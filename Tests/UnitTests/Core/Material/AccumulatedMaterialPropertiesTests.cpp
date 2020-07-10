@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_construction_test) {
 /// Test the event averaging behavior
 BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
   // These are our material properties
-  MaterialProperties a(1., 2., 6., 3., 5., 1.);
-  MaterialProperties b(2., 4., 12., 6., 10., 2.);
-  MaterialProperties c(4., 8., 16., 8., 20., 3.);
+  MaterialProperties a(Material::fromMolarDensity(1., 2., 6., 3., 5.), 1.);
+  MaterialProperties b(Material::fromMolarDensity(2., 4., 12., 6., 10.), 2.);
+  MaterialProperties c(Material::fromMolarDensity(4., 8., 16., 8., 20.), 3.);
 
   // Collect per event
   AccumulatedMaterialProperties abc;
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
 
 /// Test the total averaging behavior
 BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
-  MaterialProperties a(1., 2., 6., 3., 5., 1.);
-  MaterialProperties a3(1., 2., 6., 3., 5., 3.);
+  MaterialProperties a(Material::fromMolarDensity(1., 2., 6., 3., 5.), 1.);
+  MaterialProperties a3(Material::fromMolarDensity(1., 2., 6., 3., 5.), 3.);
 
   MaterialProperties v(1.);
 

@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(vacuum) {
 }
 
 BOOST_AUTO_TEST_CASE(single_material) {
-  Material mat(1., 2., 3., 4., 5.);
+  Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   MaterialProperties matprop(mat, 1);
   AccumulatedVolumeMaterial avm;
   // mean of a single material should be the same material again for a thickness
@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(single_material) {
 }
 
 BOOST_AUTO_TEST_CASE(two_materials) {
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
 
   MaterialProperties matprop1(mat1, 1);
   MaterialProperties matprop2(mat2, 1);
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(two_materials) {
 }
 
 BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
 
   MaterialProperties matprop1(mat1, 0.5);
   MaterialProperties matprop2(mat2, 2);

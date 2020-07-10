@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create material association in rz
   std::vector<Material> material_rz;
   for (int i = 0; i < 9; i++) {
-    material_rz.push_back(Material(i, i, i, i, i));
+    material_rz.push_back(Material::fromMolarDensity(i, i, i, i, i));
   }
 
   auto localToGlobalBin_rz = [](std::array<size_t, 2> binsRZ,
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create map in xyz
   std::vector<Material> material_xyz;
   for (int i = 0; i < 27; i++) {
-    material_xyz.push_back(Material(i, i, i, i, i));
+    material_xyz.push_back(Material::fromMolarDensity(i, i, i, i, i));
   }
 
   auto localToGlobalBin_xyz = [](std::array<size_t, 3> binsXYZ,

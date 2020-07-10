@@ -48,8 +48,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
-  MaterialProperties one(1., 1., 1., 1., 1., 1.);
-  MaterialProperties two(1., 1., 1., 1., 1., 2.);
+  Material mat = Material::fromMolarDensity(1., 1., 1., 1., 1.);
+  MaterialProperties one(mat, 1.);
+  MaterialProperties two(mat, 2.);
 
   AccumulatedSurfaceMaterial material0D{};
   // assign 2 one steps
@@ -70,10 +71,11 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
-  MaterialProperties one(1., 1., 1., 1., 1., 1.);
-  MaterialProperties two(1., 1., 1., 1., 1., 2.);
-  MaterialProperties three(1., 1., 1., 1., 1., 3.);
-  MaterialProperties four(1., 1., 1., 1., 1., 4.);
+  Material mat = Material::fromMolarDensity(1., 1., 1., 1., 1.);
+  MaterialProperties one(mat, 1.);
+  MaterialProperties two(mat, 2.);
+  MaterialProperties three(mat, 3.);
+  MaterialProperties four(mat, 4.);
 
   // BinnesSurfaceMatieral accumulation - 2D
   BinUtility binUtility2D(2, -1., 1., open, binX);
