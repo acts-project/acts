@@ -50,7 +50,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.89474607768885319e-13 * 1. / (1_MeV),
       2.95636293223822122e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams0 =
-      BoundParameters(gctx, std::move(covMat0), params0, perigeeSurface);
+      BoundParameters(perigeeSurface, params0, std::move(covMat0));
   tracks.push_back(boundParams0);
 
   // track 1 :
@@ -74,7 +74,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.85976888807477401e-11 * 1. / (1_MeV),
       1.26268676070573349e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams1 =
-      BoundParameters(gctx, std::move(covMat1), params1, perigeeSurface);
+      BoundParameters(perigeeSurface, params1, std::move(covMat1));
   tracks.push_back(boundParams1);
 
   // track 2 :
@@ -97,7 +97,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.89767384223879453e-14 * 1. / (1_MeV),
       2.01368720417934022e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams2 =
-      BoundParameters(gctx, std::move(covMat2), params2, perigeeSurface);
+      BoundParameters(perigeeSurface, params2, std::move(covMat2));
   tracks.push_back(boundParams2);
 
   // track 3 :
@@ -120,7 +120,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.22868607412569302e-13 * 1. / (1_MeV),
       6.43069972272591883e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams3 =
-      BoundParameters(gctx, std::move(covMat3), params3, perigeeSurface);
+      BoundParameters(perigeeSurface, params3, std::move(covMat3));
   tracks.push_back(boundParams3);
 
   // track 4 :
@@ -143,7 +143,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.68471064059951095e-12 * 1. / (1_MeV),
       5.01555231808420432e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams4 =
-      BoundParameters(gctx, std::move(covMat4), params4, perigeeSurface);
+      BoundParameters(perigeeSurface, params4, std::move(covMat4));
   tracks.push_back(boundParams4);
 
   // track 5 :
@@ -167,7 +167,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.80142049328043291e-12 * 1. / (1_MeV),
       6.64618290957541547e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams5 =
-      BoundParameters(gctx, std::move(covMat5), params5, perigeeSurface);
+      BoundParameters(perigeeSurface, params5, std::move(covMat5));
   tracks.push_back(boundParams5);
 
   // track 6 :
@@ -190,7 +190,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.98997883150413798e-11 * 1. / (1_MeV),
       7.336908858235347e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams6 =
-      BoundParameters(gctx, std::move(covMat6), params6, perigeeSurface);
+      BoundParameters(perigeeSurface, params6, std::move(covMat6));
   tracks.push_back(boundParams6);
 
   // track 7 :
@@ -214,7 +214,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.15397785221538584e-12 * 1. / (1_MeV),
       4.62566573586342678e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams7 =
-      BoundParameters(gctx, std::move(covMat7), params7, perigeeSurface);
+      BoundParameters(perigeeSurface, params7, std::move(covMat7));
   tracks.push_back(boundParams7);
 
   // track 8 :
@@ -237,7 +237,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       7.61584071858783847e-13 * 1. / (1_MeV),
       3.27873631023045675e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams8 =
-      BoundParameters(gctx, std::move(covMat8), params8, perigeeSurface);
+      BoundParameters(perigeeSurface, params8, std::move(covMat8));
   tracks.push_back(boundParams8);
 
   // track 9 :
@@ -260,7 +260,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.33380435332641628e-12 * 1. / (1_MeV),
       1.12903610072212501e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams9 =
-      BoundParameters(gctx, std::move(covMat9), params9, perigeeSurface);
+      BoundParameters(perigeeSurface, params9, std::move(covMat9));
   tracks.push_back(boundParams9);
 
   // track 10 :
@@ -284,7 +284,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.78960551097981704e-12 * 1. / (1_MeV),
       7.76793473294956627e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams10 =
-      BoundParameters(gctx, std::move(covMat10), params10, perigeeSurface);
+      BoundParameters(perigeeSurface, params10, std::move(covMat10));
   tracks.push_back(boundParams10);
 
   // track 11 :
@@ -307,7 +307,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       7.0596004861697542e-11 * 1. / (1_MeV),
       1.38257211235170985e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams11 =
-      BoundParameters(gctx, std::move(covMat11), params11, perigeeSurface);
+      BoundParameters(perigeeSurface, params11, std::move(covMat11));
   tracks.push_back(boundParams11);
 
   // track 12 :
@@ -330,7 +330,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.79447815502355232e-13 * 1. / (1_MeV),
       3.13229303605666587e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams12 =
-      BoundParameters(gctx, std::move(covMat12), params12, perigeeSurface);
+      BoundParameters(perigeeSurface, params12, std::move(covMat12));
   tracks.push_back(boundParams12);
 
   // track 13 :
@@ -353,7 +353,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.01639646010204121e-13 * 1. / (1_MeV),
       7.34017638337469691e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams13 =
-      BoundParameters(gctx, std::move(covMat13), params13, perigeeSurface);
+      BoundParameters(perigeeSurface, params13, std::move(covMat13));
   tracks.push_back(boundParams13);
 
   // track 14 :
@@ -376,7 +376,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.9118155474036915e-11 * 1. / (1_MeV),
       4.91916063438679885e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams14 =
-      BoundParameters(gctx, std::move(covMat14), params14, perigeeSurface);
+      BoundParameters(perigeeSurface, params14, std::move(covMat14));
   tracks.push_back(boundParams14);
 
   // track 15 :
@@ -399,7 +399,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.86168849963761193e-13 * 1. / (1_MeV),
       3.81985762465397727e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams15 =
-      BoundParameters(gctx, std::move(covMat15), params15, perigeeSurface);
+      BoundParameters(perigeeSurface, params15, std::move(covMat15));
   tracks.push_back(boundParams15);
 
   // track 16 :
@@ -422,7 +422,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.14583522129541419e-10 * 1. / (1_MeV),
       6.01911798181475888e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams16 =
-      BoundParameters(gctx, std::move(covMat16), params16, perigeeSurface);
+      BoundParameters(perigeeSurface, params16, std::move(covMat16));
   tracks.push_back(boundParams16);
 
   // track 17 :
@@ -445,7 +445,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.98558886340603463e-12 * 1. / (1_MeV),
       3.11804027042228427e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams17 =
-      BoundParameters(gctx, std::move(covMat17), params17, perigeeSurface);
+      BoundParameters(perigeeSurface, params17, std::move(covMat17));
   tracks.push_back(boundParams17);
 
   // track 18 :
@@ -468,7 +468,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.03714183548395548e-12 * 1. / (1_MeV),
       4.68583748192141769e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams18 =
-      BoundParameters(gctx, std::move(covMat18), params18, perigeeSurface);
+      BoundParameters(perigeeSurface, params18, std::move(covMat18));
   tracks.push_back(boundParams18);
 
   // track 19 :
@@ -491,7 +491,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.19827894841714947e-12 * 1. / (1_MeV),
       1.43134245775278224e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams19 =
-      BoundParameters(gctx, std::move(covMat19), params19, perigeeSurface);
+      BoundParameters(perigeeSurface, params19, std::move(covMat19));
   tracks.push_back(boundParams19);
 
   // track 20 :
@@ -515,7 +515,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.98670297988379238e-12 * 1. / (1_MeV),
       6.28335161678705845e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams20 =
-      BoundParameters(gctx, std::move(covMat20), params20, perigeeSurface);
+      BoundParameters(perigeeSurface, params20, std::move(covMat20));
   tracks.push_back(boundParams20);
 
   // track 21 :
@@ -539,7 +539,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.6225318684374243e-12 * 1. / (1_MeV),
       1.46339776234405416e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams21 =
-      BoundParameters(gctx, std::move(covMat21), params21, perigeeSurface);
+      BoundParameters(perigeeSurface, params21, std::move(covMat21));
   tracks.push_back(boundParams21);
 
   // track 22 :
@@ -563,7 +563,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.04379022097924494e-10 * 1. / (1_MeV),
       1.09507943078096526e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams22 =
-      BoundParameters(gctx, std::move(covMat22), params22, perigeeSurface);
+      BoundParameters(perigeeSurface, params22, std::move(covMat22));
   tracks.push_back(boundParams22);
 
   // track 23 :
@@ -587,7 +587,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.37524150950671376e-11 * 1. / (1_MeV),
       1.83543284737464063e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams23 =
-      BoundParameters(gctx, std::move(covMat23), params23, perigeeSurface);
+      BoundParameters(perigeeSurface, params23, std::move(covMat23));
   tracks.push_back(boundParams23);
 
   // track 24 :
@@ -610,7 +610,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.02436393801765789e-12 * 1. / (1_MeV),
       1.77089365307331326e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams24 =
-      BoundParameters(gctx, std::move(covMat24), params24, perigeeSurface);
+      BoundParameters(perigeeSurface, params24, std::move(covMat24));
   tracks.push_back(boundParams24);
 
   // track 25 :
@@ -633,7 +633,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.86034124151153122e-12 * 1. / (1_MeV),
       1.49597105536525277e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams25 =
-      BoundParameters(gctx, std::move(covMat25), params25, perigeeSurface);
+      BoundParameters(perigeeSurface, params25, std::move(covMat25));
   tracks.push_back(boundParams25);
 
   // track 26 :
@@ -657,7 +657,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.97182050693094459e-11 * 1. / (1_MeV),
       2.83151215148269575e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams26 =
-      BoundParameters(gctx, std::move(covMat26), params26, perigeeSurface);
+      BoundParameters(perigeeSurface, params26, std::move(covMat26));
   tracks.push_back(boundParams26);
 
   // track 27 :
@@ -680,7 +680,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.02230046547630554e-12 * 1. / (1_MeV),
       1.52509879725037933e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams27 =
-      BoundParameters(gctx, std::move(covMat27), params27, perigeeSurface);
+      BoundParameters(perigeeSurface, params27, std::move(covMat27));
   tracks.push_back(boundParams27);
 
   // track 28 :
@@ -703,7 +703,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.00703744558876763e-12 * 1. / (1_MeV),
       2.83601007261546911e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams28 =
-      BoundParameters(gctx, std::move(covMat28), params28, perigeeSurface);
+      BoundParameters(perigeeSurface, params28, std::move(covMat28));
   tracks.push_back(boundParams28);
 
   // track 29 :
@@ -726,7 +726,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -9.11246232266255587e-12 * 1. / (1_MeV),
       1.55326706358094313e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams29 =
-      BoundParameters(gctx, std::move(covMat29), params29, perigeeSurface);
+      BoundParameters(perigeeSurface, params29, std::move(covMat29));
   tracks.push_back(boundParams29);
 
   // track 30 :
@@ -749,7 +749,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.90579325614409665e-12 * 1. / (1_MeV),
       9.43339711900748057e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams30 =
-      BoundParameters(gctx, std::move(covMat30), params30, perigeeSurface);
+      BoundParameters(perigeeSurface, params30, std::move(covMat30));
   tracks.push_back(boundParams30);
 
   // track 31 :
@@ -774,7 +774,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.22169439162607638e-12 * 1. / (1_MeV),
       3.16079003248592727e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams31 =
-      BoundParameters(gctx, std::move(covMat31), params31, perigeeSurface);
+      BoundParameters(perigeeSurface, params31, std::move(covMat31));
   tracks.push_back(boundParams31);
 
   // track 32 :
@@ -797,7 +797,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.69885970530160845e-12 * 1. / (1_MeV),
       1.721506964758035e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams32 =
-      BoundParameters(gctx, std::move(covMat32), params32, perigeeSurface);
+      BoundParameters(perigeeSurface, params32, std::move(covMat32));
   tracks.push_back(boundParams32);
 
   // track 33 :
@@ -820,7 +820,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.22664500397267715e-13 * 1. / (1_MeV),
       1.14117890484544127e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams33 =
-      BoundParameters(gctx, std::move(covMat33), params33, perigeeSurface);
+      BoundParameters(perigeeSurface, params33, std::move(covMat33));
   tracks.push_back(boundParams33);
 
   // track 34 :
@@ -843,7 +843,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.52575602760203913e-12 * 1. / (1_MeV),
       2.77564138340125055e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams34 =
-      BoundParameters(gctx, std::move(covMat34), params34, perigeeSurface);
+      BoundParameters(perigeeSurface, params34, std::move(covMat34));
   tracks.push_back(boundParams34);
 
   // track 35 :
@@ -867,7 +867,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.60400887008258369e-12 * 1. / (1_MeV),
       3.06659697635325301e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams35 =
-      BoundParameters(gctx, std::move(covMat35), params35, perigeeSurface);
+      BoundParameters(perigeeSurface, params35, std::move(covMat35));
   tracks.push_back(boundParams35);
 
   // track 36 :
@@ -890,7 +890,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.92305231785808206e-11 * 1. / (1_MeV),
       8.93205231999871785e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams36 =
-      BoundParameters(gctx, std::move(covMat36), params36, perigeeSurface);
+      BoundParameters(perigeeSurface, params36, std::move(covMat36));
   tracks.push_back(boundParams36);
 
   // track 37 :
@@ -914,7 +914,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.55342842411113774e-12 * 1. / (1_MeV),
       9.23438478461768852e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams37 =
-      BoundParameters(gctx, std::move(covMat37), params37, perigeeSurface);
+      BoundParameters(perigeeSurface, params37, std::move(covMat37));
   tracks.push_back(boundParams37);
 
   // track 38 :
@@ -937,7 +937,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.82010017781291024e-11 * 1. / (1_MeV),
       8.54110965980980907e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams38 =
-      BoundParameters(gctx, std::move(covMat38), params38, perigeeSurface);
+      BoundParameters(perigeeSurface, params38, std::move(covMat38));
   tracks.push_back(boundParams38);
 
   // track 39 :
@@ -960,7 +960,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.08505726379481843e-12 * 1. / (1_MeV),
       1.69044726133771306e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams39 =
-      BoundParameters(gctx, std::move(covMat39), params39, perigeeSurface);
+      BoundParameters(perigeeSurface, params39, std::move(covMat39));
   tracks.push_back(boundParams39);
 
   // track 40 :
@@ -983,7 +983,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.50821896355620095e-11 * 1. / (1_MeV),
       1.938233948339807e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams40 =
-      BoundParameters(gctx, std::move(covMat40), params40, perigeeSurface);
+      BoundParameters(perigeeSurface, params40, std::move(covMat40));
   tracks.push_back(boundParams40);
 
   // track 41 :
@@ -1006,7 +1006,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -7.30460799902715398e-12 * 1. / (1_MeV),
       2.19001535656238033e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams41 =
-      BoundParameters(gctx, std::move(covMat41), params41, perigeeSurface);
+      BoundParameters(perigeeSurface, params41, std::move(covMat41));
   tracks.push_back(boundParams41);
 
   // track 42 :
@@ -1029,7 +1029,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.02372502596273887e-12 * 1. / (1_MeV),
       2.24156318506807395e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams42 =
-      BoundParameters(gctx, std::move(covMat42), params42, perigeeSurface);
+      BoundParameters(perigeeSurface, params42, std::move(covMat42));
   tracks.push_back(boundParams42);
 
   // track 43 :
@@ -1053,7 +1053,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.36775855132313344e-11 * 1. / (1_MeV),
       1.53753346859852869e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams43 =
-      BoundParameters(gctx, std::move(covMat43), params43, perigeeSurface);
+      BoundParameters(perigeeSurface, params43, std::move(covMat43));
   tracks.push_back(boundParams43);
 
   // track 44 :
@@ -1078,7 +1078,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.57887414635642927e-11 * 1. / (1_MeV),
       1.4045833940379282e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams44 =
-      BoundParameters(gctx, std::move(covMat44), params44, perigeeSurface);
+      BoundParameters(perigeeSurface, params44, std::move(covMat44));
   tracks.push_back(boundParams44);
 
   // track 45 :
@@ -1101,7 +1101,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.9029270759318352e-13 * 1. / (1_MeV),
       2.4027510883706249e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams45 =
-      BoundParameters(gctx, std::move(covMat45), params45, perigeeSurface);
+      BoundParameters(perigeeSurface, params45, std::move(covMat45));
   tracks.push_back(boundParams45);
 
   // track 46 :
@@ -1125,7 +1125,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.48951242834580673e-13 * 1. / (1_MeV),
       4.31213008009190268e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams46 =
-      BoundParameters(gctx, std::move(covMat46), params46, perigeeSurface);
+      BoundParameters(perigeeSurface, params46, std::move(covMat46));
   tracks.push_back(boundParams46);
 
   // track 47 :
@@ -1149,7 +1149,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.54234059812463208e-12 * 1. / (1_MeV),
       6.56103088525483713e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams47 =
-      BoundParameters(gctx, std::move(covMat47), params47, perigeeSurface);
+      BoundParameters(perigeeSurface, params47, std::move(covMat47));
   tracks.push_back(boundParams47);
 
   // track 48 :
@@ -1173,7 +1173,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.78975801873471684e-12 * 1. / (1_MeV),
       2.97016820860473985e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams48 =
-      BoundParameters(gctx, std::move(covMat48), params48, perigeeSurface);
+      BoundParameters(perigeeSurface, params48, std::move(covMat48));
   tracks.push_back(boundParams48);
 
   // track 49 :
@@ -1197,7 +1197,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -9.77849218642090565e-12 * 1. / (1_MeV),
       1.17200834540837073e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams49 =
-      BoundParameters(gctx, std::move(covMat49), params49, perigeeSurface);
+      BoundParameters(perigeeSurface, params49, std::move(covMat49));
   tracks.push_back(boundParams49);
 
   // track 50 :
@@ -1220,7 +1220,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       7.96588919931270625e-12 * 1. / (1_MeV),
       4.46022628552977807e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams50 =
-      BoundParameters(gctx, std::move(covMat50), params50, perigeeSurface);
+      BoundParameters(perigeeSurface, params50, std::move(covMat50));
   tracks.push_back(boundParams50);
 
   // track 51 :
@@ -1243,7 +1243,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -7.96709832496419101e-12 * 1. / (1_MeV),
       7.49710918346302435e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams51 =
-      BoundParameters(gctx, std::move(covMat51), params51, perigeeSurface);
+      BoundParameters(perigeeSurface, params51, std::move(covMat51));
   tracks.push_back(boundParams51);
 
   // track 52 :
@@ -1266,7 +1266,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.38826446714830372e-13 * 1. / (1_MeV),
       8.76188607345368409e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams52 =
-      BoundParameters(gctx, std::move(covMat52), params52, perigeeSurface);
+      BoundParameters(perigeeSurface, params52, std::move(covMat52));
   tracks.push_back(boundParams52);
 
   // track 53 :
@@ -1290,7 +1290,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.6513620234422192e-12 * 1. / (1_MeV),
       1.10141243347960938e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams53 =
-      BoundParameters(gctx, std::move(covMat53), params53, perigeeSurface);
+      BoundParameters(perigeeSurface, params53, std::move(covMat53));
   tracks.push_back(boundParams53);
 
   // track 54 :
@@ -1313,7 +1313,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.22930295116186707e-12 * 1. / (1_MeV),
       1.3151608968531292e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams54 =
-      BoundParameters(gctx, std::move(covMat54), params54, perigeeSurface);
+      BoundParameters(perigeeSurface, params54, std::move(covMat54));
   tracks.push_back(boundParams54);
 
   // track 55 :
@@ -1336,7 +1336,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.93865123861046129e-11 * 1. / (1_MeV),
       8.41345951241301293e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams55 =
-      BoundParameters(gctx, std::move(covMat55), params55, perigeeSurface);
+      BoundParameters(perigeeSurface, params55, std::move(covMat55));
   tracks.push_back(boundParams55);
 
   // track 56 :
@@ -1360,7 +1360,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.71955939069872652e-10 * 1. / (1_MeV),
       3.56558282899044343e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams56 =
-      BoundParameters(gctx, std::move(covMat56), params56, perigeeSurface);
+      BoundParameters(perigeeSurface, params56, std::move(covMat56));
   tracks.push_back(boundParams56);
 
   // track 57 :
@@ -1384,7 +1384,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.49134917661611488e-11 * 1. / (1_MeV),
       2.06098235699947452e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams57 =
-      BoundParameters(gctx, std::move(covMat57), params57, perigeeSurface);
+      BoundParameters(perigeeSurface, params57, std::move(covMat57));
   tracks.push_back(boundParams57);
 
   // track 58 :
@@ -1408,7 +1408,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.99585598211435834e-12 * 1. / (1_MeV),
       5.44141676162013255e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams58 =
-      BoundParameters(gctx, std::move(covMat58), params58, perigeeSurface);
+      BoundParameters(perigeeSurface, params58, std::move(covMat58));
   tracks.push_back(boundParams58);
 
   // track 59 :
@@ -1432,7 +1432,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.57469333177652749e-11 * 1. / (1_MeV),
       1.41142181275810685e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams59 =
-      BoundParameters(gctx, std::move(covMat59), params59, perigeeSurface);
+      BoundParameters(perigeeSurface, params59, std::move(covMat59));
   tracks.push_back(boundParams59);
 
   // track 60 :
@@ -1456,7 +1456,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.74801379954387645e-12 * 1. / (1_MeV),
       1.40280183302810002e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams60 =
-      BoundParameters(gctx, std::move(covMat60), params60, perigeeSurface);
+      BoundParameters(perigeeSurface, params60, std::move(covMat60));
   tracks.push_back(boundParams60);
 
   // track 61 :
@@ -1479,7 +1479,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.47754434165355313e-12 * 1. / (1_MeV),
       1.96000368712923034e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams61 =
-      BoundParameters(gctx, std::move(covMat61), params61, perigeeSurface);
+      BoundParameters(perigeeSurface, params61, std::move(covMat61));
   tracks.push_back(boundParams61);
 
   // track 62 :
@@ -1502,7 +1502,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.04380269074694918e-12 * 1. / (1_MeV),
       1.86463025575456243e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams62 =
-      BoundParameters(gctx, std::move(covMat62), params62, perigeeSurface);
+      BoundParameters(perigeeSurface, params62, std::move(covMat62));
   tracks.push_back(boundParams62);
 
   // track 63 :
@@ -1526,7 +1526,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.46674673345839605e-11 * 1. / (1_MeV),
       1.54105235516954764e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams63 =
-      BoundParameters(gctx, std::move(covMat63), params63, perigeeSurface);
+      BoundParameters(perigeeSurface, params63, std::move(covMat63));
   tracks.push_back(boundParams63);
 
   // track 64 :
@@ -1550,7 +1550,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.15087456059600686e-12 * 1. / (1_MeV),
       2.95290424057181866e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams64 =
-      BoundParameters(gctx, std::move(covMat64), params64, perigeeSurface);
+      BoundParameters(perigeeSurface, params64, std::move(covMat64));
   tracks.push_back(boundParams64);
 
   // track 65 :
@@ -1574,7 +1574,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.43993447359552124e-11 * 1. / (1_MeV),
       6.30697091774656826e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams65 =
-      BoundParameters(gctx, std::move(covMat65), params65, perigeeSurface);
+      BoundParameters(perigeeSurface, params65, std::move(covMat65));
   tracks.push_back(boundParams65);
 
   // track 66 :
@@ -1597,7 +1597,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.76572689736880453e-12 * 1. / (1_MeV),
       1.27183083509230244e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams66 =
-      BoundParameters(gctx, std::move(covMat66), params66, perigeeSurface);
+      BoundParameters(perigeeSurface, params66, std::move(covMat66));
   tracks.push_back(boundParams66);
 
   // track 67 :
@@ -1620,7 +1620,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.31555819953937805e-12 * 1. / (1_MeV),
       6.02211544520336872e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams67 =
-      BoundParameters(gctx, std::move(covMat67), params67, perigeeSurface);
+      BoundParameters(perigeeSurface, params67, std::move(covMat67));
   tracks.push_back(boundParams67);
 
   // track 68 :
@@ -1643,7 +1643,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.8161963481123767e-12 * 1. / (1_MeV),
       4.41570460751883331e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams68 =
-      BoundParameters(gctx, std::move(covMat68), params68, perigeeSurface);
+      BoundParameters(perigeeSurface, params68, std::move(covMat68));
   tracks.push_back(boundParams68);
 
   // track 69 :
@@ -1666,7 +1666,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.37842082317695236e-12 * 1. / (1_MeV),
       1.73160132066474404e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams69 =
-      BoundParameters(gctx, std::move(covMat69), params69, perigeeSurface);
+      BoundParameters(perigeeSurface, params69, std::move(covMat69));
   tracks.push_back(boundParams69);
 
   // track 70 :
@@ -1689,7 +1689,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.73307509198330779e-12 * 1. / (1_MeV),
       2.64328670063207483e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams70 =
-      BoundParameters(gctx, std::move(covMat70), params70, perigeeSurface);
+      BoundParameters(perigeeSurface, params70, std::move(covMat70));
   tracks.push_back(boundParams70);
 
   // track 71 :
@@ -1712,7 +1712,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.71150128191831827e-12 * 1. / (1_MeV),
       1.96153805004373183e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams71 =
-      BoundParameters(gctx, std::move(covMat71), params71, perigeeSurface);
+      BoundParameters(perigeeSurface, params71, std::move(covMat71));
   tracks.push_back(boundParams71);
 
   // track 72 :
@@ -1735,7 +1735,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.52908464521253004e-11 * 1. / (1_MeV),
       3.20209747606270412e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams72 =
-      BoundParameters(gctx, std::move(covMat72), params72, perigeeSurface);
+      BoundParameters(perigeeSurface, params72, std::move(covMat72));
   tracks.push_back(boundParams72);
 
   // track 73 :
@@ -1759,7 +1759,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.43532649831609989e-11 * 1. / (1_MeV),
       2.18980167332460951e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams73 =
-      BoundParameters(gctx, std::move(covMat73), params73, perigeeSurface);
+      BoundParameters(perigeeSurface, params73, std::move(covMat73));
   tracks.push_back(boundParams73);
 
   // track 74 :
@@ -1784,7 +1784,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.69302933545922802e-11 * 1. / (1_MeV),
       2.06939729241462089e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams74 =
-      BoundParameters(gctx, std::move(covMat74), params74, perigeeSurface);
+      BoundParameters(perigeeSurface, params74, std::move(covMat74));
   tracks.push_back(boundParams74);
 
   // track 75 :
@@ -1808,7 +1808,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.28893257339241436e-11 * 1. / (1_MeV),
       9.44539516045672656e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams75 =
-      BoundParameters(gctx, std::move(covMat75), params75, perigeeSurface);
+      BoundParameters(perigeeSurface, params75, std::move(covMat75));
   tracks.push_back(boundParams75);
 
   // track 76 :
@@ -1831,7 +1831,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.58479619806951909e-10 * 1. / (1_MeV),
       4.6452456464729508e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams76 =
-      BoundParameters(gctx, std::move(covMat76), params76, perigeeSurface);
+      BoundParameters(perigeeSurface, params76, std::move(covMat76));
   tracks.push_back(boundParams76);
 
   // track 77 :
@@ -1854,7 +1854,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.26932170430756531e-12 * 1. / (1_MeV),
       7.21128712299901053e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams77 =
-      BoundParameters(gctx, std::move(covMat77), params77, perigeeSurface);
+      BoundParameters(perigeeSurface, params77, std::move(covMat77));
   tracks.push_back(boundParams77);
 
   // track 78 :
@@ -1877,7 +1877,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.44401588800591696e-11 * 1. / (1_MeV),
       6.28857244056035825e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams78 =
-      BoundParameters(gctx, std::move(covMat78), params78, perigeeSurface);
+      BoundParameters(perigeeSurface, params78, std::move(covMat78));
   tracks.push_back(boundParams78);
 
   // track 79 :
@@ -1901,7 +1901,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -9.30864559448818034e-13 * 1. / (1_MeV),
       1.72951982596591947e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams79 =
-      BoundParameters(gctx, std::move(covMat79), params79, perigeeSurface);
+      BoundParameters(perigeeSurface, params79, std::move(covMat79));
   tracks.push_back(boundParams79);
 
   // track 80 :
@@ -1925,7 +1925,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.38086858591292421e-12 * 1. / (1_MeV),
       1.47779136150383295e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams80 =
-      BoundParameters(gctx, std::move(covMat80), params80, perigeeSurface);
+      BoundParameters(perigeeSurface, params80, std::move(covMat80));
   tracks.push_back(boundParams80);
 
   // track 81 :
@@ -1948,7 +1948,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.7695621439726223e-12 * 1. / (1_MeV),
       1.47325138200038452e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams81 =
-      BoundParameters(gctx, std::move(covMat81), params81, perigeeSurface);
+      BoundParameters(perigeeSurface, params81, std::move(covMat81));
   tracks.push_back(boundParams81);
 
   // track 82 :
@@ -1971,7 +1971,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.83536325828199794e-12 * 1. / (1_MeV),
       5.34931300644192476e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams82 =
-      BoundParameters(gctx, std::move(covMat82), params82, perigeeSurface);
+      BoundParameters(perigeeSurface, params82, std::move(covMat82));
   tracks.push_back(boundParams82);
 
   // track 83 :
@@ -1995,7 +1995,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.04279595331346869e-12 * 1. / (1_MeV),
       1.92760772621536347e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams83 =
-      BoundParameters(gctx, std::move(covMat83), params83, perigeeSurface);
+      BoundParameters(perigeeSurface, params83, std::move(covMat83));
   tracks.push_back(boundParams83);
 
   // track 84 :
@@ -2018,7 +2018,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.19247327016922366e-12 * 1. / (1_MeV),
       1.26404206546304465e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams84 =
-      BoundParameters(gctx, std::move(covMat84), params84, perigeeSurface);
+      BoundParameters(perigeeSurface, params84, std::move(covMat84));
   tracks.push_back(boundParams84);
 
   // track 85 :
@@ -2041,7 +2041,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.05519853361521036e-12 * 1. / (1_MeV),
       1.97367219789690296e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams85 =
-      BoundParameters(gctx, std::move(covMat85), params85, perigeeSurface);
+      BoundParameters(perigeeSurface, params85, std::move(covMat85));
   tracks.push_back(boundParams85);
 
   // track 86 :
@@ -2064,7 +2064,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.32123927173378508e-10 * 1. / (1_MeV),
       8.04692867895084873e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams86 =
-      BoundParameters(gctx, std::move(covMat86), params86, perigeeSurface);
+      BoundParameters(perigeeSurface, params86, std::move(covMat86));
   tracks.push_back(boundParams86);
 
   // track 87 :
@@ -2088,7 +2088,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.51121860297362421e-11 * 1. / (1_MeV),
       5.05374214698761648e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams87 =
-      BoundParameters(gctx, std::move(covMat87), params87, perigeeSurface);
+      BoundParameters(perigeeSurface, params87, std::move(covMat87));
   tracks.push_back(boundParams87);
 
   // track 88 :
@@ -2111,7 +2111,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.58945405173847072e-11 * 1. / (1_MeV),
       2.93490870495460854e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams88 =
-      BoundParameters(gctx, std::move(covMat88), params88, perigeeSurface);
+      BoundParameters(perigeeSurface, params88, std::move(covMat88));
   tracks.push_back(boundParams88);
 
   // track 89 :
@@ -2134,7 +2134,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.86199606571132037e-11 * 1. / (1_MeV),
       3.39196892795712301e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams89 =
-      BoundParameters(gctx, std::move(covMat89), params89, perigeeSurface);
+      BoundParameters(perigeeSurface, params89, std::move(covMat89));
   tracks.push_back(boundParams89);
 
   // track 90 :
@@ -2158,7 +2158,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.76163300018645983e-11 * 1. / (1_MeV),
       1.11767643751203849e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams90 =
-      BoundParameters(gctx, std::move(covMat90), params90, perigeeSurface);
+      BoundParameters(perigeeSurface, params90, std::move(covMat90));
   tracks.push_back(boundParams90);
 
   // track 91 :
@@ -2181,7 +2181,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.11281704892510676e-11 * 1. / (1_MeV),
       9.21146006693795982e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams91 =
-      BoundParameters(gctx, std::move(covMat91), params91, perigeeSurface);
+      BoundParameters(perigeeSurface, params91, std::move(covMat91));
   tracks.push_back(boundParams91);
 
   // track 92 :
@@ -2204,7 +2204,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.14949156818848357e-12 * 1. / (1_MeV),
       1.74355599402709061e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams92 =
-      BoundParameters(gctx, std::move(covMat92), params92, perigeeSurface);
+      BoundParameters(perigeeSurface, params92, std::move(covMat92));
   tracks.push_back(boundParams92);
 
   // track 93 :
@@ -2227,7 +2227,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.22675320789893397e-11 * 1. / (1_MeV),
       4.13053515002648197e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams93 =
-      BoundParameters(gctx, std::move(covMat93), params93, perigeeSurface);
+      BoundParameters(perigeeSurface, params93, std::move(covMat93));
   tracks.push_back(boundParams93);
 
   // track 94 :
@@ -2250,7 +2250,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.56585402895446448e-14 * 1. / (1_MeV),
       2.29805854901066198e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams94 =
-      BoundParameters(gctx, std::move(covMat94), params94, perigeeSurface);
+      BoundParameters(perigeeSurface, params94, std::move(covMat94));
   tracks.push_back(boundParams94);
 
   // track 95 :
@@ -2273,7 +2273,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.77698327525688441e-11 * 1. / (1_MeV),
       2.43435688274118434e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams95 =
-      BoundParameters(gctx, std::move(covMat95), params95, perigeeSurface);
+      BoundParameters(perigeeSurface, params95, std::move(covMat95));
   tracks.push_back(boundParams95);
 
   // track 96 :
@@ -2297,7 +2297,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -7.18296901266119286e-13 * 1. / (1_MeV),
       1.78482867374540888e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams96 =
-      BoundParameters(gctx, std::move(covMat96), params96, perigeeSurface);
+      BoundParameters(perigeeSurface, params96, std::move(covMat96));
   tracks.push_back(boundParams96);
 
   // track 97 :
@@ -2320,7 +2320,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.41501241215600609e-10 * 1. / (1_MeV),
       4.72637817772181279e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams97 =
-      BoundParameters(gctx, std::move(covMat97), params97, perigeeSurface);
+      BoundParameters(perigeeSurface, params97, std::move(covMat97));
   tracks.push_back(boundParams97);
 
   // track 98 :
@@ -2344,7 +2344,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       7.26578444477865009e-12 * 1. / (1_MeV),
       1.17719708980779103e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams98 =
-      BoundParameters(gctx, std::move(covMat98), params98, perigeeSurface);
+      BoundParameters(perigeeSurface, params98, std::move(covMat98));
   tracks.push_back(boundParams98);
 
   // track 99 :
@@ -2369,7 +2369,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.22177379055824259e-11 * 1. / (1_MeV),
       3.21954796156376233e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams99 =
-      BoundParameters(gctx, std::move(covMat99), params99, perigeeSurface);
+      BoundParameters(perigeeSurface, params99, std::move(covMat99));
   tracks.push_back(boundParams99);
 
   // track 100 :
@@ -2394,7 +2394,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.43857092852611679e-12 * 1. / (1_MeV),
       1.24140029852948253e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams100 =
-      BoundParameters(gctx, std::move(covMat100), params100, perigeeSurface);
+      BoundParameters(perigeeSurface, params100, std::move(covMat100));
   tracks.push_back(boundParams100);
 
   // track 101 :
@@ -2418,7 +2418,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.47351419013377902e-11 * 1. / (1_MeV),
       2.47352943683054605e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams101 =
-      BoundParameters(gctx, std::move(covMat101), params101, perigeeSurface);
+      BoundParameters(perigeeSurface, params101, std::move(covMat101));
   tracks.push_back(boundParams101);
 
   // track 102 :
@@ -2442,7 +2442,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       7.89285090595557677e-12 * 1. / (1_MeV),
       1.05506943459676705e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams102 =
-      BoundParameters(gctx, std::move(covMat102), params102, perigeeSurface);
+      BoundParameters(perigeeSurface, params102, std::move(covMat102));
   tracks.push_back(boundParams102);
 
   // track 103 :
@@ -2466,7 +2466,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.69843357485556815e-11 * 1. / (1_MeV),
       1.89580739995420799e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams103 =
-      BoundParameters(gctx, std::move(covMat103), params103, perigeeSurface);
+      BoundParameters(perigeeSurface, params103, std::move(covMat103));
   tracks.push_back(boundParams103);
 
   // track 104 :
@@ -2490,7 +2490,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -9.50285600530462166e-11 * 1. / (1_MeV),
       1.29019364636384637e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams104 =
-      BoundParameters(gctx, std::move(covMat104), params104, perigeeSurface);
+      BoundParameters(perigeeSurface, params104, std::move(covMat104));
   tracks.push_back(boundParams104);
 
   // track 105 :
@@ -2515,7 +2515,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.74774216671551251e-11 * 1. / (1_MeV),
       3.28096633195329446e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams105 =
-      BoundParameters(gctx, std::move(covMat105), params105, perigeeSurface);
+      BoundParameters(perigeeSurface, params105, std::move(covMat105));
   tracks.push_back(boundParams105);
 
   // track 106 :
@@ -2538,7 +2538,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.31956258410507594e-12 * 1. / (1_MeV),
       2.37201536190667639e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams106 =
-      BoundParameters(gctx, std::move(covMat106), params106, perigeeSurface);
+      BoundParameters(perigeeSurface, params106, std::move(covMat106));
   tracks.push_back(boundParams106);
 
   // track 107 :
@@ -2563,7 +2563,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.17575815132199387e-11 * 1. / (1_MeV),
       1.90833182589500439e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams107 =
-      BoundParameters(gctx, std::move(covMat107), params107, perigeeSurface);
+      BoundParameters(perigeeSurface, params107, std::move(covMat107));
   tracks.push_back(boundParams107);
 
   // track 108 :
@@ -2587,7 +2587,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.4716062401029798e-11 * 1. / (1_MeV),
       9.70698590951890594e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams108 =
-      BoundParameters(gctx, std::move(covMat108), params108, perigeeSurface);
+      BoundParameters(perigeeSurface, params108, std::move(covMat108));
   tracks.push_back(boundParams108);
 
   // track 109 :
@@ -2611,7 +2611,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.42299696660580778e-11 * 1. / (1_MeV),
       2.54714332958982936e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams109 =
-      BoundParameters(gctx, std::move(covMat109), params109, perigeeSurface);
+      BoundParameters(perigeeSurface, params109, std::move(covMat109));
   tracks.push_back(boundParams109);
 
   // track 110 :
@@ -2635,7 +2635,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.81008924621221718e-12 * 1. / (1_MeV),
       4.11227746299758223e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams110 =
-      BoundParameters(gctx, std::move(covMat110), params110, perigeeSurface);
+      BoundParameters(perigeeSurface, params110, std::move(covMat110));
   tracks.push_back(boundParams110);
 
   // track 111 :
@@ -2658,7 +2658,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.73298870890743619e-12 * 1. / (1_MeV),
       8.13164466317850554e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams111 =
-      BoundParameters(gctx, std::move(covMat111), params111, perigeeSurface);
+      BoundParameters(perigeeSurface, params111, std::move(covMat111));
   tracks.push_back(boundParams111);
 
   // track 112 :
@@ -2683,7 +2683,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.36270420577401879e-12 * 1. / (1_MeV),
       9.7393829112668584e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams112 =
-      BoundParameters(gctx, std::move(covMat112), params112, perigeeSurface);
+      BoundParameters(perigeeSurface, params112, std::move(covMat112));
   tracks.push_back(boundParams112);
 
   // track 113 :
@@ -2706,7 +2706,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.77783317368770183e-12 * 1. / (1_MeV),
       1.32142283226777124e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams113 =
-      BoundParameters(gctx, std::move(covMat113), params113, perigeeSurface);
+      BoundParameters(perigeeSurface, params113, std::move(covMat113));
   tracks.push_back(boundParams113);
 
   // track 114 :
@@ -2730,7 +2730,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.25280483073948522e-11 * 1. / (1_MeV),
       4.48457743162933298e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams114 =
-      BoundParameters(gctx, std::move(covMat114), params114, perigeeSurface);
+      BoundParameters(perigeeSurface, params114, std::move(covMat114));
   tracks.push_back(boundParams114);
 
   // track 115 :
@@ -2753,7 +2753,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.89686466885357287e-11 * 1. / (1_MeV),
       9.49285094975493848e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams115 =
-      BoundParameters(gctx, std::move(covMat115), params115, perigeeSurface);
+      BoundParameters(perigeeSurface, params115, std::move(covMat115));
   tracks.push_back(boundParams115);
 
   // track 116 :
@@ -2777,7 +2777,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.45815925497200098e-12 * 1. / (1_MeV),
       4.33391877940891845e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams116 =
-      BoundParameters(gctx, std::move(covMat116), params116, perigeeSurface);
+      BoundParameters(perigeeSurface, params116, std::move(covMat116));
   tracks.push_back(boundParams116);
 
   // track 117 :
@@ -2800,7 +2800,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.10238162026694015e-11 * 1. / (1_MeV),
       2.30750710206173437e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams117 =
-      BoundParameters(gctx, std::move(covMat117), params117, perigeeSurface);
+      BoundParameters(perigeeSurface, params117, std::move(covMat117));
   tracks.push_back(boundParams117);
 
   // track 118 :
@@ -2824,7 +2824,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.71918312121670268e-11 * 1. / (1_MeV),
       1.72003744580706552e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams118 =
-      BoundParameters(gctx, std::move(covMat118), params118, perigeeSurface);
+      BoundParameters(perigeeSurface, params118, std::move(covMat118));
   tracks.push_back(boundParams118);
 
   // track 119 :
@@ -2848,7 +2848,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.08338264527575119e-12 * 1. / (1_MeV),
       1.86805737545370221e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams119 =
-      BoundParameters(gctx, std::move(covMat119), params119, perigeeSurface);
+      BoundParameters(perigeeSurface, params119, std::move(covMat119));
   tracks.push_back(boundParams119);
 
   // track 120 :
@@ -2872,7 +2872,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.51583629069704591e-11 * 1. / (1_MeV),
       1.78077538826038051e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams120 =
-      BoundParameters(gctx, std::move(covMat120), params120, perigeeSurface);
+      BoundParameters(perigeeSurface, params120, std::move(covMat120));
   tracks.push_back(boundParams120);
 
   // track 121 :
@@ -2896,7 +2896,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.64157138196977762e-13 * 1. / (1_MeV),
       5.16425357338645696e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams121 =
-      BoundParameters(gctx, std::move(covMat121), params121, perigeeSurface);
+      BoundParameters(perigeeSurface, params121, std::move(covMat121));
   tracks.push_back(boundParams121);
 
   // track 122 :
@@ -2920,7 +2920,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.07937619402598992e-11 * 1. / (1_MeV),
       1.73649483681259653e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams122 =
-      BoundParameters(gctx, std::move(covMat122), params122, perigeeSurface);
+      BoundParameters(perigeeSurface, params122, std::move(covMat122));
   tracks.push_back(boundParams122);
 
   // track 123 :
@@ -2943,7 +2943,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.00985395948335217e-11 * 1. / (1_MeV),
       8.96472895917099777e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams123 =
-      BoundParameters(gctx, std::move(covMat123), params123, perigeeSurface);
+      BoundParameters(perigeeSurface, params123, std::move(covMat123));
   tracks.push_back(boundParams123);
 
   // track 124 :
@@ -2967,7 +2967,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.1663553056713431e-11 * 1. / (1_MeV),
       1.38518113645957897e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams124 =
-      BoundParameters(gctx, std::move(covMat124), params124, perigeeSurface);
+      BoundParameters(perigeeSurface, params124, std::move(covMat124));
   tracks.push_back(boundParams124);
 
   // track 125 :
@@ -2991,7 +2991,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.6401369967705386e-12 * 1. / (1_MeV),
       3.61465746223643691e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams125 =
-      BoundParameters(gctx, std::move(covMat125), params125, perigeeSurface);
+      BoundParameters(perigeeSurface, params125, std::move(covMat125));
   tracks.push_back(boundParams125);
 
   // track 126 :
@@ -3014,7 +3014,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.20738678057781713e-12 * 1. / (1_MeV),
       6.87515253061654619e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams126 =
-      BoundParameters(gctx, std::move(covMat126), params126, perigeeSurface);
+      BoundParameters(perigeeSurface, params126, std::move(covMat126));
   tracks.push_back(boundParams126);
 
   // track 127 :
@@ -3039,7 +3039,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.37236751652554644e-12 * 1. / (1_MeV),
       8.74325264965669646e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams127 =
-      BoundParameters(gctx, std::move(covMat127), params127, perigeeSurface);
+      BoundParameters(perigeeSurface, params127, std::move(covMat127));
   tracks.push_back(boundParams127);
 
   // track 128 :
@@ -3063,7 +3063,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.36288899333749929e-11 * 1. / (1_MeV),
       3.38668010302356493e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams128 =
-      BoundParameters(gctx, std::move(covMat128), params128, perigeeSurface);
+      BoundParameters(perigeeSurface, params128, std::move(covMat128));
   tracks.push_back(boundParams128);
 
   // track 129 :
@@ -3087,7 +3087,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.12217710906210286e-12 * 1. / (1_MeV),
       8.87762224843768877e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams129 =
-      BoundParameters(gctx, std::move(covMat129), params129, perigeeSurface);
+      BoundParameters(perigeeSurface, params129, std::move(covMat129));
   tracks.push_back(boundParams129);
 
   // track 130 :
@@ -3111,7 +3111,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.25136088613115525e-11 * 1. / (1_MeV),
       1.55834969928214662e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams130 =
-      BoundParameters(gctx, std::move(covMat130), params130, perigeeSurface);
+      BoundParameters(perigeeSurface, params130, std::move(covMat130));
   tracks.push_back(boundParams130);
 
   // track 131 :
@@ -3136,7 +3136,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -7.1469095279936026e-12 * 1. / (1_MeV),
       2.20003334994167687e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams131 =
-      BoundParameters(gctx, std::move(covMat131), params131, perigeeSurface);
+      BoundParameters(perigeeSurface, params131, std::move(covMat131));
   tracks.push_back(boundParams131);
 
   // track 132 :
@@ -3160,7 +3160,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.93303581762030017e-11 * 1. / (1_MeV),
       3.97582966549236971e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams132 =
-      BoundParameters(gctx, std::move(covMat132), params132, perigeeSurface);
+      BoundParameters(perigeeSurface, params132, std::move(covMat132));
   tracks.push_back(boundParams132);
 
   // track 133 :
@@ -3184,7 +3184,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.05152517914159529e-11 * 1. / (1_MeV),
       3.04403169337774671e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams133 =
-      BoundParameters(gctx, std::move(covMat133), params133, perigeeSurface);
+      BoundParameters(perigeeSurface, params133, std::move(covMat133));
   tracks.push_back(boundParams133);
 
   // track 134 :
@@ -3208,7 +3208,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.16936360639539862e-12 * 1. / (1_MeV),
       1.35624275698909003e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams134 =
-      BoundParameters(gctx, std::move(covMat134), params134, perigeeSurface);
+      BoundParameters(perigeeSurface, params134, std::move(covMat134));
   tracks.push_back(boundParams134);
 
   // track 135 :
@@ -3231,7 +3231,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.04537737743006593e-12 * 1. / (1_MeV),
       1.35220848407335836e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams135 =
-      BoundParameters(gctx, std::move(covMat135), params135, perigeeSurface);
+      BoundParameters(perigeeSurface, params135, std::move(covMat135));
   tracks.push_back(boundParams135);
 
   // track 136 :
@@ -3255,7 +3255,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.56252285968062862e-11 * 1. / (1_MeV),
       1.62369812040097372e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams136 =
-      BoundParameters(gctx, std::move(covMat136), params136, perigeeSurface);
+      BoundParameters(perigeeSurface, params136, std::move(covMat136));
   tracks.push_back(boundParams136);
 
   // track 137 :
@@ -3278,7 +3278,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.89799137780591859e-12 * 1. / (1_MeV),
       1.66225588849044925e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams137 =
-      BoundParameters(gctx, std::move(covMat137), params137, perigeeSurface);
+      BoundParameters(perigeeSurface, params137, std::move(covMat137));
   tracks.push_back(boundParams137);
 
   // track 138 :
@@ -3302,7 +3302,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.21540260659907555e-12 * 1. / (1_MeV),
       7.92930027193605724e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams138 =
-      BoundParameters(gctx, std::move(covMat138), params138, perigeeSurface);
+      BoundParameters(perigeeSurface, params138, std::move(covMat138));
   tracks.push_back(boundParams138);
 
   // track 139 :
@@ -3326,7 +3326,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.52214832118640255e-11 * 1. / (1_MeV),
       2.85946016864713215e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams139 =
-      BoundParameters(gctx, std::move(covMat139), params139, perigeeSurface);
+      BoundParameters(perigeeSurface, params139, std::move(covMat139));
   tracks.push_back(boundParams139);
 
   // track 140 :
@@ -3350,7 +3350,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.69476858439270149e-11 * 1. / (1_MeV),
       3.93277660437618692e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams140 =
-      BoundParameters(gctx, std::move(covMat140), params140, perigeeSurface);
+      BoundParameters(perigeeSurface, params140, std::move(covMat140));
   tracks.push_back(boundParams140);
 
   // track 141 :
@@ -3374,7 +3374,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.99674425730772401e-11 * 1. / (1_MeV),
       2.4992743985485788e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams141 =
-      BoundParameters(gctx, std::move(covMat141), params141, perigeeSurface);
+      BoundParameters(perigeeSurface, params141, std::move(covMat141));
   tracks.push_back(boundParams141);
 
   // track 142 :
@@ -3397,7 +3397,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.35165165596293098e-12 * 1. / (1_MeV),
       4.57582055579663916e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams142 =
-      BoundParameters(gctx, std::move(covMat142), params142, perigeeSurface);
+      BoundParameters(perigeeSurface, params142, std::move(covMat142));
   tracks.push_back(boundParams142);
 
   // track 143 :
@@ -3420,7 +3420,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.22132744873936636e-12 * 1. / (1_MeV),
       3.18471672644538017e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams143 =
-      BoundParameters(gctx, std::move(covMat143), params143, perigeeSurface);
+      BoundParameters(perigeeSurface, params143, std::move(covMat143));
   tracks.push_back(boundParams143);
 
   // track 144 :
@@ -3443,7 +3443,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.19473349424168581e-12 * 1. / (1_MeV),
       6.42161740449509466e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams144 =
-      BoundParameters(gctx, std::move(covMat144), params144, perigeeSurface);
+      BoundParameters(perigeeSurface, params144, std::move(covMat144));
   tracks.push_back(boundParams144);
 
   // track 145 :
@@ -3467,7 +3467,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       8.96597163070042405e-12 * 1. / (1_MeV),
       3.91443821801118474e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams145 =
-      BoundParameters(gctx, std::move(covMat145), params145, perigeeSurface);
+      BoundParameters(perigeeSurface, params145, std::move(covMat145));
   tracks.push_back(boundParams145);
 
   // track 146 :
@@ -3490,7 +3490,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.86232878211289549e-11 * 1. / (1_MeV),
       2.21742652017908881e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams146 =
-      BoundParameters(gctx, std::move(covMat146), params146, perigeeSurface);
+      BoundParameters(perigeeSurface, params146, std::move(covMat146));
   tracks.push_back(boundParams146);
 
   // track 147 :
@@ -3514,7 +3514,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.77175608301356693e-11 * 1. / (1_MeV),
       7.42934380681958828e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams147 =
-      BoundParameters(gctx, std::move(covMat147), params147, perigeeSurface);
+      BoundParameters(perigeeSurface, params147, std::move(covMat147));
   tracks.push_back(boundParams147);
 
   // track 148 :
@@ -3538,7 +3538,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.45854711927653862e-12 * 1. / (1_MeV),
       8.50769107940685387e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams148 =
-      BoundParameters(gctx, std::move(covMat148), params148, perigeeSurface);
+      BoundParameters(perigeeSurface, params148, std::move(covMat148));
   tracks.push_back(boundParams148);
 
   // track 149 :
@@ -3561,7 +3561,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.33592110665984887e-11 * 1. / (1_MeV),
       3.07479458561132901e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams149 =
-      BoundParameters(gctx, std::move(covMat149), params149, perigeeSurface);
+      BoundParameters(perigeeSurface, params149, std::move(covMat149));
   tracks.push_back(boundParams149);
 
   // track 150 :
@@ -3584,7 +3584,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.26867840396934173e-12 * 1. / (1_MeV),
       1.01995072110394602e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams150 =
-      BoundParameters(gctx, std::move(covMat150), params150, perigeeSurface);
+      BoundParameters(perigeeSurface, params150, std::move(covMat150));
   tracks.push_back(boundParams150);
 
   // track 151 :
@@ -3607,7 +3607,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.0379007049062301e-11 * 1. / (1_MeV),
       2.35979236151706573e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams151 =
-      BoundParameters(gctx, std::move(covMat151), params151, perigeeSurface);
+      BoundParameters(perigeeSurface, params151, std::move(covMat151));
   tracks.push_back(boundParams151);
 
   // track 152 :
@@ -3631,7 +3631,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.51450535762684209e-12 * 1. / (1_MeV),
       2.52067755557305873e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams152 =
-      BoundParameters(gctx, std::move(covMat152), params152, perigeeSurface);
+      BoundParameters(perigeeSurface, params152, std::move(covMat152));
   tracks.push_back(boundParams152);
 
   // track 153 :
@@ -3656,7 +3656,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.62710156705971042e-11 * 1. / (1_MeV),
       4.00474514661297576e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams153 =
-      BoundParameters(gctx, std::move(covMat153), params153, perigeeSurface);
+      BoundParameters(perigeeSurface, params153, std::move(covMat153));
   tracks.push_back(boundParams153);
 
   // track 154 :
@@ -3680,7 +3680,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -9.05413371576357781e-11 * 1. / (1_MeV),
       6.28650798084606777e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams154 =
-      BoundParameters(gctx, std::move(covMat154), params154, perigeeSurface);
+      BoundParameters(perigeeSurface, params154, std::move(covMat154));
   tracks.push_back(boundParams154);
 
   // track 155 :
@@ -3704,7 +3704,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.19444645168272657e-11 * 1. / (1_MeV),
       8.34616611933292063e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams155 =
-      BoundParameters(gctx, std::move(covMat155), params155, perigeeSurface);
+      BoundParameters(perigeeSurface, params155, std::move(covMat155));
   tracks.push_back(boundParams155);
 
   // track 156 :
@@ -3728,7 +3728,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -7.31342694223202373e-12 * 1. / (1_MeV),
       2.3365928636387423e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams156 =
-      BoundParameters(gctx, std::move(covMat156), params156, perigeeSurface);
+      BoundParameters(perigeeSurface, params156, std::move(covMat156));
   tracks.push_back(boundParams156);
 
   // track 157 :
@@ -3751,7 +3751,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.42683894231848255e-12 * 1. / (1_MeV),
       1.96425084530993388e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams157 =
-      BoundParameters(gctx, std::move(covMat157), params157, perigeeSurface);
+      BoundParameters(perigeeSurface, params157, std::move(covMat157));
   tracks.push_back(boundParams157);
 
   // track 158 :
@@ -3774,7 +3774,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.72996826709048491e-11 * 1. / (1_MeV),
       2.86495771550931977e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams158 =
-      BoundParameters(gctx, std::move(covMat158), params158, perigeeSurface);
+      BoundParameters(perigeeSurface, params158, std::move(covMat158));
   tracks.push_back(boundParams158);
 
   // track 159 :
@@ -3798,7 +3798,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.39037168618683865e-12 * 1. / (1_MeV),
       3.48178236242446815e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams159 =
-      BoundParameters(gctx, std::move(covMat159), params159, perigeeSurface);
+      BoundParameters(perigeeSurface, params159, std::move(covMat159));
   tracks.push_back(boundParams159);
 
   // track 160 :
@@ -3822,7 +3822,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.87734052287320618e-11 * 1. / (1_MeV),
       3.79933057237380467e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams160 =
-      BoundParameters(gctx, std::move(covMat160), params160, perigeeSurface);
+      BoundParameters(perigeeSurface, params160, std::move(covMat160));
   tracks.push_back(boundParams160);
 
   // track 161 :
@@ -3847,7 +3847,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.71866026406819207e-11 * 1. / (1_MeV),
       1.68986658000136458e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams161 =
-      BoundParameters(gctx, std::move(covMat161), params161, perigeeSurface);
+      BoundParameters(perigeeSurface, params161, std::move(covMat161));
   tracks.push_back(boundParams161);
 
   // track 162 :
@@ -3870,7 +3870,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.9067412337676577e-12 * 1. / (1_MeV),
       3.46785045124420321e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams162 =
-      BoundParameters(gctx, std::move(covMat162), params162, perigeeSurface);
+      BoundParameters(perigeeSurface, params162, std::move(covMat162));
   tracks.push_back(boundParams162);
 
   // track 163 :
@@ -3894,7 +3894,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.62705821113891289e-11 * 1. / (1_MeV),
       2.9073463081452644e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams163 =
-      BoundParameters(gctx, std::move(covMat163), params163, perigeeSurface);
+      BoundParameters(perigeeSurface, params163, std::move(covMat163));
   tracks.push_back(boundParams163);
 
   // track 164 :
@@ -3918,7 +3918,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.34156221200548834e-12 * 1. / (1_MeV),
       6.18826441912273539e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams164 =
-      BoundParameters(gctx, std::move(covMat164), params164, perigeeSurface);
+      BoundParameters(perigeeSurface, params164, std::move(covMat164));
   tracks.push_back(boundParams164);
 
   // track 165 :
@@ -3942,7 +3942,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.95104992239772127e-11 * 1. / (1_MeV),
       1.81045026192983016e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams165 =
-      BoundParameters(gctx, std::move(covMat165), params165, perigeeSurface);
+      BoundParameters(perigeeSurface, params165, std::move(covMat165));
   tracks.push_back(boundParams165);
 
   // track 166 :
@@ -3965,7 +3965,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -6.6186235709197681e-11 * 1. / (1_MeV),
       1.90290047608066004e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams166 =
-      BoundParameters(gctx, std::move(covMat166), params166, perigeeSurface);
+      BoundParameters(perigeeSurface, params166, std::move(covMat166));
   tracks.push_back(boundParams166);
 
   // track 167 :
@@ -3988,7 +3988,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.26309578361557248e-11 * 1. / (1_MeV),
       3.20331428049769329e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams167 =
-      BoundParameters(gctx, std::move(covMat167), params167, perigeeSurface);
+      BoundParameters(perigeeSurface, params167, std::move(covMat167));
   tracks.push_back(boundParams167);
 
   // track 168 :
@@ -4012,7 +4012,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.03376886437529416e-11 * 1. / (1_MeV),
       2.40058611877813632e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams168 =
-      BoundParameters(gctx, std::move(covMat168), params168, perigeeSurface);
+      BoundParameters(perigeeSurface, params168, std::move(covMat168));
   tracks.push_back(boundParams168);
 
   // track 169 :
@@ -4037,7 +4037,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.55639621894285378e-12 * 1. / (1_MeV),
       6.093434784526508e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams169 =
-      BoundParameters(gctx, std::move(covMat169), params169, perigeeSurface);
+      BoundParameters(perigeeSurface, params169, std::move(covMat169));
   tracks.push_back(boundParams169);
 
   // track 170 :
@@ -4060,7 +4060,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.78956850716596797e-11 * 1. / (1_MeV),
       1.16566450936161914e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams170 =
-      BoundParameters(gctx, std::move(covMat170), params170, perigeeSurface);
+      BoundParameters(perigeeSurface, params170, std::move(covMat170));
   tracks.push_back(boundParams170);
 
   // track 171 :
@@ -4083,7 +4083,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.38702398090118851e-11 * 1. / (1_MeV),
       5.12816594744336385e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams171 =
-      BoundParameters(gctx, std::move(covMat171), params171, perigeeSurface);
+      BoundParameters(perigeeSurface, params171, std::move(covMat171));
   tracks.push_back(boundParams171);
 
   // track 172 :
@@ -4108,7 +4108,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.04135839016089135e-11 * 1. / (1_MeV),
       9.13651862499698098e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams172 =
-      BoundParameters(gctx, std::move(covMat172), params172, perigeeSurface);
+      BoundParameters(perigeeSurface, params172, std::move(covMat172));
   tracks.push_back(boundParams172);
 
   // track 173 :
@@ -4133,7 +4133,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.24057572896354012e-11 * 1. / (1_MeV),
       2.14914561841306195e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams173 =
-      BoundParameters(gctx, std::move(covMat173), params173, perigeeSurface);
+      BoundParameters(perigeeSurface, params173, std::move(covMat173));
   tracks.push_back(boundParams173);
 
   // track 174 :
@@ -4157,7 +4157,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.21547914401007548e-12 * 1. / (1_MeV),
       8.28479385789337996e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams174 =
-      BoundParameters(gctx, std::move(covMat174), params174, perigeeSurface);
+      BoundParameters(perigeeSurface, params174, std::move(covMat174));
   tracks.push_back(boundParams174);
 
   // track 175 :
@@ -4180,7 +4180,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.89617608490651688e-12 * 1. / (1_MeV),
       2.89176599332918727e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams175 =
-      BoundParameters(gctx, std::move(covMat175), params175, perigeeSurface);
+      BoundParameters(perigeeSurface, params175, std::move(covMat175));
   tracks.push_back(boundParams175);
 
   // track 176 :
@@ -4203,7 +4203,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.81623324330943026e-13 * 1. / (1_MeV),
       7.16269968684124514e-12 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams176 =
-      BoundParameters(gctx, std::move(covMat176), params176, perigeeSurface);
+      BoundParameters(perigeeSurface, params176, std::move(covMat176));
   tracks.push_back(boundParams176);
 
   // track 177 :
@@ -4227,7 +4227,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.34801528438062845e-11 * 1. / (1_MeV),
       2.40241548876696243e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams177 =
-      BoundParameters(gctx, std::move(covMat177), params177, perigeeSurface);
+      BoundParameters(perigeeSurface, params177, std::move(covMat177));
   tracks.push_back(boundParams177);
 
   // track 178 :
@@ -4251,7 +4251,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       6.61054698516293509e-11 * 1. / (1_MeV),
       8.71379024491858445e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams178 =
-      BoundParameters(gctx, std::move(covMat178), params178, perigeeSurface);
+      BoundParameters(perigeeSurface, params178, std::move(covMat178));
   tracks.push_back(boundParams178);
 
   // track 179 :
@@ -4276,7 +4276,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.61261950846322556e-12 * 1. / (1_MeV),
       7.60389459730781425e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams179 =
-      BoundParameters(gctx, std::move(covMat179), params179, perigeeSurface);
+      BoundParameters(perigeeSurface, params179, std::move(covMat179));
   tracks.push_back(boundParams179);
 
   // track 180 :
@@ -4299,7 +4299,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       3.80890047398306893e-14 * 1. / (1_MeV),
       2.13997019432067559e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams180 =
-      BoundParameters(gctx, std::move(covMat180), params180, perigeeSurface);
+      BoundParameters(perigeeSurface, params180, std::move(covMat180));
   tracks.push_back(boundParams180);
 
   // track 181 :
@@ -4322,7 +4322,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -4.34128100864560213e-11 * 1. / (1_MeV),
       2.69415295628405715e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams181 =
-      BoundParameters(gctx, std::move(covMat181), params181, perigeeSurface);
+      BoundParameters(perigeeSurface, params181, std::move(covMat181));
   tracks.push_back(boundParams181);
 
   // track 182 :
@@ -4345,7 +4345,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.18691904163845164e-12 * 1. / (1_MeV),
       3.96474248830908094e-13 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams182 =
-      BoundParameters(gctx, std::move(covMat182), params182, perigeeSurface);
+      BoundParameters(perigeeSurface, params182, std::move(covMat182));
   tracks.push_back(boundParams182);
 
   // track 183 :
@@ -4370,7 +4370,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.19858856846402273e-10 * 1. / (1_MeV),
       2.77350448163460328e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams183 =
-      BoundParameters(gctx, std::move(covMat183), params183, perigeeSurface);
+      BoundParameters(perigeeSurface, params183, std::move(covMat183));
   tracks.push_back(boundParams183);
 
   // track 184 :
@@ -4393,7 +4393,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.56882818335140094e-11 * 1. / (1_MeV),
       8.01815225326407699e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams184 =
-      BoundParameters(gctx, std::move(covMat184), params184, perigeeSurface);
+      BoundParameters(perigeeSurface, params184, std::move(covMat184));
   tracks.push_back(boundParams184);
 
   // track 185 :
@@ -4418,7 +4418,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -5.28708663533158423e-11 * 1. / (1_MeV),
       1.09044751006592833e-09 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams185 =
-      BoundParameters(gctx, std::move(covMat185), params185, perigeeSurface);
+      BoundParameters(perigeeSurface, params185, std::move(covMat185));
   tracks.push_back(boundParams185);
 
   // track 186 :
@@ -4441,7 +4441,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.64087163963260696e-12 * 1. / (1_MeV),
       2.39039704696963895e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams186 =
-      BoundParameters(gctx, std::move(covMat186), params186, perigeeSurface);
+      BoundParameters(perigeeSurface, params186, std::move(covMat186));
   tracks.push_back(boundParams186);
 
   // track 187 :
@@ -4464,7 +4464,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -2.57140078054900237e-12 * 1. / (1_MeV),
       3.88259702166493526e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams187 =
-      BoundParameters(gctx, std::move(covMat187), params187, perigeeSurface);
+      BoundParameters(perigeeSurface, params187, std::move(covMat187));
   tracks.push_back(boundParams187);
 
   // track 188 :
@@ -4488,7 +4488,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -8.07723581241271915e-12 * 1. / (1_MeV),
       1.11964115756535421e-09 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams188 =
-      BoundParameters(gctx, std::move(covMat188), params188, perigeeSurface);
+      BoundParameters(perigeeSurface, params188, std::move(covMat188));
   tracks.push_back(boundParams188);
 
   // track 189 :
@@ -4511,7 +4511,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.88533015927685212e-10 * 1. / (1_MeV),
       2.06299227700768029e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams189 =
-      BoundParameters(gctx, std::move(covMat189), params189, perigeeSurface);
+      BoundParameters(perigeeSurface, params189, std::move(covMat189));
   tracks.push_back(boundParams189);
 
   // track 190 :
@@ -4534,7 +4534,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       2.02537558480182913e-11 * 1. / (1_MeV),
       1.74747369352523663e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams190 =
-      BoundParameters(gctx, std::move(covMat190), params190, perigeeSurface);
+      BoundParameters(perigeeSurface, params190, std::move(covMat190));
   tracks.push_back(boundParams190);
 
   // track 191 :
@@ -4557,7 +4557,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       4.99503482968757551e-12 * 1. / (1_MeV),
       1.1102829766684863e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams191 =
-      BoundParameters(gctx, std::move(covMat191), params191, perigeeSurface);
+      BoundParameters(perigeeSurface, params191, std::move(covMat191));
   tracks.push_back(boundParams191);
 
   // track 192 :
@@ -4580,7 +4580,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.22599704885134249e-11 * 1. / (1_MeV),
       2.39606362528732575e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams192 =
-      BoundParameters(gctx, std::move(covMat192), params192, perigeeSurface);
+      BoundParameters(perigeeSurface, params192, std::move(covMat192));
   tracks.push_back(boundParams192);
 
   // track 193 :
@@ -4604,7 +4604,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       5.33983405657483665e-11 * 1. / (1_MeV),
       3.6832190075664073e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams193 =
-      BoundParameters(gctx, std::move(covMat193), params193, perigeeSurface);
+      BoundParameters(perigeeSurface, params193, std::move(covMat193));
   tracks.push_back(boundParams193);
 
   // track 194 :
@@ -4628,7 +4628,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       1.62498821676485166e-12 * 1. / (1_MeV),
       4.37339504888445418e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams194 =
-      BoundParameters(gctx, std::move(covMat194), params194, perigeeSurface);
+      BoundParameters(perigeeSurface, params194, std::move(covMat194));
   tracks.push_back(boundParams194);
 
   // track 195 :
@@ -4653,7 +4653,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       9.05586100425189466e-13 * 1. / (1_MeV),
       2.24803491793990062e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams195 =
-      BoundParameters(gctx, std::move(covMat195), params195, perigeeSurface);
+      BoundParameters(perigeeSurface, params195, std::move(covMat195));
   tracks.push_back(boundParams195);
 
   // track 196 :
@@ -4676,7 +4676,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -1.84419314901396339e-12 * 1. / (1_MeV),
       6.27720861401392938e-11 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams196 =
-      BoundParameters(gctx, std::move(covMat196), params196, perigeeSurface);
+      BoundParameters(perigeeSurface, params196, std::move(covMat196));
   tracks.push_back(boundParams196);
 
   // track 197 :
@@ -4699,7 +4699,7 @@ std::vector<BoundParameters> getAthenaTracks() {
       -3.63880446087211061e-11 * 1. / (1_MeV),
       1.12412849861964759e-10 * 1. / (1_MeV * 1_MeV), 0, 0, 0, 0, 0, 0, 1;
   auto boundParams197 =
-      BoundParameters(gctx, std::move(covMat197), params197, perigeeSurface);
+      BoundParameters(perigeeSurface, params197, std::move(covMat197));
   tracks.push_back(boundParams197);
 
   return tracks;
