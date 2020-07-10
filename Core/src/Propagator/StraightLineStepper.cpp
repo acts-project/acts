@@ -32,17 +32,14 @@ StraightLineStepper::curvilinearState(State& state) const {
       state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
 }
 
-void StraightLineStepper::update(State& state,
-                                 const BoundParameters& pars) const {
-  const auto& mom = pars.momentum();
-  state.pos = pars.position();
-  state.dir = mom.normalized();
-  state.p = mom.norm();
-  state.t = pars.time();
+void StraightLineStepper::update(State& state, const FreeVector& parameters,
+                                 const Covariance& covariance) const {
+  state.pos = parameters.template segment<3>(eFreePos0);
+  state.dir = parameters.template segment<3>(eFreeDir0).normalized();
+  state.p = std::abs(1. / parameters[eFreeQOverP]);
+  state.t = parameters[eFreeTime];
 
-  if (pars.covariance()) {
-    state.cov = (*(pars.covariance()));
-  }
+  state.cov = covariance;
 }
 
 void StraightLineStepper::update(State& state, const Vector3D& uposition,

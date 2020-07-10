@@ -304,7 +304,8 @@ class EigenStepper {
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
-  void update(State& state, const BoundParameters& pars) const;
+  void update(State& state, const FreeVector& parameters,
+              const Covariance& covariance) const;
 
   /// Method to update momentum, direction and p
   ///

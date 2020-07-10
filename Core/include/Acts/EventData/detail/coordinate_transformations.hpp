@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 
@@ -125,6 +126,26 @@ struct coordinate_transformation {
   /// @return the charge as a double
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
+  }
+
+  /// @brief Transforms a bound parameter vector into the free equivalent
+  ///
+  /// @param [in] gtcx Geometry context
+  /// @param [in] parameters Bound parameter vector
+  /// @param [in] surface Surface related to @p parameters
+  ///
+  /// @return FreeVector representation of @p parameters
+  static FreeVector boundParameters2freeParameters(
+      const GeometryContext& gtcx, const BoundVector& parameters,
+      const Surface& surface) {
+    FreeVector result;
+    result.template segment<3>(eFreePos0) =
+        parameters2globalPosition(gtcx, parameters, surface);
+    result[eFreeTime] = parameters[eBoundTime];
+    result.template segment<3>(eFreeDir0) = makeDirectionUnitFromPhiTheta(
+        parameters[eBoundPhi], parameters[eBoundTheta]);
+    result[eFreeQOverP] = parameters[eBoundQOverP];
+    return result;
   }
 };
 }  // namespace detail

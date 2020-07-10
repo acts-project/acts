@@ -11,6 +11,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
@@ -471,13 +472,13 @@ class CombinatorialKalmanFilter {
 
       // Update the stepping state
       stepper.update(state.stepping,
-                     currentState.filteredParameters(state.options.geoContext));
+                     MultiTrajectoryHelpers::freeFiltered(
+                         state.options.geoContext, currentState),
+                     currentState.filteredCovariance());
       // Reinitialize the stepping jacobian
       currentState.referenceSurface().initJacobianToGlobal(
           state.options.geoContext, state.stepping.jacToGlobal,
-          state.stepping.pos, state.stepping.dir,
-          currentState.filteredParameters(state.options.geoContext)
-              .parameters());
+          state.stepping.pos, state.stepping.dir, currentState.filtered());
       state.stepping.jacobian = BoundMatrix::Identity();
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
@@ -616,12 +617,14 @@ class CombinatorialKalmanFilter {
                                                          << " branches");
           // Update stepping state using filtered parameters of last track
           // state on this surface
-          auto filteredParams =
-              result.fittedStates.getTrackState(result.activeTips.back().first)
-                  .filteredParameters(state.options.geoContext);
-          stepper.update(state.stepping, filteredParams);
+          auto ts =
+              result.fittedStates.getTrackState(result.activeTips.back().first);
+          stepper.update(state.stepping,
+                         MultiTrajectoryHelpers::freeFiltered(
+                             state.options.geoContext, ts),
+                         ts.filteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
-                       << filteredParams.parameters().transpose()
+                       << ts.filtered().transpose()
                        << " of track state with tip = "
                        << result.activeTips.back().first);
         }
@@ -1007,14 +1010,15 @@ class CombinatorialKalmanFilter {
       // Obtain the smoothed parameters at first measurement state
       auto firstMeasurement =
           result.fittedStates.getTrackState(measurementIndices.back());
-      parameters_t smoothedPars =
-          firstMeasurement.smoothedParameters(state.options.geoContext);
 
       // Update the stepping parameters - in order to progress to destination
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      stepper.update(state.stepping, smoothedPars);
+      stepper.update(state.stepping,
+                     MultiTrajectoryHelpers::freeSmoothed(
+                         state.options.geoContext, firstMeasurement),
+                     firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);
