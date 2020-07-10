@@ -39,16 +39,14 @@ class SingleBoundTrackParameters {
 
   /// Construct charged bound parameters from parameters vector on the surface.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
-  /// @param[in] cov Optional covariance in the reference frame
+  /// @param[in] surface The reference surface the parameters are defined on
   /// @param[in] params The parameter vector
-  /// @param[in] surface The reference surface the parameters are bound to
+  /// @param[in] cov Optional covariance in the reference frame
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovarianceMatrix> cov,
-                             const ParametersVector& parValues,
-                             std::shared_ptr<const Surface> surface)
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                             const ParametersVector& params,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_paramSet(std::move(cov), params),
         m_chargePolicy(std::copysign(1., params[eBoundQOverP])),
         m_surface(std::move(surface)) {
@@ -57,16 +55,14 @@ class SingleBoundTrackParameters {
 
   /// Construct neutral bound parameters from parameters vector on the surface.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
-  /// @param[in] cov Optional covariance in the reference frame
+  /// @param[in] surface The reference surface the parameters are defined on
   /// @param[in] params The parameter vector
-  /// @param[in] surface The reference surface the parameters are bound to
+  /// @param[in] cov Optional covariance in the reference frame
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& /* unused */,
-                             std::optional<CovarianceMatrix> cov,
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
                              const ParametersVector& params,
-                             std::shared_ptr<const Surface> surface)
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_paramSet(std::move(cov), params), m_surface(std::move(surface)) {
     assert(m_surface);
   }
