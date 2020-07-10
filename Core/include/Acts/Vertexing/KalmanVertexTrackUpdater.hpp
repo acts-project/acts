@@ -22,11 +22,10 @@ namespace KalmanVertexTrackUpdater {
 /// @brief Refits a single track with the knowledge of
 /// the vertex it has originated from
 ///
-/// @param gctx The Geometry Context
 /// @param track Track to update
 /// @param vtx Vertex `track` belongs to
 template <typename input_track_t>
-void update(const GeometryContext& gctx, TrackAtVertex<input_track_t>& track,
+void update(TrackAtVertex<input_track_t>& track,
             const Vertex<input_track_t>& vtx);
 
 namespace detail {
