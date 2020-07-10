@@ -149,8 +149,10 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
               double dz = Z->GetBinContent(ib0, ib1);
               double drho = rho->GetBinContent(ib0, ib1);
               // Create material properties
+              const auto material =
+                  Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
               materialMatrix[ib1 - 1][ib0 - 1] =
-                  Acts::MaterialProperties(dx0, dl0, da, dz, drho, dt);
+                  Acts::MaterialProperties(material, dt);
             }
           }
         }
@@ -180,8 +182,10 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
         double dz = Z->GetBinContent(1, 1);
         double drho = rho->GetBinContent(1, 1);
         // Create and set the homogenous surface material
+        const auto material =
+            Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
         sMaterial = std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-            Acts::MaterialProperties(dx0, dl0, da, dz, drho, dt));
+            Acts::MaterialProperties(material, dt));
       }
     }
     ACTS_VERBOSE("Successfully read Material for : " << geoID);
