@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.8-alpine
     steps:
-      - run: pip install ./CI
+      - run: |
+          cd CI
+          pip install .
       - run: |
           export TAG_NAME=${{ github.event.inputs.tag }}
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
