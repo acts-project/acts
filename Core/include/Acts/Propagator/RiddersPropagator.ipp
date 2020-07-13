@@ -17,7 +17,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       return_parameters_t, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator.template propagate<return_parameters_t>(start, options);
+  auto nominalRet =
+      m_propagator.template propagate<return_parameters_t>(start, options);
   if (not nominalRet.ok()) {
     return ThisResult::failure(nominalRet.error());
   }
