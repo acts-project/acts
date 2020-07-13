@@ -12,7 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.8-alpine
     steps:
-      - run: apk add git
+      - name: Git setup
+        run: |
+          apk add git
+          git config --global user.email "atsjenkins@cern.ch"
+          git config --global user.name "${{ github.actor }}"
       - uses: actions/checkout@v2
       - run: |
           pip install -r CI/requirements.txt
