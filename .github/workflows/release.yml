@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.8-alpine
     steps:
+      - run: apk add git
       - uses: actions/checkout@v2
       - run: |
-          apk add git
           pip install -r CI/requirements.txt
       - run: |
           export TAG_NAME=${{ github.event.inputs.tag }}
