@@ -65,11 +65,6 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   BOOST_TEST(volumeShift.transform().rotation() ==
              volume.transform().rotation());
 
-  // Test a bounding box from the volume
-  // Vector3D envelope{7_mm, 8_mm, 9_mm};
-  // BOOST_TEST(volume.boundingBox(envelope) == bounds.boundingBox(&transform,
-  // envelope, &volume));
-
   // Inside/Outside check
   BOOST_TEST(volume.inside(translation));
   BOOST_TEST(!volume.inside({10_mm, 2_mm, 3_mm}));
