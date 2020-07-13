@@ -88,9 +88,6 @@ class Measurement {
 
   /// Delete the default constructor
   Measurement() = delete;
-  
-  /// Default deconstructor
-  ~Measurement() = default;
 
   /// @brief standard constructor for surface/volume bound measurements
   ///
@@ -123,6 +120,9 @@ class Measurement {
     assert(m_pReferenceObject);
   }
 
+  /// @brief virtual destructor
+  virtual ~Measurement() = default;
+  
   /// @brief copy constructor
   ///
   /// @tparam source_link_t The identifier type
