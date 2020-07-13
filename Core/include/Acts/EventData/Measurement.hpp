@@ -122,7 +122,7 @@ class Measurement {
 
   /// @brief virtual destructor
   virtual ~Measurement() = default;
-  
+
   /// @brief copy constructor
   ///
   /// @tparam source_link_t The identifier type
