@@ -83,10 +83,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
               Acts::GeometryID boundaryID(volumeID);
               boundaryID.setBoundary(bid);
               ACTS_VERBOSE("j2a: ---> Found boundary surface " << bid);
-              auto boumat = jsonToSurfaceMaterial(bvalue);
-              if (bvalue[m_cfg.mapkey] == true)
+              if (bvalue[m_cfg.mapkey] == true) {
+                auto boumat = jsonToSurfaceMaterial(bvalue);
                 maps.first[boundaryID] =
                     std::shared_ptr<const ISurfaceMaterial>(boumat);
+              }
             }
           } else if (vckey == m_cfg.laykey) {
             ACTS_VERBOSE("j2a: --> Layer(s) to be parsed");
@@ -103,10 +104,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                 if (lckey == m_cfg.repkey and m_cfg.processRepresenting and
                     not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found representing surface");
-                  auto repmat = jsonToSurfaceMaterial(lcvalue);
-                  if (lcvalue[m_cfg.mapkey] == true)
+                  if (lcvalue[m_cfg.mapkey] == true) {
+                    auto repmat = jsonToSurfaceMaterial(lcvalue);
                     maps.first[layerID] =
                         std::shared_ptr<const Acts::ISurfaceMaterial>(repmat);
+                  }
                 } else if (lckey == m_cfg.appkey and m_cfg.processApproaches and
                            not lcvalue.empty()) {
                   ACTS_VERBOSE("j2a: ----> Found approach surface(s)");
@@ -117,10 +119,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                     Acts::GeometryID approachID(layerID);
                     approachID.setApproach(aid);
                     ACTS_VERBOSE("j2a: -----> Approach surface " << askey);
-                    auto appmat = jsonToSurfaceMaterial(asvalue);
-                    if (asvalue[m_cfg.mapkey] == true)
+                    if (asvalue[m_cfg.mapkey] == true) {
+                      auto appmat = jsonToSurfaceMaterial(asvalue);
                       maps.first[approachID] =
                           std::shared_ptr<const Acts::ISurfaceMaterial>(appmat);
+                    }
                   }
                 } else if (lckey == m_cfg.senkey and m_cfg.processSensitives and
                            not lcvalue.empty()) {
@@ -132,10 +135,11 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                     Acts::GeometryID senisitiveID(layerID);
                     senisitiveID.setSensitive(sid);
                     ACTS_VERBOSE("j2a: -----> Sensitive surface " << sskey);
-                    auto senmat = jsonToSurfaceMaterial(ssvalue);
-                    if (ssvalue[m_cfg.mapkey] == true)
+                    if (ssvalue[m_cfg.mapkey] == true) {
+                      auto senmat = jsonToSurfaceMaterial(ssvalue);
                       maps.first[senisitiveID] =
                           std::shared_ptr<const Acts::ISurfaceMaterial>(senmat);
+                    }
                   }
                 }
               }
@@ -144,8 +148,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
           } else if (m_cfg.processVolumes and vckey == m_cfg.matkey and
                      not vcvalue.empty()) {
             ACTS_VERBOSE("--> VolumeMaterial to be parsed");
-            auto intermat = jsonToVolumeMaterial(vcvalue);
             if (vcvalue[m_cfg.mapkey] == true) {
+              auto intermat = jsonToVolumeMaterial(vcvalue);
               maps.second[volumeID] =
                   std::shared_ptr<const Acts::IVolumeMaterial>(intermat);
             }
