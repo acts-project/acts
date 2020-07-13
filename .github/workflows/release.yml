@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          cd CI
-          pip install .
+          apk add py3-cffi
+          pip install ./CI
       - run: |
           export TAG_NAME=${{ github.event.inputs.tag }}
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
