@@ -37,17 +37,18 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   BoundVector paramsAtPCA = endParams->parameters();
   Vector4D positionAtPCA = Vector4D::Zero();
   {
-    auto pos = endParams->position();
+    auto pos = endParams->position(gctx);
     positionAtPCA[ePos0] = pos[ePos0];
     positionAtPCA[ePos1] = pos[ePos1];
     positionAtPCA[ePos2] = pos[ePos2];
+    positionAtPCA[eTime] = endParams->time();
   }
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
   if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
     paramsAtPCA = params.parameters();
-    auto pos = endParams->position();
+    auto pos = endParams->position(gctx);
     positionAtPCA[ePos0] = pos[ePos0];
     positionAtPCA[ePos1] = pos[ePos1];
     positionAtPCA[ePos2] = pos[ePos2];
