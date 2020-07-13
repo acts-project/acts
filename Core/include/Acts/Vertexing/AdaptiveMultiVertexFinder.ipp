@@ -103,7 +103,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
                                            fitterState, removedSeedTracks);
     } else {
       bool removedIncompatibleTrack = removeTrackIfIncompatible(
-          vtxCandidate, seedTracks, fitterState, removedSeedTracks);
+          vtxCandidate, seedTracks, fitterState, removedSeedTracks,
+          vertexingOptions.geoContext);
       if (!removedIncompatibleTrack) {
         ACTS_DEBUG(
             "Could not remove any further track from seed tracks. Break.");
@@ -225,10 +226,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     -> Result<void> {
   for (const auto& trk : tracks) {
     auto params = m_extractParameters(*trk);
+    auto pos = params.position(vertexingOptions.geoContext);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
-    if (std::abs(params.position()[eZ] - vtx.position()[eZ]) >
-        m_cfg.tracksMaxZinterval) {
+    if (m_cfg.tracksMaxZinterval < std::abs(pos[eZ] - vtx.position()[eZ])) {
       continue;
     }
     auto sigRes = getIPSignificance(trk, vtx, vertexingOptions);
@@ -268,13 +269,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double newZ = 0;
     bool nearTrackFound = false;
     for (const auto& trk : seedTracks) {
-      double zDistance = std::abs(m_extractParameters(*trk).position()[eZ] -
-                                  vtx.position()[eZ]);
+      auto pos =
+          m_extractParameters(*trk).position(vertexingOptions.geoContext);
+      auto zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         nearTrackFound = true;
-
-        newZ = m_extractParameters(*trk).position()[eZ];
+        newZ = pos[eZ];
       }
     }
     if (nearTrackFound) {
@@ -410,7 +411,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     removeTrackIfIncompatible(
         Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
         FitterState_t& fitterState,
-        std::vector<const InputTrack_t*>& removedSeedTracks) const -> bool {
+        std::vector<const InputTrack_t*>& removedSeedTracks,
+        const GeometryContext& geoCtx) const -> bool {
   // Try to find the track with highest compatibility
   double maxCompatibility = 0;
 
@@ -443,9 +445,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     double smallestDeltaZ = std::numeric_limits<double>::max();
     auto smallestDzSeedIter = seedTracks.end();
     for (unsigned int i = 0; i < seedTracks.size(); i++) {
-      double zDistance =
-          std::abs(m_extractParameters(*seedTracks[i]).position()[eZ] -
-                   vtx.position()[eZ]);
+      auto pos = m_extractParameters(*seedTracks[i]).position(geoCtx);
+      double zDistance = std::abs(pos[eZ] - vtx.position()[eZ]);
       if (zDistance < smallestDeltaZ) {
         smallestDeltaZ = zDistance;
         smallestDzSeedIter = seedTracks.begin() + i;

@@ -338,12 +338,14 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The vertex fitter state
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
+  /// @param[in] geoCtx The geometry context to access global positions
   ///
   /// @return Incompatible track was removed
   bool removeTrackIfIncompatible(
       Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
       FitterState_t& fitterState,
-      std::vector<const InputTrack_t*>& removedSeedTracks) const;
+      std::vector<const InputTrack_t*>& removedSeedTracks,
+      const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not

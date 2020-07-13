@@ -35,13 +35,13 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   BoundVector paramsAtPCA = endParams->parameters();
   SpacePointVector positionAtPCA = SpacePointVector::Zero();
-  VectorHelpers::position(positionAtPCA) = endParams->position();
+  VectorHelpers::position(positionAtPCA) = endParams->position(gctx);
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
   if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
     paramsAtPCA = params.parameters();
-    VectorHelpers::position(positionAtPCA) = params.position();
+    VectorHelpers::position(positionAtPCA) = params.position(gctx);
     parCovarianceAtPCA = *(params.covariance());
   }
 
