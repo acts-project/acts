@@ -88,6 +88,9 @@ class Measurement {
 
   /// Delete the default constructor
   Measurement() = delete;
+  
+  /// Default deconstructor
+  ~Measurement() = default;
 
   /// @brief standard constructor for surface/volume bound measurements
   ///
