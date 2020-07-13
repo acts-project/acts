@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
 
   CHECK_CLOSE_ABS(expCov, *filtered.covariance(), tol);
   CHECK_CLOSE_ABS(expPar, filtered.parameters(), tol);
-  CHECK_CLOSE_ABS(expPosition, filtered.position(), tol);
+  CHECK_CLOSE_ABS(expPosition, filtered.position(tgContext), tol);
   CHECK_CLOSE_ABS(expMomentum, filtered.momentum(), tol);
   CHECK_CLOSE_ABS(expChi2, ts.chi2(), 1e-4);
 }
