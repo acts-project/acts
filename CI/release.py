@@ -8,9 +8,9 @@ from github import Github
 import yaml
 import re
 from sh import git
+from rich import print
 
 from util import Spinner
-from rich import print
 
 default_branch_name = "master"
 

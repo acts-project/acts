@@ -11,7 +11,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - run: |
-        export TAG_NAME=${{ github.event.inputs.tag }}
-        echo $TAG_NAME
-    - run: echo $TAG_NAME
+      - run: pip install .
+      - run: |
+          export TAG_NAME=${{ github.event.inputs.tag }}
+          export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          CI/release.py tag $TAG_NAME --yes
+
