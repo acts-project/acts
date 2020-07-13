@@ -46,7 +46,7 @@ def main(ctx, token, repository, retry):
     ctx.obj = gh, repo
 
 
-def confirm(*args, yes, **kwargs):
+def confirm(*args, yes=False, **kwargs):
   if yes == True:
     return True
   return click.confirm(*args, **kwargs)
@@ -54,7 +54,7 @@ def confirm(*args, yes, **kwargs):
 @main.command()
 @click.argument("tag_name")
 @click.option("--remote", default="origin")
-@click.option("--yes/--no", "-y/-n", default=False)
+@click.option("--yes", "-y", is_flag=True, default=False)
 @click.pass_obj
 def tag(obj, tag_name, remote, yes):
   current_branch = get_current_branch()
@@ -136,7 +136,7 @@ def tag(obj, tag_name, remote, yes):
 @main.command()
 @click.argument("tag_name")
 @click.option("--draft/--publish", default=True)
-@click.option("--yes/--no", "-y/-n", default=False)
+@click.option("--yes", "-y", is_flag=True, default=False)
 @click.pass_obj
 def notes(obj, tag_name, draft, yes):
     gh, repo = obj
@@ -164,7 +164,7 @@ def notes(obj, tag_name, draft, yes):
         
         prs = list(
             gh.search_issues(
-              "", milestone=tag_milestone.title, repo=repository, type="pr", **{"is": "merged"}
+              "", milestone=tag_milestone.title, repo=repo.full_name, type="pr", **{"is": "merged"}
             )
         )
 
@@ -177,14 +177,19 @@ def notes(obj, tag_name, draft, yes):
     body = ""
 
     groups = {l: [] for l in sorted(labels)}
+    groups["Uncategorized"] = []
 
     for pr in prs:
         pr_labels = [l.name for l in pr.labels]
 
+        assigned = False
         for label in labels:
             if label in pr_labels:
                 groups[label].append(pr)
+                assigned = True
                 break
+        if not assigned:
+          groups["Uncategorized"].append(pr)
 
     for group, prs in groups.items():
         if len(prs) == 0:
@@ -247,11 +252,15 @@ def notes(obj, tag_name, draft, yes):
                     click.style(release.html_url, bold=True)
                 )
             )
+        else:
+          print("Not creating a release")
 
     if tag_milestone.state == "open":
-        if confirm(f"Do you want me to close milestone {tag_milestone.title}?", yes==yes):
+        if confirm(f"Do you want me to close milestone {tag_milestone.title}?", yes=yes):
             with Spinner(f"Closing milestone {tag_milestone.title}"):
                 tag_milestone.edit(title=tag_milestone.title, state="closed")
+        else:
+          print("Not closing milestone")
 
 
 main()
