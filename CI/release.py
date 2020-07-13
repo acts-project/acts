@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import io
 
 import click
 import github
@@ -141,8 +142,8 @@ def tag(obj, tag_name, remote, yes):
 def notes(obj, tag_name, draft, yes):
     gh, repo = obj
 
-    with (Path(__file__).parent.parent / ".labels.yml").open("r") as fh:
-        labels = yaml.safe_load(fh)["labels"]
+    label_file = repo.get_contents(".labels.yml", ref=default_branch_name).decoded_content
+    labels = yaml.safe_load(io.BytesIO(label_file))["labels"]
 
     with Spinner(f"Finding tag {tag_name}"):
         tag = None
