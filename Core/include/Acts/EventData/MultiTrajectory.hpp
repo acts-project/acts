@@ -447,9 +447,11 @@ class TrackStateProxy {
   /// *invalid* (i.e. unset) for this TrackState..
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <typename measurement_t, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  template <typename measurement_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
   void setCalibrated(const measurement_t& meas) {
-		static_assert(std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
+    static_assert(
+        std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
     IndexData& dataref = data();
     constexpr size_t measdim = measurement_t::size();
 
@@ -486,11 +488,11 @@ class TrackStateProxy {
   /// they will **not be removed**, but may become unaccessible.
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <typename measurement_t, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void resetCalibrated(
-      const measurement_t&
-          meas) {
-			  static_assert(std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
+  template <typename measurement_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void resetCalibrated(const measurement_t& meas) {
+    static_assert(
+        std::is_same<SourceLink, typename measurement_t::SourceLink>::value);
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index

@@ -216,11 +216,12 @@ struct EventDataView {
         angularErrorScale = 1;
       }
 
-      const Surface* surface = dynamic_cast<const Surface*>(&state.referenceObject());
-      if(surface == nullptr) {
-		return true;
-	}
-      
+      const Surface* surface =
+          dynamic_cast<const Surface*>(&state.referenceObject());
+      if (surface == nullptr) {
+        return true;
+      }
+
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
         GeometryView::drawSurface(helper, *surface, gctx,
@@ -236,8 +237,8 @@ struct EventDataView {
         ActsSymMatrixD<2> covariance =
             state.calibratedCovariance().template topLeftCorner<2, 2>();
         drawCovarianceCartesian(helper, lposition, covariance,
-                                surface->transform(gctx),
-                                locErrorScale, measurementConfig);
+                                surface->transform(gctx), locErrorScale,
+                                measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters
@@ -246,8 +247,7 @@ struct EventDataView {
         drawBoundParameters(
             helper,
             BoundParameters(gctx, state.predictedCovariance(),
-                            state.predicted(),
-                            surface->getSharedPtr()),
+                            state.predicted(), surface->getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));
       }

@@ -139,8 +139,8 @@ struct coordinate_transformation {
       const GeometryContext& gtcx, const BoundVector& parameters,
       const GeometryObject& object) {
     FreeVector result;
-    result.template segment<3>(eFreePos0) =
-        parameters2globalPosition(gtcx, parameters, dynamic_cast<const Surface&>(object));
+    result.template segment<3>(eFreePos0) = parameters2globalPosition(
+        gtcx, parameters, dynamic_cast<const Surface&>(object));
     result[eFreeTime] = parameters[eBoundTime];
     result.template segment<3>(eFreeDir0) = makeDirectionUnitFromPhiTheta(
         parameters[eBoundPhi], parameters[eBoundTheta]);

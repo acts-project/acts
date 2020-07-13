@@ -346,18 +346,21 @@ class KalmanFitter {
 
         // Reset smoothed status of states missed in backward filtering
         if (backwardFiltering) {
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto trackState) {
-            auto fSurface = &trackState.referenceObject();
-            auto surface_it = std::find_if(
-                result.passedAgainObject.begin(),
-                result.passedAgainObject.end(),
-                [=](const GeometryObject* object) { return object == fSurface; });
-            if (surface_it == result.passedAgainObject.end()) {
-              // If backward filtering missed this surface, then there is
-              // no smoothed parameter
-              trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
-            }
-          });
+          result.fittedStates.applyBackwards(
+              result.trackTip, [&](auto trackState) {
+                auto fSurface = &trackState.referenceObject();
+                auto surface_it =
+                    std::find_if(result.passedAgainObject.begin(),
+                                 result.passedAgainObject.end(),
+                                 [=](const GeometryObject* object) {
+                                   return object == fSurface;
+                                 });
+                if (surface_it == result.passedAgainObject.end()) {
+                  // If backward filtering missed this surface, then there is
+                  // no smoothed parameter
+                  trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
+                }
+              });
         }
         // Remember the track fitting is done
         result.finished = true;
@@ -388,7 +391,8 @@ class KalmanFitter {
       state.navigation = typename propagator_t::NavigatorState();
       result.fittedStates.applyBackwards(result.trackTip, [&](auto st) {
         if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-		  const Surface* startSurface = dynamic_cast<const Surface*>(&st.referenceObject());
+          const Surface* startSurface =
+              dynamic_cast<const Surface*>(&st.referenceObject());
           // Set the navigation state
           state.navigation.startSurface = startSurface;
           if (state.navigation.startSurface->associatedLayer() != nullptr) {
@@ -660,16 +664,18 @@ class KalmanFitter {
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto trackState) {
-            auto fSurface = &trackState.referenceObject();
-            if (fSurface == surface) {
-              result.passedAgainObject.push_back(surface);
-              trackState.smoothed() = trackStateProxy.filtered();
-              trackState.smoothedCovariance() = trackStateProxy.filteredCovariance();
-              return false;
-            }
-            return true;
-          });
+          result.fittedStates.applyBackwards(
+              result.trackTip, [&](auto trackState) {
+                auto fSurface = &trackState.referenceObject();
+                if (fSurface == surface) {
+                  result.passedAgainObject.push_back(surface);
+                  trackState.smoothed() = trackStateProxy.filtered();
+                  trackState.smoothedCovariance() =
+                      trackStateProxy.filteredCovariance();
+                  return false;
+                }
+                return true;
+              });
 
           // update stepping state using filtered parameters after kalman
           // update We need to (re-)construct a BoundParameters instance here,
@@ -910,8 +916,8 @@ class KalmanFitter {
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
     std::map<const GeometryObject*, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
-	  const GeometryObject* srf = &sl.referenceSurface();
-	  inputMeasurements.emplace(srf, sl);
+      const GeometryObject* srf = &sl.referenceSurface();
+      inputMeasurements.emplace(srf, sl);
     }
 
     // Create the ActionList and AbortList
@@ -1003,8 +1009,8 @@ class KalmanFitter {
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
     std::map<const GeometryObject*, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
-	  const GeometryObject* srf = &sl.referenceSurface();
-	  inputMeasurements.emplace(srf, sl);
+      const GeometryObject* srf = &sl.referenceSurface();
+      inputMeasurements.emplace(srf, sl);
     }
 
     // Create the ActionList and AbortList

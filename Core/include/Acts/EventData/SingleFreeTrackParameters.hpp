@@ -132,7 +132,7 @@ class SingleFreeTrackParameters {
 
   /// @brief access method to the reference volume
   const Volume& referenceVolume() const { return *m_pVolume; }
-  
+
   /// @brief Equality operator
   ///
   /// @param [in] rhs Object to compare `*this` to

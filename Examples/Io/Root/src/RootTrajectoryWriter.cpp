@@ -354,13 +354,13 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;
       }
-      
+
       // get the Surface
-      const Acts::Surface* surfacePtr = dynamic_cast<const Acts::Surface*>(&state.referenceObject());
-      if(surfacePtr == nullptr)
-      {
-		return true;
-	}
+      const Acts::Surface* surfacePtr =
+          dynamic_cast<const Acts::Surface*>(&state.referenceObject());
+      if (surfacePtr == nullptr) {
+        return true;
+      }
       auto surface = surfacePtr->getSharedPtr();
 
       // get the geometry ID
@@ -425,15 +425,14 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       m_t_eTHETA.push_back(truthTHETA);
       m_t_eQOP.push_back(truthQOP);
       m_t_eT.push_back(truthTIME);
-      
+
       // get the predicted parameter
       bool predicted = false;
       if (state.hasPredicted()) {
         predicted = true;
         m_nPredicted++;
-        Acts::BoundParameters parameter(
-            gctx, state.predictedCovariance(), state.predicted(),
-            surface);
+        Acts::BoundParameters parameter(gctx, state.predictedCovariance(),
+                                        state.predicted(), surface);
         auto covariance = state.predictedCovariance();
         // local hit residual info
         auto H = meas.projector();
@@ -566,9 +565,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasFiltered()) {
         filtered = true;
         m_nFiltered++;
-        Acts::BoundParameters parameter(
-            gctx, state.filteredCovariance(), state.filtered(),
-            surface);
+        Acts::BoundParameters parameter(gctx, state.filteredCovariance(),
+                                        state.filtered(), surface);
         auto covariance = state.filteredCovariance();
         // filtered parameter
         m_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);
@@ -677,9 +675,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasSmoothed()) {
         smoothed = true;
         m_nSmoothed++;
-        Acts::BoundParameters parameter(
-            gctx, state.smoothedCovariance(), state.smoothed(),
-            surface);
+        Acts::BoundParameters parameter(gctx, state.smoothedCovariance(),
+                                        state.smoothed(), surface);
         auto covariance = state.smoothedCovariance();
 
         // smoothed parameter
