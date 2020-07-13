@@ -156,9 +156,9 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 
   // clang-format off
     CHECK_CLOSE_ABS(exp_phi, VH::phi(tp->momentum()), 1e-4);
-    CHECK_CLOSE_ABS(exp_x, tp->position()(0), disttol);
-    CHECK_CLOSE_ABS(exp_y, tp->position()(1), disttol);
-    CHECK_CLOSE_ABS(exp_z, tp->position()(2), disttol);
+    CHECK_CLOSE_ABS(exp_x, tp->position(tgContext)(0), disttol);
+    CHECK_CLOSE_ABS(exp_y, tp->position(tgContext)(1), disttol);
+    CHECK_CLOSE_ABS(exp_z, tp->position(tgContext)(2), disttol);
   // clang-format on
   return tp->position();
 }
@@ -205,7 +205,7 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   const auto& bwdResult =
       propagator.propagate(*fwdResult.endParameters, bwdOptions).value();
 
-  const Vector3D& bwdPosition = bwdResult.endParameters->position();
+  const Vector3D& bwdPosition = bwdResult.endParameters->position(tgContext);
   const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
 
   // test propagation invariants
@@ -223,13 +223,13 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
     std::cout << ">>>>> Output for forward propagation " << std::endl;
     std::cout << fwdOutput.debugString << std::endl;
     std::cout << " - resulted at position : "
-              << fwdResult.endParameters->position() << std::endl;
+              << fwdResult.endParameters->position(tgContext) << std::endl;
 
     auto bwdOutput = bwdResult.template get<DebugOutput::result_type>();
     std::cout << ">>>>> Output for backward propagation " << std::endl;
     std::cout << bwdOutput.debugString << std::endl;
     std::cout << " - resulted at position : "
-              << bwdResult.endParameters->position() << std::endl;
+              << bwdResult.endParameters->position(tgContext) << std::endl;
   }
 }
 
@@ -294,7 +294,8 @@ std::pair<Vector3D, double> to_cylinder(
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
     // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
+    return std::pair<Vector3D, double>(tp->position(tgContext),
+                                       result.pathLength);
   } else {
     auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
 
@@ -304,7 +305,8 @@ std::pair<Vector3D, double> to_cylinder(
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
     // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
+    return std::pair<Vector3D, double>(tp->position(tgContext),
+                                       result.pathLength);
   }
 }
 
@@ -358,11 +360,11 @@ std::pair<Vector3D, double> to_surface(
     const auto& tp_s = result_s.endParameters;
     // The transform at the destination
     auto seTransform =
-        planar ? createPlanarTransform(tp_s->position(),
+        planar ? createPlanarTransform(tp_s->position(tgContext),
                                        tp_s->momentum().normalized(),
                                        0.1 * rand3, 0.1 * rand1)
-               : createCylindricTransform(tp_s->position(), 0.04 * rand1,
-                                          0.04 * rand2);
+               : createCylindricTransform(tp_s->position(tgContext),
+                                          0.04 * rand1, 0.04 * rand2);
 
     auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
@@ -395,14 +397,15 @@ std::pair<Vector3D, double> to_surface(
     }
 
     // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
+    return std::pair<Vector3D, double>(tp->position(tgContext),
+                                       propRes.pathLength);
   } else {
     auto start = new CurvilinearParameters(covOpt, pos, mom, q, time);
     const auto result_s = propagator.propagate(*start, options).value();
     const auto& tp_s = result_s.endParameters;
     // The transform at the destination
     auto seTransform =
-        planar ? createPlanarTransform(tp_s->position(),
+        planar ? createPlanarTransform(tp_s->position(tgContext),
                                        tp_s->momentum().normalized(),
                                        0.1 * rand3, 0.1 * rand1)
                : createCylindricTransform(tp_s->position(), 0.04 * rand1,
@@ -438,7 +441,8 @@ std::pair<Vector3D, double> to_surface(
       std::cout << std::endl;
     }
     // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
+    return std::pair<Vector3D, double>(tp->position(tgContext),
+                                       propRes.pathLength);
   }
 }
 
@@ -537,7 +541,7 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
                                           0.05 * rand2)
                   : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
   auto seTransform = destPlanar
-                         ? createPlanarTransform(tp_c->position(),
+                         ? createPlanarTransform(tp_c->position(tgContext),
                                                  tp_c->momentum().normalized(),
                                                  0.05 * rand3, 0.05 * rand1)
                          : createCylindricTransform(tp_c->position(),

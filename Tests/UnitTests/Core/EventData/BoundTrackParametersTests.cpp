@@ -280,7 +280,7 @@ BOOST_DATA_TEST_CASE(
                     &n_ataCylinder_from_global.referenceSurface());
   BOOST_CHECK_EQUAL(cSurface.use_count(), 5u);
 
-  auto pPosition = ataCylinder_from_pars.position();
+  auto pPosition = ataCylinder_from_pars.position(tgContext);
   // the reference frame is
   // transverse plane to the cylinder at the intersect
   Vector3D normal_at_intersect = cSurface->normal(tgContext, pPosition);

@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the bound state construction
   auto boundState = sls.boundState(slsState, *plane);
   auto boundPars = std::get<0>(boundState);
-  CHECK_CLOSE_ABS(boundPars.position(), bp.position(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                            -1. * charge, 2. * time, targetSurface);
   Vector3D dir = bpTarget.momentum().normalized();
   FreeVector freeParams;
-  freeParams[eFreePos0] = bpTarget.position()[eX];
-  freeParams[eFreePos1] = bpTarget.position()[eY];
-  freeParams[eFreePos2] = bpTarget.position()[eZ];
+  freeParams[eFreePos0] = bpTarget.position(tgContext)[eX];
+  freeParams[eFreePos1] = bpTarget.position(tgContext)[eY];
+  freeParams[eFreePos2] = bpTarget.position(tgContext)[eZ];
   freeParams[eFreeTime] = bpTarget.time();
   freeParams[eFreeDir0] = dir[eMom0];
   freeParams[eFreeDir1] = dir[eMom1];
