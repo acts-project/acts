@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     container: python:3.8-alpine
     steps:
+      - uses: actions/checkout@v2
       - run: |
           cd CI
           pip install .
