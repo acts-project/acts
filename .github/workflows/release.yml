@@ -11,7 +11,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - run: pip install .
+      - run: pip install ci
       - run: |
           export TAG_NAME=${{ github.event.inputs.tag }}
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
