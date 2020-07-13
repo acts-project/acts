@@ -501,14 +501,15 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // further predicted parameter info
-        m_x_prt.push_back(parameter.position().x());
-        m_y_prt.push_back(parameter.position().y());
-        m_z_prt.push_back(parameter.position().z());
+        auto pos = parameter.position(ctx.geoContext);
+        m_x_prt.push_back(pos[Acts::eX]);
+        m_y_prt.push_back(pos[Acts::eY]);
+        m_z_prt.push_back(pos[Acts::eZ]);
         m_px_prt.push_back(parameter.momentum().x());
         m_py_prt.push_back(parameter.momentum().y());
         m_pz_prt.push_back(parameter.momentum().z());
         m_pT_prt.push_back(parameter.pT());
-        m_eta_prt.push_back(eta(parameter.position()));
+        m_eta_prt.push_back(eta(pos));
       } else {
         // push default values if no predicted parameter
         m_res_x_hit.push_back(-99.);
@@ -618,14 +619,15 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // more filtered parameter info
-        m_x_flt.push_back(parameter.position().x());
-        m_y_flt.push_back(parameter.position().y());
-        m_z_flt.push_back(parameter.position().z());
+        auto pos = parameter.position(ctx.geoContext);
+        m_x_flt.push_back(pos[Acts::eX]);
+        m_y_flt.push_back(pos[Acts::eY]);
+        m_z_flt.push_back(pos[Acts::eZ]);
         m_px_flt.push_back(parameter.momentum().x());
         m_py_flt.push_back(parameter.momentum().y());
         m_pz_flt.push_back(parameter.momentum().z());
         m_pT_flt.push_back(parameter.pT());
-        m_eta_flt.push_back(eta(parameter.position()));
+        m_eta_flt.push_back(eta(pos));
         m_chi2.push_back(state.chi2());
       } else {
         // push default values if no filtered parameter
@@ -730,14 +732,15 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::ParDef::eT, Acts::ParDef::eT)));
 
         // further smoothed parameter info
-        m_x_smt.push_back(parameter.position().x());
-        m_y_smt.push_back(parameter.position().y());
-        m_z_smt.push_back(parameter.position().z());
+        auto pos = parameter.position(ctx.geoContext);
+        m_x_smt.push_back(pos[Acts::eX]);
+        m_y_smt.push_back(pos[Acts::eY]);
+        m_z_smt.push_back(pos[Acts::eZ]);
         m_px_smt.push_back(parameter.momentum().x());
         m_py_smt.push_back(parameter.momentum().y());
         m_pz_smt.push_back(parameter.momentum().z());
         m_pT_smt.push_back(parameter.pT());
-        m_eta_smt.push_back(eta(parameter.position()));
+        m_eta_smt.push_back(eta(pos));
       } else {
         // push default values if no smoothed parameter
         m_eLOC0_smt.push_back(-99.);
