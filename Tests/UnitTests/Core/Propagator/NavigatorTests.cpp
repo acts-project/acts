@@ -298,7 +298,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
 
   // Run with geometry but without resolving
   navigator.trackingGeometry = tGeometry;
@@ -307,7 +306,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
 
   // Run with geometry and resolving but broken navigation for various reasons
   navigator.resolveSensitive = true;
@@ -321,7 +319,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
   // b) Beacause of no target surface
   state.navigation.targetReached = false;
   state.navigation.targetSurface = nullptr;
@@ -330,7 +327,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
   // c) Because the target surface is reached
   const Surface* startSurf = tGeometry->getBeamline();
   state.stepping.pos = startSurf->center(state.geoContext);
@@ -341,8 +337,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, nullptr, nullptr,
                                         nullptr, nullptr, targetSurf, nullptr,
                                         nullptr, nullptr, targetSurf));
-  std::cout << state.options.debugString << std::endl;
-  state.options.debugString.clear();
 
   //
   // (2) Test the initialisation
@@ -360,7 +354,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                         startLay, nullptr, nullptr, startVol,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
 
   // b) Initialise having a start surface
   state.navigation = Navigator::State();
@@ -370,7 +363,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                         startLay, startSurf, startSurf,
                                         startVol, nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
 
   // c) Initialise having a start volume
   state.navigation = Navigator::State();
@@ -380,7 +372,6 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   BOOST_TEST(testNavigatorStatePointers(state.navigation, worldVol, startVol,
                                         startLay, nullptr, nullptr, startVol,
                                         nullptr, nullptr, nullptr));
-  state.options.debugString.clear();
 }
 
 BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
