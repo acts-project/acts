@@ -132,7 +132,7 @@ using geo_context_t = decltype(std::declval<T>().geoContext);
         static_assert(free_state_method_exists, "freeState method not found");        
         constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
         static_assert(bound_state_method_exists, "boundState method not found");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const covariance_t<S>&>,
                                                              has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,

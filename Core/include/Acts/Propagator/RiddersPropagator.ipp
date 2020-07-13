@@ -25,10 +25,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Extract results from the nominal propagation
   auto nominalResult = std::move(nominalRet).value();
-  const auto& nominalParameters& nominalParameters =
+  const auto& nominalParameters =
       nominalResult.endParameters->parameters();
-  // Use the curvilinear surface of the propagated parameters as target
-  const Surface& surface = nominalResult.endParameters->referenceSurface();
 
   // Steps for estimating derivatives
   std::vector<double> deviations = {-4e-3, -2e-3, 2e-3, 4e-3};

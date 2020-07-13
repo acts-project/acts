@@ -615,7 +615,7 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         BoundSymMatrix(ts.filteredCovariance()));
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
                        << ts.filtered().transpose()
                        << " of track state with tip = "
@@ -1018,7 +1018,7 @@ class CombinatorialKalmanFilter {
       stepper.update(state.stepping,
                      MultiTrajectoryHelpers::freeSmoothed(
                          state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
+                     BoundSymMatrix(firstMeasurement.smoothedCovariance()));
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);
