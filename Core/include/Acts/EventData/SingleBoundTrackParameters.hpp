@@ -155,10 +155,6 @@ class SingleBoundTrackParameters {
     m_surface->localToGlobal(geoCtx, loc, dir, pos);
     return pos;
   }
-  /// Access the spatial position vector with the default geometry context.
-  ///
-  /// @see position(const GeometryContext&)
-  Vector3D position() const { return position(GeometryContext()); }
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }
 
