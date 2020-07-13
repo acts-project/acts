@@ -76,10 +76,10 @@ namespace Acts {
 ///     double bfield   = 3.9_T;
 ///
 ///     // convert output values (via unit constants)
-///     doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
+///     doube t_in_ns    = parametersVec[eFreeTime] / Acts::UnitConstants::ns;
 ///     // convert output values (via unit user literals)
-///     double x_in_mm   = trackPars.position().x() / 1_mm;
-///     double pt_in_TeV = trackPars.momentum().pT() / 1_TeV;
+///     double x_in_mm   = parametersVec[eFreePos0] / 1_mm;
+///     double pt_in_TeV = parameters.pT() / 1_TeV;
 ///
 
 namespace UnitConstants {
