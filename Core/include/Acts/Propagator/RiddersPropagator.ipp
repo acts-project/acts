@@ -242,7 +242,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			  }
 			}
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(eFreeDir0))));
 			} 
 	  }
   return ThisResult::success(std::move(nominalResult));
