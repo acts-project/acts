@@ -62,7 +62,7 @@ struct KalmanFitterOptions {
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
-  /// @param olCfg The config for the outlier finder
+  /// @param olFinder The outlier finder
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
@@ -70,14 +70,14 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const OutlierFinder& outlierFinder,
+                      const OutlierFinder& olFinder,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        outlierFinder(outlierFinder),
+        outlierFinder(olFinder),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -346,8 +346,8 @@ class KalmanFitter {
 
         // Reset smoothed status of states missed in backward filtering
         if (backwardFiltering) {
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto state) {
-            auto fSurface = &state.referenceObject();
+          result.fittedStates.applyBackwards(result.trackTip, [&](auto trackState) {
+            auto fSurface = &trackState.referenceObject();
             auto surface_it = std::find_if(
                 result.passedAgainObject.begin(),
                 result.passedAgainObject.end(),
@@ -355,7 +355,7 @@ class KalmanFitter {
             if (surface_it == result.passedAgainObject.end()) {
               // If backward filtering missed this surface, then there is
               // no smoothed parameter
-              state.data().ismoothed = detail_lt::IndexData::kInvalid;
+              trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
             }
           });
         }
@@ -660,12 +660,12 @@ class KalmanFitter {
               << trackStateProxy.filtered().transpose());
 
           // Fill the smoothed parameter for the existing track state
-          result.fittedStates.applyBackwards(result.trackTip, [&](auto state) {
-            auto fSurface = &state.referenceObject();
+          result.fittedStates.applyBackwards(result.trackTip, [&](auto trackState) {
+            auto fSurface = &trackState.referenceObject();
             if (fSurface == surface) {
               result.passedAgainObject.push_back(surface);
-              state.smoothed() = trackStateProxy.filtered();
-              state.smoothedCovariance() = trackStateProxy.filteredCovariance();
+              trackState.smoothed() = trackStateProxy.filtered();
+              trackState.smoothedCovariance() = trackStateProxy.filteredCovariance();
               return false;
             }
             return true;
