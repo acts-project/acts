@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
@@ -34,6 +35,9 @@ using ReturnTypeParameters = decltype(std::declval<T>().parameters());
 template <typename T>
 using ReturnTypeCovariance = decltype(std::declval<T>().covariance());
 template <typename T>
+using ReturnTypePositionFromContext =
+    decltype(std::declval<T>().position(GeometryContext()));
+template <typename T>
 using ReturnTypePosition = decltype(std::declval<T>().position());
 template <typename T>
 using ReturnTypeTime = decltype(std::declval<T>().time());
@@ -59,8 +63,8 @@ struct BoundTrackParametersConceptImpl {
   constexpr static bool hasMethodCovariance =
       identical_to<const std::optional<BoundSymMatrix>&, ReturnTypeCovariance,
                    const T>;
-  constexpr static bool hasMethodPosition =
-      identical_to<Vector3D, ReturnTypePosition, const T>;
+  constexpr static bool hasMethodPositionFromContext =
+      identical_to<Vector3D, ReturnTypePositionFromContext, const T>;
   constexpr static bool hasMethodTime =
       identical_to<double, ReturnTypeTime, const T>;
   constexpr static bool hasMethodMomentum =
@@ -76,7 +80,8 @@ struct BoundTrackParametersConceptImpl {
                 "Missing/ invalid 'referenceSurface' method");
   static_assert(hasMethodParameters, "Missing/ invvalid 'parameters' method");
   static_assert(hasMethodCovariance, "Missing/ invvalid 'covariance' method");
-  static_assert(hasMethodPosition, "Missing/ invvalid 'position' method");
+  static_assert(hasMethodPositionFromContext,
+                "Missing/ invvalid 'position' method");
   static_assert(hasMethodTime, "Missing/ invvalid 'time' method");
   static_assert(hasMethodMomentum, "Missing/ invvalid 'momentum' method");
   static_assert(hasMethodCharge, "Missing/ invvalid 'charge' method");
@@ -84,7 +89,7 @@ struct BoundTrackParametersConceptImpl {
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
               hasMethodReferenceSurface, hasMethodParameters,
-              hasMethodCovariance, hasMethodPosition, hasMethodTime,
+              hasMethodCovariance, hasMethodPositionFromContext, hasMethodTime,
               hasMethodMomentum, hasMethodCharge>;
 };
 
