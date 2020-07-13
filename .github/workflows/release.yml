@@ -10,6 +10,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container: python:alpine3.6
     steps:
       - run: pip install ci
       - run: |
