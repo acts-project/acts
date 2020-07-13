@@ -1,0 +1,68 @@
+name: Analysis
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - 'release/**'
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+# NOTE this only builds core unittests to reduce the output size. if we
+#      found a way to have Github actions not fail regularly with this job
+#      all unit tests should be reactivated.
+jobs:
+  build_debug:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-Werror -gz -g1"
+          -DACTS_BUILD_UNITTESTS=on
+      - name: Build
+        run: cmake --build build --
+      - name: Unit tests
+        run: cmake --build build -- test
+      - name: Remove .o files
+        run: >
+          du -sh build
+          && find build -name *.o -delete
+          && du -sh build
+      - name: Coverage
+        run: >
+          pip3 install gcovr
+          && cd build
+          && /usr/bin/python3 ../CI/test_coverage
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./build/coverage/cov.xml
+
+  build_performance:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@4cc3c8a
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Measure
+        run: cmakeperf collect build/compile_commands.json -o perf.csv
+      - name: Results
+        run: cmakeperf print perf.csv

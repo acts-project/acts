@@ -122,7 +122,9 @@ continous integration setup and come with all dependencies pre-installed.
     release 96
 
 To use these locally, you first need to pull the relevant images from the
-registry. The current version is always tagged as `master.
+registry. Stable versions are tagged as `vX` where `X` is the version number.
+The latest version is also tagged as `master`. The following command downloads
+the latest `ubuntu2004` image:
 
 ```console
 $ docker pull gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
@@ -244,8 +246,8 @@ components. q
 | ACTS_BUILD_EXAMPLES_HEPMC3            | Build HepMC3-based code in the examples |
 | ACTS_BUILD_EXAMPLES_PYTHIA8           | Build Pythia8-based code in the examples |
 | ACTS_BUILD_BENCHMARKS                 | Build benchmarks |
-| ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
+| ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
 
 All Acts-specific options are disabled or empty by default (except for

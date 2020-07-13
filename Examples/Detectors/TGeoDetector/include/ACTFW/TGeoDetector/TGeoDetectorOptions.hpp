@@ -69,14 +69,10 @@ void addTGeoGeometryOptions(options_t& opt) {
                  "along the series.")(
       "geo-tgeo-pmodulenames", po::value<read_strings>()->default_value({}),
       "Name identifier for positive sensitive objects, odered along the "
-      "series.")("geo-tgeo-nmoduleaxes",
-                 po::value<read_strings>()->default_value({}),
-                 "Axes definition for negative sensitive objects, odered "
-                 "along the series.")(
-      "geo-tgeo-nlayer-r-range",
-      po::value<std::vector<Interval>>()->default_value({}),
-      "Radial range(s) for negative layers "
-      "to restrict the module parsing (optional).")(
+      "series.")("geo-tgeo-nlayer-r-range",
+                 po::value<std::vector<Interval>>()->default_value({}),
+                 "Radial range(s) for negative layers "
+                 "to restrict the module parsing (optional).")(
       "geo-tgeo-clayer-r-range",
       po::value<std::vector<Interval>>()->default_value({}),
       "Radial range(s) for central layers "
@@ -112,6 +108,18 @@ void addTGeoGeometryOptions(options_t& opt) {
       "geo-tgeo-player-r-split", po::value<read_range>()->default_value({}),
       "R-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different positive layers.")(
+      "geo-tgeo-sfbin-z-tolerance",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Tolerance interval in z [mm] for automated surface binning.")(
+      "geo-tgeo-sfbin-r-tolerance",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Tolerance interval in r [mm] for automated surface binninng.")(
+      "geo-tgeo-sfbin-phi-tolerance",
+      po::value<std::vector<Interval>>()->default_value({}),
+      "Tolerance interval in phi [rad] for automated surface binning.")(
+      "geo-tgeo-nmoduleaxes", po::value<read_strings>()->default_value({}),
+      "Axes definition for negative sensitive objects, odered "
+      "along the series.")(
       "geo-tgeo-player-z-split", po::value<read_range>()->default_value({}),
       "Z-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different positive layers.")(
@@ -133,9 +141,7 @@ void addTGeoGeometryOptions(options_t& opt) {
 /// @return a configuration object for a TGeoLayerBuilder
 template <typename variable_map_t>
 std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
-    const variable_map_t& vm,
-    std::shared_ptr<const Acts::LayerCreator> layerCreator,
-    std::shared_ptr<const Acts::ProtoLayerHelper> protoLayerHelper) {
+    const variable_map_t& vm) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // General: subdetector naming
@@ -228,6 +234,14 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
   std::array<read_range, 3> splittolz = {nlayersplitz, clayersplitz,
                                          playersplitz};
 
+  // Automated binning configuration
+  std::vector<Interval> binrtolerance =
+      vm["geo-tgeo-sfbin-r-tolerance"].template as<std::vector<Interval>>();
+  std::vector<Interval> binztolerance =
+      vm["geo-tgeo-sfbin-z-tolerance"].template as<std::vector<Interval>>();
+  std::vector<Interval> binphitolerance =
+      vm["geo-tgeo-sfbin-phi-tolerance"].template as<std::vector<Interval>>();
+
   // The maximum series and total counter for access of nonsplit layers
   size_t max_series = *std::max_element(series_size.begin(), series_size.end());
   std::array<size_t, 3> ti = {0, 0, 0};
@@ -257,6 +271,29 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
   for (size_t idet = 0; idet < max_series; ++idet) {
     // Each detector needs a layer builder
     Acts::TGeoLayerBuilder::Config layerBuilderConfig;
+
+    // Configuration of AutoBinning
+    if (binphitolerance.size() == binrtolerance.size() and
+        binrtolerance.size() == binztolerance.size()) {
+      layerBuilderConfig.autoSurfaceBinning = true;
+
+      auto rtol = binrtolerance[idet];
+      std::vector<std::pair<double, double>> binTolerances{(int)Acts::binValues,
+                                                           {0., 0.}};
+
+      binTolerances[Acts::binR] = {rtol.lower.value_or(0.),
+                                   rtol.upper.value_or(0.)};
+      auto ztol = binztolerance[idet];
+      binTolerances[Acts::binZ] = {ztol.lower.value_or(0.),
+                                   ztol.upper.value_or(0.)};
+      auto phitol = binphitolerance[idet];
+      binTolerances[Acts::binPhi] = {phitol.lower.value_or(0.),
+                                     phitol.upper.value_or(0.)};
+
+      layerBuilderConfig.surfaceBinMatcher =
+          Acts::SurfaceBinningMatcher(binTolerances);
+    }
+
     // Loop over the | n | c | p | configuration
     for (unsigned int ncp = 0; ncp < 3; ++ncp) {
       // number of layers of this configuration
@@ -305,8 +342,6 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
     // Set the scale and the layer creator
     layerBuilderConfig.configurationName = subdetectors[idet + idetaddon];
     layerBuilderConfig.unit = unitScalor;
-    layerBuilderConfig.layerCreator = layerCreator;
-    layerBuilderConfig.protoLayerHelper = protoLayerHelper;
 
     // Node search (ultra verbose) screen debug
     layerBuilderConfig.nodeSearchDebug =

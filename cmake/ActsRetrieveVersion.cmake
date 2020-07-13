@@ -1,6 +1,7 @@
 # Retrieve version identification.
 #
 # Must be included from the main CMakeLists file. Sets the following variables:
+#
 #   - _acts_version
 #   - _acts_commit_hash
 #
@@ -21,6 +22,7 @@ else()
   set(_acts_commit_hash "${_git_hash}-dirty")
   set(_acts_commit_hash_short "${_git_hash_short}-dirty")
 endif()
+
 # remove temporary variables
 unset(_git_refspec)
 unset(_git_hash)

@@ -13,9 +13,20 @@
 
 #include "Acts/Utilities/Units.hpp"
 
+namespace {
+enum MaterialClassificationNumberIndices {
+  eRadiationLength = 0,
+  eInteractionLength = 1,
+  eRelativeAtomicMass = 2,
+  eNuclearCharge = 3,
+  eMassDensity = 4,
+};
+}
+
 Acts::Material::Material(const ActsVectorF<5>& parameters)
-    : Material(parameters[eX0], parameters[eL0], parameters[eAr],
-               parameters[eZ], parameters[eRho]) {}
+    : Material(parameters[eRadiationLength], parameters[eInteractionLength],
+               parameters[eRelativeAtomicMass], parameters[eNuclearCharge],
+               parameters[eMassDensity]) {}
 
 float Acts::Material::molarElectronDensity() const {
   using namespace Acts::UnitLiterals;
@@ -51,11 +62,11 @@ float Acts::Material::meanExcitationEnergy() const {
 
 Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
   ActsVectorF<5> parameters;
-  parameters[eX0] = m_x0;
-  parameters[eL0] = m_l0;
-  parameters[eAr] = m_ar;
-  parameters[eZ] = m_z;
-  parameters[eRho] = m_rho;
+  parameters[eRadiationLength] = m_x0;
+  parameters[eInteractionLength] = m_l0;
+  parameters[eRelativeAtomicMass] = m_ar;
+  parameters[eNuclearCharge] = m_z;
+  parameters[eMassDensity] = m_rho;
   return parameters;
 }
 

@@ -7,16 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void ObjVisualization<T>::vertex(const Vector3D& vtx,
-                                 IVisualization::ColorType color) {
+void ObjVisualization<T>::vertex(const Vector3D& vtx, ColorRGB color) {
   m_vertexColors[m_vertices.size()] = color;
   m_vertices.push_back(vtx.template cast<ValueType>());
 }
 
 template <typename T>
 void ObjVisualization<T>::line(const Vector3D& a, const Vector3D& b,
-                               IVisualization::ColorType color) {
-  if (color != IVisualization::ColorType{0, 0, 0}) {
+                               ColorRGB color) {
+  if (color != ColorRGB{0, 0, 0}) {
     m_lineColors[m_lines.size()] = color;
   }
   // not implemented
@@ -27,8 +26,8 @@ void ObjVisualization<T>::line(const Vector3D& a, const Vector3D& b,
 
 template <typename T>
 void ObjVisualization<T>::face(const std::vector<Vector3D>& vtxs,
-                               IVisualization::ColorType color) {
-  if (color != IVisualization::ColorType{0, 0, 0}) {
+                               ColorRGB color) {
+  if (color != ColorRGB{0, 0, 0}) {
     m_faceColors[m_faces.size()] = color;
   }
   FaceType idxs;
@@ -43,16 +42,16 @@ void ObjVisualization<T>::face(const std::vector<Vector3D>& vtxs,
 template <typename T>
 void ObjVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
                                 const std::vector<FaceType>& faces,
-                                ColorType color) {
+                                ColorRGB color) {
   // No faces given - call the face() method
   if (faces.empty()) {
     face(vtxs, color);
   } else {
-    if (color != IVisualization::ColorType{0, 0, 0}) {
+    if (color != ColorRGB{0, 0, 0}) {
       m_faceColors[m_faces.size()] = color;
     }
     auto vtxoffs = m_vertices.size();
-    if (color != IVisualization::ColorType{0, 0, 0}) {
+    if (color != ColorRGB{0, 0, 0}) {
       m_vertexColors[m_vertices.size()] = color;
     }
     m_vertices.insert(m_vertices.end(), vtxs.begin(), vtxs.end());
@@ -97,7 +96,7 @@ template <typename T>
 void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
   std::map<std::string, bool> materials;
 
-  auto mixColor = [&](const IVisualization::ColorType& color) -> std::string {
+  auto mixColor = [&](const ColorRGB& color) -> std::string {
     std::string materialName;
     materialName = "material_";
     materialName += std::to_string(color[0]) + std::string("_");
@@ -119,7 +118,7 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
   };
 
   size_t iv = 0;
-  IVisualization::ColorType lastVertexColor = {0, 0, 0};
+  ColorRGB lastVertexColor = {0, 0, 0};
   for (const VertexType& vtx : m_vertices) {
     if (m_vertexColors.find(iv) != m_vertexColors.end()) {
       auto color = m_vertexColors.find(iv)->second;
@@ -128,11 +127,14 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
         lastVertexColor = color;
       }
     }
-    os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
+
+    os << "v " << std::setprecision(m_outputPrecision)
+       << m_outputScalor * vtx.x() << " " << m_outputScalor * vtx.y() << " "
+       << m_outputScalor * vtx.z() << "\n";
     ++iv;
   }
   size_t il = 0;
-  IVisualization::ColorType lastLineColor = {0, 0, 0};
+  ColorRGB lastLineColor = {0, 0, 0};
   for (const LineType& ln : m_lines) {
     if (m_lineColors.find(il) != m_lineColors.end()) {
       auto color = m_lineColors.find(il)->second;
@@ -145,7 +147,7 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
     ++il;
   }
   size_t is = 0;
-  IVisualization::ColorType lastFaceColor = {0, 0, 0};
+  ColorRGB lastFaceColor = {0, 0, 0};
   for (const FaceType& fc : m_faces) {
     if (m_faceColors.find(is) != m_faceColors.end()) {
       auto color = m_faceColors.find(is)->second;

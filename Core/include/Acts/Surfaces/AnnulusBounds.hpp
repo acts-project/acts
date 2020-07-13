@@ -31,8 +31,6 @@ namespace Acts {
 ///
 class AnnulusBounds : public DiscBounds {
  public:
-  using Transform2D = Eigen::Affine2d;
-
   enum BoundValues : int {
     eMinR = 0,
     eMaxR = 1,

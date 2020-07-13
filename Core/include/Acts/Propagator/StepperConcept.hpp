@@ -108,7 +108,7 @@ namespace concept {
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
-        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const BoundParameters&>,
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
                                                              has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,

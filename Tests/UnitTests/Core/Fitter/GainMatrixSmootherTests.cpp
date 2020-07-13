@@ -13,7 +13,6 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -29,7 +28,6 @@ using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
 using MeasurementType = Measurement<SourceLink, params...>;
-using TrackState = TrackState<SourceLink, BoundParameters>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -43,7 +41,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   auto plane3 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 3,
                                                   Vector3D::UnitX());
 
-  ActsSymMatrixD<2> cov;
+  SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas1(
       MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(

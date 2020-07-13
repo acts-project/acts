@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
 
@@ -40,12 +41,11 @@ struct coordinate_transformation {
   /// @param s the surface for the local to global transform
   ///
   /// @return position in the global frame
-  static ActsVectorD<3> parameters2globalPosition(const GeometryContext& gctx,
-                                                  const ParVector_t& pars,
-                                                  const Surface& s) {
-    ActsVectorD<3> globalPosition;
-    s.localToGlobal(gctx,
-                    ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+  static Vector3D parameters2globalPosition(const GeometryContext& gctx,
+                                            const ParVector_t& pars,
+                                            const Surface& s) {
+    Vector3D globalPosition;
+    s.localToGlobal(gctx, Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                     parameters2globalMomentum(pars), globalPosition);
     return globalPosition;
   }
@@ -59,8 +59,8 @@ struct coordinate_transformation {
   /// @param pars the parameter vector
   ///
   /// @return momentum in the global frame
-  static ActsVectorD<3> parameters2globalMomentum(const ParVector_t& pars) {
-    ActsVectorD<3> momentum;
+  static Vector3D parameters2globalMomentum(const ParVector_t& pars) {
+    Vector3D momentum;
     double p = std::abs(1. / pars(Acts::eQOP));
     double phi = pars(Acts::ePHI);
     double theta = pars(Acts::eTHETA);
@@ -81,9 +81,9 @@ struct coordinate_transformation {
   /// @param charge of the particle/track
   ///
   /// @return curvilinear parameter representation
-  static ParVector_t global2curvilinear(const ActsVectorD<3>& /*pos*/,
-                                        const ActsVectorD<3>& mom,
-                                        double charge, double time) {
+  static ParVector_t global2curvilinear(const Vector3D& /*pos*/,
+                                        const Vector3D& mom, double charge,
+                                        double time) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
     ParVector_t parameters;
@@ -108,12 +108,12 @@ struct coordinate_transformation {
   ///
   /// @return the track parameterisation
   static ParVector_t global2parameters(const GeometryContext& gctx,
-                                       const ActsVectorD<3>& pos,
-                                       const ActsVectorD<3>& mom, double charge,
-                                       double time, const Surface& s) {
+                                       const Vector3D& pos, const Vector3D& mom,
+                                       double charge, double time,
+                                       const Surface& s) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
-    ActsVectorD<2> localPosition;
+    Vector2D localPosition;
     s.globalToLocal(gctx, pos, mom, localPosition);
     ParVector_t result;
     result << localPosition(0), localPosition(1), phi(mom), theta(mom),
@@ -126,6 +126,26 @@ struct coordinate_transformation {
   /// @return the charge as a double
   static double parameters2charge(const ParVector_t& pars) {
     return (pars(Acts::eQOP) > 0) ? 1. : -1.;
+  }
+
+  /// @brief Transforms a bound parameter vector into the free equivalent
+  ///
+  /// @param [in] gtcx Geometry context
+  /// @param [in] parameters Bound parameter vector
+  /// @param [in] surface Surface related to @p parameters
+  ///
+  /// @return FreeVector representation of @p parameters
+  static FreeVector boundParameters2freeParameters(
+      const GeometryContext& gtcx, const BoundVector& parameters,
+      const Surface& surface) {
+    FreeVector result;
+    result.template segment<3>(eFreePos0) =
+        parameters2globalPosition(gtcx, parameters, surface);
+    result[eFreeTime] = parameters[eBoundTime];
+    result.template segment<3>(eFreeDir0) = makeDirectionUnitFromPhiTheta(
+        parameters[eBoundPhi], parameters[eBoundTheta]);
+    result[eFreeQOverP] = parameters[eBoundQOverP];
+    return result;
   }
 };
 }  // namespace detail

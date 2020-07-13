@@ -18,11 +18,13 @@ Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
                                                const BoundParameters& trkParams,
-                                               const Vector3D& vtxPos) const {
+                                               const Vector3D& vtxPos,
+                                               State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -39,11 +41,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
-                               const Vector3D& vtxPos) const {
+                               const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
-  auto res = getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir);
+  auto res =
+      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -114,7 +117,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // track covariance
   auto cov = trkParams->covariance();
-  ActsSymMatrixD<2> myWeightXY = cov->block<2, 2>(0, 0).inverse();
+  SymMatrix2D myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dim residual
   Vector2D myXYpos =
@@ -188,7 +191,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
-                           Vector3D& momDir) const {
+                           Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
@@ -202,7 +205,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double cotTheta = 1. / std::tan(theta);
 
   // get B-field z-component at current position
-  double bZ = m_cfg.bField.getField(trkSurfaceCenter)[eZ];
+  double bZ = m_cfg.bField.getField(trkSurfaceCenter, state.fieldCache)[eZ];
 
   // The radius
   double r;
@@ -280,12 +283,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const double cosPhi = std::cos(phi);
   const double cosTheta = std::cos(theta);
 
-  ActsSymMatrixD<2> vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
+  SymMatrix2D vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
 
   // Covariance of perigee parameters after propagation to perigee surface
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
-  ActsVectorD<2> d0JacXY(-sinPhi, cosPhi);
+  Vector2D d0JacXY(-sinPhi, cosPhi);
 
   ImpactParametersAndSigma newIPandSigma;
 
@@ -301,7 +304,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmad0 = 0;
   }
 
-  ActsSymMatrixD<2> covPerigeeZ0Theta;
+  SymMatrix2D covPerigeeZ0Theta;
   covPerigeeZ0Theta(0, 0) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
   covPerigeeZ0Theta(0, 1) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eTHETA);
   covPerigeeZ0Theta(1, 0) = perigeeCov(ParID_t::eTHETA, ParID_t::eLOC_Z0);
@@ -309,7 +312,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
-  ActsVectorD<2> z0JacZ0Theta(sinTheta, z0 * cosTheta);
+  Vector2D z0JacZ0Theta(sinTheta, z0 * cosTheta);
 
   if (vtxZZCov >= 0) {
     newIPandSigma.IPz0SinTheta = z0 * sinTheta;

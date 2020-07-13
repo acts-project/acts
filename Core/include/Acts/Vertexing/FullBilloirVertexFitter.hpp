@@ -41,6 +41,15 @@ class FullBilloirVertexFitter {
   using BField_t = typename linearizer_t::BField_t;
   using Linearizer_t = linearizer_t;
 
+  struct State {
+    /// @brief The state constructor
+    ///
+    /// @param mctx The magnetic field context
+    State(const Acts::MagneticFieldContext& mctx) : linearizerState(mctx) {}
+    /// The linearizer state
+    typename Linearizer_t::State linearizerState;
+  };
+
   struct Config {
     /// Maximum number of interations in fitter
     int maxIterations = 5;
@@ -67,12 +76,14 @@ class FullBilloirVertexFitter {
   /// @param paramVector Vector of track objects to fit vertex to
   /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
+  /// @param state The state object
   ///
   /// @return Fitted vertex
   Result<Vertex<input_track_t>> fit(
       const std::vector<const input_track_t*>& paramVector,
       const linearizer_t& linearizer,
-      const VertexingOptions<input_track_t>& vertexingOptions) const;
+      const VertexingOptions<input_track_t>& vertexingOptions,
+      State& state) const;
 
  private:
   /// Configuration object

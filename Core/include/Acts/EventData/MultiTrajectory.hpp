@@ -15,13 +15,27 @@
 
 #include <Eigen/Core>
 
-#include "Acts/EventData/TrackState.hpp"
+#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
+
+/// @enum TrackStateFlag
+///
+/// This enum describes the type of TrackState
+enum TrackStateFlag {
+  MeasurementFlag = 0,
+  ParameterFlag = 1,
+  OutlierFlag = 2,
+  HoleFlag = 3,
+  MaterialFlag = 4,
+  NumTrackStateFlags = 5
+};
+
+using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
 template <typename source_link_t>
@@ -262,10 +276,6 @@ class TrackStateProxy {
   /// @return The predicted parameters
   Parameters predicted() const;
 
-  /// Predicted parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the predicted parameters
-  BoundParameters predictedParameters(const Acts::GeometryContext& gctx) const;
-
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
   Covariance predictedCovariance() const;
@@ -282,25 +292,17 @@ class TrackStateProxy {
   /// @return The filtered parameters covariance
   Covariance filteredCovariance() const;
 
-  /// Filtered parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the filtered parameters
-  BoundParameters filteredParameters(const Acts::GeometryContext& gctx) const;
-
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
   bool hasFiltered() const { return data().ifiltered != IndexData::kInvalid; }
 
   /// Smoothed track parameters vector
-  /// @return the parameter vector
+  /// @return The smoothed parameters
   Parameters smoothed() const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
   Covariance smoothedCovariance() const;
-
-  /// Smoothed parameters in the form of BoundParameters
-  /// @return BoundParameters instance of the smoothed parameters
-  BoundParameters smoothedParameters(const Acts::GeometryContext& gctx) const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
@@ -614,21 +616,6 @@ class MultiTrajectory {
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
-
-  /// Add a track state using information from a separate track state object.
-  ///
-  /// @tparam parameters_t The parameter type used for the trackstate
-  /// @param trackParameters  at the local point
-  /// @param mask The bitmask that instructs which components to allocate and
-  /// which to leave invalid
-  /// @param iprevious        index of the previous state, SIZE_MAX if first
-  /// @note The parameter type from @p parameters_t is not currently stored in
-  /// MultiTrajectory.
-  /// @return Index of the newly added track state
-  template <typename parameters_t>
-  size_t addTrackState(const TrackState<SourceLink, parameters_t>& ts,
-                       TrackStatePropMask mask = TrackStatePropMask::All,
-                       size_t iprevious = SIZE_MAX);
 
   /// Add a track state without providing explicit information. Which components
   /// of the track state are initialized/allocated can be controlled via @p mask

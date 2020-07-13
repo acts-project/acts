@@ -81,18 +81,13 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
-  VertexFinder::State state;
+  VertexFinder::State state(ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Setup containers
   const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
       m_cfg.trackCollection);
   std::vector<Acts::BoundParameters> inputTrackCollection;
-
-  int counte = 0;
-  for (auto& bla : input) {
-    counte += bla.tracks.size();
-  }
 
   ACTS_INFO("Truth vertices in event: " << input.size());
 

@@ -13,7 +13,6 @@
 
 #include <Eigen/Core>
 
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
@@ -94,13 +93,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::predictedParameters(
-    const Acts::GeometryContext& gctx) const {
-  return {gctx, predictedCovariance(), predicted(),
-          m_traj->m_referenceSurfaces[data().irefsurface]};
-}
-
-template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
     -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
@@ -115,13 +107,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::filteredParameters(
-    const Acts::GeometryContext& gctx) const {
-  return {gctx, filteredCovariance(), filtered(),
-          m_traj->m_referenceSurfaces[data().irefsurface]};
-}
-
-template <typename SL, size_t N, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
     -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
@@ -133,13 +118,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ismoothed).data());
-}
-
-template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline BoundParameters TrackStateProxy<SL, N, M, ReadOnly>::smoothedParameters(
-    const Acts::GeometryContext& gctx) const {
-  return {gctx, smoothedCovariance(), smoothed(),
-          m_traj->m_referenceSurfaces[data().irefsurface]};
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -186,91 +164,6 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
 }
 
 }  // namespace detail_lt
-
-template <typename SL>
-template <typename parameters_t>
-inline size_t MultiTrajectory<SL>::addTrackState(
-    const TrackState<SL, parameters_t>& ts, TrackStatePropMask mask,
-    size_t iprevious) {
-  using CovMap =
-      typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
-  using PropMask = TrackStatePropMask;
-
-  // build a mask to allocate for the components in the trackstate
-  PropMask required = PropMask::None;
-  if (ts.parameter.predicted) {
-    required |= PropMask::Predicted;
-  }
-
-  if (ts.parameter.filtered) {
-    required |= PropMask::Filtered;
-  }
-
-  if (ts.parameter.smoothed) {
-    required |= PropMask::Smoothed;
-  }
-
-  if (ts.parameter.jacobian) {
-    required |= PropMask::Jacobian;
-  }
-
-  if (ts.measurement.uncalibrated) {
-    required |= PropMask::Uncalibrated;
-  }
-
-  if (ts.measurement.calibrated) {
-    required |= PropMask::Calibrated;
-  }
-
-  // use a TrackStateProxy to do the assignments
-  size_t index = addTrackState(mask | required, iprevious);
-  TrackStateProxy nts = getTrackState(index);
-
-  // make shared ownership held by this multi trajectory
-  nts.setReferenceSurface(ts.referenceSurface().getSharedPtr());
-
-  // we don't need to check allocation, because we ORed with required components
-  // above
-
-  if (ts.parameter.predicted) {
-    const auto& predicted = *ts.parameter.predicted;
-    nts.predicted() = predicted.parameters();
-    nts.predictedCovariance() = *predicted.covariance();
-  }
-
-  if (ts.parameter.filtered) {
-    const auto& filtered = *ts.parameter.filtered;
-    nts.filtered() = filtered.parameters();
-    nts.filteredCovariance() = *filtered.covariance();
-  }
-
-  if (ts.parameter.smoothed) {
-    const auto& smoothed = *ts.parameter.smoothed;
-    nts.smoothed() = smoothed.parameters();
-    nts.smoothedCovariance() = *smoothed.covariance();
-  }
-
-  // store jacobian
-  if (ts.parameter.jacobian) {
-    nts.jacobian() = *ts.parameter.jacobian;
-  }
-
-  // handle measurements
-  if (ts.measurement.uncalibrated) {
-    nts.uncalibrated() = *ts.measurement.uncalibrated;
-  }
-
-  if (ts.measurement.calibrated) {
-    std::visit([&](const auto& m) { nts.setCalibrated(m); },
-               *ts.measurement.calibrated);
-  }
-
-  nts.chi2() = ts.parameter.chi2;
-  nts.pathLength() = ts.parameter.pathLength;
-  nts.typeFlags() = ts.type();
-
-  return nts.index();
-}  // namespace Acts
 
 template <typename SL>
 inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,

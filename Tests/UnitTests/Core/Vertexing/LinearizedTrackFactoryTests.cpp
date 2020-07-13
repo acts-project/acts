@@ -125,6 +125,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linFactory(ltConfig);
+  Linearizer::State state(magFieldContext);
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
@@ -137,7 +138,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            magFieldContext)
+                            magFieldContext, state)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
@@ -216,6 +217,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   // magnetic field, which results in the extreme case of a straight line
   LinearizerStraightLine::Config ltConfig(propagator);
   LinearizerStraightLine linFactory(ltConfig);
+  LinearizerStraightLine::State state(magFieldContext);
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
@@ -228,7 +230,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            magFieldContext)
+                            magFieldContext, state)
             .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);

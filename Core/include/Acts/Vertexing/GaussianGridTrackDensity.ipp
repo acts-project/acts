@@ -27,7 +27,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
   }
 
   // Derive corresponding z value
-  return (zbin - mainGridSize / 2 + 0.5) * m_cfg.binSize;
+  return (zbin - mainGridSize / 2 + 0.5f) * m_cfg.binSize;
 }
 
 template <int mainGridSize, int trkGridSize>
@@ -56,7 +56,7 @@ std::pair<int, Acts::ActsVectorF<trkGridSize>>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundParameters& trk,
     Acts::ActsVectorF<mainGridSize>& mainGrid) const {
-  ActsSymMatrixD<2> cov = trk.covariance()->block<2, 2>(0, 0);
+  SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
@@ -70,7 +70,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   }
   // Calculate the positions of the bin centers
   float binCtrD = dOffset * m_cfg.binSize;
-  float binCtrZ = (zBin + 0.5) * m_cfg.binSize - m_cfg.zMinMax;
+  float binCtrZ = (zBin + 0.5f) * m_cfg.binSize - m_cfg.zMinMax;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
@@ -140,16 +140,16 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 template <int mainGridSize, int trkGridSize>
 Acts::ActsVectorF<trkGridSize>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::ActsSymMatrixD<2>& cov, float distCtrD,
+    int offset, const Acts::SymMatrix2D& cov, float distCtrD,
     float distCtrZ) const {
   ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
 
-  int i = (trkGridSize - 1) / 2. + offset;
-  float d = (i - (float)trkGridSize / 2. + 0.5) * m_cfg.binSize;
+  int i = (trkGridSize - 1) / 2 + offset;
+  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
 
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - (float)trkGridSize / 2. + 0.5) * m_cfg.binSize;
+    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
     trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
   }
   return trackGrid;
@@ -196,18 +196,18 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
       rhmBin * m_cfg.binSize - deltaZ1 - lhmBin * m_cfg.binSize - deltaZ2;
 
   // FWHM = 2.355 * sigma
-  float width = fwhm / 2.355;
+  float width = fwhm / 2.355f;
 
-  return std::isnormal(width) ? width : 0.;
+  return std::isnormal(width) ? width : 0.0f;
 }
 
 template <int mainGridSize, int trkGridSize>
 float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    float d, float z, const Acts::ActsSymMatrixD<2>& cov) const {
+    float d, float z, const Acts::SymMatrix2D& cov) const {
   float det = cov.determinant();
-  float coef = 1. / (2. * M_PI * std::sqrt(det));
+  float coef = 1 / (2 * M_PI * std::sqrt(det));
   float expo =
-      -1. / (2. * det) *
+      -1 / (2 * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
   return coef * std::exp(expo);
 }

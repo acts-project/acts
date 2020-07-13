@@ -1,50 +1,76 @@
 # CMake config for the Acts package
 #
-# Only defines CMake targets for requested and available components.
-# No addititional variables are defined. All additional information, e.g.
-# include directories and dependencies, are defined as target-specific
-# properties and are automatically propagated when linking to the target.
+# Defines CMake targets for requested and available components.  All additional
+# information, e.g. include directories and dependencies, are defined as
+# target-specific properties and are automatically propagated when linking to
+# the target.
+#
+# Defines the following additional variables:
+#
+#   - Acts_COMPONENTS
+#   - Acts_COMMIT_HASH
+#   - Acts_COMMIT_HASH_SHORT
 
 @PACKAGE_INIT@
 
-set(Acts_SUPPORTED_COMPONENTS @_supported_components@)
+set(Acts_COMPONENTS @_components@)
 set(Acts_COMMIT_HASH "@_acts_commit_hash@")
 set(Acts_COMMIT_HASH_SHORT "@_acts_commit_hash_short@")
 
 # print version and components information
 if(NOT Acts_FIND_QUIETLY)
-  message(STATUS "found Acts version ${Acts_VERSION} - ${Acts_COMMIT_HASH_SHORT}")
-  message(STATUS "supported components:")
-  foreach(_component ${_supported_components})
-    message(STATUS "  - ${_component}")
-  endforeach()
+  message(STATUS "found Acts version ${Acts_VERSION} commit ${Acts_COMMIT_HASH_SHORT}")
 endif()
 
 # check that requested components are available
 foreach(_component ${Acts_FIND_COMPONENTS})
-  # check if this component is supported
-  if(NOT _component IN_LIST Acts_SUPPORTED_COMPONENTS)
+  # check if this component is available 
+  if(NOT _component IN_LIST Acts_COMPONENTS)
     if (${Acts_FIND_REQUIRED_${_component}})
       # not supported, but required -> fail
       set(Acts_FOUND False)
-      message(FATAL_ERROR "required component \"${_component}\" not found")
+      set(Acts_NOT_FOUND_MESSAGE "required component '${_component}' not found")
     else()
       # not supported and optional -> skip
       list(REMOVE_ITEM Acts_FIND_COMPONENTS ${_component})
       if(NOT Acts_FIND_QUIETLY)
-        message(STATUS "optional component \"${_component}\" not found")
+        message(STATUS "optional component '${_component}' not found")
       endif()
     endif()
   endif()
 endforeach()
 
-# load requested and available components
+# find external dependencies that are needed to link with Acts. since the
+# exported Acts targets only store the linked external target names they need
+# to be found again. this avoids hard-coded paths and makes the installed
+# config/library relocatable. use exact version match where possible to ensure
+# the same versions are found that were used at build time.
+# `find_dependency` is a wrapper around `find_package` that automatically
+# handles QUIET and REQUIRED parameters.
+include(CMakeFindDependencyMacro)
+set(Boost_NO_BOOST_CMAKE ON)
+find_dependency(Boost @Boost_VERSION_STRING@ MODULE EXACT)
+find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
+if(DD4hepPlugin IN_LIST Acts_COMPONENTS)
+  find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
+endif()
+if(JsonPlugin IN_LIST Acts_COMPONENTS)
+  # if nlohmann::json is compiled as part of the Acts build
+  # then the version is undefined; can not search for exac match
+  find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)
+endif()
+if(TGeoPlugin IN_LIST Acts_COMPONENTS)
+  find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
+endif()
+
+# load **all** available components. we can not just include the requested
+# components since there can be interdependencies between them.
 if(NOT Acts_FIND_QUIETLY)
   message(STATUS "loading components:")
 endif()
-foreach(_component ${Acts_FIND_COMPONENTS})
+foreach(_component ${Acts_COMPONENTS})
   if(NOT Acts_FIND_QUIETLY)
-    message(STATUS "  - ${_component}")
+    message(STATUS "  ${_component}")
   endif()
   # include the targets file to create the imported targets for the user
   include(${CMAKE_CURRENT_LIST_DIR}/Acts${_component}Targets.cmake)

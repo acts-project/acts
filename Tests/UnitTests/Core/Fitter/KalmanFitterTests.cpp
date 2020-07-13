@@ -17,7 +17,6 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
@@ -51,7 +50,6 @@ using SourceLink = MinimalSourceLink;
 using Jacobian = BoundParameters::CovMatrix_t;
 using Covariance = BoundSymMatrix;
 
-using TrackState = TrackState<SourceLink, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
@@ -63,7 +61,7 @@ std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
 ActsSymMatrixD<1> cov1D;
-ActsSymMatrixD<2> cov2D;
+SymMatrix2D cov2D;
 
 bool debugMode = false;
 
