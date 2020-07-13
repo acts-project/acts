@@ -43,9 +43,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
         m_clearSurfaceMaterial(clearSurfaceMaterial),
         m_clearVolumeMaterial(clearVolumeMaterial) {
     // the material reader
-    Acts::JsonGeometryConverter::Config jmConverterCfg("JsonGeometryConverter",
-                                                       Logging::VERBOSE);
-    Acts::JsonGeometryConverter jmConverter(jmConverterCfg);
+    Acts::JsonGeometryConverter jmConverter(rConfig);
 
     std::ifstream ifj(jFileName.c_str());
     nlohmann::json jin;
