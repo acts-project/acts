@@ -1,4 +1,4 @@
-name: Coverage
+name: Analysis
 
 on:
   push:
@@ -46,3 +46,23 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: ./build/coverage/cov.xml
+
+  build_performance:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: pip3 install git+https://github.com/paulgessinger/cmakeperf.git@4cc3c8a
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DACTS_BUILD_EVERYTHING=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Measure
+        run: cmakeperf collect build/compile_commands.json -o perf.csv
+      - name: Results
+        run: cmakeperf print perf.csv
