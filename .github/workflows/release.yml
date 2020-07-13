@@ -18,12 +18,17 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
       - uses: actions/checkout@v2
-      - run: |
+        with:
+          path: "clone"
+      - name: Setup
+        run: |
+          cp -r clone/CI .
           pip install -r CI/requirements.txt
       - name: Make release
         run: |
           export TAG_NAME=${{ github.event.inputs.tag }}
           export GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-          CI/release.py tag $TAG_NAME --yes
-          CI/release.py notes $TAG_NAME --yes
+          cd clone
+          ../CI/release.py tag $TAG_NAME --yes
+          ../CI/release.py notes $TAG_NAME --yes
 
