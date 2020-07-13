@@ -1,0 +1,17 @@
+name: Release
+
+on: 
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        export TAG_NAME=${{ github.event.inputs.tag }}
+        echo $TAG_NAME
+    - run: echo $TAG_NAME
