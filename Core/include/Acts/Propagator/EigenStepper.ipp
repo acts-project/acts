@@ -13,6 +13,23 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
 
 template <typename B, typename E, typename A>
+  void Acts::EigenStepper<B, E, A>::resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const navDir) const {
+	            // Update the stepping state
+	  update(state, freeParams, cov);
+	  state.navDir = navDir;
+	  state.stepSize = ConstrainedStep(std::numeric_limits<double>::max());
+	  state.pathAccumulated = 0.;
+	  
+      // Reinitialize the stepping jacobian
+	  trackState.referenceSurface().initJacobianToGlobal(
+		  state.geoContext, state.jacToGlobal,
+		  position(state), direction(state), boundParams);
+	  state.jacobian = BoundMatrix::Identity();
+      state.jacTransport = FreeMatrix::Identity();
+      state.derivative = FreeVector::Zero();    
+  }
+  
+template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface) const
     -> BoundState {

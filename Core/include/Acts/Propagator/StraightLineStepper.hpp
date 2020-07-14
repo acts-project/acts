@@ -136,6 +136,8 @@ class StraightLineStepper {
   /// Constructor
   StraightLineStepper() = default;
 
+  void resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const navDir = forward) const;
+  
   /// Get the field for the stepping, this gives back a zero field
   ///
   /// @param [in,out] state is the propagation state associated with the track
