@@ -43,8 +43,10 @@ Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger) {
 Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-    size_t binsZ, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t binsPhi,
+    size_t binsZ,
+    std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -102,9 +104,12 @@ Acts::LayerCreator::cylinderLayer(
       new CylinderBounds(layerR, layerHalfZ));
 
   // create the layer
-  MutableLayerPtr cLayer =
-      CylinderLayer::create(transform, cBounds, std::move(sArray),
-                            layerThickness, std::move(ad), active);
+  MutableLayerPtr cLayer = CylinderLayer::create(transform,
+                                                 cBounds,
+                                                 std::move(sArray),
+                                                 layerThickness,
+                                                 std::move(ad),
+                                                 active);
 
   if (!cLayer)
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
@@ -117,8 +122,10 @@ Acts::LayerCreator::cylinderLayer(
 Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypePhi,
-    BinningType bTypeZ, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType bTypePhi,
+    BinningType bTypeZ,
+    std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -175,9 +182,12 @@ Acts::LayerCreator::cylinderLayer(
       new CylinderBounds(layerR, layerHalfZ));
 
   // create the layer
-  MutableLayerPtr cLayer =
-      CylinderLayer::create(transform, cBounds, std::move(sArray),
-                            layerThickness, std::move(ad), active);
+  MutableLayerPtr cLayer = CylinderLayer::create(transform,
+                                                 cBounds,
+                                                 std::move(sArray),
+                                                 layerThickness,
+                                                 std::move(ad),
+                                                 active);
 
   if (!cLayer)
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
@@ -190,8 +200,10 @@ Acts::LayerCreator::cylinderLayer(
 Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-    size_t binsPhi, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t binsR,
+    size_t binsPhi,
+    std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -241,9 +253,12 @@ Acts::LayerCreator::discLayer(
   // create the layers
   // we use the same transform here as for the layer itself
   // for disk this is fine since we don't bin in Z, so does not matter
-  MutableLayerPtr dLayer =
-      DiscLayer::create(transform, dBounds, std::move(sArray), layerThickness,
-                        std::move(ad), active);
+  MutableLayerPtr dLayer = DiscLayer::create(transform,
+                                             dBounds,
+                                             std::move(sArray),
+                                             layerThickness,
+                                             std::move(ad),
+                                             active);
 
   if (!dLayer)
     ACTS_ERROR("Creation of disc layer did not succeed!");
@@ -255,8 +270,10 @@ Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-    BinningType bTypePhi, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType bTypeR,
+    BinningType bTypePhi,
+    std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -304,9 +321,12 @@ Acts::LayerCreator::discLayer(
                                                       protoLayer.max(binR));
 
   // create the layers
-  MutableLayerPtr dLayer =
-      DiscLayer::create(transform, dBounds, std::move(sArray), layerThickness,
-                        std::move(ad), active);
+  MutableLayerPtr dLayer = DiscLayer::create(transform,
+                                             dBounds,
+                                             std::move(sArray),
+                                             layerThickness,
+                                             std::move(ad),
+                                             active);
   if (!dLayer)
     ACTS_ERROR("Creation of disc layer did not succeed!");
   associateSurfacesToLayer(*dLayer);
@@ -317,8 +337,11 @@ Acts::LayerCreator::discLayer(
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
     const GeometryContext& gctx,
-    std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-    size_t bins2, BinningValue bValue, std::optional<ProtoLayer> _protoLayer,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t bins1,
+    size_t bins2,
+    BinningValue bValue,
+    std::optional<ProtoLayer> _protoLayer,
     std::shared_ptr<const Transform3D> transform,
     std::unique_ptr<ApproachDescriptor> ad) const {
   ProtoLayer protoLayer =
@@ -384,9 +407,12 @@ Acts::LayerCreator::planeLayer(
       new RectangleBounds(layerHalf1, layerHalf2));
 
   // create the layer
-  MutableLayerPtr pLayer =
-      PlaneLayer::create(transform, pBounds, std::move(sArray), layerThickness,
-                         std::move(ad), active);
+  MutableLayerPtr pLayer = PlaneLayer::create(transform,
+                                              pBounds,
+                                              std::move(sArray),
+                                              layerThickness,
+                                              std::move(ad),
+                                              active);
 
   if (!pLayer)
     ACTS_ERROR("Creation of plane layer did not succeed!");
@@ -441,8 +467,10 @@ Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
   }
 
   std::vector<const Acts::Surface*> diff;
-  std::set_difference(sensitiveSurfaces.begin(), sensitiveSurfaces.end(),
-                      accessibleSurfaces.begin(), accessibleSurfaces.end(),
+  std::set_difference(sensitiveSurfaces.begin(),
+                      sensitiveSurfaces.end(),
+                      accessibleSurfaces.begin(),
+                      accessibleSurfaces.end(),
                       std::inserter(diff, diff.begin()));
 
   ACTS_VERBOSE(" - Checked " << nBinsChecked << " valid bins");

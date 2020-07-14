@@ -293,10 +293,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     extent = sectorPh.extent();
     CHECK_CLOSE_ABS(extent.ranges[binX].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR * std::sin(phiSector),
-                    1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR * std::sin(phiSector),
-                    1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binY].first, -outerR * std::sin(phiSector), 1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binY].second, outerR * std::sin(phiSector), 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
@@ -309,13 +309,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     auto sectorRingDiscPh =
         sectorRingDisc->polyhedronRepresentation(tgContext, segments);
     extent = sectorRingDiscPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, innerR * std::cos(phiSector),
-                    1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binX].first, innerR * std::cos(phiSector), 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR * std::sin(phiSector),
-                    1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR * std::sin(phiSector),
-                    1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binY].first, -outerR * std::sin(phiSector), 1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binY].second, outerR * std::sin(phiSector), 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
@@ -368,8 +368,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
 
     Vector2D offset(-2., 2.);
 
-    auto annulus = std::make_shared<AnnulusBounds>(minRadius, maxRadius,
-                                                   minPhiA, maxPhiA, offset);
+    auto annulus = std::make_shared<AnnulusBounds>(
+        minRadius, maxRadius, minPhiA, maxPhiA, offset);
     auto annulusDisc = Surface::makeShared<DiscSurface>(transform, annulus);
     auto annulusDiscPh =
         annulusDisc->polyhedronRepresentation(tgContext, segments);
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS(extent.ranges[binY].first, -rhY, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binY].second, rhY, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second,
-                    std::sqrt(rhX * rhX + rhY * rhY), 1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binR].second, std::sqrt(rhX * rhX + rhY * rhY), 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
     BOOST_CHECK(rectangularPh.vertices.size() == 4);
@@ -441,8 +441,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS(extent.ranges[binY].first, -thY, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binY].second, thY, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second,
-                    std::sqrt(thX * thX + thY * thY), 1e-6);
+    CHECK_CLOSE_ABS(
+        extent.ranges[binR].second, std::sqrt(thX * thX + thY * thY), 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
     BOOST_CHECK(trapezoidalPh.vertices.size() == 4);
@@ -486,10 +486,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
 
     /// ConvextPolygonBounds test
-    std::vector<Vector2D> vtxs = {
-        Vector2D(-40_mm, -10_mm), Vector2D(-10_mm, -30_mm),
-        Vector2D(30_mm, -20_mm),  Vector2D(10_mm, 20_mm),
-        Vector2D(-20_mm, 50_mm),  Vector2D(-30_mm, 30_mm)};
+    std::vector<Vector2D> vtxs = {Vector2D(-40_mm, -10_mm),
+                                  Vector2D(-10_mm, -30_mm),
+                                  Vector2D(30_mm, -20_mm),
+                                  Vector2D(10_mm, 20_mm),
+                                  Vector2D(-20_mm, 50_mm),
+                                  Vector2D(-30_mm, 30_mm)};
 
     auto sextagon = std::make_shared<ConvexPolygonBounds<6>>(vtxs);
     auto sextagonPlane = Surface::makeShared<PlaneSurface>(transform, sextagon);
@@ -516,7 +518,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS(extent.ranges[binY].second, hMaxY, 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binR].second,
-                    std::sqrt(hMaxX * hMaxX + hMaxY * hMaxY), 1e-6);
+                    std::sqrt(hMaxX * hMaxX + hMaxY * hMaxY),
+                    1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
     CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
   }

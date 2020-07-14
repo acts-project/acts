@@ -38,8 +38,10 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     std::string volumeName = "*";
     TGeoParser::Options tgpOptions;
     tgpOptions.volumeNames = {volumeName};
-    tgpOptions.targetNames = {"PixelActiveo2_1", "PixelActiveo4_1",
-                              "PixelActiveo5_1", "PixelActiveo6_1"};
+    tgpOptions.targetNames = {"PixelActiveo2_1",
+                              "PixelActiveo4_1",
+                              "PixelActiveo5_1",
+                              "PixelActiveo6_1"};
     std::string axes = "XYZ";
     double scale = 10.;
 
@@ -71,8 +73,10 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     std::string volumeName = "*";
     TGeoParser::Options tgpOptions;
     tgpOptions.volumeNames = {volumeName};
-    tgpOptions.targetNames = {"PixelActiveo2_1", "PixelActiveo4_1",
-                              "PixelActiveo5_1", "PixelActiveo6_1"};
+    tgpOptions.targetNames = {"PixelActiveo2_1",
+                              "PixelActiveo4_1",
+                              "PixelActiveo5_1",
+                              "PixelActiveo6_1"};
     tgpOptions.parseRanges.push_back({binR, {0., 40.}});
     tgpOptions.parseRanges.push_back({binZ, {-60., 15.}});
     tgpOptions.unit = 10.;
@@ -93,8 +97,8 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     for (auto& snode : tgpState.selectedNodes) {
       const auto& shape = *(snode.node->GetVolume()->GetShape());
       const auto& transform = *(snode.transform.get());
-      auto surface = TGeoSurfaceConverter::toSurface(shape, transform, axes,
-                                                     tgpOptions.unit);
+      auto surface = TGeoSurfaceConverter::toSurface(
+          shape, transform, axes, tgpOptions.unit);
       GeometryView::drawSurface(objVis, *surface, tgContext);
     }
     objVis.write("PixelActive_Innemost");

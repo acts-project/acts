@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsConstruction) {
       SurfaceBounds::eEllipse);
   //
   /// Copy constructor
-  EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
-                         averagePhi);
+  EllipseBounds original(
+      innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi);
   EllipseBounds copied(original);
   BOOST_CHECK_EQUAL(copied, original);
 }
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
   double innerRx(10.), innerRy(15.), outerRx(25.), outerRy(30.),
       phiSector(M_PI / 2.), averagePhi(0.);
   // const bool symmetric(false);
-  EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
-                         averagePhi);
+  EllipseBounds original(
+      innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi);
   auto valvector = original.values();
   std::array<double, EllipseBounds::eSize> values;
   std::copy_n(valvector.begin(), EllipseBounds::eSize, values.begin());
@@ -69,9 +69,10 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
       EllipseBounds(innerRx, -innerRy, outerRx, outerRy, phiSector, averagePhi),
       std::logic_error);
   // Exception for innerRx < 0 and innerRy < 0
-  BOOST_CHECK_THROW(EllipseBounds(-innerRx, -innerRy, outerRx, outerRy,
-                                  phiSector, averagePhi),
-                    std::logic_error);
+  BOOST_CHECK_THROW(
+      EllipseBounds(
+          -innerRx, -innerRy, outerRx, outerRy, phiSector, averagePhi),
+      std::logic_error);
   // Exception for opening outerRx <= 0
   BOOST_CHECK_THROW(
       EllipseBounds(innerRx, innerRy, 0., outerRy, phiSector, averagePhi),
@@ -81,9 +82,10 @@ BOOST_AUTO_TEST_CASE(ConeBoundsExceptions) {
       EllipseBounds(innerRx, innerRy, outerRx, 0., phiSector, averagePhi),
       std::logic_error);
   // Exception for iouterRx < 0 and outerRy < 0
-  BOOST_CHECK_THROW(EllipseBounds(innerRx, innerRy, -outerRx, -outerRy,
-                                  phiSector, averagePhi),
-                    std::logic_error);
+  BOOST_CHECK_THROW(
+      EllipseBounds(
+          innerRx, innerRy, -outerRx, -outerRy, phiSector, averagePhi),
+      std::logic_error);
   // Exception for innerRx > outerRx
   BOOST_CHECK_THROW(
       EllipseBounds(outerRx, innerRy, innerRx, outerRy, phiSector, averagePhi),
@@ -108,8 +110,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   double innerRx(10.), outerRx(15.), innerRy(15.), outerRy(20.), averagePhi(0.),
       phiSector(M_PI / 2.);
   /// Test clone
-  EllipseBounds ellipseBoundsObject(innerRx, innerRy, outerRx, outerRy,
-                                    phiSector, averagePhi);
+  EllipseBounds ellipseBoundsObject(
+      innerRx, innerRy, outerRx, outerRy, phiSector, averagePhi);
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::eEllipse);
@@ -120,9 +122,11 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   Vector2D origin(0., 0.);
   Vector2D outsideBy15(0., 30.);
   Vector2D inRectangle(17., 11.);
-  CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(origin), 10.,
+  CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(origin),
+                  10.,
                   1e-6);  // makes sense
-  CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(outsideBy15), 15.,
+  CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(outsideBy15),
+                  15.,
                   1e-6);  // fails, not clear why
   //
   /// Test rMinX
@@ -175,8 +179,8 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
 BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment) {
   double innerRx(10.), outerRx(15.), innerRy(15.), outerRy(20.), averagePhi(0.),
       phiSector(M_PI / 2.);
-  EllipseBounds ellipseBoundsObject(innerRx, outerRx, innerRy, outerRy,
-                                    averagePhi, phiSector);
+  EllipseBounds ellipseBoundsObject(
+      innerRx, outerRx, innerRy, outerRy, averagePhi, phiSector);
   EllipseBounds similarlyConstructeEllipseBoundsObject(
       innerRx, outerRx, innerRy, outerRy, averagePhi, phiSector);
   /// Test operator ==

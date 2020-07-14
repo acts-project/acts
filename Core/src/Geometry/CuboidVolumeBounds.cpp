@@ -15,7 +15,8 @@
 #include <cmath>
 #include <iostream>
 
-Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
+Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex,
+                                             double haley,
                                              double halez)
     : VolumeBounds(), m_values({halex, haley, halez}) {
   checkConsistency();

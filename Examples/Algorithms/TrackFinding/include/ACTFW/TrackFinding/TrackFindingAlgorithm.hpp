@@ -30,9 +30,10 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// and track finder options and returns some track-finding-specific result.
   using CKFOptions =
       Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>;
-  using TrackFinderFunction = std::function<TrackFinderResult(
-      const SimSourceLinkContainer&, const TrackParameters&,
-      const CKFOptions&)>;
+  using TrackFinderFunction =
+      std::function<TrackFinderResult(const SimSourceLinkContainer&,
+                                      const TrackParameters&,
+                                      const CKFOptions&)>;
 
   /// Create the track finder function implementation.
   ///
@@ -41,7 +42,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   static TrackFinderFunction
   makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      Options::BFieldVariant magneticField, Acts::Logging::Level lvl);
+      Options::BFieldVariant magneticField,
+      Acts::Logging::Level lvl);
 
   struct Config {
     /// Input source links collection.

@@ -99,8 +99,10 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
       {-10., -5.}, {10., -5.}, {10., 5.}, {-10., 5.}};
   // equality, ensure ordering is ok
   const auto& rectVertices = rect.vertices();
-  BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(), coords.cend(),
-                                rectVertices.cbegin(), rectVertices.cend());
+  BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(),
+                                coords.cend(),
+                                rectVertices.cbegin(),
+                                rectVertices.cend());
   const Vector2D pointA{1.0, 1.0}, pointB{9.0, 1.0}, outside{10.1, 5.1};
   // distance is signed, from boundary to point. (doesn't seem right, given
   // the name of the method)
@@ -116,9 +118,10 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment) {
   rectB = rectA;
   const auto originalVertices = rectA.vertices();
   const auto assignedVertices = rectB.vertices();
-  BOOST_CHECK_EQUAL_COLLECTIONS(
-      originalVertices.cbegin(), originalVertices.cend(),
-      assignedVertices.cbegin(), assignedVertices.cend());
+  BOOST_CHECK_EQUAL_COLLECTIONS(originalVertices.cbegin(),
+                                originalVertices.cend(),
+                                assignedVertices.cbegin(),
+                                assignedVertices.cend());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

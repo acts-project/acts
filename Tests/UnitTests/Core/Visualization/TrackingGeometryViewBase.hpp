@@ -54,13 +54,26 @@ run(IVisualization& helper, bool triangulate, const std::string& tag) {
 
   const Acts::TrackingVolume& tgVolume = *(tGeometry->highestTrackingVolume());
 
-  GeometryView::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
-                                   viewVolume, viewPassive, viewSensitive,
-                                   viewGrid, true, tag);
+  GeometryView::drawTrackingVolume(helper,
+                                   tgVolume,
+                                   tgContext,
+                                   viewContainer,
+                                   viewVolume,
+                                   viewPassive,
+                                   viewSensitive,
+                                   viewGrid,
+                                   true,
+                                   tag);
 
-  GeometryView::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
-                                   viewVolume, viewPassive, viewSensitive,
-                                   viewGrid, false);
+  GeometryView::drawTrackingVolume(helper,
+                                   tgVolume,
+                                   tgContext,
+                                   viewContainer,
+                                   viewVolume,
+                                   viewPassive,
+                                   viewSensitive,
+                                   viewGrid,
+                                   false);
   helper.write(cStream);
 
   return cStream.str();

@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   double halfphi(M_PI / 4.0);
   double averagePhi(0.0);
   CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
-  CylinderBounds cylinderBoundsSegment(nominalRadius, nominalHalfLength,
-                                       halfphi, averagePhi);
+  CylinderBounds cylinderBoundsSegment(
+      nominalRadius, nominalHalfLength, halfphi, averagePhi);
 
   /// test for type()
   BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::eCylinder);
@@ -112,23 +112,27 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
       !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
 
   /// test for distanceToBoundary
-  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(origin), 0.5,
+  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(origin),
+                  0.5,
                   1e-6);  // fail
-  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(beyondEnd), 10.0,
+  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(beyondEnd),
+                  10.0,
                   1e-6);  // pass
   double sinPiBy8 = std::sin(M_PI / 8.);
-  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(atPi), sinPiBy8,
+  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(atPi),
+                  sinPiBy8,
                   1e-6);  // pass
-  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(origin), 0.5,
+  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(origin),
+                  0.5,
                   1e-6);  // fail
 
   /// test for r()
-  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
-                  1e-6);
+  CHECK_CLOSE_REL(
+      cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius, 1e-6);
 
   /// test for averagePhi
-  CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eAveragePhi),
-                  averagePhi, 1e-6);
+  CHECK_CLOSE_REL(
+      cylinderBoundsObject.get(CylinderBounds::eAveragePhi), averagePhi, 1e-6);
 
   /// test for halfPhiSector
   CHECK_CLOSE_REL(cylinderBoundsSegment.get(CylinderBounds::eHalfPhiSector),
@@ -137,7 +141,8 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
 
   /// test for halflengthZ (NOTE: Naming violation)
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eHalfLengthZ),
-                  nominalHalfLength, 1e-6);
+                  nominalHalfLength,
+                  1e-6);
 
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;

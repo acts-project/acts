@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+  Finder::Config finderConfig(
+      std::move(fitter), seedFinder, ipEstimator, linearizer);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
@@ -179,21 +179,32 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   ActsSymMatrixD<3> expVtx15Cov;
   expVtx15Cov << 0.000, 1.e-06, 0.000, 1.e-06, 0.000, -6.e-05, 0.000, -6.e-05,
       0.014;
-  std::vector<double> expVtx15TrkWeights{0.0048, 0.0005, 0.0236, 0.8481,
-                                         0.8924};
-  std::vector<double> expVtx15TrkComp{19.6561, 24.1389, 16.4425, 5.5604,
-                                      4.7683};
+  std::vector<double> expVtx15TrkWeights{
+      0.0048, 0.0005, 0.0236, 0.8481, 0.8924};
+  std::vector<double> expVtx15TrkComp{
+      19.6561, 24.1389, 16.4425, 5.5604, 4.7683};
   std::vector<double> expVtx15TrkChi2{0, 0, 0, 0};
 
   // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
+  const std::vector<double> expAllVtxZPos{-6.070_mm,
+                                          -12.0605_mm,
+                                          -15.1093_mm,
+                                          -27.6569_mm,
+                                          -22.1054_mm,
+                                          -45.7010_mm,
+                                          -5.0622_mm,
+                                          -26.5496_mm,
+                                          -28.9597_mm,
+                                          -37.7430_mm,
+                                          5.4828_mm,
+                                          -47.8939_mm,
+                                          2.5777_mm,
+                                          -0.2656_mm,
+                                          -39.8197_mm};
 
   // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
+  const std::vector<int> expAllNTracks{
+      4, 2, 3, 14, 5, 9, 8, 17, 7, 2, 2, 4, 2, 7, 5};
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
@@ -211,8 +222,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
       int trkCount = 0;
       for (const auto& trk : vtx.tracks()) {
         CHECK_CLOSE_ABS(trk.trackWeight, expVtx1TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx1TrkComp[trkCount],
-                        0.15);
+        CHECK_CLOSE_ABS(
+            trk.vertexCompatibility, expVtx1TrkComp[trkCount], 0.15);
         // CHECK_CLOSE_ABS(trk.chi2Track, expVtx1TrkChi2[trkCount], 0.001);
         trkCount++;
       }
@@ -225,8 +236,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
       int trkCount = 0;
       for (const auto& trk : vtx.tracks()) {
         CHECK_CLOSE_ABS(trk.trackWeight, expVtx15TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx15TrkComp[trkCount],
-                        0.15);
+        CHECK_CLOSE_ABS(
+            trk.vertexCompatibility, expVtx15TrkComp[trkCount], 0.15);
         // CHECK_CLOSE_ABS(trk.chi2Track, expVtx15TrkChi2[trkCount], 0.001);
         trkCount++;
       }
@@ -308,8 +319,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+  Finder::Config finderConfig(
+      std::move(fitter), seedFinder, ipEstimator, linearizer);
   Finder::State state;
 
   Finder finder(finderConfig, extractParameters);
@@ -403,21 +414,32 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   ActsSymMatrixD<3> expVtx15Cov;
   expVtx15Cov << 0.000, 1.e-06, 0.000, 1.e-06, 0.000, -6.e-05, 0.000, -6.e-05,
       0.014;
-  std::vector<double> expVtx15TrkWeights{0.0048, 0.0005, 0.0236, 0.8481,
-                                         0.8924};
-  std::vector<double> expVtx15TrkComp{19.6561, 24.1389, 16.4425, 5.5604,
-                                      4.7683};
+  std::vector<double> expVtx15TrkWeights{
+      0.0048, 0.0005, 0.0236, 0.8481, 0.8924};
+  std::vector<double> expVtx15TrkComp{
+      19.6561, 24.1389, 16.4425, 5.5604, 4.7683};
   std::vector<double> expVtx15TrkChi2{0, 0, 0, 0};
 
   // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
+  const std::vector<double> expAllVtxZPos{-6.070_mm,
+                                          -12.0605_mm,
+                                          -15.1093_mm,
+                                          -27.6569_mm,
+                                          -22.1054_mm,
+                                          -45.7010_mm,
+                                          -5.0622_mm,
+                                          -26.5496_mm,
+                                          -28.9597_mm,
+                                          -37.7430_mm,
+                                          5.4828_mm,
+                                          -47.8939_mm,
+                                          2.5777_mm,
+                                          -0.2656_mm,
+                                          -39.8197_mm};
 
   // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
+  const std::vector<int> expAllNTracks{
+      4, 2, 3, 14, 5, 9, 8, 17, 7, 2, 2, 4, 2, 7, 5};
 
   const std::vector<int> expTracksIDs{29, 51, 89, 132};
 
@@ -437,8 +459,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       int trkCount = 0;
       for (const auto& trk : vtx.tracks()) {
         CHECK_CLOSE_ABS(trk.trackWeight, expVtx1TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx1TrkComp[trkCount],
-                        0.15);
+        CHECK_CLOSE_ABS(
+            trk.vertexCompatibility, expVtx1TrkComp[trkCount], 0.15);
         BOOST_CHECK_EQUAL(trk.originalParams->id(), expTracksIDs[trkCount]);
         // CHECK_CLOSE_ABS(trk.chi2Track, expVtx1TrkChi2[trkCount], 0.001);
         trkCount++;
@@ -452,8 +474,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
       int trkCount = 0;
       for (const auto& trk : vtx.tracks()) {
         CHECK_CLOSE_ABS(trk.trackWeight, expVtx15TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx15TrkComp[trkCount],
-                        0.15);
+        CHECK_CLOSE_ABS(
+            trk.vertexCompatibility, expVtx15TrkComp[trkCount], 0.15);
         // CHECK_CLOSE_ABS(trk.chi2Track, expVtx15TrkChi2[trkCount], 0.001);
         trkCount++;
       }
@@ -592,16 +614,27 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   const int expNRecoVertices = 15;
 
   // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
+  const std::vector<double> expAllVtxZPos{-6.070_mm,
+                                          -12.0605_mm,
+                                          -15.1093_mm,
+                                          -27.6569_mm,
+                                          -22.1054_mm,
+                                          -45.7010_mm,
+                                          -5.0622_mm,
+                                          -26.5496_mm,
+                                          -28.9597_mm,
+                                          -37.7430_mm,
+                                          5.4828_mm,
+                                          -47.8939_mm,
+                                          2.5777_mm,
+                                          -0.2656_mm,
+                                          -39.8197_mm};
 
   std::vector<bool> vtxFound(expAllVtxZPos.size(), false);
 
   // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
+  const std::vector<int> expAllNTracks{
+      4, 2, 3, 14, 5, 9, 8, 17, 7, 2, 2, 4, 2, 7, 5};
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 

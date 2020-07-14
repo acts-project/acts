@@ -10,7 +10,8 @@
 #include "Acts/Material/MaterialProperties.hpp"
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialPropertiesVector fullProperties,
+    const BinUtility& binUtility,
+    MaterialPropertiesVector fullProperties,
     double splitFactor)
     : ISurfaceMaterial(splitFactor), m_binUtility(binUtility) {
   // fill the material with deep copy
@@ -18,7 +19,8 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialPropertiesMatrix fullProperties,
+    const BinUtility& binUtility,
+    MaterialPropertiesMatrix fullProperties,
     double splitFactor)
     : ISurfaceMaterial(splitFactor),
       m_binUtility(binUtility),

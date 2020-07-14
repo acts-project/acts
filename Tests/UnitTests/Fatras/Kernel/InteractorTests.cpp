@@ -28,8 +28,10 @@ struct MockPhysicsList {
 
   template <typename generator_t>
   bool
-  operator()(generator_t &, const Acts::MaterialProperties &,
-             Particle &particle, std::vector<Particle> &generated) const {
+  operator()(generator_t &,
+             const Acts::MaterialProperties &,
+             Particle &particle,
+             std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
@@ -68,8 +70,11 @@ struct MockStepper {
     return state.momentum;
   }
   void
-  update(MockStepperState &state, const Vector3 &position,
-         const Vector3 &direction, Scalar momentum, Scalar time) {
+  update(MockStepperState &state,
+         const Vector3 &position,
+         const Vector3 &direction,
+         Scalar momentum,
+         Scalar time) {
     state.position = position;
     state.time = time;
     state.direction = direction;
@@ -89,8 +94,8 @@ struct MockPropagatorState {
 template <typename SurfaceSelector>
 struct Fixture {
   using Generator = std::ranlux48;
-  using Interactor = typename ActsFatras::Interactor<Generator, MockPhysicsList,
-                                                     SurfaceSelector>;
+  using Interactor = typename ActsFatras::
+      Interactor<Generator, MockPhysicsList, SurfaceSelector>;
   using InteractorResult = typename Interactor::result_type;
 
   Generator generator;
@@ -105,7 +110,9 @@ struct Fixture {
     // use zero-mass to simplify the math
     const auto particle =
         Particle(Barcode().setVertexPrimary(12u).setParticle(3u),
-                 Acts::PdgParticle::eProton, 0, 1)
+                 Acts::PdgParticle::eProton,
+                 0,
+                 1)
             .setPosition4(1, 2, 3, 4)
             .setDirection(1, 0, 0)
             .setAbsMomentum(100);
@@ -165,8 +172,8 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
   BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
   // particle energy has not changed since there were no interactions
-  CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
-                  eps);
+  CHECK_CLOSE_REL(
+      f.result.particle.energy(), f.interactor.particle.energy(), eps);
 }
 
 BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
@@ -193,8 +200,8 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
   BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
   // particle energy has changed due to interactions
-  CHECK_CLOSE_REL((f.result.particle.energy() + 1),
-                  f.interactor.particle.energy(), eps);
+  CHECK_CLOSE_REL(
+      (f.result.particle.energy() + 1), f.interactor.particle.energy(), eps);
 }
 
 BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
@@ -218,8 +225,8 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
   BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
   // particle energy has not changed since there were no interactions
-  CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
-                  eps);
+  CHECK_CLOSE_REL(
+      f.result.particle.energy(), f.interactor.particle.energy(), eps);
 }
 
 BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
@@ -243,8 +250,8 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
   BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
   // particle energy has changed due to interactions
-  CHECK_CLOSE_REL((f.result.particle.energy() + 1),
-                  f.interactor.particle.energy(), eps);
+  CHECK_CLOSE_REL(
+      (f.result.particle.energy() + 1), f.interactor.particle.energy(), eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -90,7 +90,9 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// @param halfz The half length in z
   /// @param halfphi The half lopening angle
   /// @param avgphi The average phi value
-  CylinderVolumeBounds(double rmin, double rmax, double halfz,
+  CylinderVolumeBounds(double rmin,
+                       double rmax,
+                       double halfz,
                        double halfphi = M_PI,
                        double avgphi = 0.) noexcept(false)
       : m_values({rmin, rmax, halfz, halfphi, avgphi}) {

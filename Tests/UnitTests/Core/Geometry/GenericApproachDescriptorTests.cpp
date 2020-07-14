@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
   SurfaceIntersection surfIntersection =
       approachDescriptor.approachSurface(tgContext, origin, zDir, bcheck);
   double expectedIntersection = 20.0;  // property of SurfaceStub
-  CHECK_CLOSE_REL(surfIntersection.intersection.pathLength,
-                  expectedIntersection, 1e-6);
+  CHECK_CLOSE_REL(
+      surfIntersection.intersection.pathLength, expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());

@@ -19,15 +19,19 @@ FW::Options::addParticleGunOptions(
     boost::program_options::options_description& opt) {
   using namespace boost::program_options;
 
-  opt.add_options()("pg-nparticles", value<size_t>()->default_value(1.),
+  opt.add_options()("pg-nparticles",
+                    value<size_t>()->default_value(1.),
                     "number of particles.")(
-      "pg-d0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
+      "pg-d0-range",
+      value<read_range>()->multitoken()->default_value({0., 0.}),
       "range in which the d0 parameter is simulated in [mm]. Please hand"
       "over by simply seperating the values by space")(
-      "pg-z0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
+      "pg-z0-range",
+      value<read_range>()->multitoken()->default_value({0., 0.}),
       "range in which the z0 parameter is simulated in [mm]. Please hand"
       "over by simply seperating the values by space")(
-      "pg-t0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
+      "pg-t0-range",
+      value<read_range>()->multitoken()->default_value({0., 0.}),
       "range in which the t0 parameter is simulated in [ns]. Please hand"
       "over by simply seperating the values by space")(
       "pg-phi-range",
@@ -38,12 +42,15 @@ FW::Options::addParticleGunOptions(
       value<read_range>()->multitoken()->default_value({-4., 4.}),
       "range in which the eta parameter is simulated. Please hand over by "
       "simply seperating the values by space")(
-      "pg-pt-range", value<read_range>()->multitoken()->default_value({1, 100}),
+      "pg-pt-range",
+      value<read_range>()->multitoken()->default_value({1, 100}),
       "range in which the pt in [GeV] parameter is simulated. Please hand "
       "over by simply seperating the values by space")(
-      "pg-pdg", value<int32_t>()->default_value(Acts::PdgParticle::eMuon),
+      "pg-pdg",
+      value<int32_t>()->default_value(Acts::PdgParticle::eMuon),
       "PDG number of the particle, will be adjusted for charge flip.")(
-      "pg-randomize-charge", bool_switch(),
+      "pg-randomize-charge",
+      bool_switch(),
       "flip the charge (and change PDG accordingly).");
 }
 

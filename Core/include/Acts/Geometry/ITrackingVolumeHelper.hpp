@@ -61,7 +61,8 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext& gctx, const LayerVector& layers,
+  createTrackingVolume(const GeometryContext& gctx,
+                       const LayerVector& layers,
                        std::shared_ptr<const IVolumeMaterial> volumeMaterial,
                        VolumeBoundsPtr volumeBounds,
                        MutableTrackingVolumeVector mtvVector = {},
@@ -84,10 +85,13 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext& gctx, const LayerVector& layers,
+  createTrackingVolume(const GeometryContext& gctx,
+                       const LayerVector& layers,
                        MutableTrackingVolumeVector mtvVector,
                        std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                       double loc0Min, double loc0Max, double loc1Min,
+                       double loc0Min,
+                       double loc0Max,
+                       double loc1Min,
                        double loc1Max,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType btype = arbitrary) const = 0;
@@ -106,10 +110,15 @@ class ITrackingVolumeHelper {
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
   createGapTrackingVolume(
-      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
-      double loc0Max, double loc1Min, double loc1Max,
-      unsigned int materialLayers, bool cylinder = true,
+      const GeometryContext& gctx,
+      MutableTrackingVolumeVector& mtvVector,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      double loc0Min,
+      double loc0Max,
+      double loc1Min,
+      double loc1Max,
+      unsigned int materialLayers,
+      bool cylinder = true,
       const std::string& volumeName = "UndefinedVolume") const = 0;
 
   /// Create a gap volume from dimensions and
@@ -128,7 +137,9 @@ class ITrackingVolumeHelper {
   createGapTrackingVolume(const GeometryContext& gctx,
                           MutableTrackingVolumeVector& mtvVector,
                           std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                          double loc0Min, double loc0Max, double loc1Min,
+                          double loc0Min,
+                          double loc0Max,
+                          double loc1Min,
                           double loc1Max,
                           const std::vector<double>& layerPositions,
                           bool cylinder = true,

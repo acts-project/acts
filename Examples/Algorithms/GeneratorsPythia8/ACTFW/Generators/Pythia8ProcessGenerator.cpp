@@ -87,9 +87,10 @@ FW::Pythia8Generator::operator()(FW::RandomEngine& rng) {
     }
 
     // production vertex. Pythia8 time uses units mm/c, and we use c=1
-    SimVertex::Vector4 pos4(
-        genParticle.xProd() * 1_mm, genParticle.yProd() * 1_mm,
-        genParticle.zProd() * 1_mm, genParticle.tProd() * 1_mm);
+    SimVertex::Vector4 pos4(genParticle.xProd() * 1_mm,
+                            genParticle.yProd() * 1_mm,
+                            genParticle.zProd() * 1_mm,
+                            genParticle.tProd() * 1_mm);
     // identify vertex
     std::vector<SimVertex>::iterator vertex;
     if (not genParticle.hasVertex()) {
@@ -99,8 +100,9 @@ FW::Pythia8Generator::operator()(FW::RandomEngine& rng) {
       // either add to existing secondary vertex if exists or create new one
       // TODO can we do this w/o the manual search and position check?
       vertex = std::find_if(
-          vertices.begin(), vertices.end(),
-          [=](const SimVertex& v) { return (v.position4 == pos4); });
+          vertices.begin(), vertices.end(), [=](const SimVertex& v) {
+            return (v.position4 == pos4);
+          });
       if (vertex == vertices.end()) {
         // no matching secondary vertex exists -> create new one
         vertices.emplace_back(pos4);
@@ -120,8 +122,8 @@ FW::Pythia8Generator::operator()(FW::RandomEngine& rng) {
     const auto pdg = static_cast<Acts::PdgParticle>(genParticle.id());
 
     // construct internal particle
-    ActsFatras::Particle particle(particleId, pdg, genParticle.charge() * 1_e,
-                                  genParticle.m0() * 1_GeV);
+    ActsFatras::Particle particle(
+        particleId, pdg, genParticle.charge() * 1_e, genParticle.m0() * 1_GeV);
     particle.setPosition4(pos4);
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());

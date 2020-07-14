@@ -107,7 +107,8 @@ template <int mainGridSize, int trkGridSize>
 void
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     removeTrackGridFromMainGrid(
-        int zBin, const Acts::ActsVectorF<trkGridSize>& trkGrid,
+        int zBin,
+        const Acts::ActsVectorF<trkGridSize>& trkGrid,
         Acts::ActsVectorF<mainGridSize>& mainGrid) const {
   modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, -1);
 }
@@ -143,7 +144,9 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 template <int mainGridSize, int trkGridSize>
 Acts::ActsVectorF<trkGridSize>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2D& cov, float distCtrD,
+    int offset,
+    const Acts::SymMatrix2D& cov,
+    float distCtrD,
     float distCtrZ) const {
   ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
 

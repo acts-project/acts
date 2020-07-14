@@ -165,7 +165,8 @@ matrixCompare(const Eigen::DenseBase<Derived1>& val,
 template <typename Container,
           typename Enable = typename Container::const_iterator>
 predicate_result
-compare(const Container& val, const Container& ref,
+compare(const Container& val,
+        const Container& ref,
         ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
   // (in order to provide better error reporting when they don't)
@@ -212,14 +213,16 @@ compare(const Container& val, const Container& ref,
 // Eigen expression template frontend
 template <typename T, typename U>
 predicate_result
-compare(const Eigen::DenseBase<T>& val, const Eigen::DenseBase<U>& ref,
+compare(const Eigen::DenseBase<T>& val,
+        const Eigen::DenseBase<U>& ref,
         ScalarComparison&& compareImpl) {
   return matrixCompare(val.eval(), ref.eval(), std::move(compareImpl));
 }
 
 // Eigen transform frontend
 predicate_result
-compare(const Transform3D& val, const Transform3D& ref,
+compare(const Transform3D& val,
+        const Transform3D& ref,
         ScalarComparison&& compareImpl) {
   return matrixCompare(val.matrix(), ref.matrix(), std::move(compareImpl));
 }
@@ -264,7 +267,8 @@ checkCloseOrSmall(const T& val, const U& ref, double reltol, double small) {
 template <typename Scalar, int dim>
 boost::test_tools::predicate_result
 checkCloseCovariance(const ActsSymMatrix<Scalar, dim>& val,
-                     const ActsSymMatrix<Scalar, dim>& ref, double tol) {
+                     const ActsSymMatrix<Scalar, dim>& ref,
+                     double tol) {
   static_assert(dim != Eigen::Dynamic,
                 "Dynamic-size matrices are currently unsupported.");
 

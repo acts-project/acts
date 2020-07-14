@@ -151,7 +151,8 @@ inline SPForSeed<SpacePoint>::SPForSeed(SpacePoint* const& sp, const float* r) {
 }
 
 template <typename SpacePoint>
-inline SPForSeed<SpacePoint>::SPForSeed(SpacePoint* const& sp, const float* r,
+inline SPForSeed<SpacePoint>::SPForSeed(SpacePoint* const& sp,
+                                        const float* r,
                                         const float* sc) {
   set(sp, r, sc);
   m_param = 0.;
@@ -219,7 +220,8 @@ SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r) {
 
 template <typename SpacePoint>
 inline void
-SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r,
+SPForSeed<SpacePoint>::set(SpacePoint* const& sp,
+                           const float* r,
                            const float* sc) {
   spacepoint = sp;
   m_x = r[0];

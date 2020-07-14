@@ -29,8 +29,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Add the volume boundary material if configured
   for (xml_coll_t bmat(x_det, _Unicode(boundary_material)); bmat; ++bmat) {
     xml_comp_t x_boundary_material = bmat;
-    xmlToProtoSurfaceMaterial(x_boundary_material, *barrelExtension,
-                              "boundary_material");
+    xmlToProtoSurfaceMaterial(
+        x_boundary_material, *barrelExtension, "boundary_material");
   }
   barrelDetector.addExtension<Acts::ActsExtension>(barrelExtension);
 
@@ -86,9 +86,10 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
 
       // Place the pipe in the stave
       staveAssembly.placeVolume(
-          cableVolume, Transform3D(RotationX(0.5 * M_PI),
-                                   Position(x_cable.x_offset(), positionY,
-                                            x_cable.z_offset())));
+          cableVolume,
+          Transform3D(
+              RotationX(0.5 * M_PI),
+              Position(x_cable.x_offset(), positionY, x_cable.z_offset())));
     }
 
     // Place them along local y
@@ -166,8 +167,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     // Add the proto layer material
     for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
       xml_comp_t x_layer_material = lmat;
-      xmlToProtoSurfaceMaterial(x_layer_material, *layerExtension,
-                                "layer_material");
+      xmlToProtoSurfaceMaterial(
+          x_layer_material, *layerExtension, "layer_material");
     }
     PlacedVolume placedLayer = barrelVolume.placeVolume(layerVolume);
     placedLayer.addPhysVolID("layer", layerNum);

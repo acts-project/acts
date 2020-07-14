@@ -50,8 +50,12 @@ class EllipseBounds : public PlanarBounds {
   /// @param outerRy The outer ellipse radius in y
   /// @param halfPhi spanning phi sector (is set to pi as default)
   /// @param averagePhi average phi (is set to 0. as default)
-  EllipseBounds(double innerRx, double innerRy, double outerRx, double outerRy,
-                double halfPhi = M_PI, double averagePhi = 0.) noexcept(false)
+  EllipseBounds(double innerRx,
+                double innerRy,
+                double outerRx,
+                double outerRy,
+                double halfPhi = M_PI,
+                double averagePhi = 0.) noexcept(false)
       : m_values({innerRx, innerRy, outerRx, outerRy, halfPhi, averagePhi}),
         m_boundingBox(m_values[eInnerRy], m_values[eOuterRy]) {
     checkConsistency();

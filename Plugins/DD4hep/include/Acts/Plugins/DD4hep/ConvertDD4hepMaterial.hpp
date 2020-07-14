@@ -30,7 +30,8 @@ class Layer;
 /// @return a map of the identification string and a surface material
 void
 addCylinderLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& cylinderLayer,
+    dd4hep::DetElement detElement,
+    Layer& cylinderLayer,
     Logging::Level loggingLevel = Logging::Level::INFO);
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
@@ -43,7 +44,8 @@ addCylinderLayerProtoMaterial(
 ///
 /// @return a map of the identification string and a surface material
 void
-addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
+                          Layer& discLayer,
                           Logging::Level loggingLevel = Logging::Level::INFO);
 
 /// Helper method to be called for Cylinder and Disc Proto material
@@ -55,7 +57,8 @@ addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 /// @param binning the Binning prescription for the ActsExtension
 void
 addLayerProtoMaterial(
-    const ActsExtension& actsExtension, Layer& layer,
+    const ActsExtension& actsExtension,
+    Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
 
@@ -68,7 +71,8 @@ addLayerProtoMaterial(
 /// @param binning the Binning prescription for the ActsExtension
 std::shared_ptr<Acts::ProtoSurfaceMaterial>
 createProtoMaterial(
-    const ActsExtension& actsExtension, const std::string& valueTag,
+    const ActsExtension& actsExtension,
+    const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
 

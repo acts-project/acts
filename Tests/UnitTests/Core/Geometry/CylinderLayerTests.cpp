@@ -74,9 +74,12 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   BOOST_CHECK_EQUAL(pCylinderLayerWithApproachDescriptor->approachDescriptor(),
                     adPtr);
   // with the layerType specified...
-  auto pCylinderLayerWithLayerType =
-      CylinderLayer::create(pTransform, pCylinder, nullptr, thickness,
-                            std::move(ad), LayerType::passive);
+  auto pCylinderLayerWithLayerType = CylinderLayer::create(pTransform,
+                                                           pCylinder,
+                                                           nullptr,
+                                                           thickness,
+                                                           std::move(ad),
+                                                           LayerType::passive);
   BOOST_CHECK_EQUAL(pCylinderLayerWithLayerType->layerType(),
                     LayerType::passive);
 }

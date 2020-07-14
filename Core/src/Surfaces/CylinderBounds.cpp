@@ -69,7 +69,8 @@ Acts::CylinderBounds::inside3D(const Vector3D& position,
   Vector2D lpos(detail::radian_sym(phi(position) - get(eAveragePhi)),
                 position.z());
   return bcheck.transformed(jacobian())
-      .isInside(lpos, Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
+      .isInside(lpos,
+                Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
                 Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
@@ -77,7 +78,8 @@ double
 Acts::CylinderBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
+      shifted(lposition),
+      Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
       Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 

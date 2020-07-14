@@ -18,9 +18,11 @@ FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("ckf-slselection-chi2max", value<double>()->default_value(15),
+  opt("ckf-slselection-chi2max",
+      value<double>()->default_value(15),
       "Global criteria of maximum chi2 for CKF source link selection");
-  opt("ckf-slselection-nmax", value<int>()->default_value(10),
+  opt("ckf-slselection-nmax",
+      value<int>()->default_value(10),
       "Global criteria of maximum number of source link candidates on a "
       "surface for CKF source link selection");
 }

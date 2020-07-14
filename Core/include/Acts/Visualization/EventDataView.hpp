@@ -62,8 +62,12 @@ struct EventDataView {
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
   static inline std::vector<Vector3D>
-  createEllipse(double lambda0, double lambda1, double theta, size_t lseg,
-                double offset, const Vector2D& lposition = Vector2D(0., 0.),
+  createEllipse(double lambda0,
+                double lambda1,
+                double theta,
+                size_t lseg,
+                double offset,
+                const Vector2D& lposition = Vector2D(0., 0.),
                 const Transform3D& transform = Transform3D::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
@@ -95,7 +99,8 @@ struct EventDataView {
   /// @param locErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void
-  drawCovarianceCartesian(IVisualization& helper, const Vector2D& lposition,
+  drawCovarianceCartesian(IVisualization& helper,
+                          const Vector2D& lposition,
                           const ActsSymMatrixD<2>& covariance,
                           const Transform3D& transform,
                           double locErrorScale = 1,
@@ -111,10 +116,12 @@ struct EventDataView {
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void
-  drawCovarianceAngular(IVisualization& helper, const Vector3D& position,
+  drawCovarianceAngular(IVisualization& helper,
+                        const Vector3D& position,
                         const Vector3D& direction,
                         const ActsSymMatrixD<2>& covariance,
-                        double directionScale = 1, double angularErrorScale = 1,
+                        double directionScale = 1,
+                        double angularErrorScale = 1,
                         const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw bound parameters object
@@ -130,16 +137,21 @@ struct EventDataView {
   /// @param surfConfig The visualization option for the surface
   template <typename parameters_t>
   static inline void
-  drawBoundParameters(IVisualization& helper, const parameters_t& parameters,
+  drawBoundParameters(IVisualization& helper,
+                      const parameters_t& parameters,
                       const GeometryContext& gctx = GeometryContext(),
-                      double momentumScale = 1., double locErrorScale = 1.,
+                      double momentumScale = 1.,
+                      double locErrorScale = 1.,
                       double angularErrorScale = 1.,
                       const ViewConfig& parConfig = s_viewParameter,
                       const ViewConfig& covConfig = s_viewParameter,
                       const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
-      GeometryView::drawSurface(helper, parameters.referenceSurface(), gctx,
-                                Transform3D::Identity(), surfConfig);
+      GeometryView::drawSurface(helper,
+                                parameters.referenceSurface(),
+                                gctx,
+                                Transform3D::Identity(),
+                                surfConfig);
     }
 
     // Draw the parameter shaft and cone
@@ -154,8 +166,12 @@ struct EventDataView {
     GeometryView::drawArrowBackward(
         helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
 
-    GeometryView::drawArrowForward(helper, position + 0.5 * parLength,
-                                   position + parLength, 4., 2.5, lparConfig);
+    GeometryView::drawArrowForward(helper,
+                                   position + 0.5 * parLength,
+                                   position + parLength,
+                                   4.,
+                                   2.5,
+                                   lparConfig);
 
     if (parameters.covariance().has_value()) {
       auto paramVec = parameters.parameters();
@@ -163,15 +179,20 @@ struct EventDataView {
 
       // Draw the local covariance
       const auto& covariance = *parameters.covariance();
-      drawCovarianceCartesian(helper, lposition,
+      drawCovarianceCartesian(helper,
+                              lposition,
                               covariance.template block<2, 2>(0, 0),
                               parameters.referenceSurface().transform(gctx),
-                              locErrorScale, covConfig);
+                              locErrorScale,
+                              covConfig);
 
-      drawCovarianceAngular(
-          helper, parameters.position(), parameters.momentum().normalized(),
-          covariance.template block<2, 2>(2, 2), 0.9 * p * momentumScale,
-          angularErrorScale, covConfig);
+      drawCovarianceAngular(helper,
+                            parameters.position(),
+                            parameters.momentum().normalized(),
+                            covariance.template block<2, 2>(2, 2),
+                            0.9 * p * momentumScale,
+                            angularErrorScale,
+                            covConfig);
     }
   }
 
@@ -199,7 +220,8 @@ struct EventDataView {
                       const Acts::MultiTrajectory<source_link_t>& multiTraj,
                       const size_t& entryIndex,
                       const GeometryContext& gctx = GeometryContext(),
-                      double momentumScale = 1., double locErrorScale = 1.,
+                      double momentumScale = 1.,
+                      double locErrorScale = 1.,
                       double angularErrorScale = 1.,
                       const ViewConfig& surfaceConfig = s_viewSensitive,
                       const ViewConfig& measurementConfig = s_viewMeasurement,
@@ -222,8 +244,11 @@ struct EventDataView {
 
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
-        GeometryView::drawSurface(helper, state.referenceSurface(), gctx,
-                                  Transform3D::Identity(), surfaceConfig);
+        GeometryView::drawSurface(helper,
+                                  state.referenceSurface(),
+                                  gctx,
+                                  Transform3D::Identity(),
+                                  surfaceConfig);
       }
 
       // Second, if necessary and present, draw the calibrated measurement (only
@@ -234,9 +259,12 @@ struct EventDataView {
         const Vector2D& lposition = state.calibrated().template head<2>();
         ActsSymMatrixD<2> covariance =
             state.calibratedCovariance().template topLeftCorner<2, 2>();
-        drawCovarianceCartesian(helper, lposition, covariance,
+        drawCovarianceCartesian(helper,
+                                lposition,
+                                covariance,
                                 state.referenceSurface().transform(gctx),
-                                locErrorScale, measurementConfig);
+                                locErrorScale,
+                                measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters
@@ -244,29 +272,49 @@ struct EventDataView {
       if (predictedConfig.visible and state.hasPredicted()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.predictedCovariance(),
+            BoundParameters(gctx,
+                            state.predictedCovariance(),
                             state.predicted(),
                             state.referenceSurface().getSharedPtr()),
-            gctx, momentumScale, locErrorScale, angularErrorScale,
-            predictedConfig, predictedConfig, ViewConfig(false));
+            gctx,
+            momentumScale,
+            locErrorScale,
+            angularErrorScale,
+            predictedConfig,
+            predictedConfig,
+            ViewConfig(false));
       }
       // (b) filtered track parameters
       if (filteredConfig.visible and state.hasFiltered()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.filteredCovariance(), state.filtered(),
+            BoundParameters(gctx,
+                            state.filteredCovariance(),
+                            state.filtered(),
                             state.referenceSurface().getSharedPtr()),
-            gctx, momentumScale, locErrorScale, angularErrorScale,
-            filteredConfig, filteredConfig, ViewConfig(false));
+            gctx,
+            momentumScale,
+            locErrorScale,
+            angularErrorScale,
+            filteredConfig,
+            filteredConfig,
+            ViewConfig(false));
       }
       // (c) smoothed track parameters
       if (smoothedConfig.visible and state.hasSmoothed()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.smoothedCovariance(), state.smoothed(),
+            BoundParameters(gctx,
+                            state.smoothedCovariance(),
+                            state.smoothed(),
                             state.referenceSurface().getSharedPtr()),
-            gctx, momentumScale, locErrorScale, angularErrorScale,
-            smoothedConfig, smoothedConfig, ViewConfig(false));
+            gctx,
+            momentumScale,
+            locErrorScale,
+            angularErrorScale,
+            smoothedConfig,
+            smoothedConfig,
+            ViewConfig(false));
       }
       return true;
     });

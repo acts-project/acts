@@ -45,7 +45,8 @@ class PerigeeSurface : public LineSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
+  PerigeeSurface(const GeometryContext& gctx,
+                 const PerigeeSurface& other,
                  const Transform3D& transf);
 
  public:

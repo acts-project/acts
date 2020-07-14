@@ -50,26 +50,33 @@ BOOST_AUTO_TEST_CASE(all_of_test) {
 
 BOOST_AUTO_TEST_CASE(hana_set_union_test) {
   // using first    = typename bm::set<float, int, char, bool>::type;
-  constexpr auto first = hana::make_set(hana::type_c<float>, hana::type_c<int>,
-                                        hana::type_c<char>, hana::type_c<bool>);
+  constexpr auto first = hana::make_set(hana::type_c<float>,
+                                        hana::type_c<int>,
+                                        hana::type_c<char>,
+                                        hana::type_c<bool>);
   // using second   = typename bm::vector<long, int>::type;
   constexpr auto second = hana::make_set(hana::type_c<long>, hana::type_c<int>);
   constexpr auto found = hana::union_(first, second);
   // using found    = typename detail::boost_set_merger_t<first, second>;
   // using expected = typename bm::set<float, int, char, bool, long>::type;
-  constexpr auto expected =
-      hana::make_set(hana::type_c<float>, hana::type_c<int>, hana::type_c<char>,
-                     hana::type_c<bool>, hana::type_c<long>);
+  constexpr auto expected = hana::make_set(hana::type_c<float>,
+                                           hana::type_c<int>,
+                                           hana::type_c<char>,
+                                           hana::type_c<bool>,
+                                           hana::type_c<long>);
 
   static_assert(found == expected, "union of hana::sets failed");
 }
 
 BOOST_AUTO_TEST_CASE(hana_set_to_tuple_test) {
-  constexpr auto a_set = hana::make_set(hana::type_c<float>, hana::type_c<int>,
-                                        hana::type_c<char>, hana::type_c<bool>);
-  constexpr auto h_tuple =
-      hana::make_tuple(hana::type_c<float>, hana::type_c<int>,
-                       hana::type_c<char>, hana::type_c<bool>);
+  constexpr auto a_set = hana::make_set(hana::type_c<float>,
+                                        hana::type_c<int>,
+                                        hana::type_c<char>,
+                                        hana::type_c<bool>);
+  constexpr auto h_tuple = hana::make_tuple(hana::type_c<float>,
+                                            hana::type_c<int>,
+                                            hana::type_c<char>,
+                                            hana::type_c<bool>);
 
   static_assert(hana::to<hana::tuple_tag>(a_set) == h_tuple, "not equal");
 
@@ -142,8 +149,10 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
                 "Did not find action type");
 
   constexpr auto found_results =
-      detail::type_collector_t<detail::result_type_extractor, traits1,
-                               traits2<true>, traits2<false>>;
+      detail::type_collector_t<detail::result_type_extractor,
+                               traits1,
+                               traits2<true>,
+                               traits2<false>>;
   constexpr auto expected_results =
       hana::make_set(hana::type_c<int>, hana::type_c<bool>);
   static_assert(found_results == expected_results,
@@ -158,8 +167,10 @@ BOOST_AUTO_TEST_CASE(type_collector_test) {
       "Unpacked results tuple not correct");
 
   constexpr auto found_actions =
-      detail::type_collector_t<detail::action_type_extractor, traits1,
-                               traits2<true>, traits2<false>>;
+      detail::type_collector_t<detail::action_type_extractor,
+                               traits1,
+                               traits2<true>,
+                               traits2<false>>;
   constexpr auto expected_actions =
       hana::make_set(hana::type_c<char>, hana::type_c<float>);
   static_assert(found_actions == expected_actions,

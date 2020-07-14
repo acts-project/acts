@@ -67,10 +67,16 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*>
-  surfacesRing(DetectorStore& detStore, double moduleHalfXminY,
-               double moudleHalfXmaxY, double moduleHalfY,
-               double moduleThickness, double moduleTilt, double ringRadius,
-               double ringZ, double zStagger, int nPhi) {
+  surfacesRing(DetectorStore& detStore,
+               double moduleHalfXminY,
+               double moudleHalfXmaxY,
+               double moduleHalfY,
+               double moduleThickness,
+               double moduleTilt,
+               double ringRadius,
+               double ringZ,
+               double zStagger,
+               int nPhi) {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
@@ -86,8 +92,8 @@ struct CylindricalTrackingGeometry {
     if (moduleHalfXminY == moudleHalfXmaxY) {
       mBounds = std::make_shared<RectangleBounds>(moduleHalfXminY, moduleHalfY);
     } else {
-      mBounds = std::make_shared<TrapezoidBounds>(moduleHalfXminY,
-                                                  moudleHalfXmaxY, moduleHalfY);
+      mBounds = std::make_shared<TrapezoidBounds>(
+          moduleHalfXminY, moudleHalfXmaxY, moduleHalfY);
     }
 
     double phiStep = 2 * M_PI / nPhi;
@@ -128,10 +134,14 @@ struct CylindricalTrackingGeometry {
   ///
   /// @return A vector of Surfaces
   std::vector<const Surface*>
-  surfacesCylinder(DetectorStore& detStore, double moduleHalfX,
-                   double moduleHalfY, double moduleThickness,
-                   double moduleTiltPhi, double layerRadius,
-                   double radialStagger, double longitudinalOverlap,
+  surfacesCylinder(DetectorStore& detStore,
+                   double moduleHalfX,
+                   double moduleHalfY,
+                   double moduleThickness,
+                   double moduleTiltPhi,
+                   double layerRadius,
+                   double radialStagger,
+                   double longitudinalOverlap,
                    const std::pair<int, int>& binningSchema) {
     std::vector<const Surface*> layerSurfaces;
 
@@ -147,21 +157,23 @@ struct CylindricalTrackingGeometry {
     auto mBounds = std::make_shared<RectangleBounds>(moduleHalfX, moduleHalfY);
 
     // Create the module centers
-    auto moduleCenters =
-        modulePositionsCylinder(layerRadius, radialStagger, moduleHalfY,
-                                longitudinalOverlap, binningSchema);
+    auto moduleCenters = modulePositionsCylinder(layerRadius,
+                                                 radialStagger,
+                                                 moduleHalfY,
+                                                 longitudinalOverlap,
+                                                 binningSchema);
 
     for (auto& mCenter : moduleCenters) {
       // The association transform
       double modulePhi = VectorHelpers::phi(mCenter);
       // Local z axis is the normal vector
-      Vector3D moduleLocalZ(cos(modulePhi + moduleTiltPhi),
-                            sin(modulePhi + moduleTiltPhi), 0.);
+      Vector3D moduleLocalZ(
+          cos(modulePhi + moduleTiltPhi), sin(modulePhi + moduleTiltPhi), 0.);
       // Local y axis is the global z axis
       Vector3D moduleLocalY(0., 0., 1);
       // Local x axis the normal to local y,z
-      Vector3D moduleLocalX(-sin(modulePhi + moduleTiltPhi),
-                            cos(modulePhi + moduleTiltPhi), 0.);
+      Vector3D moduleLocalX(
+          -sin(modulePhi + moduleTiltPhi), cos(modulePhi + moduleTiltPhi), 0.);
       // Create the RotationMatrix
       RotationMatrix3D moduleRotation;
       moduleRotation.col(0) = moduleLocalX;
@@ -184,8 +196,10 @@ struct CylindricalTrackingGeometry {
   /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
   std::vector<Vector3D>
-  modulePositionsCylinder(double radius, double zStagger,
-                          double moduleHalfLength, double lOverlap,
+  modulePositionsCylinder(double radius,
+                          double zStagger,
+                          double moduleHalfLength,
+                          double lOverlap,
                           const std::pair<int, int>& binningSchema) {
     int nPhiBins = binningSchema.first;
     int nZbins = binningSchema.second;
@@ -206,8 +220,8 @@ struct CylindricalTrackingGeometry {
       for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;
-        mPositions.push_back(Vector3D(moduleR * cos(modulePhi),
-                                      moduleR * sin(modulePhi), moduleZ));
+        mPositions.push_back(Vector3D(
+            moduleR * cos(modulePhi), moduleR * sin(modulePhi), moduleZ));
       }
     }
     return mPositions;
@@ -297,9 +311,15 @@ struct CylindricalTrackingGeometry {
 
     for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
       std::vector<const Surface*> layerSurfaces =
-          surfacesCylinder(detectorStore, pModuleHalfX[ilp], pModuleHalfY[ilp],
-                           pModuleThickness[ilp], pModuleTiltPhi[ilp],
-                           pLayerRadii[ilp], 2_mm, 5_mm, pLayerBinning[ilp]);
+          surfacesCylinder(detectorStore,
+                           pModuleHalfX[ilp],
+                           pModuleHalfY[ilp],
+                           pModuleThickness[ilp],
+                           pModuleTiltPhi[ilp],
+                           pLayerRadii[ilp],
+                           2_mm,
+                           5_mm,
+                           pLayerBinning[ilp]);
 
       // Make a shared version out of it
       std::vector<std::shared_ptr<const Surface>> layerSurfacePtrs;
@@ -311,9 +331,11 @@ struct CylindricalTrackingGeometry {
       // create the layer and store it
       ProtoLayer protoLayer(geoContext, layerSurfaces);
       protoLayer.envelope[binR] = {0.5, 0.5};
-      auto pLayer = layerCreator->cylinderLayer(
-          geoContext, std::move(layerSurfacePtrs), pLayerBinning[ilp].first,
-          pLayerBinning[ilp].second, protoLayer);
+      auto pLayer = layerCreator->cylinderLayer(geoContext,
+                                                std::move(layerSurfacePtrs),
+                                                pLayerBinning[ilp].first,
+                                                pLayerBinning[ilp].second,
+                                                protoLayer);
       auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
       auto mutableOuterSurface =
           const_cast<Acts::Surface*>(approachSurfaces.at(1));
@@ -324,13 +346,17 @@ struct CylindricalTrackingGeometry {
     }  // loop over layers
 
     // layer array
-    auto pLayerArray = layerArrayCreator->layerArray(geoContext, pLayers, 25.,
-                                                     300., arbitrary, binR);
+    auto pLayerArray = layerArrayCreator->layerArray(
+        geoContext, pLayers, 25., 300., arbitrary, binR);
     auto pVolumeBounds =
         std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
-    auto pVolume = TrackingVolume::create(nullptr, pVolumeBounds, nullptr,
-                                          std::move(pLayerArray), nullptr, {},
+    auto pVolume = TrackingVolume::create(nullptr,
+                                          pVolumeBounds,
+                                          nullptr,
+                                          std::move(pLayerArray),
+                                          nullptr,
+                                          {},
                                           "Pixel::Barrel");
 
     // The combined volume

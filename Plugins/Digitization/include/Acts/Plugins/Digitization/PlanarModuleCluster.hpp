@@ -41,13 +41,20 @@ class PlanarModuleCluster
   /// @param [in] t Timestamp of the cluster
   /// @param [in] dCells is the vector of digitization cells
   PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      const Identifier& identifier, ActsSymMatrixD<3> cov,
-                      double loc0, double loc1, double t,
+                      const Identifier& identifier,
+                      ActsSymMatrixD<3> cov,
+                      double loc0,
+                      double loc1,
+                      double t,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
       : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT>(
-            std::move(mSurface), identifier,  // original measurement
-            std::move(cov), loc0, loc1, t),
+            std::move(mSurface),
+            identifier,  // original measurement
+            std::move(cov),
+            loc0,
+            loc1,
+            t),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {}
 

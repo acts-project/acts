@@ -45,6 +45,7 @@ Acts::detail::rotationToLocalAxesDerivative(const RotationMatrix3D& rotation) {
   rotToLocalZAxis.col(2) =
       Vector3D(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
-  return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
+  return std::make_tuple(std::move(rotToLocalXAxis),
+                         std::move(rotToLocalYAxis),
                          std::move(rotToLocalZAxis));
 }

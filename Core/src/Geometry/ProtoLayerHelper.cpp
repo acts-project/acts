@@ -54,7 +54,8 @@ Acts::ProtoLayerHelper::protoLayers(const GeometryContext& gctx,
 
 std::vector<Acts::ProtoLayer>
 Acts::ProtoLayerHelper::protoLayers(
-    const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
+    const GeometryContext& gctx,
+    const std::vector<const Surface*>& surfaces,
     const std::vector<SortingConfig>& sortings) const {
   ACTS_DEBUG("Received " << surfaces.size() << " surfaces at input.");
   std::vector<std::vector<const Surface*>> sortSurfaces = {surfaces};

@@ -32,8 +32,11 @@
 using Line2D = Eigen::Hyperplane<double, 2>;
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
-    const Identifier& identifier, const TGeoNode& tGeoNode,
-    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    const Identifier& identifier,
+    const TGeoNode& tGeoNode,
+    const TGeoMatrix& tGeoMatrix,
+    const std::string& axes,
+    double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : Acts::IdentifiedDetectorElement(),
       m_detElement(&tGeoNode),

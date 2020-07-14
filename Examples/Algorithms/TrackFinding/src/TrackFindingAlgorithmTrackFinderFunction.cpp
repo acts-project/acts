@@ -42,7 +42,8 @@ struct TrackFinderFunctionImpl {
 FW::TrackFindingAlgorithm::TrackFinderFunction
 FW::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField,
+    Acts::Logging::Level lvl) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
@@ -59,9 +60,10 @@ FW::TrackFindingAlgorithm::makeTrackFinderFunction(
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
         using SourceLinkSelector = Acts::CKFSourceLinkSelector;
-        using CKF =
-            Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother,
-                                            SourceLinkSelector>;
+        using CKF = Acts::CombinatorialKalmanFilter<Propagator,
+                                                    Updater,
+                                                    Smoother,
+                                                    SourceLinkSelector>;
 
         // construct all components for the track finder
         MagneticField field(std::move(inputField));

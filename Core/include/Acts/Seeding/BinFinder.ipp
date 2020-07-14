@@ -8,7 +8,8 @@
 template <typename external_spacepoint_t>
 std::vector<size_t>
 Acts::BinFinder<external_spacepoint_t>::findBins(
-    size_t phiBin, size_t zBin,
+    size_t phiBin,
+    size_t zBin,
     const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) {
   return binnedSP->neighborHoodIndices({phiBin, zBin}).collect();
 }

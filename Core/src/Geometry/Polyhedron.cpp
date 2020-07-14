@@ -21,8 +21,9 @@ Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
                   const std::vector<FaceType>& additional) -> void {
     for (const auto& aface : additional) {
       FaceType nface = aface;
-      std::transform(nface.begin(), nface.end(), nface.begin(),
-                     [&](size_t x) { return (x + cvert); });
+      std::transform(nface.begin(), nface.end(), nface.begin(), [&](size_t x) {
+        return (x + cvert);
+      });
       existing.push_back(nface);
     }
   };
@@ -33,8 +34,8 @@ Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
 
 void
 Acts::Polyhedron::move(const Transform3D& transform) {
-  for_each(vertices.begin(), vertices.end(),
-           [&](auto& v) { v = transform * v; });
+  for_each(
+      vertices.begin(), vertices.end(), [&](auto& v) { v = transform * v; });
 }
 
 Acts::Extent

@@ -191,8 +191,11 @@ main(int argc, char** argv) {
   // cuda
   cudaDeviceProp prop;
   ACTS_CUDA_ERROR_CHECK(cudaGetDeviceProperties(&prop, deviceID));
-  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID,
-         prop.name, prop.major, prop.minor);
+  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n",
+         deviceID,
+         prop.name,
+         prop.major,
+         prop.minor);
   config.maxBlockSize = prop.maxThreadsPerBlock;
   config.nTrplPerSpBLimit = nTrplPerSpBLimit;
   config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
@@ -226,9 +229,13 @@ main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
-                                                 bottomBinFinder, topBinFinder,
-                                                 std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(),
+                                                 spVec.end(),
+                                                 ct,
+                                                 bottomBinFinder,
+                                                 topBinFinder,
+                                                 std::move(grid),
+                                                 config);
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;

@@ -47,7 +47,8 @@ struct FitterFunctionImpl {
 FW::FittingAlgorithm::FitterFunction
 FW::FittingAlgorithm::makeFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField,
+    Acts::Logging::Level lvl) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 

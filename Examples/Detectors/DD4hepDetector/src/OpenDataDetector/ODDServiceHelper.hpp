@@ -23,7 +23,8 @@ using namespace dd4hep;
 /// @param layerR the layer radii to connect
 template <typename volume_t>
 void
-buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
+buildBarrelRouting(Detector& oddd,
+                   volume_t& barrelVolume,
                    const xml_comp_t& x_routing,
                    const std::vector<double>& layerR) {
   // Grab the cables & route them outwards
@@ -55,8 +56,8 @@ buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
           // The box plate for the cables
           xml_comp_t x_box = x_routing.child(_U(box));
           Box box(x_box.dz(), n * ib * rmax, 0.5 * clength);
-          Volume boxVolume("CableBand", box,
-                           oddd.material(x_routing.materialStr()));
+          Volume boxVolume(
+              "CableBand", box, oddd.material(x_routing.materialStr()));
           boxVolume.setVisAttributes(oddd, x_box.visStr());
 
           cableboxAssembly.placeVolume(
@@ -64,8 +65,8 @@ buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
         }
 
         Tube cable(rmin, rmax, 0.5 * clength);
-        Volume cableVolume("Cable", cable,
-                           oddd.material(x_routing.materialStr()));
+        Volume cableVolume(
+            "Cable", cable, oddd.material(x_routing.materialStr()));
         cableVolume.setVisAttributes(oddd, x_routing.visStr());
 
         for (unsigned int icable = 0; icable < n * ib; ++icable) {
@@ -93,7 +94,8 @@ buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
 /// @param endcapZ the layer z positions to connect
 template <typename volume_t>
 void
-buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
+buildEndcapRouting(Detector& oddd,
+                   volume_t& endcapVolume,
                    const xml_comp_t& x_routing,
                    const std::vector<double>& endcapZ) {
   // Grab the cables & route them outwards
@@ -124,8 +126,8 @@ buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
         // The box plate for the cables
         xml_comp_t x_box = x_routing.child(_U(box));
         Box box(x_box.dz(), n * iec * rmax, 0.5 * clength);
-        Volume boxVolume("CableBand", box,
-                         oddd.material(x_routing.materialStr()));
+        Volume boxVolume(
+            "CableBand", box, oddd.material(x_routing.materialStr()));
         boxVolume.setVisAttributes(oddd, x_box.visStr());
 
         cableboxAssembly.placeVolume(boxVolume,
@@ -133,8 +135,8 @@ buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
       }
 
       Tube cable(rmin, rmax, 0.5 * clength);
-      Volume cableVolume("Cable", cable,
-                         oddd.material(x_routing.materialStr()));
+      Volume cableVolume(
+          "Cable", cable, oddd.material(x_routing.materialStr()));
       cableVolume.setVisAttributes(oddd, x_routing.visStr());
 
       for (unsigned int icable = 0; icable < n * iec; ++icable) {
@@ -160,7 +162,8 @@ buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
 /// @param layerR the layer radii contaienr to add the new one
 template <typename volume_t>
 void
-buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
+buildSupportCylinder(Detector& oddd,
+                     volume_t& motherVolume,
                      const xml_comp_t& x_mother_comp,
                      std::vector<double>& layerR) {
   size_t supportNum = 0;
@@ -177,7 +180,8 @@ buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
     for (int side = -1; side < x_support.nsides(); side += 2) {
       // Create the support volume
       Volume supportVolume(
-          supportName, Tube(x_support.rmin(), x_support.rmax(), x_support.dz()),
+          supportName,
+          Tube(x_support.rmin(), x_support.rmax(), x_support.dz()),
           oddd.material(x_support.materialStr()));
       supportVolume.setVisAttributes(oddd, x_support.visStr());
       // Place the support structure
@@ -197,7 +201,8 @@ buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
 /// @param layerR the layer radii contaienr to add the new one
 template <typename volume_t>
 void
-buildCoolingRings(Detector& oddd, volume_t& motherVolume,
+buildCoolingRings(Detector& oddd,
+                  volume_t& motherVolume,
                   const xml_comp_t& x_mother_comp) {
   size_t cringNum = 0;
   for (xml_coll_t cring(x_mother_comp, _Unicode(cooling_ring)); cring;

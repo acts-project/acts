@@ -30,8 +30,8 @@ class ResPlotTool {
   /// @brief Nested configuration struct
   struct Config {
     /// parameter sets to do plots
-    std::vector<std::string> paramNames = {"d0",    "z0",  "phi",
-                                           "theta", "qop", "t"};
+    std::vector<std::string> paramNames = {
+        "d0", "z0", "phi", "theta", "qop", "t"};
 
     /// Binning info for variables
     std::map<std::string, PlotHelpers::Binning> varBinning = {
@@ -95,7 +95,8 @@ class ResPlotTool {
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
   void
-  fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
+  fill(ResPlotCache& resPlotCache,
+       const Acts::GeometryContext& gctx,
        const ActsFatras::Particle& truthParticle,
        const Acts::BoundParameters& fittedParamters) const;
 

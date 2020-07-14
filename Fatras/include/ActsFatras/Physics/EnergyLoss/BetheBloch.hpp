@@ -38,7 +38,8 @@ struct BetheBloch {
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
   std::array<Particle, 0>
-  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+  operator()(generator_t &generator,
+             const Acts::MaterialProperties &slab,
              Particle &particle) const {
     // compute energy loss distribution parameters
     const auto pdg = particle.pdg();

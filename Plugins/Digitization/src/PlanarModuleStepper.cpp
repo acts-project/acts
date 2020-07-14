@@ -120,6 +120,8 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext& gctx,
     return std::vector<Acts::DigitizationStep>();
   }
   // return
-  return cellSteps(gctx, dmodule, boundaryIntersections[0].position,
+  return cellSteps(gctx,
+                   dmodule,
+                   boundaryIntersections[0].position,
                    boundaryIntersections[1].position);
 }

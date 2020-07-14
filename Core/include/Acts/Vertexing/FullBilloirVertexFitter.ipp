@@ -115,9 +115,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = linearizer.linearizeTrack(
-          trackParams, linPoint, vertexingOptions.geoContext,
-          vertexingOptions.magFieldContext, state.linearizerState);
+      auto result = linearizer.linearizeTrack(trackParams,
+                                              linPoint,
+                                              vertexingOptions.geoContext,
+                                              vertexingOptions.magFieldContext,
+                                              state.linearizerState);
       if (result.ok()) {
         const auto& linTrack = *result;
         const auto& parametersAtPCA = linTrack.parametersAtPCA;
@@ -324,10 +326,12 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
             trackMomenta[iTrack](2), 0.;
 
         BoundParameters refittedParams(vertexingOptions.geoContext,
-                                       covDeltaPmat[iTrack], paramVec, perigee);
+                                       covDeltaPmat[iTrack],
+                                       paramVec,
+                                       perigee);
 
-        TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,
-                                             bTrack.originalTrack);
+        TrackAtVertex<input_track_t> trackVx(
+            bTrack.chi2, refittedParams, bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));
         ++iTrack;
       }

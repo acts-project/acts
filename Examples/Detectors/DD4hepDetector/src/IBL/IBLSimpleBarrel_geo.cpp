@@ -30,7 +30,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // make Volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.dz());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.air());  // air at the moment change later
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
   // go trough possible layers
@@ -42,7 +43,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
     double l_rmax = x_layer.outer_r();
     // Create Volume for Layer
     string layer_name = det_name + _toString((int)layer_num, "layer%d");
-    Volume layer_vol(layer_name, Tube(l_rmin, l_rmax, x_layer.z()),
+    Volume layer_vol(layer_name,
+                     Tube(l_rmin, l_rmax, x_layer.z()),
                      lcdd.material(x_layer.materialStr()));
     DetElement lay_det(cylinderVolume, layer_name, layer_num);
     // Visualization
@@ -77,7 +79,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         string component_name = _toString((int)comp_num, "component%d");
         xml_comp_t x_component = comp;
         Volume comp_vol(component_name,
-                        Box(x_component.length(), x_component.width(),
+                        Box(x_component.length(),
+                            x_component.width(),
                             x_component.thickness()),
                         lcdd.material(x_component.materialStr()));
         comp_vol.setVisAttributes(lcdd, x_component.visStr());
@@ -101,19 +104,24 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         xml_comp_t x_tubs = x_sub.child(_U(tubs));
         string component_name = _toString((int)comp_num, "component%d");
         // create the two shapes first
-        Trapezoid trap_shape(x_trd.x1(), x_trd.x2(), x_trd.length(),
-                             x_trd.length(), x_trd.thickness());
+        Trapezoid trap_shape(x_trd.x1(),
+                             x_trd.x2(),
+                             x_trd.length(),
+                             x_trd.length(),
+                             x_trd.thickness());
         Tube tubs_shape(x_tubs.rmin(), x_tubs.rmax(), x_tubs.dz());
         // create the subtraction
-        Volume sub_vol("subtraction_components",
-                       SubtractionSolid(trap_shape, tubs_shape,
-                                        Transform3D(RotationX(0.5 * M_PI))),
-                       lcdd.material(x_sub.materialStr()));
+        Volume sub_vol(
+            "subtraction_components",
+            SubtractionSolid(
+                trap_shape, tubs_shape, Transform3D(RotationX(0.5 * M_PI))),
+            lcdd.material(x_sub.materialStr()));
         sub_vol.setVisAttributes(lcdd, x_sub.visStr());
         // Place the volume in the module
         PlacedVolume placedSub = mod_vol.placeVolume(
-            sub_vol, Transform3D(RotationZ(0.5 * M_PI) * RotationY(M_PI),
-                                 Position(0., 0., x_sub.z())));
+            sub_vol,
+            Transform3D(RotationZ(0.5 * M_PI) * RotationY(M_PI),
+                        Position(0., 0., x_sub.z())));
         placedSub.addPhysVolID("component", comp_num);
         comp_num++;
       }
@@ -127,8 +135,9 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         pipe_vol.setVisAttributes(lcdd, x_tubs.visStr());
         // Place the cooling pipe into the module
         PlacedVolume placedPipe = mod_vol.placeVolume(
-            pipe_vol, Transform3D(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
-                                  Position(0., 0., x_tubs.z())));
+            pipe_vol,
+            Transform3D(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
+                        Position(0., 0., x_tubs.z())));
         placedPipe.addPhysVolID("component", comp_num);
         comp_num++;
       }
@@ -174,7 +183,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
       double srmin = l_rmin + x_support.offset();
       double srmax = srmin + x_support.thickness();
       // create the volume of the support structure
-      Volume support_vol("SupportStructure", Tube(srmin, srmax, x_support.dz()),
+      Volume support_vol("SupportStructure",
+                         Tube(srmin, srmax, x_support.dz()),
                          lcdd.material(x_support.materialStr()));
       support_vol.setVisAttributes(lcdd, x_support.visStr());
       // place the support structure

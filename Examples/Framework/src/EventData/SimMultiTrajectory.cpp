@@ -25,7 +25,8 @@ FW::SimMultiTrajectory::identifyMajorityParticle(
       // Find the truth particle associated with this state
       const auto particleId = state.uncalibrated().truthHit().particleId();
       // Find if the particle already exists
-      auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
+      auto it = std::find_if(particleHitCount.begin(),
+                             particleHitCount.end(),
                              [=](const FW::ParticleHitCount& phc) {
                                return phc.particleId == particleId;
                              });
@@ -42,7 +43,8 @@ FW::SimMultiTrajectory::identifyMajorityParticle(
   if (not particleHitCount.empty()) {
     // sort by hit count, i.e. majority particle first
     std::sort(
-        particleHitCount.begin(), particleHitCount.end(),
+        particleHitCount.begin(),
+        particleHitCount.end(),
         [](const FW::ParticleHitCount& lhs, const FW::ParticleHitCount& rhs) {
           return lhs.hitCount > rhs.hitCount;
         });

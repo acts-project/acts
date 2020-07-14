@@ -73,17 +73,20 @@ BOOST_AUTO_TEST_CASE(DirectionPhiEta) {
   const auto mixed1 = makeDirectionUnitFromPhiEta(M_PI_4, 1.0);
   CHECK_CLOSE_REL(mixed1.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed1.dot(Vector3D(1, 1, M_SQRT2 * std::sinh(1.0)).normalized()), 1,
+      mixed1.dot(Vector3D(1, 1, M_SQRT2 * std::sinh(1.0)).normalized()),
+      1,
       eps);
   const auto mixed2 = makeDirectionUnitFromPhiEta(M_PI_4, -1.0);
   CHECK_CLOSE_REL(mixed2.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed2.dot(Vector3D(1, 1, M_SQRT2 * std::sinh(-1.0)).normalized()), 1,
+      mixed2.dot(Vector3D(1, 1, M_SQRT2 * std::sinh(-1.0)).normalized()),
+      1,
       eps);
   const auto mixed3 = makeDirectionUnitFromPhiEta(-M_PI_4, -1.0);
   CHECK_CLOSE_REL(mixed3.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed3.dot(Vector3D(1, -1, M_SQRT2 * std::sinh(-1.0)).normalized()), 1,
+      mixed3.dot(Vector3D(1, -1, M_SQRT2 * std::sinh(-1.0)).normalized()),
+      1,
       eps);
 }
 
@@ -176,7 +179,8 @@ testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
 
 BOOST_AUTO_TEST_CASE(CurvilinearTransverse) {
   // curvilinear system w/ direction in the transverse plane
-  testCurvilinear(Vector3D(1, 1, 0), Vector3D(-1, 1, 0).normalized(),
+  testCurvilinear(Vector3D(1, 1, 0),
+                  Vector3D(-1, 1, 0).normalized(),
                   Vector3D(0, 0, 1).normalized());
 }
 
@@ -192,7 +196,8 @@ BOOST_AUTO_TEST_CASE(CurvilinearNegativeZ) {
 
 BOOST_AUTO_TEST_CASE(CurvilinearCloseToZ) {
   // curvilinear system w/ direction close to z
-  testCurvilinear(Vector3D(0, 32 * eps, 1 - 32 * eps), Vector3D(-1, 0, 0),
+  testCurvilinear(Vector3D(0, 32 * eps, 1 - 32 * eps),
+                  Vector3D(-1, 0, 0),
                   Vector3D(0, -1, 32 * eps));
 }
 

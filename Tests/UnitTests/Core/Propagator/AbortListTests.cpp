@@ -162,7 +162,8 @@ struct AborterWithResultA {
 
   template <typename propagator_state_t, typename stepper_t, typename result_t>
   bool
-  operator()(const propagator_state_t&, const stepper_t&,
+  operator()(const propagator_state_t&,
+             const stepper_t&,
              const result_t&) const {
     return true;
   }
@@ -183,7 +184,8 @@ struct AborterWithResultB {
 
   template <typename propagator_state_t, typename stepper_t, typename result_t>
   bool
-  operator()(const propagator_state_t&, const stepper_t&,
+  operator()(const propagator_state_t&,
+             const stepper_t&,
              const result_t&) const {
     return true;
   }
@@ -206,7 +208,8 @@ struct AborterWithoutResult {
 struct AborterWithoutResultInvalid {
   template <typename propagator_state_t, typename stepper_t, typename result_t>
   bool
-  operator()(const propagator_state_t&, const stepper_t&,
+  operator()(const propagator_state_t&,
+             const stepper_t&,
              const result_t&) const {
     return true;
   }
@@ -225,7 +228,10 @@ BOOST_AUTO_TEST_CASE(AbortListSignatureTest) {
   static_assert(signature_check<P, S, AborterWithResultB>, "failed");
 
   // combination of two valid aborters
-  static_assert(signature_check<P, S, AborterWithoutResult, AborterWithResultA,
+  static_assert(signature_check<P,
+                                S,
+                                AborterWithoutResult,
+                                AborterWithResultA,
                                 AborterWithResultB>,
                 "failed");
 

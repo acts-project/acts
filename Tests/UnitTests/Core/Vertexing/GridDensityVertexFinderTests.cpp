@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
-                                       perigeeSurface));
+    trackVec.push_back(BoundParameters(
+        geoContext, covMat, pos, mom, charge, 0, perigeeSurface));
   }
 
   std::vector<const BoundParameters*> trackPtrVec;
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
-                                       perigeeSurface));
+    trackVec.push_back(BoundParameters(
+        geoContext, covMat, pos, mom, charge, 0, perigeeSurface));
   }
 
   std::vector<const BoundParameters*> trackPtrVec;
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
-                                       perigeeSurface));
+    trackVec.push_back(BoundParameters(
+        geoContext, covMat, pos, mom, charge, 0, perigeeSurface));
   }
 
   std::vector<const BoundParameters*> trackPtrVec;

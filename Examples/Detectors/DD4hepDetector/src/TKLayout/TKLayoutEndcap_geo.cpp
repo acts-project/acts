@@ -31,7 +31,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // make Volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.dz());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.air());  // air at the moment change later
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
   // go trough possible layers
@@ -44,7 +45,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
     double l_length = x_layer.dz();
     // Create Volume and DetElement for Layer
     string layer_name = det_name + _toString((int)layer_num, "layer%d");
-    Volume layer_vol(layer_name, Tube(l_rmin, l_rmax, l_length),
+    Volume layer_vol(layer_name,
+                     Tube(l_rmin, l_rmax, l_length),
                      lcdd.material(x_layer.materialStr()));
     DetElement lay_det(cylinderVolume, layer_name, layer_num);
     // Visualization
@@ -57,11 +59,13 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         double deltaphi = 2. * M_PI / repeat;
         double radius = x_module.radius();
         // Create the module volume
-        Volume mod_vol(
-            "module",
-            Trapezoid(x_module.x1(), x_module.x2(), x_module.thickness(),
-                      x_module.thickness(), x_module.length()),
-            lcdd.material(x_module.materialStr()));
+        Volume mod_vol("module",
+                       Trapezoid(x_module.x1(),
+                                 x_module.x2(),
+                                 x_module.thickness(),
+                                 x_module.thickness(),
+                                 x_module.length()),
+                       lcdd.material(x_module.materialStr()));
         size_t module_num = 0;
         // Place the Modules
         for (int k = 0; k < repeat; k++) {
@@ -77,8 +81,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
                                 "module%d");
           Position trans(radius * cos(phi), radius * sin(phi), slicedz);
           // Create the module DetElement
-          DetElement mod_det(lay_det, module_name,
-                             repeat * module_num_num + module_num);
+          DetElement mod_det(
+              lay_det, module_name, repeat * module_num_num + module_num);
           // Create and attach the extension for DD4Hep/Acts conversion
           Acts::ActsExtension* moduleExtension = new Acts::ActsExtension();
           mod_det.addExtension<Acts::ActsExtension>(moduleExtension);

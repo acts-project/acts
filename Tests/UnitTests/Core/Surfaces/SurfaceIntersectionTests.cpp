@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     BOOST_CHECK(aIntersection.alternative.status ==
                 Intersection::Status::reachable);
     // The other intersection is at 2 meter distance
-    CHECK_CLOSE_ABS(aIntersection.alternative.pathLength, -2_m,
-                    s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(
+        aIntersection.alternative.pathLength, -2_m, s_onSurfaceTolerance);
 
     // Intersect from the the center
     auto cIntersection =
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     BOOST_CHECK(aIntersection.alternative.status ==
                 Intersection::Status::reachable);
     // The other intersection is at 2 meter distance
-    CHECK_CLOSE_ABS(aIntersection.alternative.pathLength, -4.,
-                    s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(
+        aIntersection.alternative.pathLength, -4., s_onSurfaceTolerance);
 
     // Intersection from outside without chance of hitting the cylinder
     auto iIntersection = aCone->intersect(tgContext, outCone, perpXY, false);

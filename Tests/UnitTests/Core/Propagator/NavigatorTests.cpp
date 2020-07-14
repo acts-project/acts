@@ -126,21 +126,24 @@ struct PropagatorState {
     }
 
     Intersection::Status
-    updateSurfaceStatus(State& state, const Surface& surface,
+    updateSurfaceStatus(State& state,
+                        const Surface& surface,
                         const BoundaryCheck& bcheck) const {
-      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
-                                                        bcheck);
+      return detail::updateSingleSurfaceStatus<Stepper>(
+          *this, state, surface, bcheck);
     }
 
     template <typename object_intersection_t>
     void
-    updateStepSize(State& state, const object_intersection_t& oIntersection,
+    updateStepSize(State& state,
+                   const object_intersection_t& oIntersection,
                    bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
     void
-    setStepSize(State& state, double stepSize,
+    setStepSize(State& state,
+                double stepSize,
                 ConstrainedStep::Type stype = ConstrainedStep::actor) const {
       state.previousStepSize = state.stepSize;
       state.stepSize.update(stepSize, stype, true);
@@ -158,31 +161,38 @@ struct PropagatorState {
 
     BoundState
     boundState(State& state, const Surface& surface) const {
-      BoundParameters parameters(tgContext, std::nullopt, state.pos,
-                                 state.p * state.dir, state.q, state.t,
+      BoundParameters parameters(tgContext,
+                                 std::nullopt,
+                                 state.pos,
+                                 state.p * state.dir,
+                                 state.q,
+                                 state.t,
                                  surface.getSharedPtr());
-      BoundState bState{std::move(parameters), Jacobian::Identity(),
-                        state.pathAccumulated};
+      BoundState bState{
+          std::move(parameters), Jacobian::Identity(), state.pathAccumulated};
       return bState;
     }
 
     CurvilinearState
     curvilinearState(State& state) const {
-      CurvilinearParameters parameters(std::nullopt, state.pos,
-                                       state.p * state.dir, state.q, state.t);
+      CurvilinearParameters parameters(
+          std::nullopt, state.pos, state.p * state.dir, state.q, state.t);
       // Create the bound state
-      CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
-                                 state.pathAccumulated};
+      CurvilinearState curvState{
+          std::move(parameters), Jacobian::Identity(), state.pathAccumulated};
       return curvState;
     }
 
     void
-    update(State& /*state*/, const FreeVector& /*pars*/,
+    update(State& /*state*/,
+           const FreeVector& /*pars*/,
            const Covariance& /*cov*/) const {}
 
     void
-    update(State& /*state*/, const Vector3D& /*uposition*/,
-           const Vector3D& /*udirection*/, double /*up*/,
+    update(State& /*state*/,
+           const Vector3D& /*uposition*/,
+           const Vector3D& /*udirection*/,
+           double /*up*/,
            double /*time*/) const {}
 
     void

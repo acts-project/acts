@@ -102,7 +102,8 @@ struct MeasurementCreator {
   /// @param [out] result Vector of matching surfaces
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
@@ -120,28 +121,29 @@ struct MeasurementCreator {
           Acts::Vector2D lPos;
           surface->globalToLocal(state.geoContext,
                                  stepper.position(state.stepping),
-                                 stepper.direction(state.stepping), lPos);
+                                 stepper.direction(state.stepping),
+                                 lPos);
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
             double dp = sp * gauss(generator);
             if (lResolution->second[0].first == eLOC_0) {
               // push back & move a LOC_0 measurement
-              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + dp);
+              MeasurementType<eLOC_0> m0(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_0] + dp);
               result.measurements.push_back(std::move(m0));
               // push back & move a LOC_0 outlier
-              MeasurementType<eLOC_0> o0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + sp * 10);
+              MeasurementType<eLOC_0> o0(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_0] + sp * 10);
               result.outliers.push_back(std::move(o0));
             } else {
               // push back & move a LOC_1 measurement
-              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + dp);
+              MeasurementType<eLOC_1> m1(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_1] + dp);
               result.measurements.push_back(std::move(m1));
               // push back & move a LOC_1 outlier
-              MeasurementType<eLOC_1> o1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + sp * 10);
+              MeasurementType<eLOC_1> o1(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_1] + sp * 10);
               result.outliers.push_back(std::move(o1));
             }
           } else if (lResolution->second.size() == 2) {
@@ -152,13 +154,17 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + dx,
+            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(),
+                                                {},
+                                                cov2D,
+                                                lPos[eLOC_0] + dx,
                                                 lPos[eLOC_1] + dy);
             result.measurements.push_back(std::move(m01));
             // push back & move a LOC_0, LOC_1 outlier
-            MeasurementType<eLOC_0, eLOC_1> o01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + sx * 10,
+            MeasurementType<eLOC_0, eLOC_1> o01(surface->getSharedPtr(),
+                                                {},
+                                                cov2D,
+                                                lPos[eLOC_0] + sx * 10,
                                                 lPos[eLOC_1] + sy * 10);
             result.outliers.push_back(std::move(o01));
           }
@@ -275,8 +281,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Build propagator for the measurement creation
   MeasurementPropagator mPropagator(mStepper, mNavigator);
   Vector3D mPos(-3_m, 0., 0.), mMom(1_GeV, 0., 0);
-  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
-                                                         mMom, 42_ns);
+  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(
+      std::nullopt, mPos, mMom, 42_ns);
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
@@ -329,7 +335,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Make a vector of source links as input to the KF
   std::vector<SourceLink> sourcelinks;
-  std::transform(measurements.begin(), measurements.end(),
+  std::transform(measurements.begin(),
+                 measurements.end(),
                  std::back_inserter(sourcelinks),
                  [](const auto& m) { return SourceLink{&m}; });
 
@@ -354,11 +361,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       0., 0., 0., 1.;
 
   Vector3D rPos(-3_m, 10_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
-                0.025_GeV * gauss(generator));
+  Vector3D rMom(
+      1_GeV, 0.025_GeV * gauss(generator), 0.025_GeV * gauss(generator));
 
-  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                         42.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(
+      cov, rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -399,14 +406,19 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto fittedAgainParameters = fittedAgainTrack.fittedParameters.value();
 
   CHECK_CLOSE_REL(fittedParameters.parameters().template head<5>(),
-                  fittedAgainParameters.parameters().template head<5>(), 1e-5);
+                  fittedAgainParameters.parameters().template head<5>(),
+                  1e-5);
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
-                  fittedAgainParameters.parameters().template tail<1>(), 1e-5);
+                  fittedAgainParameters.parameters().template tail<1>(),
+                  1e-5);
 
   // Change the order of the sourcelinks
-  std::vector<SourceLink> shuffledMeasurements = {
-      sourcelinks[3], sourcelinks[2], sourcelinks[1],
-      sourcelinks[4], sourcelinks[5], sourcelinks[0]};
+  std::vector<SourceLink> shuffledMeasurements = {sourcelinks[3],
+                                                  sourcelinks[2],
+                                                  sourcelinks[1],
+                                                  sourcelinks[4],
+                                                  sourcelinks[5],
+                                                  sourcelinks[0]};
 
   // Make sure it works for shuffled measurements as well
   fitRes = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
@@ -422,9 +434,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                   1e-5);
 
   // Remove one measurement and find a hole
-  std::vector<SourceLink> measurementsWithHole = {
-      sourcelinks[0], sourcelinks[1], sourcelinks[2], sourcelinks[4],
-      sourcelinks[5]};
+  std::vector<SourceLink> measurementsWithHole = {sourcelinks[0],
+                                                  sourcelinks[1],
+                                                  sourcelinks[2],
+                                                  sourcelinks[4],
+                                                  sourcelinks[5]};
 
   // Make sure it works for shuffled measurements as well
   fitRes = kFitter.fit(measurementsWithHole, rStart, kfOptions);
@@ -481,8 +495,12 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Replace one measurement with outlier
   std::vector<SourceLink> measurementsWithOneOutlier = {
-      sourcelinks[0],           sourcelinks[1], sourcelinks[2],
-      SourceLink{&outliers[3]}, sourcelinks[4], sourcelinks[5]};
+      sourcelinks[0],
+      sourcelinks[1],
+      sourcelinks[2],
+      SourceLink{&outliers[3]},
+      sourcelinks[4],
+      sourcelinks[5]};
 
   // Make sure it works with one outlier
   fitRes = kFitter.fit(measurementsWithOneOutlier, rStart, kfOptions);

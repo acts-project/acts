@@ -11,7 +11,8 @@
 namespace Acts {
 
 std::unique_ptr<const Logger>
-getDefaultLogger(const std::string& name, const Logging::Level& lvl,
+getDefaultLogger(const std::string& name,
+                 const Logging::Level& lvl,
                  std::ostream* log_stream) {
   using namespace Logging;
   auto output = std::make_unique<LevelOutputDecorator>(

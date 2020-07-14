@@ -90,8 +90,11 @@ Parse_Json(const json& Det, std::map<std::string, std::string>& surface_name) {
 void
 Initialise_info(sinfo& surface_info,
                 const std::map<std::string, std::string>& surface_name,
-                const uint64_t& id, const int& type, const float& pos,
-                const float& range_min, const float& range_max) {
+                const uint64_t& id,
+                const int& type,
+                const float& pos,
+                const float& range_min,
+                const float& range_max) {
   Acts::GeometryID ID(id);
   std::ostringstream layerID;
   layerID << ID;

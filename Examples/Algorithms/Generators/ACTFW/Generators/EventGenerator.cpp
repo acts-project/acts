@@ -97,7 +97,8 @@ FW::EventGenerator::read(const AlgorithmContext& ctx) {
       nParticles += nParticlesVertex;
 
       // append all process vertices to the full event
-      std::move(processVertices.begin(), processVertices.end(),
+      std::move(processVertices.begin(),
+                processVertices.end(),
                 std::back_inserter(event));
 
       ACTS_VERBOSE("event=" << ctx.eventNumber << " generator=" << iGenerate

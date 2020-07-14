@@ -54,7 +54,8 @@ addOutputOptions(boost::program_options::options_description& opt);
 ///
 /// @returns Empty variables map if help text was shown.
 boost::program_options::variables_map
-parse(const boost::program_options::options_description& opt, int argc,
+parse(const boost::program_options::options_description& opt,
+      int argc,
       char* argv[]);
 
 /// Read the log level.

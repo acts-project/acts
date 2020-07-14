@@ -161,8 +161,10 @@ using IndexSwapper = std::function<void(std::size_t, std::size_t)>;
 // Selection sort has pertty bad asymptotic scaling, but it is non-recursive
 // and in-place, which makes it a good choice for smaller inputs
 void
-selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
-              const IndexComparator& compare, const IndexSwapper& swap) {
+selectionSort(const std::size_t firstIndex,
+              const std::size_t lastIndex,
+              const IndexComparator& compare,
+              const IndexSwapper& swap) {
   using namespace std;
   for (size_t targetIndex = firstIndex; targetIndex < lastIndex;
        ++targetIndex) {
@@ -180,8 +182,10 @@ selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
 
 // Quick sort is used as the top-level sorting algorithm for our datasets
 void
-quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
-          const IndexComparator& compare, const IndexSwapper& swap) {
+quickSort(const std::size_t firstIndex,
+          const std::size_t lastIndex,
+          const IndexComparator& compare,
+          const IndexSwapper& swap) {
   // We switch to non-recursive selection sort when the range becomes too small.
   // This optimization voids the need for detection of 0- and 1-element input.
   static const std::size_t NON_RECURSIVE_THRESHOLD = 25;
@@ -297,8 +301,10 @@ struct BranchComparisonHarness {
   // Type-erased factory of branch comparison harnesses, taking ROOT run-time
   // type information as input in order to select an appropriate C++ constructor
   static BranchComparisonHarness
-  create(TreeMetadata& treeMetadata, const std::string& branchName,
-         const EDataType dataType, const std::string& className) {
+  create(TreeMetadata& treeMetadata,
+         const std::string& branchName,
+         const EDataType dataType,
+         const std::string& className) {
     switch (dataType) {
       case kChar_t:
         return BranchComparisonHarness::create<char>(treeMetadata, branchName);
@@ -334,8 +340,8 @@ struct BranchComparisonHarness {
       case kOther_t:
         if (className.substr(0, 6) == "vector") {
           std::string elementType = className.substr(7, className.size() - 8);
-          return BranchComparisonHarness::createVector(treeMetadata, branchName,
-                                                       std::move(elementType));
+          return BranchComparisonHarness::createVector(
+              treeMetadata, branchName, std::move(elementType));
         } else {
           throw UnsupportedBranchType();
         }
@@ -369,9 +375,11 @@ struct BranchComparisonHarness {
     tree2Data.reserve(treeMetadata.entryCount);
 
     // Setup event data readout
-    result.m_eventLoaderPtr.reset(
-        new EventLoaderT<T>{treeMetadata.tree1Reader, treeMetadata.tree2Reader,
-                            branchName, tree1Data, tree2Data});
+    result.m_eventLoaderPtr.reset(new EventLoaderT<T>{treeMetadata.tree1Reader,
+                                                      treeMetadata.tree2Reader,
+                                                      branchName,
+                                                      tree1Data,
+                                                      tree2Data});
 
     // Setup event comparison and swapping for each tree
     result.sortHarness = std::make_pair(
@@ -426,8 +434,10 @@ struct BranchComparisonHarness {
   template <typename T>
   class EventLoaderT : public IEventLoader {
    public:
-    EventLoaderT(TTreeReader& tree1Reader, TTreeReader& tree2Reader,
-                 const std::string& branchName, std::vector<T>& tree1Data,
+    EventLoaderT(TTreeReader& tree1Reader,
+                 TTreeReader& tree2Reader,
+                 const std::string& branchName,
+                 std::vector<T>& tree1Data,
                  std::vector<T>& tree2Data)
         : branch1Reader{tree1Reader, branchName.c_str()},
           branch2Reader{tree2Reader, branchName.c_str()},
@@ -451,7 +461,8 @@ struct BranchComparisonHarness {
   // This helper factory helps building branches associated with std::vectors
   // of data, which are the only STL collection that we support at the moment.
   static BranchComparisonHarness
-  createVector(TreeMetadata& treeMetadata, const std::string& branchName,
+  createVector(TreeMetadata& treeMetadata,
+               const std::string& branchName,
                const std::string elemType) {
 // We support vectors of different types by switching across type (strings)
 #define CREATE_VECTOR__HANDLE_TYPE(type_name)                       \

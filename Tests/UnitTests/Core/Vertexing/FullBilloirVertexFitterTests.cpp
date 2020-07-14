@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
 
   const std::vector<const BoundParameters*> emptyVector;
 
-  VertexingOptions<BoundParameters> vfOptions(geoContext, magFieldContext,
-                                              myConstraint);
+  VertexingOptions<BoundParameters> vfOptions(
+      geoContext, magFieldContext, myConstraint);
 
   Vertex<BoundParameters> fittedVertex =
       billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
@@ -200,8 +200,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-      tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                       perigeeSurface));
+      tracks.push_back(BoundParameters(
+          geoContext, std::move(covMat), paramVec, perigeeSurface));
     }
 
     std::vector<const BoundParameters*> tracksPtr;
@@ -301,8 +301,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
 
     VertexingOptions<InputTrack> vfOptions(geoContext, magFieldContext);
 
-    VertexingOptions<InputTrack> vfOptionsConstr(geoContext, magFieldContext,
-                                                 myConstraint);
+    VertexingOptions<InputTrack> vfOptionsConstr(
+        geoContext, magFieldContext, myConstraint);
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-      tracks.push_back(InputTrack(BoundParameters(geoContext, std::move(covMat),
-                                                  paramVec, perigeeSurface)));
+      tracks.push_back(InputTrack(BoundParameters(
+          geoContext, std::move(covMat), paramVec, perigeeSurface)));
     }
 
     std::vector<const InputTrack*> tracksPtr;

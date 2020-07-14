@@ -314,7 +314,8 @@ roundWithPrecision(double val, int precision) {
 /// @param offset Offset in front of matrix lines
 /// @return The printed string
 inline std::string
-toString(const ActsMatrixXd& matrix, int precision = 4,
+toString(const ActsMatrixXd& matrix,
+         int precision = 4,
          const std::string& offset = "") {
   std::ostringstream sout;
 
@@ -372,7 +373,8 @@ toString(const Acts::Translation3D& translation, int precision = 4) {
 /// @param offset Offset in front of matrix lines
 /// @return The printed string
 inline std::string
-toString(const Acts::Transform3D& transform, int precision = 4,
+toString(const Acts::Transform3D& transform,
+         int precision = 4,
          const std::string& offset = "") {
   std::ostringstream sout;
   sout << "Translation : " << toString(transform.translation(), precision)
@@ -432,7 +434,9 @@ unpack_shared_vector(const std::vector<std::shared_ptr<const T>>& items) {
 /// @param args Additional arguments passed to @c Callable::invoke().
 /// @note @c Callable is expected to have a static member function @c invoke
 /// that is callable with @c Args
-template <template <size_t> class Callable, size_t N, size_t NMAX,
+template <template <size_t> class Callable,
+          size_t N,
+          size_t NMAX,
           typename... Args>
 decltype(Callable<N>::invoke(std::declval<Args>()...))
 template_switch(size_t v, Args&&... args) {
@@ -458,8 +462,7 @@ template_switch(size_t v, Args&&... args) {
 template <typename MatrixType>
 MatrixType
 bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime *
-                                 MatrixType::ColsAtCompileTime>
-                   bs) {
+                                 MatrixType::ColsAtCompileTime> bs) {
   constexpr int rows = MatrixType::RowsAtCompileTime;
   constexpr int cols = MatrixType::ColsAtCompileTime;
 

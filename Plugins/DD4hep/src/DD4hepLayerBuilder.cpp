@@ -149,13 +149,21 @@ Acts::DD4hepLayerBuilder::endcapLayers(
                                                             pl.max(Acts::binR));
         double thickness = std::fabs(pl.max(Acts::binZ) - pl.min(Acts::binZ));
         // Create the layer containing the sensitive surface
-        endcapLayer = DiscLayer::create(transform, dBounds, std::move(sArray),
-                                        thickness, nullptr, Acts::active);
+        endcapLayer = DiscLayer::create(transform,
+                                        dBounds,
+                                        std::move(sArray),
+                                        thickness,
+                                        nullptr,
+                                        Acts::active);
 
       } else {
-        endcapLayer = m_cfg.layerCreator->discLayer(
-            gctx, layerSurfaces, m_cfg.bTypeR, m_cfg.bTypePhi, pl, transform,
-            nullptr);
+        endcapLayer = m_cfg.layerCreator->discLayer(gctx,
+                                                    layerSurfaces,
+                                                    m_cfg.bTypeR,
+                                                    m_cfg.bTypePhi,
+                                                    pl,
+                                                    transform,
+                                                    nullptr);
       }
       // Add the ProtoMaterial if present
       addDiscLayerProtoMaterial(detElement, *endcapLayer);
@@ -262,14 +270,21 @@ Acts::DD4hepLayerBuilder::centralLayers(const GeometryContext& gctx) const {
         std::shared_ptr<const CylinderBounds> cBounds(
             new CylinderBounds(layerR, halfZ));
         // Create the layer containing the sensitive surface
-        centralLayer =
-            CylinderLayer::create(transform, cBounds, std::move(sArray),
-                                  thickness, nullptr, Acts::active);
+        centralLayer = CylinderLayer::create(transform,
+                                             cBounds,
+                                             std::move(sArray),
+                                             thickness,
+                                             nullptr,
+                                             Acts::active);
 
       } else {
-        centralLayer = m_cfg.layerCreator->cylinderLayer(
-            gctx, layerSurfaces, m_cfg.bTypePhi, m_cfg.bTypeZ, pl, transform,
-            nullptr);
+        centralLayer = m_cfg.layerCreator->cylinderLayer(gctx,
+                                                         layerSurfaces,
+                                                         m_cfg.bTypePhi,
+                                                         m_cfg.bTypeZ,
+                                                         pl,
+                                                         transform,
+                                                         nullptr);
       }
       // Add the ProtoMaterial if present
       addCylinderLayerProtoMaterial(detElement, *centralLayer);
@@ -317,8 +332,8 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   auto detAxis = detExtension->getType("axes", "definitions");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
-      new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
-                                      isDisc, nullptr, nullptr);
+      new Acts::DD4hepDetectorElement(
+          detElement, detAxis, UnitConstants::cm, isDisc, nullptr, nullptr);
 
   // return the surface
   return dd4hepDetElement->surface().getSharedPtr();

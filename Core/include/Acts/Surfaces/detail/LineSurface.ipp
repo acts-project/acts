@@ -8,7 +8,8 @@
 
 inline void
 LineSurface::localToGlobal(const GeometryContext& gctx,
-                           const Vector2D& lposition, const Vector3D& momentum,
+                           const Vector2D& lposition,
+                           const Vector3D& momentum,
                            Vector3D& position) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
@@ -24,7 +25,8 @@ LineSurface::localToGlobal(const GeometryContext& gctx,
 
 inline bool
 LineSurface::globalToLocal(const GeometryContext& gctx,
-                           const Vector3D& position, const Vector3D& momentum,
+                           const Vector3D& position,
+                           const Vector3D& momentum,
                            Vector2D& lposition) const {
   using VectorHelpers::perp;
 

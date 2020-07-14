@@ -37,7 +37,9 @@ class Particle {
   ///
   /// @warning It is the users responsibility that charge and mass match
   ///          the PDG particle number.
-  Particle(Barcode particleId, Acts::PdgParticle pdg, Scalar charge,
+  Particle(Barcode particleId,
+           Acts::PdgParticle pdg,
+           Scalar charge,
            Scalar mass)
       : m_particleId(particleId), m_pdg(pdg), m_charge(charge), m_mass(mass) {}
   /// Construct a particle at rest from a PDG particle number.

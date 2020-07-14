@@ -13,8 +13,10 @@
 #include <iostream>
 
 Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
-                                               double halfXmaxR, double minR,
-                                               double maxR, double avgPhi,
+                                               double halfXmaxR,
+                                               double minR,
+                                               double maxR,
+                                               double avgPhi,
                                                double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();

@@ -53,7 +53,8 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     if (state.navigation.currentVolume != nullptr) {
       auto position = stepper.position(state.stepping);
@@ -134,7 +135,8 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   /// The config object
   Acts::VolumeMaterialMapper::Config vmmConfig;
   Acts::VolumeMaterialMapper vmMapper(
-      vmmConfig, std::move(propagator),
+      vmmConfig,
+      std::move(propagator),
       getDefaultLogger("VolumeMaterialMapper", Logging::VERBOSE));
 
   /// Create some contexts
@@ -236,8 +238,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector3D pos(0., 0., 0.);
   Vector3D mom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
-                                                       42_ns);
+  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(
+      std::nullopt, pos, mom, 42_ns);
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

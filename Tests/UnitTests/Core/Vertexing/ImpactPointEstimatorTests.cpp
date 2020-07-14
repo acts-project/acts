@@ -122,15 +122,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(
+        geoContext, std::move(covMat), paramVec, perigeeSurface);
 
     // Distance in transverse plane
     double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
 
     // Estimate 3D distance
-    auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
-                                                       refPosition, state);
+    auto distanceRes = ipEstimator.calculate3dDistance(
+        geoContext, myTrack, refPosition, state);
     BOOST_CHECK(distanceRes.ok());
 
     double distance = *distanceRes;
@@ -161,10 +161,10 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     BOOST_CHECK_NE(myTrackParams[ParID_t::eLOC_Z0],
                    trackIP3dParams[ParID_t::eLOC_Z0]);
     // Theta along helix and q/p shoud remain the same
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eTHETA],
-                    trackIP3dParams[ParID_t::eTHETA], 1e-5);
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eQOP],
-                    trackIP3dParams[ParID_t::eQOP], 1e-5);
+    CHECK_CLOSE_REL(
+        myTrackParams[ParID_t::eTHETA], trackIP3dParams[ParID_t::eTHETA], 1e-5);
+    CHECK_CLOSE_REL(
+        myTrackParams[ParID_t::eQOP], trackIP3dParams[ParID_t::eQOP], 1e-5);
 
     if (debugMode) {
       std::cout << std::setprecision(10) << "Old track parameters: \n"
@@ -244,12 +244,12 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(
+        geoContext, std::move(covMat), paramVec, perigeeSurface);
 
     // Estimate 3D distance
-    auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
-                                                       refPosition, state);
+    auto distanceRes = ipEstimator.calculate3dDistance(
+        geoContext, myTrack, refPosition, state);
     BOOST_CHECK(distanceRes.ok());
 
     distancesList.push_back(*distanceRes);
@@ -428,14 +428,14 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    BoundParameters track = BoundParameters(geoContext, std::move(covMat),
-                                            paramVec, perigeeSurface);
+    BoundParameters track = BoundParameters(
+        geoContext, std::move(covMat), paramVec, perigeeSurface);
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =
         ipEstimator
-            .estimateImpactParameters(track, myConstraint, geoContext,
-                                      magFieldContext)
+            .estimateImpactParameters(
+                track, myConstraint, geoContext, magFieldContext)
             .value();
     BOOST_CHECK_NE(output.IPd0, 0.);
     BOOST_CHECK_NE(output.IPz0, 0.);

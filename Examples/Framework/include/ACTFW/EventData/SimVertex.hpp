@@ -37,8 +37,9 @@ struct SimVertex {
   ///
   /// Associated particles are left empty by default and must be filled by the
   /// user after construction.
-  SimVertex(const Vector4& position4_, ActsFatras::ProcessType process_ =
-                                           ActsFatras::ProcessType::eUndefined)
+  SimVertex(
+      const Vector4& position4_,
+      ActsFatras::ProcessType process_ = ActsFatras::ProcessType::eUndefined)
       : position4(position4_), process(process_) {}
   // explicitely default rule-of-five.
   SimVertex() = default;

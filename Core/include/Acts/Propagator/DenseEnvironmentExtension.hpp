@@ -89,9 +89,14 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  k(const propagator_state_t& state, const stepper_t& stepper, Vector3D& knew,
-    const Vector3D& bField, std::array<double, 4>& kQoP, const int i = 0,
-    const double h = 0., const Vector3D& kprev = Vector3D()) {
+  k(const propagator_state_t& state,
+    const stepper_t& stepper,
+    Vector3D& knew,
+    const Vector3D& bField,
+    std::array<double, 4>& kQoP,
+    const int i = 0,
+    const double h = 0.,
+    const Vector3D& kprev = Vector3D()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
@@ -144,7 +149,8 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& state, const stepper_t& stepper,
+  finalize(propagator_state_t& state,
+           const stepper_t& stepper,
            const double h) const {
     // Evaluate the new momentum
     double newMomentum =
@@ -188,7 +194,9 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& state, const stepper_t& stepper, const double h,
+  finalize(propagator_state_t& state,
+           const stepper_t& stepper,
+           const double h,
            FreeMatrix& D) const {
     return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
   }
@@ -204,8 +212,10 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                  const double h, FreeMatrix& D) const {
+  transportMatrix(propagator_state_t& state,
+                  const stepper_t& stepper,
+                  const double h,
+                  FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -357,13 +367,13 @@ struct DenseEnvironmentExtension {
     Acts::MaterialProperties slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
-      g = -computeEnergyLossMean(slab, state.options.absPdgCode,
-                                 state.options.mass, qop[0]);
+      g = -computeEnergyLossMean(
+          slab, state.options.absPdgCode, state.options.mass, qop[0]);
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(slab, state.options.absPdgCode,
-                                 state.options.mass, qop[0]);
+      g = -computeEnergyLossMode(
+          slab, state.options.absPdgCode, state.options.mass, qop[0]);
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -399,8 +409,10 @@ struct DenseEnvironmentExtension {
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_state_t, typename stepper_t>
   void
-  updateEnergyLoss(const double mass, const double h,
-                   const stepper_state_t& state, const stepper_t& stepper,
+  updateEnergyLoss(const double mass,
+                   const double h,
+                   const stepper_state_t& state,
+                   const stepper_t& stepper,
                    const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];

@@ -99,10 +99,10 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index1), mat1.classificationNumbers(), 1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index2), mat2.classificationNumbers(), 1e-4);
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
 }
 
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index1), mat1.classificationNumbers(), 1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index2), mat2.classificationNumbers(), 1e-4);
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
 }
 
@@ -257,10 +257,10 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index1), mat1.classificationNumbers(), 1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index2), mat2.classificationNumbers(), 1e-4);
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
 }
 
@@ -341,10 +341,10 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index1), mat1.classificationNumbers(), 1e-4);
+  CHECK_CLOSE_REL(
+      matMap.atLocalBins(index2), mat2.classificationNumbers(), 1e-4);
   BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
 }
 

@@ -93,7 +93,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -143,7 +148,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 14,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -218,7 +228,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -282,7 +297,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 

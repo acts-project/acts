@@ -66,7 +66,8 @@ struct InteractorResult {
 /// @tparam generator_t is a random number generator
 /// @tparam physics_list_t is a simulation physics lists
 /// @tparam hit_surface_selector_t is a selector of sensitive hit surfaces
-template <typename generator_t, typename physics_list_t,
+template <typename generator_t,
+          typename physics_list_t,
           typename hit_surface_selector_t = NoSurface>
 struct Interactor {
   using result_type = InteractorResult;
@@ -78,7 +79,8 @@ struct Interactor {
 
     template <typename propagator_state_t, typename stepper_t>
     constexpr bool
-    operator()(propagator_state_t &, const stepper_t &,
+    operator()(propagator_state_t &,
+               const stepper_t &,
                const result_type &result) const {
       return not result.isAlive;
     }
@@ -103,7 +105,8 @@ struct Interactor {
   /// @param result is the mutable result/cache object
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t &state, stepper_t &stepper,
+  operator()(propagator_state_t &state,
+             stepper_t &stepper,
              result_type &result) const {
     assert(generator and "The generator pointer must be valid");
 
@@ -137,8 +140,8 @@ struct Interactor {
     if (surface.surfaceMaterial()) {
       Acts::Vector2D local;
       // TODO what to do in case of invalid return value?
-      surface.globalToLocal(state.geoContext, before.position(),
-                            before.unitDirection(), local);
+      surface.globalToLocal(
+          state.geoContext, before.position(), before.unitDirection(), local);
       Acts::MaterialProperties slab =
           surface.surfaceMaterial()->materialProperties(local);
 
@@ -174,15 +177,21 @@ struct Interactor {
     result.particle = after;
     if (selectHitSurface(surface)) {
       result.hits.emplace_back(
-          surface.geoID(), before.particleId(),
+          surface.geoID(),
+          before.particleId(),
           // the interaction could potentially modify the particle position
           Hit::Scalar(0.5) * (before.position4() + after.position4()),
-          before.momentum4(), after.momentum4(), result.hits.size());
+          before.momentum4(),
+          after.momentum4(),
+          result.hits.size());
     }
 
     // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absMomentum(), after.time());
+    stepper.update(state.stepping,
+                   after.position(),
+                   after.unitDirection(),
+                   after.absMomentum(),
+                   after.time());
   }
 
   /// Pure observer interface. Does not apply to the Fatras simulator.

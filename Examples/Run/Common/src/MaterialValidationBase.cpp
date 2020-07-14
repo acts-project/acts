@@ -47,7 +47,8 @@ namespace {
 /// @return a process code
 template <typename bfield_t>
 FW::ProcessCode
-setupPropagation(FW::Sequencer& sequencer, bfield_t bfield,
+setupPropagation(FW::Sequencer& sequencer,
+                 bfield_t bfield,
                  po::variables_map& vm,
                  std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
                  std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
@@ -93,7 +94,8 @@ setupPropagation(FW::Sequencer& sequencer, bfield_t bfield,
 /// @return a process code
 FW::ProcessCode
 setupStraightLinePropagation(
-    FW::Sequencer& sequencer, po::variables_map& vm,
+    FW::Sequencer& sequencer,
+    po::variables_map& vm,
     std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level

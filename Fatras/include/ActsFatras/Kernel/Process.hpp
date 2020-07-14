@@ -52,7 +52,8 @@ struct AsInputSelector : public ParticleSelector {
 ///
 /// @note The output and child particle selectors are identical unless the
 ///       child particle selector is explicitely specified.
-template <typename physics_t, typename input_selector_t = EveryInput,
+template <typename physics_t,
+          typename input_selector_t = EveryInput,
           typename output_particle_selector_t = EveryParticle,
           typename child_particle_selector_t = output_particle_selector_t>
 struct Process {
@@ -76,8 +77,10 @@ struct Process {
   /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
   bool
-  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
-             Particle &particle, std::vector<Particle> &generated) const {
+  operator()(generator_t &generator,
+             const Acts::MaterialProperties &slab,
+             Particle &particle,
+             std::vector<Particle> &generated) const {
     // not selecting this process is not a break condition
     if (not selectInput(particle, slab)) {
       return false;
@@ -85,8 +88,10 @@ struct Process {
     // modify particle according to the physics process
     auto children = physics(generator, slab, particle);
     // move selected child particles to the output container
-    std::copy_if(children.begin(), children.end(),
-                 std::back_inserter(generated), selectChildParticle);
+    std::copy_if(children.begin(),
+                 children.end(),
+                 std::back_inserter(generated),
+                 selectChildParticle);
     // break condition is defined by whether the output particle is still valid
     // or not e.g. because it has fallen below a momentum threshold.
     return not selectOutputParticle(particle);

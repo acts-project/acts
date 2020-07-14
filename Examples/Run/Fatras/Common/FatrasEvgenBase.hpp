@@ -18,7 +18,8 @@ class Sequencer;
 class RandomNumbers;
 
 void
-setupEvgenInput(const Options::Variables& variables, Sequencer& sequencer,
+setupEvgenInput(const Options::Variables& variables,
+                Sequencer& sequencer,
                 std::shared_ptr<const RandomNumbers> randomNumbers);
 
 }  // namespace FW

@@ -56,8 +56,10 @@ updateVertexWithTrack(Vertex<input_track_t>& vtx,
 template <typename input_track_t>
 void
 updatePosition(const Acts::Vertex<input_track_t>& vtx,
-               const Acts::LinearizedTrack& linTrack, double trackWeight,
-               int sign, MatrixCache& matrixCache);
+               const Acts::LinearizedTrack& linTrack,
+               double trackWeight,
+               int sign,
+               MatrixCache& matrixCache);
 
 namespace detail {
 

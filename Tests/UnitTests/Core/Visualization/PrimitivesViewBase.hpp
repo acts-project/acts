@@ -104,12 +104,16 @@ run(IVisualization& helper) {
 
   double directionScale = 5.;
 
-  Acts::EventDataView::drawCovarianceAngular(helper, origin, direction, cov,
-                                             directionScale, 10., errorVis);
+  Acts::EventDataView::drawCovarianceAngular(
+      helper, origin, direction, cov, directionScale, 10., errorVis);
 
   Acts::GeometryView::drawArrowForward(
-      helper, origin + 0.5 * directionScale * direction,
-      origin + 1.2 * directionScale * direction, 3., 2., errorVis);
+      helper,
+      origin + 0.5 * directionScale * direction,
+      origin + 1.2 * directionScale * direction,
+      3.,
+      2.,
+      errorVis);
 
   helper.write("Primitives_AngularError");
   helper.write(ss);

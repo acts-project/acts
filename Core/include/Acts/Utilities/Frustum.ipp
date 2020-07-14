@@ -88,7 +88,9 @@ Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
   VertexType far_center = m_normals[0] * far_distance;
   std::array<std::pair<VertexType, VertexType>, SIDES> planeFarIXs;
 
-  auto ixPlanePlane = [](const auto& n1, const auto& p1, const auto& n2,
+  auto ixPlanePlane = [](const auto& n1,
+                         const auto& p1,
+                         const auto& n2,
                          const auto& p2) -> std::pair<VertexType, VertexType> {
     const VertexType m = n1.cross(n2).normalized();
     const double j = (n2.dot(p2 - p1)) / (n2.dot(n1.cross(m)));
@@ -96,7 +98,9 @@ Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
     return {m, q};
   };
 
-  auto ixLineLine = [](const auto& p1, const auto& d1, const auto& p2,
+  auto ixLineLine = [](const auto& p1,
+                       const auto& d1,
+                       const auto& p2,
                        const auto& d2) -> VertexType {
     return p1 + (((p2 - p1).cross(d2)).norm() / (d1.cross(d2)).norm()) * d1;
   };
@@ -129,8 +133,10 @@ Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 2, int>>
 std::ostream&
-Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os, value_type w,
-                                        value_type h, value_type far_distance,
+Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
+                                        value_type w,
+                                        value_type h,
+                                        value_type far_distance,
                                         value_type unit) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
@@ -145,8 +151,10 @@ Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os, value_type w,
 
   std::array<std::string, 3> colors({"orange", "blue", "red"});
 
-  auto draw_line = [&](const VertexType& left_, const VertexType& right_,
-                       std::string color, size_t width) {
+  auto draw_line = [&](const VertexType& left_,
+                       const VertexType& right_,
+                       std::string color,
+                       size_t width) {
     VertexType left = trf * left_;
     VertexType right = trf * right_;
     os << "<line ";
@@ -168,7 +176,8 @@ Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os, value_type w,
   };
 
   using vec3 = ActsVector<value_type, 3>;
-  auto ixLineLine = [](const VertexType& p1_2, const VertexType& d1_2,
+  auto ixLineLine = [](const VertexType& p1_2,
+                       const VertexType& d1_2,
                        const VertexType& p2_2,
                        const VertexType& d2_2) -> VertexType {
     const vec3 p1(p1_2.x(), p1_2.y(), 0);

@@ -18,14 +18,17 @@
 #include "TTree.h"
 
 Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2D,
+                       Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 FW::BField::txt::fieldMapperRZ(
     std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
-        localToGlobalBin,
-    std::string fieldMapFile, double lengthUnit, double BFieldUnit,
-    size_t nPoints, bool firstQuadrant) {
+                         std::array<size_t, 2> nBinsRZ)> localToGlobalBin,
+    std::string fieldMapFile,
+    double lengthUnit,
+    double BFieldUnit,
+    size_t nPoints,
+    bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -54,19 +57,28 @@ FW::BField::txt::fieldMapperRZ(
   }
   map_file.close();
   /// [2] use helper function in core
-  return Acts::fieldMapperRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
-                             BFieldUnit, firstQuadrant);
+  return Acts::fieldMapperRZ(localToGlobalBin,
+                             rPos,
+                             zPos,
+                             bField,
+                             lengthUnit,
+                             BFieldUnit,
+                             firstQuadrant);
 }
 
-Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+Acts::InterpolatedBFieldMapper<
+    Acts::detail::Grid<Acts::Vector3D,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis>>
 FW::BField::txt::fieldMapperXYZ(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
-        localToGlobalBin,
-    std::string fieldMapFile, double lengthUnit, double BFieldUnit,
-    size_t nPoints, bool firstOctant) {
+                         std::array<size_t, 3> nBinsXYZ)> localToGlobalBin,
+    std::string fieldMapFile,
+    double lengthUnit,
+    double BFieldUnit,
+    size_t nPoints,
+    bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -98,19 +110,28 @@ FW::BField::txt::fieldMapperXYZ(
   }
   map_file.close();
 
-  return Acts::fieldMapperXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
-                              lengthUnit, BFieldUnit, firstOctant);
+  return Acts::fieldMapperXYZ(localToGlobalBin,
+                              xPos,
+                              yPos,
+                              zPos,
+                              bField,
+                              lengthUnit,
+                              BFieldUnit,
+                              firstOctant);
 }
 
 Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2D,
+                       Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 FW::BField::root::fieldMapperRZ(
     std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
-        localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, double lengthUnit,
-    double BFieldUnit, bool firstQuadrant) {
+                         std::array<size_t, 2> nBinsRZ)> localToGlobalBin,
+    std::string fieldMapFile,
+    std::string treeName,
+    double lengthUnit,
+    double BFieldUnit,
+    bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -144,19 +165,28 @@ FW::BField::root::fieldMapperRZ(
   }
   inputFile->Close();
   /// [2] use helper function in core
-  return Acts::fieldMapperRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
-                             BFieldUnit, firstQuadrant);
+  return Acts::fieldMapperRZ(localToGlobalBin,
+                             rPos,
+                             zPos,
+                             bField,
+                             lengthUnit,
+                             BFieldUnit,
+                             firstQuadrant);
 }
 
-Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+Acts::InterpolatedBFieldMapper<
+    Acts::detail::Grid<Acts::Vector3D,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis>>
 FW::BField::root::fieldMapperXYZ(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
-        localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, double lengthUnit,
-    double BFieldUnit, bool firstOctant) {
+                         std::array<size_t, 3> nBinsXYZ)> localToGlobalBin,
+    std::string fieldMapFile,
+    std::string treeName,
+    double lengthUnit,
+    double BFieldUnit,
+    bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -195,6 +225,12 @@ FW::BField::root::fieldMapperXYZ(
   }
   inputFile->Close();
 
-  return Acts::fieldMapperXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
-                              lengthUnit, BFieldUnit, firstOctant);
+  return Acts::fieldMapperXYZ(localToGlobalBin,
+                              xPos,
+                              yPos,
+                              zPos,
+                              bField,
+                              lengthUnit,
+                              BFieldUnit,
+                              firstOctant);
 }

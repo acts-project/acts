@@ -21,11 +21,13 @@ FW::Options::makeDefaultOptions(std::string caption) {
 
   opt.add_options()("help,h", "Produce help message");
   opt.add_options()(
-      "loglevel,l", value<size_t>()->default_value(2),
+      "loglevel,l",
+      value<size_t>()->default_value(2),
       "The output log level. Please set the wished number (0 = VERBOSE, 1 = "
       "DEBUG, 2 = INFO, 3 = WARNING, 4 = ERROR, 5 = FATAL).");
   opt.add_options()(
-      "response-file", value<std::string>()->default_value(""),
+      "response-file",
+      value<std::string>()->default_value(""),
       "Configuration file (response file) replacing command line options.");
 
   return opt;
@@ -35,32 +37,40 @@ void
 FW::Options::addSequencerOptions(
     boost::program_options::options_description& opt) {
   // sequencer options
-  opt.add_options()("events,n", value<size_t>(),
+  opt.add_options()("events,n",
+                    value<size_t>(),
                     "The number of events to process. If not given, all "
                     "available events will be processed.")(
-      "skip", value<size_t>()->default_value(0),
+      "skip",
+      value<size_t>()->default_value(0),
       "The number of events to skip")(
-      "jobs,j", value<int>()->default_value(-1),
+      "jobs,j",
+      value<int>()->default_value(-1),
       "Number of parallel jobs, negative for automatic.");
 }
 
 void
 FW::Options::addRandomNumbersOptions(
     boost::program_options::options_description& opt) {
-  opt.add_options()("rnd-seed", value<uint64_t>()->default_value(1234567890u),
+  opt.add_options()("rnd-seed",
+                    value<uint64_t>()->default_value(1234567890u),
                     "Random numbers seed.");
 }
 
 void
 FW::Options::addGeometryOptions(
     boost::program_options::options_description& opt) {
-  opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
+  opt.add_options()("geo-surface-loglevel",
+                    value<size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
-      "geo-layer-loglevel", value<size_t>()->default_value(3),
+      "geo-layer-loglevel",
+      value<size_t>()->default_value(3),
       "The output log level for the layer building.")(
-      "geo-volume-loglevel", value<size_t>()->default_value(3),
+      "geo-volume-loglevel",
+      value<size_t>()->default_value(3),
       "The output log level for the volume building.")(
-      "geo-detector-volume", value<read_strings>()->default_value({{}}),
+      "geo-detector-volume",
+      value<read_strings>()->default_value({{}}),
       "Sub detectors for the output writing");
 }
 
@@ -68,27 +78,38 @@ void
 FW::Options::addMaterialOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()(
-      "mat-input-type", value<std::string>()->default_value("build"),
+      "mat-input-type",
+      value<std::string>()->default_value("build"),
       "The way material is loaded: 'none', 'build', 'proto', 'file'.")(
-      "mat-input-file", value<std::string>()->default_value(""),
+      "mat-input-file",
+      value<std::string>()->default_value(""),
       "Name of the material map input file, supported: '.json' or '.root'.")(
-      "mat-output-file", value<std::string>()->default_value(""),
+      "mat-output-file",
+      value<std::string>()->default_value(""),
       "Name of the material map output file (without extension).")(
-      "mat-output-sensitives", value<bool>()->default_value(true),
+      "mat-output-sensitives",
+      value<bool>()->default_value(true),
       "Write material information of sensitive surfaces.")(
-      "mat-output-approaches", value<bool>()->default_value(true),
+      "mat-output-approaches",
+      value<bool>()->default_value(true),
       "Write material information of approach surfaces.")(
-      "mat-output-representing", value<bool>()->default_value(true),
+      "mat-output-representing",
+      value<bool>()->default_value(true),
       "Write material information of representing surfaces.")(
-      "mat-output-boundaries", value<bool>()->default_value(true),
+      "mat-output-boundaries",
+      value<bool>()->default_value(true),
       "Write material information of boundary surfaces.")(
-      "mat-output-volumes", value<bool>()->default_value(true),
+      "mat-output-volumes",
+      value<bool>()->default_value(true),
       "Write material information of volumes.")(
-      "mat-output-dense-volumes", value<bool>()->default_value(false),
+      "mat-output-dense-volumes",
+      value<bool>()->default_value(false),
       "Write material information of dense volumes.")(
-      "mat-output-data", value<bool>()->default_value(true),
+      "mat-output-data",
+      value<bool>()->default_value(true),
       "Output the data field(s).")(
-      "mat-output-allmaterial", value<bool>()->default_value(false),
+      "mat-output-allmaterial",
+      value<bool>()->default_value(false),
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
 
@@ -96,40 +117,51 @@ void
 FW::Options::addOutputOptions(
     boost::program_options::options_description& opt) {
   // Add specific options for this example
-  opt.add_options()("output-dir", value<std::string>()->default_value(""),
+  opt.add_options()("output-dir",
+                    value<std::string>()->default_value(""),
                     "Output directory location.")(
-      "output-root", value<bool>()->default_value(false),
+      "output-root",
+      value<bool>()->default_value(false),
       "Switch on to write '.root' output file(s).")(
-      "output-csv", value<bool>()->default_value(false),
+      "output-csv",
+      value<bool>()->default_value(false),
       "Switch on to write '.csv' output file(s).")(
-      "output-obj", value<bool>()->default_value(false),
+      "output-obj",
+      value<bool>()->default_value(false),
       "Switch on to write '.obj' ouput file(s).")(
-      "output-json", value<bool>()->default_value(false),
+      "output-json",
+      value<bool>()->default_value(false),
       "Switch on to write '.json' ouput file(s).")(
-      "output-txt", value<bool>()->default_value(false),
+      "output-txt",
+      value<bool>()->default_value(false),
       "Switch on to write '.txt' ouput file(s).");
 }
 
 void
 FW::Options::addInputOptions(boost::program_options::options_description& opt) {
   // Add specific options for this example
-  opt.add_options()("input-dir", value<std::string>()->default_value(""),
+  opt.add_options()("input-dir",
+                    value<std::string>()->default_value(""),
                     "Input directory location.")(
-      "input-files", value<read_strings>()->multitoken()->default_value({}),
+      "input-files",
+      value<read_strings>()->multitoken()->default_value({}),
       "Input files, space separated.")("input-root",
                                        value<bool>()->default_value(false),
                                        "Switch on to read '.root' file(s).")(
-      "input-csv", value<bool>()->default_value(false),
+      "input-csv",
+      value<bool>()->default_value(false),
       "Switch on to read '.csv' file(s).")("input-obj",
                                            value<bool>()->default_value(false),
                                            "Switch on to read '.obj' file(s).")(
-      "input-json", value<bool>()->default_value(false),
+      "input-json",
+      value<bool>()->default_value(false),
       "Switch on to read '.json' file(s).");
 }
 
 boost::program_options::variables_map
 FW::Options::parse(const boost::program_options::options_description& opt,
-                   int argc, char* argv[]) noexcept(false) {
+                   int argc,
+                   char* argv[]) noexcept(false) {
   variables_map vm;
   store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);

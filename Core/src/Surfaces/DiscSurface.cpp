@@ -37,14 +37,20 @@ Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
       m_bounds(other.m_bounds) {}
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double rmin, double rmax, double hphisec)
+                               double rmin,
+                               double rmax,
+                               double hphisec)
     : GeometryObject(),
       Surface(std::move(htrans)),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double minhalfx, double maxhalfx, double maxR,
-                               double minR, double avephi, double stereo)
+                               double minhalfx,
+                               double maxhalfx,
+                               double maxR,
+                               double minR,
+                               double avephi,
+                               double stereo)
     : GeometryObject(),
       Surface(std::move(htrans)),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(

@@ -48,7 +48,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
                              const ParVector_t& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
-            std::move(cov), parValues,
+            std::move(cov),
+            parValues,
             detail::coordinate_transformation::parameters2globalPosition(
                 gctx, parValues, *surface),
             detail::coordinate_transformation::parameters2globalMomentum(
@@ -77,14 +78,17 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
                              std::optional<CovMatrix_t> cov,
-                             const Vector3D& position, const Vector3D& momentum,
-                             double dCharge, double dTime,
+                             const Vector3D& position,
+                             const Vector3D& momentum,
+                             double dCharge,
+                             double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2parameters(
                 gctx, position, momentum, dCharge, dTime, *surface),
-            position, momentum),
+            position,
+            momentum),
         m_pSurface(std::move(surface)) {
     assert(m_pSurface);
   }
@@ -109,7 +113,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
                              const ParVector_t& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
-            std::move(cov), parValues,
+            std::move(cov),
+            parValues,
             detail::coordinate_transformation::parameters2globalPosition(
                 gctx, parValues, *surface),
             detail::coordinate_transformation::parameters2globalMomentum(
@@ -138,14 +143,16 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
                              std::optional<CovMatrix_t> cov,
-                             const Vector3D& position, const Vector3D& momentum,
+                             const Vector3D& position,
+                             const Vector3D& momentum,
                              double dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2parameters(
                 gctx, position, momentum, 0, dTime, *surface),
-            position, momentum),
+            position,
+            momentum),
         m_pSurface(std::move(surface)) {}
 
   /// @brief copy constructor  - charged/neutral

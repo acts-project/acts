@@ -53,8 +53,10 @@ class DigitizationModule {
   /// @param readoutDirection is the readout drift direction
   /// @param lorentzAngle is the lorentz drift angle
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
-                     double halfThickness, int readoutDirection,
-                     double lorentzAngle, double energyThreshold = 0.,
+                     double halfThickness,
+                     int readoutDirection,
+                     double lorentzAngle,
+                     double energyThreshold = 0.,
                      bool analogue = false);
 
   /// Virtual Destructor
@@ -200,7 +202,7 @@ DigitizationModule::segmentationSurfacesY() const {
 inline const DigitizationStep
 DigitizationModule::digitizationStep(const Vector3D& start,
                                      const Vector3D& end) const {
-  return m_segmentation->digitizationStep(start, end, m_halfThickness,
-                                          m_readoutDirection, m_lorentzAngle);
+  return m_segmentation->digitizationStep(
+      start, end, m_halfThickness, m_readoutDirection, m_lorentzAngle);
 }
 }  // namespace Acts

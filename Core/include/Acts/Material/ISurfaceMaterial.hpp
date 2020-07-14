@@ -82,7 +82,8 @@ class ISurfaceMaterial {
   ///
   /// @return MaterialProperties
   MaterialProperties
-  materialProperties(const Vector2D& lp, NavigationDirection pDir,
+  materialProperties(const Vector2D& lp,
+                     NavigationDirection pDir,
                      MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
@@ -94,7 +95,8 @@ class ISurfaceMaterial {
   ///
   /// @return MaterialProperties
   MaterialProperties
-  materialProperties(const Vector3D& gp, NavigationDirection pDir,
+  materialProperties(const Vector3D& gp,
+                     NavigationDirection pDir,
                      MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator

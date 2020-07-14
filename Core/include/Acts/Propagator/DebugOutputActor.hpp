@@ -38,7 +38,8 @@ struct DebugOutputActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+  operator()(propagator_state_t& state,
+             const stepper_t& /*unused*/,
              result_type& result) const {
     // move the debug output from the state to
     // to the output actor if it is not set to mute

@@ -50,7 +50,8 @@ using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
 
 /// Write a single surface.
 void
-writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
+writeSurface(SurfaceWriter& writer,
+             const Acts::Surface& surface,
              const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
 
@@ -124,7 +125,8 @@ writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
 
 /// Write all child surfaces and descend into confined volumes.
 void
-writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
+writeVolume(SurfaceWriter& writer,
+            const Acts::TrackingVolume& volume,
             const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {

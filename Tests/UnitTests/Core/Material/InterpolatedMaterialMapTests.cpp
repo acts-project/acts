@@ -24,8 +24,8 @@ namespace Acts {
 namespace Test {
 
 constexpr unsigned int dim = 2;
-using grid_t = detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
-                            detail::EquidistantAxis>;
+using grid_t = detail::
+    Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
 
 ActsVectorD<dim>
 trafoGlobalToLocal(const Vector3D& global) {
@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 0., 2.)), true);
 
   // Test the getter
-  CHECK_CLOSE_REL(materialCell.getMaterial({0.5, 0.5, 0.5}), Material(mat),
-                  1e-4);
+  CHECK_CLOSE_REL(
+      materialCell.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 }
 
 BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
@@ -147,7 +147,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   cache.matCell = materialCell;
   cache.initialized = true;
   CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),
-                  Material(mat), 1e-4);
+                  Material(mat),
+                  1e-4);
 
   // Test the inside check
   BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(1., 1., 1.)), true);

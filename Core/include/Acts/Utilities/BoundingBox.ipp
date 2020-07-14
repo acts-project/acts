@@ -88,7 +88,9 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
   assert(boxes.size() > 1);
   std::vector<const self_t*> box_ptrs;
   box_ptrs.reserve(boxes.size());
-  std::transform(boxes.begin(), boxes.end(), std::back_inserter(box_ptrs),
+  std::transform(boxes.begin(),
+                 boxes.end(),
+                 std::back_inserter(box_ptrs),
                  [](const auto* box) { return box; });
   return wrap(box_ptrs, envelope);
 }
@@ -102,8 +104,10 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
   assert(boxes.size() > 1);
   std::vector<const self_t*> box_ptrs;
   box_ptrs.reserve(boxes.size());
-  std::transform(boxes.begin(), boxes.end(), std::back_inserter(box_ptrs),
-                 [](auto& box) { return &box; });
+  std::transform(
+      boxes.begin(), boxes.end(), std::back_inserter(box_ptrs), [](auto& box) {
+        return &box;
+      });
   return wrap(box_ptrs, envelope);
 }
 
@@ -360,44 +364,63 @@ template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 3, int>>
 void
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
-    IVisualization& helper, std::array<int, 3> color,
+    IVisualization& helper,
+    std::array<int, 3> color,
     const transform_type& trf) const {
   static_assert(DIM == 3, "PLY output only supported in 3D");
 
   const VertexType& vmin = m_vmin;
   const VertexType& vmax = m_vmax;
 
-  auto write = [&](const VertexType& a, const VertexType& b,
-                   const VertexType& c, const VertexType& d) {
+  auto write = [&](const VertexType& a,
+                   const VertexType& b,
+                   const VertexType& c,
+                   const VertexType& d) {
     helper.face(std::vector<VertexType>({trf * a, trf * b, trf * c, trf * d}),
                 color);
   };
 
-  write({vmin.x(), vmin.y(), vmin.z()}, {vmin.x(), vmax.y(), vmin.z()},
-        {vmin.x(), vmax.y(), vmax.z()}, {vmin.x(), vmin.y(), vmax.z()});
+  write({vmin.x(), vmin.y(), vmin.z()},
+        {vmin.x(), vmax.y(), vmin.z()},
+        {vmin.x(), vmax.y(), vmax.z()},
+        {vmin.x(), vmin.y(), vmax.z()});
 
-  write({vmax.x(), vmin.y(), vmin.z()}, {vmax.x(), vmax.y(), vmin.z()},
-        {vmax.x(), vmax.y(), vmax.z()}, {vmax.x(), vmin.y(), vmax.z()});
+  write({vmax.x(), vmin.y(), vmin.z()},
+        {vmax.x(), vmax.y(), vmin.z()},
+        {vmax.x(), vmax.y(), vmax.z()},
+        {vmax.x(), vmin.y(), vmax.z()});
 
-  write({vmin.x(), vmin.y(), vmin.z()}, {vmax.x(), vmin.y(), vmin.z()},
-        {vmax.x(), vmin.y(), vmax.z()}, {vmin.x(), vmin.y(), vmax.z()});
+  write({vmin.x(), vmin.y(), vmin.z()},
+        {vmax.x(), vmin.y(), vmin.z()},
+        {vmax.x(), vmin.y(), vmax.z()},
+        {vmin.x(), vmin.y(), vmax.z()});
 
-  write({vmin.x(), vmax.y(), vmin.z()}, {vmax.x(), vmax.y(), vmin.z()},
-        {vmax.x(), vmax.y(), vmax.z()}, {vmin.x(), vmax.y(), vmax.z()});
+  write({vmin.x(), vmax.y(), vmin.z()},
+        {vmax.x(), vmax.y(), vmin.z()},
+        {vmax.x(), vmax.y(), vmax.z()},
+        {vmin.x(), vmax.y(), vmax.z()});
 
-  write({vmin.x(), vmin.y(), vmin.z()}, {vmax.x(), vmin.y(), vmin.z()},
-        {vmax.x(), vmax.y(), vmin.z()}, {vmin.x(), vmax.y(), vmin.z()});
+  write({vmin.x(), vmin.y(), vmin.z()},
+        {vmax.x(), vmin.y(), vmin.z()},
+        {vmax.x(), vmax.y(), vmin.z()},
+        {vmin.x(), vmax.y(), vmin.z()});
 
-  write({vmin.x(), vmin.y(), vmax.z()}, {vmax.x(), vmin.y(), vmax.z()},
-        {vmax.x(), vmax.y(), vmax.z()}, {vmin.x(), vmax.y(), vmax.z()});
+  write({vmin.x(), vmin.y(), vmax.z()},
+        {vmax.x(), vmin.y(), vmax.z()},
+        {vmax.x(), vmax.y(), vmax.z()},
+        {vmin.x(), vmax.y(), vmax.z()});
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 2, int>>
 std::ostream&
 Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
-    std::ostream& os, value_type w, value_type h, value_type unit,
-    std::string label, std::string fillcolor) const {
+    std::ostream& os,
+    value_type w,
+    value_type h,
+    value_type unit,
+    std::string label,
+    std::string fillcolor) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
   VertexType mid(w / 2., h / 2.);
@@ -417,7 +440,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     os << "/>\n";
   };
 
-  auto draw_rect = [&](const VertexType& center_, const VertexType& size_,
+  auto draw_rect = [&](const VertexType& center_,
+                       const VertexType& size_,
                        std::string color) {
     VertexType size = size_ * unit;
     VertexType center = trf * center_ - size * 0.5;
@@ -429,8 +453,10 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     os << "/>\n";
   };
 
-  auto draw_text = [&](const VertexType& center_, std::string text,
-                       std::string color, size_t size) {
+  auto draw_text = [&](const VertexType& center_,
+                       std::string text,
+                       std::string color,
+                       size_t size) {
     VertexType center = trf * center_;
     os << "<text dominant-baseline=\"middle\" text-anchor=\"middle\" ";
     os << "fill=\"" << color << "\" font-size=\"" << size << "\" ";
@@ -448,9 +474,11 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
 
 template <typename box_t>
 box_t*
-octree_inner(std::vector<std::unique_ptr<box_t>>& store, size_t max_depth,
+octree_inner(std::vector<std::unique_ptr<box_t>>& store,
+             size_t max_depth,
              typename box_t::vertex_array_type envelope,
-             const std::vector<box_t*>& lprims, size_t depth) {
+             const std::vector<box_t*>& lprims,
+             size_t depth) {
   using VertexType = typename box_t::VertexType;
 
   assert(lprims.size() > 0);
@@ -542,7 +570,8 @@ octree_inner(std::vector<std::unique_ptr<box_t>>& store, size_t max_depth,
 template <typename box_t>
 box_t*
 Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                  const std::vector<box_t*>& prims, size_t max_depth,
+                  const std::vector<box_t*>& prims,
+                  size_t max_depth,
                   typename box_t::value_type envelope1) {
   static_assert(box_t::dim == 3, "Octree can only be created in 3D");
 

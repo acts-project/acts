@@ -20,7 +20,8 @@ class SurfaceStub : public Surface {
  public:
   SurfaceStub(std::shared_ptr<const Transform3D> htrans = nullptr)
       : GeometryObject(), Surface(htrans) {}
-  SurfaceStub(const GeometryContext& gctx, const SurfaceStub& sf,
+  SurfaceStub(const GeometryContext& gctx,
+              const SurfaceStub& sf,
               const Transform3D& transf)
       : GeometryObject(), Surface(gctx, sf, transf) {}
   SurfaceStub(const DetectorElementBase& detelement)
@@ -59,33 +60,39 @@ class SurfaceStub : public Surface {
 
   /// Local to global transformation
   void
-  localToGlobal(const GeometryContext& /*gctx*/, const Vector2D& /*lpos*/,
-                const Vector3D& /*gmom*/, Vector3D& /*gpos*/) const final {
+  localToGlobal(const GeometryContext& /*gctx*/,
+                const Vector2D& /*lpos*/,
+                const Vector3D& /*gmom*/,
+                Vector3D& /*gpos*/) const final {
     // nop
   }
 
   /// Global to local transformation
   bool
-  globalToLocal(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
-                const Vector3D& /*gmom*/, Vector2D& lpos) const final {
+  globalToLocal(const GeometryContext& /*cxt*/,
+                const Vector3D& /*gpos*/,
+                const Vector3D& /*gmom*/,
+                Vector2D& lpos) const final {
     lpos = Vector2D{20., 20.};
     return true;
   }
 
   /// Calculation of the path correction for incident
   double
-  pathCorrection(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
+  pathCorrection(const GeometryContext& /*cxt*/,
+                 const Vector3D& /*gpos*/,
                  const Vector3D& /*gmom*/) const final {
     return 0.0;
   }
 
   /// Straight line intersection schema from parameters
   Intersection
-  intersectionEstimate(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
+  intersectionEstimate(const GeometryContext& /*cxt*/,
+                       const Vector3D& /*gpos*/,
                        const Vector3D& /*gdir*/,
                        const BoundaryCheck& /*bcheck*/) const final {
-    const Intersection is{Vector3D{1, 1, 1}, 20.,
-                          Intersection::Status::reachable};
+    const Intersection is{
+        Vector3D{1, 1, 1}, 20., Intersection::Status::reachable};
     return is;
   }
 

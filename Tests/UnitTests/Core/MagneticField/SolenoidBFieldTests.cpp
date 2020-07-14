@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   SolenoidBField bField(cfg);
 
   SolenoidBField::Cache cache(mfContext);
-  CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache), Vector3D(0, 0, 2.0_T),
-                  1e-6_T);
+  CHECK_CLOSE_ABS(
+      bField.getField({0, 0, 0}, cache), Vector3D(0, 0, 2.0_T), 1e-6_T);
 
   // std::ofstream outf("solenoid.csv");
   // outf << "x;y;z;B_x;B_y;B_z" << std::endl;

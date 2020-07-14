@@ -68,7 +68,8 @@ struct KalmanFitterOptions {
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder_,
                       const Surface* rSurface = nullptr,
-                      bool mScattering = true, bool eLoss = true,
+                      bool mScattering = true,
+                      bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
@@ -173,7 +174,8 @@ struct KalmanFitterResult {
 /// the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
+template <typename propagator_t,
+          typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
           typename outlier_finder_t = VoidOutlierFinder,
           typename calibrator_t = VoidMeasurementCalibrator>
@@ -248,7 +250,8 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, const stepper_t& stepper,
+    operator()(propagator_state_t& state,
+               const stepper_t& stepper,
                result_type& result) const {
       ACTS_VERBOSE("KalmanFitter step");
 
@@ -375,7 +378,8 @@ class KalmanFitter {
     /// @param result is the mutable result state objecte
     template <typename propagator_state_t, typename stepper_t>
     void
-    reverse(propagator_state_t& state, stepper_t& stepper,
+    reverse(propagator_state_t& state,
+            stepper_t& stepper,
             result_type& result) const {
       // Remember the navigation direciton has been reserved
       result.reset = true;
@@ -413,9 +417,11 @@ class KalmanFitter {
           state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
           state.stepping.pathAccumulated = 0.;
           // Reinitialize the stepping jacobian
-          st.referenceSurface().initJacobianToGlobal(
-              state.options.geoContext, state.stepping.jacToGlobal,
-              state.stepping.pos, state.stepping.dir, st.filtered());
+          st.referenceSurface().initJacobianToGlobal(state.options.geoContext,
+                                                     state.stepping.jacToGlobal,
+                                                     state.stepping.pos,
+                                                     state.stepping.dir,
+                                                     st.filtered());
           state.stepping.jacobian = BoundMatrix::Identity();
           state.stepping.jacTransport = FreeMatrix::Identity();
           state.stepping.derivative = FreeVector::Zero();
@@ -446,8 +452,10 @@ class KalmanFitter {
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     Result<void>
-    filter(const Surface* surface, propagator_state_t& state,
-           const stepper_t& stepper, result_type& result) const {
+    filter(const Surface* surface,
+           propagator_state_t& state,
+           const stepper_t& stepper,
+           result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -611,8 +619,10 @@ class KalmanFitter {
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     Result<void>
-    backwardFilter(const Surface* surface, propagator_state_t& state,
-                   const stepper_t& stepper, result_type& result) const {
+    backwardFilter(const Surface* surface,
+                   propagator_state_t& state,
+                   const stepper_t& stepper,
+                   result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -738,15 +748,17 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void
     materialInteractor(
-        const Surface* surface, propagator_state_t& state, stepper_t& stepper,
+        const Surface* surface,
+        propagator_state_t& state,
+        stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
       // Indicator if having material
       bool hasMaterial = false;
 
       if (surface and surface->surfaceMaterial()) {
         // Prepare relevant input particle properties
-        detail::PointwiseMaterialInteraction interaction(surface, state,
-                                                         stepper);
+        detail::PointwiseMaterialInteraction interaction(
+            surface, state, stepper);
         // Evaluate the material properties
         if (interaction.evaluateMaterialProperties(state, updateStage)) {
           // Surface has material at this stage
@@ -790,7 +802,8 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     Result<void>
-    finalize(propagator_state_t& state, const stepper_t& stepper,
+    finalize(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
       // Remember you smoothed the track states
       result.smoothed = true;
@@ -828,8 +841,8 @@ class KalmanFitter {
       }
 
       // Smooth the track states
-      auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front());
+      auto smoothRes = m_smoother(
+          state.geoContext, result.fittedStates, measurementIndices.front());
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -889,10 +902,12 @@ class KalmanFitter {
     /// Broadcast the result_type
     using action_type = Actor<source_link_t, parameters_t>;
 
-    template <typename propagator_state_t, typename stepper_t,
+    template <typename propagator_state_t,
+              typename stepper_t,
               typename result_t>
     bool
-    operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+    operator()(propagator_state_t& /*state*/,
+               const stepper_t& /*stepper*/,
                const result_t& result) const {
       if (!result.result.ok()) {
         return true;
@@ -919,7 +934,8 @@ class KalmanFitter {
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
+  template <typename source_link_t,
+            typename start_parameters_t,
             typename parameters_t = BoundParameters>
   auto
   fit(const std::vector<source_link_t>& sourcelinks,
@@ -1012,7 +1028,8 @@ class KalmanFitter {
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_t, typename start_parameters_t,
+  template <typename source_link_t,
+            typename start_parameters_t,
             typename parameters_t = BoundParameters>
   auto
   fit(const std::vector<source_link_t>& sourcelinks,

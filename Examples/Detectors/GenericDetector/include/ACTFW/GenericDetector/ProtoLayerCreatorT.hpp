@@ -187,7 +187,8 @@ class ProtoLayerCreatorT {
   /// @return the protolayers and surfaces on the neg/pos detector side
   std::vector<ProtoLayerSurfaces>
   createProtoLayers(const Acts::GeometryContext& gctx,
-                    DetectorStore& detectorStore, int side) const;
+                    DetectorStore& detectorStore,
+                    int side) const;
 
   /// Configuration member
   Config m_cfg;
@@ -265,12 +266,14 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // create the CartesianSegmentation
         std::shared_ptr<const Acts::Segmentation> moduleSegmentation =
             std::make_shared<const Acts::CartesianSegmentation>(
-                moduleBounds, m_cfg.centralModuleReadoutBinsX.at(icl),
+                moduleBounds,
+                m_cfg.centralModuleReadoutBinsX.at(icl),
                 m_cfg.centralModuleReadoutBinsY.at(icl));
         // now create the digitzation module
         moduleDigitizationPtr =
             std::make_shared<const Acts::DigitizationModule>(
-                moduleSegmentation, 0.5 * m_cfg.centralModuleThickness.at(icl),
+                moduleSegmentation,
+                0.5 * m_cfg.centralModuleThickness.at(icl),
                 m_cfg.centralModuleReadoutSide.at(icl),
                 m_cfg.centralModuleLorentzAngle.at(icl));
       }
@@ -295,13 +298,14 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // create the association transform
         double modulePhi = phi(moduleCenter);
         // the local z axis is the normal vector
-        Acts::Vector3D moduleLocalZ(cos(modulePhi + modulePhiTilt),
-                                    sin(modulePhi + modulePhiTilt), 0.);
+        Acts::Vector3D moduleLocalZ(
+            cos(modulePhi + modulePhiTilt), sin(modulePhi + modulePhiTilt), 0.);
         // the local y axis is the global z axis
         Acts::Vector3D moduleLocalY(0., 0., 1);
         // the local x axis the normal to local y,z
         Acts::Vector3D moduleLocalX(-sin(modulePhi + modulePhiTilt),
-                                    cos(modulePhi + modulePhiTilt), 0.);
+                                    cos(modulePhi + modulePhiTilt),
+                                    0.);
         // create the RotationMatrix
         Acts::RotationMatrix3D moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
@@ -325,9 +329,13 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         auto moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
             mutableModuleTransform);
         // create the module
-        auto module = std::make_shared<detector_element_t>(
-            moduleIdentifier, moduleTransform, moduleBounds, moduleThickness,
-            moduleMaterialPtr, moduleDigitizationPtr);
+        auto module =
+            std::make_shared<detector_element_t>(moduleIdentifier,
+                                                 moduleTransform,
+                                                 moduleBounds,
+                                                 moduleThickness,
+                                                 moduleMaterialPtr,
+                                                 moduleDigitizationPtr);
 
         // put the module into the detector store
         layerStore.push_back(module);
@@ -354,9 +362,13 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
           moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
               mutableModuleTransform);
           // create the backseide moulde
-          auto bsmodule = std::make_shared<detector_element_t>(
-              moduleIdentifier, moduleTransform, moduleBounds, moduleThickness,
-              moduleMaterialPtr, moduleDigitizationPtr);
+          auto bsmodule =
+              std::make_shared<detector_element_t>(moduleIdentifier,
+                                                   moduleTransform,
+                                                   moduleBounds,
+                                                   moduleThickness,
+                                                   moduleMaterialPtr,
+                                                   moduleDigitizationPtr);
           // everything is set for the next module
           layerStore.push_back(std::move(bsmodule));
         }
@@ -406,7 +418,8 @@ ProtoLayerCreatorT<detector_element_t>::ProtoLayerCreatorT(
 template <typename detector_element_t>
 std::vector<ProtoLayerSurfaces>
 ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
-    const Acts::GeometryContext& gctx, DetectorStore& detectorStore,
+    const Acts::GeometryContext& gctx,
+    DetectorStore& detectorStore,
     int side) const {
   // Count the current detector modules identifiers
   size_t imodule = 0;
@@ -455,8 +468,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
         // create the bounds
         Acts::PlanarBounds* pBounds = nullptr;
         if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
-          pBounds = new Acts::TrapezoidBounds(moduleMinHalfX, moduleMaxHalfX,
-                                              moduleHalfY);
+          pBounds = new Acts::TrapezoidBounds(
+              moduleMinHalfX, moduleMaxHalfX, moduleHalfY);
         else
           pBounds = new Acts::RectangleBounds(moduleMinHalfX, moduleHalfY);
         // now create the shared bounds from it
@@ -474,7 +487,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // now create the digitzation module
           moduleDigitizationPtr =
               std::make_shared<const Acts::DigitizationModule>(
-                  moduleSegmentation, 0.5 * moduleThickness,
+                  moduleSegmentation,
+                  0.5 * moduleThickness,
                   m_cfg.posnegModuleReadoutSide.at(ipnl).at(ipnR),
                   m_cfg.posnegModuleLorentzAngle.at(ipnl).at(ipnR));
         }
@@ -513,9 +527,13 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
 
           // create the module
-          auto module = std::make_shared<detector_element_t>(
-              moduleIdentifier, moduleTransform, moduleBounds, moduleThickness,
-              moduleMaterialPtr, moduleDigitizationPtr);
+          auto module =
+              std::make_shared<detector_element_t>(moduleIdentifier,
+                                                   moduleTransform,
+                                                   moduleBounds,
+                                                   moduleThickness,
+                                                   moduleMaterialPtr,
+                                                   moduleDigitizationPtr);
           layerStore.push_back(module);
 
           // now deal with the potential backside
@@ -541,9 +559,13 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
             moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
                 mutableModuleTransform);
             // everything is set for the next module
-            auto bsmodule = std::make_shared<detector_element_t>(
-                moduleIdentifier, moduleTransform, moduleBounds,
-                moduleThickness, moduleMaterialPtr, moduleDigitizationPtr);
+            auto bsmodule =
+                std::make_shared<detector_element_t>(moduleIdentifier,
+                                                     moduleTransform,
+                                                     moduleBounds,
+                                                     moduleThickness,
+                                                     moduleMaterialPtr,
+                                                     moduleDigitizationPtr);
             // Put into the detector store
             layerStore.push_back(std::move(bsmodule));
           }
@@ -573,8 +595,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                                   m_cfg.approachSurfaceEnvelope};
 
       // push it into the layer vector
-      ProtoLayerSurfaces ples{std::move(ple), esVector, layerBinsR,
-                              layerBinsPhi};
+      ProtoLayerSurfaces ples{
+          std::move(ple), esVector, layerBinsR, layerBinsPhi};
       epLayers.push_back(std::move(ples));
       // fill the detector store
       detectorStore.push_back(std::move(layerStore));

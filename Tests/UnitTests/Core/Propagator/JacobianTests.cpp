@@ -47,7 +47,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
 std::shared_ptr<Transform3D>
-createCylindricTransform(const Vector3D& nposition, double angleX,
+createCylindricTransform(const Vector3D& nposition,
+                         double angleX,
                          double angleY) {
   Transform3D ctransform;
   ctransform.setIdentity();
@@ -65,8 +66,10 @@ createCylindricTransform(const Vector3D& nposition, double angleX,
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
 std::shared_ptr<Transform3D>
-createPlanarTransform(const Vector3D& nposition, const Vector3D& nnormal,
-                      double angleT, double angleU) {
+createPlanarTransform(const Vector3D& nposition,
+                      const Vector3D& nnormal,
+                      double angleT,
+                      double angleU) {
   // the rotation of the destination surface
   Vector3D T = nnormal.normalized();
   Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99

@@ -36,7 +36,8 @@ Surface::insideBounds(const Vector2D& lposition,
 }
 
 inline const RotationMatrix3D
-Surface::referenceFrame(const GeometryContext& gctx, const Vector3D& /*unused*/,
+Surface::referenceFrame(const GeometryContext& gctx,
+                        const Vector3D& /*unused*/,
                         const Vector3D& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }

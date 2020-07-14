@@ -79,8 +79,11 @@ FW::TrackSummaryPlotTool::write(
 void
 FW::TrackSummaryPlotTool::fill(
     TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache,
-    const Acts::BoundParameters& fittedParameters, size_t nStates,
-    size_t nMeasurements, size_t nOutliers, size_t nHoles) const {
+    const Acts::BoundParameters& fittedParameters,
+    size_t nStates,
+    size_t nMeasurements,
+    size_t nOutliers,
+    size_t nHoles) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   const auto& momentum = fittedParameters.momentum();
@@ -88,16 +91,16 @@ FW::TrackSummaryPlotTool::fill(
   const double fit_pT = perp(momentum);
 
   PlotHelpers::fillProf(trackSummaryPlotCache.nStates_vs_eta, fit_eta, nStates);
-  PlotHelpers::fillProf(trackSummaryPlotCache.nMeasurements_vs_eta, fit_eta,
-                        nMeasurements);
-  PlotHelpers::fillProf(trackSummaryPlotCache.nOutliers_vs_eta, fit_eta,
-                        nOutliers);
+  PlotHelpers::fillProf(
+      trackSummaryPlotCache.nMeasurements_vs_eta, fit_eta, nMeasurements);
+  PlotHelpers::fillProf(
+      trackSummaryPlotCache.nOutliers_vs_eta, fit_eta, nOutliers);
   PlotHelpers::fillProf(trackSummaryPlotCache.nHoles_vs_eta, fit_eta, nHoles);
 
   PlotHelpers::fillProf(trackSummaryPlotCache.nStates_vs_pt, fit_pT, nStates);
-  PlotHelpers::fillProf(trackSummaryPlotCache.nMeasurements_vs_pt, fit_pT,
-                        nMeasurements);
-  PlotHelpers::fillProf(trackSummaryPlotCache.nOutliers_vs_pt, fit_pT,
-                        nOutliers);
+  PlotHelpers::fillProf(
+      trackSummaryPlotCache.nMeasurements_vs_pt, fit_pT, nMeasurements);
+  PlotHelpers::fillProf(
+      trackSummaryPlotCache.nOutliers_vs_pt, fit_pT, nOutliers);
   PlotHelpers::fillProf(trackSummaryPlotCache.nHoles_vs_pt, fit_pT, nHoles);
 }

@@ -16,7 +16,8 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
-                               double radius, double halez)
+                               double radius,
+                               double halez)
     : GeometryObject(),
       Surface(std::move(htrans)),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}

@@ -59,14 +59,15 @@ FW::HepMC3Event::shiftPositionBy(std::shared_ptr<HepMC3::GenEvent> event,
                                  const Acts::Vector3D& deltaPos,
                                  const double deltaTime) {
   // Create HepMC3::FourVector from position and time for shift
-  const HepMC3::FourVector vec(deltaPos(0), deltaPos(1), deltaPos(2),
-                               deltaTime);
+  const HepMC3::FourVector vec(
+      deltaPos(0), deltaPos(1), deltaPos(2), deltaTime);
   event->shift_position_by(vec);
 }
 
 void
 FW::HepMC3Event::shiftPositionTo(std::shared_ptr<HepMC3::GenEvent> event,
-                                 const Acts::Vector3D& pos, const double time) {
+                                 const Acts::Vector3D& pos,
+                                 const double time) {
   // Create HepMC3::FourVector from position and time for the new position
   const HepMC3::FourVector vec(pos(0), pos(1), pos(2), time);
   event->shift_position_to(vec);
@@ -84,8 +85,10 @@ void
 FW::HepMC3Event::shiftPositionTo(std::shared_ptr<HepMC3::GenEvent> event,
                                  const double time) {
   // Create HepMC3::FourVector from position and time for the new position
-  const HepMC3::FourVector vec(event->event_pos().x(), event->event_pos().y(),
-                               event->event_pos().z(), time);
+  const HepMC3::FourVector vec(event->event_pos().x(),
+                               event->event_pos().y(),
+                               event->event_pos().z(),
+                               time);
   event->shift_position_to(vec);
 }
 
@@ -114,9 +117,10 @@ FW::HepMC3Event::addParticle(std::shared_ptr<HepMC3::GenEvent> event,
 
 HepMC3::GenVertexPtr
 FW::HepMC3Event::createGenVertex(const std::shared_ptr<SimVertex>& actsVertex) {
-  const HepMC3::FourVector vec(
-      actsVertex->position4[0], actsVertex->position4[1],
-      actsVertex->position4[2], actsVertex->position4[3]);
+  const HepMC3::FourVector vec(actsVertex->position4[0],
+                               actsVertex->position4[1],
+                               actsVertex->position4[2],
+                               actsVertex->position4[3]);
 
   // Create vertex
   HepMC3::GenVertex genVertex(vec);

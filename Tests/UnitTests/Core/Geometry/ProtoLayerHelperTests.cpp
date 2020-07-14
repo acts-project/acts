@@ -50,17 +50,24 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   std::vector<const Surface*> cylinderSurfaces;
   for (size_t ilp = 0; ilp < layerRadii.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesCylinder(
-        dStore, moduleHalfX[ilp], moduleHalfY[ilp], moduleThickness[ilp],
-        moduleTiltPhi[ilp], layerRadii[ilp], 2., 5., layerBinning[ilp]);
-    cylinderSurfaces.insert(cylinderSurfaces.begin(), layerSurfaces.begin(),
-                            layerSurfaces.end());
+    std::vector<const Surface*> layerSurfaces =
+        ctGeometry.surfacesCylinder(dStore,
+                                    moduleHalfX[ilp],
+                                    moduleHalfY[ilp],
+                                    moduleThickness[ilp],
+                                    moduleTiltPhi[ilp],
+                                    layerRadii[ilp],
+                                    2.,
+                                    5.,
+                                    layerBinning[ilp]);
+    cylinderSurfaces.insert(
+        cylinderSurfaces.begin(), layerSurfaces.begin(), layerSurfaces.end());
   }
 
   ViewConfig unsorted({252, 160, 0});
   for (auto& sf : cylinderSurfaces) {
-    GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                              unsorted);
+    GeometryView::drawSurface(
+        objVis, *sf, tgContext, Transform3D::Identity(), unsorted);
   }
   // Draw the all surfaces
   objVis.write("ProtoLayerHelper_CylinderLayers_unsorted");
@@ -82,8 +89,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig sorted(sortedColors[il]);
-      GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                                sorted);
+      GeometryView::drawSurface(
+          objVis, *sf, tgContext, Transform3D::Identity(), sorted);
     }
     ++il;
   }
@@ -106,12 +113,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> dModuleThickness = {0.15, 0.15, 0.15, 0.15};
 
   for (size_t ilp = 0; ilp < discZ.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
-        dStore, dModuleHalfXMinY[ilp], dModuleHalfXMaxY[ilp], dModuleHalfY[ilp],
-        dModuleThickness[ilp], dModuleTilt[ilp], discRadii[ilp], discZ[ilp], 2.,
-        discModules[ilp]);
-    discSurfaces.insert(discSurfaces.begin(), layerSurfaces.begin(),
-                        layerSurfaces.end());
+    std::vector<const Surface*> layerSurfaces =
+        ctGeometry.surfacesRing(dStore,
+                                dModuleHalfXMinY[ilp],
+                                dModuleHalfXMaxY[ilp],
+                                dModuleHalfY[ilp],
+                                dModuleThickness[ilp],
+                                dModuleTilt[ilp],
+                                discRadii[ilp],
+                                discZ[ilp],
+                                2.,
+                                discModules[ilp]);
+    discSurfaces.insert(
+        discSurfaces.begin(), layerSurfaces.begin(), layerSurfaces.end());
   }
 
   for (auto& sf : discSurfaces) {
@@ -130,8 +144,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig ViewConfig(sortedColors[il]);
-      GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                                ViewConfig);
+      GeometryView::drawSurface(
+          objVis, *sf, tgContext, Transform3D::Identity(), ViewConfig);
     }
     ++il;
   }
@@ -143,10 +157,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   /// Ring layout section ---------------------------------------------------
   std::vector<const Surface*> ringSurfaces;
 
-  std::vector<double> ringZ = {-350., -250., -150., -100., -360., -255.,
-                               -120., -330., -260., -150., -95.};
-  std::vector<double> ringRadii = {32., 32., 32., 32., 58., 58.,
-                                   58., 84., 84., 84., 84.};
+  std::vector<double> ringZ = {-350.,
+                               -250.,
+                               -150.,
+                               -100.,
+                               -360.,
+                               -255.,
+                               -120.,
+                               -330.,
+                               -260.,
+                               -150.,
+                               -95.};
+  std::vector<double> ringRadii = {
+      32., 32., 32., 32., 58., 58., 58., 84., 84., 84., 84.};
   std::vector<int> ringModules = {22, 22, 22, 22, 32, 32, 32, 44, 44, 44, 44};
 
   std::vector<double> rModuleHalfXMinY(11, 6.4);
@@ -156,12 +179,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   std::vector<double> rModuleThickness(11, 0.15);
 
   for (size_t ilp = 0; ilp < ringZ.size(); ++ilp) {
-    std::vector<const Surface*> layerSurfaces = ctGeometry.surfacesRing(
-        dStore, rModuleHalfXMinY[ilp], rModuleHalfXMaxY[ilp], rModuleHalfY[ilp],
-        rModuleThickness[ilp], rModuleTilt[ilp], ringRadii[ilp], ringZ[ilp], 2.,
-        ringModules[ilp]);
-    ringSurfaces.insert(ringSurfaces.begin(), layerSurfaces.begin(),
-                        layerSurfaces.end());
+    std::vector<const Surface*> layerSurfaces =
+        ctGeometry.surfacesRing(dStore,
+                                rModuleHalfXMinY[ilp],
+                                rModuleHalfXMaxY[ilp],
+                                rModuleHalfY[ilp],
+                                rModuleThickness[ilp],
+                                rModuleTilt[ilp],
+                                ringRadii[ilp],
+                                ringZ[ilp],
+                                2.,
+                                ringModules[ilp]);
+    ringSurfaces.insert(
+        ringSurfaces.begin(), layerSurfaces.begin(), layerSurfaces.end());
   }
 
   for (auto& sf : ringSurfaces) {
@@ -181,7 +211,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   int ir = 0;
   for (auto& rBatch : rSorted) {
     auto lSorted =
-        plHelper.protoLayers(tgContext, rBatch.surfaces(),
+        plHelper.protoLayers(tgContext,
+                             rBatch.surfaces(),
                              ProtoLayerHelper::SortingConfig(binZ, 5.));
     il = 0;
     dColor[ir] = 256;

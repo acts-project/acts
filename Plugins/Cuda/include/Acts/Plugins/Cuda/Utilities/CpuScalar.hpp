@@ -34,8 +34,8 @@ class CpuScalar {
     } else if (pinned == 1) {
       cudaMallocHost(&m_hostPtr, sizeof(var_t));
     }
-    cudaMemcpy(m_hostPtr, cuScalar->get(), sizeof(var_t),
-               cudaMemcpyDeviceToHost);
+    cudaMemcpy(
+        m_hostPtr, cuScalar->get(), sizeof(var_t), cudaMemcpyDeviceToHost);
   }
 
   ~CpuScalar() {

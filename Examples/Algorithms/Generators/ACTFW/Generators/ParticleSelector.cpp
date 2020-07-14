@@ -26,17 +26,23 @@ FW::ParticleSelector::addOptions(FW::Options::Description& desc) {
   using Options::Interval;
 
   auto opt = desc.add_options();
-  opt("select-rho-mm", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-rho-mm",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle transverse distance to the origin in mm");
-  opt("select-absz-mm", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-absz-mm",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle absolute longitudinal distance to the origin in mm");
-  opt("select-phi-degree", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-phi-degree",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle direction angle in the transverse plane in degree");
-  opt("select-eta", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-eta",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle pseudo-rapidity");
-  opt("select-abseta", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-abseta",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle absolute pseudo-rapidity");
-  opt("select-pt-gev", value<Interval>()->value_name("MIN:MAX"),
+  opt("select-pt-gev",
+      value<Interval>()->value_name("MIN:MAX"),
       "Select particle transverse momentum in GeV");
   opt("remove-charged", bool_switch(), "Remove charged particles");
   opt("remove-neutral", bool_switch(), "Remove neutral particles");
@@ -47,15 +53,15 @@ FW::ParticleSelector::readConfig(const FW::Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
-  auto extractInterval = [&](const char* name, auto unit, auto& lower,
-                             auto& upper) {
-    if (vars[name].empty()) {
-      return;
-    }
-    auto interval = vars[name].as<Options::Interval>();
-    lower = interval.lower.value_or(lower) * unit;
-    upper = interval.upper.value_or(upper) * unit;
-  };
+  auto extractInterval =
+      [&](const char* name, auto unit, auto& lower, auto& upper) {
+        if (vars[name].empty()) {
+          return;
+        }
+        auto interval = vars[name].as<Options::Interval>();
+        lower = interval.lower.value_or(lower) * unit;
+        upper = interval.upper.value_or(upper) * unit;
+      };
 
   Config cfg;
   extractInterval("select-rho-mm", 1_mm, cfg.rhoMin, cfg.rhoMax);
@@ -132,10 +138,14 @@ FW::ParticleSelector::execute(const FW::AlgorithmContext& ctx) const {
 
     SimVertex vertex(inputVertex.position4, inputVertex.process);
     // copy selected particles over
-    std::copy_if(inputVertex.incoming.begin(), inputVertex.incoming.end(),
-                 std::back_inserter(vertex.incoming), isValidParticle);
-    std::copy_if(inputVertex.outgoing.begin(), inputVertex.outgoing.end(),
-                 std::back_inserter(vertex.outgoing), isValidParticle);
+    std::copy_if(inputVertex.incoming.begin(),
+                 inputVertex.incoming.end(),
+                 std::back_inserter(vertex.incoming),
+                 isValidParticle);
+    std::copy_if(inputVertex.outgoing.begin(),
+                 inputVertex.outgoing.end(),
+                 std::back_inserter(vertex.outgoing),
+                 isValidParticle);
 
     // only retain vertex if it still contains particles
     if (vertex.incoming.empty() and vertex.outgoing.empty()) {

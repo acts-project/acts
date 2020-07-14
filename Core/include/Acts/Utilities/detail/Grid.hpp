@@ -370,10 +370,12 @@ class Grid final {
   /// start at 0.
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
-  template <
-      class Point, typename U = T,
-      typename = std::enable_if_t<can_interpolate<
-          Point, std::array<double, DIM>, std::array<double, DIM>, U>::value>>
+  template <class Point,
+            typename U = T,
+            typename = std::enable_if_t<can_interpolate<Point,
+                                                        std::array<double, DIM>,
+                                                        std::array<double, DIM>,
+                                                        U>::value>>
   T
   interpolate(const Point& point) const {
     // there are 2^DIM corner points used during the interpolation
@@ -396,8 +398,10 @@ class Grid final {
       neighbors.at(i++) = at(index);
     }
 
-    return Acts::interpolate(point, lowerLeftBinEdge(llIndices),
-                             upperRightBinEdge(llIndices), neighbors);
+    return Acts::interpolate(point,
+                             lowerLeftBinEdge(llIndices),
+                             upperRightBinEdge(llIndices),
+                             neighbors);
   }
 
   /// @brief check whether given point is inside grid limits
@@ -447,7 +451,9 @@ class Grid final {
     index_t nBinsArray = numLocalBins();
     // add under-and overflow bins for each axis and multiply all bins
     return std::accumulate(
-        nBinsArray.begin(), nBinsArray.end(), 1,
+        nBinsArray.begin(),
+        nBinsArray.end(),
+        1,
         [](const size_t& a, const size_t& b) { return a * (b + 2); });
   }
 

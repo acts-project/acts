@@ -47,7 +47,8 @@ class GainMatrixUpdater {
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
   Result<void>
-  operator()(const GeometryContext& /*gctx*/, track_state_t trackState,
+  operator()(const GeometryContext& /*gctx*/,
+             track_state_t trackState,
              const NavigationDirection& direction = forward) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     // let's make sure the types are consistent
@@ -80,7 +81,8 @@ class GainMatrixUpdater {
 
     std::optional<std::error_code> error{std::nullopt};  // assume ok
     visit_measurement(
-        trackState.calibrated(), trackState.calibratedCovariance(),
+        trackState.calibrated(),
+        trackState.calibratedCovariance(),
         trackState.calibratedSize(),
         [&](const auto calibrated, const auto calibrated_covariance) {
           constexpr size_t measdim = decltype(calibrated)::RowsAtCompileTime;

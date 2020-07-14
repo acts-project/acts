@@ -49,8 +49,8 @@ FW::ProcessCode
 FW::CsvParticleReader::read(const FW::AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
-  auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
-                               ctx.eventNumber);
+  auto path = perEventFilepath(
+      m_cfg.inputDir, m_cfg.inputStem + ".csv", ctx.eventNumber);
   // vt and m are an optional columns
   dfe::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;
@@ -61,9 +61,10 @@ FW::CsvParticleReader::read(const FW::AlgorithmContext& ctx) {
                                   data.q * Acts::UnitConstants::e,
                                   data.m * Acts::UnitConstants::GeV);
     particle.setProcess(static_cast<ActsFatras::ProcessType>(data.process));
-    particle.setPosition4(
-        data.vx * Acts::UnitConstants::mm, data.vy * Acts::UnitConstants::mm,
-        data.vz * Acts::UnitConstants::mm, data.vt * Acts::UnitConstants::ns);
+    particle.setPosition4(data.vx * Acts::UnitConstants::mm,
+                          data.vy * Acts::UnitConstants::mm,
+                          data.vz * Acts::UnitConstants::mm,
+                          data.vt * Acts::UnitConstants::ns);
     // only used for direction; normalization/units do not matter
     particle.setDirection(data.px, data.py, data.pz);
     particle.setAbsMomentum(std::hypot(data.px, data.py, data.pz) *

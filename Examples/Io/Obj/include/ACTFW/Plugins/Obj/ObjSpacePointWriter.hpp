@@ -70,8 +70,8 @@ FW::Obj::ObjSpacePointWriter<T>::writeT(
     const FW::AlgorithmContext& context,
     const FW::GeometryIdMultimap<T>& spacePoints) {
   // open per-event file
-  std::string path = FW::perEventFilepath(m_cfg.outputDir, "spacepoints.obj",
-                                          context.eventNumber);
+  std::string path = FW::perEventFilepath(
+      m_cfg.outputDir, "spacepoints.obj", context.eventNumber);
   std::ofstream os(path, std::ofstream::out | std::ofstream::trunc);
   if (!os) {
     throw std::ios_base::failure("Could not open '" + path + "' to write");

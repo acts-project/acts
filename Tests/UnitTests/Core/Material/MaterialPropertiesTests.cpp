@@ -43,14 +43,14 @@ BOOST_AUTO_TEST_CASE(construct_compound) {
   Acts::MaterialProperties abc(components);
 
   // consistency checks
-  CHECK_CLOSE_REL(abc.thickness() / abc.material().X0(), abc.thicknessInX0(),
-                  eps);
-  CHECK_CLOSE_REL(abc.thickness() / abc.material().L0(), abc.thicknessInL0(),
-                  eps);
+  CHECK_CLOSE_REL(
+      abc.thickness() / abc.material().X0(), abc.thicknessInX0(), eps);
+  CHECK_CLOSE_REL(
+      abc.thickness() / abc.material().L0(), abc.thicknessInL0(), eps);
 
   // absolute and relative thicknesses are additive
-  CHECK_CLOSE_REL(abc.thickness(),
-                  a.thickness() + b.thickness() + c.thickness(), eps);
+  CHECK_CLOSE_REL(
+      abc.thickness(), a.thickness() + b.thickness() + c.thickness(), eps);
   CHECK_CLOSE_REL(abc.thicknessInX0(),
                   a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
                   eps);

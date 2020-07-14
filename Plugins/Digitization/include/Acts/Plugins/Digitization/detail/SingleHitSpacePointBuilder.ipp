@@ -33,7 +33,8 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
 template <typename Cluster>
 void
 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
-    const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
+    const GeometryContext& gctx,
+    const std::vector<const Cluster*>& clusters,
     std::vector<Acts::SpacePoint<Cluster>>& spacePointStorage) const {
   // Set the space point for all stored hits
   for (const auto& c : clusters) {

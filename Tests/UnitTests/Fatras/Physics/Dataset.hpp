@@ -49,7 +49,8 @@ makeParticle(Acts::PdgParticle pdg, double phi, double lambda, double p) {
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0, 0, 0, 0)
       .setDirection(std::cos(lambda) * std::cos(phi),
-                    std::cos(lambda) * std::sin(phi), std::sin(lambda))
+                    std::cos(lambda) * std::sin(phi),
+                    std::sin(lambda))
       .setAbsMomentum(p);
 }
 

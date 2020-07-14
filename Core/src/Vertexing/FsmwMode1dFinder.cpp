@@ -27,7 +27,8 @@ Acts::FsmwMode1dFinder::getMode(
 
   // first of all order the vector according to the double value
 
-  std::sort(inputVector.begin(), inputVector.end(),
+  std::sort(inputVector.begin(),
+            inputVector.end(),
             [](std::pair<double, double> a, std::pair<double, double> b) {
               return a.first < b.first;
             });

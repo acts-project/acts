@@ -62,7 +62,8 @@ ConeSurface::intersectionEstimate(const GeometryContext& gctx,
 }
 
 inline SurfaceIntersection
-ConeSurface::intersect(const GeometryContext& gctx, const Vector3D& position,
+ConeSurface::intersect(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation

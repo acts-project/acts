@@ -74,9 +74,11 @@ Acts::PassiveLayerBuilder::endcapLayers(const Acts::GeometryContext& /*gctx*/,
       const Transform3D* eTransform = new Transform3D(
           Translation3D(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
       // create the layers
-      MutableLayerPtr eLayer = DiscLayer::create(
-          std::shared_ptr<const Transform3D>(eTransform), dBounds, nullptr,
-          m_cfg.posnegLayerThickness.at(ipnl));
+      MutableLayerPtr eLayer =
+          DiscLayer::create(std::shared_ptr<const Transform3D>(eTransform),
+                            dBounds,
+                            nullptr,
+                            m_cfg.posnegLayerThickness.at(ipnl));
 
       // assign the material to the layer surface
       std::shared_ptr<const ISurfaceMaterial> material = nullptr;

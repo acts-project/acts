@@ -49,9 +49,12 @@ class CylinderLayer : public CylinderSurface, public Layer {
          double thickness = 0.,
          std::unique_ptr<ApproachDescriptor> ad = nullptr,
          LayerType laytyp = passive) {
-    return MutableLayerPtr(new CylinderLayer(transform, cbounds,
-                                             std::move(surfaceArray), thickness,
-                                             std::move(ad), laytyp));
+    return MutableLayerPtr(new CylinderLayer(transform,
+                                             cbounds,
+                                             std::move(surfaceArray),
+                                             thickness,
+                                             std::move(ad),
+                                             laytyp));
   }
 
   /// Copy constructor - deleted

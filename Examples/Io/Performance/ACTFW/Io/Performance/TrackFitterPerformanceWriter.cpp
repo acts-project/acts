@@ -135,15 +135,18 @@ FW::TrackFitterPerformanceWriter::writeT(
     // Record this majority particle ID of this trajectory
     reconParticleIds.push_back(ip->particleId());
     // Fill the residual plots
-    m_resPlotTool.fill(m_resPlotCache, ctx.geoContext, *ip,
-                       traj.trackParameters(trackTip));
+    m_resPlotTool.fill(
+        m_resPlotCache, ctx.geoContext, *ip, traj.trackParameters(trackTip));
     // Collect the trajectory summary info
     auto trajState =
         Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
     // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                trajState.nStates, trajState.nMeasurements,
-                                trajState.nOutliers, trajState.nHoles);
+    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache,
+                                fittedParameters,
+                                trajState.nStates,
+                                trajState.nMeasurements,
+                                trajState.nOutliers,
+                                trajState.nHoles);
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with
@@ -152,7 +155,8 @@ FW::TrackFitterPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     bool isReconstructed = false;
     // Find if the particle has been reconstructed
-    auto it = std::find(reconParticleIds.begin(), reconParticleIds.end(),
+    auto it = std::find(reconParticleIds.begin(),
+                        reconParticleIds.end(),
                         particle.particleId());
     if (it != reconParticleIds.end()) {
       isReconstructed = true;

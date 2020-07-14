@@ -57,8 +57,10 @@ FW::TrackSelector::execute(const FW::AlgorithmContext& ctx) const {
     sel.vertex = vertexAndTracks.vertex;
 
     // Copy selected tracks over
-    std::copy_if(vertexAndTracks.tracks.begin(), vertexAndTracks.tracks.end(),
-                 std::back_inserter(sel.tracks), isValidTrack);
+    std::copy_if(vertexAndTracks.tracks.begin(),
+                 vertexAndTracks.tracks.end(),
+                 std::back_inserter(sel.tracks),
+                 isValidTrack);
     // Only retain vertex if it still contains tracks
     if (not sel.tracks.empty()) {
       selected.push_back(std::move(sel));

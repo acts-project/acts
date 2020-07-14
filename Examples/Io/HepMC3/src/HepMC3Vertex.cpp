@@ -26,8 +26,10 @@ FW::HepMC3Vertex::genParticlesToActs(
 std::unique_ptr<FW::SimVertex>
 FW::HepMC3Vertex::processVertex(
     const std::shared_ptr<HepMC3::GenVertex> vertex) {
-  SimVertex vtx({vertex->position().x(), vertex->position().y(),
-                 vertex->position().z(), vertex->position().t()});
+  SimVertex vtx({vertex->position().x(),
+                 vertex->position().y(),
+                 vertex->position().z(),
+                 vertex->position().t()});
   vtx.incoming = genParticlesToActs(vertex->particles_in());
   vtx.outgoing = genParticlesToActs(vertex->particles_out());
   // Create Acts vertex
@@ -136,7 +138,9 @@ FW::HepMC3Vertex::position(const std::shared_ptr<HepMC3::GenVertex> vertex,
 void
 FW::HepMC3Vertex::time(const std::shared_ptr<HepMC3::GenVertex> vertex,
                        double time) {
-  HepMC3::FourVector fVec(vertex->position().x(), vertex->position().y(),
-                          vertex->position().z(), time);
+  HepMC3::FourVector fVec(vertex->position().x(),
+                          vertex->position().y(),
+                          vertex->position().z(),
+                          time);
   vertex->set_position(fVec);
 }

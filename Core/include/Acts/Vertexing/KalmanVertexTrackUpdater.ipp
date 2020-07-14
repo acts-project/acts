@@ -120,7 +120,8 @@ inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const ActsSymMatrixD<3>& sMat,
     const ActsMatrixD<eSpacePointSize, 3>& newTrkCov,
-    const SpacePointSymMatrix& vtxWeight, const SpacePointSymMatrix& vtxCov,
+    const SpacePointSymMatrix& vtxWeight,
+    const SpacePointSymMatrix& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
   ActsSymMatrixD<3> momCov =

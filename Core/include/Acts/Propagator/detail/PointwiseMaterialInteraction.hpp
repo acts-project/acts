@@ -166,7 +166,8 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return The updated variance
   double
-  updateVariance(double variance, double change,
+  updateVariance(double variance,
+                 double change,
                  NoiseUpdateMode updateMode = addNoise) const;
 };
 }  // namespace detail

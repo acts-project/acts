@@ -16,8 +16,10 @@ using namespace std;
 using namespace dd4hep;
 
 static void
-completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
-                       Assembly& staveAssembly, double staveHlength,
+completeStaveStructure(Detector& oddd,
+                       xml_comp_t& x_stave,
+                       Assembly& staveAssembly,
+                       double staveHlength,
                        double ylength) {
   unsigned int nModules = x_stave.nmodules();
 
@@ -29,16 +31,20 @@ completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
     xml_comp_t x_pipe = x_stave.child(_U(tube));
 
     // Create the two shapes first
-    Trapezoid foamShape(x_trd.x1(), x_trd.x2(), staveHlength + x_trd.dz(),
-                        staveHlength + x_trd.dz(), x_trd.thickness());
+    Trapezoid foamShape(x_trd.x1(),
+                        x_trd.x2(),
+                        staveHlength + x_trd.dz(),
+                        staveHlength + x_trd.dz(),
+                        x_trd.thickness());
 
     Tube foamCutout(x_tubs.rmin(), x_tubs.rmax(), staveHlength + x_tubs.dz());
 
     // Create the subtraction
-    Volume foamVolume("CarbonFoam",
-                      SubtractionSolid(foamShape, foamCutout,
-                                       Transform3D(RotationX(0.5 * M_PI))),
-                      oddd.material(x_sub.materialStr()));
+    Volume foamVolume(
+        "CarbonFoam",
+        SubtractionSolid(
+            foamShape, foamCutout, Transform3D(RotationX(0.5 * M_PI))),
+        oddd.material(x_sub.materialStr()));
     foamVolume.setVisAttributes(oddd, x_sub.visStr());
     // Place the volume in the stave
     staveAssembly.placeVolume(
@@ -47,15 +53,16 @@ completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
 
     Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), staveHlength + x_pipe.dz());
     // Create the subtraction
-    Volume pipeVolume("CoolingPipe", coolingPipe,
-                      oddd.material(x_pipe.materialStr()));
+    Volume pipeVolume(
+        "CoolingPipe", coolingPipe, oddd.material(x_pipe.materialStr()));
     pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
 
     // Place the pipe in the stave
     staveAssembly.placeVolume(
-        pipeVolume, Transform3D(RotationX(0.5 * M_PI),
-                                Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                         x_pipe.z_offset())));
+        pipeVolume,
+        Transform3D(
+            RotationX(0.5 * M_PI),
+            Position(x_pipe.x_offset(), x_pipe.y_offset(), x_pipe.z_offset())));
 
     xml_comp_t x_cable = x_stave.child(_U(eltube));
     // Place the support cables for the modules
@@ -65,8 +72,8 @@ completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
       for (int side = -1; side < 2; side += 2) {
         Tube cable(x_cable.rmin(), x_cable.rmax(), 0.5 * cableLength);
         // Create the cable volume
-        Volume cableVolume("Cable", cable,
-                           oddd.material(x_cable.materialStr()));
+        Volume cableVolume(
+            "Cable", cable, oddd.material(x_cable.materialStr()));
         cableVolume.setVisAttributes(oddd, x_cable.visStr());
 
         // Place the pipe in the stave
@@ -97,8 +104,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Add the volume boundary material if configured
   for (xml_coll_t bmat(x_det, _Unicode(boundary_material)); bmat; ++bmat) {
     xml_comp_t x_boundary_material = bmat;
-    xmlToProtoSurfaceMaterial(x_boundary_material, *barrelExtension,
-                              "boundary_material");
+    xmlToProtoSurfaceMaterial(
+        x_boundary_material, *barrelExtension, "boundary_material");
   }
   barrelDetector.addExtension<Acts::ActsExtension>(barrelExtension);
 
@@ -212,8 +219,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     // Add the proto layer material
     for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
       xml_comp_t x_layer_material = lmat;
-      xmlToProtoSurfaceMaterial(x_layer_material, *layerExtension,
-                                "layer_material");
+      xmlToProtoSurfaceMaterial(
+          x_layer_material, *layerExtension, "layer_material");
     }
     layerExtension->addType("sensitive cylinder", "layer");
     layerElement.addExtension<Acts::ActsExtension>(layerExtension);

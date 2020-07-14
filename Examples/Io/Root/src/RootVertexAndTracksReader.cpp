@@ -121,9 +121,10 @@ FW::RootVertexAndTracksReader::read(const FW::AlgorithmContext& context) {
             std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
                 Acts::Surface::makeShared<Acts::PerigeeSurface>(
                     Acts::Vector3D(0., 0., 0.));
-            tracks.push_back(
-                Acts::BoundParameters(context.geoContext, std::move(covMat),
-                                      newTrackParams, perigeeSurface));
+            tracks.push_back(Acts::BoundParameters(context.geoContext,
+                                                   std::move(covMat),
+                                                   newTrackParams,
+                                                   perigeeSurface));
           }
         }  // End loop over all tracks
         // Set tracks

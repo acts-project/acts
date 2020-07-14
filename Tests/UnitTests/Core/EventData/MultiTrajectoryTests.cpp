@@ -119,8 +119,11 @@ fillTrackState(track_state_t& ts, TrackStatePropMask mask, size_t dim = 3) {
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink,
-                 meas.covariance(), meas.parameters()[0], meas.parameters()[1]};
+    pc.meas2d = {meas.referenceSurface().getSharedPtr(),
+                 sourceLink,
+                 meas.covariance(),
+                 meas.parameters()[0],
+                 meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
     }
@@ -302,8 +305,12 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 6> values{PM::Predicted,
+                           PM::Filtered,
+                           PM::Smoothed,
+                           PM::Jacobian,
+                           PM::Uncalibrated,
+                           PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
@@ -635,11 +642,17 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   using PM = TrackStatePropMask;
   MultiTrajectory<SourceLink> mj;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 6> values{PM::Predicted,
+                           PM::Filtered,
+                           PM::Smoothed,
+                           PM::Jacobian,
+                           PM::Uncalibrated,
+                           PM::Calibrated};
 
-  PM all = std::accumulate(values.begin(), values.end(), PM::None,
-                           [](auto a, auto b) { return a | b; });
+  PM all = std::accumulate(
+      values.begin(), values.end(), PM::None, [](auto a, auto b) {
+        return a | b;
+      });
 
   auto ts = mj.getTrackState(mj.addTrackState(PM::All));
   BOOST_CHECK(ts.getMask() == all);
@@ -662,8 +675,12 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   MultiTrajectory<SourceLink> mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 6> values{PM::Predicted,
+                           PM::Filtered,
+                           PM::Smoothed,
+                           PM::Jacobian,
+                           PM::Uncalibrated,
+                           PM::Calibrated};
 
   // orthogonal ones
 
@@ -764,9 +781,10 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
 
   // full copy proven to work. now let's do partial copy
   ts2 = mkts(PM::Predicted | PM::Jacobian | PM::Calibrated);
-  ts2.copyFrom(ots2, PM::Predicted | PM::Jacobian |
-                         PM::Calibrated);  // copy into empty ts, only copy some
-  ts1.copyFrom(ots1);                      // reset to original
+  ts2.copyFrom(ots2,
+               PM::Predicted | PM::Jacobian |
+                   PM::Calibrated);  // copy into empty ts, only copy some
+  ts1.copyFrom(ots1);                // reset to original
   // is different again
   BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
   BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());

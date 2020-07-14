@@ -84,8 +84,11 @@ class BinningData {
   /// @param bMax is the maxmimum value
   /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
-  BinningData(BinningOption bOption, BinningValue bValue, size_t bBins,
-              float bMin, float bMax,
+  BinningData(BinningOption bOption,
+              BinningValue bValue,
+              size_t bBins,
+              float bMin,
+              float bMax,
               std::unique_ptr<const BinningData> sBinData = nullptr,
               bool sBinAdditive = false)
       : type(equidistant),
@@ -119,7 +122,8 @@ class BinningData {
   /// @param bValue is the binning value : binX, binY, etc.
   /// @param bBoundaries are the bin boundaries
   /// @param sBinData is (optional) sub structure
-  BinningData(BinningOption bOption, BinningValue bValue,
+  BinningData(BinningOption bOption,
+              BinningValue bValue,
               const std::vector<float>& bBoundaries,
               std::unique_ptr<const BinningData> sBinData = nullptr)
       : type(arbitrary),

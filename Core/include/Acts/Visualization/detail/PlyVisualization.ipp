@@ -27,13 +27,15 @@ PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs, ColorRGB color) {
 template <typename T>
 void
 PlyVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
-                           const std::vector<FaceType>&, ColorRGB color) {
+                           const std::vector<FaceType>&,
+                           ColorRGB color) {
   face(vtxs, color);
 }
 
 template <typename T>
 void
-PlyVisualization<T>::line(const Vector3D& a, const Vector3D& b,
+PlyVisualization<T>::line(const Vector3D& a,
+                          const Vector3D& b,
                           ColorRGB color) {
   vertex(a, color);
   size_t idx_a = m_vertices.size() - 1;

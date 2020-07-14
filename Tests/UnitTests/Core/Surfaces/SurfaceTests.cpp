@@ -111,12 +111,14 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   Vector3D mom{100., 200., 300.};
   auto intersectionEstimate = surface.intersectionEstimate(
       tgContext, reference, mom.normalized(), false);
-  const Intersection ref{Vector3D{1, 1, 1}, 20.,
-                         Intersection::Status::reachable};
+  const Intersection ref{
+      Vector3D{1, 1, 1}, 20., Intersection::Status::reachable};
   BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
-  BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
+  BOOST_CHECK(surface.isOnSurface(tgContext,
+                                  reference,
+                                  mom,
                                   true));  // need to improve bounds()
   // referenceFrame()
   RotationMatrix3D unitary;

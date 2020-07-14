@@ -16,9 +16,12 @@ FW::HepMC3Particle::particle(
   // TODO this is probably not quite right
   ActsFatras::Barcode particleId;
   particleId.setParticle(particle->id());
-  SimParticle fw(particleId, static_cast<Acts::PdgParticle>(particle->pid()),
-                 HepPID::charge(particle->pid()), particle->generated_mass());
-  fw.setDirection(particle->momentum().x(), particle->momentum().y(),
+  SimParticle fw(particleId,
+                 static_cast<Acts::PdgParticle>(particle->pid()),
+                 HepPID::charge(particle->pid()),
+                 particle->generated_mass());
+  fw.setDirection(particle->momentum().x(),
+                  particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsMomentum(particle->momentum().p3mod());
   return std::make_unique<SimParticle>(std::move(fw));
@@ -103,8 +106,10 @@ FW::HepMC3Particle::momentum(std::shared_ptr<HepMC3::GenParticle> particle,
 void
 FW::HepMC3Particle::energy(std::shared_ptr<HepMC3::GenParticle> particle,
                            const double energy) {
-  HepMC3::FourVector fVec(particle->momentum().x(), particle->momentum().y(),
-                          particle->momentum().z(), energy);
+  HepMC3::FourVector fVec(particle->momentum().x(),
+                          particle->momentum().y(),
+                          particle->momentum().z(),
+                          energy);
   particle->set_momentum(fVec);
 }
 

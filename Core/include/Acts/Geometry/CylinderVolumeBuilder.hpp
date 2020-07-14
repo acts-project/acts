@@ -560,7 +560,8 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @return a VolumeConfig representing this layer
   VolumeConfig
-  analyzeContent(const GeometryContext& gctx, const LayerVector& lVector,
+  analyzeContent(const GeometryContext& gctx,
+                 const LayerVector& lVector,
                  const MutableTrackingVolumeVector& mtvVector) const;
 
  private:
@@ -591,9 +592,11 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @return boolean that indicates the test result
   bool
-  checkLayerContainment(const GeometryContext& gctx, VolumeConfig& layerConfig,
+  checkLayerContainment(const GeometryContext& gctx,
+                        VolumeConfig& layerConfig,
                         const VolumeConfig& insideConfig,
-                        const VolumeConfig& volumeConfig, int sign) const;
+                        const VolumeConfig& volumeConfig,
+                        int sign) const;
 };
 
 /// Return the configuration object

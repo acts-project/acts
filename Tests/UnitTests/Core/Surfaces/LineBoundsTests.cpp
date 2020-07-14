@@ -99,7 +99,8 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
                                        trueBoundaryCheckWithTolerance));
 
   /// test for distanceToBoundary
-  CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR), 1.,
+  CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR),
+                  1.,
                   1e-6);  // why?
 
   /// test for r()

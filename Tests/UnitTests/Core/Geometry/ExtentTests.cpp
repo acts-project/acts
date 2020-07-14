@@ -27,10 +27,12 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(ExtentTest) {
-  std::vector<Vector3D> vertices = {
-      Vector3D(15_mm, -3_mm, -10_mm), Vector3D(18_mm, 0_mm, -10_mm),
-      Vector3D(15_mm, 3_mm, -10_mm),  Vector3D(15_mm, -3_mm, 10_mm),
-      Vector3D(18_mm, 0_mm, 10_mm),   Vector3D(15_mm, 3_mm, 10_mm)};
+  std::vector<Vector3D> vertices = {Vector3D(15_mm, -3_mm, -10_mm),
+                                    Vector3D(18_mm, 0_mm, -10_mm),
+                                    Vector3D(15_mm, 3_mm, -10_mm),
+                                    Vector3D(15_mm, -3_mm, 10_mm),
+                                    Vector3D(18_mm, 0_mm, 10_mm),
+                                    Vector3D(15_mm, 3_mm, 10_mm)};
 
   // Create an Extent
   Extent gExt;
@@ -71,13 +73,26 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
 BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
   Extent aExtent;
-  aExtent.ranges = {{1, 2},    {2, 3},   {4, 5},   {2., sqrt(5.)}, {-0.1, 1.4},
-                    {-4., 4.}, {0., 0.}, {1., 2.}, {0., sqrt(9.)}};
+  aExtent.ranges = {{1, 2},
+                    {2, 3},
+                    {4, 5},
+                    {2., sqrt(5.)},
+                    {-0.1, 1.4},
+                    {-4., 4.},
+                    {0., 0.},
+                    {1., 2.},
+                    {0., sqrt(9.)}};
 
   Extent bExtent;
-  bExtent.ranges = {{-2, -1},        {1, 2.5},    {6, 8},
-                    {0., sqrt(12.)}, {-0.1, 1.4}, {-2., 2.},
-                    {0., 0.},        {-2., 0.},   {0., sqrt(9.)}};
+  bExtent.ranges = {{-2, -1},
+                    {1, 2.5},
+                    {6, 8},
+                    {0., sqrt(12.)},
+                    {-0.1, 1.4},
+                    {-2., 2.},
+                    {0., 0.},
+                    {-2., 0.},
+                    {0., sqrt(9.)}};
 
   // They certainly intersect
   BOOST_CHECK(aExtent.intersects(bExtent));

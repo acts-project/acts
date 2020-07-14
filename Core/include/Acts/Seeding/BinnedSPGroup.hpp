@@ -43,7 +43,8 @@ class NeighborhoodIterator {
 
   NeighborhoodIterator(std::vector<size_t> indices,
                        const SpacePointGrid<external_spacepoint_t>* spgrid,
-                       size_t curInd, sp_it_t curIt) {
+                       size_t curInd,
+                       sp_it_t curIt) {
     m_grid = spgrid;
     m_indices = indices;
     m_curInd = curInd;
@@ -130,7 +131,9 @@ class Neighborhood {
   NeighborhoodIterator<external_spacepoint_t>
   end() {
     return NeighborhoodIterator<external_spacepoint_t>(
-        m_indices, m_spgrid, m_indices.size() - 1,
+        m_indices,
+        m_spgrid,
+        m_indices.size() - 1,
         std::end(m_spgrid->at(m_indices.back())));
   }
 
@@ -205,7 +208,8 @@ class BinnedSPGroupIterator {
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
                         BinFinder<external_spacepoint_t>* botBinFinder,
                         BinFinder<external_spacepoint_t>* tBinFinder,
-                        size_t phiInd, size_t zInd)
+                        size_t phiInd,
+                        size_t zInd)
       : currentBin({spgrid->globalBinFromLocalBins({phiInd, zInd})}) {
     m_bottomBinFinder = botBinFinder;
     m_topBinFinder = tBinFinder;
@@ -244,10 +248,10 @@ class BinnedSPGroup {
 
   template <typename spacepoint_iterator_t>
   BinnedSPGroup<external_spacepoint_t>(
-      spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<Acts::Vector2D(const external_spacepoint_t&, float, float,
-                                   float)>
-          covTool,
+      spacepoint_iterator_t spBegin,
+      spacepoint_iterator_t spEnd,
+      std::function<Acts::Vector2D(
+          const external_spacepoint_t&, float, float, float)> covTool,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
@@ -267,9 +271,11 @@ class BinnedSPGroup {
   BinnedSPGroupIterator<external_spacepoint_t>
   end() {
     auto phiZbins = m_binnedSP->numLocalBins();
-    return BinnedSPGroupIterator<external_spacepoint_t>(
-        m_binnedSP.get(), m_bottomBinFinder.get(), m_topBinFinder.get(),
-        phiZbins[0], phiZbins[1] + 1);
+    return BinnedSPGroupIterator<external_spacepoint_t>(m_binnedSP.get(),
+                                                        m_bottomBinFinder.get(),
+                                                        m_topBinFinder.get(),
+                                                        phiZbins[0],
+                                                        phiZbins[1] + 1);
   }
 
  private:

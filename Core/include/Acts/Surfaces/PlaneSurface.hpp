@@ -48,7 +48,8 @@ class PlaneSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
+  PlaneSurface(const GeometryContext& gctx,
+               const PlaneSurface& other,
                const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
@@ -122,8 +123,10 @@ class PlaneSurface : public Surface {
   /// @param position global 3D position to be filled (given by reference for
   /// method symmetry)
   void
-  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                const Vector3D& momentum, Vector3D& position) const override;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D& lposition,
+                const Vector3D& momentum,
+                Vector3D& position) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
@@ -139,8 +142,10 @@ class PlaneSurface : public Surface {
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                const Vector3D& momentum, Vector2D& lposition) const override;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D& position,
+                const Vector3D& momentum,
+                Vector2D& lposition) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
@@ -151,7 +156,8 @@ class PlaneSurface : public Surface {
   ///
   /// @return a double representing the scaling factor
   double
-  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& direction) const final;
 
   /// @brief Straight line intersection schema
@@ -181,7 +187,8 @@ class PlaneSurface : public Surface {
   ///
   /// @return the Intersection object
   Intersection
-  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck = false) const final;
 

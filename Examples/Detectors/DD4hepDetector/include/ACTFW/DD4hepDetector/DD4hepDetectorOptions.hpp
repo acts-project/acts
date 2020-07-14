@@ -40,19 +40,23 @@ sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
     else
       tracker.push_back(detElement);
   }
-  sort(muon.begin(), muon.end(),
+  sort(muon.begin(),
+       muon.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
-  sort(eCal.begin(), eCal.end(),
+  sort(eCal.begin(),
+       eCal.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
-  sort(hCal.begin(), hCal.end(),
+  sort(hCal.begin(),
+       hCal.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
-  sort(tracker.begin(), tracker.end(),
+  sort(tracker.begin(),
+       tracker.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
@@ -86,12 +90,15 @@ addDD4hepOptions(aopt_t& opt) {
       po::value<double>()->default_value(1. * Acts::units::_mm),
       "The tolerance added to the geometrical extension in z of the "
       "layers contained to build the volume envelope around in mm.")(
-      "dd4hep-layerThickness", po::value<double>()->default_value(10e-10),
+      "dd4hep-layerThickness",
+      po::value<double>()->default_value(10e-10),
       "In case no surfaces (to be contained by the layer) are handed over, "
       "the layer thickness will be set to this value.")(
-      "dd4hep-buildFCChh", po::value<bool>()->default_value(true),
+      "dd4hep-buildFCChh",
+      po::value<bool>()->default_value(true),
       "If you are not building the FCChh detector please set this flag to "
-      "false.")("dd4hep-loglevel", po::value<size_t>()->default_value(2),
+      "false.")("dd4hep-loglevel",
+                po::value<size_t>()->default_value(2),
                 "The output log level of the geometry building. Please set the "
                 "wished "
                 "number (0 = VERBOSE, 1 = "

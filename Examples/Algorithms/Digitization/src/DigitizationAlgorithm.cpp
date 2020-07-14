@@ -105,8 +105,8 @@ FW::DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
       lorentzShift *= -(dg.digitizer->readoutDirection());
       // now calculate the steps through the silicon
       std::vector<Acts::DigitizationStep> dSteps =
-          m_cfg.planarModuleStepper->cellSteps(ctx.geoContext, *dg.digitizer,
-                                               localIntersect, localDirection);
+          m_cfg.planarModuleStepper->cellSteps(
+              ctx.geoContext, *dg.digitizer, localIntersect, localDirection);
       // everything under threshold or edge effects
       if (!dSteps.size()) {
         ACTS_VERBOSE("No steps returned from stepper.");
@@ -151,13 +151,18 @@ FW::DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
 
       // create the planar cluster
       Acts::PlanarModuleCluster pCluster(
-          dg.surface->getSharedPtr(), Identifier(identifier_type(idx), {idx}),
-          std::move(cov), localX, localY, hit.time(), std::move(usedCells));
+          dg.surface->getSharedPtr(),
+          Identifier(identifier_type(idx), {idx}),
+          std::move(cov),
+          localX,
+          localY,
+          hit.time(),
+          std::move(usedCells));
 
       // insert into the cluster container. since the input data is already
       // sorted by geoId, we should always be able to add at the end.
-      clusters.emplace_hint(clusters.end(), hit.geometryId(),
-                            std::move(pCluster));
+      clusters.emplace_hint(
+          clusters.end(), hit.geometryId(), std::move(pCluster));
     }
   }
 

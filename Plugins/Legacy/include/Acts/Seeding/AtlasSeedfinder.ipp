@@ -655,7 +655,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rbe,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rt,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rte,
-    int NB, int NT, int& nseed) {
+    int NB,
+    int NT,
+    int& nseed) {
   typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r0 = rb[0],
                                                                      r;
   if (!m_endlist) {
@@ -894,7 +896,9 @@ void
 Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
     Acts::Legacy::SPForSeed<SpacePoint>*& p1,
     Acts::Legacy::SPForSeed<SpacePoint>*& p2,
-    Acts::Legacy::SPForSeed<SpacePoint>*& p3, float z, float q) {
+    Acts::Legacy::SPForSeed<SpacePoint>*& p3,
+    float z,
+    float q) {
   // if the number of seeds already in m_OneSeeds does not exceed m_maxOneSize
   // then insert the current SP into m_mapOneSeeds and m_OneSeeds.
   if (m_nOneSeeds < m_maxOneSize) {
@@ -910,9 +914,8 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
   // Then remove all entries after the newly inserted entry equal to the new
   // seed.
   else {
-    typename std::multimap<
-        float, Acts::Legacy::InternalSeed<SpacePoint>*>::reverse_iterator l =
-        m_mapOneSeeds.rbegin();
+    typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>*>::
+        reverse_iterator l = m_mapOneSeeds.rbegin();
 
     if ((*l).first <= q) {
       return;
@@ -921,9 +924,9 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
     Acts::Legacy::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
 
-    typename std::multimap<
-        float, Acts::Legacy::InternalSeed<SpacePoint>*>::iterator i =
-        m_mapOneSeeds.insert(std::make_pair(q, s));
+    typename std::multimap<float,
+                           Acts::Legacy::InternalSeed<SpacePoint>*>::iterator
+        i = m_mapOneSeeds.insert(std::make_pair(q, s));
 
     for (++i; i != m_mapOneSeeds.end(); ++i) {
       if ((*i).second == s) {
@@ -941,7 +944,8 @@ template <class SpacePoint>
 void
 Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeedWithCurvaturesComparison(
     Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
-    Acts::Legacy::SPForSeed<SpacePoint>*& SP0, float Zob) {
+    Acts::Legacy::SPForSeed<SpacePoint>*& SP0,
+    float Zob) {
   // allowed (1/helixradius)-delta between 2 seeds
   const float dC = .00003;
 
@@ -1050,10 +1054,10 @@ void
 Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds() {
   m_fillOneSeeds = 0;
 
-  typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>
-                                    *>::iterator lf = m_mapOneSeeds.begin(),
-                                                 l = m_mapOneSeeds.begin(),
-                                                 le = m_mapOneSeeds.end();
+  typename std::multimap<float,
+                         Acts::Legacy::InternalSeed<SpacePoint>*>::iterator
+      lf = m_mapOneSeeds.begin(),
+      l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
 
   if (l == le) {
     return;

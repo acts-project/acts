@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE(interpolation_3d) {
   CHECK_CLOSE_REL(interpolate(Point({{1., 3., 2.5}}), low, high, v), 50., 1e-6);
   CHECK_CLOSE_REL(interpolate(Point({{2., 1., 2.5}}), low, high, v), 40., 1e-6);
   CHECK_CLOSE_REL(interpolate(Point({{2., 3., 2.5}}), low, high, v), 60., 1e-6);
-  CHECK_CLOSE_REL(interpolate(Point({{1.5, 2., 2.5}}), low, high, v), 360. / 8,
-                  1e-6);
-  CHECK_CLOSE_REL(interpolate(Point({{1.3, 2.1, 1.6}}), low, high, v), 32.,
-                  1e-6);
+  CHECK_CLOSE_REL(
+      interpolate(Point({{1.5, 2., 2.5}}), low, high, v), 360. / 8, 1e-6);
+  CHECK_CLOSE_REL(
+      interpolate(Point({{1.3, 2.1, 1.6}}), low, high, v), 32., 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values) {

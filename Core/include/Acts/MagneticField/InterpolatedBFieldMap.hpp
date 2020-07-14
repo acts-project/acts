@@ -71,8 +71,8 @@ struct InterpolatedBFieldMapper {
     Vector3D
     getField(const Vector3D& position) const {
       // defined in Interpolation.hpp
-      return interpolate(m_transformPos(position), m_lowerLeft, m_upperRight,
-                         m_fieldValues);
+      return interpolate(
+          m_transformPos(position), m_lowerLeft, m_upperRight, m_fieldValues);
     }
 
     /// @brief check whether given 3D position is inside this field cell
@@ -163,8 +163,8 @@ struct InterpolatedBFieldMapper {
       neighbors.at(i++) = m_transformBField(m_grid.at(index), position);
     }
 
-    return FieldCell(m_transformPos, lowerLeft, upperRight,
-                     std::move(neighbors));
+    return FieldCell(
+        m_transformPos, lowerLeft, upperRight, std::move(neighbors));
   }
 
   /// @brief get the number of bins for all axes of the field map
@@ -332,7 +332,8 @@ class InterpolatedBFieldMap final {
   /// @note Cache is not used currently
   /// @todo return derivative
   Vector3D
-  getFieldGradient(const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/,
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& /*derivative*/,
                    Cache& /*cache*/) const {
     return m_config.mapper.getField(position);
   }

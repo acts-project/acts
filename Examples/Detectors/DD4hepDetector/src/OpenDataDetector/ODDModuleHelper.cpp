@@ -36,11 +36,14 @@ ODDModuleHelper::assembleTrapezoidalModule(Detector& oddd,
     string compName =
         _toString((int)compNum, "component%d") + x_comp.materialStr();
 
-    Trapezoid trapShape(x_comp.x1(), x_comp.x2(), 0.5 * x_comp.thickness(),
-                        0.5 * x_comp.thickness(), x_comp.length());
+    Trapezoid trapShape(x_comp.x1(),
+                        x_comp.x2(),
+                        0.5 * x_comp.thickness(),
+                        0.5 * x_comp.thickness(),
+                        x_comp.length());
 
-    Volume componentVolume(compName, trapShape,
-                           oddd.material(x_comp.materialStr()));
+    Volume componentVolume(
+        compName, trapShape, oddd.material(x_comp.materialStr()));
     componentVolume.setVisAttributes(oddd, x_comp.visStr());
 
     // overwrite if you have a subtraction
@@ -52,7 +55,8 @@ ODDModuleHelper::assembleTrapezoidalModule(Detector& oddd,
       componentVolume = Volume(
           compName,
           SubtractionSolid(
-              trapShape, tubeCutout,
+              trapShape,
+              tubeCutout,
               Position(x_sub.x_offset(), x_sub.y_offset(), x_sub.z_offset())),
           oddd.material(x_comp.materialStr()));
 
@@ -61,8 +65,8 @@ ODDModuleHelper::assembleTrapezoidalModule(Detector& oddd,
         xml_comp_t x_pipe = x_comp.child(_U(tube));
         Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), x_comp.length());
         // Create the subtraction
-        Volume pipeVolume("CoolingPipe", coolingPipe,
-                          oddd.material(x_pipe.materialStr()));
+        Volume pipeVolume(
+            "CoolingPipe", coolingPipe, oddd.material(x_pipe.materialStr()));
         pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
 
         componentVolume.placeVolume(
@@ -127,8 +131,8 @@ ODDModuleHelper::assembleRectangularModule(Detector& oddd,
     string componentName = _toString((int)compNum, "component%d");
     Box boxShape(0.5 * x_comp.dx(), 0.5 * x_comp.dy(), 0.5 * x_comp.dz());
     // Standard component volume without cutout
-    Volume componentVolume(componentName, boxShape,
-                           oddd.material(x_comp.materialStr()));
+    Volume componentVolume(
+        componentName, boxShape, oddd.material(x_comp.materialStr()));
 
     // overwrite if you have a subtraction
     if (x_comp.hasChild(_U(subtraction))) {
@@ -138,11 +142,12 @@ ODDModuleHelper::assembleRectangularModule(Detector& oddd,
       // Create the subtraction
       componentVolume =
           Volume(componentName,
-                 SubtractionSolid(
-                     boxShape, tubeCutout,
-                     Transform3D(RotationX(0.5 * M_PI),
-                                 Position(x_sub.x_offset(), x_sub.y_offset(),
-                                          x_sub.z_offset()))),
+                 SubtractionSolid(boxShape,
+                                  tubeCutout,
+                                  Transform3D(RotationX(0.5 * M_PI),
+                                              Position(x_sub.x_offset(),
+                                                       x_sub.y_offset(),
+                                                       x_sub.z_offset()))),
                  oddd.material(x_comp.materialStr()));
 
       // place a fitting pipe if available
@@ -150,15 +155,15 @@ ODDModuleHelper::assembleRectangularModule(Detector& oddd,
         xml_comp_t x_pipe = x_comp.child(_U(tube));
         Tube coolingPipe(x_pipe.rmin(), x_pipe.rmax(), 0.5 * x_comp.dy());
         // Create the subtraction
-        Volume pipeVolume("CoolingPipe", coolingPipe,
-                          oddd.material(x_pipe.materialStr()));
+        Volume pipeVolume(
+            "CoolingPipe", coolingPipe, oddd.material(x_pipe.materialStr()));
         pipeVolume.setVisAttributes(oddd, x_pipe.visStr());
 
-        componentVolume.placeVolume(
-            pipeVolume,
-            Transform3D(RotationX(0.5 * M_PI),
-                        Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                 x_pipe.z_offset())));
+        componentVolume.placeVolume(pipeVolume,
+                                    Transform3D(RotationX(0.5 * M_PI),
+                                                Position(x_pipe.x_offset(),
+                                                         x_pipe.y_offset(),
+                                                         x_pipe.z_offset())));
       }
     }
     componentVolume.setVisAttributes(oddd, x_comp.visStr());

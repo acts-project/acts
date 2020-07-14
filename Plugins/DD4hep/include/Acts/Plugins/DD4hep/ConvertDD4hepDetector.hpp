@@ -23,7 +23,8 @@ namespace Acts {
 /// @param[in][out] det the dd4hep::DetElements to be sorted
 void
 sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
-  sort(det.begin(), det.end(),
+  sort(det.begin(),
+       det.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {
          return (a.id() < b.id());
        });
@@ -87,8 +88,10 @@ std::unique_ptr<const TrackingGeometry>
 convertDD4hepDetector(
     dd4hep::DetElement worldDetElement,
     Logging::Level loggingLevel = Logging::Level::INFO,
-    BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
-    BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
+    BinningType bTypePhi = equidistant,
+    BinningType bTypeR = equidistant,
+    BinningType bTypeZ = equidistant,
+    double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
     double defaultLayerThickness = UnitConstants::fm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&

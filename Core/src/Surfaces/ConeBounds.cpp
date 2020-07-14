@@ -13,16 +13,24 @@
 #include <iostream>
 #include <limits>
 
-Acts::ConeBounds::ConeBounds(double alpha, bool symm, double halfphi,
+Acts::ConeBounds::ConeBounds(double alpha,
+                             bool symm,
+                             double halfphi,
                              double avphi) noexcept(false)
-    : m_values({alpha, symm ? -std::numeric_limits<double>::infinity() : 0,
-                std::numeric_limits<double>::infinity(), halfphi, avphi}),
+    : m_values({alpha,
+                symm ? -std::numeric_limits<double>::infinity() : 0,
+                std::numeric_limits<double>::infinity(),
+                halfphi,
+                avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
 }
 
-Acts::ConeBounds::ConeBounds(double alpha, double minz, double maxz,
-                             double halfphi, double avphi) noexcept(false)
+Acts::ConeBounds::ConeBounds(double alpha,
+                             double minz,
+                             double maxz,
+                             double halfphi,
+                             double avphi) noexcept(false)
     : m_values({alpha, minz, maxz, halfphi, avphi}),
       m_tanAlpha(std::tan(alpha)) {
   checkConsistency();
@@ -58,7 +66,8 @@ bool
 Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                          const Acts::BoundaryCheck& bcheck) const {
   auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
-  return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get(eMinZ)),
+  return bcheck.isInside(shifted(lposition),
+                         Vector2D(-rphiHalf, get(eMinZ)),
                          Vector2D(rphiHalf, get(eMaxZ)));
 }
 

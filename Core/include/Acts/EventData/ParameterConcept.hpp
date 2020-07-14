@@ -64,16 +64,19 @@ namespace concept {
         identical_to<double, time_returntype_t, const P>;
     constexpr static bool surfacebound_covariance_exists =
         identical_to<const std::optional<BoundSymMatrix>&,
-                     covariance_returntype_t, const P>;
+                     covariance_returntype_t,
+                     const P>;
     constexpr static bool surfacebound_parameters_exists =
         identical_to<BoundVector, parameters_returntype_t, const P>;
 
     /// Tie all surface bound results together
-    constexpr static bool boundValue =
-        require<reference_surface_exists, surfacebound_position_exists,
-                surfacebound_momentum_exists, surfacebound_charge_exists,
-                surfacebound_time_exists, surfacebound_covariance_exists,
-                surfacebound_parameters_exists>;
+    constexpr static bool boundValue = require<reference_surface_exists,
+                                               surfacebound_position_exists,
+                                               surfacebound_momentum_exists,
+                                               surfacebound_charge_exists,
+                                               surfacebound_time_exists,
+                                               surfacebound_covariance_exists,
+                                               surfacebound_parameters_exists>;
 
     /// Tests related to free parametrisations
     constexpr static bool free_position_exists =
@@ -89,10 +92,12 @@ namespace concept {
         has_method<const P, FreeVector, parameters_t>;
 
     /// Tie all free results together
-    constexpr static bool freeValue =
-        require<free_position_exists, free_momentum_exists, free_charge_exists,
-                free_time_exists, free_covariance_exists,
-                free_parameters_exists>;
+    constexpr static bool freeValue = require<free_position_exists,
+                                              free_momentum_exists,
+                                              free_charge_exists,
+                                              free_time_exists,
+                                              free_covariance_exists,
+                                              free_parameters_exists>;
 
     /// Assert the individual results for easier error handling
     // TODO: The surface getter should be tested but would be useless in this

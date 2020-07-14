@@ -37,7 +37,9 @@ class CpuVector {
     } else if (pinned == 1) {
       cudaMallocHost(&m_hostPtr, m_size * sizeof(var_t));
     }
-    cudaMemcpy(m_hostPtr, cuVec->get(), m_size * sizeof(var_t),
+    cudaMemcpy(m_hostPtr,
+               cuVec->get(),
+               m_size * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
@@ -61,14 +63,19 @@ class CpuVector {
 
   void
   copyD2H(var_t* devPtr, size_t len, size_t offset) {
-    cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
+    cudaMemcpy(m_hostPtr + offset,
+               devPtr,
+               len * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
   void
   copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
-    cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
-                    cudaMemcpyDeviceToHost, *stream);
+    cudaMemcpyAsync(m_hostPtr + offset,
+                    devPtr,
+                    len * sizeof(var_t),
+                    cudaMemcpyDeviceToHost,
+                    *stream);
   }
 
   void

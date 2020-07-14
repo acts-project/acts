@@ -101,7 +101,8 @@ class GaussianGridTrackDensity {
   /// @param trkGrid The 1-dim density contribution of the track
   /// @param mainGrid The main 1-dim density grid along the z-axis
   void
-  removeTrackGridFromMainGrid(int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+  removeTrackGridFromMainGrid(int zBin,
+                              const ActsVectorF<trkGridSize>& trkGrid,
                               ActsVectorF<mainGridSize>& mainGrid) const;
 
  private:
@@ -112,7 +113,8 @@ class GaussianGridTrackDensity {
   /// @param trkGrid The 1-dim density contribution of the track
   /// @param mainGrid The main 1-dim density grid along the z-axis
   void
-  addTrackGridToMainGrid(int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+  addTrackGridToMainGrid(int zBin,
+                         const ActsVectorF<trkGridSize>& trkGrid,
                          ActsVectorF<mainGridSize>& mainGrid) const;
 
   /// @brief Helper function that modifies the main density grid
@@ -124,7 +126,8 @@ class GaussianGridTrackDensity {
   /// @param modifyModeSign Sign that determines the mode of modification,
   /// +1 for adding a track, -1 for removing a track
   void
-  modifyMainGridWithTrackGrid(int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+  modifyMainGridWithTrackGrid(int zBin,
+                              const ActsVectorF<trkGridSize>& trkGrid,
                               ActsVectorF<mainGridSize>& mainGrid,
                               int modifyModeSign) const;
 
@@ -139,7 +142,9 @@ class GaussianGridTrackDensity {
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
   ActsVectorF<trkGridSize>
-  createTrackGrid(int offset, const SymMatrix2D& cov, float distCtrD,
+  createTrackGrid(int offset,
+                  const SymMatrix2D& cov,
+                  float distCtrD,
                   float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the FWHM of

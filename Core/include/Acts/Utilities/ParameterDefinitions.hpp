@@ -341,7 +341,8 @@ struct ParameterTypeFor<FreeParametersIndices, I> {
 using BoundVector = ActsVector<BoundParametersScalar, eBoundParametersSize>;
 using BoundRowVector =
     ActsRowVector<BoundParametersScalar, eBoundParametersSize>;
-using BoundMatrix = ActsMatrix<BoundParametersScalar, eBoundParametersSize,
+using BoundMatrix = ActsMatrix<BoundParametersScalar,
+                               eBoundParametersSize,
                                eBoundParametersSize>;
 using BoundSymMatrix =
     ActsSymMatrix<BoundParametersScalar, eBoundParametersSize>;
@@ -372,7 +373,8 @@ using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
 // to retain accuracy.
 
 using FreeToBoundMatrix = ActsMatrix<BoundParametersScalar,
-                                     eBoundParametersSize, eFreeParametersSize>;
+                                     eBoundParametersSize,
+                                     eFreeParametersSize>;
 using SpacePointToBoundMatrix =
     ActsMatrix<BoundParametersScalar, eBoundParametersSize, eSpacePointSize>;
 

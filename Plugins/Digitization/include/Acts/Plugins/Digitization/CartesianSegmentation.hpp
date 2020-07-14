@@ -46,7 +46,8 @@ class CartesianSegmentation : public Segmentation {
   /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
   CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
-                        size_t numCellsX, size_t numCellsY = 1);
+                        size_t numCellsX,
+                        size_t numCellsY = 1);
 
   /// @todo contructor from BinUtilities for more complex readouts
   ///
@@ -71,7 +72,8 @@ class CartesianSegmentation : public Segmentation {
   createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
                              SurfacePtrVector& segmentationSurfacesX,
                              SurfacePtrVector& segmentationSurfacesY,
-                             double halfThickness, int readoutDirection = 1.,
+                             double halfThickness,
+                             int readoutDirection = 1.,
                              double lorentzAngle = 0.) const final;
 
   /// @copydoc Segmentation::cell
@@ -91,8 +93,10 @@ class CartesianSegmentation : public Segmentation {
   ///
   /// @copydoc Segmentation::digitizationStep
   DigitizationStep
-  digitizationStep(const Vector3D& startStep, const Vector3D& endStep,
-                   double halfThickness, int readoutDirection = 1,
+  digitizationStep(const Vector3D& startStep,
+                   const Vector3D& endStep,
+                   double halfThickness,
+                   int readoutDirection = 1,
                    double lorentzAngle = 0.) const final;
 
   /// return the surface bounds by reference

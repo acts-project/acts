@@ -32,9 +32,14 @@
 namespace Acts {
 std::unique_ptr<const TrackingGeometry>
 convertDD4hepDetector(
-    dd4hep::DetElement worldDetElement, Logging::Level loggingLevel,
-    BinningType bTypePhi, BinningType bTypeR, BinningType bTypeZ,
-    double layerEnvelopeR, double layerEnvelopeZ, double defaultLayerThickness,
+    dd4hep::DetElement worldDetElement,
+    Logging::Level loggingLevel,
+    BinningType bTypePhi,
+    BinningType bTypeR,
+    BinningType bTypeZ,
+    double layerEnvelopeR,
+    double layerEnvelopeZ,
+    double defaultLayerThickness,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors,
     const Acts::GeometryContext& gctx,
@@ -58,9 +63,14 @@ convertDD4hepDetector(
   for (auto& subDetector : subDetectors) {
     ACTS_INFO("Translating DD4hep sub detector: " << subDetector.name());
     // create volume builder
-    auto volBuilder = volumeBuilder_dd4hep(
-        subDetector, loggingLevel, bTypePhi, bTypeR, bTypeZ, layerEnvelopeR,
-        layerEnvelopeZ, defaultLayerThickness);
+    auto volBuilder = volumeBuilder_dd4hep(subDetector,
+                                           loggingLevel,
+                                           bTypePhi,
+                                           bTypeR,
+                                           bTypeZ,
+                                           layerEnvelopeR,
+                                           layerEnvelopeZ,
+                                           defaultLayerThickness);
     if (volBuilder) {
       // distinguish beam pipe
       if (volBuilder->getConfiguration().buildToRadiusZero) {
@@ -86,9 +96,10 @@ convertDD4hepDetector(
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
 
-  std::vector<std::function<std::shared_ptr<TrackingVolume>(
-      const GeometryContext&, const TrackingVolumePtr&,
-      const VolumeBoundsPtr&)>>
+  std::vector<
+      std::function<std::shared_ptr<TrackingVolume>(const GeometryContext&,
+                                                    const TrackingVolumePtr&,
+                                                    const VolumeBoundsPtr&)>>
       volumeFactories;
 
   for (const auto& vb : volumeBuilders) {
@@ -114,9 +125,12 @@ convertDD4hepDetector(
 
 std::shared_ptr<const CylinderVolumeBuilder>
 volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
-                     Logging::Level loggingLevel, BinningType bTypePhi,
-                     BinningType bTypeR, BinningType bTypeZ,
-                     double layerEnvelopeR, double layerEnvelopeZ,
+                     Logging::Level loggingLevel,
+                     BinningType bTypePhi,
+                     BinningType bTypeR,
+                     BinningType bTypeZ,
+                     double layerEnvelopeR,
+                     double layerEnvelopeZ,
                      double defaultLayerThickness) {
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(loggingLevel);
@@ -212,12 +226,14 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
           if (volumeExtension->hasType("boundary_material")) {
             if (volumeExtension->hasValue("boundary_material_negative")) {
               cvbConfig.boundaryMaterial[2] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_negative",
+                  *volumeExtension,
+                  "boundary_material_negative",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
             if (volumeExtension->hasValue("boundary_material_positive")) {
               cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_positive",
+                  *volumeExtension,
+                  "boundary_material_positive",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
           }
@@ -236,12 +252,14 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
           if (volumeExtension->hasType("boundary_material")) {
             if (volumeExtension->hasValue("boundary_material_negative")) {
               cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_negative",
+                  *volumeExtension,
+                  "boundary_material_negative",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
             if (volumeExtension->hasValue("boundary_material_positive")) {
               cvbConfig.boundaryMaterial[5] = Acts::createProtoMaterial(
-                  *volumeExtension, "boundary_material_positive",
+                  *volumeExtension,
+                  "boundary_material_positive",
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}});
             }
           }
@@ -263,12 +281,14 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
         if (volumeExtension->hasType("boundary_material")) {
           if (volumeExtension->hasValue("boundary_material_negative")) {
             cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
-                *volumeExtension, "boundary_material_negative",
+                *volumeExtension,
+                "boundary_material_negative",
                 {{"binPhi", Acts::closed}, {"binR", Acts::open}});
           }
           if (volumeExtension->hasValue("boundary_material_positive")) {
             cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
-                *volumeExtension, "boundary_material_positive",
+                *volumeExtension,
+                "boundary_material_positive",
                 {{"binPhi", Acts::closed}, {"binR", Acts::open}});
           }
         }
@@ -285,12 +305,14 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
       if (volumeExtension->hasType("boundary_material")) {
         if (volumeExtension->hasValue("boundary_material_inner")) {
           cvbConfig.boundaryMaterial[0] = Acts::createProtoMaterial(
-              *volumeExtension, "boundary_material_inner",
+              *volumeExtension,
+              "boundary_material_inner",
               {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
         }
         if (volumeExtension->hasValue("boundary_material_outer")) {
           cvbConfig.boundaryMaterial[1] = Acts::createProtoMaterial(
-              *volumeExtension, "boundary_material_outer",
+              *volumeExtension,
+              "boundary_material_outer",
               {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
         }
       }
@@ -375,7 +397,8 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     if (subDetExtension->hasType("layer_material")) {
       // get the possible material of the surounding volume
       plMaterial = Acts::createProtoMaterial(
-          *subDetExtension, "layer_material_representing",
+          *subDetExtension,
+          "layer_material_representing",
           {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
     }
 

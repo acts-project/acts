@@ -88,7 +88,8 @@ struct DistanceObserver {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+  operator()(propagator_state_t& state,
+             const stepper_t& /*unused*/,
              result_type& result) const {
     result.distance = path_to_go - state.stepping.pathAccumulated;
   }
@@ -111,7 +112,8 @@ struct CallCounter {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+  operator()(propagator_state_t& /*unused*/,
+             const stepper_t& /*unused*/,
              result_type& r) const {
     ++r.calls;
   }

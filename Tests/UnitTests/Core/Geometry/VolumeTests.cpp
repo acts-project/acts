@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   Volume volume(std::make_shared<const Transform3D>(transform),
                 std::make_shared<const CuboidVolumeBounds>(bounds));
   BOOST_TEST(volume.transform().matrix() == transform.matrix());
-  CHECK_CLOSE_ABS(volume.itransform().matrix(), transform.inverse().matrix(),
-                  eps);
+  CHECK_CLOSE_ABS(
+      volume.itransform().matrix(), transform.inverse().matrix(), eps);
   BOOST_TEST(volume.center() == translation);
   auto vBounds = static_cast<const decltype(bounds)*>(&volume.volumeBounds());
   BOOST_TEST(*vBounds == bounds);

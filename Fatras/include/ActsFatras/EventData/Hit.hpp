@@ -43,8 +43,12 @@ class Hit {
   /// All quantities are given in the global coordinate system. It is the
   /// users responsibility to ensure that the position correspond to a
   /// position on the given surface.
-  Hit(Acts::GeometryID geometryId, Barcode particleId, const Vector4& pos4,
-      const Vector4& before4, const Vector4& after4, int32_t index_ = -1)
+  Hit(Acts::GeometryID geometryId,
+      Barcode particleId,
+      const Vector4& pos4,
+      const Vector4& before4,
+      const Vector4& after4,
+      int32_t index_ = -1)
       : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),

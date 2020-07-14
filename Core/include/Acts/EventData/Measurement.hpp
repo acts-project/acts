@@ -93,7 +93,8 @@ class Measurement {
   /// measurement
   template <typename... Tail>
   Measurement(std::shared_ptr<const Surface> surface,
-              const source_link_t& source, CovarianceMatrix cov,
+              const source_link_t& source,
+              CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)

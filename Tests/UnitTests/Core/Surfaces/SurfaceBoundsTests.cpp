@@ -66,8 +66,10 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsProperties) {
   SurfaceBoundsStub surface(5);
   std::vector<double> reference{0, 1, 2, 3, 4};
   const auto& boundValues = surface.values();
-  BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(), reference.cend(),
-                                boundValues.cbegin(), boundValues.cend());
+  BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(),
+                                reference.cend(),
+                                boundValues.cbegin(),
+                                boundValues.cend());
 }
 /// Unit test for testing SurfaceBounds properties
 BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
@@ -81,9 +83,10 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality) {
   BOOST_CHECK_EQUAL(surface, assignedSurface);
   const auto& surfaceboundValues = surface.values();
   const auto& assignedboundValues = assignedSurface.values();
-  BOOST_CHECK_EQUAL_COLLECTIONS(
-      surfaceboundValues.cbegin(), surfaceboundValues.cend(),
-      assignedboundValues.cbegin(), assignedboundValues.cend());
+  BOOST_CHECK_EQUAL_COLLECTIONS(surfaceboundValues.cbegin(),
+                                surfaceboundValues.cend(),
+                                assignedboundValues.cbegin(),
+                                assignedboundValues.cend());
 }
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -42,7 +42,9 @@ Acts::AccumulatedVolumeMaterial::average() {
   }
 
   // Create the material
-  return Material(m_thickness / m_totalX0, m_thickness / m_totalL0,
-                  m_totalAr / m_materialEntries, m_totalZ / m_materialEntries,
+  return Material(m_thickness / m_totalX0,
+                  m_thickness / m_totalL0,
+                  m_totalAr / m_materialEntries,
+                  m_totalZ / m_materialEntries,
                   m_totalRho / m_materialEntries);
 }

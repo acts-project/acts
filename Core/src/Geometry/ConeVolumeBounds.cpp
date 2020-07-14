@@ -21,9 +21,12 @@
 #include <cmath>
 #include <iostream>
 
-Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
-                                         double outerAlpha, double outerOffsetZ,
-                                         double halflengthZ, double averagePhi,
+Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha,
+                                         double innerOffsetZ,
+                                         double outerAlpha,
+                                         double outerOffsetZ,
+                                         double halflengthZ,
+                                         double averagePhi,
                                          double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
   m_values[eInnerAlpha] = innerAlpha;
@@ -37,8 +40,10 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
   checkConsistency();
 }
 
-Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
-                                         double offsetZ, double halflengthZ,
+Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR,
+                                         double alpha,
+                                         double offsetZ,
+                                         double halflengthZ,
                                          double averagePhi,
                                          double halfPhiSector) noexcept(false)
     : VolumeBounds(), m_values() {
@@ -247,9 +252,11 @@ Acts::ConeVolumeBounds::buildSurfaceBounds() {
     double innerZmax = get(eInnerOffsetZ) + get(eHalfLengthZ);
     m_innerRmin = std::abs(innerZmin) * m_innerTanAlpha;
     m_innerRmax = std::abs(innerZmax) * m_innerTanAlpha;
-    m_innerConeBounds =
-        std::make_shared<ConeBounds>(get(eInnerAlpha), innerZmin, innerZmax,
-                                     get(eHalfPhiSector), get(eAveragePhi));
+    m_innerConeBounds = std::make_shared<ConeBounds>(get(eInnerAlpha),
+                                                     innerZmin,
+                                                     innerZmax,
+                                                     get(eHalfPhiSector),
+                                                     get(eAveragePhi));
   } else if (m_innerRmin == m_innerRmax and m_innerRmin > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<CylinderBounds>(
         m_innerRmin, get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
@@ -261,9 +268,11 @@ Acts::ConeVolumeBounds::buildSurfaceBounds() {
     double outerZmax = get(eOuterOffsetZ) + get(eHalfLengthZ);
     m_outerRmin = std::abs(outerZmin) * m_outerTanAlpha;
     m_outerRmax = std::abs(outerZmax) * m_outerTanAlpha;
-    m_outerConeBounds =
-        std::make_shared<ConeBounds>(get(eOuterAlpha), outerZmin, outerZmax,
-                                     get(eHalfPhiSector), get(eAveragePhi));
+    m_outerConeBounds = std::make_shared<ConeBounds>(get(eOuterAlpha),
+                                                     outerZmin,
+                                                     outerZmax,
+                                                     get(eHalfPhiSector),
+                                                     get(eAveragePhi));
 
   } else if (m_outerRmin == m_outerRmax) {
     m_outerCylinderBounds = std::make_shared<CylinderBounds>(

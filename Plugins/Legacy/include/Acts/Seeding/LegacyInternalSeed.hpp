@@ -24,8 +24,10 @@ class InternalSeed {
 
  public:
   InternalSeed();
-  InternalSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
-               SPForSeed<SpacePoint>*&, float);
+  InternalSeed(SPForSeed<SpacePoint>*&,
+               SPForSeed<SpacePoint>*&,
+               SPForSeed<SpacePoint>*&,
+               float);
   InternalSeed(const InternalSeed<SpacePoint>&);
   virtual ~InternalSeed();
   InternalSeed<SpacePoint>&
@@ -53,7 +55,9 @@ class InternalSeed {
   }
 
   void
-  set(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
+  set(SPForSeed<SpacePoint>*&,
+      SPForSeed<SpacePoint>*&,
+      SPForSeed<SpacePoint>*&,
       float);
 
   bool
@@ -130,7 +134,8 @@ template <typename SpacePoint>
 inline void
 InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
                               SPForSeed<SpacePoint>*& s1,
-                              SPForSeed<SpacePoint>*& s2, float z) {
+                              SPForSeed<SpacePoint>*& s2,
+                              float z) {
   m_z = z;
   m_s0 = s0;
   m_s1 = s1;

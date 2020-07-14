@@ -45,12 +45,14 @@ class PlyVisualization : public IVisualization {
 
   /// @copydoc Acts::IVisualization::faces()
   void
-  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
+  faces(const std::vector<Vector3D>& vtxs,
+        const std::vector<FaceType>&,
         ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::face()
   void
-  line(const Vector3D& a, const Vector3D& b,
+  line(const Vector3D& a,
+       const Vector3D& b,
        ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::write()

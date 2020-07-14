@@ -37,7 +37,8 @@ class LineSurface : public Surface {
   /// @param htrans The transform that positions the surface in the global frame
   /// @param radius The straw radius
   /// @param halez The half length in z
-  LineSurface(std::shared_ptr<const Transform3D> htrans, double radius,
+  LineSurface(std::shared_ptr<const Transform3D> htrans,
+              double radius,
               double halez);
 
   /// Constructor from Transform3D and a shared bounds object
@@ -65,7 +66,8 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  LineSurface(const GeometryContext& gctx, const LineSurface& other,
+  LineSurface(const GeometryContext& gctx,
+              const LineSurface& other,
               const Transform3D& transf);
 
  public:
@@ -116,7 +118,8 @@ class LineSurface : public Surface {
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   const RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx, const Vector3D& position,
+  referenceFrame(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& momentum) const final;
 
   /// Initialize the jacobian from local to global
@@ -131,8 +134,10 @@ class LineSurface : public Surface {
   ///
   /// @param pars is the paranmeters vector
   void
-  initJacobianToGlobal(const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
-                       const Vector3D& position, const Vector3D& direction,
+  initJacobianToGlobal(const GeometryContext& gctx,
+                       BoundToFreeMatrix& jacobian,
+                       const Vector3D& position,
+                       const Vector3D& direction,
                        const BoundVector& pars) const final;
 
   /// Calculate the form factors for the derivatives
@@ -147,8 +152,10 @@ class LineSurface : public Surface {
   ///
   /// @return a five-dim vector
   const BoundRowVector
-  derivativeFactors(const GeometryContext& gctx, const Vector3D& position,
-                    const Vector3D& direction, const RotationMatrix3D& rft,
+  derivativeFactors(const GeometryContext& gctx,
+                    const Vector3D& position,
+                    const Vector3D& direction,
+                    const RotationMatrix3D& rft,
                     const BoundToFreeMatrix& jacobian) const final;
 
   /// Local to global transformation
@@ -160,8 +167,10 @@ class LineSurface : public Surface {
   /// @param momentum is the global momentum (used to sign the closest approach)
   /// @param position is the global position which is filled
   void
-  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                const Vector3D& momentum, Vector3D& position) const final;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D& lposition,
+                const Vector3D& momentum,
+                Vector3D& position) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -202,8 +211,10 @@ class LineSurface : public Surface {
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                const Vector3D& momentum, Vector2D& lposition) const final;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D& position,
+                const Vector3D& momentum,
+                Vector2D& lposition) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -242,7 +253,8 @@ class LineSurface : public Surface {
   ///
   /// @return is the intersection object
   Intersection
-  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck = false) const final;
 
@@ -252,7 +264,8 @@ class LineSurface : public Surface {
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double
-  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& momentum) const override;
 
   /// This method returns the bounds of the Surface by reference */
@@ -303,8 +316,10 @@ class LineSurface : public Surface {
   /// @param momentum is the momentum
   /// @param lposition is the local position to be filled
   bool
-  globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum, Vector2D& lposition) const;
+  globalToLocalPlain(const GeometryContext& gctx,
+                     const Vector3D& position,
+                     const Vector3D& momentum,
+                     Vector2D& lposition) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

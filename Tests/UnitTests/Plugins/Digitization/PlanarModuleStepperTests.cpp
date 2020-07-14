@@ -72,7 +72,11 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_int_distribution<>(-halfY, halfY))) ^
         bdata::xrange(ntests),
-    entryX, entryY, exitX, exitY, index) {
+    entryX,
+    entryY,
+    exitX,
+    exitY,
+    index) {
   // avoid warning with void
   (void)index;
 

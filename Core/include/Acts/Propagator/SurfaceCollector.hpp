@@ -24,7 +24,8 @@ struct SurfaceSelector {
   /// @param sSensitive is the directive to select sensitive surfaces
   /// @param sMaterial is the directive to select material surfaces
   /// @param sPassive is the directive to select passive surfaces
-  SurfaceSelector(bool sSensitive = true, bool sMaterial = false,
+  SurfaceSelector(bool sSensitive = true,
+                  bool sMaterial = false,
                   bool sPassive = false)
       : selectSensitive(sSensitive),
         selectMaterial(sMaterial),
@@ -88,7 +89,8 @@ struct SurfaceCollector {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     // The current surface has been assigned by the navigator
     if (state.navigation.currentSurface &&

@@ -21,8 +21,8 @@ Acts::LineBounds::inside(const Acts::Vector2D& lposition,
                          const Acts::BoundaryCheck& bcheck) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
-  return bcheck.isInside(lposition, Vector2D(-r, -halfLengthZ),
-                         Vector2D(r, halfLengthZ));
+  return bcheck.isInside(
+      lposition, Vector2D(-r, -halfLengthZ), Vector2D(r, halfLengthZ));
 }
 
 double

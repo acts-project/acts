@@ -48,7 +48,8 @@ struct TargetOptions {
 /// @param logAction is a callable function that returns a streamable object
 template <typename propagator_state_t>
 void
-targetDebugLog(propagator_state_t& state, const std::string& status,
+targetDebugLog(propagator_state_t& state,
+               const std::string& status,
                const std::function<std::string()>& logAction) {
   if (state.options.debug) {
     std::stringstream dstream;
@@ -134,7 +135,8 @@ struct SurfaceReached {
   /// @param [in] targetSurface The target surface
   template <typename propagator_state_t, typename stepper_t>
   bool
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              const Surface& targetSurface) const {
     if (state.navigation.targetReached) {
       return true;
@@ -156,8 +158,10 @@ struct SurfaceReached {
     // Calculate the distance to the surface
     const double tolerance = state.options.targetTolerance;
     const auto sIntersection = targetSurface.intersect(
-        state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), true);
+        state.geoContext,
+        stepper.position(state.stepping),
+        state.stepping.navDir * stepper.direction(state.stepping),
+        true);
 
     // The target is reached
     bool targetReached =

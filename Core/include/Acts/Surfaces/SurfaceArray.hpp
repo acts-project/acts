@@ -342,7 +342,8 @@ class SurfaceArray {
 
         for (const auto& idx : neighborIdxs) {
           const std::vector<const Surface*>& binContent = m_grid.at(idx);
-          std::copy(binContent.begin(), binContent.end(),
+          std::copy(binContent.begin(),
+                    binContent.end(),
                     std::back_inserter(neighbors));
         }
       }

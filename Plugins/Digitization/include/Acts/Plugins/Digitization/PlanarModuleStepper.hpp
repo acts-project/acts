@@ -45,8 +45,10 @@ class PlanarModuleStepper {
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
-  cellSteps(const GeometryContext& gctx, const DigitizationModule& dmodule,
-            const Vector3D& startPoint, const Vector3D& endPoint) const;
+  cellSteps(const GeometryContext& gctx,
+            const DigitizationModule& dmodule,
+            const Vector3D& startPoint,
+            const Vector3D& endPoint) const;
 
   /// Calculate the steps caused by this track - fast simulation interface
   ///
@@ -57,7 +59,8 @@ class PlanarModuleStepper {
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
-  cellSteps(const GeometryContext& gctx, const DigitizationModule& dmodule,
+  cellSteps(const GeometryContext& gctx,
+            const DigitizationModule& dmodule,
             const Vector2D& moduleIntersection,
             const Vector3D& trackDirection) const;
 

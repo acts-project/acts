@@ -79,7 +79,8 @@ class NavigationLayer : public Layer {
   ///
   /// @return boolean that indicates if the position is on surface
   bool
-  isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+  isOnLayer(const GeometryContext& gctx,
+            const Vector3D& gp,
             const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
@@ -92,7 +93,8 @@ class NavigationLayer : public Layer {
   ///
   /// @return a boolean whether the layer is accepted for processing
   bool
-  resolve(bool resolveSensitive, bool resolveMaterial,
+  resolve(bool resolveSensitive,
+          bool resolveMaterial,
           bool resolvePassive) const final;
 
  protected:
@@ -130,13 +132,15 @@ NavigationLayer::binningPosition(const GeometryContext& gctx,
 }
 
 inline bool
-NavigationLayer::isOnLayer(const GeometryContext& gctx, const Vector3D& gp,
+NavigationLayer::isOnLayer(const GeometryContext& gctx,
+                           const Vector3D& gp,
                            const BoundaryCheck& bcheck) const {
   return m_surfaceRepresentation->isOnSurface(gctx, gp, s_origin, bcheck);
 }
 
 inline bool
-NavigationLayer::resolve(bool /*resolveSensitive*/, bool /*resolveMaterial*/,
+NavigationLayer::resolve(bool /*resolveSensitive*/,
+                         bool /*resolveMaterial*/,
                          bool /*reolvePassive*/) const {
   return false;
 }

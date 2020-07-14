@@ -123,9 +123,12 @@ FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
       }
       const auto& fittedParameters = traj.trackParameters(trackTip);
       // Fill the trajectory summary info
-      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                  trajState.nStates, trajState.nMeasurements,
-                                  trajState.nOutliers, trajState.nHoles);
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache,
+                                  fittedParameters,
+                                  trajState.nStates,
+                                  trajState.nMeasurements,
+                                  trajState.nOutliers,
+                                  trajState.nHoles);
 
       // Get the majority truth particle to this track
       std::vector<ParticleHitCount> particleHitCount =
@@ -164,7 +167,8 @@ FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
   for (auto& [particleId, matchedTracks] : matched) {
     // Sort the reco tracks matched to this particle by the number of majority
     // hits
-    std::sort(matchedTracks.begin(), matchedTracks.end(),
+    std::sort(matchedTracks.begin(),
+              matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                 return lhs.first > rhs.first;
               });
@@ -174,8 +178,8 @@ FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
       // track; others are as 'duplicated'
       bool isDuplicated = (itrack != 0);
       // Fill the duplication rate
-      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                 isDuplicated);
+      m_duplicationPlotTool.fill(
+          m_duplicationPlotCache, fittedParameters, isDuplicated);
     }
   }
 
@@ -194,8 +198,8 @@ FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
     // Fill efficiency plots
     m_effPlotTool.fill(m_effPlotCache, particle, isReconstructed);
     // Fill number of duplicated tracks for this particle
-    m_duplicationPlotTool.fill(m_duplicationPlotCache, particle,
-                               nMatchedTracks - 1);
+    m_duplicationPlotTool.fill(
+        m_duplicationPlotCache, particle, nMatchedTracks - 1);
 
     // Investigate the fake (i.e. truth-unmatched) tracks
     size_t nFakeTracks = 0;
@@ -204,8 +208,8 @@ FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
       nFakeTracks = ifake->second;
     }
     // Fill number of reconstructed/truth-matched/fake tracks for this particle
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, particle, nMatchedTracks,
-                            nFakeTracks);
+    m_fakeRatePlotTool.fill(
+        m_fakeRatePlotCache, particle, nMatchedTracks, nFakeTracks);
   }  // end all truth particles
 
   return ProcessCode::SUCCESS;

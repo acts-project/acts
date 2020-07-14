@@ -105,8 +105,10 @@ template <typename SpacePoint>
 Seed<SpacePoint>::Seed() {}
 
 template <typename SpacePoint>
-Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
-                       const SpacePoint* u, const double vertex) {
+Seed<SpacePoint>::Seed(const SpacePoint* b,
+                       const SpacePoint* m,
+                       const SpacePoint* u,
+                       const double vertex) {
   m_zvertex = vertex;
   m_spacepoints.push_back(b);
   m_spacepoints.push_back(m);

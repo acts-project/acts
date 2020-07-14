@@ -37,7 +37,8 @@ class IExperimentCuts {
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   virtual bool
-  singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
+  singleSeedCut(float weight,
+                const InternalSpacePoint<SpacePoint>& bottom,
                 const InternalSpacePoint<SpacePoint>& middle,
                 const InternalSpacePoint<SpacePoint>& top) const = 0;
 

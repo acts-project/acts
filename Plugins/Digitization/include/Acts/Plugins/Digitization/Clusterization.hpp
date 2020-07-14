@@ -32,7 +32,9 @@ namespace Acts {
 template <typename cell_t>
 std::vector<std::vector<cell_t>>
 createClusters(std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
-               size_t nBins0, bool commonCorner = true, double energyCut = 0.);
+               size_t nBins0,
+               bool commonCorner = true,
+               double energyCut = 0.);
 
 /// @brief fillCluster
 /// This function is a helper function internally used by Acts::createClusters.
@@ -57,7 +59,9 @@ template <typename cell_t>
 void
 fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
             std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
-            size_t index, size_t nBins0, bool commonCorner = true,
+            size_t index,
+            size_t nBins0,
+            bool commonCorner = true,
             double energyCut = 0.);
 }  // namespace Acts
 

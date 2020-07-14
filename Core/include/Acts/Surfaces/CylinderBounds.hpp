@@ -50,7 +50,9 @@ class CylinderBounds : public SurfaceBounds {
   /// @param halfZ The half length in z
   /// @param halfPhi The half opening angle
   /// @param avgPhi (optional) The phi value from which the opening angle spans
-  CylinderBounds(double r, double halfZ, double halfPhi = M_PI,
+  CylinderBounds(double r,
+                 double halfZ,
+                 double halfPhi = M_PI,
                  double avgPhi = 0.) noexcept(false)
       : m_values({r, halfZ, halfPhi, avgPhi}),
         m_closed(std::abs(halfPhi - M_PI) < s_epsilon) {

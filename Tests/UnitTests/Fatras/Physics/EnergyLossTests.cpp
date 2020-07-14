@@ -22,8 +22,8 @@ using Generator = std::ranlux48;
 
 BOOST_AUTO_TEST_SUITE(FatrasEnergyLoss)
 
-BOOST_DATA_TEST_CASE(BetheBloch, Dataset::parameters, pdg, phi, lambda, p,
-                     seed) {
+BOOST_DATA_TEST_CASE(
+    BetheBloch, Dataset::parameters, pdg, phi, lambda, p, seed) {
   Generator gen(seed);
   ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
   ActsFatras::Particle after = before;
@@ -37,8 +37,8 @@ BOOST_DATA_TEST_CASE(BetheBloch, Dataset::parameters, pdg, phi, lambda, p,
   BOOST_TEST(outgoing.empty());
 }
 
-BOOST_DATA_TEST_CASE(BetheHeitler, Dataset::parameters, pdg, phi, lambda, p,
-                     seed) {
+BOOST_DATA_TEST_CASE(
+    BetheHeitler, Dataset::parameters, pdg, phi, lambda, p, seed) {
   Generator gen(seed);
   ActsFatras::Particle before = Dataset::makeParticle(pdg, phi, lambda, p);
   ActsFatras::Particle after = before;

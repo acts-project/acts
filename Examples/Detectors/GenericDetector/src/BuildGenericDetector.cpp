@@ -14,7 +14,9 @@ namespace Generic {
 
 /// helper method for cylinder
 std::vector<Acts::Vector3D>
-modulePositionsCylinder(double radius, double zStagger, double moduleHalfLength,
+modulePositionsCylinder(double radius,
+                        double zStagger,
+                        double moduleHalfLength,
                         double lOverlap,
                         const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
@@ -36,8 +38,8 @@ modulePositionsCylinder(double radius, double zStagger, double moduleHalfLength,
     for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
       // calculate the current phi value
       double modulePhi = minPhi + phiBin * phiStep;
-      mPositions.push_back(Acts::Vector3D(moduleR * cos(modulePhi),
-                                          moduleR * sin(modulePhi), moduleZ));
+      mPositions.push_back(Acts::Vector3D(
+          moduleR * cos(modulePhi), moduleR * sin(modulePhi), moduleZ));
     }
   }
   return mPositions;
@@ -45,10 +47,13 @@ modulePositionsCylinder(double radius, double zStagger, double moduleHalfLength,
 
 /// helper method for disc
 std::vector<std::vector<Acts::Vector3D>>
-modulePositionsDisc(double z, double ringStagger,
+modulePositionsDisc(double z,
+                    double ringStagger,
                     std::vector<double> phiStagger,
-                    std::vector<double> phiSubStagger, double innerRadius,
-                    double outerRadius, const std::vector<size_t>& discBinning,
+                    std::vector<double> phiSubStagger,
+                    double innerRadius,
+                    double outerRadius,
+                    const std::vector<size_t>& discBinning,
                     const std::vector<double>& moduleHalfLength) {
   // calculate the radii
   std::vector<double> radii;
@@ -94,16 +99,19 @@ modulePositionsDisc(double z, double ringStagger,
                     : (ir % 2 ? z + 0.5 * ringStagger : z - 0.5 * ringStagger);
     // fill the ring positions
     double psStagger = phiSubStagger.size() ? phiSubStagger[ir] : 0.;
-    mPositions.push_back(modulePositionsRing(rz, radii[ir], phiStagger[ir],
-                                             psStagger, discBinning[ir]));
+    mPositions.push_back(modulePositionsRing(
+        rz, radii[ir], phiStagger[ir], psStagger, discBinning[ir]));
   }
   return mPositions;
 }
 
 /// Helper method for positioning
 std::vector<Acts::Vector3D>
-modulePositionsRing(double z, double radius, double phiStagger,
-                    double phiSubStagger, int nPhiBins) {
+modulePositionsRing(double z,
+                    double radius,
+                    double phiStagger,
+                    double phiSubStagger,
+                    int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3D> rPositions;
   rPositions.reserve(nPhiBins);

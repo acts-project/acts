@@ -28,9 +28,11 @@ namespace po = boost::program_options;
 template <typename options_t>
 void
 addEmptyGeometryOptions(options_t& opt) {
-  opt.add_options()("geo-empty-radius", po::value<double>()->default_value(2_m),
+  opt.add_options()("geo-empty-radius",
+                    po::value<double>()->default_value(2_m),
                     "Radius of the empty cylinder [in m]. ")(
-      "geo-empty-halfLength", po::value<double>()->default_value(10_m),
+      "geo-empty-halfLength",
+      po::value<double>()->default_value(10_m),
       "Half length of the empty cylinder [in m].");
 }
 }  // namespace Options

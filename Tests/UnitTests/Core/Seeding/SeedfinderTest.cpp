@@ -161,9 +161,13 @@ main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
-                                                 bottomBinFinder, topBinFinder,
-                                                 std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(),
+                                                 spVec.end(),
+                                                 ct,
+                                                 bottomBinFinder,
+                                                 topBinFinder,
+                                                 std::move(grid),
+                                                 config);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   auto start = std::chrono::system_clock::now();

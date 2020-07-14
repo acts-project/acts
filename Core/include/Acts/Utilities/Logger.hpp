@@ -329,7 +329,8 @@ class NamedOutputDecorator final : public OutputDecorator {
   /// @param [in] name     name to be added to debug message
   /// @param [in] maxWidth maximum width of field used for name
   NamedOutputDecorator(std::unique_ptr<OutputPrintPolicy> wrappee,
-                       const std::string& name, unsigned int maxWidth = 15)
+                       const std::string& name,
+                       unsigned int maxWidth = 15)
       : OutputDecorator(std::move(wrappee)),
         m_name(name),
         m_maxWidth(maxWidth) {}
@@ -461,8 +462,8 @@ class LevelOutputDecorator final : public OutputDecorator {
   /// @return string representation of debug level
   std::string
   toString(const Level& lvl) const {
-    static const char* const buffer[] = {"VERBOSE", "DEBUG", "INFO",
-                                         "WARNING", "ERROR", "FATAL"};
+    static const char* const buffer[] = {
+        "VERBOSE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"};
     return buffer[lvl];
   }
 };
@@ -534,7 +535,8 @@ class Logger {
   Logging::OutStream
   log(const Logging::Level& lvl) const {
     return Logging::OutStream(std::bind(&Logging::OutputPrintPolicy::flush,
-                                        m_printPolicy.get(), lvl,
+                                        m_printPolicy.get(),
+                                        lvl,
                                         std::placeholders::_1));
   }
 
@@ -560,7 +562,8 @@ class Logger {
 ///
 /// @return pointer to logging instance
 std::unique_ptr<const Logger>
-getDefaultLogger(const std::string& name, const Logging::Level& lvl,
+getDefaultLogger(const std::string& name,
+                 const Logging::Level& lvl,
                  std::ostream* log_stream = &std::cout);
 
 }  // namespace Acts

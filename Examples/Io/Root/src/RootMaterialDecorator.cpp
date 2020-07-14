@@ -64,28 +64,28 @@ FW::RootMaterialDecorator::RootMaterialDecorator(
 
     // volume
     std::vector<std::string> splitNames;
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.voltag));
+    iter_split(
+        splitNames, tdName, boost::algorithm::first_finder(m_cfg.voltag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
     Acts::GeometryID::Value volID = std::stoi(splitNames[0]);
     // boundary
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.boutag));
+    iter_split(
+        splitNames, tdName, boost::algorithm::first_finder(m_cfg.boutag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
     Acts::GeometryID::Value bouID = std::stoi(splitNames[0]);
     // layer
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.laytag));
+    iter_split(
+        splitNames, tdName, boost::algorithm::first_finder(m_cfg.laytag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
     Acts::GeometryID::Value layID = std::stoi(splitNames[0]);
     // approach
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.apptag));
+    iter_split(
+        splitNames, tdName, boost::algorithm::first_finder(m_cfg.apptag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
     Acts::GeometryID::Value appID = std::stoi(splitNames[0]);
     // sensitive
-    iter_split(splitNames, tdName,
-               boost::algorithm::first_finder(m_cfg.sentag));
+    iter_split(
+        splitNames, tdName, boost::algorithm::first_finder(m_cfg.sentag));
     Acts::GeometryID::Value senID = std::stoi(splitNames[1]);
 
     // Reconstruct the geometry ID

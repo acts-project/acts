@@ -26,7 +26,8 @@ create_element(Detector& lcdd, xml_h e, SensitiveDetector /*sens*/) {
   // Create the shape and volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.z());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.air());  // air at the moment change later
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
 

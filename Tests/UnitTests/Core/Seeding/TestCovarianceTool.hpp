@@ -26,12 +26,16 @@ class CovarianceTool {
   /// errors
   template <typename SpacePoint>
   Acts::Vector2D
-  getCovariances(const SpacePoint* sp, float zAlign = 0, float rAlign = 0,
+  getCovariances(const SpacePoint* sp,
+                 float zAlign = 0,
+                 float rAlign = 0,
                  float sigma = 1);
 };
 template <typename SpacePoint>
 inline Acts::Vector2D
-CovarianceTool::getCovariances(const SpacePoint* sp, float zAlign, float rAlign,
+CovarianceTool::getCovariances(const SpacePoint* sp,
+                               float zAlign,
+                               float rAlign,
                                float sigma) {
   Acts::Vector2D cov;
   cov[0] = ((*sp).varianceR + rAlign * rAlign) * sigma;

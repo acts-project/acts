@@ -22,7 +22,8 @@ using namespace Acts::Logging;
 /// @cond
 namespace detail {
 std::unique_ptr<const Logger>
-create_logger(const std::string& logger_name, std::ostream* logfile,
+create_logger(const std::string& logger_name,
+              std::ostream* logfile,
               Logging::Level lvl) {
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(

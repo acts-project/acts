@@ -111,7 +111,8 @@ class AxisAlignedBoundingBox {
    * @param vmin The minimum vertex.
    * @param vmax The maximum vertex.
    */
-  AxisAlignedBoundingBox(const entity_t* entity, const VertexType& vmin,
+  AxisAlignedBoundingBox(const entity_t* entity,
+                         const VertexType& vmin,
                          const VertexType& vmax);
 
   /**
@@ -122,7 +123,8 @@ class AxisAlignedBoundingBox {
    * @note The special type @c size is required to disambiguate this constructor
    * from the other one above. It is a wrapper around a simple @c Vector3D.
    */
-  AxisAlignedBoundingBox(const entity_t* entity, const VertexType& center,
+  AxisAlignedBoundingBox(const entity_t* entity,
+                         const VertexType& center,
                          const Size& size);
 
   /**
@@ -310,7 +312,8 @@ class AxisAlignedBoundingBox {
    */
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
   void
-  draw(IVisualization& helper, std::array<int, 3> color = {120, 120, 120},
+  draw(IVisualization& helper,
+       std::array<int, 3> color = {120, 120, 120},
        const transform_type& trf = transform_type::Identity()) const;
 
   /**
@@ -327,8 +330,12 @@ class AxisAlignedBoundingBox {
    */
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream&
-  svg(std::ostream& os, value_type w, value_type h, value_type unit = 10,
-      std::string label = "", std::string fillcolor = "grey") const;
+  svg(std::ostream& os,
+      value_type w,
+      value_type h,
+      value_type unit = 10,
+      std::string label = "",
+      std::string fillcolor = "grey") const;
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
@@ -366,7 +373,8 @@ class AxisAlignedBoundingBox {
 template <typename box_t>
 box_t*
 make_octree(std::vector<std::unique_ptr<box_t>>& store,
-            const std::vector<box_t*>& prims, size_t max_depth = 1,
+            const std::vector<box_t*>& prims,
+            size_t max_depth = 1,
             typename box_t::value_type envelope1 = 0);
 
 /**

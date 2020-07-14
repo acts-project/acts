@@ -204,7 +204,8 @@ class SingleTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
-                        const ParVector_t& parValues, const Vector3D& position,
+                        const ParVector_t& parValues,
+                        const Vector3D& position,
                         const Vector3D& momentum)
       : m_oChargePolicy(
             detail::coordinate_transformation::parameters2charge(parValues)),
@@ -221,7 +222,8 @@ class SingleTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleTrackParameters(std::optional<CovMatrix_t> cov,
-                        const ParVector_t& parValues, const Vector3D& position,
+                        const ParVector_t& parValues,
+                        const Vector3D& position,
                         const Vector3D& momentum)
       : m_oChargePolicy(),
         m_oParameters(std::move(cov), parValues),

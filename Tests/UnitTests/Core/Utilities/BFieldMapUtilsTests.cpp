@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
     return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
   };
   // create b field mapper in rz
-  auto mapper_rz = Acts::fieldMapperRZ(localToGlobalBin_rz, rPos, zPos,
-                                       bField_rz, 1, 1, false);
+  auto mapper_rz = Acts::fieldMapperRZ(
+      localToGlobalBin_rz, rPos, zPos, bField_rz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), zPos.size()};
   std::vector<double> minima_rz = {0., 0.};
@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   };
 
   // create b field mapper in xyz
-  auto mapper_xyz = Acts::fieldMapperXYZ(localToGlobalBin_xyz, xPos, yPos, zPos,
-                                         bField_xyz, 1, 1, false);
+  auto mapper_xyz = Acts::fieldMapperXYZ(
+      localToGlobalBin_xyz, xPos, yPos, zPos, bField_xyz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
   std::vector<double> minima_xyz = {0., 0., 0.};
@@ -151,7 +151,12 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
       [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
         return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
       },
-      rPos, zPos, bField_rz, 1, 1, true);
+      rPos,
+      zPos,
+      bField_rz,
+      1,
+      1,
+      true);
 
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
@@ -178,11 +183,17 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
         return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                 binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
       },
-      xPos, yPos, zPos, bField_xyz, 1, 1, true);
+      xPos,
+      yPos,
+      zPos,
+      bField_xyz,
+      1,
+      1,
+      true);
 
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
-                                   2 * zPos.size() - 1};
+  std::vector<size_t> nBins_xyz = {
+      2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {-2., -2., -2.};
   std::vector<double> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
@@ -242,7 +253,10 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<>(-20., 20.))) ^
         bdata::xrange(10),
-    x, y, z, index) {
+    x,
+    y,
+    z,
+    index) {
   (void)index;
 
   std::vector<double> rPos;
@@ -275,7 +289,12 @@ BOOST_DATA_TEST_CASE(
       [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
         return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
       },
-      rPos, zPos, bField_rz, 1, 1, true);
+      rPos,
+      zPos,
+      bField_rz,
+      1,
+      1,
+      true);
 
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
@@ -300,14 +319,20 @@ BOOST_DATA_TEST_CASE(
         return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                 binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
       },
-      xPos, yPos, zPos, bField_xyz, 1, 1, true);
+      xPos,
+      yPos,
+      zPos,
+      bField_xyz,
+      1,
+      1,
+      true);
   // check number of bins, minima & maxima
-  std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
-                                   2 * zPos.size() - 1};
+  std::vector<size_t> nBins_xyz = {
+      2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
   std::vector<double> minima_xyz = {
       -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_xyz = {nBins * stepR, nBins * stepR,
-                                    nBins * stepZ};
+  std::vector<double> maxima_xyz = {
+      nBins * stepR, nBins * stepR, nBins * stepZ};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)

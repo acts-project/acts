@@ -63,9 +63,12 @@ BOOST_AUTO_TEST_SUITE(AtlasStepper)
 // test state construction from parameters w/o covariance
 BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::State state(
-      geoCtx, magCtx,
-      CurvilinearParameters(std::nullopt, pos, mom, charge, time), navDir,
-      stepSize, tolerance);
+      geoCtx,
+      magCtx,
+      CurvilinearParameters(std::nullopt, pos, mom, charge, time),
+      navDir,
+      stepSize,
+      tolerance);
 
   BOOST_TEST(!state.covTransport);
   BOOST_TEST(state.covariance == nullptr);
@@ -86,9 +89,12 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 
 // test state construction from parameters w/ covariance
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   BOOST_TEST(state.covTransport);
   BOOST_TEST(*state.covariance == cov);
@@ -110,9 +116,12 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
 // test stepper getters for particle state
 BOOST_AUTO_TEST_CASE(Getters) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), time, eps);
@@ -124,9 +133,12 @@ BOOST_AUTO_TEST_CASE(Getters) {
 // test stepper update methods with bound state as input
 BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   auto newPos = (pos + Vector3D(1_mm, 2_mm, 3_mm)).eval();
   auto newTime = time + 20_ns;
@@ -161,9 +173,12 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 // test stepper update methods with individual components as input
 BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   auto newPos = (pos + Vector3D(1_mm, 2_mm, 3_mm)).eval();
   auto newTime = time + 20_ns;
@@ -181,9 +196,12 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
 // test building a bound state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildBound) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
   // example surface at the current state position
   auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
 
@@ -204,9 +222,12 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
 // test building a curvilinear state object from the stepper state
 BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
   // check parameters
@@ -225,9 +246,13 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 // test step method without covariance transport
 BOOST_AUTO_TEST_CASE(Step) {
   Stepper stepper(magneticField);
-  MockPropagatorState state(Stepper::State(
-      geoCtx, magCtx, CurvilinearParameters(cov, pos, mom, charge, time),
-      navDir, stepSize, tolerance));
+  MockPropagatorState state(
+      Stepper::State(geoCtx,
+                     magCtx,
+                     CurvilinearParameters(cov, pos, mom, charge, time),
+                     navDir,
+                     stepSize,
+                     tolerance));
   state.stepping.covTransport = false;
 
   // ensure step does not result in an error
@@ -257,9 +282,13 @@ BOOST_AUTO_TEST_CASE(Step) {
 // test step method with covariance transport
 BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   Stepper stepper(magneticField);
-  MockPropagatorState state(Stepper::State(
-      geoCtx, magCtx, CurvilinearParameters(cov, pos, mom, charge, time),
-      navDir, stepSize, tolerance));
+  MockPropagatorState state(
+      Stepper::State(geoCtx,
+                     magCtx,
+                     CurvilinearParameters(cov, pos, mom, charge, time),
+                     navDir,
+                     stepSize,
+                     tolerance));
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
@@ -291,9 +320,12 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
 BOOST_AUTO_TEST_CASE(StepSize) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   // TODO figure out why this fails and what it should be
   // BOOST_TEST(stepper.overstepLimit(state) == tolerance);
@@ -309,9 +341,12 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 // test step size modification with target surfaces
 BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   Stepper stepper(magneticField);
-  Stepper::State state(geoCtx, magCtx,
+  Stepper::State state(geoCtx,
+                       magCtx,
                        CurvilinearParameters(cov, pos, mom, charge, time),
-                       navDir, stepSize, tolerance);
+                       navDir,
+                       stepSize,
+                       tolerance);
 
   auto distance = 10_mm;
   auto target = Surface::makeShared<PlaneSurface>(
@@ -323,8 +358,10 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
+      target->intersect(state.geoContext,
+                        stepper.position(state),
+                        state.navDir * stepper.direction(state),
+                        false),
       false);
   BOOST_TEST(state.stepSize == distance);
 
@@ -332,8 +369,10 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   state.stepSize = navDir * stepSize;
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
+      target->intersect(state.geoContext,
+                        stepper.position(state),
+                        state.navDir * stepper.direction(state),
+                        false),
       true);
   BOOST_TEST(state.stepSize == distance);
 }

@@ -145,7 +145,13 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
                          bdata::random(-M_PI, M_PI) ^ bdata::random(-10., 10.) ^
                          bdata::random(-10., 10.) ^ bdata::random(-10., 10.) ^
                          bdata::xrange(100),
-                     alpha, beta, gamma, posX, posY, posZ, index) {
+                     alpha,
+                     beta,
+                     gamma,
+                     posX,
+                     posY,
+                     posZ,
+                     index) {
   (void)index;
 
   // Create a test context
@@ -179,10 +185,12 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   // check if difference is halfZ - sign and direction independent
   CHECK_CLOSE_REL(
       (pos - boundarySurfaces.at(0).first->center(tgContext)).norm(),
-      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
+      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
+      1e-12);
   CHECK_CLOSE_REL(
       (pos - boundarySurfaces.at(1).first->center(tgContext)).norm(),
-      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
+      cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
+      1e-12);
   // transform to local
   double posDiscPosZ = (transformPtr->inverse() *
                         boundarySurfaces.at(1).first->center(tgContext))
@@ -198,23 +206,27 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   // checks for zero value. double precision value is not exact.
   CHECK_CLOSE_ABS(
       negDiscPosZ + cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
-      centerPosZ, 1e-12);
+      centerPosZ,
+      1e-12);
   CHECK_CLOSE_ABS(
       posDiscPosZ - cylBounds.get(CylinderVolumeBounds::eHalfLengthZ),
-      centerPosZ, 1e-12);
+      centerPosZ,
+      1e-12);
   // orientation of disc surfaces
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
       transformPtr->rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
           tgContext, Acts::Vector2D(0., 0.))),
-      1., 1e-12);
+      1.,
+      1e-12);
   // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
       transformPtr->rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
           tgContext, Acts::Vector2D(0., 0.))),
-      1., 1e-12);
+      1.,
+      1e-12);
   // test in r
   CHECK_CLOSE_REL(boundarySurfaces.at(3).first->center(tgContext), pos, 1e-12);
   CHECK_CLOSE_REL(boundarySurfaces.at(2).first->center(tgContext), pos, 1e-12);

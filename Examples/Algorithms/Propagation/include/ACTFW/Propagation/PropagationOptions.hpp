@@ -29,39 +29,53 @@ template <typename aopt_t>
 void
 addPropagationOptions(aopt_t& opt) {
   opt.add_options()(
-      "prop-debug", po::value<bool>()->default_value(false),
+      "prop-debug",
+      po::value<bool>()->default_value(false),
       "Run in debug mode, will create propagation screen output.")(
       "prop-step-collection",
       po::value<std::string>()->default_value("propagation-steps"),
       "Propgation step collection.")(
-      "prop-stepper", po::value<int>()->default_value(1),
+      "prop-stepper",
+      po::value<int>()->default_value(1),
       "Propgation type: 0 (StraightLine), 1 (Eigen), 2 (Atlas).")(
-      "prop-mode", po::value<int>()->default_value(0),
+      "prop-mode",
+      po::value<int>()->default_value(0),
       "Propgation modes: 0 (inside-out), 1 (surface to surface).")(
-      "prop-cov", po::value<bool>()->default_value(false),
+      "prop-cov",
+      po::value<bool>()->default_value(false),
       "Propagate (random) test covariances.")(
-      "prop-energyloss", po::value<bool>()->default_value(true),
+      "prop-energyloss",
+      po::value<bool>()->default_value(true),
       "Apply energy loss correction - in extrapolation mode only.")(
-      "prop-scattering", po::value<bool>()->default_value(true),
+      "prop-scattering",
+      po::value<bool>()->default_value(true),
       "Apply scattering correction - in extrapolation mode only.")(
-      "prop-record-material", po::value<bool>()->default_value(true),
+      "prop-record-material",
+      po::value<bool>()->default_value(true),
       "Record the material interaction and - in extrapolation mode only.")(
       "prop-material-collection",
       po::value<std::string>()->default_value("propagation-material"),
       "Propagation material collection.")(
-      "prop-ntests", po::value<size_t>()->default_value(1000),
+      "prop-ntests",
+      po::value<size_t>()->default_value(1000),
       "Number of tests performed.")(
-      "prop-d0-sigma", po::value<double>()->default_value(15_um),
+      "prop-d0-sigma",
+      po::value<double>()->default_value(15_um),
       "Sigma of the transverse impact parameter [in mm].")(
-      "prop-z0-sigma", po::value<double>()->default_value(55_mm),
+      "prop-z0-sigma",
+      po::value<double>()->default_value(55_mm),
       "Sigma of the longitudinal impact parameter [in mm].")(
-      "prop-phi-sigma", po::value<double>()->default_value(0.001),
+      "prop-phi-sigma",
+      po::value<double>()->default_value(0.001),
       "Sigma of the azimuthal angle [in rad].")(
-      "prop-theta-sigma", po::value<double>()->default_value(0.001),
+      "prop-theta-sigma",
+      po::value<double>()->default_value(0.001),
       "Sigma of the polar angle [in rad].")(
-      "prop-qp-sigma", po::value<double>()->default_value(0.0001 / 1_GeV),
+      "prop-qp-sigma",
+      po::value<double>()->default_value(0.0001 / 1_GeV),
       "Sigma of the signed inverse momentum [in GeV^{-1}].")(
-      "prop-t-sigma", po::value<double>()->default_value(1_ns),
+      "prop-t-sigma",
+      po::value<double>()->default_value(1_ns),
       "Sigma of the time parameter [in ns].")(
       "prop-corr-offd",
       po::value<read_range>()->multitoken()->default_value({}),
@@ -76,9 +90,11 @@ addPropagationOptions(aopt_t& opt) {
       "prop-pt-range",
       po::value<read_range>()->multitoken()->default_value({100_MeV, 100_GeV}),
       "Transverse momentum range for proprapolated tracks [in GeV].")(
-      "prop-max-stepsize", po::value<double>()->default_value(3_m),
+      "prop-max-stepsize",
+      po::value<double>()->default_value(3_m),
       "Maximum step size for the propagation [in mm].")(
-      "prop-pt-loopers", po::value<double>()->default_value(300_MeV),
+      "prop-pt-loopers",
+      po::value<double>()->default_value(300_MeV),
       "Transverse momentum below which loops are being detected [in GeV].");
 }
 

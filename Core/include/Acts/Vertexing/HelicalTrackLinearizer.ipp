@@ -14,7 +14,8 @@ Acts::HelicalTrackLinearizer<propagator_t, propagator_options_t>::
     linearizeTrack(const BoundParameters& params,
                    const SpacePointVector& linPoint,
                    const Acts::GeometryContext& gctx,
-                   const Acts::MagneticFieldContext& mctx, State& state) const {
+                   const Acts::MagneticFieldContext& mctx,
+                   State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -171,7 +172,13 @@ Acts::HelicalTrackLinearizer<propagator_t, propagator_options_t>::
   BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
   weightAtPCA.block<5, 5>(0, 0) = parWeight;
 
-  return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
-                         positionJacobian, momentumJacobian, positionAtPCA,
-                         momentumAtPCA, constTerm);
+  return LinearizedTrack(paramsAtPCA,
+                         parCovarianceAtPCA,
+                         weightAtPCA,
+                         linPoint,
+                         positionJacobian,
+                         momentumJacobian,
+                         positionAtPCA,
+                         momentumAtPCA,
+                         constTerm);
 }

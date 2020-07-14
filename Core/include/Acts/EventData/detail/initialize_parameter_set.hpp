@@ -32,10 +32,12 @@ struct initialize_parset;
 /// @cond
 template <typename T, T first, T... others>
 struct initialize_parset<T, first, others...> {
-  template <typename ParSetType, typename first_value_type,
+  template <typename ParSetType,
+            typename first_value_type,
             typename... other_value_types>
   static void
-  init(ParSetType& parSet, const first_value_type& v1,
+  init(ParSetType& parSet,
+       const first_value_type& v1,
        const other_value_types&... values) {
     parSet.template setParameter<first>(v1);
     initialize_parset<T, others...>::init(parSet, values...);
@@ -43,7 +45,8 @@ struct initialize_parset<T, first, others...> {
 
   template <typename ParSetType>
   static void
-  init(ParSetType& parSet, const typename ParSetType::ParameterVector& values,
+  init(ParSetType& parSet,
+       const typename ParSetType::ParameterVector& values,
        const unsigned int& pos = 0) {
     parSet.template setParameter<first>(values(pos));
     initialize_parset<T, others...>::init(parSet, values, pos + 1);
@@ -60,7 +63,8 @@ struct initialize_parset<T, last> {
 
   template <typename ParSetType>
   static void
-  init(ParSetType& parSet, const typename ParSetType::ParameterVector& values,
+  init(ParSetType& parSet,
+       const typename ParSetType::ParameterVector& values,
        const unsigned int& pos = 0) {
     parSet.template setParameter<last>(values(pos));
   }

@@ -48,7 +48,8 @@ struct HepMC3Event {
   /// @param deltaTime relative time shift that will be applied
   void
   shiftPositionBy(std::shared_ptr<HepMC3::GenEvent> event,
-                  const Acts::Vector3D& deltaPos, const double deltaTime);
+                  const Acts::Vector3D& deltaPos,
+                  const double deltaTime);
 
   /// @brief Shifts the positioning of an event to a paint in space and time
   /// @param event event in HepMC data type
@@ -56,7 +57,8 @@ struct HepMC3Event {
   /// @param time new time of the event
   void
   shiftPositionTo(std::shared_ptr<HepMC3::GenEvent> event,
-                  const Acts::Vector3D& pos, const double time);
+                  const Acts::Vector3D& pos,
+                  const double time);
 
   /// @brief Shifts the positioning of an event to a paint in space
   /// @param event event in HepMC data type

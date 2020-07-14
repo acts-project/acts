@@ -92,8 +92,14 @@ testBoundParameters(IVisualization& helper) {
       0, 0, 0, 0, 0, 1;
 
   EventDataView::drawBoundParameters(
-      helper, BoundParameters(gctx, std::move(cov), pars, plane), gctx,
-      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
+      helper,
+      BoundParameters(gctx, std::move(cov), pars, plane),
+      gctx,
+      momentumScale,
+      localErrorScale,
+      directionErrorScale,
+      pcolor,
+      scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -153,7 +159,8 @@ testMultiTrajectory(IVisualization& helper) {
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
         [](std::shared_ptr<const Transform3D> trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           std::shared_ptr<const RectangleBounds> bounds,
+           double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
@@ -213,7 +220,9 @@ testMultiTrajectory(IVisualization& helper) {
     // 2D measurements
     double dx = resolution[eLOC_0] * gauss(generator);
     double dy = resolution[eLOC_1] * gauss(generator);
-    MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {}, cov2D,
+    MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(),
+                                        {},
+                                        cov2D,
                                         lPosCenter[eLOC_0] + dx,
                                         lPosCenter[eLOC_1] + dy);
     measurements.push_back(std::move(m01));
@@ -221,7 +230,8 @@ testMultiTrajectory(IVisualization& helper) {
 
   // Make a vector of source links as input to the KF
   std::vector<SourceLink> sourcelinks;
-  std::transform(measurements.begin(), measurements.end(),
+  std::transform(measurements.begin(),
+                 measurements.end(),
                  std::back_inserter(sourcelinks),
                  [](const auto& m) { return SourceLink{&m}; });
 
@@ -246,11 +256,11 @@ testMultiTrajectory(IVisualization& helper) {
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
 
   Vector3D rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
-                0.025_GeV * gauss(generator));
+  Vector3D rMom(
+      1_GeV, 0.025_GeV * gauss(generator), 0.025_GeV * gauss(generator));
 
-  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                         42.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(
+      cov, rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -288,10 +298,18 @@ testMultiTrajectory(IVisualization& helper) {
   ViewConfig spcolor({20, 120, 20});
   spcolor.offset = -0.04;
 
-  EventDataView::drawMultiTrajectory(
-      helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
-      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
-      ppcolor, fpcolor, spcolor);
+  EventDataView::drawMultiTrajectory(helper,
+                                     fittedTrack.fittedStates,
+                                     fittedTrack.trackTip,
+                                     tgContext,
+                                     momentumScale,
+                                     localErrorScale,
+                                     directionErrorScale,
+                                     scolor,
+                                     mcolor,
+                                     ppcolor,
+                                     fpcolor,
+                                     spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

@@ -27,7 +27,8 @@ Acts::Surface::Surface(const Surface& other)
       m_transform(other.m_transform),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
-Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
+Acts::Surface::Surface(const GeometryContext& gctx,
+                       const Surface& other,
                        const Transform3D& shift)
     : GeometryObject(),
       m_transform(std::make_shared<const Transform3D>(
@@ -39,7 +40,8 @@ Acts::Surface::~Surface() = default;
 
 bool
 Acts::Surface::isOnSurface(const GeometryContext& gctx,
-                           const Vector3D& position, const Vector3D& momentum,
+                           const Vector3D& position,
+                           const Vector3D& momentum,
                            const BoundaryCheck& bcheck) const {
   // create the local position
   Vector2D lposition{0., 0.};
@@ -115,8 +117,10 @@ Acts::Surface::alignmentToBoundDerivative(const GeometryContext& gctx,
 
 const Acts::AlignmentRowVector
 Acts::Surface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-    const Vector3D& position, const Vector3D& direction) const {
+    const GeometryContext& gctx,
+    const RotationMatrix3D& rotToLocalZAxis,
+    const Vector3D& position,
+    const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();

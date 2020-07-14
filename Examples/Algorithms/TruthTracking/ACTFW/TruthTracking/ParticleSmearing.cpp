@@ -79,7 +79,8 @@ FW::ParticleSmearing::execute(const AlgorithmContext& ctx) const {
     // smear the position
     const Acts::Vector3D pos =
         particle.position() + Acts::Vector3D(deltaD0 * std::sin(phi),
-                                             deltaD0 * -std::cos(phi), deltaZ0);
+                                             deltaD0 * -std::cos(phi),
+                                             deltaZ0);
     // smear the time
     const auto time = particle.time() + deltaT0;
     // smear direction angles phi,theta ensuring correct bounds
@@ -101,8 +102,8 @@ FW::ParticleSmearing::execute(const AlgorithmContext& ctx) const {
     cov(Acts::eQOP, Acts::eQOP) = sigmaQOverP * sigmaQOverP;
     cov(Acts::eT, Acts::eT) = sigmaT0 * sigmaT0;
 
-    parameters.emplace_back(std::make_optional(std::move(cov)), pos, mom,
-                            particle.charge(), time);
+    parameters.emplace_back(
+        std::make_optional(std::move(cov)), pos, mom, particle.charge(), time);
   };
 
   ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(parameters));

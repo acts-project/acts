@@ -48,8 +48,8 @@ main(int argc, char* argv[]) {
 
   Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "Building interpolated field map" << std::endl;
-  auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax},
-                                          {nBinsR, nBinsZ}, bSolenoidField);
+  auto mapper = Acts::solenoidFieldMapper(
+      {rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, bSolenoidField);
   using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
 
   BField_t::Config cfg(std::move(mapper));
@@ -68,7 +68,8 @@ main(int argc, char* argv[]) {
   // lookup position is negligible in comparison...
   std::cout << "Benchmarking random SolenoidBField lookup: " << std::flush;
   const auto solenoid_result = Acts::Test::microBenchmark(
-      [&] { return bSolenoidField.getField(genPos()); }, iters_solenoid,
+      [&] { return bSolenoidField.getField(genPos()); },
+      iters_solenoid,
       runs_solenoid);
   std::cout << solenoid_result << std::endl;
 

@@ -46,7 +46,8 @@ Layer::representingVolume() const {
 }
 
 inline const Layer*
-Layer::nextLayer(const GeometryContext& /*gctx*/, const Vector3D& position,
+Layer::nextLayer(const GeometryContext& /*gctx*/,
+                 const Vector3D& position,
                  const Vector3D& direction) const {
   // no binutility -> no chance to find out the direction
   if (m_nextLayerUtility == nullptr) {
@@ -58,7 +59,8 @@ Layer::nextLayer(const GeometryContext& /*gctx*/, const Vector3D& position,
 }
 
 inline bool
-Layer::resolve(bool resolveSensitive, bool resolveMaterial,
+Layer::resolve(bool resolveSensitive,
+               bool resolveMaterial,
                bool resolvePassive) const {
   if (resolvePassive) {
     return true;
@@ -76,7 +78,8 @@ Layer::resolve(bool resolveSensitive, bool resolveMaterial,
 
 template <typename options_t>
 std::vector<SurfaceIntersection>
-Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3D& position,
+Layer::compatibleSurfaces(const GeometryContext& gctx,
+                          const Vector3D& position,
                           const Vector3D& direction,
                           const options_t& options) const {
   // the list of valid intersection
@@ -219,7 +222,8 @@ Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3D& position,
 
 template <typename options_t>
 const SurfaceIntersection
-Layer::surfaceOnApproach(const GeometryContext& gctx, const Vector3D& position,
+Layer::surfaceOnApproach(const GeometryContext& gctx,
+                         const Vector3D& position,
                          const Vector3D& direction,
                          const options_t& options) const {
   // resolve directive based by options
@@ -289,7 +293,8 @@ Layer::surfaceOnApproach(const GeometryContext& gctx, const Vector3D& position,
 }
 
 inline bool
-Layer::isOnLayer(const GeometryContext& gctx, const Vector3D& position,
+Layer::isOnLayer(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const BoundaryCheck& bcheck) const {
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(position);

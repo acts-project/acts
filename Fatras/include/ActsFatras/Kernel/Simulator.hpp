@@ -37,7 +37,8 @@ namespace ActsFatras {
 /// @tparam propagator_t is the type of the underlying propagator
 /// @tparam physics_list_t is the type of the simulated physics list
 /// @tparam hit_surface_selector_t is the type that selects hit surfaces
-template <typename propagator_t, typename physics_list_t,
+template <typename propagator_t,
+          typename physics_list_t,
           typename hit_surface_selector_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
@@ -72,7 +73,8 @@ struct ParticleSimulator {
   template <typename generator_t>
   Acts::Result<InteractorResult>
   simulate(const Acts::GeometryContext &geoCtx,
-           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+           const Acts::MagneticFieldContext &magCtx,
+           generator_t &generator,
            const Particle &particle) const {
     assert(localLogger and "Missing local logger");
 
@@ -101,8 +103,10 @@ struct ParticleSimulator {
     //      of the charge policy and template the class on the parameter.
     if (particle.charge() != 0) {
       Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> start(
-          std::nullopt, particle.position(),
-          particle.absMomentum() * particle.unitDirection(), particle.charge(),
+          std::nullopt,
+          particle.position(),
+          particle.absMomentum() * particle.unitDirection(),
+          particle.charge(),
           particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
@@ -112,8 +116,10 @@ struct ParticleSimulator {
       }
     } else {
       Acts::SingleCurvilinearTrackParameters<Acts::NeutralPolicy> start(
-          std::nullopt, particle.position(),
-          particle.absMomentum() * particle.unitDirection(), particle.time());
+          std::nullopt,
+          particle.position(),
+          particle.absMomentum() * particle.unitDirection(),
+          particle.time());
       auto result = propagator.propagate(start, options);
       if (result.ok()) {
         return result.value().template get<InteractorResult>();
@@ -130,8 +136,10 @@ struct ParticleSimulator {
 /// @tparam charged_simulator_t Single particle simulator for charged particles
 /// @tparam neutral_selector_t Callable selector type for neutral particles
 /// @tparam neutral_simulator_t Single particle simulator for neutral particles
-template <typename charged_selector_t, typename charged_simulator_t,
-          typename neutral_selector_t, typename neutral_simulator_t>
+template <typename charged_selector_t,
+          typename charged_simulator_t,
+          typename neutral_selector_t,
+          typename neutral_simulator_t>
 struct Simulator {
   /// A particle that failed to simulate.
   struct FailedParticle {
@@ -189,14 +197,18 @@ struct Simulator {
   /// @tparam input_particles_t is a Container for particles
   /// @tparam output_particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
-  template <typename generator_t, typename input_particles_t,
-            typename output_particles_t, typename hits_t>
+  template <typename generator_t,
+            typename input_particles_t,
+            typename output_particles_t,
+            typename hits_t>
   Acts::Result<std::vector<FailedParticle>>
   simulate(const Acts::GeometryContext &geoCtx,
-           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+           const Acts::MagneticFieldContext &magCtx,
+           generator_t &generator,
            const input_particles_t &inputParticles,
            output_particles_t &simulatedParticlesInitial,
-           output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
+           output_particles_t &simulatedParticlesFinal,
+           hits_t &hits) const {
     assert(
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
@@ -248,8 +260,10 @@ struct Simulator {
           continue;
         }
 
-        copyOutputs(result.value(), simulatedParticlesInitial,
-                    simulatedParticlesFinal, hits);
+        copyOutputs(result.value(),
+                    simulatedParticlesInitial,
+                    simulatedParticlesFinal,
+                    hits);
         // since physics processes are independent, there can be particle id
         // collisions within the generated secondaries. they can be resolved by
         // renumbering within each sub-particle generation. this must happen
@@ -287,14 +301,17 @@ struct Simulator {
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename particles_t, typename hits_t>
   void
-  copyOutputs(const InteractorResult &result, particles_t &particlesInitial,
-              particles_t &particlesFinal, hits_t &hits) const {
+  copyOutputs(const InteractorResult &result,
+              particles_t &particlesInitial,
+              particles_t &particlesFinal,
+              hits_t &hits) const {
     // initial particle state was already pushed to the container before
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
     // move generated secondaries that should be simulated to the output
     std::copy_if(
-        result.generatedParticles.begin(), result.generatedParticles.end(),
+        result.generatedParticles.begin(),
+        result.generatedParticles.end(),
         std::back_inserter(particlesInitial),
         [this](const Particle &particle) { return selectParticle(particle); });
     std::copy(result.hits.begin(), result.hits.end(), std::back_inserter(hits));

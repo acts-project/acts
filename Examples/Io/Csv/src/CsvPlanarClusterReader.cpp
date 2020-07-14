@@ -108,8 +108,10 @@ struct CompareGeometryId {
 
 template <typename Data>
 inline std::vector<Data>
-readEverything(const std::string& inputDir, const std::string& filename,
-               const std::vector<std::string>& optionalColumns, size_t event) {
+readEverything(const std::string& inputDir,
+               const std::string& filename,
+               const std::vector<std::string>& optionalColumns,
+               size_t event) {
   std::string path = FW::perEventFilepath(inputDir, filename, event);
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
@@ -125,8 +127,8 @@ readEverything(const std::string& inputDir, const std::string& filename,
 std::vector<FW::HitData>
 readHitsByGeoId(const std::string& inputDir, size_t event) {
   // geometry_id and t are optional columns
-  auto hits = readEverything<FW::HitData>(inputDir, "hits.csv",
-                                          {"geometry_id", "t"}, event);
+  auto hits = readEverything<FW::HitData>(
+      inputDir, "hits.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
   std::sort(hits.begin(), hits.end(), CompareGeometryId{});
   return hits;
@@ -146,11 +148,17 @@ std::vector<FW::TruthHitData>
 readTruthHitsByHitId(const std::string& inputDir, size_t event) {
   // define all optional columns
   std::vector<std::string> optionalColumns = {
-      "geometry_id", "tt",      "te",     "deltapx",
-      "deltapy",     "deltapz", "deltae", "index",
+      "geometry_id",
+      "tt",
+      "te",
+      "deltapx",
+      "deltapy",
+      "deltapz",
+      "deltae",
+      "index",
   };
-  auto truths = readEverything<FW::TruthHitData>(inputDir, "truth.csv",
-                                                 optionalColumns, event);
+  auto truths = readEverything<FW::TruthHitData>(
+      inputDir, "truth.csv", optionalColumns, event);
   // sort for fast hit id look up
   std::sort(truths.begin(), truths.end(), CompareHitId{});
   return truths;
@@ -185,8 +193,8 @@ FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
     // find associated truth/ simulation hits
     std::vector<std::size_t> simHitIndices;
     {
-      auto range = makeRange(std::equal_range(truths.begin(), truths.end(),
-                                              hit.hit_id, CompareHitId{}));
+      auto range = makeRange(std::equal_range(
+          truths.begin(), truths.end(), hit.hit_id, CompareHitId{}));
       simHitIndices.reserve(range.size());
       for (const auto& truth : range) {
         const auto simGeometryId = Acts::GeometryID(truth.geometry_id);
@@ -217,9 +225,13 @@ FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
         // hits by geometry id should ensure that new sim hits are always added
         // at the end and previously created ones rest at their existing
         // locations.
-        auto inserted = simHits.emplace_hint(simHits.end(), simGeometryId,
-                                             simParticleId, simPos4, simMom4,
-                                             simMom4 + simDelta4, simIndex);
+        auto inserted = simHits.emplace_hint(simHits.end(),
+                                             simGeometryId,
+                                             simParticleId,
+                                             simPos4,
+                                             simMom4,
+                                             simMom4 + simDelta4,
+                                             simIndex);
         if (std::next(inserted) != simHits.end()) {
           ACTS_FATAL("Truth hit sorting broke for input hit id " << hit.hit_id);
           return ProcessCode::ABORT;
@@ -231,8 +243,8 @@ FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
     // find matching pixel cell information
     std::vector<Acts::DigitizationCell> digitizationCells;
     {
-      auto range = makeRange(std::equal_range(cells.begin(), cells.end(),
-                                              hit.hit_id, CompareHitId{}));
+      auto range = makeRange(std::equal_range(
+          cells.begin(), cells.end(), hit.hit_id, CompareHitId{}));
       for (const auto& c : range) {
         digitizationCells.emplace_back(c.ch0, c.ch1, c.value);
       }
@@ -260,7 +272,11 @@ FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
     Acts::PlanarModuleCluster cluster(
         surface.getSharedPtr(),
         Identifier(identifier_type(geoId.value()), std::move(simHitIndices)),
-        std::move(cov), local[0], local[1], time, std::move(digitizationCells));
+        std::move(cov),
+        local[0],
+        local[1],
+        time,
+        std::move(digitizationCells));
 
     // due to the previous sorting of the raw hit data by geometry id, new
     // clusters should always end up at the end of the container. previous
@@ -273,11 +289,11 @@ FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
       return ProcessCode::ABORT;
     }
     auto hitIndex = clusters.index_of(inserted);
-    auto truthRange = makeRange(std::equal_range(truths.begin(), truths.end(),
-                                                 hit.hit_id, CompareHitId{}));
+    auto truthRange = makeRange(std::equal_range(
+        truths.begin(), truths.end(), hit.hit_id, CompareHitId{}));
     for (const auto& truth : truthRange) {
-      hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIndex,
-                                   truth.particle_id);
+      hitParticlesMap.emplace_hint(
+          hitParticlesMap.end(), hitIndex, truth.particle_id);
     }
 
     // map internal hit/cluster index back to original, non-monotonic hit id

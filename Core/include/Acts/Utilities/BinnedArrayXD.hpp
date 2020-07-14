@@ -73,7 +73,8 @@ class BinnedArrayXD : public BinnedArray<T> {
         /// fill the data
         m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
-        if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(),
+        if (std::find(m_arrayObjects.begin(),
+                      m_arrayObjects.end(),
                       tap.first) == m_arrayObjects.end()) {
           m_arrayObjects.push_back(tap.first);
         }

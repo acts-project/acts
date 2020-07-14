@@ -47,7 +47,8 @@ PointwiseMaterialInteraction::covarianceContributions(bool multipleScattering,
 }
 
 double
-PointwiseMaterialInteraction::updateVariance(double variance, double change,
+PointwiseMaterialInteraction::updateVariance(double variance,
+                                             double change,
                                              NoiseUpdateMode updateMode) const {
   // Add/Subtract the change
   // Protect the variance against becoming negative

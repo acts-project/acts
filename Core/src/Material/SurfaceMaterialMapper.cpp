@@ -20,7 +20,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
-    const Config& cfg, StraightLinePropagator propagator,
+    const Config& cfg,
+    StraightLinePropagator propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
       m_propagator(std::move(propagator)),
@@ -28,7 +29,8 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
 
 Acts::SurfaceMaterialMapper::State
 Acts::SurfaceMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const GeometryContext& gctx,
+    const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
@@ -181,15 +183,16 @@ void
 Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
-                                          mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(
+      std::nullopt, mTrack.first.first, mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
   using DebugOutput = DebugOutputActor;
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
   using ActionList = ActionList<MaterialSurfaceCollector,
-                                MaterialVolumeCollector, DebugOutput>;
+                                MaterialVolumeCollector,
+                                DebugOutput>;
   using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,

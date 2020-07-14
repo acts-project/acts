@@ -20,10 +20,16 @@ Acts::EigenStepper<B, E, A>::boundState(State& state,
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
-  return detail::boundState(state.geoContext, state.cov, state.jacobian,
-                            state.jacTransport, state.derivative,
-                            state.jacToGlobal, parameters, state.covTransport,
-                            state.pathAccumulated, surface);
+  return detail::boundState(state.geoContext,
+                            state.cov,
+                            state.jacobian,
+                            state.jacTransport,
+                            state.derivative,
+                            state.jacToGlobal,
+                            parameters,
+                            state.covTransport,
+                            state.pathAccumulated,
+                            surface);
 }
 
 template <typename B, typename E, typename A>
@@ -33,14 +39,20 @@ Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
-  return detail::curvilinearState(
-      state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
+  return detail::curvilinearState(state.cov,
+                                  state.jacobian,
+                                  state.jacTransport,
+                                  state.derivative,
+                                  state.jacToGlobal,
+                                  parameters,
+                                  state.covTransport,
+                                  state.pathAccumulated);
 }
 
 template <typename B, typename E, typename A>
 void
-Acts::EigenStepper<B, E, A>::update(State& state, const FreeVector& parameters,
+Acts::EigenStepper<B, E, A>::update(State& state,
+                                    const FreeVector& parameters,
                                     const Covariance& covariance) const {
   state.pos = parameters.template segment<3>(eFreePos0);
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
@@ -52,8 +64,10 @@ Acts::EigenStepper<B, E, A>::update(State& state, const FreeVector& parameters,
 
 template <typename B, typename E, typename A>
 void
-Acts::EigenStepper<B, E, A>::update(State& state, const Vector3D& uposition,
-                                    const Vector3D& udirection, double up,
+Acts::EigenStepper<B, E, A>::update(State& state,
+                                    const Vector3D& uposition,
+                                    const Vector3D& udirection,
+                                    double up,
                                     double time) const {
   state.pos = uposition;
   state.dir = udirection;
@@ -64,8 +78,12 @@ Acts::EigenStepper<B, E, A>::update(State& state, const Vector3D& uposition,
 template <typename B, typename E, typename A>
 void
 Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
-  detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.dir);
+  detail::covarianceTransport(state.cov,
+                              state.jacobian,
+                              state.jacTransport,
+                              state.derivative,
+                              state.jacToGlobal,
+                              state.dir);
 }
 
 template <typename B, typename E, typename A>
@@ -75,9 +93,14 @@ Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
-  detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
-                              state.jacTransport, state.derivative,
-                              state.jacToGlobal, parameters, surface);
+  detail::covarianceTransport(state.geoContext,
+                              state.cov,
+                              state.jacobian,
+                              state.jacTransport,
+                              state.derivative,
+                              state.jacToGlobal,
+                              parameters,
+                              surface);
 }
 
 template <typename B, typename E, typename A>
@@ -111,14 +134,14 @@ Acts::EigenStepper<B, E, A>::step(propagator_state_t& state) const {
     const Vector3D pos1 =
         state.stepping.pos + half_h * state.stepping.dir + h2 * 0.125 * sd.k1;
     sd.B_middle = getField(state.stepping, pos1);
-    if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k1)) {
+    if (!state.stepping.extension.k2(
+            state, *this, sd.k2, sd.B_middle, sd.kQoP, half_h, sd.k1)) {
       return false;
     }
 
     // Third Runge-Kutta point
-    if (!state.stepping.extension.k3(state, *this, sd.k3, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k2)) {
+    if (!state.stepping.extension.k3(
+            state, *this, sd.k3, sd.B_middle, sd.kQoP, half_h, sd.k2)) {
       return false;
     }
 
@@ -126,8 +149,8 @@ Acts::EigenStepper<B, E, A>::step(propagator_state_t& state) const {
     const Vector3D pos2 =
         state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
     sd.B_last = getField(state.stepping, pos2);
-    if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
-                                     sd.k3)) {
+    if (!state.stepping.extension.k4(
+            state, *this, sd.k4, sd.B_last, sd.kQoP, h, sd.k3)) {
       return false;
     }
 
@@ -144,11 +167,12 @@ Acts::EigenStepper<B, E, A>::step(propagator_state_t& state) const {
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
-    stepSizeScaling =
-        std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(2. * error_estimate)),
-                                         0.25)),
-                 4.);
+    stepSizeScaling = std::min(
+        std::max(
+            0.25,
+            std::pow((state.options.tolerance / std::abs(2. * error_estimate)),
+                     0.25)),
+        4.);
 
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 

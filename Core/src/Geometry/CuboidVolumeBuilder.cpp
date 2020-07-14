@@ -40,7 +40,8 @@ Acts::CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
         *(cfg.detElementConstructor(std::make_shared<const Transform3D>(trafo),
-                                    cfg.rBounds, cfg.thickness)));
+                                    cfg.rBounds,
+                                    cfg.thickness)));
   } else {
     surface = Surface::makeShared<PlaneSurface>(
         std::make_shared<const Transform3D>(trafo), cfg.rBounds);
@@ -65,8 +66,12 @@ Acts::CuboidVolumeBuilder::buildLayer(
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
 
-  return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, std::nullopt,
+  return layerCreator.planeLayer(gctx,
+                                 {cfg.surface},
+                                 cfg.binsY,
+                                 cfg.binsZ,
+                                 BinningValue::binX,
+                                 std::nullopt,
                                  std::make_shared<const Transform3D>(trafo));
 }
 
@@ -143,8 +148,12 @@ Acts::CuboidVolumeBuilder::buildVolume(
   LayerArrayCreator layArrCreator(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
-      layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
-                               BinningType::arbitrary, BinningValue::binX));
+      layArrCreator.layerArray(gctx,
+                               layVec,
+                               minMax.first,
+                               minMax.second,
+                               BinningType::arbitrary,
+                               BinningValue::binX));
 
   // Build confined volumes
   if (cfg.trackingVolumes.empty())
@@ -154,21 +163,32 @@ Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-        nullptr, nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume =
+        TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
+                               bounds,
+                               cfg.volumeMaterial,
+                               nullptr,
+                               nullptr,
+                               cfg.trackingVolumes,
+                               cfg.name);
   } else {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-        std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume =
+        TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
+                               bounds,
+                               cfg.volumeMaterial,
+                               std::move(layArr),
+                               nullptr,
+                               cfg.trackingVolumes,
+                               cfg.name);
   }
   return trackVolume;
 }
 
 Acts::MutableTrackingVolumePtr
 Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
+    const GeometryContext& gctx,
+    Acts::TrackingVolumePtr /*unused*/,
     Acts::VolumeBoundsPtr /*unused*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
@@ -179,10 +199,12 @@ Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {
-    volumes[i + 1]->glueTrackingVolume(
-        gctx, BoundarySurfaceFace::negativeFaceYZ, volumes[i].get(),
-        BoundarySurfaceFace::positiveFaceYZ);
-    volumes[i]->glueTrackingVolume(gctx, BoundarySurfaceFace::positiveFaceYZ,
+    volumes[i + 1]->glueTrackingVolume(gctx,
+                                       BoundarySurfaceFace::negativeFaceYZ,
+                                       volumes[i].get(),
+                                       BoundarySurfaceFace::positiveFaceYZ);
+    volumes[i]->glueTrackingVolume(gctx,
+                                   BoundarySurfaceFace::positiveFaceYZ,
                                    volumes[i + 1].get(),
                                    BoundarySurfaceFace::negativeFaceYZ);
   }

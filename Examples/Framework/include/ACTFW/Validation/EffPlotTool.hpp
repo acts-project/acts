@@ -56,7 +56,8 @@ class EffPlotTool {
   /// @param truthParticle the truth Particle
   /// @param status the reconstruction status
   void
-  fill(EffPlotCache& effPlotCache, const ActsFatras::Particle& truthParticle,
+  fill(EffPlotCache& effPlotCache,
+       const ActsFatras::Particle& truthParticle,
        bool status) const;
 
   /// @brief write the efficiency plots to file

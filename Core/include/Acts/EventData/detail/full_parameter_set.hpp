@@ -35,14 +35,16 @@ struct full_parset {
 
   template <parameter_indices_t v, parameter_indices_t... others>
   struct add_to_value_container<
-      v, std::integer_sequence<parameter_indices_t, others...>> {
+      v,
+      std::integer_sequence<parameter_indices_t, others...>> {
     using type = std::integer_sequence<parameter_indices_t, others..., v>;
   };
 
   template <typename T, unsigned int N>
   struct tparam_generator {
     using type = typename add_to_value_container<
-        static_cast<T>(N), typename tparam_generator<T, N - 1>::type>::type;
+        static_cast<T>(N),
+        typename tparam_generator<T, N - 1>::type>::type;
   };
 
   template <typename T>

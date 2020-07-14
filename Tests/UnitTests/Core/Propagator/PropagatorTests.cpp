@@ -51,7 +51,8 @@ struct PerpendicularMeasure {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
@@ -82,7 +83,8 @@ struct SurfaceObserver {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     if (surface && !result.surfaces_passed) {
       // calculate the distance to the surface
@@ -90,7 +92,8 @@ struct SurfaceObserver {
           surface
               ->intersectionEstimate(state.geoContext,
                                      stepper.position(state.stepping),
-                                     stepper.direction(state.stepping), true)
+                                     stepper.direction(state.stepping),
+                                     true)
               .pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::actor);
@@ -162,7 +165,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -219,7 +227,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -260,8 +273,8 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(start, options_1s).value().endParameters;
 
   // test that the propagation is additive
-  CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
-                  0.001);
+  CHECK_CLOSE_REL(
+      end_parameters_1s->position(), end_parameters_2s->position(), 0.001);
 
   const auto& cov_1s = *(end_parameters_1s->covariance());
   const auto& cov_2s = *(end_parameters_2s->covariance());
@@ -292,7 +305,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   double dcharge = -1 + 2 * charge;
   (void)index;
 
@@ -336,8 +354,8 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(start, *cSurface, options_1s).value().endParameters;
 
   // test that the propagation is additive
-  CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
-                  0.001);
+  CHECK_CLOSE_REL(
+      end_parameters_1s->position(), end_parameters_2s->position(), 0.001);
 
   const auto& cov_1s = (*(end_parameters_1s->covariance()));
   const auto& cov_2s = (*(end_parameters_2s->covariance()));

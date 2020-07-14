@@ -74,78 +74,82 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Start smoothing from previous track state at index: "
                    << prev_ts.previous());
 
-      trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
-                                                     this](auto ts) {
-        // should have filtered and predicted, this should also include the
-        // covariances.
-        assert(ts.hasFiltered());
-        assert(ts.hasPredicted());
-        assert(ts.hasJacobian());
+      trajectory.applyBackwards(
+          prev_ts.previous(), [&prev_ts, &G, &error, this](auto ts) {
+            // should have filtered and predicted, this should also include the
+            // covariances.
+            assert(ts.hasFiltered());
+            assert(ts.hasPredicted());
+            assert(ts.hasJacobian());
 
-        // previous trackstate should have smoothed and predicted
-        assert(prev_ts.hasSmoothed());
-        assert(prev_ts.hasPredicted());
+            // previous trackstate should have smoothed and predicted
+            assert(prev_ts.hasSmoothed());
+            assert(prev_ts.hasPredicted());
 
-        ACTS_VERBOSE("Calculate smoothing matrix:");
-        ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-        ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
-        ACTS_VERBOSE("Prev. predicted covariance\n"
-                     << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                     << prev_ts.predictedCovariance().inverse());
+            ACTS_VERBOSE("Calculate smoothing matrix:");
+            ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
+            ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+            ACTS_VERBOSE("Prev. predicted covariance\n"
+                         << prev_ts.predictedCovariance() << "\n, inverse: \n"
+                         << prev_ts.predictedCovariance().inverse());
 
-        // Gain smoothing matrix
-        // NB: The jacobian stored in a state is the jacobian from previous
-        // state to this state in forward propagation
-        G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
-            prev_ts.predictedCovariance().inverse();
+            // Gain smoothing matrix
+            // NB: The jacobian stored in a state is the jacobian from previous
+            // state to this state in forward propagation
+            G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
+                prev_ts.predictedCovariance().inverse();
 
-        if (G.hasNaN()) {
-          error = KalmanFitterError::SmoothFailed;  // set to error
-          return false;                             // abort execution
-        }
+            if (G.hasNaN()) {
+              error = KalmanFitterError::SmoothFailed;  // set to error
+              return false;                             // abort execution
+            }
 
-        ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
+            ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
 
-        ACTS_VERBOSE("Calculate smoothed parameters:");
-        ACTS_VERBOSE("Filtered parameters: " << ts.filtered().transpose());
-        ACTS_VERBOSE(
-            "Prev. smoothed parameters: " << prev_ts.smoothed().transpose());
-        ACTS_VERBOSE(
-            "Prev. predicted parameters: " << prev_ts.predicted().transpose());
+            ACTS_VERBOSE("Calculate smoothed parameters:");
+            ACTS_VERBOSE("Filtered parameters: " << ts.filtered().transpose());
+            ACTS_VERBOSE("Prev. smoothed parameters: "
+                         << prev_ts.smoothed().transpose());
+            ACTS_VERBOSE("Prev. predicted parameters: "
+                         << prev_ts.predicted().transpose());
 
-        // Calculate the smoothed parameters
-        ts.smoothed() =
-            ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+            // Calculate the smoothed parameters
+            ts.smoothed() =
+                ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
 
-        ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
+            ACTS_VERBOSE(
+                "Smoothed parameters are: " << ts.smoothed().transpose());
 
-        ACTS_VERBOSE("Calculate smoothed covariance:");
-        ACTS_VERBOSE("Prev. smoothed covariance:\n"
-                     << prev_ts.smoothedCovariance());
+            ACTS_VERBOSE("Calculate smoothed covariance:");
+            ACTS_VERBOSE("Prev. smoothed covariance:\n"
+                         << prev_ts.smoothedCovariance());
 
-        // And the smoothed covariance
-        ts.smoothedCovariance() =
-            ts.filteredCovariance() -
-            G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
-                G.transpose();
+            // And the smoothed covariance
+            ts.smoothedCovariance() =
+                ts.filteredCovariance() - G *
+                                              (prev_ts.predictedCovariance() -
+                                               prev_ts.smoothedCovariance()) *
+                                              G.transpose();
 
-        // Check if the covariance matrix is semi-positive definite.
-        // If not, make one (could do more) attempt to replace it with the
-        // nearest semi-positive def matrix,
-        // but it could still be non semi-positive
-        Matrix smoothedCov = ts.smoothedCovariance();
-        if (not detail::covariance_helper<Matrix>::validate(smoothedCov)) {
-          ACTS_DEBUG(
-              "Smoothed covariance is not positive definite. Could result in "
-              "negative covariance!");
-        }
-        // Reset smoothed covariance
-        ts.smoothedCovariance() = smoothedCov;
-        ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
+            // Check if the covariance matrix is semi-positive definite.
+            // If not, make one (could do more) attempt to replace it with the
+            // nearest semi-positive def matrix,
+            // but it could still be non semi-positive
+            Matrix smoothedCov = ts.smoothedCovariance();
+            if (not detail::covariance_helper<Matrix>::validate(smoothedCov)) {
+              ACTS_DEBUG(
+                  "Smoothed covariance is not positive definite. Could result "
+                  "in "
+                  "negative covariance!");
+            }
+            // Reset smoothed covariance
+            ts.smoothedCovariance() = smoothedCov;
+            ACTS_VERBOSE("Smoothed covariance is: \n"
+                         << ts.smoothedCovariance());
 
-        prev_ts = ts;
-        return true;  // continue execution
-      });
+            prev_ts = ts;
+            return true;  // continue execution
+          });
     }
     if (error) {
       // error is set, return result

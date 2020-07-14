@@ -29,7 +29,8 @@ Acts::AnnealingUtility::anneal(State& state) const {
 }
 
 double
-Acts::AnnealingUtility::getWeight(State& state, double chi2,
+Acts::AnnealingUtility::getWeight(State& state,
+                                  double chi2,
                                   const std::vector<double>& allChi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];

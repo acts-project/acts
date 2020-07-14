@@ -74,7 +74,8 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext& gctx, const LayerVector& layers,
+  createTrackingVolume(const GeometryContext& gctx,
+                       const LayerVector& layers,
                        std::shared_ptr<const IVolumeMaterial> volumeMaterial,
                        VolumeBoundsPtr volumeBounds,
                        MutableTrackingVolumeVector mtvVector = {},
@@ -99,10 +100,14 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const GeometryContext& gctx, const LayerVector& layers,
+  createTrackingVolume(const GeometryContext& gctx,
+                       const LayerVector& layers,
                        MutableTrackingVolumeVector mtvVector,
                        std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                       double rMin, double rMax, double zMin, double zMax,
+                       double rMin,
+                       double rMax,
+                       double zMin,
+                       double zMax,
                        const std::string& volumeName = "UndefinedVolume",
                        BinningType bType = arbitrary) const override;
 
@@ -123,9 +128,14 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createGapTrackingVolume(
-      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-      double rMax, double zMin, double zMax, unsigned int materialLayers,
+      const GeometryContext& gctx,
+      MutableTrackingVolumeVector& mtvVector,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      double rMin,
+      double rMax,
+      double zMin,
+      double zMax,
+      unsigned int materialLayers,
       bool cylinder = true,
       const std::string& volumeName = "UndefinedVolume") const override;
 
@@ -148,7 +158,10 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   createGapTrackingVolume(const GeometryContext& gctx,
                           MutableTrackingVolumeVector& mtvVector,
                           std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-                          double rMin, double rMax, double zMin, double zMax,
+                          double rMin,
+                          double rMax,
+                          double zMin,
+                          double zMax,
                           const std::vector<double>& layerPositions,
                           bool cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
@@ -215,8 +228,10 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
                             const LayerVector& layers,
                             const CylinderVolumeBounds*& cylinderVolumeBounds,
                             std::shared_ptr<const Transform3D>& transform,
-                            double& rMinClean, double& rMaxClean,
-                            double& zMinClean, double& zMaxClean,
+                            double& rMinClean,
+                            double& rMaxClean,
+                            double& zMinClean,
+                            double& zMaxClean,
                             BinningValue& bValue,
                             BinningType bType = arbitrary) const;
 
@@ -233,9 +248,13 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @param zMax the maximum z extend of the volume
   bool
   interGlueTrackingVolume(const GeometryContext& gctx,
-                          const MutableTrackingVolumePtr& tVolume, bool rBinned,
-                          double rMin, double rGlueMin, double rMax,
-                          double zMin, double zMax) const;
+                          const MutableTrackingVolumePtr& tVolume,
+                          bool rBinned,
+                          double rMin,
+                          double rGlueMin,
+                          double rMax,
+                          double zMin,
+                          double zMax) const;
 
   /// Private method - glue volume to the other
   ///
@@ -254,8 +273,12 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
                       const MutableTrackingVolumePtr& tvolOne,
                       BoundarySurfaceFace faceOne,
                       const MutableTrackingVolumePtr& tvolTwo,
-                      BoundarySurfaceFace faceTwo, double rMin, double rGlueMin,
-                      double rMax, double zMin, double zMax) const;
+                      BoundarySurfaceFace faceTwo,
+                      double rMin,
+                      double rGlueMin,
+                      double rMax,
+                      double zMin,
+                      double zMax) const;
 
   /// Private method - helper method not to duplicate code
   ///
@@ -278,8 +301,12 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to newly created cylinder layer
   LayerPtr
-  createCylinderLayer(double z, double r, double halflengthZ, double thickness,
-                      int binsPhi, int binsZ) const;
+  createCylinderLayer(double z,
+                      double r,
+                      double halflengthZ,
+                      double thickness,
+                      int binsPhi,
+                      int binsZ) const;
 
   /// Private method - helper method to save some code
   ///
@@ -292,8 +319,12 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to newly created cylinder layer
   LayerPtr
-  createDiscLayer(double z, double rMin, double rMax, double thickness,
-                  int binsPhi, int binsR) const;
+  createDiscLayer(double z,
+                  double rMin,
+                  double rMax,
+                  double thickness,
+                  int binsPhi,
+                  int binsR) const;
 };
 
 inline CylinderVolumeHelper::Config

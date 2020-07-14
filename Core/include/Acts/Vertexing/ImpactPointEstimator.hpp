@@ -34,7 +34,8 @@ struct ImpactParametersAndSigma {
 /// @class ImpactPointEstimator
 ///
 /// @brief Estimator for impact point calculations
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
   using BField_t = typename propagator_t::Stepper::BField;
@@ -96,7 +97,8 @@ class ImpactPointEstimator {
   /// @return Distance
   Result<double>
   calculate3dDistance(const GeometryContext& gctx,
-                      const BoundParameters& trkParams, const Vector3D& vtxPos,
+                      const BoundParameters& trkParams,
+                      const Vector3D& vtxPos,
                       State& state) const;
 
   /// @brief Creates track parameters bound to plane
@@ -118,7 +120,8 @@ class ImpactPointEstimator {
   estimate3DImpactParameters(const GeometryContext& gctx,
                              const Acts::MagneticFieldContext& mctx,
                              const BoundParameters& trkParams,
-                             const Vector3D& vtxPos, State& state) const;
+                             const Vector3D& vtxPos,
+                             State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -165,8 +168,11 @@ class ImpactPointEstimator {
   ///
   /// @return New phi value
   Result<double>
-  performNewtonApproximation(const Vector3D& trkPos, const Vector3D& vtxPos,
-                             double phi, double theta, double r) const;
+  performNewtonApproximation(const Vector3D& trkPos,
+                             const Vector3D& vtxPos,
+                             double phi,
+                             double theta,
+                             double r) const;
 
   /// @brief Helper function to calculate relative
   /// distance between track and vtxPos and the
@@ -183,8 +189,10 @@ class ImpactPointEstimator {
   Result<void>
   getDistanceAndMomentum(const GeometryContext& gctx,
                          const BoundParameters& trkParams,
-                         const Vector3D& vtxPos, Vector3D& deltaR,
-                         Vector3D& momDir, State& state) const;
+                         const Vector3D& vtxPos,
+                         Vector3D& deltaR,
+                         Vector3D& momDir,
+                         State& state) const;
 };
 
 }  // namespace Acts

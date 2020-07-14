@@ -54,7 +54,8 @@ class Segmentation {
   createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
                              SurfacePtrVector& segmentationSurfacesX,
                              SurfacePtrVector& segmentationSurfacesY,
-                             double halfThickness, int readoutDirection,
+                             double halfThickness,
+                             int readoutDirection,
                              double lorentzAngle) const = 0;
 
   /// Get the digitization cell fropm a 3D position
@@ -94,8 +95,10 @@ class Segmentation {
   ///
   /// @return is a fully calculated digitzation step
   virtual DigitizationStep
-  digitizationStep(const Vector3D& start, const Vector3D& end,
-                   double halfThickness, int readoutDirection,
+  digitizationStep(const Vector3D& start,
+                   const Vector3D& end,
+                   double halfThickness,
+                   int readoutDirection,
                    double lorentzAngle) const = 0;
 
   /// return the surface bounds by reference

@@ -29,8 +29,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   // Add the volume boundary material if configured
   for (xml_coll_t bmat(x_det, _Unicode(boundary_material)); bmat; ++bmat) {
     xml_comp_t x_boundary_material = bmat;
-    xmlToProtoSurfaceMaterial(x_boundary_material, *endcapExtension,
-                              "boundary_material");
+    xmlToProtoSurfaceMaterial(
+        x_boundary_material, *endcapExtension, "boundary_material");
   }
   endcapDetector.addExtension<Acts::ActsExtension>(endcapExtension);
   // Make Volume
@@ -115,8 +115,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   xml_comp_t x_support = x_det.child(_Unicode(ring_support));
   // The support shape
   Tube supportShape(x_support.rmin(), x_support.rmax(), x_support.dz());
-  Volume supportVolume("DiskSupport", supportShape,
-                       oddd.material(x_support.materialStr()));
+  Volume supportVolume(
+      "DiskSupport", supportShape, oddd.material(x_support.materialStr()));
   supportVolume.setVisAttributes(oddd, x_support.visStr());
   diskAssembly.placeVolume(supportVolume);
 
@@ -166,8 +166,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     // Add the proto layer material
     for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
       xml_comp_t x_layer_material = lmat;
-      xmlToProtoSurfaceMaterial(x_layer_material, *layerExtension,
-                                "layer_material");
+      xmlToProtoSurfaceMaterial(
+          x_layer_material, *layerExtension, "layer_material");
     }  // Finish up the DetElement tree
     layerElement.setPlacement(placedLayer);
     endcapDetector.add(layerElement);
@@ -180,8 +180,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
 
     // The Shape and Volume
     Tube endplateShape(x_endplate.rmin(), x_endplate.rmax(), x_endplate.dz());
-    Volume endplateVolume("Endplate", endplateShape,
-                          oddd.material(x_endplate.materialStr()));
+    Volume endplateVolume(
+        "Endplate", endplateShape, oddd.material(x_endplate.materialStr()));
     endplateVolume.setVisAttributes(oddd, x_endplate.visStr());
 
     double zeff = x_endplate.z_offset() - x_det_dim.z();
@@ -199,8 +199,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
     // Add the proto layer material
     for (xml_coll_t lmat(x_endplate, _Unicode(layer_material)); lmat; ++lmat) {
       xml_comp_t x_layer_material = lmat;
-      xmlToProtoSurfaceMaterial(x_layer_material, *endplateExtension,
-                                "layer_material");
+      xmlToProtoSurfaceMaterial(
+          x_layer_material, *endplateExtension, "layer_material");
     }
     // Finish up the DetElement tree
     endplateElement.setPlacement(placedEndplate);

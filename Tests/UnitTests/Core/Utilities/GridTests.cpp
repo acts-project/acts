@@ -411,14 +411,14 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant) {
   CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{2, 2, 1}}), Point({{1., 1., 0.}}), 1e-6);
 
   // test some upper right-bin edges
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 1, 1}}), Point({{1., 1., 1.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{2, 3, 2}}), Point({{2., 3., 2.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 1, 2}}), Point({{1., 1., 2.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{2, 2, 1}}), Point({{2., 2., 1.}}),
-                  1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 1, 1}}), Point({{1., 1., 1.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{2, 3, 2}}), Point({{2., 3., 2.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 1, 2}}), Point({{1., 1., 2.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{2, 2, 1}}), Point({{2., 2., 1.}}), 1e-6);
 
   // initialize grid
   for (size_t bin = 0; bin < g.size(); ++bin) {
@@ -728,29 +728,29 @@ BOOST_AUTO_TEST_CASE(grid_test_3d_variable) {
 
   // test some lower-left bin edges
   CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 1, 1}}), Point({{0., 0., 0.}}), 1e-6);
-  CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 1, 2}}), Point({{0., 0., 0.5}}),
-                  1e-6);
+  CHECK_CLOSE_ABS(
+      g.lowerLeftBinEdge({{1, 1, 2}}), Point({{0., 0., 0.5}}), 1e-6);
   CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 1, 3}}), Point({{0., 0., 3.}}), 1e-6);
-  CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 2, 1}}), Point({{0., 0.5, 0.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 2, 2}}), Point({{0., 0.5, 0.5}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.lowerLeftBinEdge({{1, 2, 3}}), Point({{0., 0.5, 3.}}),
-                  1e-6);
+  CHECK_CLOSE_ABS(
+      g.lowerLeftBinEdge({{1, 2, 1}}), Point({{0., 0.5, 0.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.lowerLeftBinEdge({{1, 2, 2}}), Point({{0., 0.5, 0.5}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.lowerLeftBinEdge({{1, 2, 3}}), Point({{0., 0.5, 3.}}), 1e-6);
 
   // test some upper right-bin edges
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 1, 1}}), Point({{1., 0.5, 0.5}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 1, 2}}), Point({{1., 0.5, 3.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 1, 3}}), Point({{1., 0.5, 3.3}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 2, 1}}), Point({{1., 3., 0.5}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 2, 2}}), Point({{1., 3., 3.}}),
-                  1e-6);
-  CHECK_CLOSE_ABS(g.upperRightBinEdge({{1, 2, 3}}), Point({{1., 3., 3.3}}),
-                  1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 1, 1}}), Point({{1., 0.5, 0.5}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 1, 2}}), Point({{1., 0.5, 3.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 1, 3}}), Point({{1., 0.5, 3.3}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 2, 1}}), Point({{1., 3., 0.5}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 2, 2}}), Point({{1., 3., 3.}}), 1e-6);
+  CHECK_CLOSE_ABS(
+      g.upperRightBinEdge({{1, 2, 3}}), Point({{1., 3., 3.3}}), 1e-6);
 
   // initialize grid
   for (size_t bin = 0; bin < g.size(); ++bin) {

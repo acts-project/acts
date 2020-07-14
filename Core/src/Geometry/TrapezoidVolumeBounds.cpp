@@ -19,7 +19,8 @@
 
 Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
                                                    double maxhalex,
-                                                   double haley, double halez)
+                                                   double haley,
+                                                   double halez)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthXposY] = maxhalex;
@@ -31,9 +32,8 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
   buildSurfaceBounds();
 }
 
-Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
-                                                   double haley, double halez,
-                                                   double alpha, double beta)
+Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(
+    double minhalex, double haley, double halez, double alpha, double beta)
     : VolumeBounds() {
   m_values[eHalfLengthXnegY] = minhalex;
   m_values[eHalfLengthY] = haley;

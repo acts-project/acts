@@ -34,8 +34,19 @@ struct ParticleData {
   /// Charge in e.
   float q;
 
-  DFE_NAMEDTUPLE(ParticleData, particle_id, particle_type, process, vx, vy, vz,
-                 vt, px, py, pz, m, q);
+  DFE_NAMEDTUPLE(ParticleData,
+                 particle_id,
+                 particle_type,
+                 process,
+                 vx,
+                 vy,
+                 vz,
+                 vt,
+                 px,
+                 py,
+                 pz,
+                 m,
+                 q);
 };
 
 struct TruthHitData {
@@ -65,8 +76,23 @@ struct TruthHitData {
   // Hit index along the trajectory. Not available in the TrackML datasets.
   int32_t index = -1;
 
-  DFE_NAMEDTUPLE(TruthHitData, hit_id, particle_id, geometry_id, tx, ty, tz, tt,
-                 tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae, index);
+  DFE_NAMEDTUPLE(TruthHitData,
+                 hit_id,
+                 particle_id,
+                 geometry_id,
+                 tx,
+                 ty,
+                 tz,
+                 tt,
+                 tpx,
+                 tpy,
+                 tpz,
+                 te,
+                 deltapx,
+                 deltapy,
+                 deltapz,
+                 deltae,
+                 index);
 };
 
 struct HitData {
@@ -81,8 +107,8 @@ struct HitData {
   /// Global hit time in ns. Not available in the TrackML datasets.
   float t = 0.0f;
 
-  DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, volume_id, layer_id, module_id,
-                 x, y, z, t);
+  DFE_NAMEDTUPLE(
+      HitData, hit_id, geometry_id, volume_id, layer_id, module_id, x, y, z, t);
 };
 
 struct CellData {
@@ -121,10 +147,29 @@ struct SurfaceData {
   float pitch_u = -1;
   float pitch_v = -1;
 
-  DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, layer_id, module_id, cx,
-                 cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv, rot_yw, rot_zu,
-                 rot_zv, rot_zw, module_t, module_minhu, module_maxhu,
-                 module_hv, pitch_u, pitch_v);
+  DFE_NAMEDTUPLE(SurfaceData,
+                 geometry_id,
+                 volume_id,
+                 layer_id,
+                 module_id,
+                 cx,
+                 cy,
+                 cz,
+                 rot_xu,
+                 rot_xv,
+                 rot_xw,
+                 rot_yu,
+                 rot_yv,
+                 rot_yw,
+                 rot_zu,
+                 rot_zv,
+                 rot_zw,
+                 module_t,
+                 module_minhu,
+                 module_maxhu,
+                 module_hv,
+                 pitch_u,
+                 pitch_v);
 };
 
 }  // namespace FW

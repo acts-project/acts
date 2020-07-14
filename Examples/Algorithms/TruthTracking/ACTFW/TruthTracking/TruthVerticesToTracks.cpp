@@ -80,8 +80,10 @@ FW::TruthVerticesToTracksAlgorithm::execute(
           particle.absMomentum() * particle.unitDirection();
 
       // Define start track params
-      Acts::CurvilinearParameters start(std::nullopt, particle.position(),
-                                        ptclMom, particle.charge(),
+      Acts::CurvilinearParameters start(std::nullopt,
+                                        particle.position(),
+                                        ptclMom,
+                                        particle.charge(),
                                         particle.time());
       // Run propagator
       auto result = propagator.propagate(start, *perigeeSurface, pOptions);

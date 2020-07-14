@@ -110,12 +110,12 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
 
   // Check the value
   // in rz case material is phi symmetric (check radius)
-  CHECK_CLOSE_ABS(value0_rz.classificationNumbers(),
-                  mat0_rz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value1_rz.classificationNumbers(),
-                  mat1_rz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value2_rz.classificationNumbers(),
-                  mat2_rz.classificationNumbers(), 1e-9);
+  CHECK_CLOSE_ABS(
+      value0_rz.classificationNumbers(), mat0_rz.classificationNumbers(), 1e-9);
+  CHECK_CLOSE_ABS(
+      value1_rz.classificationNumbers(), mat1_rz.classificationNumbers(), 1e-9);
+  CHECK_CLOSE_ABS(
+      value2_rz.classificationNumbers(), mat2_rz.classificationNumbers(), 1e-9);
 
   // Check if filled value is expected value in xyz
   Vector3D pos0_xyz(0., 0., 0.);
@@ -135,11 +135,14 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Check the value
   // in xyz case material is phi symmetric (check radius)
   CHECK_CLOSE_ABS(value0_xyz.classificationNumbers(),
-                  mat0_xyz.classificationNumbers(), 1e-9);
+                  mat0_xyz.classificationNumbers(),
+                  1e-9);
   CHECK_CLOSE_ABS(value1_xyz.classificationNumbers(),
-                  mat1_xyz.classificationNumbers(), 1e-9);
+                  mat1_xyz.classificationNumbers(),
+                  1e-9);
   CHECK_CLOSE_ABS(value2_xyz.classificationNumbers(),
-                  mat2_xyz.classificationNumbers(), 1e-9);
+                  mat2_xyz.classificationNumbers(),
+                  1e-9);
 }
 }  // namespace Test
 }  // namespace Acts

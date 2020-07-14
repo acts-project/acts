@@ -125,8 +125,10 @@ BOOST_AUTO_TEST_CASE(toString_test_helper) {
 BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
   {
     std::vector<std::shared_ptr<int>> vec;
-    vec = {std::make_shared<int>(5), std::make_shared<int>(9),
-           std::make_shared<int>(26), std::make_shared<int>(18473)};
+    vec = {std::make_shared<int>(5),
+           std::make_shared<int>(9),
+           std::make_shared<int>(26),
+           std::make_shared<int>(18473)};
 
     std::vector<int*> unpacked = unpack_shared_vector(vec);
 
@@ -137,15 +139,17 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
         vec[3].get(),
     };
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(unpacked.begin(), unpacked.end(), exp.begin(),
-                                  exp.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        unpacked.begin(), unpacked.end(), exp.begin(), exp.end());
   }
 
   // same for const
   {
     std::vector<std::shared_ptr<const int>> vec;
-    vec = {std::make_shared<const int>(5), std::make_shared<const int>(9),
-           std::make_shared<const int>(26), std::make_shared<const int>(18473)};
+    vec = {std::make_shared<const int>(5),
+           std::make_shared<const int>(9),
+           std::make_shared<const int>(26),
+           std::make_shared<const int>(18473)};
 
     std::vector<const int*> unpacked = unpack_shared_vector(vec);
 
@@ -156,8 +160,8 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
         vec[3].get(),
     };
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(unpacked.begin(), unpacked.end(), exp.begin(),
-                                  exp.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        unpacked.begin(), unpacked.end(), exp.begin(), exp.end());
   }
 }
 

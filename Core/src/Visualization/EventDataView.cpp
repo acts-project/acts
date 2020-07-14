@@ -10,14 +10,21 @@
 
 void
 Acts::EventDataView::drawCovarianceCartesian(
-    IVisualization& helper, const Vector2D& lposition,
-    const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
-    double locErrorScale, const ViewConfig& viewConfig) {
+    IVisualization& helper,
+    const Vector2D& lposition,
+    const ActsSymMatrixD<2>& covariance,
+    const Transform3D& transform,
+    double locErrorScale,
+    const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
-  std::vector<Vector3D> ellipse = createEllipse(
-      lambda0 * locErrorScale, lambda1 * locErrorScale, theta,
-      viewConfig.nSegments, viewConfig.offset, lposition, transform);
+  std::vector<Vector3D> ellipse = createEllipse(lambda0 * locErrorScale,
+                                                lambda1 * locErrorScale,
+                                                theta,
+                                                viewConfig.nSegments,
+                                                viewConfig.offset,
+                                                lposition,
+                                                transform);
 
   ellipse.push_back(transform *
                     Vector3D(lposition.x(), lposition.y(), viewConfig.offset));
@@ -27,10 +34,13 @@ Acts::EventDataView::drawCovarianceCartesian(
 }
 
 void
-Acts::EventDataView::drawCovarianceAngular(
-    IVisualization& helper, const Vector3D& position, const Vector3D& direction,
-    const ActsSymMatrixD<2>& covariance, double directionScale,
-    double angularErrorScale, const ViewConfig& viewConfig) {
+Acts::EventDataView::drawCovarianceAngular(IVisualization& helper,
+                                           const Vector3D& position,
+                                           const Vector3D& direction,
+                                           const ActsSymMatrixD<2>& covariance,
+                                           double directionScale,
+                                           double angularErrorScale,
+                                           const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 
   // Anker point
@@ -46,8 +56,12 @@ Acts::EventDataView::drawCovarianceAngular(
   // Now generate the ellipse points
   std::vector<Vector3D> ellipse =
       createEllipse(angularErrorScale * directionScale * tan(lambda0),
-                    angularErrorScale * directionScale * tan(lambda1), theta,
-                    viewConfig.nSegments, 0., {0., 0.}, eplane);
+                    angularErrorScale * directionScale * tan(lambda1),
+                    theta,
+                    viewConfig.nSegments,
+                    0.,
+                    {0., 0.},
+                    eplane);
 
   std::vector<Vector3D> coneTop = ellipse;
   coneTop.push_back(anker);

@@ -16,8 +16,11 @@
 
 Acts::DigitizationModule::DigitizationModule(
     std::shared_ptr<const Segmentation> moduleSegmentation,
-    double halfThickness, int readoutDirection, double lorentzAngle,
-    double energyThreshold, bool analogue)
+    double halfThickness,
+    int readoutDirection,
+    double lorentzAngle,
+    double energyThreshold,
+    bool analogue)
     :
 
       m_halfThickness(halfThickness),
@@ -30,9 +33,12 @@ Acts::DigitizationModule::DigitizationModule(
       m_boundarySurfaces(),
       m_segmentationSurfacesX(),
       m_segmentationSurfacesY() {
-  m_segmentation->createSegmentationSurfaces(
-      m_boundarySurfaces, m_segmentationSurfacesX, m_segmentationSurfacesY,
-      halfThickness, readoutDirection, lorentzAngle);
+  m_segmentation->createSegmentationSurfaces(m_boundarySurfaces,
+                                             m_segmentationSurfacesX,
+                                             m_segmentationSurfacesY,
+                                             halfThickness,
+                                             readoutDirection,
+                                             lorentzAngle);
 }
 
 const Acts::SurfacePtrVector

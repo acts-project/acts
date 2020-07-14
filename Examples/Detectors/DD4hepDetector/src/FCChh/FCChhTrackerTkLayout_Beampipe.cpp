@@ -25,7 +25,8 @@ create_element(dd4hep::Detector& lcdd, xml_h e, dd4hep::SensitiveDetector) {
   beamtube.addExtension<Acts::ActsExtension>(detvolume);
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.z());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.material(x_det_dim.attr<std::string>("material")));
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
   // Place Volume

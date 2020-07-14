@@ -58,7 +58,10 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param rmax The outer radius of the overall shape
   /// @param hlZ The longer halflength of the shape
   /// @param hlZc The cutout halflength of the shape
-  CutoutCylinderVolumeBounds(double rmin, double rmed, double rmax, double hlZ,
+  CutoutCylinderVolumeBounds(double rmin,
+                             double rmed,
+                             double rmax,
+                             double hlZ,
                              double hlZc) noexcept(false)
       : m_values({rmin, rmed, rmax, hlZ, hlZc}) {
     checkConsistency();

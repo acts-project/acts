@@ -24,12 +24,15 @@
 namespace po = boost::program_options;
 
 using InterpolatedMapper2D = Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2D,
+                       Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>;
 
-using InterpolatedMapper3D = Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
+using InterpolatedMapper3D = Acts::InterpolatedBFieldMapper<
+    Acts::detail::Grid<Acts::Vector3D,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis,
+                       Acts::detail::EquidistantAxis>>;
 
 using InterpolatedBFieldMap2D =
     Acts::InterpolatedBFieldMap<InterpolatedMapper2D>;
@@ -43,30 +46,37 @@ namespace Options {
 // common bfield options, with a bf prefix
 void
 addBFieldOptions(boost::program_options::options_description& opt) {
-  opt.add_options()("bf-map", po::value<std::string>()->default_value(""),
+  opt.add_options()("bf-map",
+                    po::value<std::string>()->default_value(""),
                     "Set this string to point to the bfield source file."
                     "That can either be a '.txt', a '.csv' or a '.root' file. "
                     "Omit for a constant magnetic field.")(
-      "bf-name", po::value<std::string>()->default_value("bField"),
+      "bf-name",
+      po::value<std::string>()->default_value("bField"),
       "In case your field map file is given in root format, please specify "
       "the "
       "name of the TTree.")(
-      "bf-gridpoints", po::value<size_t>()->default_value(100000),
+      "bf-gridpoints",
+      po::value<size_t>()->default_value(100000),
       "Estimate of number of grid points, "
       "needed for allocation, only for txt and csv files.")(
-      "bf-lscalor", po::value<double>()->default_value(1.),
+      "bf-lscalor",
+      po::value<double>()->default_value(1.),
       "The default unit for the grid "
       "points is mm. In case the grid points of your field map has another "
       "unit, please set  the scalor to mm.")(
-      "bf-bscalor", po::value<double>()->default_value(1.),
+      "bf-bscalor",
+      po::value<double>()->default_value(1.),
       "The default unit for the magnetic field values is Tesla. In case the "
       "grid points of your field map has another unit, please set  the "
       "scalor "
       "to [T].")(
-      "bf-rz", po::value<bool>()->default_value(false),
+      "bf-rz",
+      po::value<bool>()->default_value(false),
       "Please set this flag to true, if your grid points and your "
       "magnetic field values are given in 'rz'. The default is 'xyz'.")(
-      "bf-foctant", po::value<bool>()->default_value(false),
+      "bf-foctant",
+      po::value<bool>()->default_value(false),
       "Please set this flag to true, if your field map is only given for the "
       "first octant/quadrant and should be symmetrically created for all "
       "other "
@@ -77,7 +87,8 @@ addBFieldOptions(boost::program_options::options_description& opt) {
       "field will be created automatically. The values can be set with this "
       "options. Please hand over the coordinates in cartesian coordinates: "
       "{Bx,By,Bz} in Tesla.")(
-      "bf-context-scalable", po::value<bool>()->default_value(false),
+      "bf-context-scalable",
+      po::value<bool>()->default_value(false),
       "This is for testing the event dependent magnetic field scaling.");
 }
 
@@ -150,7 +161,9 @@ readBField(const boost::program_options::variables_map& vm) {
             return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
           },
           vm["bf-map"].template as<std::string>(),
-          vm["bf-name"].template as<std::string>(), lengthUnit, BFieldUnit,
+          vm["bf-name"].template as<std::string>(),
+          lengthUnit,
+          BFieldUnit,
           vm["bf-foctant"].template as<bool>());
 
       // create field mapping
@@ -166,7 +179,9 @@ readBField(const boost::program_options::variables_map& vm) {
                     binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
           },
           vm["bf-map"].template as<std::string>(),
-          vm["bf-name"].template as<std::string>(), lengthUnit, BFieldUnit,
+          vm["bf-name"].template as<std::string>(),
+          lengthUnit,
+          BFieldUnit,
           vm["bf-foctant"].template as<bool>());
 
       // create field mapping
@@ -181,7 +196,9 @@ readBField(const boost::program_options::variables_map& vm) {
           [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
             return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
           },
-          vm["bf-map"].template as<std::string>(), lengthUnit, BFieldUnit,
+          vm["bf-map"].template as<std::string>(),
+          lengthUnit,
+          BFieldUnit,
           vm["bf-gridpoints"].template as<size_t>(),
           vm["bf-foctant"].template as<bool>());
 
@@ -197,7 +214,9 @@ readBField(const boost::program_options::variables_map& vm) {
             return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                     binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
           },
-          vm["bf-map"].template as<std::string>(), lengthUnit, BFieldUnit,
+          vm["bf-map"].template as<std::string>(),
+          lengthUnit,
+          BFieldUnit,
           vm["bf-gridpoints"].template as<size_t>(),
           vm["bf-foctant"].template as<bool>());
 

@@ -54,8 +54,10 @@ class DiscSurface : public Surface {
   /// @param rmax The outer radius of the disc surface
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
-  DiscSurface(std::shared_ptr<const Transform3D> htrans, double rmin,
-              double rmax, double hphisec = M_PI);
+  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+              double rmin,
+              double rmax,
+              double hphisec = M_PI);
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -69,8 +71,12 @@ class DiscSurface : public Surface {
   /// @param minR The outer radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
-  DiscSurface(std::shared_ptr<const Transform3D> htrans, double minhalfx,
-              double maxhalfx, double maxR, double minR, double avephi = 0.,
+  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+              double minhalfx,
+              double maxhalfx,
+              double maxR,
+              double minR,
+              double avephi = 0.,
               double stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
@@ -97,7 +103,8 @@ class DiscSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
+  DiscSurface(const GeometryContext& gctx,
+              const DiscSurface& other,
               const Transform3D& transf);
 
  public:
@@ -155,8 +162,10 @@ class DiscSurface : public Surface {
   ///
   /// @note the momentum is ignored for Disc surfaces in this calculateion
   void
-  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                const Vector3D& momentum, Vector3D& position) const final;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D& lposition,
+                const Vector3D& momentum,
+                Vector3D& position) const final;
 
   /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
@@ -171,8 +180,10 @@ class DiscSurface : public Surface {
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                const Vector3D& momentum, Vector2D& lposition) const final;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D& position,
+                const Vector3D& momentum,
+                Vector2D& lposition) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
@@ -221,7 +232,8 @@ class DiscSurface : public Surface {
   ///
   /// @return value is a local polar
   const Vector2D
-  globalToLocalCartesian(const GeometryContext& gctx, const Vector3D& position,
+  globalToLocalCartesian(const GeometryContext& gctx,
+                         const Vector3D& position,
                          double tol = 0.) const;
 
   /// Initialize the jacobian from local to global
@@ -236,8 +248,10 @@ class DiscSurface : public Surface {
   ///
   /// @param pars The paranmeters vector
   void
-  initJacobianToGlobal(const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
-                       const Vector3D& position, const Vector3D& direction,
+  initJacobianToGlobal(const GeometryContext& gctx,
+                       BoundToFreeMatrix& jacobian,
+                       const Vector3D& position,
+                       const Vector3D& direction,
                        const BoundVector& pars) const final;
 
   /// Initialize the jacobian from global to local
@@ -252,7 +266,8 @@ class DiscSurface : public Surface {
   ///
   /// @return the transposed reference frame (avoids recalculation)
   const RotationMatrix3D
-  initJacobianToLocal(const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
+  initJacobianToLocal(const GeometryContext& gctx,
+                      FreeToBoundMatrix& jacobian,
                       const Vector3D& position,
                       const Vector3D& direction) const final;
 
@@ -263,7 +278,8 @@ class DiscSurface : public Surface {
   /// @param direction The global momentum at the starting point
   /// @return The correction factor due to incident
   double
-  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& direction) const final;
 
   /// @brief Straight line intersection schema
@@ -292,7 +308,8 @@ class DiscSurface : public Surface {
   ///
   /// @return is the surface intersection object
   Intersection
-  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck = false) const final;
 

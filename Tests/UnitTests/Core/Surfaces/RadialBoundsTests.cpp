@@ -93,9 +93,11 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   Vector2D origin(0., 0.);
   Vector2D outside(30., 0.);
   Vector2D inSurface(2., 0.0);
-  CHECK_CLOSE_REL(radialBoundsObject.distanceToBoundary(origin), 1.,
+  CHECK_CLOSE_REL(radialBoundsObject.distanceToBoundary(origin),
+                  1.,
                   1e-6);  // makes sense
-  CHECK_CLOSE_REL(radialBoundsObject.distanceToBoundary(outside), 25.,
+  CHECK_CLOSE_REL(radialBoundsObject.distanceToBoundary(outside),
+                  25.,
                   1e-6);  // ok
   //
   /// Test dump

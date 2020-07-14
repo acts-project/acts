@@ -48,9 +48,10 @@ namespace concept {
     static_assert(default_constructible,
                   "Source link must be default-constructible");
 
-    constexpr static bool value =
-        concept ::require<comparison_works, surface_method_exists, copyable,
-                          default_constructible>;
+    constexpr static bool value = concept ::require<comparison_works,
+                                                    surface_method_exists,
+                                                    copyable,
+                                                    default_constructible>;
   };
   }  // namespace detail_slc
 }  // namespace concept

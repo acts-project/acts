@@ -210,12 +210,16 @@ class AtlasSeedfinder {
   newSpacePoint(SpacePoint* const&);
 
   void
-  newOneSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
-             SPForSeed<SpacePoint>*&, float, float);
+  newOneSeed(SPForSeed<SpacePoint>*&,
+             SPForSeed<SpacePoint>*&,
+             SPForSeed<SpacePoint>*&,
+             float,
+             float);
 
   void
   newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*&,
-                                     SPForSeed<SpacePoint>*&, float);
+                                     SPForSeed<SpacePoint>*&,
+                                     float);
 
   void
   fillSeeds();
@@ -229,7 +233,9 @@ class AtlasSeedfinder {
   production3Sp(typename std::list<SPForSeed<SpacePoint>*>::iterator*,
                 typename std::list<SPForSeed<SpacePoint>*>::iterator*,
                 typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                typename std::list<SPForSeed<SpacePoint>*>::iterator*, int, int,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                int,
+                int,
                 int&);
 
   void

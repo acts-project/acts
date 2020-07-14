@@ -59,14 +59,16 @@ class Seedfinder {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>>
-  createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs,
+  createSeedsForGroup(sp_range_t bottomSPs,
+                      sp_range_t middleSPs,
                       sp_range_t topSPs) const;
 
  private:
   void
   transformCoordinates(
       std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-      const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+      const InternalSpacePoint<external_spacepoint_t>& spM,
+      bool bottom,
       std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;

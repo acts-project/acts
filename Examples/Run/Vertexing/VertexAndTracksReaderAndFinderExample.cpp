@@ -29,7 +29,8 @@ main(int argc, char* argv[]) {
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addOutputOptions(desc);
-  desc.add_options()("input", value<std::string>()->default_value(""),
+  desc.add_options()("input",
+                     value<std::string>()->default_value(""),
                      "Input root file to read.");
   auto vm = Options::parse(desc, argc, argv);
 

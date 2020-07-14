@@ -116,7 +116,8 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
@@ -139,8 +140,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
-                                              stepSize, tolerance);
+  EigenStepper<ConstantBField>::State esState(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_TEST(esState.jacToGlobal == BoundToFreeMatrix::Zero());
@@ -161,15 +162,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<ConstantBField>::State(
+      tgContext, mfContext, ncp, ndir, stepSize, tolerance);
   BOOST_TEST(esState.q == 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<ConstantBField>::State(
+      tgContext, mfContext, ncp, ndir, stepSize, tolerance);
   BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(esState.covTransport);
   BOOST_TEST(esState.cov == cov);
@@ -193,8 +194,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CurvilinearParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
-  EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
-                                              stepSize, tolerance);
+  EigenStepper<ConstantBField>::State esState(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
@@ -226,8 +227,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_TEST(curvPars.covariance().has_value());
   BOOST_TEST(*curvPars.covariance() != cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_COVARIANCE(
+      std::get<1>(curvState), BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
 
   // Test the update method
@@ -278,8 +279,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
   BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
-  esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
-                                                stepSize, tolerance);
+  esState = EigenStepper<ConstantBField>::State(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface = Surface::makeShared<PlaneSurface>(
@@ -290,15 +291,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the step size modification in the context of a surface
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, esState.pos,
-                               esState.navDir * esState.dir, false),
+      targetSurface->intersect(
+          esState.geoContext, esState.pos, esState.navDir * esState.dir, false),
       false);
   BOOST_TEST(esState.stepSize == 2.);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, esState.pos,
-                               esState.navDir * esState.dir, false),
+      targetSurface->intersect(
+          esState.geoContext, esState.pos, esState.navDir * esState.dir, false),
       true);
   BOOST_TEST(esState.stepSize == 2.);
 
@@ -311,13 +312,18 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_TEST(boundPars.covariance().has_value());
   BOOST_TEST(*boundPars.covariance() != cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_COVARIANCE(
+      std::get<1>(boundState), BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Update in context of a surface
-  BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
-                           -1. * charge, 2. * time, targetSurface);
+  BoundParameters bpTarget(tgContext,
+                           2. * cov,
+                           2. * pos,
+                           2. * mom,
+                           -1. * charge,
+                           2. * time,
+                           targetSurface);
   Vector3D dir = bpTarget.momentum().normalized();
   FreeVector freeParams;
   freeParams[eFreePos0] = bpTarget.position()[eX];
@@ -353,8 +359,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Produce some errors
   NullBField nBfield;
   EigenStepper<NullBField> nes(nBfield);
-  EigenStepper<NullBField>::State nesState(tgContext, mfContext, cp, ndir,
-                                           stepSize, tolerance);
+  EigenStepper<NullBField>::State nesState(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
   PropState nps(nesState);
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
@@ -412,8 +418,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+      cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -525,8 +531,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+      cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -697,8 +703,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+      cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -973,8 +979,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+      cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,

@@ -27,7 +27,8 @@ class FittingAlgorithm final : public BareAlgorithm {
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
   using FitterFunction = std::function<FitterResult(
-      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const std::vector<SimSourceLink>&,
+      const TrackParameters&,
       const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>&)>;
 
   /// Create the fitter function implementation.
@@ -37,7 +38,8 @@ class FittingAlgorithm final : public BareAlgorithm {
   static FitterFunction
   makeFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      Options::BFieldVariant magneticField, Acts::Logging::Level lvl);
+      Options::BFieldVariant magneticField,
+      Acts::Logging::Level lvl);
 
   struct Config {
     /// Input source links collection.

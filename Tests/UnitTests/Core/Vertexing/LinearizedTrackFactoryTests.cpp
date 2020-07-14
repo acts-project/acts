@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-    tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                     perigeeSurface));
+    tracks.push_back(BoundParameters(
+        geoContext, std::move(covMat), paramVec, perigeeSurface));
   }
 
   Linearizer::Config ltConfig(bField, propagator);
@@ -135,11 +135,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
       ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
-    LinearizedTrack linTrack =
-        linFactory
-            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            magFieldContext, state)
-            .value();
+    LinearizedTrack linTrack = linFactory
+                                   .linearizeTrack(parameters,
+                                                   SpacePointVector::Zero(),
+                                                   geoContext,
+                                                   magFieldContext,
+                                                   state)
+                                   .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
@@ -209,8 +211,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-    tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                     perigeeSurface));
+    tracks.push_back(BoundParameters(
+        geoContext, std::move(covMat), paramVec, perigeeSurface));
   }
 
   // Set up helical track linearizer for the case of a non-existing
@@ -227,11 +229,13 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
       ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
-    LinearizedTrack linTrack =
-        linFactory
-            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
-                            magFieldContext, state)
-            .value();
+    LinearizedTrack linTrack = linFactory
+                                   .linearizeTrack(parameters,
+                                                   SpacePointVector::Zero(),
+                                                   geoContext,
+                                                   magFieldContext,
+                                                   state)
+                                   .value();
 
     BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
     BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);

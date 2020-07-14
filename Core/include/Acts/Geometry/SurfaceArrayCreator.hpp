@@ -115,8 +115,10 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnCylinder(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      size_t binsPhi,
+      size_t binsZ,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -140,7 +142,8 @@ class SurfaceArrayCreator {
   surfaceArrayOnCylinder(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces,
-      BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
+      BinningType bTypePhi = equidistant,
+      BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
@@ -163,8 +166,10 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      size_t binsR,
+      size_t binsPhi,
+      std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -190,7 +195,8 @@ class SurfaceArrayCreator {
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnDisc(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
@@ -218,8 +224,10 @@ class SurfaceArrayCreator {
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(
       const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-      size_t bins2, BinningValue bValue,
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      size_t bins1,
+      size_t bins2,
+      BinningValue bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
@@ -230,8 +238,10 @@ class SurfaceArrayCreator {
   /// @param a first surface for checking
   /// @param b second surface for checking
   static bool
-  isSurfaceEquivalent(const GeometryContext& gctx, BinningValue bValue,
-                      const Surface* a, const Surface* b) {
+  isSurfaceEquivalent(const GeometryContext& gctx,
+                      BinningValue bValue,
+                      const Surface* a,
+                      const Surface* b) {
     using namespace UnitLiterals;
     using VectorHelpers::perp;
 
@@ -317,7 +327,8 @@ class SurfaceArrayCreator {
   ProtoAxis
   createVariableAxis(const GeometryContext& gctx,
                      const std::vector<const Surface*>& surfaces,
-                     BinningValue bValue, ProtoLayer protoLayer,
+                     BinningValue bValue,
+                     ProtoLayer protoLayer,
                      Transform3D& transform) const;
 
   /// SurfaceArrayCreator internal method
@@ -344,8 +355,10 @@ class SurfaceArrayCreator {
   ProtoAxis
   createEquidistantAxis(const GeometryContext& gctx,
                         const std::vector<const Surface*>& surfaces,
-                        BinningValue bValue, ProtoLayer protoLayer,
-                        Transform3D& transform, size_t nBins = 0) const;
+                        BinningValue bValue,
+                        ProtoLayer protoLayer,
+                        Transform3D& transform,
+                        size_t nBins = 0) const;
 
   /// SurfaceArrayCreator internal method
   /// @brief Creates a SurfaceGridLookup instance within an any
@@ -359,10 +372,14 @@ class SurfaceArrayCreator {
   /// @param localToGlobal transform callable
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
-            typename F1, typename F2>
+  template <detail::AxisBoundaryType bdtA,
+            detail::AxisBoundaryType bdtB,
+            typename F1,
+            typename F2>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(F1 globalToLocal, F2 localToGlobal, ProtoAxis pAxisA,
+  makeSurfaceGridLookup2D(F1 globalToLocal,
+                          F2 localToGlobal,
+                          ProtoAxis pAxisA,
                           ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
@@ -451,7 +468,8 @@ class SurfaceArrayCreator {
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates
   std::vector<Acts::Vector3D>
-  makeGlobalVertices(const GeometryContext& gctx, const Acts::Surface& surface,
+  makeGlobalVertices(const GeometryContext& gctx,
+                     const Acts::Surface& surface,
                      const std::vector<Acts::Vector2D>& locVertices) const;
 };
 

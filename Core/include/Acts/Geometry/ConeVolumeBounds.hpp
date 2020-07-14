@@ -54,8 +54,12 @@ class ConeVolumeBounds : public VolumeBounds {
   /// @param halflengthZ The minimum z value of the inner and outer cones
   /// @param avergePhi The phi orientation of the sector
   /// @param halfPhiSector The opening angle phi sector
-  ConeVolumeBounds(double innerAlpha, double innerTipZ, double outerAlpha,
-                   double outerOffsetZ, double halflengthZ, double averagePhi,
+  ConeVolumeBounds(double innerAlpha,
+                   double innerTipZ,
+                   double outerAlpha,
+                   double outerOffsetZ,
+                   double halflengthZ,
+                   double averagePhi,
                    double halfPhiSector) noexcept(false);
 
   /// Constructor - for general cylidner-cone setups
@@ -69,8 +73,11 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @note depending on cylinderR > coneR it is constructing a cone with
   /// cylindrical cutout or a cylinder with conical cutout
-  ConeVolumeBounds(double cylinderR, double alpha, double offsetZ,
-                   double halflengthZ, double averagePhi,
+  ConeVolumeBounds(double cylinderR,
+                   double alpha,
+                   double offsetZ,
+                   double halflengthZ,
+                   double averagePhi,
                    double halfPhiSector) noexcept(false);
 
   /// Constructor - from a fixed size array

@@ -31,7 +31,9 @@ class CpuMatrix {
     }
   }
 
-  CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<var_t>* cuMat,
+  CpuMatrix(size_t nRows,
+            size_t nCols,
+            CudaMatrix<var_t>* cuMat,
             bool pinned = 0) {
     m_setSize(nRows, nCols);
     m_pinned = pinned;
@@ -40,7 +42,9 @@ class CpuMatrix {
     } else if (pinned == 1) {
       cudaMallocHost(&m_hostPtr, m_nRows * m_nCols * sizeof(var_t));
     }
-    cudaMemcpy(m_hostPtr, cuMat->get(0, 0), m_size * sizeof(var_t),
+    cudaMemcpy(m_hostPtr,
+               cuMat->get(0, 0),
+               m_size * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
@@ -66,14 +70,19 @@ class CpuMatrix {
 
   void
   copyD2H(var_t* devPtr, size_t len, size_t offset) {
-    cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
+    cudaMemcpy(m_hostPtr + offset,
+               devPtr,
+               len * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
   void
   copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
-    cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
-                    cudaMemcpyDeviceToHost, *stream);
+    cudaMemcpyAsync(m_hostPtr + offset,
+                    devPtr,
+                    len * sizeof(var_t),
+                    cudaMemcpyDeviceToHost,
+                    *stream);
   }
 
   void

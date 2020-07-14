@@ -129,15 +129,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(geoContext, std::move(covMat), paramVec,
-                           perigeeSurface);
+    BoundParameters params(
+        geoContext, std::move(covMat), paramVec, perigeeSurface);
 
     // Linearized state of the track
-    LinearizedTrack linTrack =
-        linearizer
-            .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
-                            magFieldContext, linState)
-            .value();
+    LinearizedTrack linTrack = linearizer
+                                   .linearizeTrack(params,
+                                                   SpacePointVector::Zero(),
+                                                   geoContext,
+                                                   magFieldContext,
+                                                   linState)
+                                   .value();
 
     // Create TrackAtVertex
     TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
@@ -153,8 +155,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundParameters>(geoContext, trkAtVtx,
-                                                      vtx);
+    KalmanVertexTrackUpdater::update<BoundParameters>(
+        geoContext, trkAtVtx, vtx);
 
     // The old distance
     double oldDistance =
@@ -164,8 +166,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     // The new distance after update
     double newDistance =
         ip3dEst
-            .calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
-                                 state)
+            .calculate3dDistance(
+                geoContext, trkAtVtx.fittedParams, vtxPos, state)
             .value();
     if (debug) {
       std::cout << "Old distance: " << oldDistance << std::endl;

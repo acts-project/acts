@@ -67,11 +67,11 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
 
     std::vector<std::shared_ptr<const Surface>> sharedSurfaces = {
         atNegX, atNegY, atPosX, atPosY};
-    surfaceStore.insert(surfaceStore.begin(), sharedSurfaces.begin(),
-                        sharedSurfaces.end());
+    surfaceStore.insert(
+        surfaceStore.begin(), sharedSurfaces.begin(), sharedSurfaces.end());
     if (not shared) {
-      std::vector<const Surface*> surfaces = {atNegX.get(), atNegY.get(),
-                                              atPosX.get(), atPosY.get()};
+      std::vector<const Surface*> surfaces = {
+          atNegX.get(), atNegY.get(), atPosX.get(), atPosY.get()};
 
       return ProtoLayer(tgContext, surfaces);
     }

@@ -44,7 +44,8 @@ namespace TGeo {
 /// @param vm is the variable map from the options
 template <typename variable_maps_t>
 std::shared_ptr<const Acts::TrackingGeometry>
-buildTGeoDetector(variable_maps_t& vm, const Acts::GeometryContext& context,
+buildTGeoDetector(variable_maps_t& vm,
+                  const Acts::GeometryContext& context,
                   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
                       detElementStore) {
   Acts::Logging::Level surfaceLogLevel =
@@ -142,9 +143,10 @@ buildTGeoDetector(variable_maps_t& vm, const Acts::GeometryContext& context,
       sacConfigLB.surfaceMatcher = lbc.surfaceBinMatcher;
       auto surfaceArrayCreatorLB =
           std::make_shared<const Acts::SurfaceArrayCreator>(
-              sacConfigLB, Acts::getDefaultLogger(
-                               lbc.configurationName + "SurfaceArrayCreator",
-                               surfaceLogLevel));
+              sacConfigLB,
+              Acts::getDefaultLogger(
+                  lbc.configurationName + "SurfaceArrayCreator",
+                  surfaceLogLevel));
       // configure the layer creator that uses the surface array creator
       Acts::LayerCreator::Config lcConfigLB;
       lcConfigLB.surfaceArrayCreator = surfaceArrayCreatorLB;
@@ -168,8 +170,9 @@ buildTGeoDetector(variable_maps_t& vm, const Acts::GeometryContext& context,
         (protoLayerHelperLB != nullptr) ? protoLayerHelperLB : protoLayerHelper;
 
     auto layerBuilder = std::make_shared<const Acts::TGeoLayerBuilder>(
-        lbc, Acts::getDefaultLogger(lbc.configurationName + "LayerBuilder",
-                                    layerLogLevel));
+        lbc,
+        Acts::getDefaultLogger(lbc.configurationName + "LayerBuilder",
+                               layerLogLevel));
     // remember the layer builder
     tgLayerBuilders.push_back(layerBuilder);
 
@@ -226,8 +229,8 @@ buildTGeoDetector(variable_maps_t& vm, const Acts::GeometryContext& context,
   // collect the detector element store
   for (auto& lBuilder : tgLayerBuilders) {
     auto detElements = lBuilder->detectorElements();
-    detElementStore.insert(detElementStore.begin(), detElements.begin(),
-                           detElements.end());
+    detElementStore.insert(
+        detElementStore.begin(), detElements.begin(), detElements.end());
   }
 
   /// return the tracking geometry

@@ -39,8 +39,8 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector) {
     xml_comp_t VolDet = tubIt;
     dd4hep::Tube VolShape(VolDet.rmin(), VolDet.rmax(), VolDet.dz());
     std::string VolName = dd4hep::xml::_toString(VolDet.nameStr());
-    dd4hep::Volume Volume(VolName, VolShape,
-                          oddd.material(VolDet.materialStr()));
+    dd4hep::Volume Volume(
+        VolName, VolShape, oddd.material(VolDet.materialStr()));
     // Create volume detector element
     dd4hep::DetElement vol_det(CaloBarrel, VolName, VolIdx);
 

@@ -52,8 +52,11 @@ FW::TrackFindingAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
 
     // Set the CombinatorialKalmanFilter options
     FW::TrackFindingAlgorithm::CKFOptions ckfOptions(
-        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        m_cfg.sourcelinkSelectorCfg, &(*pSurface));
+        ctx.geoContext,
+        ctx.magFieldContext,
+        ctx.calibContext,
+        m_cfg.sourcelinkSelectorCfg,
+        &(*pSurface));
 
     ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
     auto result = m_cfg.findTracks(sourceLinks, initialParams, ckfOptions);

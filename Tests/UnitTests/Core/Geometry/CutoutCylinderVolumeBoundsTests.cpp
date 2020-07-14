@@ -42,8 +42,8 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
   CutoutCylinderVolumeBounds original(5, 10, 15, 30, 25);
   std::array<double, CutoutCylinderVolumeBounds::eSize> values;
   std::vector<double> valvector = original.values();
-  std::copy_n(valvector.begin(), CutoutCylinderVolumeBounds::eSize,
-              values.begin());
+  std::copy_n(
+      valvector.begin(), CutoutCylinderVolumeBounds::eSize, values.begin());
   CutoutCylinderVolumeBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
 }

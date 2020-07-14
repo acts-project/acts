@@ -48,7 +48,8 @@ template <typename propagator_t>
 template <typename parameters_t>
 PropagationOutput
 PropagationAlgorithm<propagator_t>::executeTest(
-    const AlgorithmContext& context, const parameters_t& startParameters,
+    const AlgorithmContext& context,
+    const parameters_t& startParameters,
     double pathLength) const {
   ACTS_DEBUG("Test propagation/extrapolation starts");
 
@@ -171,8 +172,8 @@ PropagationAlgorithm<propagator_t>::execute(
     PropagationOutput pOutput;
     if (charge) {
       // charged extrapolation - with hit recording
-      Acts::BoundParameters startParameters(context.geoContext, std::move(cov),
-                                            std::move(pars), surface);
+      Acts::BoundParameters startParameters(
+          context.geoContext, std::move(cov), std::move(pars), surface);
       sPosition = startParameters.position();
       sMomentum = startParameters.momentum();
       pOutput = executeTest(context, startParameters);

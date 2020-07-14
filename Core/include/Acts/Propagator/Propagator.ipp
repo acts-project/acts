@@ -85,7 +85,8 @@ Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
+template <typename parameters_t,
+          typename propagator_options_t,
           typename path_aborter_t>
 auto
 Acts::Propagator<S, N>::propagate(const parameters_t& start,
@@ -121,7 +122,9 @@ Acts::Propagator<S, N>::propagate(const parameters_t& start,
   StateType state(start, eOptions);
 
   static_assert(
-      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
+      concept ::has_method<const S,
+                           Result<double>,
+                           concept ::Stepper::step_t,
                            StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
@@ -154,14 +157,17 @@ Acts::Propagator<S, N>::propagate(const parameters_t& start,
 }
 
 template <typename S, typename N>
-template <typename parameters_t, typename propagator_options_t,
-          typename target_aborter_t, typename path_aborter_t>
+template <typename parameters_t,
+          typename propagator_options_t,
+          typename target_aborter_t,
+          typename path_aborter_t>
 auto
 Acts::Propagator<S, N>::propagate(const parameters_t& start,
                                   const Surface& target,
                                   const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundParameters, typename propagator_options_t::action_list_type>> {
+        BoundParameters,
+        typename propagator_options_t::action_list_type>> {
   static_assert(ParameterConcept<parameters_t>,
                 "Parameters do not fulfill parameter concept.");
 
@@ -189,7 +195,9 @@ Acts::Propagator<S, N>::propagate(const parameters_t& start,
   state.navigation.targetSurface = &target;
 
   static_assert(
-      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
+      concept ::has_method<const S,
+                           Result<double>,
+                           concept ::Stepper::step_t,
                            StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");

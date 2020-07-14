@@ -24,7 +24,8 @@ Acts::ActsExtension::getValue(const std::string& tag,
 }
 
 void
-Acts::ActsExtension::addValue(double value, const std::string& tag,
+Acts::ActsExtension::addValue(double value,
+                              const std::string& tag,
                               const std::string& category) {
   addT(m_values, value, tag, category, 0.0);
 }

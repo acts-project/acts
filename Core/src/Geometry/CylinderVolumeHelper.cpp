@@ -47,11 +47,13 @@ Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<const Logger> newLogger) {
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const GeometryContext& gctx, const LayerVector& layers,
+    const GeometryContext& gctx,
+    const LayerVector& layers,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::shared_ptr<const VolumeBounds> volumeBounds,
     MutableTrackingVolumeVector mtvVector,
-    std::shared_ptr<const Transform3D> transform, const std::string& volumeName,
+    std::shared_ptr<const Transform3D> transform,
+    const std::string& volumeName,
     BinningType bType) const {
   // the final one to build / sensitive Volume / Bounds
   MutableTrackingVolumePtr tVolume = nullptr;
@@ -85,9 +87,16 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     BinningValue bValue = binR;
 
     // check the dimension and fill raw data
-    if (not estimateAndCheckDimension(gctx, layers, cylinderBounds, transform,
-                                      rMinRaw, rMaxRaw, zMinRaw, zMaxRaw,
-                                      bValue, bType)) {
+    if (not estimateAndCheckDimension(gctx,
+                                      layers,
+                                      cylinderBounds,
+                                      transform,
+                                      rMinRaw,
+                                      rMaxRaw,
+                                      zMinRaw,
+                                      zMaxRaw,
+                                      bValue,
+                                      bType)) {
       ACTS_WARNING(
           "[!] Problem with given dimensions - return nullptr and "
           "delete provided objects");
@@ -122,10 +131,10 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
     // create the Layer Array
     layerArray = (bValue == binR)
-                     ? m_cfg.layerArrayCreator->layerArray(gctx, layers, rMin,
-                                                           rMax, bType, bValue)
-                     : m_cfg.layerArrayCreator->layerArray(gctx, layers, zMin,
-                                                           zMax, bType, bValue);
+                     ? m_cfg.layerArrayCreator->layerArray(
+                           gctx, layers, rMin, rMax, bType, bValue)
+                     : m_cfg.layerArrayCreator->layerArray(
+                           gctx, layers, zMin, zMax, bType, bValue);
 
   }  // layers are created and done
   // make sure the ownership of the bounds is correct
@@ -134,8 +143,12 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
           ? volumeBounds
           : std::shared_ptr<const VolumeBounds>(cylinderBounds);
   // finally create the TrackingVolume
-  tVolume = TrackingVolume::create(transform, volumeBoundsFinal, volumeMaterial,
-                                   std::move(layerArray), nullptr, mtvVector,
+  tVolume = TrackingVolume::create(transform,
+                                   volumeBoundsFinal,
+                                   volumeMaterial,
+                                   std::move(layerArray),
+                                   nullptr,
+                                   mtvVector,
                                    volumeName);
   // screen output
   ACTS_VERBOSE(
@@ -147,10 +160,15 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const GeometryContext& gctx, const LayerVector& layers,
+    const GeometryContext& gctx,
+    const LayerVector& layers,
     MutableTrackingVolumeVector mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, const std::string& volumeName,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double rMin,
+    double rMax,
+    double zMin,
+    double zMax,
+    const std::string& volumeName,
     BinningType bType) const {
   // The Bounds to e created
   CylinderVolumeBounds* cBounds = nullptr;
@@ -183,17 +201,28 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
                              Translation3D(0., 0., zPosition))
                        : nullptr;
   // call to the creation method with Bounds & Translation3D
-  return createTrackingVolume(gctx, layers, volumeMaterial,
-                              VolumeBoundsPtr(cBounds), mtvVector, transform,
-                              volumeName, bType);
+  return createTrackingVolume(gctx,
+                              layers,
+                              volumeMaterial,
+                              VolumeBoundsPtr(cBounds),
+                              mtvVector,
+                              transform,
+                              volumeName,
+                              bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, unsigned int materialLayers,
-    bool cylinder, const std::string& volumeName) const {
+    const GeometryContext& gctx,
+    MutableTrackingVolumeVector& mtvVector,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double rMin,
+    double rMax,
+    double zMin,
+    double zMax,
+    unsigned int materialLayers,
+    bool cylinder,
+    const std::string& volumeName) const {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
@@ -216,18 +245,32 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   }
 
   // now call the main method
-  return createGapTrackingVolume(gctx, mtvVector, volumeMaterial, rMin, rMax,
-                                 zMin, zMax, layerPositions, cylinder,
-                                 volumeName, arbitrary);
+  return createGapTrackingVolume(gctx,
+                                 mtvVector,
+                                 volumeMaterial,
+                                 rMin,
+                                 rMax,
+                                 zMin,
+                                 zMax,
+                                 layerPositions,
+                                 cylinder,
+                                 volumeName,
+                                 arbitrary);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax,
-    const std::vector<double>& layerPositions, bool cylinder,
-    const std::string& volumeName, BinningType bType) const {
+    const GeometryContext& gctx,
+    MutableTrackingVolumeVector& mtvVector,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double rMin,
+    double rMax,
+    double zMin,
+    double zMax,
+    const std::vector<double>& layerPositions,
+    bool cylinder,
+    const std::string& volumeName,
+    BinningType bType) const {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
@@ -246,24 +289,38 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       double zMinLayer = zMin;
       double zMaxLayer = zMax;
       // create the layer
-      layers.push_back(createCylinderLayer(
-          0.5 * (zMinLayer + zMaxLayer), (*layerPropIter),
-          std::abs(0.5 * (zMaxLayer - zMinLayer)), m_cfg.passiveLayerThickness,
-          m_cfg.passiveLayerPhiBins, m_cfg.passiveLayerRzBins));
+      layers.push_back(
+          createCylinderLayer(0.5 * (zMinLayer + zMaxLayer),
+                              (*layerPropIter),
+                              std::abs(0.5 * (zMaxLayer - zMinLayer)),
+                              m_cfg.passiveLayerThickness,
+                              m_cfg.passiveLayerPhiBins,
+                              m_cfg.passiveLayerRzBins));
 
     } else {
       // take the envelopes into account
       double rMinLayer = rMin;
       double rMaxLayer = rMax;
       // create the layer
-      layers.push_back(createDiscLayer(
-          (*layerPropIter), rMinLayer, rMaxLayer, m_cfg.passiveLayerThickness,
-          m_cfg.passiveLayerPhiBins, m_cfg.passiveLayerRzBins));
+      layers.push_back(createDiscLayer((*layerPropIter),
+                                       rMinLayer,
+                                       rMaxLayer,
+                                       m_cfg.passiveLayerThickness,
+                                       m_cfg.passiveLayerPhiBins,
+                                       m_cfg.passiveLayerRzBins));
     }
   }
   // now call the createTrackingVolume() method
-  return createTrackingVolume(gctx, layers, mtvVector, volumeMaterial, rMin,
-                              rMax, zMin, zMax, volumeName, bType);
+  return createTrackingVolume(gctx,
+                              layers,
+                              mtvVector,
+                              volumeMaterial,
+                              rMin,
+                              rMax,
+                              zMin,
+                              zMax,
+                              volumeName,
+                              bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
@@ -386,13 +443,15 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     return nullptr;
   }
   // we have the bounds and the volume array, create the volume
-  std::shared_ptr<TrackingVolume> topVolume = TrackingVolume::create(
-      topVolumeTransform, VolumeBoundsPtr(topVolumeBounds), volumeArray,
-      volumeName);
+  std::shared_ptr<TrackingVolume> topVolume =
+      TrackingVolume::create(topVolumeTransform,
+                             VolumeBoundsPtr(topVolumeBounds),
+                             volumeArray,
+                             volumeName);
   // glueing section
   // --------------------------------------------------------------------------------------
-  if (not interGlueTrackingVolume(gctx, topVolume, rCase, rMin, rGlueMin, rMax,
-                                  zSep1, zSep2)) {
+  if (not interGlueTrackingVolume(
+          gctx, topVolume, rCase, rMin, rGlueMin, rMax, zSep1, zSep2)) {
     ACTS_WARNING(
         "Problem with inter-glueing of TrackingVolumes (needed) - "
         "returning 0 ");
@@ -409,11 +468,16 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
  * volume */
 bool
 Acts::CylinderVolumeHelper::estimateAndCheckDimension(
-    const GeometryContext& gctx, const LayerVector& layers,
+    const GeometryContext& gctx,
+    const LayerVector& layers,
     const CylinderVolumeBounds*& cylinderVolumeBounds,
-    std::shared_ptr<const Transform3D>& transform, double& rMinClean,
-    double& rMaxClean, double& zMinClean, double& zMaxClean,
-    BinningValue& bValue, BinningType /*unused*/) const {
+    std::shared_ptr<const Transform3D>& transform,
+    double& rMinClean,
+    double& rMaxClean,
+    double& zMinClean,
+    double& zMaxClean,
+    BinningValue& bValue,
+    BinningType /*unused*/) const {
   // some verbose output
 
   ACTS_VERBOSE("Parsing the " << layers.size()
@@ -568,8 +632,13 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
 
 bool
 Acts::CylinderVolumeHelper::interGlueTrackingVolume(
-    const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tVolume,
-    bool rBinned, double rMin, double rGlueMin, double rMax, double zMin,
+    const GeometryContext& gctx,
+    const std::shared_ptr<TrackingVolume>& tVolume,
+    bool rBinned,
+    double rMin,
+    double rGlueMin,
+    double rMax,
+    double zMin,
     double zMax) const {
   ACTS_VERBOSE("Glue contained TrackingVolumes of container '"
                << tVolume->volumeName() << "'.");
@@ -626,8 +695,16 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*tVolIter);
           std::shared_ptr<TrackingVolume> tVol2 =
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
-          glueTrackingVolumes(gctx, tVol1, tubeOuterCover, tVol2,
-                              tubeInnerCover, rMin, rGlueMin, rMax, zMin, zMax);
+          glueTrackingVolumes(gctx,
+                              tVol1,
+                              tubeOuterCover,
+                              tVol2,
+                              tubeInnerCover,
+                              rMin,
+                              rGlueMin,
+                              rMax,
+                              zMin,
+                              zMax);
         }
       }
     } else {
@@ -652,8 +729,16 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*tVolIter);
           std::shared_ptr<TrackingVolume> tVol2 =
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
-          glueTrackingVolumes(gctx, tVol1, positiveFaceXY, tVol2,
-                              negativeFaceXY, rMin, rGlueMin, rMax, zMin, zMax);
+          glueTrackingVolumes(gctx,
+                              tVol1,
+                              positiveFaceXY,
+                              tVol2,
+                              negativeFaceXY,
+                              rMin,
+                              rGlueMin,
+                              rMax,
+                              zMin,
+                              zMax);
         }
       }
     }
@@ -697,22 +782,26 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     ACTS_VERBOSE("[GV] Register " << glueVolumesNegativeFace.size()
                                   << " volumes at face negativeFaceXY:");
     for (tVolIter = glueVolumesNegativeFace.begin();
-         tVolIter != glueVolumesNegativeFace.end(); ++tVolIter)
+         tVolIter != glueVolumesNegativeFace.end();
+         ++tVolIter)
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesPositiveFace.size()
                                   << " volumes at face positiveFaceXY: ");
     for (tVolIter = glueVolumesPositiveFace.begin();
-         tVolIter != glueVolumesPositiveFace.end(); ++tVolIter)
+         tVolIter != glueVolumesPositiveFace.end();
+         ++tVolIter)
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesInnerTube.size()
                                   << " volumes at face tubeInnerCover: ");
     for (tVolIter = glueVolumesInnerTube.begin();
-         tVolIter != glueVolumesInnerTube.end(); ++tVolIter)
+         tVolIter != glueVolumesInnerTube.end();
+         ++tVolIter)
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesOuterTube.size()
                                   << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
-         tVolIter != glueVolumesOuterTube.end(); ++tVolIter)
+         tVolIter != glueVolumesOuterTube.end();
+         ++tVolIter)
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
   }
   // return success
@@ -722,10 +811,16 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
 /** private helper method to fill the glue volumes (or the volume itself in) */
 void
 Acts::CylinderVolumeHelper::glueTrackingVolumes(
-    const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tvolOne,
-    BoundarySurfaceFace faceOne, const std::shared_ptr<TrackingVolume>& tvolTwo,
-    BoundarySurfaceFace faceTwo, double rMin, double rGlueMin, double rMax,
-    double zMin, double zMax) const {
+    const GeometryContext& gctx,
+    const std::shared_ptr<TrackingVolume>& tvolOne,
+    BoundarySurfaceFace faceOne,
+    const std::shared_ptr<TrackingVolume>& tvolTwo,
+    BoundarySurfaceFace faceTwo,
+    double rMin,
+    double rGlueMin,
+    double rMax,
+    double zMin,
+    double zMax) const {
   // get the two gluevolume descriptors
   const GlueVolumesDescriptor& gvDescriptorOne =
       tvolOne->glueVolumesDescriptor();
@@ -769,8 +864,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << glueVolTwo->volumeName() << " @ "
                                       << faceTwo << " ]");
     // one to one is easy
-    mutableGlueVolOne->glueTrackingVolume(gctx, faceOne,
-                                          mutableGlueVolTwo.get(), faceTwo);
+    mutableGlueVolOne->glueTrackingVolume(
+        gctx, faceOne, mutableGlueVolTwo.get(), faceTwo);
 
   } else if (volOneGlueVols <= 1) {
     // (ii) one -> many
@@ -780,8 +875,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                  << " ]");
     auto mutableFaceTwoVolumes = std::const_pointer_cast<TrackingVolumeArray>(
         gvDescriptorTwo.glueVolumes(faceTwo));
-    mutableGlueVolOne->glueTrackingVolumes(gctx, faceOne, mutableFaceTwoVolumes,
-                                           faceTwo);
+    mutableGlueVolOne->glueTrackingVolumes(
+        gctx, faceOne, mutableFaceTwoVolumes, faceTwo);
   } else if (volTwoGlueVols <= 1) {
     // (iii) many -> one
     ACTS_VERBOSE("      glue : many[ "
@@ -789,8 +884,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
                  << glueVolTwo->volumeName() << " @ " << faceTwo << " ]");
     auto mutableFaceOneVolumes = std::const_pointer_cast<TrackingVolumeArray>(
         gvDescriptorOne.glueVolumes(faceOne));
-    mutableGlueVolTwo->glueTrackingVolumes(gctx, faceTwo, mutableFaceOneVolumes,
-                                           faceOne);
+    mutableGlueVolTwo->glueTrackingVolumes(
+        gctx, faceTwo, mutableFaceOneVolumes, faceOne);
   } else {
     // (iv) glue array to array
     ACTS_VERBOSE("      glue : many[ "
@@ -823,7 +918,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             at " << cSurface->center(gctx).transpose());
       boundarySurface =
           std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
-              std::move(cSurface), gvDescriptorOne.glueVolumes(faceOne),
+              std::move(cSurface),
+              gvDescriptorOne.glueVolumes(faceOne),
               gvDescriptorTwo.glueVolumes(faceTwo));
     } else {
       // Calculate correct position for disc surface
@@ -849,7 +945,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             at " << dSurface->center(gctx).transpose());
       boundarySurface =
           std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
-              std::move(dSurface), gvDescriptorOne.glueVolumes(faceOne),
+              std::move(dSurface),
+              gvDescriptorOne.glueVolumes(faceOne),
               gvDescriptorTwo.glueVolumes(faceTwo));
     }
 
@@ -906,7 +1003,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
 /** Private method - helper method not to duplicate code */
 void
 Acts::CylinderVolumeHelper::addFaceVolumes(
-    const std::shared_ptr<TrackingVolume>& tvol, BoundarySurfaceFace glueFace,
+    const std::shared_ptr<TrackingVolume>& tvol,
+    BoundarySurfaceFace glueFace,
     TrackingVolumeVector& vols) const {
   ACTS_VERBOSE("Adding face volumes of face " << glueFace << " for the volume '"
                                               << tvol->volumeName() << "'.");
@@ -932,9 +1030,11 @@ Acts::CylinderVolumeHelper::addFaceVolumes(
 }
 
 std::shared_ptr<const Acts::Layer>
-Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
+Acts::CylinderVolumeHelper::createCylinderLayer(double z,
+                                                double r,
                                                 double halflengthZ,
-                                                double thickness, int binsPhi,
+                                                double thickness,
+                                                int binsPhi,
                                                 int binsZ) const {
   ACTS_VERBOSE("Creating a CylinderLayer at position " << z << " and radius "
                                                        << r);
@@ -945,8 +1045,8 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
           : nullptr;
 
   // z-binning
-  BinUtility layerBinUtility(binsZ, z - halflengthZ, z + halflengthZ, open,
-                             binZ);
+  BinUtility layerBinUtility(
+      binsZ, z - halflengthZ, z + halflengthZ, open, binZ);
   if (binsPhi == 1) {
     // the BinUtility for the material
     // ---------------------> create material for the layer surface
@@ -955,8 +1055,8 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
 
   } else {  // break the phi symmetry
     // update the BinUtility: local position on Cylinder is rPhi, z
-    BinUtility layerBinUtilityPhiZ(binsPhi, -r * M_PI, +r * M_PI, closed,
-                                   binPhi);
+    BinUtility layerBinUtilityPhiZ(
+        binsPhi, -r * M_PI, +r * M_PI, closed, binPhi);
     layerBinUtilityPhiZ += layerBinUtility;
     // ---------------------> create material for the layer surface
     ACTS_VERBOSE(" -> Preparing the binned material with "
@@ -967,13 +1067,18 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
   CylinderBounds* cylinderBounds = new CylinderBounds(r, halflengthZ);
   // create the cylinder
   return CylinderLayer::create(
-      transform, std::shared_ptr<const CylinderBounds>(cylinderBounds), nullptr,
+      transform,
+      std::shared_ptr<const CylinderBounds>(cylinderBounds),
+      nullptr,
       thickness);
 }
 
 std::shared_ptr<const Acts::Layer>
-Acts::CylinderVolumeHelper::createDiscLayer(double z, double rMin, double rMax,
-                                            double thickness, int binsPhi,
+Acts::CylinderVolumeHelper::createDiscLayer(double z,
+                                            double rMin,
+                                            double rMax,
+                                            double thickness,
+                                            int binsPhi,
                                             int binsR) const {
   ACTS_VERBOSE("Creating a DiscLayer at position " << z << " and rMin/rMax "
                                                    << rMin << " / " << rMax);
@@ -1002,5 +1107,6 @@ Acts::CylinderVolumeHelper::createDiscLayer(double z, double rMin, double rMax,
   // create the disc
   return DiscLayer::create(transform,
                            std::shared_ptr<const DiscBounds>(discBounds),
-                           nullptr, thickness);
+                           nullptr,
+                           thickness);
 }

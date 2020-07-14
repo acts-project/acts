@@ -32,13 +32,16 @@ Acts::ConeSurface::ConeSurface(const GeometryContext& gctx,
       m_bounds(other.m_bounds) {}
 
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               double alpha, bool symmetric)
+                               double alpha,
+                               bool symmetric)
     : GeometryObject(),
       Surface(std::move(htrans)),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               double alpha, double zmin, double zmax,
+                               double alpha,
+                               double zmin,
+                               double zmax,
                                double halfPhi)
     : GeometryObject(),
       Surface(std::move(htrans)),
@@ -58,8 +61,8 @@ Acts::ConeSurface::binningPosition(const GeometryContext& gctx,
 
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
-    return Vector3D(sfCenter.x() + bounds().r(sfCenter.z()), sfCenter.y(),
-                    sfCenter.z());
+    return Vector3D(
+        sfCenter.x() + bounds().r(sfCenter.z()), sfCenter.y(), sfCenter.z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
@@ -172,8 +175,8 @@ Acts::ConeSurface::normal(const GeometryContext& gctx,
          sgn = lposition[Acts::eLOC_Z] > 0 ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
-  Vector3D localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha,
-                       sgn * sinAlpha);
+  Vector3D localNormal(
+      cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   return m_transform ? Vector3D(transform(gctx).linear() * localNormal)
                      : localNormal;
 }
@@ -249,9 +252,14 @@ Acts::ConeSurface::polyhedronRepresentation(const GeometryContext& gctx,
     Vector3D zoffset(0., 0., z);
     for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
       int addon = (iseg == phiSegs.size() - 2 and not fullCone) ? 1 : 0;
-      detail::VerticesHelper::createSegment(vertices, {r, r}, phiSegs[iseg],
-                                            phiSegs[iseg + 1], lseg, addon,
-                                            zoffset, ctransform);
+      detail::VerticesHelper::createSegment(vertices,
+                                            {r, r},
+                                            phiSegs[iseg],
+                                            phiSegs[iseg + 1],
+                                            lseg,
+                                            addon,
+                                            zoffset,
+                                            ctransform);
     }
     // Create the faces
     if (tipExists) {

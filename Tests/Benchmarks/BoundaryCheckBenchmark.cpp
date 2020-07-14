@@ -73,18 +73,20 @@ main(int /*argc*/, char** /*argv[]*/) {
   };
 
   // Benchmark runner
-  auto run_bench = [&](auto&& iteration, int num_iters,
-                       const std::string& bench_name) {
-    auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
-    print_bench_result(bench_name, bench_result);
-  };
-  auto run_bench_with_inputs = [&](auto&& iterationWithArg, auto&& inputs,
+  auto run_bench =
+      [&](auto&& iteration, int num_iters, const std::string& bench_name) {
+        auto bench_result = Acts::Test::microBenchmark(iteration, num_iters);
+        print_bench_result(bench_name, bench_result);
+      };
+  auto run_bench_with_inputs = [&](auto&& iterationWithArg,
+                                   auto&& inputs,
                                    const std::string& bench_name) {
     auto bench_result = Acts::Test::microBenchmark(iterationWithArg, inputs);
     print_bench_result(bench_name, bench_result);
   };
   auto run_all_benches = [&](const BoundaryCheck& check,
-                             const std::string& check_name, const Mode mode) {
+                             const std::string& check_name,
+                             const Mode mode) {
     // Announce a set of benchmarks
     print_bench_header(check_name);
 
@@ -104,27 +106,33 @@ main(int /*argc*/, char** /*argv[]*/) {
         num_inside_points = NTESTS;
         num_outside_points = NTESTS_SLOW;
     };
-    run_bench([&] { return check.isInside(center, poly); }, num_inside_points,
+    run_bench([&] { return check.isInside(center, poly); },
+              num_inside_points,
               "Center");
     run_bench([&] { return check.isInside(edge_inside, poly); },
-              num_inside_points, "Inside edge");
+              num_inside_points,
+              "Inside edge");
     run_bench([&] { return check.isInside(edge_outside, poly); },
-              num_outside_points, "Outside edge");
+              num_outside_points,
+              "Outside edge");
     run_bench([&] { return check.isInside(far_away, poly); },
-              num_outside_points, "Far away");
+              num_outside_points,
+              "Far away");
 
     // Pre-rolled random points
     std::vector<Vector2D> points(num_outside_points);
     std::generate(points.begin(), points.end(), random_point);
     run_bench_with_inputs(
-        [&](const auto& point) { return check.isInside(point, poly); }, points,
+        [&](const auto& point) { return check.isInside(point, poly); },
+        points,
         "Random");
   };
 
   // Benchmark scenarios
   run_all_benches(BoundaryCheck(false), "No check", Mode::NoCheck);
   run_all_benches(BoundaryCheck(true), "No tolerance", Mode::FastOutside);
-  run_all_benches(BoundaryCheck(true, true, 0.6, 0.45), "Abs. tolerance",
+  run_all_benches(BoundaryCheck(true, true, 0.6, 0.45),
+                  "Abs. tolerance",
                   Mode::SlowOutside);
   run_all_benches(BoundaryCheck(cov, 3.0), "Cov. tolerance", Mode::SlowOutside);
 

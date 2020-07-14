@@ -14,8 +14,9 @@ Acts::RiddersPropagator<propagator_t>::propagate(
     -> Result<action_list_t_result_t<
         CurvilinearParameters,
         typename propagator_options_t::action_list_type>> {
-  using ThisResult = Result<action_list_t_result_t<
-      CurvilinearParameters, typename propagator_options_t::action_list_type>>;
+  using ThisResult = Result<
+      action_list_t_result_t<CurvilinearParameters,
+                             typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
   auto nominalRet = m_propagator.propagate(start, options);
@@ -61,12 +62,15 @@ template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto
 Acts::RiddersPropagator<propagator_t>::propagate(
-    const parameters_t& start, const Surface& target,
+    const parameters_t& start,
+    const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundParameters, typename propagator_options_t::action_list_type>> {
-  using ThisResult = Result<action_list_t_result_t<
-      BoundParameters, typename propagator_options_t::action_list_type>>;
+        BoundParameters,
+        typename propagator_options_t::action_list_type>> {
+  using ThisResult = Result<
+      action_list_t_result_t<BoundParameters,
+                             typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
   auto nominalRet = m_propagator.propagate(start, target, options);
@@ -157,8 +161,10 @@ template <typename propagator_t>
 template <typename options_t, typename parameters_t>
 std::vector<Acts::BoundVector>
 Acts::RiddersPropagator<propagator_t>::wiggleDimension(
-    const options_t& options, const parameters_t& startPars,
-    const unsigned int param, const Surface& target,
+    const options_t& options,
+    const parameters_t& startPars,
+    const unsigned int param,
+    const Surface& target,
     const Acts::BoundVector& nominal,
     const std::vector<double>& deviations) const {
   // Storage of the results

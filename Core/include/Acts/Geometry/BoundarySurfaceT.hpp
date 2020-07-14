@@ -55,7 +55,8 @@ class BoundarySurfaceT {
   /// @param inside The inside volume the bounday surface points to
   /// @param outside The outside volume the boundary surface points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface,
-                   const volume_t* inside, const volume_t* outside)
+                   const volume_t* inside,
+                   const volume_t* outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside),
         m_alongVolume(outside),
@@ -68,7 +69,8 @@ class BoundarySurfaceT {
   /// @param surface The unqiue surface the boundary represents
   /// @param inside The inside volume the bounday surface points to
   /// @param outside The outside volume the boundary surface points to
-  BoundarySurfaceT(std::shared_ptr<const Surface> surface, VolumePtr inside,
+  BoundarySurfaceT(std::shared_ptr<const Surface> surface,
+                   VolumePtr inside,
                    VolumePtr outside)
       : m_surface(std::move(surface)),
         m_oppositeVolume(inside.get()),
@@ -104,8 +106,10 @@ class BoundarySurfaceT {
   ///
   /// @return The attached volume at that position
   virtual const volume_t*
-  attachedVolume(const GeometryContext& gctx, const Vector3D& pos,
-                 const Vector3D& mom, NavigationDirection pdir) const;
+  attachedVolume(const GeometryContext& gctx,
+                 const Vector3D& pos,
+                 const Vector3D& mom,
+                 NavigationDirection pdir) const;
 
   /// templated onBoundary method
   ///

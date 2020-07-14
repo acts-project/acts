@@ -44,7 +44,8 @@ class AssertionFailureException : public std::exception {
   /// @param line The current line
   /// @param msg The message to print if assertion fails
   AssertionFailureException(const std::string& expression,
-                            const std::string& file, int line,
+                            const std::string& file,
+                            int line,
                             const std::string& msg) {
     std::ostringstream os;
 
@@ -73,6 +74,8 @@ class AssertionFailureException : public std::exception {
 #define throw_assert(EXPRESSION, MESSAGE)                                 \
   if (!(EXPRESSION)) {                                                    \
     throw Acts::AssertionFailureException(                                \
-        #EXPRESSION, __FILE__, __LINE__,                                  \
+        #EXPRESSION,                                                      \
+        __FILE__,                                                         \
+        __LINE__,                                                         \
         (Acts::AssertionFailureException::StreamFormatter() << MESSAGE)); \
   }

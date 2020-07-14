@@ -192,10 +192,10 @@ create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
     sens.setType("tracker");
     sens_vol.setSensitiveDetector(sens);
 
-    sens_vol.setAttributes(lcdd, x_det.regionStr(), x_det.limitsStr(),
-                           sens_view);
-    supp_vol.setAttributes(lcdd, x_det.regionStr(), x_det.limitsStr(),
-                           supp_vis);
+    sens_vol.setAttributes(
+        lcdd, x_det.regionStr(), x_det.limitsStr(), sens_view);
+    supp_vol.setAttributes(
+        lcdd, x_det.regionStr(), x_det.limitsStr(), supp_vis);
 
     //--------- loop over ladders ---------------------------
 

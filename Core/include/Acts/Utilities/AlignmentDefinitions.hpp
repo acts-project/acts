@@ -42,12 +42,12 @@ using AlignmentVector =
     ActsVector<AlignmentParametersScalar, eAlignmentParametersSize>;
 using AlignmentRowVector =
     ActsRowVector<AlignmentParametersScalar, eAlignmentParametersSize>;
-using AlingmentMatrix =
-    ActsMatrix<AlignmentParametersScalar, eAlignmentParametersSize,
-               eAlignmentParametersSize>;
+using AlingmentMatrix = ActsMatrix<AlignmentParametersScalar,
+                                   eAlignmentParametersSize,
+                                   eAlignmentParametersSize>;
 using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
-using AlignmentToBoundMatrix =
-    ActsMatrix<BoundParametersScalar, eBoundParametersSize,
-               eAlignmentParametersSize>;
+using AlignmentToBoundMatrix = ActsMatrix<BoundParametersScalar,
+                                          eBoundParametersSize,
+                                          eAlignmentParametersSize>;
 }  // namespace Acts

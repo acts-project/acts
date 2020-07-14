@@ -101,7 +101,8 @@ class GroupBy {
   };
 
   /// Construct the group-by proxy for an iterator range.
-  constexpr GroupBy(Iterator begin, Iterator end,
+  constexpr GroupBy(Iterator begin,
+                    Iterator end,
                     KeyGetter keyGetter = KeyGetter())
       : m_begin(begin), m_end(end), m_keyGetter(std::move(keyGetter)) {}
   constexpr GroupIterator
@@ -134,10 +135,10 @@ class GroupBy {
       return start;
     }
     // search the first element that does not share a key with the start.
-    return std::find_if_not(std::next(start), m_end,
-                            [this, start](const auto& x) {
-                              return m_keyGetter(x) == m_keyGetter(*start);
-                            });
+    return std::find_if_not(
+        std::next(start), m_end, [this, start](const auto& x) {
+          return m_keyGetter(x) == m_keyGetter(*start);
+        });
   }
 };
 

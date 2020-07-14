@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                       perigeeSurface));
+      tracks.push_back(BoundParameters(
+          geoContext, std::move(covMat), paramVec, perigeeSurface));
     }
 
     std::vector<const BoundParameters*> tracksPtr;
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.push_back(InputTrack(BoundParameters(geoContext, std::move(covMat),
-                                                  paramVec, perigeeSurface)));
+      tracks.push_back(InputTrack(BoundParameters(
+          geoContext, std::move(covMat), paramVec, perigeeSurface)));
     }
 
     std::vector<const InputTrack*> tracksPtr;

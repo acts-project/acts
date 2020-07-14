@@ -47,7 +47,8 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
       std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const PlanarBounds> pBounds,
+      double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),
@@ -66,7 +67,8 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
       std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const LineBounds> lBounds, double thickness,
+      std::shared_ptr<const LineBounds> lBounds,
+      double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),

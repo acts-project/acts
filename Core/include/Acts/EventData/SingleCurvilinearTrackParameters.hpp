@@ -41,13 +41,15 @@ class SingleCurvilinearTrackParameters
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
                                    const Vector3D& position,
-                                   const Vector3D& momentum, double dCharge,
+                                   const Vector3D& momentum,
+                                   double dCharge,
                                    double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
                 position, momentum, dCharge, dTime),
-            position, momentum),
+            position,
+            momentum),
         m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 
   /// @brief constructor for curvilienear representation
@@ -61,12 +63,14 @@ class SingleCurvilinearTrackParameters
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
                                    const Vector3D& position,
-                                   const Vector3D& momentum, double dTime)
+                                   const Vector3D& momentum,
+                                   double dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
                 position, momentum, 0, dTime),
-            position, momentum),
+            position,
+            momentum),
         m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 
   /// @brief copy constructor - charged/neutral

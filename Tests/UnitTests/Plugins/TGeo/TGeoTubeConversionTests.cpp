@@ -37,8 +37,8 @@ ViewConfig red({200, 0, 0});
 ViewConfig green({0, 200, 0});
 ViewConfig blue({0, 0, 200});
 
-std::vector<std::string> allowedAxes = {"XY*", "Xy*", "xy*", "xY*",
-                                        "YX*", "yx*", "yX*", "Yx*"};
+std::vector<std::string> allowedAxes = {
+    "XY*", "Xy*", "xy*", "xY*", "YX*", "yx*", "yX*", "Yx*"};
 
 std::vector<std::string> notAllowedAxes = {"YZ*", "ZX*", "ZY*"};
 
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
   size_t icyl = 0;
   for (const auto &axes : allowedAxes) {
-    auto cylinder = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                    *gGeoIdentity, axes, 1);
+    auto cylinder = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_TEST(cylinder != nullptr);
     BOOST_TEST(cylinder->type() == Surface::Cylinder);
 
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
                    std::to_string(icyl));
       objVis.clear();
     } else {
-      BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vols->GetShape(),
-                                                        *gGeoIdentity, axes, 1),
+      BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                            *vols->GetShape(), *gGeoIdentity, axes, 1),
                         std::invalid_argument);
     }
     ++icyl;
@@ -133,8 +133,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
   // Check exceptions for not allowed axis definition
   for (const auto &naxes : notAllowedAxes) {
-    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                      *gGeoIdentity, naxes, 1),
+    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                          *vol->GetShape(), *gGeoIdentity, naxes, 1),
                       std::invalid_argument);
   }
 }
@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
   size_t idisc = 0;
   for (const auto &axes : allowedAxes) {
-    auto disc = TGeoSurfaceConverter::toSurface(*vol->GetShape(), *gGeoIdentity,
-                                                axes, 1);
+    auto disc = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_TEST(disc != nullptr);
     BOOST_TEST(disc->type() == Surface::Disc);
 
@@ -182,9 +182,12 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
     const Vector3D center = disc->center(tgContext);
     GeometryView::drawArrowForward(
         objVis, center, center + 1.2 * rmax * Vector3D::UnitX(), 4., 2.5, red);
-    GeometryView::drawArrowForward(objVis, center,
-                                   center + 1.2 * rmax * Vector3D::UnitY(), 4.,
-                                   2.5, green);
+    GeometryView::drawArrowForward(objVis,
+                                   center,
+                                   center + 1.2 * rmax * Vector3D::UnitY(),
+                                   4.,
+                                   2.5,
+                                   green);
     GeometryView::drawArrowForward(
         objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
     objVis.write("TGeoConversion_TGeoTube_DiscSurface_" +
@@ -209,12 +212,18 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       CHECK_CLOSE_ABS(hphi, 0.25 * M_PI, s_epsilon);
       CHECK_CLOSE_ABS(mphi, 0., s_epsilon);
       GeometryView::drawSurface(objVis, *discSegment, tgContext);
-      GeometryView::drawArrowForward(objVis, center,
+      GeometryView::drawArrowForward(objVis,
+                                     center,
                                      center + 1.2 * bmaxr * Vector3D::UnitX(),
-                                     4., 2.5, red);
-      GeometryView::drawArrowForward(objVis, center,
+                                     4.,
+                                     2.5,
+                                     red);
+      GeometryView::drawArrowForward(objVis,
+                                     center,
                                      center + 1.2 * bmaxr * Vector3D::UnitY(),
-                                     4., 2.5, green);
+                                     4.,
+                                     2.5,
+                                     green);
       GeometryView::drawArrowForward(
           objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
       objVis.write("TGeoConversion_TGeoTube_DiscSegmentSurface_" +
@@ -222,8 +231,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       objVis.clear();
 
     } else {
-      BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vols->GetShape(),
-                                                        *gGeoIdentity, axes, 1),
+      BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                            *vols->GetShape(), *gGeoIdentity, axes, 1),
                         std::invalid_argument);
     }
     ++idisc;
@@ -231,8 +240,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
   // Check exceptions for not allowed axis definition
   for (const auto &naxes : notAllowedAxes) {
-    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                      *gGeoIdentity, naxes, 1),
+    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                          *vol->GetShape(), *gGeoIdentity, naxes, 1),
                       std::invalid_argument);
   }
 }

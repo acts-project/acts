@@ -42,7 +42,8 @@ struct Polyhedron {
   /// @note This creates copies of the input vectors
   Polyhedron(const std::vector<Vector3D>& verticesIn,
              const std::vector<FaceType>& facesIn,
-             const std::vector<FaceType>& triangularMeshIn, bool isExact = true)
+             const std::vector<FaceType>& triangularMeshIn,
+             bool isExact = true)
       : vertices(verticesIn),
         faces(facesIn),
         triangularMesh(triangularMeshIn),

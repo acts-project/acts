@@ -28,9 +28,10 @@ struct ConstrainedStep {
   enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };
 
   /// the step size tuple
-  std::array<double, 4> values = {
-      {std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
-       std::numeric_limits<double>::max(), std::numeric_limits<double>::max()}};
+  std::array<double, 4> values = {{std::numeric_limits<double>::max(),
+                                   std::numeric_limits<double>::max(),
+                                   std::numeric_limits<double>::max(),
+                                   std::numeric_limits<double>::max()}};
 
   /// The Navigation direction
   NavigationDirection direction = forward;

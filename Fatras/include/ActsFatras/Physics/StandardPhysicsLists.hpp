@@ -36,9 +36,10 @@ using StandardBetheBloch =
 ///
 /// Only applies to electrons and positions. Bethe-Heitler generates no
 /// particles and the child selector has no effect.
-using StandardBetheHeitler =
-    Process<BetheHeitler, AsInputSelector<SelectElectronLike>, SelectPMin,
-            EveryParticle>;
+using StandardBetheHeitler = Process<BetheHeitler,
+                                     AsInputSelector<SelectElectronLike>,
+                                     SelectPMin,
+                                     EveryParticle>;
 }  // namespace detail
 
 /// Electro-magnetic interactions for charged particles.
@@ -54,7 +55,8 @@ using StandardBetheHeitler =
 /// @todo Bethe-Heitler is applied after energy loss and thus sees the wrong
 ///       input energy.
 using ChargedElectroMagneticPhysicsList =
-    PhysicsList<detail::StandardScattering, detail::StandardBetheBloch,
+    PhysicsList<detail::StandardScattering,
+                detail::StandardBetheBloch,
                 detail::StandardBetheHeitler>;
 
 /// Construct the standard electro-magnetic physics list for charged particles.

@@ -21,7 +21,8 @@
 
 void
 FW::setupDigitization(
-    FW::Options::Variables& vars, FW::Sequencer& sequencer,
+    FW::Options::Variables& vars,
+    FW::Sequencer& sequencer,
     std::shared_ptr<const FW::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   // Read the standard options

@@ -29,8 +29,10 @@
 
 std::unique_ptr<const Acts::LayerArray>
 Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
-                                    const LayerVector& layersInput, double min,
-                                    double max, BinningType bType,
+                                    const LayerVector& layersInput,
+                                    double min,
+                                    double max,
+                                    BinningType bType,
                                     BinningValue bValue) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
                                         << " layers at input.");
@@ -63,8 +65,8 @@ Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
             layIter, layIter->binningPosition(gctx, bValue)));
       }
       // create the binUitlity
-      binUtility = std::make_unique<const BinUtility>(layers.size(), min, max,
-                                                      open, bValue);
+      binUtility = std::make_unique<const BinUtility>(
+          layers.size(), min, max, open, bValue);
       ACTS_VERBOSE("equidistant : created a BinUtility as " << *binUtility);
     } break;
 
@@ -108,7 +110,9 @@ Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
 
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *layIter, bValue,
+            createNavigationSurface(gctx,
+                                    *layIter,
+                                    bValue,
                                     -std::abs(layerValue - navigationValue));
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
@@ -138,8 +142,8 @@ Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
       if (navigationValue != max) {
         // create the navigation layer surface from the layer
         std::shared_ptr<const Surface> navLayerSurface =
-            createNavigationSurface(gctx, *lastLayer, bValue,
-                                    navigationValue - layerValue);
+            createNavigationSurface(
+                gctx, *lastLayer, bValue, navigationValue - layerValue);
         ACTS_VERBOSE(
             "arbitrary : creating a  NavigationLayer at "
             << (navLayerSurface->binningPosition(gctx, bValue)).x() << ", "

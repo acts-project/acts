@@ -77,8 +77,8 @@ FWE::IterativeVertexFinderAlgorithm::execute(
   VertexSeeder::Config seederCfg(ipEst);
   VertexSeeder seeder(std::move(seederCfg));
   // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                                 std::move(seeder), ipEst);
+  VertexFinder::Config finderCfg(
+      std::move(vertexFitter), std::move(linearizer), std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);

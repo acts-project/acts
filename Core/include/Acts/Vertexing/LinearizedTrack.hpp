@@ -50,7 +50,8 @@ struct LinearizedTrack {
                   const SpacePointVector& linPoint,
                   const SpacePointToBoundMatrix& posJacobian,
                   const ActsMatrixD<eBoundParametersSize, 3>& momJacobian,
-                  const SpacePointVector& position, const Vector3D& momentum,
+                  const SpacePointVector& position,
+                  const Vector3D& momentum,
                   const BoundVector& constTerm)
       : parametersAtPCA(paramsAtPCA),
         covarianceAtPCA(parCovarianceAtPCA),

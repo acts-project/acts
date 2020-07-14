@@ -93,7 +93,8 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
   /// @param shift Additional transform applied after copying from the source
-  Surface(const GeometryContext& gctx, const Surface& other,
+  Surface(const GeometryContext& gctx,
+          const Surface& other,
           const Transform3D& shift);
 
  public:
@@ -273,7 +274,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return boolean indication if operation was successful
   bool
-  isOnSurface(const GeometryContext& gctx, const Vector3D& position,
+  isOnSurface(const GeometryContext& gctx,
+              const Vector3D& position,
               const Vector3D& momentum,
               const BoundaryCheck& bcheck = true) const;
 
@@ -317,8 +319,10 @@ class Surface : public virtual GeometryObject,
   /// @param position global 3D position to be filled (given by reference for
   /// method symmetry)
   virtual void
-  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                const Vector3D& momentum, Vector3D& position) const = 0;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D& lposition,
+                const Vector3D& momentum,
+                Vector3D& position) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -335,8 +339,10 @@ class Surface : public virtual GeometryObject,
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
-  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                const Vector3D& momentum, Vector2D& lposition) const = 0;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D& position,
+                const Vector3D& momentum,
+                Vector2D& lposition) const = 0;
 
   /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
@@ -350,7 +356,8 @@ class Surface : public virtual GeometryObject,
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx, const Vector3D& position,
+  referenceFrame(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& momentum) const;
 
   /// Initialize the jacobian from local to global
@@ -368,8 +375,10 @@ class Surface : public virtual GeometryObject,
   /// @param direction is the direction at of the parameters
   /// @param pars is the parameter vector
   virtual void
-  initJacobianToGlobal(const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
-                       const Vector3D& position, const Vector3D& direction,
+  initJacobianToGlobal(const GeometryContext& gctx,
+                       BoundToFreeMatrix& jacobian,
+                       const Vector3D& position,
+                       const Vector3D& direction,
                        const BoundVector& pars) const;
 
   /// Initialize the jacobian from global to local
@@ -388,7 +397,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
-  initJacobianToLocal(const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
+  initJacobianToLocal(const GeometryContext& gctx,
+                      FreeToBoundMatrix& jacobian,
                       const Vector3D& position,
                       const Vector3D& direction) const;
 
@@ -409,8 +419,10 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return a five-dim vector
   virtual const BoundRowVector
-  derivativeFactors(const GeometryContext& gctx, const Vector3D& position,
-                    const Vector3D& direction, const RotationMatrix3D& rft,
+  derivativeFactors(const GeometryContext& gctx,
+                    const Vector3D& position,
+                    const Vector3D& direction,
+                    const RotationMatrix3D& rft,
                     const BoundToFreeMatrix& jacobian) const;
 
   /// Calucation of the path correction for incident
@@ -422,7 +434,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Path correction with respect to the nominal incident.
   virtual double
-  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& direction) const = 0;
 
   /// Straight line intersection schema from position/direction
@@ -434,8 +447,10 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
   virtual SurfaceIntersection
-  intersect(const GeometryContext& gctx, const Vector3D& position,
-            const Vector3D& direction, const BoundaryCheck& bcheck) const
+  intersect(const GeometryContext& gctx,
+            const Vector3D& position,
+            const Vector3D& direction,
+            const BoundaryCheck& bcheck) const
 
   {
     // Get the intersection with the surface
@@ -456,7 +471,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Intersection object
   virtual Intersection
-  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck) const = 0;
 

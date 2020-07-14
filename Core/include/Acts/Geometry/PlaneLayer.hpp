@@ -40,9 +40,12 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
          double thickness = 0.,
          std::unique_ptr<ApproachDescriptor> ad = nullptr,
          LayerType laytyp = Acts::active) {
-    return MutableLayerPtr(new PlaneLayer(std::move(transform), pbounds,
-                                          std::move(surfaceArray), thickness,
-                                          std::move(ad), laytyp));
+    return MutableLayerPtr(new PlaneLayer(std::move(transform),
+                                          pbounds,
+                                          std::move(surfaceArray),
+                                          thickness,
+                                          std::move(ad),
+                                          laytyp));
   }
 
   /// Default Constructor - deleted

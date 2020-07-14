@@ -17,13 +17,16 @@ Acts::IVisualization::vertex(const Vector3F& vtx, ColorRGB color) {
 void
 Acts::IVisualization::face(const std::vector<Vector3F>& vtxs, ColorRGB color) {
   std::vector<Vector3D> vtxsd;
-  std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
-                 [](auto& v) { return v.template cast<double>(); });
+  std::transform(
+      vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd), [](auto& v) {
+        return v.template cast<double>();
+      });
   face(vtxsd, color);
 }
 
 void
-Acts::IVisualization::line(const Vector3F& a, const Vector3F& b,
+Acts::IVisualization::line(const Vector3F& a,
+                           const Vector3F& b,
                            ColorRGB color) {
   Vector3D ad = a.template cast<double>();
   Vector3D bd = b.template cast<double>();

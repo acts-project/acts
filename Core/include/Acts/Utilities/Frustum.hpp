@@ -52,7 +52,8 @@ class Frustum {
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  Frustum(const VertexType& origin, const VertexType& dir,
+  Frustum(const VertexType& origin,
+          const VertexType& dir,
           value_type opening_angle);
 
   /// Constructor for the 3D case.
@@ -62,7 +63,8 @@ class Frustum {
   /// @note The @p opening_angle is defined as the angle between opposing side
   /// planes. The opening angle needs to be < pi.
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  Frustum(const VertexType& origin, const VertexType& dir,
+  Frustum(const VertexType& origin,
+          const VertexType& dir,
           value_type opening_angle);
 
   /// Draw a representation of this frustum using a visualization helper
@@ -84,7 +86,10 @@ class Frustum {
   /// @param unit Multiplicative factor to apply to internal distances
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream&
-  svg(std::ostream& os, value_type w, value_type h, value_type far_distance = 1,
+  svg(std::ostream& os,
+      value_type w,
+      value_type h,
+      value_type far_distance = 1,
       value_type unit = 20.) const;
 
   /// Getter for the oriogin of the frustum

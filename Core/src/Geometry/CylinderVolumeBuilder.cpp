@@ -48,7 +48,8 @@ Acts::CylinderVolumeBuilder::setLogger(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx, TrackingVolumePtr existingVolume,
+    const GeometryContext& gctx,
+    TrackingVolumePtr existingVolume,
     VolumeBoundsPtr externalBounds) const {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
   if (existingVolume) {
@@ -200,21 +201,24 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // (C) VOLUME CREATION ----------------------------------
   auto tvHelper = m_cfg.trackingVolumeHelper;
   // the barrel is always created
-  auto barrel =
-      wConfig.cVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.cVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.cVolumeConfig.rMin, wConfig.cVolumeConfig.rMax,
-                wConfig.cVolumeConfig.zMin, wConfig.cVolumeConfig.zMax,
-                m_cfg.volumeName + "::Barrel")
-          : nullptr;
+  auto barrel = wConfig.cVolumeConfig ? tvHelper->createTrackingVolume(
+                                            gctx,
+                                            wConfig.cVolumeConfig.layers,
+                                            wConfig.cVolumeConfig.volumes,
+                                            m_cfg.volumeMaterial,
+                                            wConfig.cVolumeConfig.rMin,
+                                            wConfig.cVolumeConfig.rMax,
+                                            wConfig.cVolumeConfig.zMin,
+                                            wConfig.cVolumeConfig.zMax,
+                                            m_cfg.volumeName + "::Barrel")
+                                      : nullptr;
 
   // Helper method to check for
 
   // Helper method to create endcap volume
   auto createEndcap =
-      [&](VolumeConfig& centralConfig, VolumeConfig& endcapConfig,
+      [&](VolumeConfig& centralConfig,
+          VolumeConfig& endcapConfig,
           const std::string& endcapName) -> MutableTrackingVolumePtr {
     // No config - no volume
     if (not endcapConfig) {
@@ -290,7 +294,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                 elay->surfaceRepresentation().binningPositionValue(gctx, binR);
             // Find the right bin
             auto ringVolume = std::find_if(
-                volumeRminRmax.begin(), volumeRminRmax.end(),
+                volumeRminRmax.begin(),
+                volumeRminRmax.end(),
                 [&](const auto& reference) {
                   return (test > reference.first and test < reference.second);
                 });
@@ -311,9 +316,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                          << volumeRminRmax[ir].first << "/"
                                          << volumeRminRmax[ir].second);
             endcapContainer.push_back(tvHelper->createTrackingVolume(
-                gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
-                volumeRminRmax[ir].first, volumeRminRmax[ir].second,
-                endcapConfig.zMin, endcapConfig.zMax,
+                gctx,
+                rLayers,
+                centralConfig.volumes,
+                m_cfg.volumeMaterial,
+                volumeRminRmax[ir].first,
+                volumeRminRmax[ir].second,
+                endcapConfig.zMin,
+                endcapConfig.zMax,
                 m_cfg.volumeName + endcapName + std::string("::Ring") +
                     std::to_string(ir)));
             ++ir;
@@ -325,19 +335,24 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     }
 
     // No ring layout - return single volume
-    return tvHelper->createTrackingVolume(
-        gctx, endcapConfig.layers, centralConfig.volumes, m_cfg.volumeMaterial,
-        endcapConfig.rMin, endcapConfig.rMax, endcapConfig.zMin,
-        endcapConfig.zMax, m_cfg.volumeName + endcapName);
+    return tvHelper->createTrackingVolume(gctx,
+                                          endcapConfig.layers,
+                                          centralConfig.volumes,
+                                          m_cfg.volumeMaterial,
+                                          endcapConfig.rMin,
+                                          endcapConfig.rMax,
+                                          endcapConfig.zMin,
+                                          endcapConfig.zMax,
+                                          m_cfg.volumeName + endcapName);
   };
 
   // The negative endcap is created if present
-  auto nEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.nVolumeConfig,
-                              "::NegativeEndcap");
+  auto nEndcap = createEndcap(
+      wConfig.cVolumeConfig, wConfig.nVolumeConfig, "::NegativeEndcap");
 
   // The positive endcap is created if present
-  auto pEndcap = createEndcap(wConfig.cVolumeConfig, wConfig.pVolumeConfig,
-                              "::PositiveEndcap");
+  auto pEndcap = createEndcap(
+      wConfig.cVolumeConfig, wConfig.pVolumeConfig, "::PositiveEndcap");
 
   ACTS_DEBUG("Newly created volume(s) will be " << wConfig.wConditionScreen);
   // Standalone container, full wrapping, full insertion & if no existing volume
@@ -411,22 +426,34 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     std::vector<TrackingVolumePtr> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
-      auto fGap = tvHelper->createGapTrackingVolume(
-          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-          wConfig.fGapVolumeConfig.rMin, wConfig.fGapVolumeConfig.rMax,
-          wConfig.fGapVolumeConfig.zMin, wConfig.fGapVolumeConfig.zMax, 1,
-          false, m_cfg.volumeName + "::fGap");
+      auto fGap =
+          tvHelper->createGapTrackingVolume(gctx,
+                                            wConfig.cVolumeConfig.volumes,
+                                            m_cfg.volumeMaterial,
+                                            wConfig.fGapVolumeConfig.rMin,
+                                            wConfig.fGapVolumeConfig.rMax,
+                                            wConfig.fGapVolumeConfig.zMin,
+                                            wConfig.fGapVolumeConfig.zMax,
+                                            1,
+                                            false,
+                                            m_cfg.volumeName + "::fGap");
       // push it back into the list
       existingContainer.push_back(fGap);
     }
     existingContainer.push_back(existingVolumeCp);
     if (wConfig.sGapVolumeConfig) {
       // create the gap volume
-      auto sGap = tvHelper->createGapTrackingVolume(
-          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-          wConfig.sGapVolumeConfig.rMin, wConfig.sGapVolumeConfig.rMax,
-          wConfig.sGapVolumeConfig.zMin, wConfig.sGapVolumeConfig.zMax, 1,
-          false, m_cfg.volumeName + "::sGap");
+      auto sGap =
+          tvHelper->createGapTrackingVolume(gctx,
+                                            wConfig.cVolumeConfig.volumes,
+                                            m_cfg.volumeMaterial,
+                                            wConfig.sGapVolumeConfig.rMin,
+                                            wConfig.sGapVolumeConfig.rMax,
+                                            wConfig.sGapVolumeConfig.zMin,
+                                            wConfig.sGapVolumeConfig.zMax,
+                                            1,
+                                            false,
+                                            m_cfg.volumeName + "::sGap");
       // push it back into the list
       existingContainer.push_back(sGap);
     }
@@ -485,7 +512,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 // -----------------------------
 Acts::VolumeConfig
 Acts::CylinderVolumeBuilder::analyzeContent(
-    const GeometryContext& gctx, const LayerVector& lVector,
+    const GeometryContext& gctx,
+    const LayerVector& lVector,
     const MutableTrackingVolumeVector& mtvVector) const {
   // @TODO add envelope tolerance
   //

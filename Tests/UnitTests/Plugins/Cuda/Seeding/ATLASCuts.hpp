@@ -30,7 +30,8 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   bool
-  singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
+  singleSeedCut(float weight,
+                const InternalSpacePoint<SpacePoint>& bottom,
                 const InternalSpacePoint<SpacePoint>&,
                 const InternalSpacePoint<SpacePoint>&) const;
 
@@ -64,7 +65,8 @@ ATLASCuts<SpacePoint>::seedWeight(
 template <typename SpacePoint>
 bool
 ATLASCuts<SpacePoint>::singleSeedCut(
-    float weight, const InternalSpacePoint<SpacePoint>& b,
+    float weight,
+    const InternalSpacePoint<SpacePoint>& b,
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>&) const {
   return !(b.radius() > 150. && weight < 380.);

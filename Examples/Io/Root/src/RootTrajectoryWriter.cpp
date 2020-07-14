@@ -25,8 +25,8 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
-using Measurement = Acts::Measurement<FW::SimSourceLink, Acts::ParDef::eLOC_0,
-                                      Acts::ParDef::eLOC_1>;
+using Measurement = Acts::
+    Measurement<FW::SimSourceLink, Acts::ParDef::eLOC_0, Acts::ParDef::eLOC_1>;
 
 FW::RootTrajectoryWriter::RootTrajectoryWriter(
     const FW::RootTrajectoryWriter::Config& cfg, Acts::Logging::Level lvl)
@@ -425,7 +425,9 @@ FW::RootTrajectoryWriter::writeT(const AlgorithmContext& ctx,
         predicted = true;
         m_nPredicted++;
         Acts::BoundParameters parameter(
-            gctx, state.predictedCovariance(), state.predicted(),
+            gctx,
+            state.predictedCovariance(),
+            state.predicted(),
             state.referenceSurface().getSharedPtr());
         auto covariance = state.predictedCovariance();
         // local hit residual info
@@ -560,7 +562,9 @@ FW::RootTrajectoryWriter::writeT(const AlgorithmContext& ctx,
         filtered = true;
         m_nFiltered++;
         Acts::BoundParameters parameter(
-            gctx, state.filteredCovariance(), state.filtered(),
+            gctx,
+            state.filteredCovariance(),
+            state.filtered(),
             state.referenceSurface().getSharedPtr());
         auto covariance = state.filteredCovariance();
         // filtered parameter
@@ -671,7 +675,9 @@ FW::RootTrajectoryWriter::writeT(const AlgorithmContext& ctx,
         smoothed = true;
         m_nSmoothed++;
         Acts::BoundParameters parameter(
-            gctx, state.smoothedCovariance(), state.smoothed(),
+            gctx,
+            state.smoothedCovariance(),
+            state.smoothed(),
             state.referenceSurface().getSharedPtr());
         auto covariance = state.smoothedCovariance();
 

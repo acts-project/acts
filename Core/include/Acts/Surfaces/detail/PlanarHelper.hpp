@@ -22,7 +22,8 @@ namespace PlanarHelper {
 /// @param position The starting position for the intersection
 /// @param direction The starting direction for the intersection
 static Intersection
-intersectionEstimate(const Transform3D& transform, const Vector3D& position,
+intersectionEstimate(const Transform3D& transform,
+                     const Vector3D& position,
                      const Vector3D& direction) {
   // Get the matrix from the transform (faster access)
   const auto& tMatrix = transform.matrix();

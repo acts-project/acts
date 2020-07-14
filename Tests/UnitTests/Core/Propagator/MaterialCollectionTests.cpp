@@ -83,8 +83,13 @@ bool debugModeBwdStep = false;
 /// @param index is the run index from the test
 template <typename propagator_t>
 void
-runTest(const propagator_t& prop, double pT, double phi, double theta,
-        int charge, double time, int index) {
+runTest(const propagator_t& prop,
+        double pT,
+        double phi,
+        double theta,
+        int charge,
+        double time,
+        int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -449,7 +454,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   runTest(epropagator, pT, phi, theta, charge, time, index);
   runTest(slpropagator, pT, phi, theta, charge, time, index);
 }

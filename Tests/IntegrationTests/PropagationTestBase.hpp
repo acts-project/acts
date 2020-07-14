@@ -46,44 +46,73 @@ auto threeRandom = (rand1 ^ rand2 ^ rand2);
 
 /// test consistency of forward-backward propagation
 BOOST_DATA_TEST_CASE(forward_backward_propagation_,
-                     ds::trackParameters* ds::propagationLimit, pT, phi, theta,
-                     charge, plimit) {
+                     ds::trackParameters* ds::propagationLimit,
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit) {
   ++itest;
 
   // foward backward check atlas stepper
-  foward_backward(apropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
-                  debug);
+  foward_backward(
+      apropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV, debug);
   // foward backward check eigen stepper
-  foward_backward(epropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
-                  debug);
+  foward_backward(
+      epropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV, debug);
   // foward backward check straight line stepper
-  foward_backward(spropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV,
-                  debug);
+  foward_backward(
+      spropagator, pT, phi, theta, charge, plimit, 1_um, 1_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
 BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
                      ds::trackParameters* ds::propagationFraction ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, pfrac, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     pfrac,
+                     rand1,
+                     rand2,
+                     rand3) {
   // just make sure we can reach it
   double r = pfrac * std::abs(pT / Bz);
   r = (r > 2.5_m) ? 2.5_m : r;
 
   if (r > 0.) {
     // check atlas stepper
-    auto a_at_cylinder = to_cylinder(apropagator, pT, phi, theta, charge, r,
-                                     rand1, rand2, rand3, covtpr, debug);
+    auto a_at_cylinder = to_cylinder(apropagator,
+                                     pT,
+                                     phi,
+                                     theta,
+                                     charge,
+                                     r,
+                                     rand1,
+                                     rand2,
+                                     rand3,
+                                     covtpr,
+                                     debug);
     // check eigen stepper
-    auto e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, charge, r,
-                                     rand1, rand2, rand3, covtpr, debug);
+    auto e_at_cylinder = to_cylinder(epropagator,
+                                     pT,
+                                     phi,
+                                     theta,
+                                     charge,
+                                     r,
+                                     rand1,
+                                     rand2,
+                                     rand3,
+                                     covtpr,
+                                     debug);
     CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10_um);
 
     // check without charge
-    auto s_at_cylinder = to_cylinder(spropagator, pT, phi, theta, 0., r, rand1,
-                                     rand2, rand3, covtpr, debug);
-    e_at_cylinder = to_cylinder(epropagator, pT, phi, theta, 0., r, rand1,
-                                rand2, rand3, covtpr, debug);
+    auto s_at_cylinder = to_cylinder(
+        spropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
+    e_at_cylinder = to_cylinder(
+        epropagator, pT, phi, theta, 0., r, rand1, rand2, rand3, covtpr, debug);
 
     CHECK_CLOSE_ABS(s_at_cylinder.first, e_at_cylinder.first, 1_um);
   }
@@ -93,25 +122,65 @@ BOOST_DATA_TEST_CASE(propagation_to_cylinder_,
 BOOST_DATA_TEST_CASE(propagation_to_plane_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // to a plane with the atlas stepper
-  auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto a_at_plane = to_surface<AtlasPropagatorType, PlaneSurface>(apropagator,
+                                                                  pT,
+                                                                  phi,
+                                                                  theta,
+                                                                  charge,
+                                                                  plimit,
+                                                                  rand1,
+                                                                  rand2,
+                                                                  rand3,
+                                                                  true,
+                                                                  covtpr);
   // to a plane with the eigen stepper
-  auto e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(epropagator,
+                                                                  pT,
+                                                                  phi,
+                                                                  theta,
+                                                                  charge,
+                                                                  plimit,
+                                                                  rand1,
+                                                                  rand2,
+                                                                  rand3,
+                                                                  true,
+                                                                  covtpr);
   CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1_um);
 
   // to a plane with the straight line stepper
-  auto s_at_plane = to_surface<StraightPropagatorType, PlaneSurface>(
-      spropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto s_at_plane =
+      to_surface<StraightPropagatorType, PlaneSurface>(spropagator,
+                                                       pT,
+                                                       phi,
+                                                       theta,
+                                                       0.,
+                                                       plimit,
+                                                       rand1,
+                                                       rand2,
+                                                       rand3,
+                                                       true,
+                                                       covtpr);
   // to a plane with the eigen stepper without charge
-  e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(
-      epropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
-      covtpr);
+  e_at_plane = to_surface<EigenPropagatorType, PlaneSurface>(epropagator,
+                                                             pT,
+                                                             phi,
+                                                             theta,
+                                                             0.,
+                                                             plimit,
+                                                             rand1,
+                                                             rand2,
+                                                             rand3,
+                                                             true,
+                                                             covtpr);
   CHECK_CLOSE_ABS(e_at_plane.first, s_at_plane.first, 1_um);
 }
 
@@ -119,25 +188,64 @@ BOOST_DATA_TEST_CASE(propagation_to_plane_,
 BOOST_DATA_TEST_CASE(propagation_to_disc_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // to a disc with the  atlas stepper
-  auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto a_at_disc = to_surface<AtlasPropagatorType, DiscSurface>(apropagator,
+                                                                pT,
+                                                                phi,
+                                                                theta,
+                                                                charge,
+                                                                plimit,
+                                                                rand1,
+                                                                rand2,
+                                                                rand3,
+                                                                true,
+                                                                covtpr);
   // to a disc with the eigen stepper
-  auto e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(epropagator,
+                                                                pT,
+                                                                phi,
+                                                                theta,
+                                                                charge,
+                                                                plimit,
+                                                                rand1,
+                                                                rand2,
+                                                                rand3,
+                                                                true,
+                                                                covtpr);
   CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1_um);
 
   // to a disc with the straight line stepper
-  auto s_at_disc = to_surface<StraightPropagatorType, DiscSurface>(
-      spropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
-      covtpr);
+  auto s_at_disc = to_surface<StraightPropagatorType, DiscSurface>(spropagator,
+                                                                   pT,
+                                                                   phi,
+                                                                   theta,
+                                                                   0.,
+                                                                   plimit,
+                                                                   rand1,
+                                                                   rand2,
+                                                                   rand3,
+                                                                   true,
+                                                                   covtpr);
   // to a disc with the eigen stepper without charge
-  e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(
-      epropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, true,
-      covtpr);
+  e_at_disc = to_surface<EigenPropagatorType, DiscSurface>(epropagator,
+                                                           pT,
+                                                           phi,
+                                                           theta,
+                                                           0.,
+                                                           plimit,
+                                                           rand1,
+                                                           rand2,
+                                                           rand3,
+                                                           true,
+                                                           covtpr);
 
   CHECK_CLOSE_ABS(e_at_disc.first, s_at_disc.first, 1_um);
 }
@@ -146,34 +254,77 @@ BOOST_DATA_TEST_CASE(propagation_to_disc_,
 BOOST_DATA_TEST_CASE(propagation_to_line_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // to a line with the atlas stepper
   if (debug) {
     std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
   }
-  auto a_at_line = to_surface<AtlasPropagatorType, StrawSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
-      covtpr, debug);
+  auto a_at_line = to_surface<AtlasPropagatorType, StrawSurface>(apropagator,
+                                                                 pT,
+                                                                 phi,
+                                                                 theta,
+                                                                 charge,
+                                                                 plimit,
+                                                                 rand1,
+                                                                 rand2,
+                                                                 rand3,
+                                                                 false,
+                                                                 covtpr,
+                                                                 debug);
   // to a line with the eigen stepper
   if (debug) {
     std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
   }
-  auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, false,
-      covtpr, debug);
+  auto e_at_line = to_surface<EigenPropagatorType, StrawSurface>(epropagator,
+                                                                 pT,
+                                                                 phi,
+                                                                 theta,
+                                                                 charge,
+                                                                 plimit,
+                                                                 rand1,
+                                                                 rand2,
+                                                                 rand3,
+                                                                 false,
+                                                                 covtpr,
+                                                                 debug);
   CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 10_um);
 
   if (debug) {
     std::cout << "[ >>>> Testing Neutral Propagators <<<< ]" << std::endl;
   }
   // to a straw with the straight line stepper
-  auto s_at_line = to_surface<StraightPropagatorType, StrawSurface>(
-      spropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, false,
-      covtpr, debug);
+  auto s_at_line = to_surface<StraightPropagatorType, StrawSurface>(spropagator,
+                                                                    pT,
+                                                                    phi,
+                                                                    theta,
+                                                                    0.,
+                                                                    plimit,
+                                                                    rand1,
+                                                                    rand2,
+                                                                    rand3,
+                                                                    false,
+                                                                    covtpr,
+                                                                    debug);
   // to a straw with the eigen stepper without charge
-  e_at_line = to_surface<EigenPropagatorType, StrawSurface>(
-      epropagator, pT, phi, theta, 0., plimit, rand1, rand2, rand3, false,
-      covtpr, debug);
+  e_at_line = to_surface<EigenPropagatorType, StrawSurface>(epropagator,
+                                                            pT,
+                                                            phi,
+                                                            theta,
+                                                            0.,
+                                                            plimit,
+                                                            rand1,
+                                                            rand2,
+                                                            rand3,
+                                                            false,
+                                                            covtpr,
+                                                            debug);
 
   CHECK_CLOSE_ABS(e_at_line.first, s_at_line.first, 1_um);
 }
@@ -182,8 +333,12 @@ BOOST_DATA_TEST_CASE(propagation_to_line_,
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
 BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
-                     ds::trackParameters* ds::propagationLimit, pT, phi, theta,
-                     charge, plimit) {
+                     ds::trackParameters* ds::propagationLimit,
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit) {
   // covariance check for straight line stepper
   CHECK_CLOSE_COVARIANCE(
       covariance_curvilinear(rspropagator, pT, phi, theta, charge, plimit),
@@ -205,16 +360,41 @@ BOOST_DATA_TEST_CASE(covariance_transport_curvilinear_curvilinear_,
 BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // covariance check for straight line stepper
   auto covCalculated =
       covariance_bound<RiddersStraightPropagatorType, DiscSurface, DiscSurface>(
-          rspropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          true, true);
+          rspropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          true,
+          true);
   auto covObtained =
       covariance_bound<StraightPropagatorType, DiscSurface, DiscSurface>(
-          spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          true, true);
+          spropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          true,
+          true);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 5e-1);
   }
@@ -222,10 +402,28 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
   // covariance check for eigen stepper
   covCalculated =
       covariance_bound<RiddersEigenPropagatorType, DiscSurface, DiscSurface>(
-          repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          true, true);
+          repropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          true,
+          true);
   covObtained = covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
-      epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      epropagator,
+      pT,
+      phi,
+      theta,
+      charge,
+      plimit,
+      rand1,
+      rand2,
+      rand3,
+      true,
       true);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
@@ -234,10 +432,28 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
   // covariance check for atlas stepper
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, DiscSurface, DiscSurface>(
-          rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          true, true);
+          rapropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          true,
+          true);
   covObtained = covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
-      apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3, true,
+      apropagator,
+      pT,
+      phi,
+      theta,
+      charge,
+      plimit,
+      rand1,
+      rand2,
+      rand3,
+      true,
       true);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
@@ -248,10 +464,18 @@ BOOST_DATA_TEST_CASE(covariance_transport_disc_disc_,
 BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // covariance check for straight line stepper
   auto covCalculated = covariance_bound<RiddersStraightPropagatorType,
-                                        PlaneSurface, PlaneSurface>(
+                                        PlaneSurface,
+                                        PlaneSurface>(
       rspropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3);
   auto covObtained =
       covariance_bound<StraightPropagatorType, PlaneSurface, PlaneSurface>(
@@ -283,38 +507,99 @@ BOOST_DATA_TEST_CASE(covariance_transport_plane_plane_,
 BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
                      ds::trackParameters* ds::propagationLimit ^
                          ds::threeRandom,
-                     pT, phi, theta, charge, plimit, rand1, rand2, rand3) {
+                     pT,
+                     phi,
+                     theta,
+                     charge,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // covariance check for straight line stepper
-  auto covCalculated =
-      covariance_bound<RiddersStraightPropagatorType, StrawSurface,
-                       StrawSurface>(rspropagator, pT, phi, theta, charge,
-                                     plimit, rand1, rand2, rand3, false, false);
+  auto covCalculated = covariance_bound<RiddersStraightPropagatorType,
+                                        StrawSurface,
+                                        StrawSurface>(rspropagator,
+                                                      pT,
+                                                      phi,
+                                                      theta,
+                                                      charge,
+                                                      plimit,
+                                                      rand1,
+                                                      rand2,
+                                                      rand3,
+                                                      false,
+                                                      false);
   auto covObtained =
       covariance_bound<StraightPropagatorType, StrawSurface, StrawSurface>(
-          spropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          false, false);
+          spropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          false,
+          false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for eigen stepper
   covCalculated =
       covariance_bound<RiddersEigenPropagatorType, StrawSurface, StrawSurface>(
-          repropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          false, false);
+          repropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          false,
+          false);
   covObtained =
       covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
-          epropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          false, false);
+          epropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          false,
+          false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 
   // covariance check for atlas stepper
   covCalculated =
       covariance_bound<RiddersAtlasPropagatorType, StrawSurface, StrawSurface>(
-          rapropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          false, false);
+          rapropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          false,
+          false);
   covObtained =
       covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
-          apropagator, pT, phi, theta, charge, plimit, rand1, rand2, rand3,
-          false, false);
+          apropagator,
+          pT,
+          phi,
+          theta,
+          charge,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          false,
+          false);
   CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 1e-1);
 }
 
@@ -323,32 +608,55 @@ BOOST_DATA_TEST_CASE(covariance_transport_line_line_,
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
 BOOST_DATA_TEST_CASE(dense_covariance_transport_curvilinear_curvilinear_,
-                     ds::pT* ds::propagationLimit ^ ds::threeRandom, pT, plimit,
-                     rand1, rand2, rand3) {
+                     ds::pT* ds::propagationLimit ^ ds::threeRandom,
+                     pT,
+                     plimit,
+                     rand1,
+                     rand2,
+                     rand3) {
   // covariance check for eigen stepper in dense environment
   DensePropagatorType dpropagator = setupDensePropagator();
   RiddersPropagator rdpropagator(dpropagator);
 
   CHECK_CLOSE_COVARIANCE(
-      covariance_curvilinear(rdpropagator, pT, 0_degree, 45_degree, 1_e,
-                             plimit),
+      covariance_curvilinear(
+          rdpropagator, pT, 0_degree, 45_degree, 1_e, plimit),
       covariance_curvilinear(dpropagator, pT, 0_degree, 45_degree, 1_e, plimit),
       3e-1);
 
-  auto covCalculated =
-      covariance_bound<RiddersPropagator<DensePropagatorType>, DiscSurface,
-                       DiscSurface>(rdpropagator, pT, 0_degree, 45_degree, 1_e,
-                                    plimit, rand1, rand2, rand3, true, true);
+  auto covCalculated = covariance_bound<RiddersPropagator<DensePropagatorType>,
+                                        DiscSurface,
+                                        DiscSurface>(rdpropagator,
+                                                     pT,
+                                                     0_degree,
+                                                     45_degree,
+                                                     1_e,
+                                                     plimit,
+                                                     rand1,
+                                                     rand2,
+                                                     rand3,
+                                                     true,
+                                                     true);
   auto covObtained =
       covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
-          dpropagator, pT, 0_degree, 45_degree, 1_e, plimit, rand1, rand2,
-          rand3, true, true);
+          dpropagator,
+          pT,
+          0_degree,
+          45_degree,
+          1_e,
+          plimit,
+          rand1,
+          rand2,
+          rand3,
+          true,
+          true);
   if (covCalculated != Covariance::Zero()) {
     CHECK_CLOSE_COVARIANCE(covCalculated, covObtained, 8e-1);
   }
 
   covCalculated = covariance_bound<RiddersPropagator<DensePropagatorType>,
-                                   PlaneSurface, PlaneSurface>(
+                                   PlaneSurface,
+                                   PlaneSurface>(
       rdpropagator, pT, 0_degree, 45_degree, 1, plimit, rand1, rand2, rand3);
   covObtained =
       covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(

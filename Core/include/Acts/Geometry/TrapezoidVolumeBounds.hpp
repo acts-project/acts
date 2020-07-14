@@ -65,7 +65,9 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param maxhalex is the half length in x at maximal y
   /// @param haley is the half length in y
   /// @param halez is the half length in z
-  TrapezoidVolumeBounds(double minhalex, double maxhalex, double haley,
+  TrapezoidVolumeBounds(double minhalex,
+                        double maxhalex,
+                        double haley,
                         double halez) noexcept(false);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
@@ -75,8 +77,11 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   /// @param halez is the half length in z
   /// @param alpha is the openeing angle at -x,-y
   /// @param beta is the openeing angle at +x,-y
-  TrapezoidVolumeBounds(double minhalex, double haley, double halez,
-                        double alpha, double beta) noexcept(false);
+  TrapezoidVolumeBounds(double minhalex,
+                        double haley,
+                        double halez,
+                        double alpha,
+                        double beta) noexcept(false);
 
   /// Constructor - from a fixed size array
   ///

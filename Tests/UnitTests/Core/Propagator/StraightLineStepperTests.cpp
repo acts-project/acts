@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
-  StraightLineStepper::State slsState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  StraightLineStepper::State slsState(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
   BOOST_TEST(slsState.jacToGlobal == BoundToFreeMatrix::Zero());
@@ -71,15 +71,15 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
 
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
-  slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
-                                        stepSize, tolerance);
+  slsState = StraightLineStepper::State(
+      tgContext, mfContext, ncp, ndir, stepSize, tolerance);
   BOOST_TEST(slsState.q == 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
-  slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
-                                        stepSize, tolerance);
+  slsState = StraightLineStepper::State(
+      tgContext, mfContext, ncp, ndir, stepSize, tolerance);
   BOOST_TEST(slsState.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(slsState.covTransport);
   BOOST_TEST(slsState.cov == cov);
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CurvilinearParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
-  StraightLineStepper::State slsState(tgContext, mfContext, cp, ndir, stepSize,
-                                      tolerance);
+  StraightLineStepper::State slsState(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
   StraightLineStepper sls;
 
   // Test the getters
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_TEST(curvPars.covariance().has_value());
   BOOST_TEST(*curvPars.covariance() != cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_COVARIANCE(
+      std::get<1>(curvState), BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
 
   // Test the update method
@@ -193,8 +193,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
   BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
-  slsState = StraightLineStepper::State(tgContext, mfContext, cp, ndir,
-                                        stepSize, tolerance);
+  slsState = StraightLineStepper::State(
+      tgContext, mfContext, cp, ndir, stepSize, tolerance);
 
   // Test the intersection in the context of a surface
   auto targetSurface = Surface::makeShared<PlaneSurface>(
@@ -203,18 +203,20 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
 
   // Test the step size modification in the context of a surface
-  sls.updateStepSize(
-      slsState,
-      targetSurface->intersect(slsState.geoContext, slsState.pos,
-                               slsState.navDir * slsState.dir, false),
-      false);
+  sls.updateStepSize(slsState,
+                     targetSurface->intersect(slsState.geoContext,
+                                              slsState.pos,
+                                              slsState.navDir * slsState.dir,
+                                              false),
+                     false);
   BOOST_TEST(slsState.stepSize == 2.);
   slsState.stepSize = ndir * stepSize;
-  sls.updateStepSize(
-      slsState,
-      targetSurface->intersect(slsState.geoContext, slsState.pos,
-                               slsState.navDir * slsState.dir, false),
-      true);
+  sls.updateStepSize(slsState,
+                     targetSurface->intersect(slsState.geoContext,
+                                              slsState.pos,
+                                              slsState.navDir * slsState.dir,
+                                              false),
+                     true);
   BOOST_TEST(slsState.stepSize == 2.);
 
   // Test the bound state construction
@@ -226,13 +228,18 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_TEST(boundPars.covariance().has_value());
   BOOST_TEST(*boundPars.covariance() != cov);
-  CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
+  CHECK_CLOSE_COVARIANCE(
+      std::get<1>(boundState), BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Update in context of a surface
-  BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
-                           -1. * charge, 2. * time, targetSurface);
+  BoundParameters bpTarget(tgContext,
+                           2. * cov,
+                           2. * pos,
+                           2. * mom,
+                           -1. * charge,
+                           2. * time,
+                           targetSurface);
   Vector3D dir = bpTarget.momentum().normalized();
   FreeVector freeParams;
   freeParams[eFreePos0] = bpTarget.position()[eX];

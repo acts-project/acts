@@ -66,8 +66,10 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   ///       will be translated into a cylindrical surface.
   /// @param material Possible material of detector element
   DD4hepDetectorElement(
-      const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
-      double scalor = 1., bool isDisc = false,
+      const dd4hep::DetElement detElement,
+      const std::string& axes = "XYZ",
+      double scalor = 1.,
+      bool isDisc = false,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
 

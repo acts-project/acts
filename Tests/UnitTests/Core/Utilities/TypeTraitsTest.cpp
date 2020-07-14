@@ -189,7 +189,8 @@ template <typename T>
 constexpr bool SomeConcept =
     require<has_method<T, double, foo_method_t, double, int>,
             has_method<const T, bool, bar_method_t, double&&>,
-            has_member<T, member_t, bool>, exists<nested_t, T>,
+            has_member<T, member_t, bool>,
+            exists<nested_t, T>,
             exists<meta_t, T>>;
 
 struct A {

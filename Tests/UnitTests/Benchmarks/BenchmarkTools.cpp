@@ -52,11 +52,14 @@ BOOST_AUTO_TEST_CASE(assume_written) {
 BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
   MicroBenchmarkResult res;
   res.iters_per_run = 42;
-  res.run_timings = {
-      std::chrono::microseconds(420), std::chrono::microseconds(21),
-      std::chrono::milliseconds(4),   std::chrono::microseconds(84),
-      std::chrono::microseconds(294), std::chrono::microseconds(378),
-      std::chrono::microseconds(126), std::chrono::milliseconds(42)};
+  res.run_timings = {std::chrono::microseconds(420),
+                     std::chrono::microseconds(21),
+                     std::chrono::milliseconds(4),
+                     std::chrono::microseconds(84),
+                     std::chrono::microseconds(294),
+                     std::chrono::microseconds(378),
+                     std::chrono::microseconds(126),
+                     std::chrono::milliseconds(42)};
 
   CHECK_CLOSE_REL(res.totalTime().count() / 1'000'000., 47.323, 1e-6);
 
@@ -71,16 +74,16 @@ BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
   BOOST_CHECK_EQUAL(sorted[6].count(), 4'000'000.);
   BOOST_CHECK_EQUAL(sorted[7].count(), 42'000'000.);
 
-  CHECK_CLOSE_REL(res.runTimeMedian().count() / 1000., (294. + 378.) / 2.,
-                  1e-6);
+  CHECK_CLOSE_REL(
+      res.runTimeMedian().count() / 1000., (294. + 378.) / 2., 1e-6);
 
   const auto [firstq, thirdq] = res.runTimeQuartiles();
   CHECK_CLOSE_REL(firstq.count() / 1000., (84. + 126.) / 2., 1e-6);
   CHECK_CLOSE_REL(thirdq.count() / 1000., (420. + 4000.) / 2., 1e-6);
 
   const auto robustRTStddev = res.runTimeRobustStddev();
-  CHECK_CLOSE_REL(robustRTStddev.count(), (thirdq - firstq).count() / 1.349,
-                  1e-3);
+  CHECK_CLOSE_REL(
+      robustRTStddev.count(), (thirdq - firstq).count() / 1.349, 1e-3);
 
   const auto runTimeError = res.runTimeError();
   CHECK_CLOSE_REL(
@@ -89,10 +92,12 @@ BOOST_AUTO_TEST_CASE(micro_benchmark_result) {
       1e-3);
 
   CHECK_CLOSE_REL(res.iterTimeAverage().count(),
-                  res.runTimeMedian().count() / res.iters_per_run, 1e-6);
+                  res.runTimeMedian().count() / res.iters_per_run,
+                  1e-6);
 
   CHECK_CLOSE_REL(res.iterTimeError().count(),
-                  runTimeError.count() / std::sqrt(res.iters_per_run), 1e-6);
+                  runTimeError.count() / std::sqrt(res.iters_per_run),
+                  1e-6);
 
   std::ostringstream os;
   os << res;
@@ -113,7 +118,9 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
         ++counter;
         return counter;
       },
-      17, 11, std::chrono::milliseconds(0));
+      17,
+      11,
+      std::chrono::milliseconds(0));
   BOOST_CHECK_EQUAL(counter, 17 * 11);
 
   counter = 0;
@@ -130,7 +137,9 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
         }
         previous = input;
       },
-      ints, 123, std::chrono::milliseconds(3));
+      ints,
+      123,
+      std::chrono::milliseconds(3));
   BOOST_CHECK_EQUAL(counter, 127);
 
   counter = 0;
@@ -148,7 +157,9 @@ BOOST_AUTO_TEST_CASE(micro_benchmark) {
         previous = input;
         return &previous;
       },
-      chars, 456, std::chrono::milliseconds(8));
+      chars,
+      456,
+      std::chrono::milliseconds(8));
   BOOST_CHECK_EQUAL(counter, -61);
 }
 

@@ -43,7 +43,8 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   struct Config {
     /// The list of tracking volume builders
     std::vector<std::function<std::shared_ptr<TrackingVolume>(
-        const GeometryContext& gctx, const TrackingVolumePtr&,
+        const GeometryContext& gctx,
+        const TrackingVolumePtr&,
         const VolumeBoundsPtr&)>>
         trackingVolumeBuilders;
 

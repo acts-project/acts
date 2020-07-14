@@ -118,7 +118,9 @@ struct LayerCreatorFixture {
   }
 
   SrfVec
-  fullPhiTestSurfacesEC(size_t n = 10, double shift = 0, double zbase = 0,
+  fullPhiTestSurfacesEC(size_t n = 10,
+                        double shift = 0,
+                        double zbase = 0,
                         double r = 10) {
     SrfVec res;
 
@@ -146,8 +148,11 @@ struct LayerCreatorFixture {
   }
 
   SrfVec
-  fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                         double incl = M_PI / 9., double w = 2,
+  fullPhiTestSurfacesBRL(int n = 10,
+                         double shift = 0,
+                         double zbase = 0,
+                         double incl = M_PI / 9.,
+                         double w = 2,
                          double h = 1.5) {
     SrfVec res;
 
@@ -192,8 +197,12 @@ struct LayerCreatorFixture {
   }
 
   std::pair<SrfVec, std::vector<std::pair<const Surface*, const Surface*>>>
-  makeBarrelStagger(int nPhi, int nZ, double shift = 0, double incl = M_PI / 9.,
-                    double w = 2, double h = 1.5) {
+  makeBarrelStagger(int nPhi,
+                    int nZ,
+                    double shift = 0,
+                    double incl = M_PI / 9.,
+                    double w = 2,
+                    double h = 1.5) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
 

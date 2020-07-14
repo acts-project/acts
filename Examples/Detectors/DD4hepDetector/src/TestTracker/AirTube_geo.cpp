@@ -49,8 +49,8 @@ create_element(Detector& lcdd, xml_h e, SensitiveDetector /* sens */) {
 
   Tube tubeSolid(inner_r, outer_r, z_half);
 
-  Volume tube_vol(name + "_inner_cylinder_air", tubeSolid,
-                  lcdd.material("Air"));
+  Volume tube_vol(
+      name + "_inner_cylinder_air", tubeSolid, lcdd.material("Air"));
 
   Volume mother = lcdd.pickMotherVolume(airTube);
 

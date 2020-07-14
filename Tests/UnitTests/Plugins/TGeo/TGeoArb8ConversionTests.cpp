@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   gGeoManager->CloseGeometry();
 
   // Check the 4 possible ways
-  std::vector<std::string> allowedAxes = {"XY*", "xy*", "Xy*", "xY*",
-                                          "YX*", "yx*", "Yx*", "yX*"};
+  std::vector<std::string> allowedAxes = {
+      "XY*", "xy*", "Xy*", "xY*", "YX*", "yx*", "Yx*", "yX*"};
 
   size_t iarb8 = 0;
   for (const auto &axes : allowedAxes) {
-    auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                 *gGeoIdentity, axes, 1);
+    auto plane = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_TEST(plane != nullptr);
     BOOST_TEST(plane->type() == Surface::Plane);
 
@@ -82,12 +82,12 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     auto rotation = transform.rotation();
     GeometryView::drawSurface(objVis, *plane, tgContext);
     const Vector3D center = plane->center(tgContext);
-    GeometryView::drawArrowForward(objVis, center,
-                                   center + 30 * rotation.col(0), 4., 2.5, red);
+    GeometryView::drawArrowForward(
+        objVis, center, center + 30 * rotation.col(0), 4., 2.5, red);
     GeometryView::drawArrowForward(
         objVis, center, center + 30 * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
                  std::to_string(iarb8++));
@@ -95,12 +95,25 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   }
 
   // Check exceptions for not allowed axis definition
-  std::vector<std::string> notAllowed = {
-      "XZ*", "xz*", "xZ*", "Xz*", "ZX*", "zx*", "zX*", "Zx*",
-      "YZ*", "yz*", "yZ*", "Yz*", "ZY*", "zy*", "Zy*", "zY*"};
+  std::vector<std::string> notAllowed = {"XZ*",
+                                         "xz*",
+                                         "xZ*",
+                                         "Xz*",
+                                         "ZX*",
+                                         "zx*",
+                                         "zX*",
+                                         "Zx*",
+                                         "YZ*",
+                                         "yz*",
+                                         "yZ*",
+                                         "Yz*",
+                                         "ZY*",
+                                         "zy*",
+                                         "Zy*",
+                                         "zY*"};
   for (const auto &naxis : notAllowed) {
-    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                      *gGeoIdentity, naxis, 1),
+    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                          *vol->GetShape(), *gGeoIdentity, naxis, 1),
                       std::invalid_argument);
   }
 }

@@ -54,7 +54,8 @@ Acts::TGeoParser::select(Acts::TGeoParser::State& state,
       const Double_t* translation = transform.GetTranslation();
 
       // Create a eigen transform
-      Vector3D t(options.unit * translation[0], options.unit * translation[1],
+      Vector3D t(options.unit * translation[0],
+                 options.unit * translation[1],
                  options.unit * translation[2]);
       Vector3D cx(rotation[0], rotation[3], rotation[6]);
       Vector3D cy(rotation[1], rotation[4], rotation[7]);

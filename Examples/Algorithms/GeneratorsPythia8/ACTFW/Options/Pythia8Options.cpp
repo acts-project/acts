@@ -21,11 +21,14 @@ FW::Options::addPythia8Options(
     boost::program_options::options_description& opt) {
   using namespace boost::program_options;
 
-  opt.add_options()("evg-cms-energy", value<double>()->default_value(14000.),
+  opt.add_options()("evg-cms-energy",
+                    value<double>()->default_value(14000.),
                     "Center-of-mass energy collision in GeV")(
-      "evg-beam0", value<int32_t>()->default_value(Acts::PdgParticle::eProton),
+      "evg-beam0",
+      value<int32_t>()->default_value(Acts::PdgParticle::eProton),
       "PDG number of the first beam particle")(
-      "evg-beam1", value<int32_t>()->default_value(Acts::PdgParticle::eProton),
+      "evg-beam1",
+      value<int32_t>()->default_value(Acts::PdgParticle::eProton),
       "PDG number of the second beam particle")(
       "evg-hard-process",
       value<std::string>()->default_value("HardQCD:all = on"),
@@ -33,13 +36,17 @@ FW::Options::addPythia8Options(
       "evg-pileup-process",
       value<std::string>()->default_value("SoftQCD:all = on"),
       "Pythi8 process string for the pile-up")(
-      "evg-pileup", value<size_t>()->default_value(200),
+      "evg-pileup",
+      value<size_t>()->default_value(200),
       "Number of instantaneous pile-up events")(
-      "evg-vertex-xy-std", value<double>()->default_value(0.015),
+      "evg-vertex-xy-std",
+      value<double>()->default_value(0.015),
       "Transverse vertex standard deviation in mm")(
-      "evg-vertex-z-std", value<double>()->default_value(55.5),
+      "evg-vertex-z-std",
+      value<double>()->default_value(55.5),
       "Longitudinal vertex standard deviation in mm")(
-      "evg-vertex-t-std", value<double>()->default_value(0.08),
+      "evg-vertex-t-std",
+      value<double>()->default_value(0.08),
       "Temporal vertex standard deviation in ns")(
       "evg-shuffle", bool_switch(), "Randomnly shuffle the vertex order.");
 }

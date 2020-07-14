@@ -37,7 +37,8 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
   Acts::ActsExtension* detWorldExt = new Acts::ActsExtension();
   detWorldExt->addType("barrel", "detector");
   topDetElement.addExtension<Acts::ActsExtension>(detWorldExt);
-  dd4hep::Tube topVolumeShape(dimensions.rmin(), dimensions.rmax(),
+  dd4hep::Tube topVolumeShape(dimensions.rmin(),
+                              dimensions.rmax(),
                               (dimensions.zmax() - dimensions.zmin()) * 0.5);
   Volume topVolume(detectorName, topVolumeShape, lcdd.air());
   topVolume.setVisAttributes(lcdd.invisible());
@@ -49,7 +50,8 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
   // loop over 'layer' nodes in xml
   dd4hep::xml::Component xLayers = xmlElement.child(_Unicode(layers));
   for (dd4hep::xml::Collection_t xLayerColl(xLayers, _U(layer));
-       nullptr != xLayerColl; ++xLayerColl) {
+       nullptr != xLayerColl;
+       ++xLayerColl) {
     dd4hep::xml::Component xLayer =
         static_cast<dd4hep::xml::Component>(xLayerColl);
     dd4hep::xml::Component xRods = xLayer.child("rods");
@@ -64,8 +66,8 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
     // layerVolume.setVisAttributes(lcdd.invisible());
     PlacedVolume placedLayerVolume = topVolume.placeVolume(layerVolume);
     placedLayerVolume.addPhysVolID("layer", layerCounter);
-    DetElement lay_det(topDetElement, "layer" + std::to_string(layerCounter),
-                       layerCounter);
+    DetElement lay_det(
+        topDetElement, "layer" + std::to_string(layerCounter), layerCounter);
     // the local coordinate systems of modules in dd4hep and acts differ
     // see http://acts.web.cern.ch/ACTS/latest/doc/group__DD4hepPlugins.html
     // detElement owns extension
@@ -84,7 +86,8 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
 
     for (dd4hep::xml::Collection_t xModuleComponentOddColl(xModuleComponentsOdd,
                                                            _U(component));
-         nullptr != xModuleComponentOddColl; ++xModuleComponentOddColl) {
+         nullptr != xModuleComponentOddColl;
+         ++xModuleComponentOddColl) {
       dd4hep::xml::Component xModuleComponentOdd =
           static_cast<dd4hep::xml::Component>(xModuleComponentOddColl);
       // collect module materials
@@ -94,15 +97,17 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
     }
     for (dd4hep::xml::Collection_t xModuleComponentOddColl(xModuleComponentsOdd,
                                                            _U(component));
-         nullptr != xModuleComponentOddColl; ++xModuleComponentOddColl) {
+         nullptr != xModuleComponentOddColl;
+         ++xModuleComponentOddColl) {
       dd4hep::xml::Component xModuleComponentOdd =
           static_cast<dd4hep::xml::Component>(xModuleComponentOddColl);
       auto moduleWidth = 0.5 * xModulePropertiesOdd.attr<double>("modWidth");
       auto moduleThickness = 0.5 * xModuleComponentOdd.thickness();
       auto moduleLength = 0.5 * xModulePropertiesOdd.attr<double>("modLength");
-      Volume moduleVolume = Volume(
-          "module", dd4hep::Box(moduleWidth, moduleThickness, moduleLength),
-          lcdd.material(xModuleComponentOdd.materialStr()));
+      Volume moduleVolume =
+          Volume("module",
+                 dd4hep::Box(moduleWidth, moduleThickness, moduleLength),
+                 lcdd.material(xModuleComponentOdd.materialStr()));
 
       // Create digitization module
       // with readout given by layer
@@ -124,7 +129,8 @@ createTkLayoutTrackerBarrel(dd4hep::Detector& lcdd,
           currentComp = xModulesOdd;
         }
         for (dd4hep::xml::Collection_t xModuleColl(currentComp, _U(module));
-             nullptr != xModuleColl; ++xModuleColl) {
+             nullptr != xModuleColl;
+             ++xModuleColl) {
           dd4hep::xml::Component xModule =
               static_cast<dd4hep::xml::Component>(xModuleColl);
           double currentPhi = atan2(xModule.Y(), xModule.X());

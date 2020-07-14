@@ -49,8 +49,11 @@ class CylinderSurface : public Surface {
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
-  CylinderSurface(std::shared_ptr<const Transform3D> htrans, double radius,
-                  double halfz, double halfphi = M_PI, double avphi = 0.);
+  CylinderSurface(std::shared_ptr<const Transform3D> htrans,
+                  double radius,
+                  double halfz,
+                  double halfphi = M_PI,
+                  double avphi = 0.);
 
   /// Constructor from Transform3D and CylinderBounds arguments
   ///
@@ -71,7 +74,8 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  CylinderSurface(const GeometryContext& gctx, const CylinderSurface& other,
+  CylinderSurface(const GeometryContext& gctx,
+                  const CylinderSurface& other,
                   const Transform3D& transf);
 
  public:
@@ -105,7 +109,8 @@ class CylinderSurface : public Surface {
   /// @param momentum is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   const RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx, const Vector3D& position,
+  referenceFrame(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& momentum) const final;
 
   /// Return the surface type
@@ -156,8 +161,10 @@ class CylinderSurface : public Surface {
   /// @param momentum is the global momentum (ignored in this operation)
   /// @param position is the global position which is filled
   void
-  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                const Vector3D& momentum, Vector3D& position) const final;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D& lposition,
+                const Vector3D& momentum,
+                Vector3D& position) const final;
 
   /// Global to local transformation
   ///
@@ -168,8 +175,10 @@ class CylinderSurface : public Surface {
   ///
   /// @return is a boolean indicating if the transformation succeeded
   bool
-  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                const Vector3D& momentum, Vector2D& lposition) const final;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D& position,
+                const Vector3D& momentum,
+                Vector2D& lposition) const final;
 
   /// Straight line intersection schema - provides closest intersection
   ///  and (signed) path length
@@ -182,7 +191,8 @@ class CylinderSurface : public Surface {
   ///
   /// @return is the closest intersection (fwd or bwd)
   Intersection
-  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D& position,
                        const Vector3D& direction,
                        const BoundaryCheck& bcheck) const final;
 
@@ -197,8 +207,10 @@ class CylinderSurface : public Surface {
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
   SurfaceIntersection
-  intersect(const GeometryContext& gctx, const Vector3D& position,
-            const Vector3D& direction, const BoundaryCheck& bcheck) const final;
+  intersect(const GeometryContext& gctx,
+            const Vector3D& position,
+            const Vector3D& direction,
+            const BoundaryCheck& bcheck) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -208,7 +220,8 @@ class CylinderSurface : public Surface {
   ///
   /// @return is the correction factor due to incident
   double
-  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D& position,
                  const Vector3D& direction) const final;
 
   /// Return method for properly formatted output string
@@ -277,7 +290,8 @@ class CylinderSurface : public Surface {
   ///
   /// @return the quadratic equation
   detail::RealQuadraticEquation
-  intersectionSolver(const Transform3D& transform, const Vector3D& position,
+  intersectionSolver(const Transform3D& transform,
+                     const Vector3D& position,
                      const Vector3D& direction) const;
 };
 

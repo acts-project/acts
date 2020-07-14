@@ -45,9 +45,14 @@ struct DefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  k(const propagator_state_t& state, const stepper_t& stepper, Vector3D& knew,
-    const Vector3D& bField, std::array<double, 4>& kQoP, const int i = 0,
-    const double h = 0., const Vector3D& kprev = Vector3D()) {
+  k(const propagator_state_t& state,
+    const stepper_t& stepper,
+    Vector3D& knew,
+    const Vector3D& bField,
+    std::array<double, 4>& kQoP,
+    const int i = 0,
+    const double h = 0.,
+    const Vector3D& kprev = Vector3D()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data
@@ -73,7 +78,8 @@ struct DefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& state, const stepper_t& stepper,
+  finalize(propagator_state_t& state,
+           const stepper_t& stepper,
            const double h) const {
     propagateTime(state, stepper, h);
     return true;
@@ -92,7 +98,9 @@ struct DefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& state, const stepper_t& stepper, const double h,
+  finalize(propagator_state_t& state,
+           const stepper_t& stepper,
+           const double h,
            FreeMatrix& D) const {
     propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
@@ -108,7 +116,8 @@ struct DefaultExtension {
   /// @param [in] h Step size
   template <typename propagator_state_t, typename stepper_t>
   void
-  propagateTime(propagator_state_t& state, const stepper_t& stepper,
+  propagateTime(propagator_state_t& state,
+                const stepper_t& stepper,
                 const double h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
@@ -132,8 +141,10 @@ struct DefaultExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool
-  transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                  const double h, FreeMatrix& D) const {
+  transportMatrix(propagator_state_t& state,
+                  const stepper_t& stepper,
+                  const double h,
+                  FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed

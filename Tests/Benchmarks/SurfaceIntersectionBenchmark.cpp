@@ -99,7 +99,9 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<>(-0.3, 0.3))) ^
         bdata::xrange(ntests),
-    phi, theta, index) {
+    phi,
+    theta,
+    index) {
   (void)index;
 
   std::cout << std::endl

@@ -49,7 +49,9 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, bool symm, double halfphi = M_PI,
+  ConeBounds(double alpha,
+             bool symm,
+             double halfphi = M_PI,
              double avphi = 0.) noexcept(false);
 
   /// Constructor - open cone with alpha, minz and maxz, by
@@ -61,7 +63,10 @@ class ConeBounds : public SurfaceBounds {
   /// @param halfphi is the half opening angle (default is pi)
   /// @param avphi is the phi value around which the bounds are opened
   /// (default=0)
-  ConeBounds(double alpha, double minz, double maxz, double halfphi = M_PI,
+  ConeBounds(double alpha,
+             double minz,
+             double maxz,
+             double halfphi = M_PI,
              double avphi = 0.) noexcept(false);
 
   /// Constructor - from parameters array

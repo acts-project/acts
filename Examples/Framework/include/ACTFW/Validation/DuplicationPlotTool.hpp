@@ -66,7 +66,8 @@ class DuplicationPlotTool {
   /// @param status the (truth-matched) reconstructed track is duplicated or not
   void
   fill(DuplicationPlotCache& duplicationPlotCache,
-       const Acts::BoundParameters& fittedParameters, bool status) const;
+       const Acts::BoundParameters& fittedParameters,
+       bool status) const;
 
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///

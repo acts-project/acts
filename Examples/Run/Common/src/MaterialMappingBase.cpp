@@ -103,7 +103,8 @@ materialMappingExample(int argc, char* argv[], FW::IBaseDetector& detector) {
     /// The material surface mapper
     Acts::SurfaceMaterialMapper::Config smmConfig;
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
-        smmConfig, std::move(propagator),
+        smmConfig,
+        std::move(propagator),
         Acts::getDefaultLogger("SurfaceMaterialMapper", logLevel));
     mmAlgConfig.materialSurfaceMapper = smm;
   }
@@ -117,7 +118,8 @@ materialMappingExample(int argc, char* argv[], FW::IBaseDetector& detector) {
     Acts::VolumeMaterialMapper::Config vmmConfig;
     vmmConfig.mappingStep = volumeStep;
     auto vmm = std::make_shared<Acts::VolumeMaterialMapper>(
-        vmmConfig, std::move(propagator),
+        vmmConfig,
+        std::move(propagator),
         Acts::getDefaultLogger("VolumeMaterialMapper", logLevel));
     mmAlgConfig.materialVolumeMapper = vmm;
   }

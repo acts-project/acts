@@ -35,7 +35,8 @@ struct GeometryView {
   /// @param Polyhedron The surface to be drawn
   /// @param ViewConfig The drawing configuration
   static void
-  drawPolyhedron(IVisualization& helper, const Polyhedron& polyhedron,
+  drawPolyhedron(IVisualization& helper,
+                 const Polyhedron& polyhedron,
                  const ViewConfig& ViewConfig = s_viewVolume);
 
   /// Helper method to draw Surface objects
@@ -46,7 +47,8 @@ struct GeometryView {
   /// @param transform An option additional transform
   /// @param ViewConfig The drawing configuration
   static void
-  drawSurface(IVisualization& helper, const Surface& surface,
+  drawSurface(IVisualization& helper,
+              const Surface& surface,
               const GeometryContext& gctx,
               const Transform3D& transform = Transform3D::Identity(),
               const ViewConfig& ViewConfig = s_viewSensitive);
@@ -61,7 +63,8 @@ struct GeometryView {
   /// @param passiveConfig The drawing configuration for passive surfaces
   /// @param gridCongig The drawing configuraiton for grid
   static void
-  drawSurfaceArray(IVisualization& helper, const SurfaceArray& surfaceArray,
+  drawSurfaceArray(IVisualization& helper,
+                   const SurfaceArray& surfaceArray,
                    const GeometryContext& gctx,
                    const Transform3D& transform = Transform3D::Identity(),
                    const ViewConfig& sensitiveConfig = s_viewSensitive,
@@ -76,7 +79,8 @@ struct GeometryView {
   /// @param transform An option additional transform
   /// @param viewConfig The drawing configuration for boundary surfaces
   static void
-  drawVolume(IVisualization& helper, const AbstractVolume& volume,
+  drawVolume(IVisualization& helper,
+             const AbstractVolume& volume,
              const GeometryContext& gctx,
              const Transform3D& transform = Transform3D::Identity(),
              const ViewConfig& viewConfig = s_viewVolume);
@@ -90,7 +94,8 @@ struct GeometryView {
   /// @param sensitiveConfig The drawing configuration for sensitive surfaces
   /// @param gridConfig The drawing configuraiton for grid display
   static void
-  drawLayer(IVisualization& helper, const Layer& layer,
+  drawLayer(IVisualization& helper,
+            const Layer& layer,
             const GeometryContext& gctx,
             const ViewConfig& layerConfig = s_viewPassive,
             const ViewConfig& sensitiveConfig = s_viewSensitive,
@@ -110,14 +115,16 @@ struct GeometryView {
   /// @param writeIt The prescription to write it or not
   /// @param tag The (optional) additional output tag
   static void
-  drawTrackingVolume(IVisualization& helper, const TrackingVolume& tVolume,
+  drawTrackingVolume(IVisualization& helper,
+                     const TrackingVolume& tVolume,
                      const GeometryContext& gctx,
                      const ViewConfig& containerView = s_viewVolume,
                      const ViewConfig& volumeView = s_viewVolume,
                      const ViewConfig& layerView = s_viewPassive,
                      const ViewConfig& sensitiveView = s_viewSensitive,
                      const ViewConfig& gridView = s_viewGrid,
-                     bool writeIt = true, const std::string& tag = "");
+                     bool writeIt = true,
+                     const std::string& tag = "");
 
   /// Helper method to draw lines - base for all lines
   ///
@@ -129,8 +136,11 @@ struct GeometryView {
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
   static void
-  drawSegmentBase(IVisualization& helper, const Vector3D& start,
-                  const Vector3D& end, int arrows = 0, double arrowLength = 0.,
+  drawSegmentBase(IVisualization& helper,
+                  const Vector3D& start,
+                  const Vector3D& end,
+                  int arrows = 0,
+                  double arrowLength = 0.,
                   double arrowWidth = 0.,
                   const ViewConfig& viewConfig = s_viewLine);
 
@@ -141,8 +151,10 @@ struct GeometryView {
   /// @param end The end point
   /// @param ViewConfig The drawing configuration for this segement
   static void
-  drawSegment(IVisualization& helper, const Vector3D& start,
-              const Vector3D& end, const ViewConfig& viewConfig = s_viewLine);
+  drawSegment(IVisualization& helper,
+              const Vector3D& start,
+              const Vector3D& end,
+              const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing back
   ///
@@ -153,8 +165,11 @@ struct GeometryView {
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
   static void
-  drawArrowBackward(IVisualization& helper, const Vector3D& start,
-                    const Vector3D& end, double arrowLength, double arrowWidth,
+  drawArrowBackward(IVisualization& helper,
+                    const Vector3D& start,
+                    const Vector3D& end,
+                    double arrowLength,
+                    double arrowWidth,
                     const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing forwad
@@ -166,8 +181,11 @@ struct GeometryView {
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
   static void
-  drawArrowForward(IVisualization& helper, const Vector3D& start,
-                   const Vector3D& end, double arrowLength, double arrowWidth,
+  drawArrowForward(IVisualization& helper,
+                   const Vector3D& start,
+                   const Vector3D& end,
+                   double arrowLength,
+                   double arrowWidth,
                    const ViewConfig& viewConfig = s_viewLine);
 
   /// Convenience function : arrow pointing both directions
@@ -179,8 +197,11 @@ struct GeometryView {
   /// @param arrowWidth wrt thickness
   /// @param ViewConfig The drawing configuration for this segement
   static void
-  drawArrowsBoth(IVisualization& helper, const Vector3D& start,
-                 const Vector3D& end, double arrowLength, double arrowWidth,
+  drawArrowsBoth(IVisualization& helper,
+                 const Vector3D& start,
+                 const Vector3D& end,
+                 double arrowLength,
+                 double arrowWidth,
                  const ViewConfig& viewConfig = s_viewLine);
 };
 

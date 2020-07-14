@@ -34,7 +34,8 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
   // Make Volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   dd4hep::Tube barrelShape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.dz());
-  dd4hep::Volume barrelVolume(barrelName, barrelShape,
+  dd4hep::Volume barrelVolume(barrelName,
+                              barrelShape,
                               lcdd.air());  // air at the moment change later
   barrelVolume.setVisAttributes(lcdd, x_det.visStr());
 
@@ -47,7 +48,8 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
     unsigned int layerNum = x_layer.id();
     // Create Volume for Layer
     std::string layerName = barrelName + _toString((int)layerNum, "layer%d");
-    dd4hep::Volume layerVolume(layerName, Tube(rmin, rmax, x_layer.dz()),
+    dd4hep::Volume layerVolume(layerName,
+                               Tube(rmin, rmax, x_layer.dz()),
                                lcdd.material(x_layer.materialStr()));
     dd4hep::DetElement layerElement(barrelDetector, layerName, layerNum);
     // Visualization
@@ -123,15 +125,17 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
       if (x_module.hasChild(_U(tubs))) {
         xml_comp_t x_tubs = x_module.child(_U(tubs));
         dd4hep::Volume pipeVolume(
-            "CoolingPipe", Tube(x_tubs.rmin(), x_tubs.rmax(), x_tubs.length()),
+            "CoolingPipe",
+            Tube(x_tubs.rmin(), x_tubs.rmax(), x_tubs.length()),
             lcdd.material(x_tubs.materialStr()));
         pipeVolume.setVisAttributes(lcdd, x_tubs.visStr());
         // Place the cooling pipe into the module
         dd4hep::PlacedVolume placedPipe = moduleAssembly.placeVolume(
             pipeVolume,
-            Transform3D(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
-                        Position(x_tubs.x_offset(), x_tubs.y_offset(),
-                                 x_tubs.z_offset())));
+            Transform3D(
+                RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
+                Position(
+                    x_tubs.x_offset(), x_tubs.y_offset(), x_tubs.z_offset())));
         placedPipe.addPhysVolID("support", supportNum++);
       }
 
@@ -139,18 +143,19 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
       if (x_module.hasChild(_U(anchor))) {
         xml_comp_t x_trd = x_module.child(_U(anchor));
         // create the two shapes first
-        dd4hep::Trapezoid mountShape(x_trd.x1(), x_trd.x2(), x_trd.length(),
-                                     x_trd.length(), x_trd.dz());
+        dd4hep::Trapezoid mountShape(
+            x_trd.x1(), x_trd.x2(), x_trd.length(), x_trd.length(), x_trd.dz());
 
-        dd4hep::Volume mountVolume("ModuleMount", mountShape,
-                                   lcdd.material(x_trd.materialStr()));
+        dd4hep::Volume mountVolume(
+            "ModuleMount", mountShape, lcdd.material(x_trd.materialStr()));
 
         // Place the mount onto the module
-        dd4hep::PlacedVolume placedMount = moduleAssembly.placeVolume(
-            mountVolume,
-            Transform3D(RotationZ(0.5 * M_PI),
-                        Position(x_trd.x_offset(), x_trd.y_offset(),
-                                 x_trd.z_offset())));
+        dd4hep::PlacedVolume placedMount =
+            moduleAssembly.placeVolume(mountVolume,
+                                       Transform3D(RotationZ(0.5 * M_PI),
+                                                   Position(x_trd.x_offset(),
+                                                            x_trd.y_offset(),
+                                                            x_trd.z_offset())));
         placedMount.addPhysVolID("support", supportNum++);
       }
 
@@ -158,16 +163,18 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
       if (x_module.hasChild(_U(box))) {
         xml_comp_t x_cab = x_module.child(_U(box));
         dd4hep::Volume cableVolume(
-            "Cable", Box(0.5 * x_cab.dx(), 0.5 * x_cab.dy(), 0.5 * x_cab.dz()),
+            "Cable",
+            Box(0.5 * x_cab.dx(), 0.5 * x_cab.dy(), 0.5 * x_cab.dz()),
             lcdd.material(x_cab.materialStr()));
         // Visualization
         cableVolume.setVisAttributes(lcdd, x_cab.visStr());
         // Place Module Box Volumes in layer
-        dd4hep::PlacedVolume placedCable = moduleAssembly.placeVolume(
-            cableVolume,
-            Transform3D(RotationX(x_cab.alpha()),
-                        Position(x_cab.x_offset(), x_cab.y_offset(),
-                                 x_cab.z_offset())));
+        dd4hep::PlacedVolume placedCable =
+            moduleAssembly.placeVolume(cableVolume,
+                                       Transform3D(RotationX(x_cab.alpha()),
+                                                   Position(x_cab.x_offset(),
+                                                            x_cab.y_offset(),
+                                                            x_cab.z_offset())));
         placedCable.addPhysVolID("support", supportNum++);
       }
 
@@ -181,8 +188,8 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
         // Place the sensitive inside here
         unsigned int ccomp = 1;
         for (auto& sensComp : sensComponents) {
-          dd4hep::DetElement componentElement(moduleElement, "component",
-                                              ccomp++);
+          dd4hep::DetElement componentElement(
+              moduleElement, "component", ccomp++);
           componentElement.setPlacement(sensComp);
           // Add the sensor extension
           Acts::ActsExtension* sensorExtension = new Acts::ActsExtension();
@@ -209,8 +216,8 @@ create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
     // Add the proto layer material
     for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
       xml_comp_t x_layer_material = lmat;
-      xmlToProtoSurfaceMaterial(x_layer_material, *layerExtension,
-                                "layer_material");
+      xmlToProtoSurfaceMaterial(
+          x_layer_material, *layerExtension, "layer_material");
     }
     layerElement.addExtension<Acts::ActsExtension>(layerExtension);
 

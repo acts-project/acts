@@ -3,13 +3,13 @@ BasedOnStyle: Google
 Language:        Cpp
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-
 AlwaysBreakAfterReturnType: All
 AlignAfterOpenBracket: Align
-
+BinPackArguments: 'false'
+BinPackParameters: 'false'
+AllowShortFunctionsOnASingleLine: Inline
 PointerAlignment: Left
 ColumnLimit:     80
 IncludeCategories: 

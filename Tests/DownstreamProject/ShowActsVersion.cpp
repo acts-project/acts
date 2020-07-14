@@ -12,7 +12,10 @@
 
 int
 main(void) {
-  printf("Using Acts version %u.%u.%u commit %s\n", Acts::VersionMajor,
-         Acts::VersionMinor, Acts::VersionPatch, Acts::CommitHash);
+  printf("Using Acts version %u.%u.%u commit %s\n",
+         Acts::VersionMajor,
+         Acts::VersionMinor,
+         Acts::VersionPatch,
+         Acts::CommitHash);
   return EXIT_SUCCESS;
 }

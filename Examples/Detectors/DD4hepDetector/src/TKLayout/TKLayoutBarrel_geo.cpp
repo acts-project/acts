@@ -30,7 +30,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // make Volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.dz());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.air());  // air at the moment change later
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
   // go trough possible layers
@@ -42,7 +43,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
     double l_length = x_layer.z();
     // Create Volume and DetElement for Layer
     string layer_name = det_name + _toString((int)layer_num, "layer%d");
-    Volume layer_vol(layer_name, Tube(l_rmin, l_rmax, l_length),
+    Volume layer_vol(layer_name,
+                     Tube(l_rmin, l_rmax, l_length),
                      lcdd.material(x_layer.materialStr()));
     DetElement lay_det(cylinderVolume, layer_name, layer_num);
     // Visualization

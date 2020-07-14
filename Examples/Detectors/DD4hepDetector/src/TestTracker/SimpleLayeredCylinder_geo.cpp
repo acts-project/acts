@@ -40,8 +40,8 @@ createSimpleLayeredCylinder(dd4hep::Detector& lcdd,
   dd4hep::Volume experimentalHall = lcdd.pickMotherVolume(detElement);
   xml_comp_t dimensions(xmlDet.dimensions());
   dd4hep::Tube envelope(dimensions.rmin(), dimensions.rmax(), dimensions.dz());
-  dd4hep::Volume envVolume(name, envelope,
-                           lcdd.material(dimensions.materialStr()));
+  dd4hep::Volume envVolume(
+      name, envelope, lcdd.material(dimensions.materialStr()));
 
   // Create layer cylinders with their respective material, etc
   size_t layerIdx = 0;

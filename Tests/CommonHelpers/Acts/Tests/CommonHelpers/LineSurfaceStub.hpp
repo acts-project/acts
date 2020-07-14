@@ -19,7 +19,8 @@ class LineSurfaceStub : public LineSurface {
  public:
   LineSurfaceStub() = delete;
   //
-  LineSurfaceStub(std::shared_ptr<const Transform3D> htrans, double radius,
+  LineSurfaceStub(std::shared_ptr<const Transform3D> htrans,
+                  double radius,
                   double halfz)
       : GeometryObject(), LineSurface(htrans, radius, halfz) { /* nop */
   }
@@ -46,7 +47,8 @@ class LineSurfaceStub : public LineSurface {
   }
 
   //
-  LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,
+  LineSurfaceStub(const GeometryContext& gctx,
+                  const LineSurfaceStub& ls,
                   const Transform3D& t)
       : GeometryObject(), LineSurface(gctx, ls, t) { /* nop */
   }

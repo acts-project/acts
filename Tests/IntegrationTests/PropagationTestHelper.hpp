@@ -36,8 +36,10 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
 std::shared_ptr<Transform3D>
-createPlanarTransform(const Vector3D& nposition, const Vector3D& nnormal,
-                      double angleT, double angleU) {
+createPlanarTransform(const Vector3D& nposition,
+                      const Vector3D& nnormal,
+                      double angleT,
+                      double angleU) {
   // the rotation of the destination surface
   Vector3D T = nnormal.normalized();
   Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
@@ -66,7 +68,8 @@ createPlanarTransform(const Vector3D& nposition, const Vector3D& nnormal,
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
 std::shared_ptr<Transform3D>
-createCylindricTransform(const Vector3D& nposition, double angleX,
+createCylindricTransform(const Vector3D& nposition,
+                         double angleX,
                          double angleY) {
   Transform3D ctransform;
   ctransform.setIdentity();
@@ -78,8 +81,12 @@ createCylindricTransform(const Vector3D& nposition, double angleX,
 
 template <typename Propagator_type>
 Vector3D
-constant_field_propagation(const Propagator_type& propagator, double pT,
-                           double phi, double theta, double charge, double time,
+constant_field_propagation(const Propagator_type& propagator,
+                           double pT,
+                           double phi,
+                           double theta,
+                           double charge,
+                           double time,
                            double Bz,
                            double disttol = 0.1 * Acts::UnitConstants::um,
                            bool debug = false) {
@@ -164,8 +171,12 @@ constant_field_propagation(const Propagator_type& propagator, double pT,
 
 template <typename Propagator_type>
 void
-foward_backward(const Propagator_type& propagator, double pT, double phi,
-                double theta, double charge, double plimit,
+foward_backward(const Propagator_type& propagator,
+                double pT,
+                double phi,
+                double theta,
+                double charge,
+                double plimit,
                 double disttol = 1 * Acts::UnitConstants::um,
                 double momtol = 10 * Acts::UnitConstants::keV,
                 bool debug = false) {
@@ -236,9 +247,16 @@ foward_backward(const Propagator_type& propagator, double pT, double phi,
 // test propagation to cylinder
 template <typename Propagator_type>
 std::pair<Vector3D, double>
-to_cylinder(const Propagator_type& propagator, double pT, double phi,
-            double theta, double charge, double plimit, double rand1,
-            double rand2, double /*rand3*/, bool covtransport = false,
+to_cylinder(const Propagator_type& propagator,
+            double pT,
+            double phi,
+            double theta,
+            double charge,
+            double plimit,
+            double rand1,
+            double rand2,
+            double /*rand3*/,
+            bool covtransport = false,
             bool debug = false) {
   using namespace Acts::UnitLiterals;
 
@@ -278,8 +296,8 @@ to_cylinder(const Propagator_type& propagator, double pT, double phi,
   }
 
   // The transform at the destination
-  auto seTransform = createCylindricTransform(Vector3D(0., 0., 0.),
-                                              0.04 * rand1, 0.04 * rand2);
+  auto seTransform = createCylindricTransform(
+      Vector3D(0., 0., 0.), 0.04 * rand1, 0.04 * rand2);
   auto endSurface = Surface::makeShared<CylinderSurface>(
       seTransform, plimit, std::numeric_limits<double>::max());
 
@@ -312,10 +330,18 @@ to_cylinder(const Propagator_type& propagator, double pT, double phi,
 // test propagation to most surfaces
 template <typename Propagator_type, typename SurfaceType>
 std::pair<Vector3D, double>
-to_surface(const Propagator_type& propagator, double pT, double phi,
-           double theta, double charge, double plimit, double rand1,
-           double rand2, double rand3, bool planar = true,
-           bool covtransport = false, bool debug = false) {
+to_surface(const Propagator_type& propagator,
+           double pT,
+           double phi,
+           double theta,
+           double charge,
+           double plimit,
+           double rand1,
+           double rand2,
+           double rand3,
+           bool planar = true,
+           bool covtransport = false,
+           bool debug = false) {
   using namespace Acts::UnitLiterals;
   using DebugOutput = DebugOutputActor;
 
@@ -362,9 +388,10 @@ to_surface(const Propagator_type& propagator, double pT, double phi,
     auto seTransform =
         planar ? createPlanarTransform(tp_s->position(),
                                        tp_s->momentum().normalized(),
-                                       0.1 * rand3, 0.1 * rand1)
-               : createCylindricTransform(tp_s->position(), 0.04 * rand1,
-                                          0.04 * rand2);
+                                       0.1 * rand3,
+                                       0.1 * rand1)
+               : createCylindricTransform(
+                     tp_s->position(), 0.04 * rand1, 0.04 * rand2);
 
     auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
@@ -406,9 +433,10 @@ to_surface(const Propagator_type& propagator, double pT, double phi,
     auto seTransform =
         planar ? createPlanarTransform(tp_s->position(),
                                        tp_s->momentum().normalized(),
-                                       0.1 * rand3, 0.1 * rand1)
-               : createCylindricTransform(tp_s->position(), 0.04 * rand1,
-                                          0.04 * rand2);
+                                       0.1 * rand3,
+                                       0.1 * rand1)
+               : createCylindricTransform(
+                     tp_s->position(), 0.04 * rand1, 0.04 * rand2);
 
     auto endSurface = Surface::makeShared<SurfaceType>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
@@ -446,8 +474,12 @@ to_surface(const Propagator_type& propagator, double pT, double phi,
 
 template <typename Propagator_type>
 Covariance
-covariance_curvilinear(const Propagator_type& propagator, double pT, double phi,
-                       double theta, double charge, double plimit,
+covariance_curvilinear(const Propagator_type& propagator,
+                       double pT,
+                       double phi,
+                       double theta,
+                       double charge,
+                       double plimit,
                        bool debug = false) {
   using namespace Acts::UnitLiterals;
 
@@ -491,13 +523,22 @@ covariance_curvilinear(const Propagator_type& propagator, double pT, double phi,
   return *(tp->covariance());
 }
 
-template <typename Propagator_type, typename StartSurfaceType,
+template <typename Propagator_type,
+          typename StartSurfaceType,
           typename DestSurfaceType>
 Covariance
-covariance_bound(const Propagator_type& propagator, double pT, double phi,
-                 double theta, double charge, double plimit, double rand1,
-                 double rand2, double rand3, bool startPlanar = true,
-                 bool destPlanar = true, bool debug = false) {
+covariance_bound(const Propagator_type& propagator,
+                 double pT,
+                 double phi,
+                 double theta,
+                 double charge,
+                 double plimit,
+                 double rand1,
+                 double rand2,
+                 double rand3,
+                 bool startPlanar = true,
+                 bool destPlanar = true,
+                 bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -536,15 +577,16 @@ covariance_bound(const Propagator_type& propagator, double pT, double phi,
   const auto& tp_c = result_c.endParameters;
 
   auto ssTransform =
-      startPlanar ? createPlanarTransform(pos, mom.normalized(), 0.05 * rand1,
-                                          0.05 * rand2)
+      startPlanar ? createPlanarTransform(
+                        pos, mom.normalized(), 0.05 * rand1, 0.05 * rand2)
                   : createCylindricTransform(pos, 0.01 * rand1, 0.01 * rand2);
   auto seTransform = destPlanar
                          ? createPlanarTransform(tp_c->position(),
                                                  tp_c->momentum().normalized(),
-                                                 0.05 * rand3, 0.05 * rand1)
-                         : createCylindricTransform(tp_c->position(),
-                                                    0.01 * rand1, 0.01 * rand2);
+                                                 0.05 * rand3,
+                                                 0.05 * rand1)
+                         : createCylindricTransform(
+                               tp_c->position(), 0.01 * rand1, 0.01 * rand2);
 
   auto startSurface =
       Surface::makeShared<StartSurfaceType>(ssTransform, nullptr);

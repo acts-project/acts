@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
   size_t nBins0 = 10;
   std::vector<size_t> clusterSizes = {2, 2, 2, 3, 6, 6, 7};
   std::vector<size_t> clusterSizesCut = {1, 1, 1, 1, 1, 1, 1, 2, 2, 3};
-  std::vector<size_t> clusterSizesEdge = {1, 1, 1, 1, 1, 1, 1,
-                                          2, 2, 2, 3, 3, 3, 6};
+  std::vector<size_t> clusterSizesEdge = {
+      1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 3, 3, 3, 6};
   size_t nClusters = clusterSizes.size();
   size_t nClustersCut = clusterSizesCut.size();
   size_t nClustersEdge = clusterSizesEdge.size();
@@ -208,8 +208,10 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
   }
   // check the cluster sizes
   std::sort(clusterSizes1.begin(), clusterSizes1.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizes.begin(), clusterSizes.end(),
-                                clusterSizes1.begin(), clusterSizes1.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizes.begin(),
+                                clusterSizes.end(),
+                                clusterSizes1.begin(),
+                                clusterSizes1.end());
   // check cells
   CHECK_CLOSE_REL(data1, nCellsWithoutDuplicates, 1e-5);
 
@@ -233,7 +235,8 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
   // check the cluster sizes
   std::sort(clusterSizes2.begin(), clusterSizes2.end());
   BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizesEdge.begin(),
-                                clusterSizesEdge.end(), clusterSizes2.begin(),
+                                clusterSizesEdge.end(),
+                                clusterSizes2.begin(),
                                 clusterSizes2.end());
   // check cells
   CHECK_CLOSE_REL(data2, nCellsWithoutDuplicates, 1e-5);
@@ -257,8 +260,10 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
   }
   // check the cluster sizes
   std::sort(clusterSizes3.begin(), clusterSizes3.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizes.begin(), clusterSizes.end(),
-                                clusterSizes3.begin(), clusterSizes3.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizes.begin(),
+                                clusterSizes.end(),
+                                clusterSizes3.begin(),
+                                clusterSizes3.end());
   // check cells
   CHECK_CLOSE_REL(data3, nCells, 1e-5);
 
@@ -282,8 +287,10 @@ BOOST_AUTO_TEST_CASE(create_Clusters1) {
   }
   // check the cluster sizes
   std::sort(clusterSizes4.begin(), clusterSizes4.end());
-  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizesCut.begin(), clusterSizesCut.end(),
-                                clusterSizes4.begin(), clusterSizes4.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS(clusterSizesCut.begin(),
+                                clusterSizesCut.end(),
+                                clusterSizes4.begin(),
+                                clusterSizes4.end());
   // check cells
   CHECK_CLOSE_REL(data4, nCells, 1e-5);
 }

@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   BOOST_CHECK_EQUAL(xData_arb_binary.value(xyPosition), 0.5);
 
   // r/phi/rphiData
-  CHECK_CLOSE_REL(rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5),
-                  1e-5);
+  CHECK_CLOSE_REL(
+      rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5), 1e-5);
   BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
 
   CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * M_PI);
@@ -334,7 +334,8 @@ BOOST_AUTO_TEST_CASE(BinningData_boundaries) {
   // open values
   std::vector<float> boundaries = {0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.};
   BOOST_CHECK_EQUAL_COLLECTIONS(xData_eq.boundaries().begin(),
-                                xData_eq.boundaries().end(), boundaries.begin(),
+                                xData_eq.boundaries().end(),
+                                boundaries.begin(),
                                 boundaries.end());
 
   float phiStep = M_PI * 2. / 5.;
@@ -380,18 +381,19 @@ BOOST_AUTO_TEST_CASE(BinningData_bincenter) {
   BOOST_CHECK_EQUAL(xData_arb_binary.center(0), 0.5 * delta);
 
   // open values
-  std::vector<float> center = {0.5, 1.5, 2.5, 3.5, 4.5,
-                               5.5, 6.5, 7.5, 8.5, 9.5};
+  std::vector<float> center = {
+      0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5};
   for (size_t ib = 0; ib < center.size(); ++ib) {
     BOOST_CHECK_EQUAL(xData_eq.center(ib), center[ib]);
   }
 
   // running into rounding errors here
   float phiStep = M_PI * 2. / 5.;
-  std::vector<float> phiCenters_eq = {
-      float(-M_PI + 0.5 * phiStep), float(-M_PI + 1.5 * phiStep),
-      float(-M_PI + 2.5 * phiStep), float(-M_PI + 3.5 * phiStep),
-      float(-M_PI + 4.5 * phiStep)};
+  std::vector<float> phiCenters_eq = {float(-M_PI + 0.5 * phiStep),
+                                      float(-M_PI + 1.5 * phiStep),
+                                      float(-M_PI + 2.5 * phiStep),
+                                      float(-M_PI + 3.5 * phiStep),
+                                      float(-M_PI + 4.5 * phiStep)};
 
   for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
     CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);

@@ -58,9 +58,14 @@ PayloadDetector::finalize(
 
   /// return the generic detector - with payload context decorator
   TrackingGeometryPtr pTrackingGeometry =
-      FW::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, 0, std::move(mdecorator), buildProto,
-          surfaceLogLevel, layerLogLevel, volumeLogLevel);
+      FW::Generic::buildDetector<DetectorElement>(nominalContext,
+                                                  detectorStore,
+                                                  0,
+                                                  std::move(mdecorator),
+                                                  buildProto,
+                                                  surfaceLogLevel,
+                                                  layerLogLevel,
+                                                  volumeLogLevel);
 
   ContextDecorators pContextDecorators = {};
 

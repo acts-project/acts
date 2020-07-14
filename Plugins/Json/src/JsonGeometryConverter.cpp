@@ -397,8 +397,11 @@ Acts::JsonGeometryConverter::jsonToVolumeMaterial(const json& material) {
       MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
-                                       mmat[bin][3], mmat[bin][4])
+        mGrid.at(bin) = Acts::Material(mmat[bin][0],
+                                       mmat[bin][1],
+                                       mmat[bin][2],
+                                       mmat[bin][3],
+                                       mmat[bin][4])
                             .classificationNumbers();
       }
       MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
@@ -421,8 +424,11 @@ Acts::JsonGeometryConverter::jsonToVolumeMaterial(const json& material) {
       MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = Acts::Material(mmat[bin][0], mmat[bin][1], mmat[bin][2],
-                                       mmat[bin][3], mmat[bin][4])
+        mGrid.at(bin) = Acts::Material(mmat[bin][0],
+                                       mmat[bin][1],
+                                       mmat[bin][2],
+                                       mmat[bin][3],
+                                       mmat[bin][4])
                             .classificationNumbers();
       }
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
@@ -605,8 +611,12 @@ Acts::JsonGeometryConverter::surfaceMaterialToJson(
     if (mp) {
       /// Return the thickness in mm
       return {
-          mp.material().X0(), mp.material().L0(),          mp.material().Ar(),
-          mp.material().Z(),  mp.material().massDensity(), mp.thickness(),
+          mp.material().X0(),
+          mp.material().L0(),
+          mp.material().Ar(),
+          mp.material().Z(),
+          mp.material().massDensity(),
+          mp.thickness(),
       };
     }
     return {};
@@ -783,8 +793,8 @@ Acts::JsonGeometryConverter::volumeMaterialToJson(
   }
   // add the bin utility
   if (bUtility != nullptr) {
-    std::vector<std::string> binkeys = {m_cfg.bin0key, m_cfg.bin1key,
-                                        m_cfg.bin2key};
+    std::vector<std::string> binkeys = {
+        m_cfg.bin0key, m_cfg.bin1key, m_cfg.bin2key};
     // loop over dimensions and write
     auto& binningData = bUtility->binningData();
     // loop over the dimensions
@@ -877,8 +887,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
 Acts::BinUtility
 Acts::JsonGeometryConverter::jsonToBinUtility(const json& bin) {
   // finding the iterator position to determine the binning value
-  auto bit = std::find(Acts::binningValueNames.begin(),
-                       Acts::binningValueNames.end(), bin[0]);
+  auto bit = std::find(
+      Acts::binningValueNames.begin(), Acts::binningValueNames.end(), bin[0]);
   size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
   Acts::BinningValue bval = Acts::BinningValue(indx);
   Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
@@ -910,9 +920,10 @@ Acts::JsonGeometryConverter::DefaultBin(const Acts::Surface& surface) {
                                radialBounds->get(RadialBounds::eHalfPhiSector),
                            radialBounds->get(RadialBounds::eAveragePhi) +
                                radialBounds->get(RadialBounds::eHalfPhiSector),
-                           Acts::closed, Acts::binPhi);
-    bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
-                           Acts::open, Acts::binR);
+                           Acts::closed,
+                           Acts::binPhi);
+    bUtility += BinUtility(
+        1, radialBounds->rMin(), radialBounds->rMax(), Acts::open, Acts::binR);
   }
   if (cylinderBounds != nullptr) {
     bUtility +=
@@ -921,18 +932,26 @@ Acts::JsonGeometryConverter::DefaultBin(const Acts::Surface& surface) {
                        cylinderBounds->get(CylinderBounds::eHalfPhiSector),
                    cylinderBounds->get(CylinderBounds::eAveragePhi) +
                        cylinderBounds->get(CylinderBounds::eHalfPhiSector),
-                   Acts::closed, Acts::binPhi);
+                   Acts::closed,
+                   Acts::binPhi);
     bUtility +=
-        BinUtility(1, -1 * cylinderBounds->get(CylinderBounds::eHalfLengthZ),
+        BinUtility(1,
+                   -1 * cylinderBounds->get(CylinderBounds::eHalfLengthZ),
                    cylinderBounds->get(CylinderBounds::eHalfLengthZ),
-                   Acts::open, Acts::binZ);
+                   Acts::open,
+                   Acts::binZ);
   }
   if (annulusBounds != nullptr) {
-    bUtility += BinUtility(1, annulusBounds->get(AnnulusBounds::eMinPhiRel),
+    bUtility += BinUtility(1,
+                           annulusBounds->get(AnnulusBounds::eMinPhiRel),
                            annulusBounds->get(AnnulusBounds::eMaxPhiRel),
-                           Acts::closed, Acts::binPhi);
-    bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
-                           Acts::open, Acts::binR);
+                           Acts::closed,
+                           Acts::binPhi);
+    bUtility += BinUtility(1,
+                           annulusBounds->rMin(),
+                           annulusBounds->rMax(),
+                           Acts::open,
+                           Acts::binR);
   }
   return bUtility;
 }
@@ -947,27 +966,37 @@ Acts::JsonGeometryConverter::DefaultBin(const Acts::TrackingVolume& volume) {
       dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
 
   if (cyBounds != nullptr) {
-    bUtility += BinUtility(1, cyBounds->get(CylinderVolumeBounds::eMinR),
+    bUtility += BinUtility(1,
+                           cyBounds->get(CylinderVolumeBounds::eMinR),
                            cyBounds->get(CylinderVolumeBounds::eMaxR),
-                           Acts::open, Acts::binR);
-    bUtility +=
-        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
-                   cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
-                   Acts::closed, Acts::binPhi);
-    bUtility +=
-        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
-                   cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
-                   Acts::open, Acts::binZ);
+                           Acts::open,
+                           Acts::binR);
+    bUtility += BinUtility(1,
+                           -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+                           cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+                           Acts::closed,
+                           Acts::binPhi);
+    bUtility += BinUtility(1,
+                           -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                           cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
+                           Acts::open,
+                           Acts::binZ);
   } else if (cuBounds != nullptr) {
-    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
+    bUtility += BinUtility(1,
+                           -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
-                           Acts::open, Acts::binX);
-    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
+                           Acts::open,
+                           Acts::binX);
+    bUtility += BinUtility(1,
+                           -cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
-                           Acts::closed, Acts::binY);
-    bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
+                           Acts::closed,
+                           Acts::binY);
+    bUtility += BinUtility(1,
+                           -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
-                           Acts::open, Acts::binZ);
+                           Acts::open,
+                           Acts::binZ);
   }
   return bUtility;
 }

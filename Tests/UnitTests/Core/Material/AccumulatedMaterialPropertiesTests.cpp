@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
                   a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
                   0.0001);
   // Consistency check : X0
-  CHECK_CLOSE_REL(mpAbc.thickness() / mpAbc.material().X0(),
-                  mpAbc.thicknessInX0(), 0.0001);
+  CHECK_CLOSE_REL(
+      mpAbc.thickness() / mpAbc.material().X0(), mpAbc.thicknessInX0(), 0.0001);
   // Consistency check : L0
   CHECK_CLOSE_REL(mpAbc.thicknessInL0(),
                   a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
@@ -128,7 +128,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   BOOST_CHECK_EQUAL(halfA.thicknessInX0(), matAV.thicknessInX0());
   BOOST_CHECK_EQUAL(halfA.thicknessInL0(), matAV.thicknessInL0());
   CHECK_CLOSE_REL(halfA.material().massDensity() * halfA.thickness(),
-                  matAV.material().massDensity() * matAV.thickness(), 0.0001);
+                  matAV.material().massDensity() * matAV.thickness(),
+                  0.0001);
   BOOST_CHECK_EQUAL(averageAV.second, 2u);
 
   // Test:
@@ -145,7 +146,8 @@ BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
   BOOST_CHECK_EQUAL(doubleA.thicknessInX0(), matAA3.thicknessInX0());
   BOOST_CHECK_EQUAL(doubleA.thicknessInL0(), matAA3.thicknessInL0());
   CHECK_CLOSE_REL(doubleA.material().massDensity() * doubleA.thickness(),
-                  matAA3.material().massDensity() * matAA3.thickness(), 0.0001);
+                  matAA3.material().massDensity() * matAA3.thickness(),
+                  0.0001);
   BOOST_CHECK_EQUAL(averageAA3.second, 2u);
 
   /// Test:

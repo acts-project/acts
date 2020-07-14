@@ -43,7 +43,12 @@ FW::Obj::ObjTrackingGeometryWriter::write(const AlgorithmContext& context,
 
   Acts::ObjVisualization objVis(m_cfg.outputPrecision, m_cfg.outputScalor);
 
-  Acts::GeometryView::drawTrackingVolume(
-      objVis, tVolume, context.geoContext, m_cfg.containerView,
-      m_cfg.volumeView, m_cfg.sensitiveView, m_cfg.passiveView, m_cfg.gridView);
+  Acts::GeometryView::drawTrackingVolume(objVis,
+                                         tVolume,
+                                         context.geoContext,
+                                         m_cfg.containerView,
+                                         m_cfg.volumeView,
+                                         m_cfg.sensitiveView,
+                                         m_cfg.passiveView,
+                                         m_cfg.gridView);
 }

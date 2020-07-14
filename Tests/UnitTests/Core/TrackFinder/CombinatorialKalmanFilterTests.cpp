@@ -118,7 +118,8 @@ struct MeasurementCreator {
   /// @param [out] result Vector of matching surfaces
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
@@ -136,20 +137,21 @@ struct MeasurementCreator {
           Acts::Vector2D lPos;
           surface->globalToLocal(state.geoContext,
                                  stepper.position(state.stepping),
-                                 stepper.direction(state.stepping), lPos);
+                                 stepper.direction(state.stepping),
+                                 lPos);
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
             double dp = sp * gauss(generator);
             if (lResolution->second[0].first == eLOC_0) {
               // push back & move a LOC_0 measurement
-              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + dp);
+              MeasurementType<eLOC_0> m0(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_0] + dp);
               result.push_back(std::move(m0));
             } else {
               // push back & move a LOC_1 measurement
-              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + dp);
+              MeasurementType<eLOC_1> m1(
+                  surface->getSharedPtr(), {}, cov1D, lPos[eLOC_1] + dp);
               result.push_back(std::move(m1));
             }
           } else if (lResolution->second.size() == 2) {
@@ -160,8 +162,10 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + dx,
+            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(),
+                                                {},
+                                                cov2D,
+                                                lPos[eLOC_0] + dx,
                                                 lPos[eLOC_1] + dy);
             result.push_back(std::move(m01));
           }
@@ -247,8 +251,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Set the starting momentum for propagation
   Vector3D mMom(1_GeV, 0., 0);
   for (const auto& [trackID, mPos] : startingPos) {
-    SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
-                                                           mMom, 42_ns);
+    SingleCurvilinearTrackParameters<NeutralPolicy> mStart(
+        std::nullopt, mPos, mMom, 42_ns);
     // Launch and collect - the measurements
     auto mResult = mPropagator.propagate(mStart, mOptions).value();
     if (debugMode) {
@@ -267,8 +271,10 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   }
 
   // Transform the measurments to sourcelinks
-  std::transform(measurements.begin(), measurements.end(),
-                 std::back_inserter(sourcelinks), [](const auto& m) {
+  std::transform(measurements.begin(),
+                 measurements.end(),
+                 std::back_inserter(sourcelinks),
+                 [](const auto& m) {
                    return SourceLink{m.first, &m.second};
                  });
 
@@ -293,7 +299,9 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using Smoother = GainMatrixSmoother;
   using SourceLinkSelector = CKFSourceLinkSelector;
   using CombinatorialKalmanFilter =
-      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,
+      CombinatorialKalmanFilter<RecoPropagator,
+                                Updater,
+                                Smoother,
                                 SourceLinkSelector>;
 
   // Implement different chi2/nSourceLinks cutoff at different detector level
@@ -328,10 +336,11 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     double rTheta = 0.0002 * gauss(generator);
     double rPhi = 0.0002 * gauss(generator);
     Vector3D rMom(1_GeV * cos(rTheta) * cos(rPhi),
-                  1_GeV * cos(rTheta) * sin(rPhi), 1_GeV * sin(rTheta));
+                  1_GeV * cos(rTheta) * sin(rPhi),
+                  1_GeV * sin(rTheta));
 
-    SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                           42.);
+    SingleCurvilinearTrackParameters<ChargedPolicy> rStart(
+        cov, rPos, rMom, 1., 42.);
 
     const Surface* rSurface = &rStart.referenceSurface();
 

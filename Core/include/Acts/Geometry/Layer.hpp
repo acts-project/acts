@@ -130,7 +130,8 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return boolean that indicates success of the operation
   virtual bool
-  isOnLayer(const GeometryContext& gctx, const Vector3D& position,
+  isOnLayer(const GeometryContext& gctx,
+            const Vector3D& position,
             const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
@@ -149,7 +150,8 @@ class Layer : public virtual GeometryObject {
   template <typename options_t>
   bool
   resolve(const options_t& options) const {
-    return resolve(options.resolveSensitive, options.resolveMaterial,
+    return resolve(options.resolveSensitive,
+                   options.resolveMaterial,
                    options.resolvePassive);
   }
 
@@ -161,7 +163,8 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return a boolean whether the layer is accepted for processing
   virtual bool
-  resolve(bool resolveSensitive, bool resolveMaterial,
+  resolve(bool resolveSensitive,
+          bool resolveMaterial,
           bool resolvePassive) const;
 
   /// @brief Decompose Layer into (compatible) surfaces
@@ -176,8 +179,10 @@ class Layer : public virtual GeometryObject {
   /// @return list of intersection of surfaces on the layer
   template <typename options_t>
   std::vector<SurfaceIntersection>
-  compatibleSurfaces(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& direction, const options_t& options) const;
+  compatibleSurfaces(const GeometryContext& gctx,
+                     const Vector3D& position,
+                     const Vector3D& direction,
+                     const options_t& options) const;
 
   /// Surface seen on approach
   ///
@@ -194,8 +199,10 @@ class Layer : public virtual GeometryObject {
   /// @return the Surface intersection of the approach surface
   template <typename options_t>
   const SurfaceIntersection
-  surfaceOnApproach(const GeometryContext& gctx, const Vector3D& position,
-                    const Vector3D& direction, const options_t& options) const;
+  surfaceOnApproach(const GeometryContext& gctx,
+                    const Vector3D& position,
+                    const Vector3D& direction,
+                    const options_t& options) const;
 
   /// Fast navigation to next layer
   ///
@@ -205,7 +212,8 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return the pointer to the next layer
   const Layer*
-  nextLayer(const GeometryContext& gctx, const Vector3D& position,
+  nextLayer(const GeometryContext& gctx,
+            const Vector3D& position,
             const Vector3D& direction) const;
 
   /// Get the confining TrackingVolume
@@ -231,7 +239,8 @@ class Layer : public virtual GeometryObject {
   /// @param thickness is the normal thickness of the Layer
   /// @param ades oapproach descriptor
   /// @param laytyp is the layer type if active or passive
-  Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+  Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+        double thickness = 0.,
         std::unique_ptr<ApproachDescriptor> ades = nullptr,
         LayerType laytyp = passive);
 

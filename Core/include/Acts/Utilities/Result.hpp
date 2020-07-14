@@ -78,7 +78,9 @@ class Result {
    * error.
    */
   template <
-      typename T2, typename _E = E, typename _T = T,
+      typename T2,
+      typename _E = E,
+      typename _T = T,
       typename = std::enable_if_t<
           (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
            !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&
@@ -98,7 +100,9 @@ class Result {
    * @return The assigned instance
    */
   template <
-      typename T2, typename _E = E, typename _T = T,
+      typename T2,
+      typename _E = E,
+      typename _T = T,
       typename = std::enable_if_t<
           (!std::is_same_v<_T, _E> && !std::is_constructible_v<_T, _E> &&
            !std::is_convertible_v<_T, _E> && !std::is_constructible_v<_E, _T> &&

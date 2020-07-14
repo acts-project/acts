@@ -43,8 +43,11 @@ class DiamondBounds : public PlanarBounds {
   /// @param halfXposY is the halflength in x at maximal y
   /// @param halfYneg is the halflength into y < 0
   /// @param halfYpos is the halflength into y > 0
-  DiamondBounds(double halfXnegY, double halfXzeroY, double halfXposY,
-                double halfYneg, double halfYpos) noexcept(false)
+  DiamondBounds(double halfXnegY,
+                double halfXzeroY,
+                double halfXposY,
+                double halfYneg,
+                double halfYpos) noexcept(false)
       : m_values({halfXnegY, halfXzeroY, halfXposY, halfYneg, halfYpos}),
         m_boundingBox(
             Vector2D{
@@ -141,8 +144,8 @@ DiamondBounds::values() const {
 
 inline void
 DiamondBounds::checkConsistency() noexcept(false) {
-  if (std::any_of(m_values.begin(), m_values.end(),
-                  [](auto v) { return v <= 0.; })) {
+  if (std::any_of(
+          m_values.begin(), m_values.end(), [](auto v) { return v <= 0.; })) {
     throw std::invalid_argument("DiamondBounds: negative half length.");
   }
   if (get(eHalfLengthXnegY) > get(eHalfLengthXzeroY) or

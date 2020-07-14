@@ -35,10 +35,17 @@ using RandomEngine = std::mt19937;
 
 template <typename field_t, typename field_context_t>
 void
-accessStepWise(field_t& bField, field_context_t& bFieldContext, size_t events,
-               size_t theta_steps, double theta_0, double theta_step,
-               size_t phi_steps, double phi_0, double phi_step,
-               size_t access_steps, double access_step) {
+accessStepWise(field_t& bField,
+               field_context_t& bFieldContext,
+               size_t events,
+               size_t theta_steps,
+               double theta_0,
+               double theta_step,
+               size_t phi_steps,
+               double phi_0,
+               double phi_step,
+               size_t access_steps,
+               double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
   size_t mismatched = 0;
   // initialize the field cache
@@ -54,8 +61,8 @@ accessStepWise(field_t& bField, field_context_t& bFieldContext, size_t events,
       for (size_t iphi = 0; iphi < phi_steps; ++iphi) {
         double phi = phi_0 + iphi * phi_step;
         // make a direction
-        Acts::Vector3D dir(cos(phi) * sin(theta), sin(phi) * sin(theta),
-                           cos(theta));
+        Acts::Vector3D dir(
+            cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
         // check for the current step
         double currentStep = 0.;
         // now step through the magnetic field
@@ -83,7 +90,9 @@ accessStepWise(field_t& bField, field_context_t& bFieldContext, size_t events,
 
 template <typename field_t, typename field_context_t>
 void
-accessRandom(field_t& bField, field_context_t& bFieldContext, size_t totalSteps,
+accessRandom(field_t& bField,
+             field_context_t& bFieldContext,
+             size_t totalSteps,
              double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
   size_t mismatched = 0;
@@ -128,15 +137,20 @@ main(int argc, char* argv[]) {
   desc.add_options()("bf-phi-range",
                      po::value<read_range>()->default_value({-M_PI, M_PI}),
                      "range in which the phi parameter is generated.")(
-      "bf-theta-range", po::value<read_range>()->default_value({0., M_PI}),
+      "bf-theta-range",
+      po::value<read_range>()->default_value({0., M_PI}),
       "range in which the eta parameter is generated.")(
-      "bf-phisteps", po::value<size_t>()->default_value(1000),
+      "bf-phisteps",
+      po::value<size_t>()->default_value(1000),
       "number of steps for the phi parameter.")(
-      "bf-thetasteps", po::value<size_t>()->default_value(100),
+      "bf-thetasteps",
+      po::value<size_t>()->default_value(100),
       "number of steps for the eta parameter.")(
-      "bf-accesssteps", po::value<size_t>()->default_value(100),
+      "bf-accesssteps",
+      po::value<size_t>()->default_value(100),
       "number of steps for magnetic field access.")(
-      "bf-tracklength", po::value<double>()->default_value(100.),
+      "bf-tracklength",
+      po::value<double>()->default_value(100.),
       "track length in [mm] magnetic field access.");
   auto vm = FW::Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -181,11 +195,20 @@ main(int argc, char* argv[]) {
           return EXIT_FAILURE;
         } else {
           // Step-wise access pattern
-          accessStepWise(*bField, magFieldContext, nEvents, theta_steps,
-                         thetar[0], theta_step, phi_steps, phir[0], phi_step,
-                         access_steps, access_step);
+          accessStepWise(*bField,
+                         magFieldContext,
+                         nEvents,
+                         theta_steps,
+                         thetar[0],
+                         theta_step,
+                         phi_steps,
+                         phir[0],
+                         phi_step,
+                         access_steps,
+                         access_step);
           // Random access pattern
-          accessRandom(*bField, magFieldContext,
+          accessRandom(*bField,
+                       magFieldContext,
                        nEvents * theta_steps * phi_steps * access_steps,
                        track_length);
           return EXIT_SUCCESS;

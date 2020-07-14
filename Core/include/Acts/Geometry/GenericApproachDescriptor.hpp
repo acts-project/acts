@@ -57,7 +57,8 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   ///
   /// @return : a SurfaceIntersection
   ObjectIntersection<Surface>
-  approachSurface(const GeometryContext& gctx, const Vector3D& position,
+  approachSurface(const GeometryContext& gctx,
+                  const Vector3D& position,
                   const Vector3D& direction,
                   const BoundaryCheck& bcheck) const override;
 

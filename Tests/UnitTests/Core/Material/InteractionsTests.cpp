@@ -24,8 +24,8 @@ static constexpr Acts::Material material = Acts::Test::makeSilicon();
 static double valuesThickness[] = {200_um, 1_mm};
 static auto thickness = data::make(valuesThickness);
 // particle type, mass, and charge
-static int pdg[] = {Acts::eElectron, Acts::eMuon, Acts::ePionPlus,
-                    Acts::eProton};
+static int pdg[] = {
+    Acts::eElectron, Acts::eMuon, Acts::ePionPlus, Acts::eProton};
 static double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
 static double charge[] = {-1_e, -1_e, 1_e, 1_e};
 static auto particle = data::make(pdg) ^ data::make(mass) ^ data::make(charge);
@@ -38,8 +38,8 @@ static auto momentum = momentum_low + momentum_med + momentum_high;
 BOOST_AUTO_TEST_SUITE(interactions)
 
 // consistency checks for the energy loss values
-BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
-                     i, m, q, p) {
+BOOST_DATA_TEST_CASE(
+    energy_loss_consistency, thickness* particle* momentum, x, i, m, q, p) {
   const auto slab = Acts::MaterialProperties(material, x);
   const auto qOverP = q / p;
 
@@ -68,7 +68,12 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
 
 // consistency checks for multiple scattering
 BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
-                     thickness* particle* momentum, x, i, m, q, p) {
+                     thickness* particle* momentum,
+                     x,
+                     i,
+                     m,
+                     q,
+                     p) {
   const auto slab = Acts::MaterialProperties(material, x);
   const auto slabDoubled = Acts::MaterialProperties(material, 2 * x);
   const auto qOverP = q / p;

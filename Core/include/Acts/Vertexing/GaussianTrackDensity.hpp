@@ -34,8 +34,12 @@ class GaussianTrackDensity {
     /// @param c2_ Quadratic coefficient in exponent
     /// @param lowerBound_ The lower bound
     /// @param upperBound_ The upper bound
-    TrackEntry(double z_, double c0_, double c1_, double c2_,
-               double lowerBound_, double upperBound_)
+    TrackEntry(double z_,
+               double c0_,
+               double c1_,
+               double c2_,
+               double lowerBound_,
+               double upperBound_)
         : z(z_),
           c0(c0_),
           c1(c1_),
@@ -142,7 +146,8 @@ class GaussianTrackDensity {
   /// @param extractParameters Function extracting BoundParameters from
   /// InputTrack
   void
-  addTracks(State& state, const std::vector<const input_track_t*>& trackList,
+  addTracks(State& state,
+            const std::vector<const input_track_t*>& trackList,
             const std::function<BoundParameters(input_track_t)>&
                 extractParameters) const;
 
@@ -164,8 +169,12 @@ class GaussianTrackDensity {
   /// @return The max z position, the max value at z position, the max second
   /// derivative
   std::tuple<double, double, double>
-  updateMaximum(double newZ, double newValue, double newSecondDerivative,
-                double maxZ, double maxValue, double maxSecondDerivative) const;
+  updateMaximum(double newZ,
+                double newValue,
+                double newSecondDerivative,
+                double maxZ,
+                double maxValue,
+                double maxSecondDerivative) const;
 
   /// @brief Calculates the step size
   ///

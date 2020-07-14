@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   /// create curvilinear parameters without covariance +1/-1 charge
   CurvilinearParameters curvilinear_pos(std::nullopt, pos, mom, 1_e, 1_s);
   CurvilinearParameters curvilinear_neg(std::nullopt, pos, mom, -1_e, 2.5_s);
-  NeutralCurvilinearTrackParameters curvilinear_neut(std::nullopt, pos, mom,
-                                                     33.33_s);
+  NeutralCurvilinearTrackParameters curvilinear_neut(
+      std::nullopt, pos, mom, 33.33_s);
 
   /// check local coordinates
   const auto fphi = phi(mom);
@@ -45,28 +45,36 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   const double oOp = 1. / mom.norm();
 
   // check parameters
-  consistencyCheck(curvilinear_pos, pos, mom, +1_e, 1_s,
-                   {0., 0., fphi, ftheta, oOp, 1_s});
-  consistencyCheck(curvilinear_neg, pos, mom, -1_e, 2.5_s,
+  consistencyCheck(
+      curvilinear_pos, pos, mom, +1_e, 1_s, {0., 0., fphi, ftheta, oOp, 1_s});
+  consistencyCheck(curvilinear_neg,
+                   pos,
+                   mom,
+                   -1_e,
+                   2.5_s,
                    {0., 0., fphi, ftheta, -oOp, 2.5_s});
-  consistencyCheck(curvilinear_neut, pos, mom, 0., 33.33_s,
+  consistencyCheck(curvilinear_neut,
+                   pos,
+                   mom,
+                   0.,
+                   33.33_s,
                    {0., 0., fphi, ftheta, oOp, 33.33_s});
 
   // check that the created surface is at the position
-  CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().center(tgContext), pos,
-                  1e-6);
-  CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().center(tgContext), pos,
-                  1e-6);
-  CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().center(tgContext), pos,
-                  1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_pos.referenceSurface().center(tgContext), pos, 1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_neg.referenceSurface().center(tgContext), pos, 1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_neut.referenceSurface().center(tgContext), pos, 1e-6);
 
   // check that the z-axis of the created surface is along momentum direction
-  CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().normal(tgContext, pos),
-                  dir, 1e-6);
-  CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().normal(tgContext, pos),
-                  dir, 1e-6);
-  CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().normal(tgContext, pos),
-                  dir, 1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_pos.referenceSurface().normal(tgContext, pos), dir, 1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_neg.referenceSurface().normal(tgContext, pos), dir, 1e-6);
+  CHECK_CLOSE_REL(
+      curvilinear_neut.referenceSurface().normal(tgContext, pos), dir, 1e-6);
 
   // check the reference frame of curvilinear parameters
   // it is the x-y frame of the created surface
@@ -77,12 +85,12 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   mFrame.col(0) = uAxis;
   mFrame.col(1) = vAxis;
   mFrame.col(2) = tAxis;
-  CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_pos.referenceFrame(tgContext), 1e-6,
-                       1e-9);
-  CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neg.referenceFrame(tgContext), 1e-6,
-                       1e-9);
-  CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neut.referenceFrame(tgContext), 1e-6,
-                       1e-9);
+  CHECK_CLOSE_OR_SMALL(
+      mFrame, curvilinear_pos.referenceFrame(tgContext), 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(
+      mFrame, curvilinear_neg.referenceFrame(tgContext), 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(
+      mFrame, curvilinear_neut.referenceFrame(tgContext), 1e-6, 1e-9);
 
   /// copy construction test
   CurvilinearParameters curvilinear_pos_copy(curvilinear_pos);
@@ -109,7 +117,8 @@ BOOST_AUTO_TEST_CASE(curvilinear_initialization) {
   CHECK_CLOSE_REL(curvilinear_pos_copy.position(), uposition, 1e-6);
   // it should be the position of the surface
   CHECK_CLOSE_REL(curvilinear_pos_copy.referenceSurface().center(tgContext),
-                  uposition, 1e-6);
+                  uposition,
+                  1e-6);
 
   double uphi = 1.2;
   double utheta = 0.2;

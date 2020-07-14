@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(vtxPosVec[vtxIdx]);
 
-    allTracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                        perigeeSurface));
+    allTracks.push_back(BoundParameters(
+        geoContext, std::move(covMat), paramVec, perigeeSurface));
   }
 
   if (debugMode) {
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
         &(allTracks[iTrack]));
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-                       TrackAtVertex<BoundParameters>(1., allTracks[iTrack],
-                                                      &(allTracks[iTrack]))));
+                       TrackAtVertex<BoundParameters>(
+                           1., allTracks[iTrack], &(allTracks[iTrack]))));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
           &(allTracks[iTrack]));
       state.tracksAtVerticesMap.insert(
           std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
-                         TrackAtVertex<BoundParameters>(1., allTracks[iTrack],
-                                                        &(allTracks[iTrack]))));
+                         TrackAtVertex<BoundParameters>(
+                             1., allTracks[iTrack], &(allTracks[iTrack]))));
     }
   }
 
@@ -279,10 +279,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   BOOST_CHECK_EQUAL(vtxList.at(2).fullPosition(),
                     seedListCopy.at(2).fullPosition());
 
-  CHECK_CLOSE_ABS(vtxList.at(0).fullPosition(),
-                  seedListCopy.at(0).fullPosition(), 1_mm);
-  CHECK_CLOSE_ABS(vtxList.at(1).fullPosition(),
-                  seedListCopy.at(1).fullPosition(), 1_mm);
+  CHECK_CLOSE_ABS(
+      vtxList.at(0).fullPosition(), seedListCopy.at(0).fullPosition(), 1_mm);
+  CHECK_CLOSE_ABS(
+      vtxList.at(1).fullPosition(), seedListCopy.at(1).fullPosition(), 1_mm);
 
   auto res2 =
       fitter.addVtxToFit(state, vtxList.at(2), linearizer, vertexingOptions);
@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   // Now also the third vertex should have been modified and fitted
   BOOST_CHECK_NE(vtxList.at(2).fullPosition(),
                  seedListCopy.at(2).fullPosition());
-  CHECK_CLOSE_ABS(vtxList.at(2).fullPosition(),
-                  seedListCopy.at(2).fullPosition(), 1_mm);
+  CHECK_CLOSE_ABS(
+      vtxList.at(2).fullPosition(), seedListCopy.at(2).fullPosition(), 1_mm);
 
   if (debugMode) {
     std::cout << "Vertex positions after fit of vertex 3:" << std::endl;
@@ -375,22 +375,52 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   std::vector<BoundParameters> params1;
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1a, mom1a, 1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1a,
+                      mom1a,
+                      1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1a)));
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1b, mom1b, -1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1b,
+                      mom1b,
+                      -1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1b)));
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1c, mom1c, 1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1c,
+                      mom1c,
+                      1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1c)));
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1d, mom1d, -1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1d,
+                      mom1d,
+                      -1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1d)));
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1e, mom1e, 1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1e,
+                      mom1e,
+                      1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1e)));
   params1.push_back(
-      BoundParameters(geoContext, covMat1, pos1f, mom1f, -1, 0,
+      BoundParameters(geoContext,
+                      covMat1,
+                      pos1f,
+                      mom1f,
+                      -1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos1f)));
 
   // Create second vector of tracks
@@ -406,13 +436,28 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
 
   std::vector<BoundParameters> params2;
   params2.push_back(
-      BoundParameters(geoContext, covMat2, pos2a, mom2a, 1, 0,
+      BoundParameters(geoContext,
+                      covMat2,
+                      pos2a,
+                      mom2a,
+                      1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos2a)));
   params2.push_back(
-      BoundParameters(geoContext, covMat2, pos2b, mom2b, -1, 0,
+      BoundParameters(geoContext,
+                      covMat2,
+                      pos2b,
+                      mom2b,
+                      -1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos2b)));
   params2.push_back(
-      BoundParameters(geoContext, covMat2, pos2c, mom2c, -1, 0,
+      BoundParameters(geoContext,
+                      covMat2,
+                      pos2c,
+                      mom2c,
+                      -1,
+                      0,
                       Surface::makeShared<PerigeeSurface>(pos2c)));
 
   std::vector<Vertex<BoundParameters>*> vtxList;

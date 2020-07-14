@@ -59,7 +59,10 @@ class BinUtility {
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(size_t bins, float min, float max, BinningOption opt = open,
+  BinUtility(size_t bins,
+             float min,
+             float max,
+             BinningOption opt = open,
              BinningValue value = binX,
              const std::shared_ptr<const Transform3D>& tForm = nullptr)
       : m_binningData(),
@@ -75,7 +78,8 @@ class BinUtility {
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<float>& bValues, BinningOption opt = open,
+  BinUtility(std::vector<float>& bValues,
+             BinningOption opt = open,
              BinningValue value = binPhi,
              const std::shared_ptr<const Transform3D>& tForm = nullptr)
       : m_binningData(),
@@ -237,7 +241,8 @@ class BinUtility {
   ///
   /// @return the next bin
   int
-  nextDirection(const Vector3D& position, const Vector3D& direction,
+  nextDirection(const Vector3D& position,
+                const Vector3D& direction,
                 size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;

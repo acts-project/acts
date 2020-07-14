@@ -206,17 +206,18 @@ Acts::createGrid3D(
   std::function<double(Acts::Vector3D)> coord3 =
       globalToLocalFromBin(bu[2].binvalue);
 
-  transfoGlobalToLocal = [coord1, coord2,
-                          coord3](Acts::Vector3D pos) -> Acts::Vector3D {
+  transfoGlobalToLocal =
+      [coord1, coord2, coord3](Acts::Vector3D pos) -> Acts::Vector3D {
     return {coord1(pos), coord2(pos), coord3(pos)};
   };
-  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
-                           std::move(gridAxis3)));
+  return (Acts::createGrid(
+      std::move(gridAxis1), std::move(gridAxis2), std::move(gridAxis3)));
 }
 
 Acts::MaterialGrid2D
 Acts::mapMaterialPoints(
-    Acts::Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Acts::Grid2D& grid,
+    const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
   // Walk over each point
   for (const auto& rm : mPoints) {
@@ -246,7 +247,8 @@ Acts::mapMaterialPoints(
 
 Acts::MaterialGrid3D
 Acts::mapMaterialPoints(
-    Acts::Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Acts::Grid3D& grid,
+    const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   // Walk over each point
   for (const auto& rm : mPoints) {

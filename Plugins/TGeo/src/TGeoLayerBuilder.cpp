@@ -65,7 +65,8 @@ Acts::TGeoLayerBuilder::positiveLayers(const GeometryContext& gctx) const {
 
 void
 Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
-                                    LayerVector& layers, int type) {
+                                    LayerVector& layers,
+                                    int type) {
   // Bail out if you have no gGeoManager
   if (gGeoManager == nullptr) {
     ACTS_WARNING("No gGeoManager found - bailing out.");
@@ -176,7 +177,10 @@ Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 : Identifier();
 
         auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
-            identifier, *snode.node, *snode.transform, layerCfg.localAxes,
+            identifier,
+            *snode.node,
+            *snode.transform,
+            layerCfg.localAxes,
             m_cfg.unit);
         m_elementStore.push_back(tgElement);
         layerSurfaces.push_back(tgElement->surface().getSharedPtr());

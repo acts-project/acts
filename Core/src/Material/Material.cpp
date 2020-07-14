@@ -24,8 +24,10 @@ enum MaterialClassificationNumberIndices {
 }
 
 Acts::Material::Material(const ActsVectorF<5>& parameters)
-    : Material(parameters[eRadiationLength], parameters[eInteractionLength],
-               parameters[eRelativeAtomicMass], parameters[eNuclearCharge],
+    : Material(parameters[eRadiationLength],
+               parameters[eInteractionLength],
+               parameters[eRelativeAtomicMass],
+               parameters[eNuclearCharge],
                parameters[eMassDensity]) {}
 
 float

@@ -85,7 +85,9 @@ namespace {
 /// Helper function to print multiple elements in a container.
 template <typename Iterator>
 inline std::ostream&
-printContainer(std::ostream& os, Iterator begin, Iterator end,
+printContainer(std::ostream& os,
+               Iterator begin,
+               Iterator end,
                const char* separator) {
   for (auto it = begin; it != end; ++it) {
     if (it != begin) {

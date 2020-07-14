@@ -199,8 +199,8 @@ struct MicroBenchmarkResult {
   //
   Duration
   totalTime() const {
-    return std::accumulate(run_timings.cbegin(), run_timings.cend(),
-                           Duration());
+    return std::accumulate(
+        run_timings.cbegin(), run_timings.cend(), Duration());
   }
 
   // Robust estimator of the mean benchmark iteration time
@@ -442,7 +442,9 @@ struct MicroBenchmarkIter<Callable, void> {
 // Common logic between iteration-based and data-based microBenchmark
 template <typename Callable>
 MicroBenchmarkResult
-microBenchmarkImpl(Callable&& run, size_t iters_per_run, size_t num_runs,
+microBenchmarkImpl(Callable&& run,
+                   size_t iters_per_run,
+                   size_t num_runs,
                    std::chrono::milliseconds warmup_time) {
   using Clock = std::chrono::steady_clock;
 
@@ -536,7 +538,9 @@ microBenchmarkImpl(Callable&& run, size_t iters_per_run, size_t num_runs,
 template <typename Callable>
 MicroBenchmarkResult
 microBenchmark(
-    Callable&& iteration, size_t iters_per_run, size_t num_runs = 20000,
+    Callable&& iteration,
+    size_t iters_per_run,
+    size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {
   return benchmark_tools_internal::microBenchmarkImpl(
       [&] {
@@ -545,7 +549,9 @@ microBenchmark(
               iteration);
         }
       },
-      iters_per_run, num_runs, warmup_time);
+      iters_per_run,
+      num_runs,
+      warmup_time);
 }
 
 // Same idea as above, but the iteration function takes one argument, which is
@@ -557,7 +563,8 @@ microBenchmark(
 template <typename Callable, typename Input>
 MicroBenchmarkResult
 microBenchmark(
-    Callable&& iterationWithInput, const std::vector<Input>& inputs,
+    Callable&& iterationWithInput,
+    const std::vector<Input>& inputs,
     size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {
   return benchmark_tools_internal::microBenchmarkImpl(
@@ -567,7 +574,9 @@ microBenchmark(
               iterationWithInput, &input);
         }
       },
-      inputs.size(), num_runs, warmup_time);
+      inputs.size(),
+      num_runs,
+      warmup_time);
 }
 
 }  // namespace Test

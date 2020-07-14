@@ -54,11 +54,19 @@ class AnnulusBounds : public DiscBounds {
   /// frame
   /// @note For @c morigin you need to actually calculate the cartesian
   /// offset
-  AnnulusBounds(double minR, double maxR, double minPhiRel, double maxPhiRel,
+  AnnulusBounds(double minR,
+                double maxR,
+                double minPhiRel,
+                double maxPhiRel,
                 const Vector2D& moduleOrigin = {0, 0},
                 double avgPhi = 0) noexcept(false)
-      : AnnulusBounds({minR, maxR, minPhiRel, maxPhiRel, avgPhi,
-                       moduleOrigin.x(), moduleOrigin.y()}) {}
+      : AnnulusBounds({minR,
+                       maxR,
+                       minPhiRel,
+                       maxPhiRel,
+                       avgPhi,
+                       moduleOrigin.x(),
+                       moduleOrigin.y()}) {}
 
   /// Constructor - from parameters array
   ///
@@ -224,7 +232,9 @@ class AnnulusBounds : public DiscBounds {
 
   /// Private helper method
   Vector2D
-  closestOnSegment(const Vector2D& a, const Vector2D& b, const Vector2D& p,
+  closestOnSegment(const Vector2D& a,
+                   const Vector2D& b,
+                   const Vector2D& p,
                    const Eigen::Matrix<double, 2, 2>& weight) const;
 
   /// Private helper mehtod

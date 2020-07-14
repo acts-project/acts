@@ -103,7 +103,8 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @param [in] stepper Stepper used for the propagation
   template <typename result_t, typename propagator_state_t, typename stepper_t>
   bool
-  operator()(const result_t& result, propagator_state_t& state,
+  operator()(const result_t& result,
+             propagator_state_t& state,
              const stepper_t& stepper) const {
     // clang-format off
     static_assert(detail::all_of_v<concept::abort_condition_signature_check_v<
@@ -112,8 +113,8 @@ struct AbortList : public detail::Extendable<aborters_t...> {
                   "not all aborters support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<aborters_t...>::check(tuple(), result, state,
-                                                         stepper);
+    return detail::abort_list_impl<aborters_t...>::check(
+        tuple(), result, state, stepper);
   }
 };
 

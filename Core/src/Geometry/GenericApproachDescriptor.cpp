@@ -21,8 +21,10 @@ Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
 
 Acts::ObjectIntersection<Acts::Surface>
 Acts::GenericApproachDescriptor::approachSurface(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx,
+    const Vector3D& position,
+    const Vector3D& direction,
+    const BoundaryCheck& bcheck) const {
   // the intersection estimates
   std::vector<ObjectIntersection<Surface>> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());

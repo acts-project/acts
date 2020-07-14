@@ -83,23 +83,38 @@ FW::RootMaterialWriter::write(const Acts::DetectorMaterialMaps& detMaterial) {
       size_t binningBins = binningData.size();
 
       // The bin number information
-      TH1F* n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
+      TH1F* n = new TH1F(m_cfg.ntag.c_str(),
+                         "bins; bin",
+                         binningBins,
+                         -0.5,
                          binningBins - 0.5);
 
       // The binning value information
-      TH1F* v = new TH1F(m_cfg.vtag.c_str(), "binning values; bin", binningBins,
-                         -0.5, binningBins - 0.5);
+      TH1F* v = new TH1F(m_cfg.vtag.c_str(),
+                         "binning values; bin",
+                         binningBins,
+                         -0.5,
+                         binningBins - 0.5);
 
       // The binning option information
-      TH1F* o = new TH1F(m_cfg.otag.c_str(), "binning options; bin",
-                         binningBins, -0.5, binningBins - 0.5);
+      TH1F* o = new TH1F(m_cfg.otag.c_str(),
+                         "binning options; bin",
+                         binningBins,
+                         -0.5,
+                         binningBins - 0.5);
 
       // The binning option information
-      TH1F* min = new TH1F(m_cfg.mintag.c_str(), "min; bin", binningBins, -0.5,
+      TH1F* min = new TH1F(m_cfg.mintag.c_str(),
+                           "min; bin",
+                           binningBins,
+                           -0.5,
                            binningBins - 0.5);
 
       // The binning option information
-      TH1F* max = new TH1F(m_cfg.maxtag.c_str(), "max; bin", binningBins, -0.5,
+      TH1F* max = new TH1F(m_cfg.maxtag.c_str(),
+                           "max; bin",
+                           binningBins,
+                           -0.5,
                            binningBins - 0.5);
 
       // Now fill the histogram content
@@ -120,18 +135,54 @@ FW::RootMaterialWriter::write(const Acts::DetectorMaterialMaps& detMaterial) {
       max->Write();
     }
 
-    TH2F* t = new TH2F(m_cfg.ttag.c_str(), "thickness [mm] ;b0 ;b1", bins0,
-                       -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-    TH2F* x0 = new TH2F(m_cfg.x0tag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
-                        bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-    TH2F* l0 = new TH2F(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0,
-                        -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-    TH2F* A = new TH2F(m_cfg.atag.c_str(), "X_{0} [mm] ;b0 ;b1", bins0, -0.5,
-                       bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-    TH2F* Z = new TH2F(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;b0 ;b1", bins0,
-                       -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
-    TH2F* rho = new TH2F(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;b0 ;b1", bins0,
-                         -0.5, bins0 - 0.5, bins1, -0.5, bins1 - 0.5);
+    TH2F* t = new TH2F(m_cfg.ttag.c_str(),
+                       "thickness [mm] ;b0 ;b1",
+                       bins0,
+                       -0.5,
+                       bins0 - 0.5,
+                       bins1,
+                       -0.5,
+                       bins1 - 0.5);
+    TH2F* x0 = new TH2F(m_cfg.x0tag.c_str(),
+                        "X_{0} [mm] ;b0 ;b1",
+                        bins0,
+                        -0.5,
+                        bins0 - 0.5,
+                        bins1,
+                        -0.5,
+                        bins1 - 0.5);
+    TH2F* l0 = new TH2F(m_cfg.l0tag.c_str(),
+                        "#Lambda_{0} [mm] ;b0 ;b1",
+                        bins0,
+                        -0.5,
+                        bins0 - 0.5,
+                        bins1,
+                        -0.5,
+                        bins1 - 0.5);
+    TH2F* A = new TH2F(m_cfg.atag.c_str(),
+                       "X_{0} [mm] ;b0 ;b1",
+                       bins0,
+                       -0.5,
+                       bins0 - 0.5,
+                       bins1,
+                       -0.5,
+                       bins1 - 0.5);
+    TH2F* Z = new TH2F(m_cfg.ztag.c_str(),
+                       "#Lambda_{0} [mm] ;b0 ;b1",
+                       bins0,
+                       -0.5,
+                       bins0 - 0.5,
+                       bins1,
+                       -0.5,
+                       bins1 - 0.5);
+    TH2F* rho = new TH2F(m_cfg.rhotag.c_str(),
+                         "#rho [g/mm^3] ;b0 ;b1",
+                         bins0,
+                         -0.5,
+                         bins0 - 0.5,
+                         bins1,
+                         -0.5,
+                         bins1 - 0.5);
 
     // loop over the material and fill
     for (size_t b0 = 0; b0 < bins0; ++b0) {

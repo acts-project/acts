@@ -148,15 +148,28 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   dim3 DS_BlockSize = m_config.maxBlockSize;
   dim3 DS_GridSize(nSpM, 1, 1);
 
-  searchDoublet(DS_GridSize, DS_BlockSize, nSpM_cuda.get(), spMmat_cuda.get(),
-                nSpB_cuda.get(), spBmat_cuda.get(), nSpT_cuda.get(),
-                spTmat_cuda.get(), deltaRMin_cuda.get(), deltaRMax_cuda.get(),
-                cotThetaMax_cuda.get(), collisionRegionMin_cuda.get(),
-                collisionRegionMax_cuda.get(), nSpMcomp_cuda.get(),
-                nSpBcompPerSpMMax_cuda.get(), nSpTcompPerSpMMax_cuda.get(),
-                nSpBcompPerSpM_cuda.get(), nSpTcompPerSpM_cuda.get(),
-                McompIndex_cuda.get(), BcompIndex_cuda.get(),
-                tmpBcompIndex_cuda.get(), TcompIndex_cuda.get(),
+  searchDoublet(DS_GridSize,
+                DS_BlockSize,
+                nSpM_cuda.get(),
+                spMmat_cuda.get(),
+                nSpB_cuda.get(),
+                spBmat_cuda.get(),
+                nSpT_cuda.get(),
+                spTmat_cuda.get(),
+                deltaRMin_cuda.get(),
+                deltaRMax_cuda.get(),
+                cotThetaMax_cuda.get(),
+                collisionRegionMin_cuda.get(),
+                collisionRegionMax_cuda.get(),
+                nSpMcomp_cuda.get(),
+                nSpBcompPerSpMMax_cuda.get(),
+                nSpTcompPerSpMMax_cuda.get(),
+                nSpBcompPerSpM_cuda.get(),
+                nSpTcompPerSpM_cuda.get(),
+                McompIndex_cuda.get(),
+                BcompIndex_cuda.get(),
+                tmpBcompIndex_cuda.get(),
+                TcompIndex_cuda.get(),
                 tmpTcompIndex_cuda.get());
 
   CpuScalar<int> nSpMcomp_cpu(&nSpMcomp_cuda);
@@ -183,14 +196,24 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   dim3 TC_GridSize(*nSpMcomp_cpu.get(), 1, 1);
   dim3 TC_BlockSize = m_config.maxBlockSize;
 
-  transformCoordinate(
-      TC_GridSize, TC_BlockSize, nSpM_cuda.get(), spMmat_cuda.get(),
-      McompIndex_cuda.get(), nSpB_cuda.get(), spBmat_cuda.get(),
-      nSpBcompPerSpMMax_cuda.get(), BcompIndex_cuda.get(), nSpT_cuda.get(),
-      spTmat_cuda.get(), nSpTcompPerSpMMax_cuda.get(), TcompIndex_cuda.get(),
-      spMcompMat_cuda.get(), spBcompMatPerSpM_cuda.get(),
-      circBcompMatPerSpM_cuda.get(), spTcompMatPerSpM_cuda.get(),
-      circTcompMatPerSpM_cuda.get());
+  transformCoordinate(TC_GridSize,
+                      TC_BlockSize,
+                      nSpM_cuda.get(),
+                      spMmat_cuda.get(),
+                      McompIndex_cuda.get(),
+                      nSpB_cuda.get(),
+                      spBmat_cuda.get(),
+                      nSpBcompPerSpMMax_cuda.get(),
+                      BcompIndex_cuda.get(),
+                      nSpT_cuda.get(),
+                      spTmat_cuda.get(),
+                      nSpTcompPerSpMMax_cuda.get(),
+                      TcompIndex_cuda.get(),
+                      spMcompMat_cuda.get(),
+                      spBcompMatPerSpM_cuda.get(),
+                      circBcompMatPerSpM_cuda.get(),
+                      spTcompMatPerSpM_cuda.get(),
+                      circTcompMatPerSpM_cuda.get());
 
   //------------------------------------------------------
   //  Algorithm 3. Triplet Search (TS) & Seed filtering
@@ -210,8 +233,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                                           *nSpMcomp_cpu.get());
   CpuVector<int> nTrplPerSpM_cpu(*nSpMcomp_cpu.get(), true);
   nTrplPerSpM_cpu.zeros();
-  CpuMatrix<Triplet> TripletsPerSpM_cpu(nTrplPerSpMLimit, *nSpMcomp_cpu.get(),
-                                        true);
+  CpuMatrix<Triplet> TripletsPerSpM_cpu(
+      nTrplPerSpMLimit, *nSpMcomp_cpu.get(), true);
   cudaStream_t cuStream;
   ACTS_CUDA_ERROR_CHECK(cudaStreamCreate(&cuStream));
 
@@ -228,36 +251,51 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       dim3 TS_BlockSize =
           dim3(fmin(m_config.maxBlockSize, *nSpTcompPerSpM), 1, 1);
 
-      searchTriplet(
-          TS_GridSize, TS_BlockSize, nSpTcompPerSpM_cpu.get(mIndex),
-          nSpTcompPerSpM_cuda.get(mIndex), nSpMcomp_cuda.get(),
-          spMcompMat_cuda.get(i_m, 0), nSpBcompPerSpMMax_cuda.get(),
-          BcompIndex_cuda.get(0, i_m), circBcompMatPerSpM_cuda.get(0, 6 * i_m),
-          nSpTcompPerSpMMax_cuda.get(), TcompIndex_cuda.get(0, i_m),
-          spTcompMatPerSpM_cuda.get(0, 6 * i_m),
-          circTcompMatPerSpM_cuda.get(0, 6 * i_m),
-          // Seed finder config
-          maxScatteringAngle2_cuda.get(), sigmaScattering_cuda.get(),
-          minHelixDiameter2_cuda.get(), pT2perRadius_cuda.get(),
-          impactMax_cuda.get(), nTrplPerSpMLimit_cuda.get(),
-          nTrplPerSpBLimit_cpu.get(), nTrplPerSpBLimit_cuda.get(),
-          deltaInvHelixDiameter_cuda.get(), impactWeightFactor_cuda.get(),
-          filterDeltaRMin_cuda.get(), compatSeedWeight_cuda.get(),
-          compatSeedLimit_cpu.get(), compatSeedLimit_cuda.get(),
-          // output
-          nTrplPerSpM_cuda.get(i_m), TripletsPerSpM_cuda.get(0, i_m),
-          &cuStream);
+      searchTriplet(TS_GridSize,
+                    TS_BlockSize,
+                    nSpTcompPerSpM_cpu.get(mIndex),
+                    nSpTcompPerSpM_cuda.get(mIndex),
+                    nSpMcomp_cuda.get(),
+                    spMcompMat_cuda.get(i_m, 0),
+                    nSpBcompPerSpMMax_cuda.get(),
+                    BcompIndex_cuda.get(0, i_m),
+                    circBcompMatPerSpM_cuda.get(0, 6 * i_m),
+                    nSpTcompPerSpMMax_cuda.get(),
+                    TcompIndex_cuda.get(0, i_m),
+                    spTcompMatPerSpM_cuda.get(0, 6 * i_m),
+                    circTcompMatPerSpM_cuda.get(0, 6 * i_m),
+                    // Seed finder config
+                    maxScatteringAngle2_cuda.get(),
+                    sigmaScattering_cuda.get(),
+                    minHelixDiameter2_cuda.get(),
+                    pT2perRadius_cuda.get(),
+                    impactMax_cuda.get(),
+                    nTrplPerSpMLimit_cuda.get(),
+                    nTrplPerSpBLimit_cpu.get(),
+                    nTrplPerSpBLimit_cuda.get(),
+                    deltaInvHelixDiameter_cuda.get(),
+                    impactWeightFactor_cuda.get(),
+                    filterDeltaRMin_cuda.get(),
+                    compatSeedWeight_cuda.get(),
+                    compatSeedLimit_cpu.get(),
+                    compatSeedLimit_cuda.get(),
+                    // output
+                    nTrplPerSpM_cuda.get(i_m),
+                    TripletsPerSpM_cuda.get(0, i_m),
+                    &cuStream);
       nTrplPerSpM_cpu.copyD2H(nTrplPerSpM_cuda.get(i_m), 1, i_m, &cuStream);
 
       TripletsPerSpM_cpu.copyD2H(TripletsPerSpM_cuda.get(0, i_m),
-                                 nTrplPerSpMLimit, nTrplPerSpMLimit * i_m,
+                                 nTrplPerSpMLimit,
+                                 nTrplPerSpMLimit * i_m,
                                  &cuStream);
     }
 
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+      std::vector<
+          std::pair<float,
+                    std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
           seedsPerSpM;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
@@ -274,8 +312,8 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
           triplet.weight +=
               m_experimentCuts->seedWeight(bottomSP, middleSP, topSP);
           // discard seeds according to detector specific cuts (e.g.: weight)
-          if (!m_experimentCuts->singleSeedCut(triplet.weight, bottomSP,
-                                               middleSP, topSP)) {
+          if (!m_experimentCuts->singleSeedCut(
+                  triplet.weight, bottomSP, middleSP, topSP)) {
             continue;
           }
         }

@@ -57,7 +57,8 @@ createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
   std::vector<DetElement> discDetElementVec;
   /// iterate over discs
   for (dd4hep::xml::Collection_t xDiscColl(xDiscs, _Unicode(discZPls));
-       nullptr != xDiscColl; ++xDiscColl) {
+       nullptr != xDiscColl;
+       ++xDiscColl) {
     Component xDisc = static_cast<Component>(xDiscColl);
     Component xCurrentRings = xDisc.child(_Unicode(rings));
     // create disc volume
@@ -80,7 +81,8 @@ createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
       discDetElementVec.back().addExtension<Acts::ActsExtension>(detlayer);
       // iterate over rings
       for (dd4hep::xml::Collection_t xRingColl(xCurrentRings, _U(ring));
-           (nullptr != xRingColl); ++xRingColl) {
+           (nullptr != xRingColl);
+           ++xRingColl) {
         Component xRing = static_cast<Component>(xRingColl);
         Component xRingModules = xRing.child(_Unicode(modules));
         Component xModuleOdd = xRingModules.child(_Unicode(moduleOdd));
@@ -95,7 +97,8 @@ createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
         // place components in module
         for (dd4hep::xml::Collection_t xCompColl(xModulePropertiesComp,
                                                  _U(component));
-             nullptr != xCompColl; ++xCompColl) {
+             nullptr != xCompColl;
+             ++xCompColl) {
           dd4hep::xml::Component xComp = static_cast<Component>(xCompColl);
           // collect module materials
           compMaterials.push_back(std::make_pair(
@@ -104,7 +107,8 @@ createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
         double integratedCompThickness = 0.;
         for (dd4hep::xml::Collection_t xCompColl(xModulePropertiesComp,
                                                  _U(component));
-             nullptr != xCompColl; ++xCompColl) {
+             nullptr != xCompColl;
+             ++xCompColl) {
           Component xComp = static_cast<Component>(xCompColl);
           double compMinWidth =
               0.5 * xModuleProperties.attr<double>("modWidthMin");
@@ -113,16 +117,21 @@ createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
           double compThickness = 0.5 * xComp.thickness();
           double compLength =
               0.5 * xSensorProperties.attr<double>("sensorLength");
-          Volume componentVolume(
-              "component",
-              dd4hep::Trapezoid(compMinWidth, compMaxWidth, compThickness,
-                                compThickness, compLength),
-              lcdd.material(xComp.materialStr()));
+          Volume componentVolume("component",
+                                 dd4hep::Trapezoid(compMinWidth,
+                                                   compMaxWidth,
+                                                   compThickness,
+                                                   compThickness,
+                                                   compLength),
+                                 lcdd.material(xComp.materialStr()));
 
           // Create digitization module
-          auto digiModule = det::utils::trapezoidalDigiModuleXZ(
-              compMinWidth, compMaxWidth, compLength, compThickness, xRing.X(),
-              xRing.Z());
+          auto digiModule = det::utils::trapezoidalDigiModuleXZ(compMinWidth,
+                                                                compMaxWidth,
+                                                                compLength,
+                                                                compThickness,
+                                                                xRing.X(),
+                                                                xRing.Z());
 
           componentVolume.setVisAttributes(lcdd.invisible());
           unsigned int nPhi = xRing.attr<int>("nModules");

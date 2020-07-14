@@ -36,14 +36,18 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
 
   auto trfSpace = [](std::vector<Vector3D>& vtxs,
                      const Transform3D& trf) -> void {
-    std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(),
-                   [&](auto& v) { return (trf * v); });
+    std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {
+      return (trf * v);
+    });
   };
 
   // x-y plane test
-  std::vector<Vector3D> xyplane = {Vector3D(1., 3., 0.), Vector3D(-2., 1., 0.),
-                                   Vector3D(5., 8., 0.), Vector3D(-9., -9., 0.),
-                                   Vector3D(5., 0., 0.), Vector3D(3., 1., 0.)};
+  std::vector<Vector3D> xyplane = {Vector3D(1., 3., 0.),
+                                   Vector3D(-2., 1., 0.),
+                                   Vector3D(5., 8., 0.),
+                                   Vector3D(-9., -9., 0.),
+                                   Vector3D(5., 0., 0.),
+                                   Vector3D(3., 1., 0.)};
 
   trfSpace(xyplane, transform);
 

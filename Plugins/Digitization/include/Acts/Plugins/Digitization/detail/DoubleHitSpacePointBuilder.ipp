@@ -53,8 +53,10 @@ struct SpacePointParameters {
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
 double
-differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
-                            const Vector3D& posVertex, const double maxDistance,
+differenceOfClustersChecked(const Vector3D& pos1,
+                            const Vector3D& pos2,
+                            const Vector3D& posVertex,
+                            const double maxDistance,
                             const double maxAngleTheta2,
                             const double maxAnglePhi2) {
   // Check if measurements are close enough to each other
@@ -134,8 +136,10 @@ findLocalTopAndBottomEnd(const Vector2D& local,
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
 double
-calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
-                            const Vector3D& q, const Vector3D& r) {
+calcPerpendicularProjection(const Vector3D& a,
+                            const Vector3D& c,
+                            const Vector3D& q,
+                            const Vector3D& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -265,7 +269,8 @@ recoverSpacePoint(SpacePointParameters& spaPoPa,
 bool
 calculateSpacePoint(const std::pair<Vector3D, Vector3D>& stripEnds1,
                     const std::pair<Vector3D, Vector3D>& stripEnds2,
-                    const Vector3D& posVertex, SpacePointParameters& spaPoPa,
+                    const Vector3D& posVertex,
+                    SpacePointParameters& spaPoPa,
                     const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding cluster on the second strip. The
@@ -369,8 +374,11 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
       // Calculate the distances between the hits
       currentDiff = detail::differenceOfClustersChecked(
           globalCoords(gctx, *(clustersFront[iClustersFront])),
-          globalCoords(gctx, *(clustersBack[iClustersBack])), m_cfg.vertex,
-          m_cfg.diffDist, m_cfg.diffPhi2, m_cfg.diffTheta2);
+          globalCoords(gctx, *(clustersBack[iClustersBack])),
+          m_cfg.vertex,
+          m_cfg.diffDist,
+          m_cfg.diffPhi2,
+          m_cfg.diffTheta2);
       // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
@@ -447,8 +455,8 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
       }
     }
 
-    if (calculateSpacePoint(ends1, ends2, m_cfg.vertex, spaPoPa,
-                            m_cfg.stripLengthTolerance)) {
+    if (calculateSpacePoint(
+            ends1, ends2, m_cfg.vertex, spaPoPa, m_cfg.stripLengthTolerance)) {
       // Store the space point
       Acts::SpacePoint<Cluster> sp;
       sp.clusterModule.push_back(cp.first);

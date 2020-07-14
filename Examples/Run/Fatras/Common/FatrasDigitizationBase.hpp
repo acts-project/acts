@@ -23,7 +23,8 @@ class RandomNumbers;
 
 void
 setupDigitization(
-    Options::Variables& variables, Sequencer& sequencer,
+    Options::Variables& variables,
+    Sequencer& sequencer,
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
 

@@ -82,9 +82,14 @@ AlignedDetector::finalize(
 
   /// return the generic detector - with aligned context decorator
   TrackingGeometryPtr aTrackingGeometry =
-      FW::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, buildLevel, std::move(mdecorator),
-          buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
+      FW::Generic::buildDetector<DetectorElement>(nominalContext,
+                                                  detectorStore,
+                                                  buildLevel,
+                                                  std::move(mdecorator),
+                                                  buildProto,
+                                                  surfaceLogLevel,
+                                                  layerLogLevel,
+                                                  volumeLogLevel);
 
   Acts::Logging::Level decoratorLogLevel =
       Acts::Logging::Level(vm["align-loglevel"].template as<size_t>());

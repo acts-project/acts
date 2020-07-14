@@ -166,9 +166,12 @@ class TrackStateProxy {
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
       Eigen::Matrix<typename Covariance::Scalar, M, N, ProjectorFlags>;
-  using EffectiveProjector =
-      Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    ProjectorFlags, M, N>;
+  using EffectiveProjector = Eigen::Matrix<typename Projector::Scalar,
+                                           Eigen::Dynamic,
+                                           Eigen::Dynamic,
+                                           ProjectorFlags,
+                                           M,
+                                           N>;
 
   /// Index within the trajectory.
   /// @return the index
@@ -206,7 +209,8 @@ class TrackStateProxy {
   ///       with the source track state proxy, an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <bool RO = ReadOnly, bool ReadOnlyOther,
+  template <bool RO = ReadOnly,
+            bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
   void
   copyFrom(const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
@@ -396,7 +400,8 @@ class TrackStateProxy {
   /// and store it.
   /// @param projector The projector in the form of a dense matrix
   /// @note @p projector is assumed to only have 0s or 1s as components.
-  template <typename Derived, bool RO = ReadOnly,
+  template <typename Derived,
+            bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   void
   setProjector(const Eigen::MatrixBase<Derived>& projector) {
@@ -514,7 +519,8 @@ class TrackStateProxy {
   /// *invalid* (i.e. unset) for this TrackState..
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
+  template <bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>,
             ParID_t... params>
   void
   setCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
@@ -554,7 +560,8 @@ class TrackStateProxy {
   /// they will **not be removed**, but may become unaccessible.
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
+  template <bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>,
             ParID_t... params>
   void
   resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
@@ -690,11 +697,10 @@ class MultiTrajectory {
     MeasurementSizeMax = eBoundParametersSize,
   };
   using SourceLink = source_link_t;
-  using ConstTrackStateProxy =
-      detail_lt::TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax,
-                                 true>;
-  using TrackStateProxy = detail_lt::TrackStateProxy<SourceLink, ParametersSize,
-                                                     MeasurementSizeMax, false>;
+  using ConstTrackStateProxy = detail_lt::
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
+  using TrackStateProxy = detail_lt::
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, false>;
 
   using ProjectorBitset = std::bitset<ParametersSize * MeasurementSizeMax>;
 
@@ -763,10 +769,10 @@ class MultiTrajectory {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
-  friend class detail_lt::TrackStateProxy<SourceLink, ParametersSize,
-                                          MeasurementSizeMax, true>;
-  friend class detail_lt::TrackStateProxy<SourceLink, ParametersSize,
-                                          MeasurementSizeMax, false>;
+  friend class detail_lt::
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
+  friend class detail_lt::
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, false>;
 };
 
 }  // namespace Acts

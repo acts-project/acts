@@ -33,8 +33,8 @@ BOOST_AUTO_TEST_CASE(getSurface_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
 
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2u);
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   MinimalSourceLink msl{&fm};
@@ -104,12 +104,14 @@ BOOST_AUTO_TEST_CASE(visit_measurement_test) {
       BOOST_CHECK_EQUAL(param, parFull.head(dim));
       BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(dim, dim));
     });
-    visit_measurement(parFull, covFull, dim,
-                      [&](const auto& param, const auto& cov) {
-                        BOOST_CHECK_EQUAL(param, parFull.head(dim));
-                        BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(dim, dim));
-                      });
-    visit_measurement(parFullConst, covFullConst, dim,
+    visit_measurement(
+        parFull, covFull, dim, [&](const auto& param, const auto& cov) {
+          BOOST_CHECK_EQUAL(param, parFull.head(dim));
+          BOOST_CHECK_EQUAL(cov, covFull.topLeftCorner(dim, dim));
+        });
+    visit_measurement(parFullConst,
+                      covFullConst,
+                      dim,
                       [&](const auto& param, const auto& cov) {
                         BOOST_CHECK_EQUAL(param, parFullConst.head(dim));
                         BOOST_CHECK_EQUAL(cov,

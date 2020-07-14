@@ -27,7 +27,8 @@ namespace VerticesHelper {
 /// @param phiTolerance is the tolerance for reference phi insertion
 /// @return a vector
 std::vector<double>
-phiSegments(double phiMin = -M_PI, double phiMax = M_PI,
+phiSegments(double phiMin = -M_PI,
+            double phiMax = M_PI,
             const std::vector<double>& phiRefs = {},
             double phiTolerance = 1e-6);
 
@@ -47,8 +48,12 @@ phiSegments(double phiMin = -M_PI, double phiMax = M_PI,
 /// @param transform The transform applied (optional)
 template <typename vertex_t, typename transform_t>
 void
-createSegment(std::vector<vertex_t>& vertices, std::pair<double, double> rxy,
-              double phi1, double phi2, unsigned int lseg, int addon = 0,
+createSegment(std::vector<vertex_t>& vertices,
+              std::pair<double, double> rxy,
+              double phi1,
+              double phi2,
+              unsigned int lseg,
+              int addon = 0,
               const vertex_t& offset = vertex_t::Zero(),
               const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
@@ -77,8 +82,12 @@ createSegment(std::vector<vertex_t>& vertices, std::pair<double, double> rxy,
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
 std::vector<Vector2D>
-ellipsoidVertices(double innerRx, double innerRy, double outerRx,
-                  double outerRy, double avgPhi = 0., double halfPhi = M_PI,
+ellipsoidVertices(double innerRx,
+                  double innerRy,
+                  double outerRx,
+                  double outerRy,
+                  double avgPhi = 0.,
+                  double halfPhi = M_PI,
                   unsigned int lseg = 1);
 
 /// Construct vertices on an disc/wheel-like bound object.
@@ -90,8 +99,11 @@ ellipsoidVertices(double innerRx, double innerRy, double outerRx,
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
 std::vector<Vector2D>
-circularVertices(double innerR, double outerR, double avgPhi = 0.,
-                 double halfPhi = M_PI, unsigned int lseg = 1);
+circularVertices(double innerR,
+                 double outerR,
+                 double avgPhi = 0.,
+                 double halfPhi = M_PI,
+                 unsigned int lseg = 1);
 
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
@@ -151,7 +163,8 @@ isInsidePolygon(const vertex_t& point, const vertex_container_t& vertices) {
 /// @return bool for inside/outside
 template <typename vertex_t>
 bool
-isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
+isInsideRectangle(const vertex_t& point,
+                  const vertex_t& lowerLeft,
                   const vertex_t& upperRight) {
   return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0]) &&
          (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);

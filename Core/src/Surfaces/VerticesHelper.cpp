@@ -9,7 +9,8 @@
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 std::vector<double>
-Acts::detail::VerticesHelper::phiSegments(double phiMin, double phiMax,
+Acts::detail::VerticesHelper::phiSegments(double phiMin,
+                                          double phiMax,
                                           const std::vector<double>& phiRefs,
                                           double phiTolerance) {
   // This is to ensure that the extrema are built regardless of number
@@ -46,9 +47,12 @@ Acts::detail::VerticesHelper::phiSegments(double phiMin, double phiMax,
 }
 
 std::vector<Acts::Vector2D>
-Acts::detail::VerticesHelper::ellipsoidVertices(double innerRx, double innerRy,
-                                                double outerRx, double outerRy,
-                                                double avgPhi, double halfPhi,
+Acts::detail::VerticesHelper::ellipsoidVertices(double innerRx,
+                                                double innerRy,
+                                                double outerRx,
+                                                double outerRy,
+                                                double avgPhi,
+                                                double halfPhi,
                                                 unsigned int lseg) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
@@ -67,12 +71,18 @@ Acts::detail::VerticesHelper::ellipsoidVertices(double innerRx, double innerRy,
   for (unsigned int iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
     int addon = (iseg == phiSegs.size() - 2 and not closed) ? 1 : 0;
     if (innerExists) {
-      createSegment<Vector2D, Transform2D>(ivertices, {innerRx, innerRy},
-                                           phiSegs[iseg], phiSegs[iseg + 1],
-                                           lseg, addon);
+      createSegment<Vector2D, Transform2D>(ivertices,
+                                           {innerRx, innerRy},
+                                           phiSegs[iseg],
+                                           phiSegs[iseg + 1],
+                                           lseg,
+                                           addon);
     }
-    createSegment<Vector2D, Transform2D>(overtices, {outerRx, outerRy},
-                                         phiSegs[iseg], phiSegs[iseg + 1], lseg,
+    createSegment<Vector2D, Transform2D>(overtices,
+                                         {outerRx, outerRy},
+                                         phiSegs[iseg],
+                                         phiSegs[iseg + 1],
+                                         lseg,
                                          addon);
   }
 
@@ -94,11 +104,13 @@ Acts::detail::VerticesHelper::ellipsoidVertices(double innerRx, double innerRy,
 }
 
 std::vector<Acts::Vector2D>
-Acts::detail::VerticesHelper::circularVertices(double innerR, double outerR,
-                                               double avgPhi, double halfPhi,
+Acts::detail::VerticesHelper::circularVertices(double innerR,
+                                               double outerR,
+                                               double avgPhi,
+                                               double halfPhi,
                                                unsigned int lseg) {
-  return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
-                           lseg);
+  return ellipsoidVertices(
+      innerR, innerR, outerR, outerR, avgPhi, halfPhi, lseg);
 }
 
 bool

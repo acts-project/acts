@@ -58,9 +58,9 @@ makeFieldMap(const SolenoidBField& field) {
   auto mapper =
       solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
-  using Grid_t =
-      Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
-                         Acts::detail::EquidistantAxis>;
+  using Grid_t = Acts::detail::Grid<Acts::Vector2D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
   const Grid_t& grid = mapper.getGrid();
   using index_t = Grid_t::index_t;
   using point_t = Grid_t::point_t;
@@ -101,17 +101,23 @@ StreamWrapper valid(std::ofstream("magfield_lookup.csv"));
 const int ntests = 10000;
 BOOST_DATA_TEST_CASE(
     solenoid_interpolated_bfield_comparison,
-    bdata::random((bdata::seed = 1, bdata::engine = std::mt19937(),
+    bdata::random((bdata::seed = 1,
+                   bdata::engine = std::mt19937(),
                    bdata::distribution = std::uniform_real_distribution<>(
                        1.5 * (-L / 2.), 1.5 * L / 2.))) ^
-        bdata::random((bdata::seed = 2, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 2,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(0, R * 1.5))) ^
-        bdata::random((bdata::seed = 3, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 3,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
         bdata::xrange(ntests),
-    z, r, phi, index) {
+    z,
+    r,
+    phi,
+    index) {
   (void)index;
   if (index % 1000 == 0) {
     std::cout << index << std::endl;

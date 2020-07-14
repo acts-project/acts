@@ -16,13 +16,17 @@ FW::Options::addFatrasOptions(FW::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("fatras-pmin-gev", value<double>()->default_value(0.5),
+  opt("fatras-pmin-gev",
+      value<double>()->default_value(0.5),
       "Minimum momentum for simulated particles in GeV");
-  opt("fatras-em-scattering", value<bool>()->default_value(true),
+  opt("fatras-em-scattering",
+      value<bool>()->default_value(true),
       "Simulate multiple scattering of charged particles");
-  opt("fatras-em-ionisation", value<bool>()->default_value(true),
+  opt("fatras-em-ionisation",
+      value<bool>()->default_value(true),
       "Simulate ionisiation/excitation energy loss of charged particles");
-  opt("fatras-em-radiation", value<bool>()->default_value(true),
+  opt("fatras-em-radiation",
+      value<bool>()->default_value(true),
       "Simulate radiative energy loss of charged particles");
   opt("fatras-hits",
       value<std::string>()

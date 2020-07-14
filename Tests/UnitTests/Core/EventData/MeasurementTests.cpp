@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   std::default_random_engine generator(42);
 

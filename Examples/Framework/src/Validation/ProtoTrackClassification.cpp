@@ -27,8 +27,8 @@ FW::identifyContributingParticles(
       auto isSameParticle = [=](const ParticleHitCount& phc) {
         return (phc.particleId == particleId);
       };
-      auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
-                             isSameParticle);
+      auto it = std::find_if(
+          particleHitCount.begin(), particleHitCount.end(), isSameParticle);
       // either increase count if we saw the particle before or add it
       if (it != particleHitCount.end()) {
         it->hitCount += 1;

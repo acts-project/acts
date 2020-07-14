@@ -98,17 +98,27 @@ struct get_dimension<2u> {
 /// - @c N is the number of hyper box corners which is \f$2^d\f$ where \f$d\f$
 /// is the dimensionality of the hyper box. The dimensionality must be
 /// consistent with the provided @c Point types.
-template <typename T, class Point1, class Point2, class Point3, size_t D,
+template <typename T,
+          class Point1,
+          class Point2,
+          class Point3,
+          size_t D,
           size_t N>
 struct interpolate_impl;
 
 /// @cond
 // recursive implementation of linear interpolation in multiple dimensions
-template <typename T, class Point1, class Point2, class Point3, size_t D,
+template <typename T,
+          class Point1,
+          class Point2,
+          class Point3,
+          size_t D,
           size_t N>
 struct interpolate_impl {
   static T
-  run(const Point1& pos, const Point2& lowerLeft, const Point3& upperRight,
+  run(const Point1& pos,
+      const Point2& lowerLeft,
+      const Point3& upperRight,
       const std::array<T, N>& fields) {
     // get distance to lower boundary relative to total bin width
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
@@ -127,7 +137,9 @@ struct interpolate_impl {
 template <typename T, class Point1, class Point2, class Point3, size_t D>
 struct interpolate_impl<T, Point1, Point2, Point3, D, 2u> {
   static T
-  run(const Point1& pos, const Point2& lowerLeft, const Point3& upperRight,
+  run(const Point1& pos,
+      const Point2& lowerLeft,
+      const Point3& upperRight,
       const std::array<T, 2u>& fields) {
     // get distance to lower boundary relative to total bin width
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);

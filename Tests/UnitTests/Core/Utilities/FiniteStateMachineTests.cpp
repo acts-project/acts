@@ -35,8 +35,11 @@ struct Pong {};
 struct Disconnect {};
 }  // namespace events
 
-struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
-                                states::Pinging, states::Connected> {
+struct fsm : FiniteStateMachine<fsm,
+                                states::Disconnected,
+                                states::Connecting,
+                                states::Pinging,
+                                states::Connected> {
   fsm() : fsm_base(states::Disconnected{}){};
 
   event_return

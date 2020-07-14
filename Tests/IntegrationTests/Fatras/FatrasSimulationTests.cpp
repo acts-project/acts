@@ -35,7 +35,8 @@ struct SplitEnergyLoss {
 
   template <typename generator_t>
   bool
-  operator()(generator_t&, const Acts::MaterialProperties&,
+  operator()(generator_t&,
+             const Acts::MaterialProperties&,
              ActsFatras::Particle& particle,
              std::vector<ActsFatras::Particle>& generated) const {
     const auto p = particle.absMomentum();
@@ -69,16 +70,20 @@ using ChargedPhysicsList =
     ActsFatras::PhysicsList<ActsFatras::detail::StandardScattering,
                             SplitEnergyLoss>;
 using ChargedSimulator =
-    ActsFatras::ParticleSimulator<ChargedPropagator, ChargedPhysicsList,
+    ActsFatras::ParticleSimulator<ChargedPropagator,
+                                  ChargedPhysicsList,
                                   ActsFatras::EverySurface>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
 using NeutralSimulator =
-    ActsFatras::ParticleSimulator<NeutralPropagator, ActsFatras::PhysicsList<>,
+    ActsFatras::ParticleSimulator<NeutralPropagator,
+                                  ActsFatras::PhysicsList<>,
                                   ActsFatras::NoSurface>;
 // full simulator type for charged and neutrals
-using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                        NeutralSelector, NeutralSimulator>;
+using Simulator = ActsFatras::Simulator<ChargedSelector,
+                                        ChargedSimulator,
+                                        NeutralSelector,
+                                        NeutralSimulator>;
 
 // parameters for data-driven test cases
 
@@ -117,27 +122,28 @@ const auto dataset =
 template <typename Container>
 void
 sortByParticleId(Container& container) {
-  std::sort(container.begin(), container.end(),
-            [](const auto& lhs, const auto& rhs) {
-              return lhs.particleId() < rhs.particleId();
-            });
+  std::sort(
+      container.begin(), container.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.particleId() < rhs.particleId();
+      });
 }
 template <typename Container>
 bool
 areParticleIdsUnique(const Container& sortedByParticleId) {
   // assumes the container is sorted by particle id
-  auto ret =
-      std::adjacent_find(sortedByParticleId.begin(), sortedByParticleId.end(),
-                         [](const auto& lhs, const auto& rhs) {
-                           return lhs.particleId() == rhs.particleId();
-                         });
+  auto ret = std::adjacent_find(sortedByParticleId.begin(),
+                                sortedByParticleId.end(),
+                                [](const auto& lhs, const auto& rhs) {
+                                  return lhs.particleId() == rhs.particleId();
+                                });
   return ret == sortedByParticleId.end();
 }
 template <typename Container, typename Value>
 bool
 containsParticleId(const Container& sortedByParticleId, const Value& value) {
   return std::binary_search(sortedByParticleId.begin(),
-                            sortedByParticleId.end(), value,
+                            sortedByParticleId.end(),
+                            value,
                             [](const auto& lhs, const auto& rhs) {
                               return lhs.particleId() < rhs.particleId();
                             });
@@ -145,8 +151,8 @@ containsParticleId(const Container& sortedByParticleId, const Value& value) {
 
 }  // namespace
 
-BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
-                     numParticles) {
+BOOST_DATA_TEST_CASE(
+    FatrasSimulation, dataset, pdg, phi, eta, p, numParticles) {
   using namespace Acts::UnitLiterals;
 
   Acts::GeometryContext geoCtx;
@@ -190,8 +196,8 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   BOOST_TEST(input.size() == numParticles);
 
   // run the simulation
-  auto result = simulator.simulate(geoCtx, magCtx, generator, input,
-                                   simulatedInitial, simulatedFinal, hits);
+  auto result = simulator.simulate(
+      geoCtx, magCtx, generator, input, simulatedInitial, simulatedFinal, hits);
 
   // should always succeed
   BOOST_TEST(result.ok());

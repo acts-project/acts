@@ -175,7 +175,8 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void>
-  fit(State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
+  fit(State& state,
+      const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -203,7 +204,8 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void>
-  addVtxToFit(State& state, Vertex<InputTrack_t>& newVertex,
+  addVtxToFit(State& state,
+              Vertex<InputTrack_t>& newVertex,
               const Linearizer_t& linearizer,
               const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -236,7 +238,8 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @return Result<void> object
   Result<void>
-  fitImpl(State& state, const Linearizer_t& linearizer,
+  fitImpl(State& state,
+          const Linearizer_t& linearizer,
           const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
@@ -259,7 +262,8 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void>
   prepareVertexForFit(
-      State& state, Vertex<InputTrack_t>* vtx,
+      State& state,
+      Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Sets vertexCompatibility for all TrackAtVertex objects
@@ -270,7 +274,8 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void>
   setAllVertexCompatibilities(
-      State& state, Vertex<InputTrack_t>* currentVtx,
+      State& state,
+      Vertex<InputTrack_t>* currentVtx,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
   /// @brief Sets weights to the track according to Eq.(5.46) in Ref.(1)
@@ -281,7 +286,8 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   Result<void>
   setWeightsAndUpdate(
-      State& state, const Linearizer_t& linearizer,
+      State& state,
+      const Linearizer_t& linearizer,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
   /// @brief Collects all compatibility values of the track `trk`

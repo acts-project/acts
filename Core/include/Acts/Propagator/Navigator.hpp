@@ -70,9 +70,12 @@ struct NavigationOptions {
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
   /// @param maxStepLength Maximal step length to check against
-  NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
-                    bool resolves = true, bool resolvem = true,
-                    bool resolvep = false, const object_t* sobject = nullptr,
+  NavigationOptions(NavigationDirection ndir,
+                    BoundaryCheck bcheck,
+                    bool resolves = true,
+                    bool resolvem = true,
+                    bool resolvep = false,
+                    const object_t* sobject = nullptr,
                     const object_t* eobject = nullptr)
       : navDir(ndir),
         boundaryCheck(std::move(bcheck)),
@@ -254,7 +257,9 @@ class Navigator {
 
     // (b) Status call within propagation loop
     // Try finding status of surfaces
-    if (status(state, stepper, state.navigation.navSurfaces,
+    if (status(state,
+               stepper,
+               state.navigation.navSurfaces,
                state.navigation.navSurfaceIter)) {
       debugLog(state,
                [&] { return std::string("Status: in surface handling."); });
@@ -279,7 +284,9 @@ class Navigator {
       debugLog(state,
                [&] { return std::string("Staying focussed on surface."); });
       // Try finding status of layer
-    } else if (status(state, stepper, state.navigation.navLayers,
+    } else if (status(state,
+                      stepper,
+                      state.navigation.navLayers,
                       state.navigation.navLayerIter)) {
       debugLog(state,
                [&] { return std::string("Status: in layer handling."); });
@@ -299,7 +306,9 @@ class Navigator {
                  [&] { return std::string("Staying focussed on layer."); });
       }
       // Try finding status of boundaries
-    } else if (status(state, stepper, state.navigation.navBoundaries,
+    } else if (status(state,
+                      stepper,
+                      state.navigation.navBoundaries,
                       state.navigation.navBoundaryIter)) {
       debugLog(state,
                [&] { return std::string("Status: in boundary handling."); });
@@ -318,9 +327,11 @@ class Navigator {
         // Update volume information
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume = boundary->attachedVolume(
-            state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.stepping.navDir);
+        state.navigation.currentVolume =
+            boundary->attachedVolume(state.geoContext,
+                                     stepper.position(state.stepping),
+                                     stepper.direction(state.stepping),
+                                     state.stepping.navDir);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           debugLog(state, [&] {
@@ -512,10 +523,13 @@ class Navigator {
   /// @param [in] navIter test surface fore the status test
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigation_surfaces_t, typename navigation_iter_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename navigation_surfaces_t,
+            typename navigation_iter_t>
   bool
-  status(propagator_state_t& state, const stepper_t& stepper,
+  status(propagator_state_t& state,
+         const stepper_t& stepper,
          navigation_surfaces_t& navSurfaces,
          const navigation_iter_t& navIter) const {
     // No surfaces, status check will be done on layer
@@ -683,9 +697,13 @@ class Navigator {
       // check if current volume has BVH, or layers
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
-        NavigationOptions<Surface> navOpts(
-            state.stepping.navDir, true, resolveSensitive, resolveMaterial,
-            resolvePassive, nullptr, state.navigation.targetSurface);
+        NavigationOptions<Surface> navOpts(state.stepping.navDir,
+                                           true,
+                                           resolveSensitive,
+                                           resolveMaterial,
+                                           resolvePassive,
+                                           nullptr,
+                                           state.navigation.targetSurface);
         navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
         double opening_angle = 0;
 
@@ -725,8 +743,11 @@ class Navigator {
 
         auto protoNavSurfaces =
             state.navigation.currentVolume->compatibleSurfacesFromHierarchy(
-                state.geoContext, stepper.position(state.stepping),
-                stepper.direction(state.stepping), opening_angle, navOpts);
+                state.geoContext,
+                stepper.position(state.stepping),
+                stepper.direction(state.stepping),
+                opening_angle,
+                navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
 
@@ -742,8 +763,8 @@ class Navigator {
             state.navigation.navLayers = {};
             state.navigation.navLayerIter = state.navigation.navLayers.end();
             // The stepper updates the step size ( single / multi component)
-            stepper.updateStepSize(state.stepping,
-                                   *state.navigation.navSurfaceIter, true);
+            stepper.updateStepSize(
+                state.stepping, *state.navigation.navSurfaceIter, true);
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Navigation stepSize updated to ";
@@ -894,8 +915,10 @@ class Navigator {
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries =
           state.navigation.currentVolume->compatibleBoundaries(
-              state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts);
+              state.geoContext,
+              stepper.position(state.stepping),
+              stepper.direction(state.stepping),
+              navOpts);
       // The number of boundary candidates
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -910,8 +933,8 @@ class Navigator {
       state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
       if (not state.navigation.navBoundaries.empty()) {
         // Set to the first and return to the stepper
-        stepper.updateStepSize(state.stepping,
-                               *state.navigation.navBoundaryIter, true);
+        stepper.updateStepSize(
+            state.stepping, *state.navigation.navBoundaryIter, true);
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Navigation stepSize updated to ";
@@ -1029,8 +1052,10 @@ class Navigator {
       // Slow navigation initialization for target:
       // target volume and layer search through global search
       auto targetIntersection = state.navigation.targetSurface->intersect(
-          state.geoContext, stepper.position(state.stepping),
-          state.stepping.navDir * stepper.direction(state.stepping), false);
+          state.geoContext,
+          stepper.position(state.stepping),
+          state.stepping.navDir * stepper.direction(state.stepping),
+          false);
       if (targetIntersection) {
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -1073,7 +1098,8 @@ class Navigator {
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool
-  resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
+  resolveSurfaces(propagator_state_t& state,
+                  const stepper_t& stepper,
                   const Layer* cLayer = nullptr) const {
     // get the layer and layer surface
     auto layerSurface = cLayer ? state.navigation.startSurface
@@ -1083,9 +1109,13 @@ class Navigator {
     bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
-    NavigationOptions<Surface> navOpts(
-        state.stepping.navDir, true, resolveSensitive, resolveMaterial,
-        resolvePassive, startSurface, state.navigation.targetSurface);
+    NavigationOptions<Surface> navOpts(state.stepping.navDir,
+                                       true,
+                                       resolveSensitive,
+                                       resolveMaterial,
+                                       resolvePassive,
+                                       startSurface,
+                                       state.navigation.targetSurface);
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
@@ -1094,9 +1124,11 @@ class Navigator {
                                 : stepper.overstepLimit(state.stepping);
 
     // get the surfaces
-    state.navigation.navSurfaces = navLayer->compatibleSurfaces(
-        state.geoContext, stepper.position(state.stepping),
-        stepper.direction(state.stepping), navOpts);
+    state.navigation.navSurfaces =
+        navLayer->compatibleSurfaces(state.geoContext,
+                                     stepper.position(state.stepping),
+                                     stepper.direction(state.stepping),
+                                     navOpts);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
@@ -1111,8 +1143,8 @@ class Navigator {
       // set the iterator
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
       // The stepper updates the step size ( single / multi component)
-      stepper.updateStepSize(state.stepping, *state.navigation.navSurfaceIter,
-                             true);
+      stepper.updateStepSize(
+          state.stepping, *state.navigation.navSurfaceIter, true);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Navigation stepSize updated to ";
@@ -1155,9 +1187,13 @@ class Navigator {
             : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
-    NavigationOptions<Layer> navOpts(state.stepping.navDir, true,
-                                     resolveSensitive, resolveMaterial,
-                                     resolvePassive, startLayer, nullptr);
+    NavigationOptions<Layer> navOpts(state.stepping.navDir,
+                                     true,
+                                     resolveSensitive,
+                                     resolveMaterial,
+                                     resolvePassive,
+                                     startLayer,
+                                     nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
     navOpts.pathLimit = state.stepping.stepSize.value(ConstrainedStep::aborter);
@@ -1165,8 +1201,10 @@ class Navigator {
     // Request the compatible layers
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
-            state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), navOpts);
+            state.geoContext,
+            stepper.position(state.stepping),
+            stepper.direction(state.stepping),
+            navOpts);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
@@ -1188,8 +1226,8 @@ class Navigator {
               state.navigation.startLayer) {
         debugLog(state, [&] { return std::string("Target at layer."); });
         // The stepper updates the step size ( single / multi component)
-        stepper.updateStepSize(state.stepping, *state.navigation.navLayerIter,
-                               true);
+        stepper.updateStepSize(
+            state.stepping, *state.navigation.navLayerIter, true);
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Navigation stepSize updated to ";

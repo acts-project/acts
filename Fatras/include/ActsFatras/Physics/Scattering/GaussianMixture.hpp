@@ -40,12 +40,16 @@ struct GaussianMixture {
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
   double
-  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+  operator()(generator_t &generator,
+             const Acts::MaterialProperties &slab,
              Particle &particle) const {
     /// Calculate the highland formula first
     double sigma = Acts::computeMultipleScatteringTheta0(
-        slab, particle.pdg(), particle.mass(),
-        particle.charge() / particle.absMomentum(), particle.charge());
+        slab,
+        particle.pdg(),
+        particle.mass(),
+        particle.charge() / particle.absMomentum(),
+        particle.charge());
     double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator

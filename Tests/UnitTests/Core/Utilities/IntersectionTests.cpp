@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
                     tsfpIntersections[2].pathLength);
 
   // let's sort them with greater
-  std::sort(tsfpIntersections.begin(), tsfpIntersections.end(),
-            std::greater<>());
+  std::sort(
+      tsfpIntersections.begin(), tsfpIntersections.end(), std::greater<>());
   BOOST_CHECK_EQUAL(fstpIntersections[0].pathLength,
                     tsfpIntersections[2].pathLength);
   BOOST_CHECK_EQUAL(fstpIntersections[1].pathLength,
@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
                     tsfnIntersections[2].pathLength);
 
   // let's sort them with greater
-  std::sort(fstnIntersections.begin(), fstnIntersections.end(),
-            std::greater<>());
+  std::sort(
+      fstnIntersections.begin(), fstnIntersections.end(), std::greater<>());
   BOOST_CHECK_EQUAL(fstnIntersections[0].pathLength,
                     tsfnIntersections[2].pathLength);
   BOOST_CHECK_EQUAL(fstnIntersections[1].pathLength,
@@ -129,15 +129,15 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   std::vector<Intersection> tfsznIntersections = {tIn, fIn, sIn, zI};
   std::vector<Intersection> ztfsnIntersections = {zI, tIn, fIn, sIn};
 
-  std::sort(tfsznIntersections.begin(), tfsznIntersections.end(),
-            std::greater<>());
+  std::sort(
+      tfsznIntersections.begin(), tfsznIntersections.end(), std::greater<>());
   BOOST_CHECK_EQUAL(tfsznIntersections[0].pathLength, 0.);
   BOOST_CHECK_EQUAL(tfsznIntersections[1].pathLength, -1.);
   BOOST_CHECK_EQUAL(tfsznIntersections[2].pathLength, -2.);
   BOOST_CHECK_EQUAL(tfsznIntersections[3].pathLength, -3.);
 
-  std::sort(ztfsnIntersections.begin(), ztfsnIntersections.end(),
-            std::greater<>());
+  std::sort(
+      ztfsnIntersections.begin(), ztfsnIntersections.end(), std::greater<>());
   BOOST_CHECK_EQUAL(ztfsnIntersections[0].pathLength, 0.);
   BOOST_CHECK_EQUAL(ztfsnIntersections[1].pathLength, -1.);
   BOOST_CHECK_EQUAL(ztfsnIntersections[2].pathLength, -2.);
@@ -171,10 +171,10 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
   PlaneIntersection int9a(
       Intersection(Vector3D(9., 0., 0.), 9., Intersection::Status::reachable),
       psf9.get());
-  PlaneIntersection int9b(
-      Intersection(Vector3D(9., 1., 0.), std::sqrt(9. * 9. + 1.),
-                   Intersection::Status::reachable),
-      psf9.get());
+  PlaneIntersection int9b(Intersection(Vector3D(9., 1., 0.),
+                                       std::sqrt(9. * 9. + 1.),
+                                       Intersection::Status::reachable),
+                          psf9.get());
   PlaneIntersection int10(
       Intersection(Vector3D(10., 0., 0.), 10., Intersection::Status::reachable),
       psf10.get());
@@ -187,14 +187,20 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
   std::vector<PlaneIntersection> unionSetCst = {};
 
   // This should give 6 different intersections
-  std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
-                 secondSet.end(), std::back_inserter(unionSetStd));
+  std::set_union(firstSet.begin(),
+                 firstSet.end(),
+                 secondSet.begin(),
+                 secondSet.end(),
+                 std::back_inserter(unionSetStd));
   BOOST_CHECK_EQUAL(unionSetStd.size(), 6u);
 
   // This should give 5 different inteseciton attempts (for each surface 1)
   SameSurfaceIntersection onSameSurface;
-  std::set_union(firstSet.begin(), firstSet.end(), secondSet.begin(),
-                 secondSet.end(), std::back_inserter(unionSetCst),
+  std::set_union(firstSet.begin(),
+                 firstSet.end(),
+                 secondSet.begin(),
+                 secondSet.end(),
+                 std::back_inserter(unionSetCst),
                  onSameSurface);
   BOOST_CHECK_EQUAL(unionSetCst.size(), 5u);
 }

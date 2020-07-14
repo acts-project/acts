@@ -38,7 +38,8 @@ Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
 double
 Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(get(eMinR), -get(eHalfPhiSector)),
+      shifted(lposition),
+      Vector2D(get(eMinR), -get(eHalfPhiSector)),
       Vector2D(get(eMaxR), get(eHalfPhiSector)));
 }
 

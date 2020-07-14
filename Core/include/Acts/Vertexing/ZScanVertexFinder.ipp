@@ -32,8 +32,10 @@ Acts::ZScanVertexFinder<vfitter_t>::find(
     if (useConstraint &&
         vertexingOptions.vertexConstraint.covariance()(0, 0) != 0) {
       auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
-          params, vertexingOptions.vertexConstraint,
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext);
+          params,
+          vertexingOptions.vertexConstraint,
+          vertexingOptions.geoContext,
+          vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {
@@ -100,7 +102,8 @@ Acts::ZScanVertexFinder<vfitter_t>::find(
   // constraint x()/y() equals 0 if no constraint
   SpacePointVector output(vertexingOptions.vertexConstraint.position().x(),
                           vertexingOptions.vertexConstraint.position().y(),
-                          ZResult, vertexingOptions.vertexConstraint.time());
+                          ZResult,
+                          vertexingOptions.vertexConstraint.time());
   Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex

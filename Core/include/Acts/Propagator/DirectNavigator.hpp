@@ -67,7 +67,8 @@ class DirectNavigator {
     /// @param r the result of this Actor
     template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+    operator()(propagator_state_t& state,
+               const stepper_t& /*unused*/,
                result_type& r) const {
       // Only act once
       if (not r.initialized) {

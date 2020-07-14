@@ -66,7 +66,9 @@ template <typename input_track_t>
 void
 Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
-    const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
+    const Acts::LinearizedTrack& linTrack,
+    double trackWeight,
+    int sign,
     MatrixCache& matrixCache) {
   // Retrieve linTrack information
   const ActsMatrixD<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);

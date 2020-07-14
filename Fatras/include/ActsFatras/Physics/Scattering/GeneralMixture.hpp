@@ -40,7 +40,8 @@ struct GeneralMixture {
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
   double
-  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+  operator()(generator_t &generator,
+             const Acts::MaterialProperties &slab,
              Particle &particle) const {
     double theta = 0.0;
 
@@ -64,20 +65,24 @@ struct GeneralMixture {
       if (tob2 > 0.6 / std::pow(slab.material().Z(), 0.6)) {
         // Gaussian mixture or pure Gaussian
         if (tob2 > 10) {
-          scattering_params = getGaussian(beta, particle.absMomentum(), tInX0,
-                                          genMixtureScalor);
+          scattering_params = getGaussian(
+              beta, particle.absMomentum(), tInX0, genMixtureScalor);
         } else {
-          scattering_params =
-              getGaussmix(beta, particle.absMomentum(), tInX0,
-                          slab.material().Z(), genMixtureScalor);
+          scattering_params = getGaussmix(beta,
+                                          particle.absMomentum(),
+                                          tInX0,
+                                          slab.material().Z(),
+                                          genMixtureScalor);
         }
         // Simulate
         theta = gaussmix(generator, scattering_params);
       } else {
         // Semigaussian mixture - get parameters
-        auto scattering_params_sg =
-            getSemigauss(beta, particle.absMomentum(), tInX0,
-                         slab.material().Z(), genMixtureScalor);
+        auto scattering_params_sg = getSemigauss(beta,
+                                                 particle.absMomentum(),
+                                                 tInX0,
+                                                 slab.material().Z(),
+                                                 genMixtureScalor);
         // Simulate
         theta = semigauss(generator, scattering_params_sg);
       }
@@ -85,8 +90,11 @@ struct GeneralMixture {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
-          slab, particle.pdg(), particle.mass(),
-          particle.charge() / particle.absMomentum(), particle.charge());
+          slab,
+          particle.pdg(),
+          particle.mass(),
+          particle.charge() / particle.absMomentum(),
+          particle.charge());
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle
@@ -107,8 +115,8 @@ struct GeneralMixture {
   }
 
   std::array<double, 4>
-  getGaussmix(double beta, double p, double tInX0, double Z,
-              double scale) const {
+  getGaussmix(
+      double beta, double p, double tInX0, double Z, double scale) const {
     std::array<double, 4> scattering_params;
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) *
                            scale;  // Total standard deviation of mixture
@@ -128,8 +136,8 @@ struct GeneralMixture {
   }
 
   std::array<double, 6>
-  getSemigauss(double beta, double p, double tInX0, double Z,
-               double scale) const {
+  getSemigauss(
+      double beta, double p, double tInX0, double Z, double scale) const {
     std::array<double, 6> scattering_params;
     double N = tInX0 * 1.587E7 * std::pow(Z, 1.0 / 3.0) / (beta * beta) /
                (Z + 1) / std::log(287 / std::sqrt(Z));

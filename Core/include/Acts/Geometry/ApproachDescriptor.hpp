@@ -51,7 +51,8 @@ class ApproachDescriptor {
   ///
   /// @return is a surface intersection
   virtual ObjectIntersection<Surface>
-  approachSurface(const GeometryContext& gctx, const Vector3D& position,
+  approachSurface(const GeometryContext& gctx,
+                  const Vector3D& position,
                   const Vector3D& direction,
                   const BoundaryCheck& bcheck) const = 0;
 

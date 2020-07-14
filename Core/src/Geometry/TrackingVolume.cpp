@@ -27,7 +27,8 @@ Acts::TrackingVolume::TrackingVolume()
       m_name("undefined") {}
 
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    std::shared_ptr<const Transform3D> htrans,
+    VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
     : Volume(std::move(htrans), std::move(volbounds)),
@@ -42,7 +43,8 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+    std::shared_ptr<const Transform3D> htrans,
+    VolumeBoundsPtr volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
@@ -61,7 +63,8 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    std::shared_ptr<const Transform3D> htrans,
+    VolumeBoundsPtr volbounds,
     std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
     std::vector<std::unique_ptr<const Volume>> descendants,
     const Volume::BoundingBox* top,
@@ -219,7 +222,8 @@ Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
 
 void
 Acts::TrackingVolume::glueTrackingVolumes(
-    const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
+    const GeometryContext& gctx,
+    BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace bsfNeighbor) {
   // find the connection of the two tracking volumes : binR returns the center
@@ -366,7 +370,8 @@ Acts::TrackingVolume::interlinkLayers() {
 void
 Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
-    std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) {
+    std::map<std::string, const TrackingVolume*>& volumeMap,
+    size_t& vol) {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 
@@ -486,7 +491,8 @@ Acts::TrackingVolume::visitSurfaces(
 // Returns the boundary surfaces ordered in probability to hit them based on
 std::vector<Acts::BoundaryIntersection>
 Acts::TrackingVolume::compatibleBoundaries(
-    const GeometryContext& gctx, const Vector3D& position,
+    const GeometryContext& gctx,
+    const Vector3D& position,
     const Vector3D& direction,
     const NavigationOptions<Surface>& options) const {
   // Loop over boundarySurfaces and calculate the intersection
@@ -517,8 +523,8 @@ Acts::TrackingVolume::compatibleBoundaries(
     if (withinLimit) {
       sIntersection.intersection.pathLength *=
           std::copysign(1., options.navDir);
-      return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                  sIntersection.object);
+      return BoundaryIntersection(
+          sIntersection.intersection, bSurface, sIntersection.object);
     }
     // Check the alternative
     if (sIntersection.alternative) {
@@ -529,8 +535,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       if (sIntersection.alternative and withinLimit) {
         sIntersection.alternative.pathLength *=
             std::copysign(1., options.navDir);
-        return BoundaryIntersection(sIntersection.alternative, bSurface,
-                                    sIntersection.object);
+        return BoundaryIntersection(
+            sIntersection.alternative, bSurface, sIntersection.object);
       }
     }
     // Return an invalid one
@@ -546,8 +552,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
-        auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
-                                                options.boundaryCheck);
+        auto bCandidate = bSurfaceRep.intersect(
+            gctx, position, sDirection, options.boundaryCheck);
         // Intersect and continue
         auto bIntersection = checkIntersection(bCandidate, bsIter.get());
         if (bIntersection) {
@@ -579,8 +585,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 
 std::vector<Acts::LayerIntersection>
 Acts::TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const NavigationOptions<Layer>& options) const {
+    const GeometryContext& gctx,
+    const Vector3D& position,
+    const Vector3D& direction,
+    const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
 
@@ -662,8 +670,10 @@ intersectSearchHierarchy(const T obj, const Acts::Volume::BoundingBox* lnode) {
 
 std::vector<Acts::SurfaceIntersection>
 Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, double angle,
+    const GeometryContext& gctx,
+    const Vector3D& position,
+    const Vector3D& direction,
+    double angle,
     const NavigationOptions<Surface>& options) const {
   std::vector<SurfaceIntersection> sIntersections;
   sIntersections.reserve(20);  // arbitrary

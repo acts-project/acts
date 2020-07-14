@@ -20,16 +20,19 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // middle-spacepoint.
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
-std::vector<std::pair<
-    float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+std::vector<
+    std::pair<float,
+              std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
 SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     const InternalSpacePoint<external_spacepoint_t>& bottomSP,
     const InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
-    std::vector<float>& impactParametersVec, float zOrigin) const {
-  std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+    std::vector<float>& impactParametersVec,
+    float zOrigin) const {
+  std::vector<
+      std::pair<float,
+                std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       selectedSeeds;
 
   for (size_t i = 0; i < topSpVec.size(); i++) {
@@ -88,14 +91,15 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // add detector specific considerations on the seed weight
       weight += m_experimentCuts->seedWeight(bottomSP, middleSP, *topSpVec[i]);
       // discard seeds according to detector specific cuts (e.g.: weight)
-      if (!m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP,
-                                           *topSpVec[i])) {
+      if (!m_experimentCuts->singleSeedCut(
+              weight, bottomSP, middleSP, *topSpVec[i])) {
         continue;
       }
     }
     selectedSeeds.push_back(std::make_pair(
-        weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                    bottomSP, middleSP, *topSpVec[i], zOrigin)));
+        weight,
+        std::make_unique<const InternalSeed<external_spacepoint_t>>(
+            bottomSP, middleSP, *topSpVec[i], zOrigin)));
   }
   return selectedSeeds;
 }
@@ -104,33 +108,40 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 template <typename external_spacepoint_t>
 void
 SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+    std::vector<
+        std::pair<float,
+                  std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         seedsPerSpM,
     std::vector<Seed<external_spacepoint_t>>& outVec) const {
   // sort by weight and iterate only up to configured max number of seeds per
   // middle SP
-  std::sort((seedsPerSpM.begin()), (seedsPerSpM.end()),
-            [](const std::pair<float, std::unique_ptr<const Acts::InternalSeed<
-                                          external_spacepoint_t>>>& i1,
-               const std::pair<float, std::unique_ptr<const Acts::InternalSeed<
-                                          external_spacepoint_t>>>& i2) {
-              if (i1.first != i2.first) {
-                return i1.first > i2.first;
-              } else {
-                // This is for the case when the weights from different seeds
-                // are same. This makes cpu & cuda results same
-                float seed1_sum = 0;
-                float seed2_sum = 0;
-                for (int i = 0; i < 3; i++) {
-                  seed1_sum += pow(i1.second->sp[i]->sp().y(), 2) +
-                               pow(i1.second->sp[i]->sp().z(), 2);
-                  seed2_sum += pow(i2.second->sp[i]->sp().y(), 2) +
-                               pow(i2.second->sp[i]->sp().z(), 2);
-                }
-                return seed1_sum > seed2_sum;
-              }
-            });
+  std::sort(
+      (seedsPerSpM.begin()),
+      (seedsPerSpM.end()),
+      [](const std::pair<
+             float,
+             std::unique_ptr<const Acts::InternalSeed<external_spacepoint_t>>>&
+             i1,
+         const std::pair<
+             float,
+             std::unique_ptr<const Acts::InternalSeed<external_spacepoint_t>>>&
+             i2) {
+        if (i1.first != i2.first) {
+          return i1.first > i2.first;
+        } else {
+          // This is for the case when the weights from different seeds
+          // are same. This makes cpu & cuda results same
+          float seed1_sum = 0;
+          float seed2_sum = 0;
+          for (int i = 0; i < 3; i++) {
+            seed1_sum += pow(i1.second->sp[i]->sp().y(), 2) +
+                         pow(i1.second->sp[i]->sp().z(), 2);
+            seed2_sum += pow(i2.second->sp[i]->sp().y(), 2) +
+                         pow(i2.second->sp[i]->sp().z(), 2);
+          }
+          return seed1_sum > seed2_sum;
+        }
+      });
   if (m_experimentCuts != nullptr) {
     seedsPerSpM = m_experimentCuts->cutPerMiddleSP(std::move(seedsPerSpM));
   }
@@ -145,9 +156,10 @@ SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   for (; it < itBegin + maxSeeds; ++it) {
-    outVec.push_back(Seed<external_spacepoint_t>(
-        (*it).second->sp[0]->sp(), (*it).second->sp[1]->sp(),
-        (*it).second->sp[2]->sp(), (*it).second->z()));
+    outVec.push_back(Seed<external_spacepoint_t>((*it).second->sp[0]->sp(),
+                                                 (*it).second->sp[1]->sp(),
+                                                 (*it).second->sp[2]->sp(),
+                                                 (*it).second->z()));
   }
 }
 

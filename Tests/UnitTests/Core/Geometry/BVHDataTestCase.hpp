@@ -65,9 +65,13 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
   auto tvBounds =
       std::make_shared<CuboidVolumeBounds>(hl * 1.1, hl * 1.1, hl * 1.1);
 
-  auto tv =
-      TrackingVolume::create(tvTrf, tvBounds, std::move(boxStore),
-                             std::move(volumes), top, nullptr, "TheVolume");
+  auto tv = TrackingVolume::create(tvTrf,
+                                   tvBounds,
+                                   std::move(boxStore),
+                                   std::move(volumes),
+                                   top,
+                                   nullptr,
+                                   "TheVolume");
 
   auto tg = std::make_shared<TrackingGeometry>(tv);
 
@@ -78,23 +82,33 @@ auto [volumes, tg] = gridBoxFactory();
 
 BOOST_DATA_TEST_CASE(
     bvhnavigation_test,
-    bdata::random((bdata::seed = 7, bdata::engine = std::mt19937(),
+    bdata::random((bdata::seed = 7,
+                   bdata::engine = std::mt19937(),
                    bdata::distribution = std::uniform_real_distribution<>(-5,
                                                                           5))) ^
-        bdata::random((bdata::seed = 2, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 2,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
-        bdata::random((bdata::seed = 3, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 3,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 4, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 4,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(-100, 100))) ^
-        bdata::random((bdata::seed = 5, bdata::engine = std::mt19937(),
+        bdata::random((bdata::seed = 5,
+                       bdata::engine = std::mt19937(),
                        bdata::distribution =
                            std::uniform_real_distribution<>(-100, 100))) ^
         bdata::xrange(NTESTS),
-    eta, phi, x, y, z, index) {
+    eta,
+    phi,
+    x,
+    y,
+    z,
+    index) {
   using namespace Acts::UnitLiterals;
   (void)index;
 
@@ -151,8 +165,8 @@ BOOST_DATA_TEST_CASE(
   // this should be irrelevant.
   double mom = 50_GeV;
 
-  Acts::CurvilinearParameters startPar(std::nullopt, ray.origin(),
-                                       ray.dir() * mom, +1, 0.);
+  Acts::CurvilinearParameters startPar(
+      std::nullopt, ray.origin(), ray.dir() * mom, +1, 0.);
 
   const auto result = propagator.propagate(startPar, options).value();
 

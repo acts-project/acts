@@ -83,7 +83,8 @@ struct HitSurfaceSelector {
 template <typename magnetic_field_t>
 void
 setupSimulationAlgorithms(
-    const FW::Options::Variables& variables, FW::Sequencer& sequencer,
+    const FW::Options::Variables& variables,
+    FW::Sequencer& sequencer,
     std::shared_ptr<const FW::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     magnetic_field_t&& magneticField) {
@@ -117,16 +118,21 @@ setupSimulationAlgorithms(
   using ChargedSelector =
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, MinP>;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
-      ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
+      ChargedPropagator,
+      ActsFatras::ChargedElectroMagneticPhysicsList,
       HitSurfaceSelector>;
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, MinP>;
-  using NeutralSimulator = ActsFatras::ParticleSimulator<
-      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface>;
+  using NeutralSimulator =
+      ActsFatras::ParticleSimulator<NeutralPropagator,
+                                    ActsFatras::PhysicsList<>,
+                                    ActsFatras::NoSurface>;
   // full simulator type for charged and neutrals
-  using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
-                                          NeutralSelector, NeutralSimulator>;
+  using Simulator = ActsFatras::Simulator<ChargedSelector,
+                                          ChargedSimulator,
+                                          NeutralSelector,
+                                          NeutralSimulator>;
   // final algorihm type
   using SimulationAlgorithm = FW::FatrasAlgorithm<Simulator>;
 
@@ -204,7 +210,8 @@ setupSimulationAlgorithms(
 
 void
 FW::setupSimulation(
-    const FW::Options::Variables& variables, FW::Sequencer& sequencer,
+    const FW::Options::Variables& variables,
+    FW::Sequencer& sequencer,
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   auto magneticFieldVariant = FW::Options::readBField(variables);
@@ -213,8 +220,11 @@ FW::setupSimulation(
         using magnetic_field_t =
             typename std::decay_t<decltype(inputField)>::element_type;
         Acts::SharedBField<magnetic_field_t> magneticField(inputField);
-        setupSimulationAlgorithms(variables, sequencer, randomNumbers,
-                                  trackingGeometry, std::move(magneticField));
+        setupSimulationAlgorithms(variables,
+                                  sequencer,
+                                  randomNumbers,
+                                  trackingGeometry,
+                                  std::move(magneticField));
       },
       magneticFieldVariant);
 }

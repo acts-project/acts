@@ -62,14 +62,22 @@ Acts::AnnulusBounds::AnnulusBounds(
   };
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
-  m_outLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                            get(eMaxR), get(eMaxPhiRel));
-  m_inLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                           get(eMinR), get(eMaxPhiRel));
-  m_outRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                             get(eMaxR), get(eMinPhiRel));
-  m_inRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                            get(eMinR), get(eMinPhiRel));
+  m_outLeftStripXY = circIx(m_moduleOrigin[eLOC_X],
+                            m_moduleOrigin[eLOC_Y],
+                            get(eMaxR),
+                            get(eMaxPhiRel));
+  m_inLeftStripXY = circIx(m_moduleOrigin[eLOC_X],
+                           m_moduleOrigin[eLOC_Y],
+                           get(eMinR),
+                           get(eMaxPhiRel));
+  m_outRightStripXY = circIx(m_moduleOrigin[eLOC_X],
+                             m_moduleOrigin[eLOC_Y],
+                             get(eMaxR),
+                             get(eMinPhiRel));
+  m_inRightStripXY = circIx(m_moduleOrigin[eLOC_X],
+                            m_moduleOrigin[eLOC_Y],
+                            get(eMinR),
+                            get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -90,8 +98,10 @@ std::vector<Acts::Vector2D>
 Acts::AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
-  return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
-          rot * m_inLeftStripPC, rot * m_inRightStripPC};
+  return {rot * m_outRightStripPC,
+          rot * m_outLeftStripPC,
+          rot * m_inLeftStripPC,
+          rot * m_inRightStripPC};
 }
 
 std::vector<Acts::Vector2D>
@@ -113,22 +123,31 @@ Acts::AnnulusBounds::vertices(unsigned int lseg) const {
   for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
     int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
     detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
-        rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
-        phisInner[iseg + 1], lseg, addon);
+        rvertices,
+        {get(eMinR), get(eMinR)},
+        phisInner[iseg],
+        phisInner[iseg + 1],
+        lseg,
+        addon);
   }
   // Upper bow from phi_min -> phi_max
   for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
     int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
     detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
-        rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
-        phisOuter[iseg + 1], lseg, addon);
+        rvertices,
+        {get(eMaxR), get(eMaxR)},
+        phisOuter[iseg],
+        phisOuter[iseg + 1],
+        lseg,
+        addon);
   }
 
   return rvertices;
 }
 
 bool
-Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
+Acts::AnnulusBounds::inside(const Vector2D& lposition,
+                            double tolR,
                             double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by m_phiAvg
@@ -169,8 +188,8 @@ Acts::AnnulusBounds::inside(const Vector2D& lposition,
                             const BoundaryCheck& bcheck) const {
   // locpo is PC in STRIP SYSTEM
   if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    return inside(lposition, bcheck.tolerance()[eLOC_R],
-                  bcheck.tolerance()[eLOC_PHI]);
+    return inside(
+        lposition, bcheck.tolerance()[eLOC_R], bcheck.tolerance()[eLOC_PHI]);
   } else {
     // first check if inside. We don't need to look into the covariance if
     // inside
@@ -282,13 +301,13 @@ Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // do projection in STRIP PC
 
     // first: STRIP system. locpo is in STRIP PC already
-    currentClosest = closestOnSegment(m_inLeftStripPC, m_outLeftStripPC,
-                                      locpo_rotated, weightStripPC);
+    currentClosest = closestOnSegment(
+        m_inLeftStripPC, m_outLeftStripPC, locpo_rotated, weightStripPC);
     currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
     minDist = currentDist;
 
-    currentClosest = closestOnSegment(m_inRightStripPC, m_outRightStripPC,
-                                      locpo_rotated, weightStripPC);
+    currentClosest = closestOnSegment(
+        m_inRightStripPC, m_outRightStripPC, locpo_rotated, weightStripPC);
     currentDist = squaredNorm(locpo_rotated - currentClosest, weightStripPC);
     if (currentDist < minDist) {
       minDist = currentDist;
@@ -304,15 +323,15 @@ Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // now check edges in MODULE PC (inner and outer circle)
     // assuming Mahalanobis distances are of same unit if covariance
     // is correctly transformed
-    currentClosest = closestOnSegment(m_inLeftModulePC, m_inRightModulePC,
-                                      locpoModulePC, weightModulePC);
+    currentClosest = closestOnSegment(
+        m_inLeftModulePC, m_inRightModulePC, locpoModulePC, weightModulePC);
     currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
     if (currentDist < minDist) {
       minDist = currentDist;
     }
 
-    currentClosest = closestOnSegment(m_outLeftModulePC, m_outRightModulePC,
-                                      locpoModulePC, weightModulePC);
+    currentClosest = closestOnSegment(
+        m_outLeftModulePC, m_outRightModulePC, locpoModulePC, weightModulePC);
     currentDist = squaredNorm(locpoModulePC - currentClosest, weightModulePC);
     if (currentDist < minDist) {
       minDist = currentDist;
@@ -402,8 +421,8 @@ Acts::AnnulusBounds::distanceToBoundary(const Vector2D& lposition) const {
   }
 
   // phi right
-  Vector2D closestRight = closestOnSegment(m_inRightStripXY, m_outRightStripXY,
-                                           locpoStripXY, weight);
+  Vector2D closestRight = closestOnSegment(
+      m_inRightStripXY, m_outRightStripXY, locpoStripXY, weight);
   curDist = (closestRight - locpoStripXY).norm();
   if (curDist < minDist) {
     minDist = curDist;
@@ -420,7 +439,9 @@ Acts::AnnulusBounds::stripXYToModulePC(const Vector2D& vStripXY) const {
 
 Acts::Vector2D
 Acts::AnnulusBounds::closestOnSegment(
-    const Vector2D& a, const Vector2D& b, const Vector2D& p,
+    const Vector2D& a,
+    const Vector2D& b,
+    const Vector2D& p,
     const Eigen::Matrix<double, 2, 2>& weight) const {
   // connecting vector
   auto n = b - a;

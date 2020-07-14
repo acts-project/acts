@@ -12,13 +12,15 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     calculate3dDistance(const GeometryContext& gctx,
                         const BoundParameters& trkParams,
-                        const Vector3D& vtxPos, State& state) const {
+                        const Vector3D& vtxPos,
+                        State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -33,14 +35,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return deltaR.norm();
 }
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
                                const BoundParameters& trkParams,
-                               const Vector3D& vtxPos, State& state) const {
+                               const Vector3D& vtxPos,
+                               State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -85,7 +89,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 }
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
@@ -127,12 +132,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return myXYpos.dot(myWeightXY * myXYpos);
 }
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    performNewtonApproximation(const Vector3D& trkPos, const Vector3D& vtxPos,
-                               double phi, double theta, double r) const {
+    performNewtonApproximation(const Vector3D& trkPos,
+                               const Vector3D& vtxPos,
+                               double phi,
+                               double theta,
+                               double r) const {
   double sinNewPhi = -std::sin(phi);
   double cosNewPhi = std::cos(phi);
 
@@ -181,14 +190,17 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return phi;
 }
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<void>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundParameters& trkParams,
-                           const Vector3D& vtxPos, Vector3D& deltaR,
-                           Vector3D& momDir, State& state) const {
+                           const Vector3D& vtxPos,
+                           Vector3D& deltaR,
+                           Vector3D& momDir,
+                           State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
   double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
@@ -242,7 +254,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   return {};
 }
 
-template <typename input_track_t, typename propagator_t,
+template <typename input_track_t,
+          typename propagator_t,
           typename propagator_options_t>
 Acts::Result<Acts::ImpactParametersAndSigma>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::

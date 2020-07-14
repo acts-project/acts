@@ -69,8 +69,10 @@ struct MaterialMapper {
     Material
     getMaterial(const Vector3D& position) const {
       // defined in Interpolation.hpp
-      return Material(interpolate(m_transformPos(position), m_lowerLeft,
-                                  m_upperRight, m_materialValues));
+      return Material(interpolate(m_transformPos(position),
+                                  m_lowerLeft,
+                                  m_upperRight,
+                                  m_materialValues));
     }
 
     /// @brief Check whether given 3D position is inside this cell
@@ -167,8 +169,8 @@ struct MaterialMapper {
       neighbors.at(i++) = m_grid.at(index);
     }
 
-    return MaterialCell(m_transformPos, lowerLeft, upperRight,
-                        std::move(neighbors));
+    return MaterialCell(
+        m_transformPos, lowerLeft, upperRight, std::move(neighbors));
   }
 
   /// @brief Get the number of bins for all axes of the map

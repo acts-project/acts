@@ -70,7 +70,8 @@ class FakeRatePlotTool {
   /// @param status the reconstructed track is fake or not
   void
   fill(FakeRatePlotCache& fakeRatePlotCache,
-       const Acts::BoundParameters& fittedParameters, bool status) const;
+       const Acts::BoundParameters& fittedParameters,
+       bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
@@ -81,7 +82,8 @@ class FakeRatePlotTool {
   /// @param nFakeTracks the number of fake tracks
   void
   fill(FakeRatePlotCache& fakeRatePlotCache,
-       const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
+       const ActsFatras::Particle& truthParticle,
+       size_t nTruthMatchedTracks,
        size_t nFakeTracks) const;
 
   /// @brief write the fake rate plots to file

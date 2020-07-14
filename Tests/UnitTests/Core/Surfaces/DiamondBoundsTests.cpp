@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsConstruction) {
 BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   double minHalfX(10.), midHalfX(50.), maxHalfX(30.), halfY1(10.), halfY2(20.);
   /// Test clone
-  DiamondBounds diamondBoundsObject(minHalfX, midHalfX, maxHalfX, halfY1,
-                                    halfY2);
+  DiamondBounds diamondBoundsObject(
+      minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   //
   /// Test type() (redundant; already used in constructor confirmation)
   BOOST_CHECK_EQUAL(diamondBoundsObject.type(), SurfaceBounds::eDiamond);
@@ -87,9 +87,11 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   Vector2D origin(0., 0.);
   Vector2D outsideBy10(0., 30.);
   Vector2D inRectangle(15., 0.);
-  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(origin), -10.,
+  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(origin),
+                  -10.,
                   1e-6);  // makes sense
-  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(outsideBy10), 10.,
+  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(outsideBy10),
+                  10.,
                   1e-6);  // ok
   //
   /// Test dump
@@ -111,19 +113,23 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   //
   /// Test vertices (does this need to be implemented in this class??
   // auto v=diamondBoundsObject.vertices();
-  std::vector<Vector2D> referenceVertices{
-      {-minHalfX, -halfY1}, {minHalfX, -halfY1}, {midHalfX, 0.},
-      {maxHalfX, halfY2},   {-maxHalfX, halfY2}, {-midHalfX, 0.}};
+  std::vector<Vector2D> referenceVertices{{-minHalfX, -halfY1},
+                                          {minHalfX, -halfY1},
+                                          {midHalfX, 0.},
+                                          {maxHalfX, halfY2},
+                                          {-maxHalfX, halfY2},
+                                          {-midHalfX, 0.}};
   const auto& actualVertices = diamondBoundsObject.vertices();
-  BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(), actualVertices.cend(),
+  BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(),
+                                actualVertices.cend(),
                                 referenceVertices.cbegin(),
                                 referenceVertices.cend());
 }
 /// Unit test for testing DiamondBounds assignment
 BOOST_AUTO_TEST_CASE(DiamondBoundsAssignment) {
   double minHalfX(10.), midHalfX(20.), maxHalfX(15.), halfY1(5.), halfY2(7.);
-  DiamondBounds diamondBoundsObject(minHalfX, midHalfX, maxHalfX, halfY1,
-                                    halfY2);
+  DiamondBounds diamondBoundsObject(
+      minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   DiamondBounds similarlyConstructeDiamondBoundsObject(
       minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
   /// Test operator ==

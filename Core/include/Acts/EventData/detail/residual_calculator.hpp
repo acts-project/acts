@@ -29,7 +29,8 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator;
 /// @cond
 
-template <typename parameter_indices_t, typename R,
+template <typename parameter_indices_t,
+          typename R,
           parameter_indices_t... params>
 struct residual_calculator_impl;
 
@@ -40,13 +41,15 @@ struct residual_calculator {
   static ParVector_t
   result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;
-    residual_calculator_impl<parameter_indices_t, ParVector_t,
-                             params...>::calculate(result, test, ref, 0);
+    residual_calculator_impl<parameter_indices_t, ParVector_t, params...>::
+        calculate(result, test, ref, 0);
     return result;
   }
 };
 
-template <typename parameter_indices_t, typename R, parameter_indices_t first,
+template <typename parameter_indices_t,
+          typename R,
+          parameter_indices_t first,
           parameter_indices_t... others>
 struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
   static void

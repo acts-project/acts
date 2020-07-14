@@ -63,7 +63,8 @@ struct StepWiseActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     // Listen to the surface and create bound state where necessary
     auto surface = state.navigation.currentSurface;

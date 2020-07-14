@@ -117,7 +117,8 @@ class SurfaceMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param log The logger
-  SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
+  SurfaceMaterialMapper(const Config& cfg,
+                        StraightLinePropagator propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
                                              Logging::INFO));
@@ -130,7 +131,8 @@ class SurfaceMaterialMapper {
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
   State
-  createState(const GeometryContext& gctx, const MagneticFieldContext& mctx,
+  createState(const GeometryContext& gctx,
+              const MagneticFieldContext& mctx,
               const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps

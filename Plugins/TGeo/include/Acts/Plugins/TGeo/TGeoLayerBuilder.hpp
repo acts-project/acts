@@ -185,12 +185,15 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
   /// Private helper method : register splitting input
   void
-  registerSplit(std::vector<double>& parameters, double test, double tolerance,
+  registerSplit(std::vector<double>& parameters,
+                double test,
+                double tolerance,
                 std::pair<double, double>& range) const;
 };
 
 inline void
-TGeoLayerBuilder::registerSplit(std::vector<double>& parameters, double test,
+TGeoLayerBuilder::registerSplit(std::vector<double>& parameters,
+                                double test,
                                 double tolerance,
                                 std::pair<double, double>& range) const {
   bool found = false;

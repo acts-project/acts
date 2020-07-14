@@ -51,7 +51,8 @@ struct StepVolumeCollector {
 
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     result.position.push_back(stepper.position(state.stepping));
     result.volume.push_back(state.navigation.currentVolume);
@@ -94,7 +95,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     cfg.detElementConstructor =
         [](std::shared_ptr<const Transform3D> trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           std::shared_ptr<const RectangleBounds> bounds,
+           double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);

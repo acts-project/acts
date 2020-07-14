@@ -37,7 +37,8 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
   /// Construct the action and ensure singleton usage.
   PrimaryGeneratorAction(const G4String& particleName = "geantino",
                          G4double energy = 1000. * MeV,
-                         G4int randomSeed1 = 12345, G4int randomSeed2 = 23456);
+                         G4int randomSeed1 = 12345,
+                         G4int randomSeed2 = 23456);
   ~PrimaryGeneratorAction() final override;
 
   /// Interface method to generate the primary

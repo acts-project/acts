@@ -77,9 +77,13 @@ class FatrasAlgorithm final : public BareAlgorithm {
 
     // run the simulation w/ a local random generator
     auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
-    auto ret = m_cfg.simulator.simulate(
-        ctx.geoContext, ctx.magFieldContext, rng, inputParticles,
-        particlesInitialUnordered, particlesFinalUnordered, hitsUnordered);
+    auto ret = m_cfg.simulator.simulate(ctx.geoContext,
+                                        ctx.magFieldContext,
+                                        rng,
+                                        inputParticles,
+                                        particlesInitialUnordered,
+                                        particlesFinalUnordered,
+                                        hitsUnordered);
     // fatal error leads to panic
     if (not ret.ok()) {
       ACTS_FATAL("event " << ctx.eventNumber << " simulation failed with error "

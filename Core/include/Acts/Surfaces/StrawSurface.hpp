@@ -35,7 +35,8 @@ class StrawSurface : public LineSurface {
   /// frame
   /// @param radius is the straw radius
   /// @param halez is the half length in z
-  StrawSurface(std::shared_ptr<const Transform3D> htrans, double radius,
+  StrawSurface(std::shared_ptr<const Transform3D> htrans,
+               double radius,
                double halez);
 
   /// Constructor from Transform3D and a shared bounds object
@@ -65,7 +66,8 @@ class StrawSurface : public LineSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
+  StrawSurface(const GeometryContext& gctx,
+               const StrawSurface& other,
                const Transform3D& transf);
 
  public:

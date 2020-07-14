@@ -39,7 +39,8 @@
 #include "TGeoTube.h"
 
 std::tuple<std::shared_ptr<const Acts::CylinderBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+           std::shared_ptr<const Acts::Transform3D>,
+           double>
 Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const Double_t* rotation,
                                                const Double_t* translation,
@@ -64,7 +65,8 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     int ys = islower(axes.at(1)) ? -1 : 1;
 
     // Create translation and rotation
-    Vector3D t(scalor * translation[0], scalor * translation[1],
+    Vector3D t(scalor * translation[0],
+               scalor * translation[1],
                scalor * translation[2]);
     bool flipxy = not boost::istarts_with(axes, "X");
     Vector3D ax = flipxy ? xs * Vector3D(rotation[1], rotation[4], rotation[7])
@@ -106,7 +108,8 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
 }
 
 std::tuple<std::shared_ptr<const Acts::DiscBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+           std::shared_ptr<const Acts::Transform3D>,
+           double>
 Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            const Double_t* rotation,
                                            const Double_t* translation,
@@ -128,7 +131,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     }
 
     // Create translation and rotation
-    Vector3D t(scalor * translation[0], scalor * translation[1],
+    Vector3D t(scalor * translation[0],
+               scalor * translation[1],
                scalor * translation[2]);
     Vector3D ax(rotation[0], rotation[3], rotation[6]);
     Vector3D ay(rotation[1], rotation[4], rotation[7]);
@@ -226,7 +230,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       int ys = islower(axes.at(1)) ? -1 : 1;
 
       // Create translation and rotation
-      Vector3D t(scalor * translation[0], scalor * translation[1],
+      Vector3D t(scalor * translation[0],
+                 scalor * translation[1],
                  scalor * translation[2]);
       Vector3D ax = xs * Vector3D(rotation[0], rotation[3], rotation[6]);
       Vector3D ay = ys * Vector3D(rotation[1], rotation[4], rotation[7]);
@@ -262,14 +267,16 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
 }
 
 std::tuple<std::shared_ptr<const Acts::PlanarBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+           std::shared_ptr<const Acts::Transform3D>,
+           double>
 Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const Double_t* rotation,
                                             const Double_t* translation,
                                             const std::string& axes,
                                             double scalor) noexcept(false) {
   // Create translation and rotation
-  Vector3D t(scalor * translation[0], scalor * translation[1],
+  Vector3D t(scalor * translation[0],
+             scalor * translation[1],
              scalor * translation[2]);
   Vector3D ax(rotation[0], rotation[3], rotation[6]);
   Vector3D ay(rotation[1], rotation[4], rotation[7]);

@@ -25,7 +25,8 @@ using namespace dd4hep;
 // @return a pair for a template module assembly and detector element
 struct ODDModuleHelper {
   static std::pair<Assembly, DetElement>
-  assembleTrapezoidalModule(Detector& oddd, SensitiveDetector& sens,
+  assembleTrapezoidalModule(Detector& oddd,
+                            SensitiveDetector& sens,
                             const xml_comp_t& x_module);
 
   /// This method assemples a rectangular module for the
@@ -41,6 +42,8 @@ struct ODDModuleHelper {
   ///
   // @return a pair for a template module assembly and detector element
   static std::pair<Assembly, DetElement>
-  assembleRectangularModule(Detector& oddd, SensitiveDetector& sens,
-                            const xml_comp_t& x_module, double& ylength);
+  assembleRectangularModule(Detector& oddd,
+                            SensitiveDetector& sens,
+                            const xml_comp_t& x_module,
+                            double& ylength);
 };

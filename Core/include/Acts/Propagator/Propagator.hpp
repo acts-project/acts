@@ -250,8 +250,12 @@ class Propagator final {
     template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
         : options(topts),
-          stepping(topts.geoContext, topts.magFieldContext, start,
-                   topts.direction, topts.maxStepSize, topts.tolerance),
+          stepping(topts.geoContext,
+                   topts.magFieldContext,
+                   start,
+                   topts.direction,
+                   topts.maxStepSize,
+                   topts.tolerance),
           geoContext(topts.geoContext) {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
@@ -344,10 +348,12 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename parameters_t,
+            typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      CurvilinearParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<CurvilinearParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
@@ -370,12 +376,15 @@ class Propagator final {
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t, typename propagator_options_t,
+  template <typename parameters_t,
+            typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      BoundParameters, typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start, const Surface& target,
+  Result<
+      action_list_t_result_t<BoundParameters,
+                             typename propagator_options_t::action_list_type>>
+  propagate(const parameters_t& start,
+            const Surface& target,
             const propagator_options_t& options) const;
 
  private:

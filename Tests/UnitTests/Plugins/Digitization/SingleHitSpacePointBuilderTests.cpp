@@ -30,7 +30,8 @@ GeometryContext tgContext = GeometryContext();
 /// Unit test for testing the main functions of OneHitSpacePointBuilder
 /// 1) A resolved dummy hit gets created and added.
 /// 2) A hit gets added and resolved.
-BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
+BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic,
+                     bdata::xrange(1),
                      index) {
   (void)index;
 

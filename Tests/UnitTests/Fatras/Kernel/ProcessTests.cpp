@@ -26,7 +26,8 @@ namespace {
 struct MakeChildren {
   template <typename generator_t>
   std::array<ActsFatras::Particle, 4>
-  operator()(generator_t &, const Acts::MaterialProperties &,
+  operator()(generator_t &,
+             const Acts::MaterialProperties &,
              ActsFatras::Particle &) const {
     // create daughter particles
     return {

@@ -16,8 +16,10 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
-                   std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray,
+                   double thickness,
+                   std::unique_ptr<ApproachDescriptor> ades,
+                   LayerType laytyp)
     : m_nextLayers(NextLayers(nullptr, nullptr)),
       m_surfaceArray(surfaceArray.release()),
       m_layerThickness(thickness),

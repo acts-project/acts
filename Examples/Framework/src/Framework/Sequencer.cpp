@@ -219,7 +219,8 @@ struct TimingInfo {
 
 void
 storeTiming(const std::vector<std::string>& identifiers,
-            const std::vector<Duration>& durations, std::size_t numEvents,
+            const std::vector<Duration>& durations,
+            std::size_t numEvents,
             std::string path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(std::move(path), 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
@@ -351,7 +352,9 @@ FW::Sequencer::run() {
     ACTS_DEBUG("  " << names[i] << ": "
                     << perEvent(clocksAlgorithms[i], numEvents));
   }
-  storeTiming(names, clocksAlgorithms, numEvents,
+  storeTiming(names,
+              clocksAlgorithms,
+              numEvents,
               joinPaths(m_cfg.outputDir, "timing.tsv"));
 
   return EXIT_SUCCESS;

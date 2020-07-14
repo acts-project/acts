@@ -40,7 +40,8 @@ class Vertex {
   /// @param position Vertex position
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector3D& position, const ActsSymMatrixD<3>& covariance,
+  Vertex(const Vector3D& position,
+         const ActsSymMatrixD<3>& covariance,
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @brief Vertex constructor

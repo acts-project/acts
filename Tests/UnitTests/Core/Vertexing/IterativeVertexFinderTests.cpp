@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(
+        bFitter, linearizer, std::move(sFinder), ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto params = BoundParameters(geoContext, std::move(covMat), paramVec,
-                                      perigeeSurface);
+        auto params = BoundParameters(
+            geoContext, std::move(covMat), paramVec, perigeeSurface);
 
         tracks.push_back(std::make_unique<BoundParameters>(params));
 
@@ -353,8 +353,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
-                             ipEstimator);
+    VertexFinder::Config cfg(
+        bFitter, linearizer, std::move(sFinder), ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
     VertexFinder finder(cfg, extractParameters);

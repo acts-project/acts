@@ -25,7 +25,13 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_wraps,
                          bdata::random(-10., 10.) ^ bdata::random(0., 4.) ^
                          bdata::random(11., 15.) ^ bdata::random(10., 15.) ^
                          bdata::xrange(100),
-                     left, right, central, inner, outer, length, index) {
+                     left,
+                     right,
+                     central,
+                     inner,
+                     outer,
+                     length,
+                     index) {
   (void)index;
   // inner volume
   VolumeConfig innerConfig;
@@ -101,7 +107,13 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_containes,
                          bdata::random(-10., 10.) ^ bdata::random(0., 4.) ^
                          bdata::random(10., 15.) ^ bdata::random(10., 15.) ^
                          bdata::xrange(100),
-                     left, right, central, inner, outer, length, index) {
+                     left,
+                     right,
+                     central,
+                     inner,
+                     outer,
+                     length,
+                     index) {
   (void)index;
   // inner volume
   VolumeConfig innerConfig;
@@ -186,7 +198,9 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_containes,
 BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_overlapsInR,
                      bdata::random(0., 4.) ^ bdata::random(11., 15.) ^
                          bdata::xrange(100),
-                     inner, outer, index) {
+                     inner,
+                     outer,
+                     index) {
   (void)index;
   // reference volume
   VolumeConfig Config0;
@@ -248,7 +262,10 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_overlapsInR,
 BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_overlapsInZ,
                      bdata::random(-11., -15.) ^ bdata::random(11., 15.) ^
                          bdata::random(0., 4.) ^ bdata::xrange(100),
-                     left, right, inner, index) {
+                     left,
+                     right,
+                     inner,
+                     index) {
   (void)index;
   // inner volume
   VolumeConfig Config0;

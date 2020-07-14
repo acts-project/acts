@@ -136,7 +136,8 @@ struct FW::TrackFinderPerformanceWriter::Impl {
   }
 
   void
-  write(uint64_t eventId, const SimParticleContainer& particles,
+  write(uint64_t eventId,
+        const SimParticleContainer& particles,
         const HitParticlesMap& hitParticlesMap,
         const ProtoTrackContainer& tracks) {
     // compute the inverse mapping on-the-fly
@@ -156,8 +157,8 @@ struct FW::TrackFinderPerformanceWriter::Impl {
       for (size_t itrack = 0; itrack < tracks.size(); ++itrack) {
         const auto& track = tracks[itrack];
 
-        identifyContributingParticles(hitParticlesMap, track,
-                                      particleHitCounts);
+        identifyContributingParticles(
+            hitParticlesMap, track, particleHitCounts);
         // extract per-particle reconstruction counts
         // empty track hits counts could originate from a  buggy track finder
         // that results in empty tracks or from purely noise track where no hits

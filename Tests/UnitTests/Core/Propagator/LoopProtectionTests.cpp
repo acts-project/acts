@@ -125,7 +125,9 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<>(-M_PI, M_PI))) ^
         bdata::xrange(1),
-    phi, deltaPhi, index) {
+    phi,
+    deltaPhi,
+    index) {
   (void)index;
   (void)deltaPhi;
 
@@ -170,7 +172,11 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 23,
              bdata::distribution = std::uniform_int_distribution<>(0, 1))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    index) {
   if (index < skip) {
     return;
   }

@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(ConeBoundsConstruction) {
   ConeBounds defaulted5ParamConeBounds(alpha, zMin, zMax);
   BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Five parameter constructor)");
-  ConeBounds fiveParamConstructedConeBounds(alpha, zMin, zMax, halfPhi,
-                                            averagePhi);
+  ConeBounds fiveParamConstructedConeBounds(
+      alpha, zMin, zMax, halfPhi, averagePhi);
   BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(),
                     SurfaceBounds::eCone);
   BOOST_TEST_CHECKPOINT("Copy constructor");
@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eMaxZ), zMax, 1e-6);
   //
   /// test for averagePhi
-  CHECK_CLOSE_REL(coneBoundsObject.get(ConeBounds::eHalfPhiSector), halfPhi,
-                  1e-6);
+  CHECK_CLOSE_REL(
+      coneBoundsObject.get(ConeBounds::eHalfPhiSector), halfPhi, 1e-6);
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   coneBoundsObject.toStream(dumpOuput);

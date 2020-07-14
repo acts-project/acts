@@ -75,7 +75,8 @@ struct TGeoParser {
   /// @param options [in] The parsing options as requiremed
   /// @param gmatrix The current built-up transform to global at this depth
   static void
-  select(State& state, const Options& options,
+  select(State& state,
+         const Options& options,
          const TGeoMatrix& gmatrix = TGeoIdentity("ID"));
 };
 

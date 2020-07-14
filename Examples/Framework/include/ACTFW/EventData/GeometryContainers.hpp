@@ -95,8 +95,8 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator>
 selectVolume(const GeometryIdMultiset<T>& container,
              Acts::GeometryID::Value volume) {
   auto cmp = Acts::GeometryID().setVolume(volume);
-  auto beg = std::lower_bound(container.begin(), container.end(), cmp,
-                              detail::CompareGeometryId{});
+  auto beg = std::lower_bound(
+      container.begin(), container.end(), cmp, detail::CompareGeometryId{});
   // WARNING overflows to volume==0 if the input volume is the last one
   cmp = Acts::GeometryID().setVolume(volume + 1u);
   // optimize search by using the lower bound as start point. also handles
@@ -116,10 +116,11 @@ selectVolume(const GeometryIdMultiset<T>& container, Acts::GeometryID id) {
 template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator>
 selectLayer(const GeometryIdMultiset<T>& container,
-            Acts::GeometryID::Value volume, Acts::GeometryID::Value layer) {
+            Acts::GeometryID::Value volume,
+            Acts::GeometryID::Value layer) {
   auto cmp = Acts::GeometryID().setVolume(volume).setLayer(layer);
-  auto beg = std::lower_bound(container.begin(), container.end(), cmp,
-                              detail::CompareGeometryId{});
+  auto beg = std::lower_bound(
+      container.begin(), container.end(), cmp, detail::CompareGeometryId{});
   // WARNING resets to layer==0 if the input layer is the last one
   cmp = Acts::GeometryID().setVolume(volume).setLayer(layer + 1u);
   // optimize search by using the lower bound as start point. also handles
@@ -145,7 +146,8 @@ selectModule(const GeometryIdMultiset<T>& container, Acts::GeometryID geoId) {
 template <typename T>
 inline auto
 selectModule(const GeometryIdMultiset<T>& container,
-             Acts::GeometryID::Value volume, Acts::GeometryID::Value layer,
+             Acts::GeometryID::Value volume,
+             Acts::GeometryID::Value layer,
              Acts::GeometryID::Value module) {
   return selectModule(
       container,

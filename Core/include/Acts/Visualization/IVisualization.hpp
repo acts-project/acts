@@ -50,7 +50,8 @@ class IVisualization {
   /// @param color The color of the face
   ///
   virtual void
-  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>& faces,
+  faces(const std::vector<Vector3D>& vtxs,
+        const std::vector<FaceType>& faces,
         ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a line from a vertex to another
@@ -59,7 +60,8 @@ class IVisualization {
   /// @param color The color of the line
   ///
   virtual void
-  line(const Vector3D& a, const Vector3D& b,
+  line(const Vector3D& a,
+       const Vector3D& b,
        ColorRGB color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.

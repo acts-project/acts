@@ -95,7 +95,9 @@ class ParameterSet {
       detail::are_sorted<true, true, parameter_indices_t, params...>::value,
       "parameter identifiers are not sorted");
   static_assert(
-      detail::are_within<unsigned int, 0, kSizeMax,
+      detail::are_within<unsigned int,
+                         0,
+                         kSizeMax,
                          static_cast<unsigned int>(params)...>::value,
       "parameter identifiers must be greater or "
       "equal to zero and smaller than the total number of parameters");
@@ -126,17 +128,16 @@ class ParameterSet {
    * @param values values for the remaining stored parameters
    */
   template <typename... Tail>
-  ParameterSet(
-      std::optional<CovarianceMatrix> cov,
-      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t>
-          head,
-      Tail... values)
+  ParameterSet(std::optional<CovarianceMatrix> cov,
+               std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters,
+                                ParValue_t> head,
+               Tail... values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
-                                                                    values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init(
+        *this, head, values...);
   }
 
   /**
@@ -233,8 +234,8 @@ class ParameterSet {
   template <parameter_indices_t parameter>
   static constexpr size_t
   getIndex() {
-    return detail::get_position<parameter_indices_t, parameter,
-                                params...>::value;
+    return detail::get_position<parameter_indices_t, parameter, params...>::
+        value;
   }
 
   /**
@@ -325,8 +326,8 @@ class ParameterSet {
   template <parameter_indices_t parameter>
   bool
   contains() const {
-    return detail::is_contained<parameter_indices_t, parameter,
-                                params...>::value;
+    return detail::is_contained<parameter_indices_t, parameter, params...>::
+        value;
   }
 
   /**
@@ -596,5 +597,6 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 const typename ParameterSet<parameter_indices_t, params...>::Projection
     ParameterSet<parameter_indices_t, params...>::sProjector =
         detail::make_projection_matrix<
-            kSizeMax, static_cast<unsigned int>(params)...>::init();
+            kSizeMax,
+            static_cast<unsigned int>(params)...>::init();
 }  // namespace Acts

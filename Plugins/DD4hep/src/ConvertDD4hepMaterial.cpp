@@ -23,7 +23,8 @@
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial>
 Acts::createProtoMaterial(
-    const ActsExtension& actsExtension, const std::string& valueTag,
+    const ActsExtension& actsExtension,
+    const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning) {
   // Create the bin utility
@@ -32,7 +33,8 @@ Acts::createProtoMaterial(
   for (auto& bin : binning) {
     // finding the iterator position to determine the binning value
     auto bit = std::find(Acts::binningValueNames.begin(),
-                         Acts::binningValueNames.end(), bin.first);
+                         Acts::binningValueNames.end(),
+                         bin.first);
     size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
     Acts::BinningValue bval = Acts::BinningValue(indx);
     Acts::BinningOption bopt = bin.second;
@@ -52,7 +54,8 @@ Acts::createProtoMaterial(
 
 void
 Acts::addLayerProtoMaterial(
-    const ActsExtension& actsExtension, Layer& layer,
+    const ActsExtension& actsExtension,
+    Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning) {
   // Start with the representing surface
@@ -96,7 +99,8 @@ Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   // Get the Acts extension in order to prepare the ProtoMaterial
   auto actsExtension = detElement.extension<ActsExtension>();
   if (actsExtension != nullptr and actsExtension->hasType("layer_material")) {
-    addLayerProtoMaterial(*actsExtension, cylinderLayer,
+    addLayerProtoMaterial(*actsExtension,
+                          cylinderLayer,
                           {{"binPhi", Acts::closed}, {"binZ", Acts::open}});
   }
 }
@@ -128,7 +132,8 @@ Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
 }
 
 void
-Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
+                                Layer& discLayer,
                                 Logging::Level loggingLevel) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
@@ -137,7 +142,8 @@ Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
   // Get the Acts extension
   auto actsExtension = detElement.extension<ActsExtension>();
   if (actsExtension != nullptr and actsExtension->hasType("layer_material")) {
-    addLayerProtoMaterial(*actsExtension, discLayer,
+    addLayerProtoMaterial(*actsExtension,
+                          discLayer,
                           {{"binPhi", Acts::closed}, {"binR", Acts::open}});
   }
 }

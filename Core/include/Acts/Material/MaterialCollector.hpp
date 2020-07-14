@@ -58,7 +58,8 @@ struct MaterialCollector {
   /// @param result is the result object to be filled
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     if (state.navigation.currentSurface) {
       if (state.navigation.currentSurface == state.navigation.targetSurface and

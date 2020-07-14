@@ -60,7 +60,8 @@ class ObjVisualization : public IVisualization {
 
   /// @copydoc Acts::IVisualization::faces()
   void
-  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>& faces,
+  faces(const std::vector<Vector3D>& vtxs,
+        const std::vector<FaceType>& faces,
         ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::write()

@@ -86,14 +86,15 @@ FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // Set up the vertex seed finder
   using SeedFinder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundParameters>>;
+      Fitter,
+      Acts::GaussianTrackDensity<Acts::BoundParameters>>;
   SeedFinder seedFinder;
 
   // The vertex finder type
   using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer);
+  Finder::Config finderConfig(
+      std::move(fitter), seedFinder, ipEstimator, linearizer);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
 

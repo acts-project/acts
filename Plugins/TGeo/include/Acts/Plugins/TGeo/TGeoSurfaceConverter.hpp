@@ -34,9 +34,12 @@ struct TGeoSurfaceConverter {
   ///
   /// @return tuple of DiscBounds, Trasnform, thickness
   static std::tuple<std::shared_ptr<const CylinderBounds>,
-                    std::shared_ptr<const Transform3D>, double>
-  cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                     const Double_t* translation, const std::string& axes,
+                    std::shared_ptr<const Transform3D>,
+                    double>
+  cylinderComponents(const TGeoShape& tgShape,
+                     const Double_t* rotation,
+                     const Double_t* translation,
+                     const std::string& axes,
                      double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into disk surface components
@@ -49,9 +52,12 @@ struct TGeoSurfaceConverter {
   ///
   /// @return tuple of DiscBounds, Trasnform, thickness
   static std::tuple<std::shared_ptr<const DiscBounds>,
-                    std::shared_ptr<const Transform3D>, double>
-  discComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                 const Double_t* translation, const std::string& axes,
+                    std::shared_ptr<const Transform3D>,
+                    double>
+  discComponents(const TGeoShape& tgShape,
+                 const Double_t* rotation,
+                 const Double_t* translation,
+                 const std::string& axes,
                  double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape into plane surface components
@@ -64,9 +70,12 @@ struct TGeoSurfaceConverter {
   ///
   /// @return tuple of PlanarBounds, Trasnform, thickness
   static std::tuple<std::shared_ptr<const PlanarBounds>,
-                    std::shared_ptr<const Transform3D>, double>
-  planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
-                  const Double_t* translation, const std::string& axes,
+                    std::shared_ptr<const Transform3D>,
+                    double>
+  planeComponents(const TGeoShape& tgShape,
+                  const Double_t* rotation,
+                  const Double_t* translation,
+                  const std::string& axes,
                   double scalor = 10.) noexcept(false);
 
   /// Convert a TGeoShape to a Surface
@@ -78,8 +87,10 @@ struct TGeoSurfaceConverter {
   ///
   /// @return shared pointer to a surface
   static std::shared_ptr<Surface>
-  toSurface(const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-            const std::string& axes, double scalor = 10.) noexcept(false);
+  toSurface(const TGeoShape& tgShape,
+            const TGeoMatrix& tgMatrix,
+            const std::string& axes,
+            double scalor = 10.) noexcept(false);
 
   /// Transalte TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)

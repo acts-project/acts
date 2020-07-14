@@ -125,7 +125,8 @@ Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
 
 Acts::Volume::BoundingBox
 Acts::CutoutCylinderVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Acts::Vector3D& envelope,
+    const Acts::Transform3D* trf,
+    const Acts::Vector3D& envelope,
     const Acts::Volume* entity) const {
   Vector3D vmin, vmax;
 

@@ -39,10 +39,10 @@ create_element(Detector& oddd, xml_h xml, SensitiveDetector /*sens*/) {
   cylinderElement.addExtension<Acts::ActsExtension>(pcExtension);
 
   string shapeName = x_det_tubs.nameStr();
-  Tube tubeShape(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
-                 x_det_tubs.dz());
-  Volume tubeVolume(detName, tubeShape,
-                    oddd.material(x_det_tubs.materialStr()));
+  Tube tubeShape(
+      shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(), x_det_tubs.dz());
+  Volume tubeVolume(
+      detName, tubeShape, oddd.material(x_det_tubs.materialStr()));
   tubeVolume.setVisAttributes(oddd, x_det.visStr());
 
   // Place it in the mother

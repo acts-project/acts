@@ -24,7 +24,8 @@ struct VolumeSelector {
   /// @param sMaterial is the directive to select material volumes
   /// @param sLayer is the directive to select volumes with layers
   /// @param sPassive is the directive to select passive volumes
-  VolumeSelector(bool sMaterial = true, bool sLayer = false,
+  VolumeSelector(bool sMaterial = true,
+                 bool sLayer = false,
                  bool sPassive = false)
       : selectMaterial(sMaterial),
         selectLayer(sLayer),
@@ -88,7 +89,8 @@ struct VolumeCollector {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, const stepper_t& stepper,
+  operator()(propagator_state_t& state,
+             const stepper_t& stepper,
              result_type& result) const {
     // The current volume has been assigned by the navigator
     if (state.navigation.currentVolume &&

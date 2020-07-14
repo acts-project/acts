@@ -103,7 +103,8 @@ class HelicalTrackLinearizer {
   linearizeTrack(const BoundParameters& params,
                  const SpacePointVector& linPoint,
                  const Acts::GeometryContext& gctx,
-                 const Acts::MagneticFieldContext& mctx, State& state) const;
+                 const Acts::MagneticFieldContext& mctx,
+                 State& state) const;
 
  private:
   /// Configuration object

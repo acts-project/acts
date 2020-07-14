@@ -34,8 +34,8 @@ class MaterialProperties {
   /// @param Z         is the atomic number
   /// @param rho       is the mass density
   /// @param thickness is the thickness of the material
-  MaterialProperties(float X0, float L0, float Ar, float Z, float rho,
-                     float thickness);
+  MaterialProperties(
+      float X0, float L0, float Ar, float Z, float rho, float thickness);
   /// Construct from material description.
   ///
   /// @param material  is the material description

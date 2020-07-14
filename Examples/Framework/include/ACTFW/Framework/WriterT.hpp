@@ -42,7 +42,8 @@ class WriterT : public IWriter {
   /// @param objectName The object that should be read from the event store
   /// @param writerName The name of the writer, e.g. for logging output
   /// @param level The internal log level
-  WriterT(std::string objectName, std::string writerName,
+  WriterT(std::string objectName,
+          std::string writerName,
           Acts::Logging::Level level);
 
   /// Provide the name of the writer

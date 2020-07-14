@@ -32,10 +32,13 @@ template <typename stepper_t>
 Acts::Intersection::Status
 updateSingleSurfaceStatus(const stepper_t& stepper,
                           typename stepper_t::State& state,
-                          const Surface& surface, const BoundaryCheck& bcheck) {
+                          const Surface& surface,
+                          const BoundaryCheck& bcheck) {
   auto sIntersection =
-      surface.intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), bcheck);
+      surface.intersect(state.geoContext,
+                        stepper.position(state),
+                        state.navDir * stepper.direction(state),
+                        bcheck);
 
   // The intersection is on surface already
   if (sIntersection.intersection.status == Intersection::Status::onSurface) {

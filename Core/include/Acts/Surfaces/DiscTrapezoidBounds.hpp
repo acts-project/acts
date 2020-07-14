@@ -47,8 +47,11 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param maxR outer radius
   /// @param avgPhi average phi value
   /// @param stereo optional stero angle applied
-  DiscTrapezoidBounds(double halfXminR, double halfXmaxR, double minR,
-                      double maxR, double avgPhi = M_PI_2,
+  DiscTrapezoidBounds(double halfXminR,
+                      double halfXmaxR,
+                      double minR,
+                      double maxR,
+                      double avgPhi = M_PI_2,
                       double stereo = 0.) noexcept(false);
 
   /// Constructor - from fixed size array

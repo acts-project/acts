@@ -31,7 +31,8 @@ using MaterialGrid3D =
 }  // namespace
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
-    const Config& cfg, StraightLinePropagator propagator,
+    const Config& cfg,
+    StraightLinePropagator propagator,
     std::unique_ptr<const Logger> slogger)
     : m_cfg(cfg),
       m_propagator(std::move(propagator)),
@@ -39,7 +40,8 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
 
 Acts::VolumeMaterialMapper::State
 Acts::VolumeMaterialMapper::createState(
-    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const GeometryContext& gctx,
+    const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
@@ -239,8 +241,8 @@ void
 Acts::VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
-                                          mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(
+      std::nullopt, mTrack.first.first, mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;

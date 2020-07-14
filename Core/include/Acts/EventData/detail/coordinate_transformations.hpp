@@ -43,10 +43,13 @@ struct coordinate_transformation {
   /// @return position in the global frame
   static Vector3D
   parameters2globalPosition(const GeometryContext& gctx,
-                            const ParVector_t& pars, const Surface& s) {
+                            const ParVector_t& pars,
+                            const Surface& s) {
     Vector3D globalPosition;
-    s.localToGlobal(gctx, Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
-                    parameters2globalMomentum(pars), globalPosition);
+    s.localToGlobal(gctx,
+                    Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+                    parameters2globalMomentum(pars),
+                    globalPosition);
     return globalPosition;
   }
 
@@ -83,8 +86,10 @@ struct coordinate_transformation {
   ///
   /// @return curvilinear parameter representation
   static ParVector_t
-  global2curvilinear(const Vector3D& /*pos*/, const Vector3D& mom,
-                     double charge, double time) {
+  global2curvilinear(const Vector3D& /*pos*/,
+                     const Vector3D& mom,
+                     double charge,
+                     double time) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;
     ParVector_t parameters;
@@ -109,8 +114,11 @@ struct coordinate_transformation {
   ///
   /// @return the track parameterisation
   static ParVector_t
-  global2parameters(const GeometryContext& gctx, const Vector3D& pos,
-                    const Vector3D& mom, double charge, double time,
+  global2parameters(const GeometryContext& gctx,
+                    const Vector3D& pos,
+                    const Vector3D& mom,
+                    double charge,
+                    double time,
                     const Surface& s) {
     using VectorHelpers::phi;
     using VectorHelpers::theta;

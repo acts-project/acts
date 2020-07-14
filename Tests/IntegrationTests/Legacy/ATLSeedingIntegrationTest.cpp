@@ -150,8 +150,11 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
   // difference between reference and result shows if results exactly the same
   // (i.e. difference is 0)
   std::vector<Acts::Legacy::Seed<SpacePoint>> diff;
-  std::set_difference(refVec.begin(), refVec.end(), seedVec.begin(),
-                      seedVec.end(), std::inserter(diff, diff.begin()),
+  std::set_difference(refVec.begin(),
+                      refVec.end(),
+                      seedVec.begin(),
+                      seedVec.end(),
+                      std::inserter(diff, diff.begin()),
                       seedComparator());
   BOOST_CHECK(diff.empty());
   for (auto sp : spVec) {

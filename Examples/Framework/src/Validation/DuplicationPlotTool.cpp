@@ -32,7 +32,8 @@ FW::DuplicationPlotTool::book(
   // duplication rate vs pT
   duplicationPlotCache.duplicationRate_vs_pT =
       PlotHelpers::bookEff("duplicationRate_vs_pT",
-                           "Duplication rate;pT [GeV/c];Duplication rate", bPt);
+                           "Duplication rate;pT [GeV/c];Duplication rate",
+                           bPt);
   // duplication rate vs eta
   duplicationPlotCache.duplicationRate_vs_eta = PlotHelpers::bookEff(
       "duplicationRate_vs_eta", "Duplication rate;#eta;Duplication rate", bEta);
@@ -44,13 +45,17 @@ FW::DuplicationPlotTool::book(
   duplicationPlotCache.nDuplicated_vs_pT = PlotHelpers::bookProf(
       "nDuplicated_vs_pT", "Number of duplicated track candidates", bPt, bNum);
   // duplication number vs eta
-  duplicationPlotCache.nDuplicated_vs_eta = PlotHelpers::bookProf(
-      "nDuplicated_vs_eta", "Number of duplicated track candidates", bEta,
-      bNum);
+  duplicationPlotCache.nDuplicated_vs_eta =
+      PlotHelpers::bookProf("nDuplicated_vs_eta",
+                            "Number of duplicated track candidates",
+                            bEta,
+                            bNum);
   // duplication number vs phi
-  duplicationPlotCache.nDuplicated_vs_phi = PlotHelpers::bookProf(
-      "nDuplicated_vs_phi", "Number of duplicated track candidates", bPhi,
-      bNum);
+  duplicationPlotCache.nDuplicated_vs_phi =
+      PlotHelpers::bookProf("nDuplicated_vs_phi",
+                            "Number of duplicated track candidates",
+                            bPhi,
+                            bNum);
 }
 
 void
@@ -79,32 +84,34 @@ FW::DuplicationPlotTool::write(const DuplicationPlotTool::DuplicationPlotCache&
 void
 FW::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
-    const Acts::BoundParameters& fittedParameters, bool status) const {
+    const Acts::BoundParameters& fittedParameters,
+    bool status) const {
   const auto& momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_pT, fit_pT,
-                       status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_eta, fit_eta,
-                       status);
-  PlotHelpers::fillEff(duplicationPlotCache.duplicationRate_vs_phi, fit_phi,
-                       status);
+  PlotHelpers::fillEff(
+      duplicationPlotCache.duplicationRate_vs_pT, fit_pT, status);
+  PlotHelpers::fillEff(
+      duplicationPlotCache.duplicationRate_vs_eta, fit_eta, status);
+  PlotHelpers::fillEff(
+      duplicationPlotCache.duplicationRate_vs_phi, fit_phi, status);
 }
 
 void
 FW::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
-    const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
+    const ActsFatras::Particle& truthParticle,
+    size_t nDuplicatedTracks) const {
   const auto t_phi = phi(truthParticle.unitDirection());
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();
 
-  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,
-                        nDuplicatedTracks);
-  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_eta, t_eta,
-                        nDuplicatedTracks);
-  PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_phi, t_phi,
-                        nDuplicatedTracks);
+  PlotHelpers::fillProf(
+      duplicationPlotCache.nDuplicated_vs_pT, t_pT, nDuplicatedTracks);
+  PlotHelpers::fillProf(
+      duplicationPlotCache.nDuplicated_vs_eta, t_eta, nDuplicatedTracks);
+  PlotHelpers::fillProf(
+      duplicationPlotCache.nDuplicated_vs_phi, t_phi, nDuplicatedTracks);
 }

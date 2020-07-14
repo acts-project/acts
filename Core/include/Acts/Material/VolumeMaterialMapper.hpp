@@ -112,7 +112,8 @@ class VolumeMaterialMapper {
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param log The logger
-  VolumeMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
+  VolumeMaterialMapper(const Config& cfg,
+                       StraightLinePropagator propagator,
                        std::unique_ptr<const Logger> slogger = getDefaultLogger(
                            "VolumeMaterialMapper", Logging::INFO));
 
@@ -124,7 +125,8 @@ class VolumeMaterialMapper {
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
   State
-  createState(const GeometryContext& gctx, const MagneticFieldContext& mctx,
+  createState(const GeometryContext& gctx,
+              const MagneticFieldContext& mctx,
               const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps

@@ -40,7 +40,8 @@ FW::joinPaths(const std::string& dir, const std::string& name) {
 }
 
 std::string
-FW::perEventFilepath(const std::string& dir, const std::string& name,
+FW::perEventFilepath(const std::string& dir,
+                     const std::string& name,
                      size_t event) {
   char prefix[64];
 

@@ -47,7 +47,8 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   GenericDetectorElement(
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3D> transform,
-      std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
+      std::shared_ptr<const Acts::PlanarBounds> pBounds,
+      double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
           nullptr);
@@ -63,7 +64,8 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   GenericDetectorElement(
       const Identifier identifier,
       std::shared_ptr<const Acts::Transform3D> transform,
-      std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
+      std::shared_ptr<const Acts::DiscBounds> dBounds,
+      double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
           nullptr);

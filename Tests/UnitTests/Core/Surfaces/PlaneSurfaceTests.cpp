@@ -99,7 +99,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   CHECK_CLOSE_OR_SMALL(
       planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+      expectedFrame,
+      1e-6,
+      1e-9);
   //
   /// Test normal, given 3D position
   Vector3D normal3D(0., 0., 1.);
@@ -111,26 +113,26 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2D localPosition{1.5, 1.7};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  planeSurfaceObject->localToGlobal(
+      tgContext, localPosition, momentum, globalPosition);
   //
   // expected position is the translated one
-  Vector3D expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
-                            translation.z()};
+  Vector3D expectedPosition{
+      1.5 + translation.x(), 1.7 + translation.y(), translation.z()};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
   /// Testing globalToLocal
-  planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum,
-                                    localPosition);
+  planeSurfaceObject->globalToLocal(
+      tgContext, globalPosition, momentum, localPosition);
   Vector2D expectedLocalPosition{1.5, 1.7};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
   /// Test isOnSurface
   Vector3D offSurface{0, 1, -2.};
-  BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                              momentum, true));
+  BOOST_CHECK(planeSurfaceObject->isOnSurface(
+      tgContext, globalPosition, momentum, true));
   BOOST_CHECK(
       !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
   //
@@ -138,17 +140,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector3D direction{0., 0., 1.};
   auto intersect = planeSurfaceObject->intersectionEstimate(
       tgContext, offSurface, direction, true);
-  Intersection expectedIntersect{Vector3D{0, 1, 2}, 4.,
-                                 Intersection::Status::reachable};
+  Intersection expectedIntersect{
+      Vector3D{0, 1, 2}, 4., Intersection::Status::reachable};
   BOOST_CHECK(bool(intersect));
   BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);
   BOOST_CHECK_EQUAL(intersect.pathLength, expectedIntersect.pathLength);
   //
 
   /// Test pathCorrection
-  CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
-                                                     momentum.normalized()),
-                  std::sqrt(3), 0.01);
+  CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(
+                      tgContext, offSurface, momentum.normalized()),
+                  std::sqrt(3),
+                  0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(planeSurfaceObject->name(),
@@ -218,7 +221,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binR), std::sqrt(yPs * yPs + rHy * rHy),
+  CHECK_CLOSE_ABS(planeExtent.max(binR),
+                  std::sqrt(yPs * yPs + rHy * rHy),
                   s_onSurfaceTolerance);
 
   // Now rotate
@@ -233,16 +237,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
       planeRot->polyhedronRepresentation(tgContext, 1).extent();
   CHECK_CLOSE_ABS(planeExtentRot.min(binZ), -rHx, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtentRot.max(binZ), rHx, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binX), -rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(
+      planeExtentRot.min(binX), -rHy * std::cos(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(
+      planeExtentRot.max(binX), rHy * std::cos(alpha), s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(planeExtentRot.min(binY),
+                  yPs - rHy * std::sin(alpha),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binX), rHy * std::cos(alpha),
+  CHECK_CLOSE_ABS(planeExtentRot.max(binY),
+                  yPs + rHy * std::sin(alpha),
                   s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binY), yPs - rHy * std::sin(alpha),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.max(binY), yPs + rHy * std::sin(alpha),
-                  s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtentRot.min(binR), yPs * std::cos(alpha),
-                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(
+      planeExtentRot.min(binR), yPs * std::cos(alpha), s_onSurfaceTolerance);
 }
 
 /// Unit test for testing PlaneSurface alignment derivatives
@@ -266,8 +272,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3D direction = momentum.normalized();
   /// Get the global position
   Vector3D globalPosition{0, 0, 0};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  planeSurfaceObject->localToGlobal(
+      tgContext, localPosition, momentum, globalPosition);
 
   // Call the function to calculate the derivative of local frame axes w.r.t its
   // rotation
@@ -276,8 +282,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
-                                                    globalPosition, direction);
+      planeSurfaceObject->alignmentToPathDerivative(
+          tgContext, rotToLocalZAxis, globalPosition, direction);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
@@ -290,16 +296,16 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
   // For plane surface, this should be identity matrix
-  CHECK_CLOSE_ABS(loc3DToLocBound, LocalCartesianToBoundLocalMatrix::Identity(),
-                  1e-10);
+  CHECK_CLOSE_ABS(
+      loc3DToLocBound, LocalCartesianToBoundLocalMatrix::Identity(), 1e-10);
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
   FreeVector derivatives = FreeVector::Zero();
   derivatives.segment<3>(0) = momentum;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, derivatives,
-                                                     globalPosition, direction);
+      planeSurfaceObject->alignmentToBoundDerivative(
+          tgContext, derivatives, globalPosition, direction);
   const AlignmentRowVector& alignToloc0 = alignToBound.block<1, 6>(0, 0);
   const AlignmentRowVector& alignToloc1 = alignToBound.block<1, 6>(1, 0);
   // The expected results

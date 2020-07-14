@@ -123,18 +123,23 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 4,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   if (index < skip) {
     return;
   }
 
   double dcharge = -1 + 2 * charge;
   // constant field propagation atlas stepper
-  auto aposition = constant_field_propagation(apropagator, pT, phi, theta,
-                                              dcharge, time, Bz);
+  auto aposition = constant_field_propagation(
+      apropagator, pT, phi, theta, dcharge, time, Bz);
   // constant field propagation eigen stepper
-  auto eposition = constant_field_propagation(epropagator, pT, phi, theta,
-                                              dcharge, time, Bz);
+  auto eposition = constant_field_propagation(
+      epropagator, pT, phi, theta, dcharge, time, Bz);
   // check consistency
   CHECK_CLOSE_REL(eposition, aposition, 1e-6);
 }

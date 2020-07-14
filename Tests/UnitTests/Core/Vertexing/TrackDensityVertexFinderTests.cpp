@@ -61,12 +61,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
-                           perigeeSurface);
-  BoundParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
-                           perigeeSurface);
-  BoundParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
-                           perigeeSurface);
+  BoundParameters params1a(
+      geoContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface);
+  BoundParameters params1b(
+      geoContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface);
+  BoundParameters params1c(
+      geoContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface);
 
   // Vectors of track parameters in different orders
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
@@ -133,12 +133,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  BoundParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
-                           perigeeSurface);
-  BoundParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
-                           perigeeSurface);
-  BoundParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
-                           perigeeSurface);
+  BoundParameters params1a(
+      geoContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface);
+  BoundParameters params1b(
+      geoContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface);
+  BoundParameters params1c(
+      geoContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface);
 
   // Vector of track parameters
   std::vector<const BoundParameters*> vec1 = {&params1a, &params1b, &params1c};
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundParameters(geoContext, covMat, pos, mom, charge, 0,
-                                       perigeeSurface));
+    trackVec.push_back(BoundParameters(
+        geoContext, covMat, pos, mom, charge, 0, perigeeSurface));
   }
 
   std::vector<const BoundParameters*> trackPtrVec;

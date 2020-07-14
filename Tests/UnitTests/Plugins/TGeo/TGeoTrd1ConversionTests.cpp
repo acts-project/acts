@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
 
   size_t itrd = 0;
   for (const auto &axes : allowedAxes) {
-    auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                 *gGeoIdentity, axes, 1);
+    auto plane = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_TEST(plane != nullptr);
     BOOST_TEST(plane->type() == Surface::Plane);
 
@@ -81,23 +81,29 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    GeometryView::drawSurface(objVis, *plane, tgContext,
+    GeometryView::drawSurface(objVis,
+                              *plane,
+                              tgContext,
                               Translation3D{offset} * Transform3D::Identity());
     const Vector3D center = plane->center(tgContext) + offset;
     GeometryView::drawArrowForward(
-        objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 4.,
-        2.5, red);
+        objVis,
+        center,
+        center + 1.2 * (hXminY + hXmaxY) * rotation.col(0),
+        4.,
+        2.5,
+        red);
     GeometryView::drawArrowForward(
         objVis, center, center + 1.2 * hY * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
   }
 
   // Check exceptions for not allowed axis definition
   std::vector<std::string> notAllowed = {"XY*", "YZ*", "ZX*", "ZY*"};
   for (const auto &naxis : notAllowed) {
-    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                      *gGeoIdentity, naxis, 1),
+    BOOST_CHECK_THROW(TGeoSurfaceConverter::toSurface(
+                          *vol->GetShape(), *gGeoIdentity, naxis, 1),
                       std::invalid_argument);
   }
   objVis.write("TGeoConversion_TGeoTrd1_PlaneSurface");

@@ -205,8 +205,8 @@ class FiniteStateMachine {
 
     auto new_state = std::visit(
         [&](auto& s) -> std::optional<StateVariant> {
-          auto s2 = child.on_event(s, std::forward<Event>(event),
-                                   std::forward<Args>(args)...);
+          auto s2 = child.on_event(
+              s, std::forward<Event>(event), std::forward<Args>(args)...);
 
           if (s2) {
             std::visit([&](auto& s2_) { child.on_process(s, event, s2_); },

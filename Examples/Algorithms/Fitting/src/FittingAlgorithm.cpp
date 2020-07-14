@@ -87,8 +87,11 @@ FW::FittingAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
 
     // Set the KalmanFitter options
     Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
-        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        Acts::VoidOutlierFinder(), &(*pSurface));
+        ctx.geoContext,
+        ctx.magFieldContext,
+        ctx.calibContext,
+        Acts::VoidOutlierFinder(),
+        &(*pSurface));
 
     ACTS_DEBUG("Invoke fitter");
     auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
@@ -113,7 +116,8 @@ FW::FittingAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
       }
       // Create a SimMultiTrajectory
       trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(trackTips), std::move(indexedParams));
+                                std::move(trackTips),
+                                std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track " << itrack << " with error"
                                            << result.error());

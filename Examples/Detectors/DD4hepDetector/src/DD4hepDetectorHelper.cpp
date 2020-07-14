@@ -17,7 +17,9 @@ using namespace FW::DD4hep;
 
 std::shared_ptr<const Acts::DigitizationModule>
 DD4hepDetectorHelper::rectangleDigiModule(
-    double halflengthX, double halflengthY, double thickness,
+    double halflengthX,
+    double halflengthY,
+    double thickness,
     const dd4hep::Segmentation& segmentation) {
   // convert to Acts units
   double scalor = Acts::units::_cm;
@@ -38,20 +40,23 @@ DD4hepDetectorHelper::rectangleDigiModule(
         (cartesianGrid.gridSizeY() != 0) ? (2 * halflengthY) / gridSizeY : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
+        std::make_shared<const Acts::CartesianSegmentation>(
+            bounds, bins0, bins1);
     // finally create the digitization module
     // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
+    return (std::make_shared<const Acts::DigitizationModule>(
+        actsSegmentation, thickness, 1, 0));
   }
   return nullptr;
 }
 
 std::shared_ptr<const Acts::DigitizationModule>
 DD4hepDetectorHelper::trapezoidalDigiModule(
-    double minHalflengthX, double maxHalflengthX, double halflengthY,
-    double thickness, const dd4hep::Segmentation& segmentation) {
+    double minHalflengthX,
+    double maxHalflengthX,
+    double halflengthY,
+    double thickness,
+    const dd4hep::Segmentation& segmentation) {
   // convert to Acts units
   double scalor = Acts::units::_cm;
   minHalflengthX *= scalor;
@@ -73,12 +78,12 @@ DD4hepDetectorHelper::trapezoidalDigiModule(
         (cartesianGrid.gridSizeY() != 0) ? (2 * halflengthY) / gridSizeY : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
+        std::make_shared<const Acts::CartesianSegmentation>(
+            bounds, bins0, bins1);
     // finally create the digitization module
     // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
+    return (std::make_shared<const Acts::DigitizationModule>(
+        actsSegmentation, thickness, 1, 0));
   }
   return nullptr;
 }

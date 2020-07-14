@@ -31,11 +31,14 @@ Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
       m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D> htrans, double radius, double halfz,
-    double halfphi, double avphi)
+    std::shared_ptr<const Transform3D> htrans,
+    double radius,
+    double halfz,
+    double halfphi,
+    double avphi)
     : Surface(std::move(htrans)),
-      m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
-                                                      avphi)) {}
+      m_bounds(std::make_shared<const CylinderBounds>(
+          radius, halfz, halfphi, avphi)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
@@ -70,8 +73,8 @@ Acts::CylinderSurface::binningPosition(const GeometryContext& gctx,
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return Vector3D(sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi),
-                    sfCenter.z());
+    return Vector3D(
+        sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi), sfCenter.z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
@@ -211,7 +214,10 @@ Acts::CylinderSurface::polyhedronRepresentation(const GeometryContext& gctx,
       detail::VerticesHelper::createSegment(
           vertices,
           {bounds().get(CylinderBounds::eR), bounds().get(CylinderBounds::eR)},
-          phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
+          phiSegs[iseg],
+          phiSegs[iseg + 1],
+          lseg,
+          addon,
           Vector3D(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
           ctrans);
     }

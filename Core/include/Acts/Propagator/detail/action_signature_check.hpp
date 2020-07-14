@@ -41,7 +41,9 @@ namespace detail {
 
 namespace {
 
-template <typename T, typename propagator_state_t, typename stepper_t,
+template <typename T,
+          typename propagator_state_t,
+          typename stepper_t,
           typename result_t,
           typename = decltype(std::declval<T>().
                               operator()(std::declval<propagator_state_t&>(),
@@ -54,7 +56,9 @@ template <typename, typename, typename, typename>
 std::false_type
 test_action_with_result(...);
 
-template <typename T, typename propagator_state_t, typename stepper_t,
+template <typename T,
+          typename propagator_state_t,
+          typename stepper_t,
           typename = decltype(std::declval<T>().
                               operator()(std::declval<propagator_state_t&>(),
                                          std::declval<stepper_t&>()))>
@@ -65,7 +69,9 @@ template <typename>
 std::false_type
 test_action_without_result(...);
 
-template <typename T, typename propagator_state_t, typename stepper_t,
+template <typename T,
+          typename propagator_state_t,
+          typename stepper_t,
           bool has_result = false>
 struct action_signature_check_impl
     : decltype(
@@ -73,12 +79,16 @@ struct action_signature_check_impl
 
 template <typename T, typename propagator_state_t, typename stepper_t>
 struct action_signature_check_impl<T, propagator_state_t, stepper_t, true>
-    : decltype(test_action_with_result<T, propagator_state_t, stepper_t,
+    : decltype(test_action_with_result<T,
+                                       propagator_state_t,
+                                       stepper_t,
                                        detail::result_type_t<T>>(0)) {};
 
 template <typename T, typename propagator_state_t, typename stepper_t>
 struct action_signature_check
-    : action_signature_check_impl<T, propagator_state_t, stepper_t,
+    : action_signature_check_impl<T,
+                                  propagator_state_t,
+                                  stepper_t,
                                   detail::has_result_type_v<T>> {};
 }  // end of anonymous namespace
 

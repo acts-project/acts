@@ -18,15 +18,21 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    const std::shared_ptr<const PlanarBounds>& mBounds, size_t numCellsX,
+    const std::shared_ptr<const PlanarBounds>& mBounds,
+    size_t numCellsX,
     size_t numCellsY)
     : m_activeBounds(mBounds), m_binUtility(nullptr) {
-  auto mutableBinUtility = std::make_shared<BinUtility>(
-      numCellsX, -mBounds->boundingBox().halfLengthX(),
-      mBounds->boundingBox().halfLengthX(), Acts::open, Acts::binX);
-  (*mutableBinUtility) +=
-      BinUtility(numCellsY, -mBounds->boundingBox().halfLengthY(),
-                 mBounds->boundingBox().halfLengthY(), Acts::open, Acts::binY);
+  auto mutableBinUtility =
+      std::make_shared<BinUtility>(numCellsX,
+                                   -mBounds->boundingBox().halfLengthX(),
+                                   mBounds->boundingBox().halfLengthX(),
+                                   Acts::open,
+                                   Acts::binX);
+  (*mutableBinUtility) += BinUtility(numCellsY,
+                                     -mBounds->boundingBox().halfLengthY(),
+                                     mBounds->boundingBox().halfLengthY(),
+                                     Acts::open,
+                                     Acts::binY);
   m_binUtility = std::const_pointer_cast<const BinUtility>(mutableBinUtility);
 }
 
@@ -44,9 +50,12 @@ Acts::CartesianSegmentation::~CartesianSegmentation() = default;
 
 void
 Acts::CartesianSegmentation::createSegmentationSurfaces(
-    SurfacePtrVector& boundarySurfaces, SurfacePtrVector& segmentationSurfacesX,
-    SurfacePtrVector& segmentationSurfacesY, double halfThickness,
-    int readoutDirection, double lorentzAngle) const {
+    SurfacePtrVector& boundarySurfaces,
+    SurfacePtrVector& segmentationSurfacesX,
+    SurfacePtrVector& segmentationSurfacesY,
+    double halfThickness,
+    int readoutDirection,
+    double lorentzAngle) const {
   // may be needed throughout
   double lorentzAngleTan = tan(lorentzAngle);
   double lorentzPlaneShiftX = halfThickness * lorentzAngleTan;
@@ -251,6 +260,11 @@ Acts::CartesianSegmentation::digitizationStep(const Vector3D& startStep,
   Acts::DigitizationCell dCell = cell(stepCenterProjected);
   Vector2D cellCenter = cellPosition(dCell);
   // we are ready to return what we have
-  return DigitizationStep((endStep - startStep).norm(), driftLength, dCell,
-                          startStep, endStep, stepCenterProjected, cellCenter);
+  return DigitizationStep((endStep - startStep).norm(),
+                          driftLength,
+                          dCell,
+                          startStep,
+                          endStep,
+                          stepCenterProjected,
+                          cellCenter);
 }

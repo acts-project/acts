@@ -36,16 +36,21 @@ class PhysicsList {
   /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
   bool
-  operator()(generator_t& generator, const Acts::MaterialProperties& slab,
-             Particle& particle, std::vector<Particle>& generated) const {
-    static_assert(
-        (true && ... &&
-         std::is_same_v<bool, decltype(processes_t()(generator, slab, particle,
-                                                     generated))>),
-        "Not all processes conform to the expected interface");
+  operator()(generator_t& generator,
+             const Acts::MaterialProperties& slab,
+             Particle& particle,
+             std::vector<Particle>& generated) const {
+    static_assert((true && ... &&
+                   std::is_same_v<bool,
+                                  decltype(processes_t()(
+                                      generator, slab, particle, generated))>),
+                  "Not all processes conform to the expected interface");
 
-    return impl(std::index_sequence_for<processes_t...>(), generator, slab,
-                particle, generated);
+    return impl(std::index_sequence_for<processes_t...>(),
+                generator,
+                slab,
+                particle,
+                generated);
   }
 
   /// Access a specific process by index.
@@ -96,14 +101,19 @@ class PhysicsList {
   // compile-time index-based recursive function call for all processes
   template <typename generator_t>
   bool
-  impl(std::index_sequence<>, generator_t&, const Acts::MaterialProperties&,
-       Particle&, std::vector<Particle>&) const {
+  impl(std::index_sequence<>,
+       generator_t&,
+       const Acts::MaterialProperties&,
+       Particle&,
+       std::vector<Particle>&) const {
     return false;
   }
   template <std::size_t I0, std::size_t... INs, typename generator_t>
   bool
-  impl(std::index_sequence<I0, INs...>, generator_t& generator,
-       const Acts::MaterialProperties& slab, Particle& particle,
+  impl(std::index_sequence<I0, INs...>,
+       generator_t& generator,
+       const Acts::MaterialProperties& slab,
+       Particle& particle,
        std::vector<Particle>& generated) const {
     // only call process if it is not masked
     if (not m_mask[I0] and
@@ -111,8 +121,8 @@ class PhysicsList {
       // exit early in case the process signals an abort
       return true;
     } else {
-      return impl(std::index_sequence<INs...>(), generator, slab, particle,
-                  generated);
+      return impl(
+          std::index_sequence<INs...>(), generator, slab, particle, generated);
     }
   }
 };

@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
       Surface::Cone);
   //
   /// Constructor with transform pointer, alpha,z min and max, halfPhiSector
-  BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(pTransform, alpha, zMin,
-                                                     zMax, halfPhiSector)
+  BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(
+                        pTransform, alpha, zMin, zMax, halfPhiSector)
                         ->type(),
                     Surface::Cone);
 
@@ -100,7 +100,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   Vector3D binningPosition{0., 1., 2.};
   CHECK_CLOSE_ABS(
       coneSurfaceObject->binningPosition(tgContext, BinningValue::binPhi),
-      binningPosition, 1e-6);
+      binningPosition,
+      1e-6);
   //
   /// Test referenceFrame
   Vector3D globalPosition{2.0, 2.0, 2.0};
@@ -110,7 +111,9 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1., 0.;
   CHECK_CLOSE_OR_SMALL(
       coneSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
+      expectedFrame,
+      1e-6,
+      1e-9);
   //
   /// Test normal, given 3D position
   Vector3D origin{0., 0., 0.};
@@ -122,28 +125,30 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   Vector3D normalAtPiBy2{0.0312768, 0.92335, -0.382683};
 
   CHECK_CLOSE_OR_SMALL(coneSurfaceObject->normal(tgContext, positionPiBy2),
-                       normalAtPiBy2, 1e-2, 1e-9);
+                       normalAtPiBy2,
+                       1e-2,
+                       1e-9);
   //
   /// Test rotational symmetry axis
   Vector3D symmetryAxis{0., 0., 1.};
-  CHECK_CLOSE_ABS(coneSurfaceObject->rotSymmetryAxis(tgContext), symmetryAxis,
-                  1e-6);
+  CHECK_CLOSE_ABS(
+      coneSurfaceObject->rotSymmetryAxis(tgContext), symmetryAxis, 1e-6);
   //
   /// Test bounds
   BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::eCone);
   //
   /// Test localToGlobal
   Vector2D localPosition{1.0, M_PI / 2.0};
-  coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                   globalPosition);
+  coneSurfaceObject->localToGlobal(
+      tgContext, localPosition, momentum, globalPosition);
   // std::cout<<globalPosition<<std::endl;
   Vector3D expectedPosition{0.0220268, 1.65027, 3.5708};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
   /// Testing globalToLocal
-  coneSurfaceObject->globalToLocal(tgContext, globalPosition, momentum,
-                                   localPosition);
+  coneSurfaceObject->globalToLocal(
+      tgContext, globalPosition, momentum, localPosition);
   // std::cout<<localPosition<<std::endl;
   Vector2D expectedLocalPosition{1.0, M_PI / 2.0};
 
@@ -151,15 +156,16 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   //
   /// Test isOnSurface
   Vector3D offSurface{100, 1, 2};
-  BOOST_CHECK(coneSurfaceObject->isOnSurface(tgContext, globalPosition,
-                                             momentum, true));
+  BOOST_CHECK(coneSurfaceObject->isOnSurface(
+      tgContext, globalPosition, momentum, true));
   BOOST_CHECK(
       !coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
 
   /// Test pathCorrection
-  CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(tgContext, offSurface,
-                                                    momentum.normalized()),
-                  0.40218866453252877, 0.01);
+  CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(
+                      tgContext, offSurface, momentum.normalized()),
+                  0.40218866453252877,
+                  0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(coneSurfaceObject->name(),

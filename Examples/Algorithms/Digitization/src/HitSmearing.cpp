@@ -72,8 +72,8 @@ FW::HitSmearing::execute(const AlgorithmContext& ctx) const {
     for (const auto& hit : moduleHits) {
       // transform global position into local coordinates
       Acts::Vector2D pos(0, 0);
-      surface->globalToLocal(ctx.geoContext, hit.position(),
-                             hit.unitDirection(), pos);
+      surface->globalToLocal(
+          ctx.geoContext, hit.position(), hit.unitDirection(), pos);
 
       // smear truth to create local measurement
       Acts::BoundVector loc = Acts::BoundVector::Zero();
@@ -81,8 +81,8 @@ FW::HitSmearing::execute(const AlgorithmContext& ctx) const {
       loc[Acts::eLOC_1] = pos[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
 
       // create source link at the end of the container
-      auto it = sourceLinks.emplace_hint(sourceLinks.end(), *surface, hit, 2,
-                                         loc, cov);
+      auto it = sourceLinks.emplace_hint(
+          sourceLinks.end(), *surface, hit, 2, loc, cov);
       // ensure hits and links share the same order to prevent ugly surprises
       if (std::next(it) != sourceLinks.end()) {
         ACTS_FATAL("The hit ordering broke. Run for your life.");

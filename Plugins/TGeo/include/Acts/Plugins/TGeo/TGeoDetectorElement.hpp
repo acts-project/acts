@@ -62,9 +62,11 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param digitizationModule Shared pointer to the geometric digitization
   /// description
   TGeoDetectorElement(
-      const Identifier& identifier, const TGeoNode& tGeoNode,
+      const Identifier& identifier,
+      const TGeoNode& tGeoNode,
       const TGeoMatrix& tGeoMatrix = TGeoIdentity(),
-      const std::string& axes = "XYZ", double scalor = 10.,
+      const std::string& axes = "XYZ",
+      double scalor = 10.,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr);
 
   ~TGeoDetectorElement() override;

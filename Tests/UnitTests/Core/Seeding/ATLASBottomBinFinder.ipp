@@ -11,7 +11,8 @@
 template <typename SpacePoint>
 std::set<size_t>
 Acts::ATLASBottomBinFinder<SpacePoint>::findBins(
-    size_t phiBin, size_t zBin,
+    size_t phiBin,
+    size_t zBin,
     const Acts::SpacePointGrid<SpacePoint>* binnedSP) {
   std::set<size_t> neighbourBins =
       binnedSP->neighborHoodIndices({phiBin, zBin}, 1);

@@ -17,7 +17,8 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
-                                 double radius, double halez)
+                                 double radius,
+                                 double halez)
     : GeometryObject(), LineSurface(std::move(htrans), radius, halez) {}
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
@@ -66,7 +67,12 @@ Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
         int addon = (iseg == phiSegs.size() - 2) ? 1 : 0;
         /// Helper method to create the segment
         detail::VerticesHelper::createSegment(
-            vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
+            vertices,
+            {r, r},
+            phiSegs[iseg],
+            phiSegs[iseg + 1],
+            lseg,
+            addon,
             Vector3D(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
             ctransform);
       }

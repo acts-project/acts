@@ -35,7 +35,8 @@ struct BetheHeitler {
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
   std::array<Particle, 0>
-  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+  operator()(generator_t &generator,
+             const Acts::MaterialProperties &slab,
              Particle &particle) const {
     // Take a random gamma-distributed value - depending on t/X0
     std::gamma_distribution<double> gDist(slab.thicknessInX0() / std::log(2.0),

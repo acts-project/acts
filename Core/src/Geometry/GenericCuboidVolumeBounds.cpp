@@ -69,8 +69,8 @@ Acts::GenericCuboidVolumeBounds::orientedSurfaces(
 
   cog *= 0.125;  // 1/8.
 
-  auto make_surface = [&](const auto& a, const auto& b, const auto& c,
-                          const auto& d) -> void {
+  auto make_surface =
+      [&](const auto& a, const auto& b, const auto& c, const auto& d) -> void {
     // calculate centroid of these points
     Vector3D ctrd = (a + b + c + d) / 4.;
     // create normal
@@ -148,7 +148,9 @@ Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
 
   size_t idx = 0;
 
-  auto handle_face = [&](const auto& a, const auto& b, const auto& c,
+  auto handle_face = [&](const auto& a,
+                         const auto& b,
+                         const auto& c,
                          const auto& d) {
     // we assume a b c d to be counter clockwise
     const Vector3D ab = b - a, ac = c - a;
@@ -219,11 +221,11 @@ Acts::GenericCuboidVolumeBounds::boundingBox(const Acts::Transform3D* trf,
 void
 Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
                                       const Transform3D& transform) const {
-  auto draw_face = [&](const auto& a, const auto& b, const auto& c,
-                       const auto& d) {
-    helper.face(std::vector<Vector3D>(
-        {transform * a, transform * b, transform * c, transform * d}));
-  };
+  auto draw_face =
+      [&](const auto& a, const auto& b, const auto& c, const auto& d) {
+        helper.face(std::vector<Vector3D>(
+            {transform * a, transform * b, transform * c, transform * d}));
+      };
 
   draw_face(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
   draw_face(m_vertices[4], m_vertices[5], m_vertices[6], m_vertices[7]);

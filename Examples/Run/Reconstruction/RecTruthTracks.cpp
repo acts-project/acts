@@ -136,8 +136,8 @@ main(int argc, char* argv[]) {
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
-  fitter.fit = FittingAlgorithm::makeFitterFunction(trackingGeometry,
-                                                    magneticField, logLevel);
+  fitter.fit = FittingAlgorithm::makeFitterFunction(
+      trackingGeometry, magneticField, logLevel);
   sequencer.addAlgorithm(std::make_shared<FittingAlgorithm>(fitter, logLevel));
 
   // write tracks from fitting

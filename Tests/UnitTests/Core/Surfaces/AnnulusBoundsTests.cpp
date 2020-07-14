@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsProperties) {
   Vector2D outsideXY2(10., 3.);
   Vector2D outsideXY3(10., 10.);
   Vector2D outsideXY4(4., 10.);
-  std::vector<Vector2D> testPoints = {inSurfaceXY, outsideXY1, outsideXY2,
-                                      outsideXY3, outsideXY4};
+  std::vector<Vector2D> testPoints = {
+      inSurfaceXY, outsideXY1, outsideXY2, outsideXY3, outsideXY4};
 
   auto toStripFrame = [&](const Vector2D& xy) -> Vector2D {
     auto shifted = xy + offset;

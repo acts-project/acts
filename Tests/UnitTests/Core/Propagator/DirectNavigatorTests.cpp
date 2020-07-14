@@ -79,8 +79,14 @@ double oversteppingMaxStepSize = 1_mm;
 /// @param index is the run index from the test
 template <typename rpropagator_t, typename dpropagator_t>
 void
-runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
-        double phi, double theta, int charge, double time, int index) {
+runTest(const rpropagator_t& rprop,
+        const dpropagator_t& dprop,
+        double pT,
+        double phi,
+        double theta,
+        int charge,
+        double time,
+        int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {
@@ -145,9 +151,10 @@ runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initalizer
-    using DirectActionList =
-        ActionList<DirectNavigator::Initializer, MaterialInteractor,
-                   SurfaceCollector<>, DebugOutput>;
+    using DirectActionList = ActionList<DirectNavigator::Initializer,
+                                        MaterialInteractor,
+                                        SurfaceCollector<>,
+                                        DebugOutput>;
 
     // Direct options definition
     using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
@@ -215,7 +222,12 @@ BOOST_DATA_TEST_CASE(
             (bdata::seed = 24,
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
-    pT, phi, theta, charge, time, index) {
+    pT,
+    phi,
+    theta,
+    charge,
+    time,
+    index) {
   // Run the test
   runTest(rpropagator, dpropagator, pT, phi, theta, charge, time, index);
 }

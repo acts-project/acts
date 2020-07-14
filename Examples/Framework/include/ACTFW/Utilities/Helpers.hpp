@@ -40,7 +40,8 @@ struct Binning {
 /// @param varBinning the binning info of variable
 /// @return histogram pointer
 TH1F*
-bookHisto(const char* histName, const char* histTitle,
+bookHisto(const char* histName,
+          const char* histTitle,
           const Binning& varBinning);
 
 /// @brief book a 2D histogram
@@ -50,8 +51,10 @@ bookHisto(const char* histName, const char* histTitle,
 /// @param varYBinning the binning info of variable at y axis
 /// @return histogram pointer
 TH2F*
-bookHisto(const char* histName, const char* histTitle,
-          const Binning& varXBinning, const Binning& varYBinning);
+bookHisto(const char* histName,
+          const char* histTitle,
+          const Binning& varXBinning,
+          const Binning& varYBinning);
 
 /// @brief fill a 1D histogram
 /// @param hist histogram to fill
@@ -94,7 +97,9 @@ bookEff(const char* effName, const char* effTitle, const Binning& varBinning);
 /// @param varYBinning the binning info of variable at y axis
 /// @return TEfficiency pointer
 TEfficiency*
-bookEff(const char* effName, const char* effTitle, const Binning& varXBinning,
+bookEff(const char* effName,
+        const char* effTitle,
+        const Binning& varXBinning,
         const Binning& varYBinning);
 
 /// @brief fill a 1D efficiency plot
@@ -119,8 +124,10 @@ fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status);
 /// @param varYBinning the binning info of variable at y axis
 /// @return TProfile pointer
 TProfile*
-bookProf(const char* profName, const char* profTitle,
-         const Binning& varXBinning, const Binning& varYBinning);
+bookProf(const char* profName,
+         const char* profTitle,
+         const Binning& varXBinning,
+         const Binning& varYBinning);
 
 /// @brief fill a TProfile plot
 /// @param profile plot to fill

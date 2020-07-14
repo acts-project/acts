@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(ConeVolumeBoundsTests) {
   BOOST_TEST(cutOffHollowConeSurfaces.size() == 4);
 
   // Sectoral Cone - Cone inlay
-  ConeVolumeBounds cutOffHollowSectoralCone(0.35, 70_mm, 0.45, 80_mm, 50_mm, 0.,
-                                            0.456);
+  ConeVolumeBounds cutOffHollowSectoralCone(
+      0.35, 70_mm, 0.45, 80_mm, 50_mm, 0., 0.456);
   auto cutOffHollowSectoralConeSurfaces =
       cutOffHollowSectoralCone.orientedSurfaces();
   BOOST_TEST(cutOffHollowSectoralConeSurfaces.size() == 6);

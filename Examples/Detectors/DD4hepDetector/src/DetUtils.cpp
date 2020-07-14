@@ -18,7 +18,9 @@ namespace det {
 namespace utils {
 
 std::shared_ptr<const Acts::DigitizationModule>
-rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
+rectangleDigiModuleXZ(double halflengthX,
+                      double halflengthZ,
+                      double thickness,
                       const dd4hep::Segmentation& segmentation) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
@@ -38,19 +40,22 @@ rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
         (cartesianGrid.gridSizeZ() != 0) ? (2 * halflengthZ) / gridSizeZ : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
+        std::make_shared<const Acts::CartesianSegmentation>(
+            bounds, bins0, bins1);
     // finally create the digitization module
     // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
+    return (std::make_shared<const Acts::DigitizationModule>(
+        actsSegmentation, thickness, 1, 0));
   }
   return nullptr;
 }
 
 std::shared_ptr<const Acts::DigitizationModule>
-rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
-                      double gridSizeX, double gridSizeZ) {
+rectangleDigiModuleXZ(double halflengthX,
+                      double halflengthZ,
+                      double thickness,
+                      double gridSizeX,
+                      double gridSizeZ) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
   halflengthX *= scalor;
@@ -69,13 +74,15 @@ rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
 
   // finally create the digitization module
   // @todo set lorentz angle
-  return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                           thickness, 1, 0));
+  return (std::make_shared<const Acts::DigitizationModule>(
+      actsSegmentation, thickness, 1, 0));
 }
 
 std::shared_ptr<const Acts::DigitizationModule>
-trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
-                        double halflengthZ, double thickness,
+trapezoidalDigiModuleXZ(double minHalflengthX,
+                        double maxHalflengthX,
+                        double halflengthZ,
+                        double thickness,
                         const dd4hep::Segmentation& segmentation) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
@@ -98,19 +105,22 @@ trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
         (cartesianGrid.gridSizeZ() != 0) ? (2 * halflengthZ) / gridSizeZ : 0;
 
     std::shared_ptr<const Acts::CartesianSegmentation> actsSegmentation =
-        std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0,
-                                                            bins1);
+        std::make_shared<const Acts::CartesianSegmentation>(
+            bounds, bins0, bins1);
     // finally create the digitization module
     // @todo set lorentz angle
-    return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                             thickness, 1, 0));
+    return (std::make_shared<const Acts::DigitizationModule>(
+        actsSegmentation, thickness, 1, 0));
   }
   return nullptr;
 }
 
 std::shared_ptr<const Acts::DigitizationModule>
-trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
-                        double halflengthZ, double thickness, double gridSizeX,
+trapezoidalDigiModuleXZ(double minHalflengthX,
+                        double maxHalflengthX,
+                        double halflengthZ,
+                        double thickness,
+                        double gridSizeX,
                         double gridSizeZ) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
@@ -132,16 +142,18 @@ trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
       std::make_shared<const Acts::CartesianSegmentation>(bounds, bins0, bins1);
   // finally create the digitization module
   // @todo set lorentz angle
-  return (std::make_shared<const Acts::DigitizationModule>(actsSegmentation,
-                                                           thickness, 1, 0));
+  return (std::make_shared<const Acts::DigitizationModule>(
+      actsSegmentation, thickness, 1, 0));
 }
 
 dd4hep::xml::Component
 getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
-                 const std::string& nodeName, const std::string& attrName,
+                 const std::string& nodeName,
+                 const std::string& attrName,
                  const std::string& attrValue) {
   for (dd4hep::xml::Collection_t xCompColl(mother, nodeName.c_str());
-       nullptr != xCompColl; ++xCompColl) {
+       nullptr != xCompColl;
+       ++xCompColl) {
     if (xCompColl.attr<std::string>(attrName.c_str()) == attrValue) {
       return static_cast<dd4hep::xml::Component>(xCompColl);
     }

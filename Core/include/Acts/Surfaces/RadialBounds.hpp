@@ -42,7 +42,9 @@ class RadialBounds : public DiscBounds {
   /// @param maxR The outer radius
   /// @param halfPhi The half opening angle (Pi for full angular coverage)
   /// @param avgPhi The average phi for the disc/ring sector
-  RadialBounds(double minR, double maxR, double halfPhi = M_PI,
+  RadialBounds(double minR,
+               double maxR,
+               double halfPhi = M_PI,
                double avgPhi = 0.) noexcept(false)
       : m_values({minR, maxR, halfPhi, avgPhi}) {
     checkConsistency();

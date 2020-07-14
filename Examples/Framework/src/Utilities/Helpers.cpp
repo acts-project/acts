@@ -12,10 +12,11 @@ namespace FW {
 
 namespace PlotHelpers {
 TH1F*
-bookHisto(const char* histName, const char* histTitle,
+bookHisto(const char* histName,
+          const char* histTitle,
           const Binning& varBinning) {
-  TH1F* hist = new TH1F(histName, histTitle, varBinning.nBins, varBinning.min,
-                        varBinning.max);
+  TH1F* hist = new TH1F(
+      histName, histTitle, varBinning.nBins, varBinning.min, varBinning.max);
   hist->GetXaxis()->SetTitle(varBinning.title.c_str());
   hist->GetYaxis()->SetTitle("Entries");
   hist->Sumw2();
@@ -23,10 +24,17 @@ bookHisto(const char* histName, const char* histTitle,
 }
 
 TH2F*
-bookHisto(const char* histName, const char* histTitle,
-          const Binning& varXBinning, const Binning& varYBinning) {
-  TH2F* hist = new TH2F(histName, histTitle, varXBinning.nBins, varXBinning.min,
-                        varXBinning.max, varYBinning.nBins, varYBinning.min,
+bookHisto(const char* histName,
+          const char* histTitle,
+          const Binning& varXBinning,
+          const Binning& varYBinning) {
+  TH2F* hist = new TH2F(histName,
+                        histTitle,
+                        varXBinning.nBins,
+                        varXBinning.min,
+                        varXBinning.max,
+                        varYBinning.nBins,
+                        varYBinning.min,
                         varYBinning.max);
   hist->GetXaxis()->SetTitle(varXBinning.title.c_str());
   hist->GetYaxis()->SetTitle(varYBinning.title.c_str());
@@ -65,17 +73,24 @@ anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
 
 TEfficiency*
 bookEff(const char* effName, const char* effTitle, const Binning& varBinning) {
-  TEfficiency* efficiency = new TEfficiency(effName, effTitle, varBinning.nBins,
-                                            varBinning.min, varBinning.max);
+  TEfficiency* efficiency = new TEfficiency(
+      effName, effTitle, varBinning.nBins, varBinning.min, varBinning.max);
   return efficiency;
 }
 
 TEfficiency*
-bookEff(const char* effName, const char* effTitle, const Binning& varXBinning,
+bookEff(const char* effName,
+        const char* effTitle,
+        const Binning& varXBinning,
         const Binning& varYBinning) {
-  TEfficiency* efficiency = new TEfficiency(
-      effName, effTitle, varXBinning.nBins, varXBinning.min, varXBinning.max,
-      varYBinning.nBins, varYBinning.min, varYBinning.max);
+  TEfficiency* efficiency = new TEfficiency(effName,
+                                            effTitle,
+                                            varXBinning.nBins,
+                                            varXBinning.min,
+                                            varXBinning.max,
+                                            varYBinning.nBins,
+                                            varYBinning.min,
+                                            varYBinning.max);
   return efficiency;
 }
 
@@ -92,11 +107,17 @@ fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status) {
 }
 
 TProfile*
-bookProf(const char* profName, const char* profTitle,
-         const Binning& varXBinning, const Binning& varYBinning) {
-  TProfile* prof =
-      new TProfile(profName, profTitle, varXBinning.nBins, varXBinning.min,
-                   varXBinning.max, varYBinning.min, varYBinning.max);
+bookProf(const char* profName,
+         const char* profTitle,
+         const Binning& varXBinning,
+         const Binning& varYBinning) {
+  TProfile* prof = new TProfile(profName,
+                                profTitle,
+                                varXBinning.nBins,
+                                varXBinning.min,
+                                varXBinning.max,
+                                varYBinning.min,
+                                varYBinning.max);
   prof->GetXaxis()->SetTitle(varXBinning.title.c_str());
   prof->GetYaxis()->SetTitle(varYBinning.title.c_str());
   return prof;

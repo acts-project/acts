@@ -23,7 +23,8 @@ Acts::Vertex<input_track_t>::Vertex(const SpacePointVector& position)
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector3D& position, const ActsSymMatrixD<3>& covariance,
+    const Vector3D& position,
+    const ActsSymMatrixD<3>& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_tracksAtVertex(tracks) {
   m_position.setZero();
@@ -34,7 +35,8 @@ Acts::Vertex<input_track_t>::Vertex(
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const SpacePointVector& position, const SpacePointSymMatrix& covariance,
+    const SpacePointVector& position,
+    const SpacePointSymMatrix& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),

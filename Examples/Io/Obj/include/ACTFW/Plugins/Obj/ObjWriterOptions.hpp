@@ -28,9 +28,11 @@ namespace Options {
 template <typename aopt_t>
 void
 addObjWriterOptions(aopt_t& opt) {
-  opt.add_options()("obj-precision", po::value<int>()->default_value(6),
+  opt.add_options()("obj-precision",
+                    po::value<int>()->default_value(6),
                     "Floating number output precission.")(
-      "obj-scalor", po::value<double>()->default_value(1.),
+      "obj-scalor",
+      po::value<double>()->default_value(1.),
       "Optional scaling from Acts units to ouput units.")(
       "obj-container-view",
       po::value<read_series>()->multitoken()->default_value(
@@ -57,7 +59,8 @@ addObjWriterOptions(aopt_t& opt) {
       "obj-grid-view",
       po::value<read_series>()->multitoken()->default_value({1, 220, 0, 0, 0}),
       "View configuration of grid structures (vis/novis, r, g, b, trimesh).")(
-      "obj-grid-offset", po::value<double>()->default_value(0.),
+      "obj-grid-offset",
+      po::value<double>()->default_value(0.),
       "View offset of grid values.")("obj-grid-thickness",
                                      po::value<double>()->default_value(0.5),
                                      "Thickness of grid objects.");
@@ -67,7 +70,8 @@ addObjWriterOptions(aopt_t& opt) {
 template <class amap_t>
 FW::Obj::ObjTrackingGeometryWriter::Config
 readObjTrackingGeometryWriterConfig(
-    const amap_t& vm, const std::string& name,
+    const amap_t& vm,
+    const std::string& name,
     Acts::Logging::Level loglevel = Acts::Logging::INFO) {
   FW::Obj::ObjTrackingGeometryWriter::Config objTgConfig(name, loglevel);
 

@@ -46,9 +46,12 @@ class DiscLayer : virtual public DiscSurface, public Layer {
          double thickness = 0.,
          std::unique_ptr<ApproachDescriptor> ad = nullptr,
          LayerType laytyp = Acts::passive) {
-    return MutableLayerPtr(new DiscLayer(transform, dbounds,
-                                         std::move(surfaceArray), thickness,
-                                         std::move(ad), laytyp));
+    return MutableLayerPtr(new DiscLayer(transform,
+                                         dbounds,
+                                         std::move(surfaceArray),
+                                         thickness,
+                                         std::move(ad),
+                                         laytyp));
   }
 
   /// Default Constructor

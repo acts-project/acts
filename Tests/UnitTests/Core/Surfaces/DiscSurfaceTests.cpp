@@ -107,27 +107,28 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3D point3DOnSurface{1.2, 0.0, 0};
   BOOST_CHECK(!discSurfaceObject->isOnSurface(
       tgContext, point3DNotInSector, ignoredMomentum, true));  // passes
-  BOOST_CHECK(discSurfaceObject->isOnSurface(tgContext, point3DOnSurface,
-                                             ignoredMomentum, true));  // passes
+  BOOST_CHECK(discSurfaceObject->isOnSurface(
+      tgContext, point3DOnSurface, ignoredMomentum, true));  // passes
   //
   /// Test localToGlobal
   Vector3D returnedPosition{10.9, 8.7, 6.5};
   Vector3D expectedPosition{1.2, 0, 0};
   Vector2D rPhiOnDisc{1.2, 0.0};
   Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
-  discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum,
-                                   returnedPosition);
+  discSurfaceObject->localToGlobal(
+      tgContext, rPhiOnDisc, ignoredMomentum, returnedPosition);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
   //
-  discSurfaceObject->localToGlobal(tgContext, rPhiNotInSector, ignoredMomentum,
-                                   returnedPosition);
+  discSurfaceObject->localToGlobal(
+      tgContext, rPhiNotInSector, ignoredMomentum, returnedPosition);
   Vector3D expectedNonPosition{-1.2, 0, 0};
   CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
   //
   /// Test globalToLocal
   Vector2D returnedLocalPosition{33., 44.};
   Vector2D expectedLocalPosition{1.2, 0.0};
-  BOOST_CHECK(discSurfaceObject->globalToLocal(tgContext, point3DOnSurface,
+  BOOST_CHECK(discSurfaceObject->globalToLocal(tgContext,
+                                               point3DOnSurface,
                                                ignoredMomentum,
                                                returnedLocalPosition));  // pass
   CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
@@ -143,36 +144,40 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   /// Test localPolarToCartesian
   Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
   Vector2D cartesian1_1{1., 1.};
-  CHECK_CLOSE_REL(discSurfaceObject->localPolarToCartesian(rPhi1_1),
-                  cartesian1_1, 1e-6);
+  CHECK_CLOSE_REL(
+      discSurfaceObject->localPolarToCartesian(rPhi1_1), cartesian1_1, 1e-6);
   //
   /// Test localCartesianToPolar
-  CHECK_CLOSE_REL(discSurfaceObject->localCartesianToPolar(cartesian1_1),
-                  rPhi1_1, 1e-6);
+  CHECK_CLOSE_REL(
+      discSurfaceObject->localCartesianToPolar(cartesian1_1), rPhi1_1, 1e-6);
   //
   /// Test localPolarToLocalCartesian
   CHECK_CLOSE_REL(discSurfaceObject->localPolarToLocalCartesian(rPhi1_1),
-                  cartesian1_1, 1e-6);
+                  cartesian1_1,
+                  1e-6);
   //
   /// Test localCartesianToGlobal
   Vector3D cartesian3D1_1{1., 1., 0.};
   CHECK_CLOSE_ABS(
       discSurfaceObject->localCartesianToGlobal(tgContext, cartesian1_1),
-      cartesian3D1_1, 1e-6);
+      cartesian3D1_1,
+      1e-6);
   //
   /// Test globalToLocalCartesian
   CHECK_CLOSE_REL(
       discSurfaceObject->globalToLocalCartesian(tgContext, cartesian3D1_1),
-      cartesian1_1, 1e-6);
+      cartesian1_1,
+      1e-6);
   //
   /// Test pathCorrection
   double projected3DMomentum = std::sqrt(3.) * 1.e6;
-  Vector3D momentum{projected3DMomentum, projected3DMomentum,
-                    projected3DMomentum};
+  Vector3D momentum{
+      projected3DMomentum, projected3DMomentum, projected3DMomentum};
   Vector3D ignoredPosition{1.1, 2.2, 3.3};
-  CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
-                                                    momentum.normalized()),
-                  std::sqrt(3), 0.01);
+  CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(
+                      tgContext, ignoredPosition, momentum.normalized()),
+                  std::sqrt(3),
+                  0.01);
   //
   /// intersectionEstimate
   Vector3D globalPosition{1.2, 0.0, -10.};
@@ -182,8 +187,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   // (bool) valid
   auto intersect = discSurfaceObject->intersectionEstimate(
       tgContext, globalPosition, direction, false);
-  Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10.,
-                                 Intersection::Status::reachable};
+  Intersection expectedIntersect{
+      Vector3D{1.2, 0., 0.}, 10., Intersection::Status::reachable};
   BOOST_CHECK(bool(intersect));
   CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
   CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
@@ -265,8 +270,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      discSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
-                                                   globalPosition, direction);
+      discSurfaceObject->alignmentToPathDerivative(
+          tgContext, rotToLocalZAxis, globalPosition, direction);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;

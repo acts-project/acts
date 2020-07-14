@@ -31,7 +31,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // make Volume
   dd4hep::xml::Dimension x_det_dim(x_det.dimensions());
   Tube tube_shape(x_det_dim.rmin(), x_det_dim.rmax(), x_det_dim.dz());
-  Volume tube_vol(det_name, tube_shape,
+  Volume tube_vol(det_name,
+                  tube_shape,
                   lcdd.air());  // air at the moment change later
   tube_vol.setVisAttributes(lcdd, x_det_dim.visStr());
   // go trough possible layers
@@ -44,7 +45,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
     double l_length = x_layer.dz();
     // Create Volume and DetElement for Layer
     string layer_name = det_name + _toString((int)layer_num, "layer%d");
-    Volume layer_vol(layer_name, Tube(l_rmin, l_rmax, l_length),
+    Volume layer_vol(layer_name,
+                     Tube(l_rmin, l_rmax, l_length),
                      lcdd.material(x_layer.materialStr()));
     DetElement lay_det(cylinderVolume, layer_name, layer_num);
     // Visualization
@@ -62,19 +64,24 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         size_t module_num = 0;
 
         // Create the module volume
-        Volume mod_vol(
-            "module",
-            Trapezoid(x_module.x1(), x_module.x2(), x_module.thickness(),
-                      x_module.thickness(), x_module.length()),
-            lcdd.material(x_module.materialStr()));
+        Volume mod_vol("module",
+                       Trapezoid(x_module.x1(),
+                                 x_module.x2(),
+                                 x_module.thickness(),
+                                 x_module.thickness(),
+                                 x_module.length()),
+                       lcdd.material(x_module.materialStr()));
         mod_vol.setVisAttributes(lcdd, x_module.visStr());
 
         // create the Acts::DigitizationModule (needed to do geometric
         // digitization) for all modules which have digitization module
         auto digiModule =
             FW::DD4hep::DD4hepDetectorHelper::trapezoidalDigiModule(
-                x_module.x1(), x_module.x2(), x_module.length(),
-                x_module.thickness(), sens.readout().segmentation());
+                x_module.x1(),
+                x_module.x2(),
+                x_module.length(),
+                x_module.thickness(),
+                sens.readout().segmentation());
 
         // the sensitive placed components to be used later to create the
         // DetElements
@@ -88,11 +95,13 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           // create the component volume
           string comp_name =
               _toString((int)comp_num, "component%d") + x_comp.materialStr();
-          Volume comp_vol(
-              comp_name,
-              Trapezoid(x_comp.x1(), x_comp.x2(), x_comp.thickness(),
-                        x_comp.thickness(), x_comp.length()),
-              lcdd.material(x_comp.materialStr()));
+          Volume comp_vol(comp_name,
+                          Trapezoid(x_comp.x1(),
+                                    x_comp.x2(),
+                                    x_comp.thickness(),
+                                    x_comp.thickness(),
+                                    x_comp.length()),
+                          lcdd.material(x_comp.materialStr()));
           comp_vol.setVisAttributes(lcdd, x_comp.visStr());
 
           // create the Acts::DigitizationModule (needed to do geometric
@@ -100,7 +109,10 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
           // compoenent
           digiComponent =
               FW::DD4hep::DD4hepDetectorHelper::trapezoidalDigiModule(
-                  x_comp.x1(), x_comp.x2(), x_comp.length(), x_comp.thickness(),
+                  x_comp.x1(),
+                  x_comp.x2(),
+                  x_comp.length(),
+                  x_comp.thickness(),
                   sens.readout().segmentation());
 
           // Set Sensitive Volumes sensitive
@@ -126,8 +138,8 @@ create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
                                 "module%d");
           Position trans(radius * cos(phi), radius * sin(phi), slicedz);
           // Create the module DetElement
-          DetElement mod_det(lay_det, module_name,
-                             repeat * module_num_num + module_num);
+          DetElement mod_det(
+              lay_det, module_name, repeat * module_num_num + module_num);
           // Set Sensitive Volumes sensitive
           if (x_module.isSensitive()) {
             mod_vol.setSensitiveDetector(sens);
