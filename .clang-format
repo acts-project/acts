@@ -6,6 +6,10 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
+
+AlwaysBreakAfterReturnType: All
+AlignAfterOpenBracket: Align
+
 PointerAlignment: Left
 ColumnLimit:     80
 IncludeCategories: 
