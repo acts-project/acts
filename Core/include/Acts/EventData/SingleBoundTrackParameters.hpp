@@ -71,22 +71,20 @@ class SingleBoundTrackParameters {
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   /// @param[in] cov Optional covariance in the reference frame
-  /// @param[in] position The global track three-position vector
-  /// @param[in] momentum The global track three-momentum vector
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
   /// @param[in] charge The particle charge
   /// @param[in] time The time coordinate
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& geoCtx,
-                             std::optional<Covariance> cov,
-                             const Vector3D& position, const Vector3D& momentum,
-                             Scalar charge, Scalar time,
+                             std::optional<Covariance> cov, const Vector3D& pos,
+                             const Vector3D& mom, Scalar charge, Scalar time,
                              std::shared_ptr<const Surface> surface)
       : m_paramSet(std::move(cov),
                    detail::transformFreeToBoundParameters(
-                       position, time, momentum, charge / momentum.norm(),
-                       *surface, geoCtx)),
+                       pos, time, mom, charge / mom.norm(), *surface, geoCtx)),
         m_chargePolicy(charge),
         m_surface(std::move(surface)) {
     assert(m_surface);
@@ -96,20 +94,19 @@ class SingleBoundTrackParameters {
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   /// @param[in] cov Optional covariance in the reference frame
-  /// @param[in] position The global track three-position vector
-  /// @param[in] momentum The global track three-momentum vector
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
   /// @param[in] time The time coordinate
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& geoCtx,
-                             std::optional<Covariance> cov,
-                             const Vector3D& position, const Vector3D& momentum,
-                             Scalar time,
+                             std::optional<Covariance> cov, const Vector3D& pos,
+                             const Vector3D& mom, Scalar time,
                              std::shared_ptr<const Surface> surface)
-      : m_paramSet(std::move(cov), detail::transformFreeToBoundParameters(
-                                       position, time, momentum,
-                                       1 / momentum.norm(), *surface, geoCtx)),
+      : m_paramSet(std::move(cov),
+                   detail::transformFreeToBoundParameters(
+                       pos, time, mom, 1 / mom.norm(), *surface, geoCtx)),
         m_surface(std::move(surface)) {
     assert(m_surface);
   }
