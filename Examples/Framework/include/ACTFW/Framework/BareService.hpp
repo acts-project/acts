@@ -32,16 +32,22 @@ class BareService : public IService {
               Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// The service name.
-  std::string name() const final override;
+  std::string
+  name() const final override;
 
   /// Default noop implementation for the start-of-run hook.
-  void startRun() override;
+  void
+  startRun() override;
 
   /// Default noop implementation for the per-event prepare hook.
-  void prepare(AlgorithmContext& ctx) override;
+  void
+  prepare(AlgorithmContext& ctx) override;
 
  protected:
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 
  private:
   std::string m_name;

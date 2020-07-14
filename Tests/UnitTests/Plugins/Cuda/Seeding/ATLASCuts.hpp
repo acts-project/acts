@@ -19,18 +19,20 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  float seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
-                   const InternalSpacePoint<SpacePoint>& middle,
-                   const InternalSpacePoint<SpacePoint>& top) const;
+  float
+  seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
+             const InternalSpacePoint<SpacePoint>& middle,
+             const InternalSpacePoint<SpacePoint>& top) const;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  bool singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
-                     const InternalSpacePoint<SpacePoint>&,
-                     const InternalSpacePoint<SpacePoint>&) const;
+  bool
+  singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
+                const InternalSpacePoint<SpacePoint>&,
+                const InternalSpacePoint<SpacePoint>&) const;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
@@ -44,7 +46,8 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
 };
 
 template <typename SpacePoint>
-float ATLASCuts<SpacePoint>::seedWeight(
+float
+ATLASCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>& bottom,
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>& top) const {
@@ -59,7 +62,8 @@ float ATLASCuts<SpacePoint>::seedWeight(
 }
 
 template <typename SpacePoint>
-bool ATLASCuts<SpacePoint>::singleSeedCut(
+bool
+ATLASCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>&) const {

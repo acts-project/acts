@@ -36,7 +36,10 @@ BOOST_AUTO_TEST_CASE(bitset_to_matrix_to_bitset) {
 }
 
 struct MyStruct {
-  double phi() const { return 42; }
+  double
+  phi() const {
+    return 42;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(phi_helper_test) {
@@ -247,7 +250,10 @@ BOOST_AUTO_TEST_CASE(position_helper_test) {
 
 template <size_t I>
 struct functor {
-  static constexpr size_t invoke() { return I * I * I; }
+  static constexpr size_t
+  invoke() {
+    return I * I * I;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {

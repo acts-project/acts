@@ -56,7 +56,8 @@ struct GrowableColumns {
   /// can safely be written to.
   /// @param n Number of columns to add, defaults to 1.
   /// @return View into the last allocated column
-  auto addCol(size_t n = 1) {
+  auto
+  addCol(size_t n = 1) {
     size_t index = m_size + (n - 1);
     while (capacity() <= index) {
       data.conservativeResize(Eigen::NoChange, data.cols() + kSizeIncrement);
@@ -71,15 +72,27 @@ struct GrowableColumns {
   }
 
   /// Writable access to a column w/o checking its existence first.
-  auto col(size_t index) { return data.col(index); }
+  auto
+  col(size_t index) {
+    return data.col(index);
+  }
 
   /// Read-only access to a column w/o checking its existence first.
-  auto col(size_t index) const { return data.col(index); }
+  auto
+  col(size_t index) const {
+    return data.col(index);
+  }
 
   /// Return the current allocated storage capacity
-  size_t capacity() const { return static_cast<size_t>(data.cols()); }
+  size_t
+  capacity() const {
+    return static_cast<size_t>(data.cols());
+  }
 
-  size_t size() const { return m_size; }
+  size_t
+  size() const {
+    return m_size;
+  }
 
  private:
   Storage data;
@@ -159,24 +172,32 @@ class TrackStateProxy {
 
   /// Index within the trajectory.
   /// @return the index
-  size_t index() const { return m_istate; }
+  size_t
+  index() const {
+    return m_istate;
+  }
 
   /// Return the index of the track state 'previous' in the track sequence
   /// @return The index of the previous track state.
-  size_t previous() const { return data().iprevious; }
+  size_t
+  previous() const {
+    return data().iprevious;
+  }
 
   /// Return the index tuple that makes up this track state
   /// @return Mutable ref to index tuple from the parent @c MultiTrajectory
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexData& data() {
+  IndexData&
+  data() {
     return m_traj->m_index[m_istate];
   }
 
   /// Build a mask that represents all the allocated components of this track
   /// state proxy
   /// @return The generated mask
-  TrackStatePropMask getMask() const;
+  TrackStatePropMask
+  getMask() const;
 
   /// Copy the contents of another track state proxy into this one
   /// @param other The other track state to copy from
@@ -187,9 +208,9 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void copyFrom(
-      const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
-      TrackStatePropMask mask = TrackStatePropMask::All) {
+  void
+  copyFrom(const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
+           TrackStatePropMask mask = TrackStatePropMask::All) {
     using PM = TrackStatePropMask;
     auto dest = getMask();
     auto src = other.getMask() &
@@ -242,11 +263,15 @@ class TrackStateProxy {
 
   /// Return the index tuple that makes up this track state
   /// @return Immutable ref to index tuple from the parent @c MultiTrajectory
-  const IndexData& data() const { return m_traj->m_index[m_istate]; }
+  const IndexData&
+  data() const {
+    return m_traj->m_index[m_istate];
+  }
 
   /// Reference surface.
   /// @return the reference surface
-  const Surface& referenceSurface() const {
+  const Surface&
+  referenceSurface() const {
     assert(data().irefsurface != IndexData::kInvalid);
     return *m_traj->m_referenceSurfaces[data().irefsurface];
   }
@@ -255,7 +280,8 @@ class TrackStateProxy {
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+  void
+  setReferenceSurface(std::shared_ptr<const Surface> srf) {
     m_traj->m_referenceSurfaces[data().irefsurface] = std::move(srf);
   }
 
@@ -263,58 +289,79 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  Parameters
+  parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  Covariance
+  covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
-  Parameters predicted() const;
+  Parameters
+  predicted() const;
 
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
-  Covariance predictedCovariance() const;
+  Covariance
+  predictedCovariance() const;
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasPredicted() const { return data().ipredicted != IndexData::kInvalid; }
+  bool
+  hasPredicted() const {
+    return data().ipredicted != IndexData::kInvalid;
+  }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
-  Parameters filtered() const;
+  Parameters
+  filtered() const;
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
-  Covariance filteredCovariance() const;
+  Covariance
+  filteredCovariance() const;
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasFiltered() const { return data().ifiltered != IndexData::kInvalid; }
+  bool
+  hasFiltered() const {
+    return data().ifiltered != IndexData::kInvalid;
+  }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
-  Parameters smoothed() const;
+  Parameters
+  smoothed() const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
-  Covariance smoothedCovariance() const;
+  Covariance
+  smoothedCovariance() const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasSmoothed() const { return data().ismoothed != IndexData::kInvalid; }
+  bool
+  hasSmoothed() const {
+    return data().ismoothed != IndexData::kInvalid;
+  }
 
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
-  Covariance jacobian() const;
+  Covariance
+  jacobian() const;
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
-  bool hasJacobian() const { return data().ijacobian != IndexData::kInvalid; }
+  bool
+  hasJacobian() const {
+    return data().ijacobian != IndexData::kInvalid;
+  }
 
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
@@ -323,11 +370,15 @@ class TrackStateProxy {
   /// dimensions. The NxM submatrix, where N is the actual dimension of the
   /// measurement, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
-  Projector projector() const;
+  Projector
+  projector() const;
 
   /// Returns whether a projector is set
   /// @return Whether it is set
-  bool hasProjector() const { return data().iprojector != IndexData::kInvalid; }
+  bool
+  hasProjector() const {
+    return data().iprojector != IndexData::kInvalid;
+  }
 
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
@@ -335,7 +386,8 @@ class TrackStateProxy {
   /// is of dimension NxM, where N is the actual dimension of the
   /// measurement.
   /// @return The effective projector
-  EffectiveProjector effectiveProjector() const {
+  EffectiveProjector
+  effectiveProjector() const {
     return projector().topLeftCorner(data().measdim, M);
   }
 
@@ -346,7 +398,8 @@ class TrackStateProxy {
   /// @note @p projector is assumed to only have 0s or 1s as components.
   template <typename Derived, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  void setProjector(const Eigen::MatrixBase<Derived>& projector) {
+  void
+  setProjector(const Eigen::MatrixBase<Derived>& projector) {
     constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
     constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
 
@@ -375,40 +428,46 @@ class TrackStateProxy {
 
   /// Return whether an uncalibrated measurement (source link) is set
   /// @return Whether it is set
-  bool hasUncalibrated() const {
+  bool
+  hasUncalibrated() const {
     return data().iuncalibrated != IndexData::kInvalid;
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  const SourceLink& uncalibrated() const;
+  const SourceLink&
+  uncalibrated() const;
 
   /// Uncalibrated measurement in the form of a source link. Mutable version
   /// @note This overload is only available if @c ReadOnly is false
   /// @return The uncalibrated measurement source link
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  SourceLink& uncalibrated() {
+  SourceLink&
+  uncalibrated() {
     assert(data().iuncalibrated != IndexData::kInvalid);
     return m_traj->m_sourceLinks[data().iuncalibrated];
   }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
-  bool hasCalibrated() const {
+  bool
+  hasCalibrated() const {
     return data().icalibrated != IndexData::kInvalid;
   }
 
   /// The source link of the calibrated measurement. Const version
   /// @note This does not necessarily have to be the uncalibrated source link.
   /// @return The source link
-  const SourceLink& calibratedSourceLink() const;
+  const SourceLink&
+  calibratedSourceLink() const;
 
   /// The source link of the calibrated measurement. Mutable version
   /// @note This does not necessarily have to be the uncalibrated source link.
   /// @note This overload is only available if @c ReadOnly is false
   /// @return The source link
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  SourceLink& calibratedSourceLink() {
+  SourceLink&
+  calibratedSourceLink() {
     assert(data().icalibratedsourcelink != IndexData::kInvalid);
     return m_traj->m_sourceLinks[data().icalibratedsourcelink];
   }
@@ -416,20 +475,26 @@ class TrackStateProxy {
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
   /// @return The measurement vector
-  Measurement calibrated() const;
+  Measurement
+  calibrated() const;
 
   /// Full calibrated measurement covariance matrix. The effective covariance
   /// is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
-  MeasurementCovariance calibratedCovariance() const;
+  MeasurementCovariance
+  calibratedCovariance() const;
 
   /// Dynamic measurement vector with only the valid dimensions.
   /// @return The effective calibrated measurement vector
-  auto effectiveCalibrated() const { return calibrated().head(data().measdim); }
+  auto
+  effectiveCalibrated() const {
+    return calibrated().head(data().measdim);
+  }
 
   /// Dynamic measurement covariance matrix with only the valid dimensions.
   /// @return The effective calibrated covariance matrix
-  auto effectiveCalibratedCovariance() const {
+  auto
+  effectiveCalibratedCovariance() const {
     return calibratedCovariance().topLeftCorner(data().measdim, data().measdim);
   }
 
@@ -437,7 +502,10 @@ class TrackStateProxy {
   /// @note The underlying storage is overallocated to MeasurementSizeMax
   /// regardless of this value
   /// @return The number of dimensions
-  size_t calibratedSize() const { return data().measdim; }
+  size_t
+  calibratedSize() const {
+    return data().measdim;
+  }
 
   /// Setter for a full measurement object
   /// @note This assumes this TrackState stores it's own calibrated
@@ -448,7 +516,8 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
+  void
+  setCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
     IndexData& dataref = data();
     constexpr size_t measdim = Acts::Measurement<SourceLink, params...>::size();
 
@@ -487,7 +556,8 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
-  void resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
+  void
+  resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
@@ -513,7 +583,8 @@ class TrackStateProxy {
   /// @note this overload is only enabled in case the proxy is not read-only
   /// @return Mutable reference to the chi2 value
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  double& chi2() {
+  double&
+  chi2() {
     return data().chi2;
   }
 
@@ -521,52 +592,65 @@ class TrackStateProxy {
   /// This overload returns a copy of the chi2 value, and thus does not allow
   /// modification of the value in the backing storage.
   /// @return the chi2 value of the track state
-  double chi2() const { return data().chi2; }
+  double
+  chi2() const {
+    return data().chi2;
+  }
 
   /// Getter for the path length associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return Mutable reference to the pathlength.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  double& pathLength() {
+  double&
+  pathLength() {
     return data().pathLength;
   }
 
   /// Getter for the path length. Returns a copy of the path length value.
   /// @return The path length of this track state
-  double pathLength() const { return data().pathLength; }
+  double
+  pathLength() const {
+    return data().pathLength;
+  }
 
   /// Getter for the type flags associated with the track state.
   /// This overloaded is only enabled if not read-only, and returns a mutable
   /// reference.
   /// @return reference to the type flags.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateType& typeFlags() {
+  TrackStateType&
+  typeFlags() {
     return data().typeFlags;
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
-  TrackStateType typeFlags() const { return data().typeFlags; }
+  TrackStateType
+  typeFlags() const {
+    return data().typeFlags;
+  }
 
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
                   size_t istate);
 
-  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
+  const std::shared_ptr<const Surface>&
+  referenceSurfacePointer() const {
     assert(data().irefsurface != IndexData::kInvalid);
     return m_traj->m_referenceSurfaces[data().irefsurface];
   }
 
-  typename MultiTrajectory<SourceLink>::ProjectorBitset projectorBitset()
-      const {
+  typename MultiTrajectory<SourceLink>::ProjectorBitset
+  projectorBitset() const {
     assert(data().iprojector != IndexData::kInvalid);
     return m_traj->m_projectors[data().iprojector];
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(
+  void
+  setProjectorBitset(
       typename MultiTrajectory<SourceLink>::ProjectorBitset proj) {
     assert(data().iprojector != IndexData::kInvalid);
     m_traj->m_projectors[data().iprojector] = proj;
@@ -623,27 +707,33 @@ class MultiTrajectory {
   /// which to leave invalid
   /// @param iprevious index of the previous state, SIZE_MAX if first
   /// @return Index of the newly added track state
-  size_t addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
-                       size_t iprevious = SIZE_MAX);
+  size_t
+  addTrackState(TrackStatePropMask mask = TrackStatePropMask::All,
+                size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read only proxy to the stored track state
-  ConstTrackStateProxy getTrackState(size_t istate) const {
+  ConstTrackStateProxy
+  getTrackState(size_t istate) const {
     return {*this, istate};
   }
 
   /// Access a writable point on the trajectory by index.
   /// @param istate The index to access
   /// @return Read-write proxy to the stored track state
-  TrackStateProxy getTrackState(size_t istate) { return {*this, istate}; }
+  TrackStateProxy
+  getTrackState(size_t istate) {
+    return {*this, istate};
+  }
 
   /// Visit all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
-  void visitBackwards(size_t iendpoint, F&& callable) const;
+  void
+  visitBackwards(size_t iendpoint, F&& callable) const;
 
   /// Apply a function to all previous states starting at a given endpoint.
   ///
@@ -653,7 +743,8 @@ class MultiTrajectory {
   /// @warning If the trajectory contains multiple components with common
   ///          points, this can have an impact on the other components.
   template <typename F>
-  void applyBackwards(size_t iendpoint, F&& callable);
+  void
+  applyBackwards(size_t iendpoint, F&& callable);
 
  private:
   /// index to map track states to the corresponding

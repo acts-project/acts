@@ -55,15 +55,18 @@ Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
   }
 }
 
-const Acts::DiscSurface& Acts::DiscLayer::surfaceRepresentation() const {
+const Acts::DiscSurface&
+Acts::DiscLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::DiscSurface& Acts::DiscLayer::surfaceRepresentation() {
+Acts::DiscSurface&
+Acts::DiscLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void Acts::DiscLayer::buildApproachDescriptor() {
+void
+Acts::DiscLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // take the boundary surfaces of the representving volume if they exist

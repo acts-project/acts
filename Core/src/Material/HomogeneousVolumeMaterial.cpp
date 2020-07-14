@@ -13,8 +13,8 @@ Acts::HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(
     const Material& material)
     : m_material(material) {}
 
-std::ostream& Acts::HomogeneousVolumeMaterial::toStream(
-    std::ostream& sl) const {
+std::ostream&
+Acts::HomogeneousVolumeMaterial::toStream(std::ostream& sl) const {
   sl << "Acts::HomogeneousVolumeMaterial : " << std::endl;
   sl << "   - material : " << m_material << std::endl;
   return sl;

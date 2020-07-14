@@ -37,7 +37,8 @@ Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
                                  const Transform3D& transf)
     : GeometryObject(), LineSurface(gctx, other, transf) {}
 
-Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
+Acts::StrawSurface&
+Acts::StrawSurface::operator=(const StrawSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
     m_bounds = other.m_bounds;
@@ -45,8 +46,9 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   return *this;
 }
 
-Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+Acts::Polyhedron
+Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                             size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;

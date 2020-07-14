@@ -28,7 +28,8 @@ struct Object {
 struct FeatureSelector {
   int select_on = 0;
 
-  bool operator()(const Object& object) const {
+  bool
+  operator()(const Object& object) const {
     return object.feature == select_on;
   }
 };
@@ -37,7 +38,8 @@ struct FeatureSelector {
 struct NameSelector {
   std::string select_on = "";
 
-  bool operator()(const Object& object) const {
+  bool
+  operator()(const Object& object) const {
     return object.name == select_on;
   }
 };

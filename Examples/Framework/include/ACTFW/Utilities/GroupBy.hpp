@@ -62,7 +62,8 @@ class GroupBy {
           m_groupBegin(groupBegin),
           m_groupEnd(groupBy.findEndOfGroup(groupBegin)) {}
     /// Pre-increment operator to advance to the next group.
-    constexpr GroupIterator& operator++() {
+    constexpr GroupIterator&
+    operator++() {
       // make the current end the new group beginning
       std::swap(m_groupBegin, m_groupEnd);
       // find the end of the next group starting from the new beginning
@@ -70,7 +71,8 @@ class GroupBy {
       return *this;
     }
     /// Post-increment operator to advance to the next group.
-    constexpr GroupIterator operator++(int) {
+    constexpr GroupIterator
+    operator++(int) {
       GroupIterator retval = *this;
       ++(*this);
       return retval;
@@ -88,12 +90,12 @@ class GroupBy {
     Iterator m_groupBegin;
     Iterator m_groupEnd;
 
-    friend constexpr bool operator==(const GroupIterator& lhs,
-                                     const GroupEndIterator& rhs) {
+    friend constexpr bool
+    operator==(const GroupIterator& lhs, const GroupEndIterator& rhs) {
       return lhs.m_groupBegin == rhs;
     }
-    friend constexpr bool operator!=(const GroupIterator& lhs,
-                                     const GroupEndIterator& rhs) {
+    friend constexpr bool
+    operator!=(const GroupIterator& lhs, const GroupEndIterator& rhs) {
       return not(lhs == rhs);
     }
   };
@@ -102,11 +104,18 @@ class GroupBy {
   constexpr GroupBy(Iterator begin, Iterator end,
                     KeyGetter keyGetter = KeyGetter())
       : m_begin(begin), m_end(end), m_keyGetter(std::move(keyGetter)) {}
-  constexpr GroupIterator begin() const {
+  constexpr GroupIterator
+  begin() const {
     return GroupIterator(*this, m_begin);
   }
-  constexpr GroupEndIterator end() const { return m_end; }
-  constexpr bool empty() const { return m_begin == m_end; }
+  constexpr GroupEndIterator
+  end() const {
+    return m_end;
+  }
+  constexpr bool
+  empty() const {
+    return m_begin == m_end;
+  }
 
  private:
   Iterator m_begin;
@@ -118,7 +127,8 @@ class GroupBy {
   /// This uses a linear search from the start position and thus has linear
   /// complexity in the group size. It does not assume any ordering of the
   /// underlying container and is a cache-friendly access pattern.
-  constexpr Iterator findEndOfGroup(Iterator start) const {
+  constexpr Iterator
+  findEndOfGroup(Iterator start) const {
     // check for end so we can safely dereference the start iterator.
     if (start == m_end) {
       return start;
@@ -133,8 +143,8 @@ class GroupBy {
 
 /// Construct the group-by proxy for a container.
 template <typename Container, typename KeyGetter>
-GroupBy<typename Container::const_iterator, KeyGetter> makeGroupBy(
-    const Container& container, KeyGetter keyGetter) {
+GroupBy<typename Container::const_iterator, KeyGetter>
+makeGroupBy(const Container& container, KeyGetter keyGetter) {
   return {container.begin(), container.end(), std::move(keyGetter)};
 }
 

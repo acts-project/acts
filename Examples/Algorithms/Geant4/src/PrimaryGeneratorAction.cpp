@@ -21,7 +21,8 @@ using namespace ActsExamples;
 
 PrimaryGeneratorAction* PrimaryGeneratorAction::s_instance = nullptr;
 
-PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
+PrimaryGeneratorAction*
+PrimaryGeneratorAction::instance() {
   return s_instance;
 }
 
@@ -53,7 +54,8 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
   s_instance = nullptr;
 }
 
-void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
+void
+PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // this function is called at the begining of event
   G4double phi = -M_PI + G4UniformRand() * 2. * M_PI;
   G4double theta = G4UniformRand() * M_PI;

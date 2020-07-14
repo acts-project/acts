@@ -29,8 +29,8 @@ Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
       m_yzBounds(bobo.m_yzBounds),
       m_zxBounds(bobo.m_zxBounds) {}
 
-Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
-    const CuboidVolumeBounds& bobo) {
+Acts::CuboidVolumeBounds&
+Acts::CuboidVolumeBounds::operator=(const CuboidVolumeBounds& bobo) {
   if (this != &bobo) {
     m_values = bobo.m_values;
     m_xyBounds = bobo.m_xyBounds;
@@ -40,7 +40,8 @@ Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
   return *this;
 }
 
-Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces
+Acts::CuboidVolumeBounds::orientedSurfaces(
     const Transform3D* transformPtr) const {
   // The transform - apply when given
   Transform3D transform =
@@ -91,13 +92,15 @@ Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-std::ostream& Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT(sl);
 }
 
-Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
-    const Volume* entity) const {
+Acts::Volume::BoundingBox
+Acts::CuboidVolumeBounds::boundingBox(const Acts::Transform3D* trf,
+                                      const Vector3D& envelope,
+                                      const Volume* entity) const {
   Vector3D vmin(-get(eHalfLengthX), -get(eHalfLengthY), -get(eHalfLengthZ));
   Vector3D vmax(get(eHalfLengthX), get(eHalfLengthY), get(eHalfLengthZ));
 
@@ -105,7 +108,8 @@ Acts::Volume::BoundingBox Acts::CuboidVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
+void
+Acts::CuboidVolumeBounds::buildSurfaceBounds() {
   m_xyBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthX),
                                                        get(eHalfLengthY));
   m_yzBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthY),

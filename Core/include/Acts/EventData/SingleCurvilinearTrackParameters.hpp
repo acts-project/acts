@@ -88,8 +88,8 @@ class SingleCurvilinearTrackParameters
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
-  SingleCurvilinearTrackParameters<ChargePolicy>& operator=(
-      const SingleCurvilinearTrackParameters<ChargePolicy>& rhs) {
+  SingleCurvilinearTrackParameters<ChargePolicy>&
+  operator=(const SingleCurvilinearTrackParameters<ChargePolicy>& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
@@ -101,8 +101,8 @@ class SingleCurvilinearTrackParameters
 
   /// @brief move assignment operator - charged/netural
   /// virtual constructor for type creation without casting
-  SingleCurvilinearTrackParameters<ChargePolicy>& operator=(
-      SingleCurvilinearTrackParameters<ChargePolicy>&& rhs) {
+  SingleCurvilinearTrackParameters<ChargePolicy>&
+  operator=(SingleCurvilinearTrackParameters<ChargePolicy>&& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
@@ -125,7 +125,8 @@ class SingleCurvilinearTrackParameters
       ParID_t par,
       std::enable_if_t<std::is_same_v<BoundParameterType<par>, local_parameter>,
                        int> = 0>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void
+  set(const GeometryContext& gctx, ParValue_t newValue) {
     // set the parameter & update the new global position
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
@@ -150,7 +151,8 @@ class SingleCurvilinearTrackParameters
             std::enable_if_t<
                 not std::is_same_v<BoundParameterType<par>, local_parameter>,
                 int> = 0>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void
+  set(const GeometryContext& gctx, ParValue_t newValue) {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
     // recreate the surface
@@ -159,7 +161,10 @@ class SingleCurvilinearTrackParameters
   }
 
   /// @brief access to the reference surface
-  const Surface& referenceSurface() const final { return *m_upSurface; }
+  const Surface&
+  referenceSurface() const final {
+    return *m_upSurface;
+  }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -170,7 +175,8 @@ class SingleCurvilinearTrackParameters
   ///
   /// @note For a curvilinear track parameterisation this is identical to
   /// the rotation matrix of the intrinsic planar surface.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
+  RotationMatrix3D
+  referenceFrame(const GeometryContext& gctx) const {
     return m_upSurface->transform(gctx).linear();
   }
 

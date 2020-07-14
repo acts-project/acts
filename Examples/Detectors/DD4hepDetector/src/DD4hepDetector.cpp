@@ -16,12 +16,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-void DD4hepDetector::addOptions(
+void
+DD4hepDetector::addOptions(
     boost::program_options::options_description& opt) const {
   FW::Options::addDD4hepOptions(opt);
 }
 
-auto DD4hepDetector::finalize(
+auto
+DD4hepDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {

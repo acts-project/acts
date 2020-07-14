@@ -20,10 +20,12 @@ namespace Acts {
 class DiscBounds : public SurfaceBounds {
  public:
   /// Return method for inner Radius
-  virtual double rMin() const = 0;
+  virtual double
+  rMin() const = 0;
 
   /// Return method for outer Radius
-  virtual double rMax() const = 0;
+  virtual double
+  rMax() const = 0;
 
   /// Return the vertices
   ///
@@ -34,19 +36,24 @@ class DiscBounds : public SurfaceBounds {
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D
-  virtual std::vector<Vector2D> vertices(unsigned int lseg) const = 0;
+  virtual std::vector<Vector2D>
+  vertices(unsigned int lseg) const = 0;
 
   /// Returns a reference radius for binning
-  virtual double binningValueR() const = 0;
+  virtual double
+  binningValueR() const = 0;
 
   /// Returns a refererance phi for binning
-  virtual double binningValuePhi() const = 0;
+  virtual double
+  binningValuePhi() const = 0;
 
   /// Returns true for full phi coverage
-  virtual bool coversFullAzimuth() const = 0;
+  virtual bool
+  coversFullAzimuth() const = 0;
 
   /// Checks if it's inside the radius
-  virtual bool insideRadialBounds(double R, double tolerance = 0.) const = 0;
+  virtual bool
+  insideRadialBounds(double R, double tolerance = 0.) const = 0;
 };
 
 }  // namespace Acts

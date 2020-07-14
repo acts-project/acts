@@ -35,8 +35,9 @@ class PhysicsList {
   ///
   /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
-  bool operator()(generator_t& generator, const Acts::MaterialProperties& slab,
-                  Particle& particle, std::vector<Particle>& generated) const {
+  bool
+  operator()(generator_t& generator, const Acts::MaterialProperties& slab,
+             Particle& particle, std::vector<Particle>& generated) const {
     static_assert(
         (true && ... &&
          std::is_same_v<bool, decltype(processes_t()(generator, slab, particle,
@@ -49,22 +50,28 @@ class PhysicsList {
 
   /// Access a specific process by index.
   template <size_t I>
-  std::tuple_element_t<I, std::tuple<processes_t...>>& get() {
+  std::tuple_element_t<I, std::tuple<processes_t...>>&
+  get() {
     return std::get<I>(m_processes);
   }
   /// Access a specific process by type.
   template <typename process_t>
-  process_t& get() {
+  process_t&
+  get() {
     return std::get<process_t>(m_processes);
   }
 
   /// Disable a specific process by index.
-  void disable(std::size_t i) { m_mask.set(i, true); }
+  void
+  disable(std::size_t i) {
+    m_mask.set(i, true);
+  }
   /// Disable a specific process by type.
   ///
   /// @warning Disables only the first of multiple processes of the same type.
   template <typename process_t>
-  void disable() {
+  void
+  disable() {
     return disable(Index<process_t, std::tuple<processes_t...>>::value);
   }
 
@@ -88,15 +95,16 @@ class PhysicsList {
 
   // compile-time index-based recursive function call for all processes
   template <typename generator_t>
-  bool impl(std::index_sequence<>, generator_t&,
-            const Acts::MaterialProperties&, Particle&,
-            std::vector<Particle>&) const {
+  bool
+  impl(std::index_sequence<>, generator_t&, const Acts::MaterialProperties&,
+       Particle&, std::vector<Particle>&) const {
     return false;
   }
   template <std::size_t I0, std::size_t... INs, typename generator_t>
-  bool impl(std::index_sequence<I0, INs...>, generator_t& generator,
-            const Acts::MaterialProperties& slab, Particle& particle,
-            std::vector<Particle>& generated) const {
+  bool
+  impl(std::index_sequence<I0, INs...>, generator_t& generator,
+       const Acts::MaterialProperties& slab, Particle& particle,
+       std::vector<Particle>& generated) const {
     // only call process if it is not masked
     if (not m_mask[I0] and
         std::get<I0>(m_processes)(generator, slab, particle, generated)) {

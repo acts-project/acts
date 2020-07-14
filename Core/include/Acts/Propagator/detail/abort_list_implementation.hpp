@@ -22,8 +22,9 @@ template <bool has_result = true>
 struct condition_caller {
   template <typename condition, typename result_t, typename propagator_state_t,
             typename stepper_t>
-  static bool check(const condition& c, const result_t& r,
-                    propagator_state_t& state, const stepper_t& stepper) {
+  static bool
+  check(const condition& c, const result_t& r, propagator_state_t& state,
+        const stepper_t& stepper) {
     using action_type = action_type_t<condition>;
     using result_type = result_type_t<action_type>;
 
@@ -37,8 +38,9 @@ template <>
 struct condition_caller<false> {
   template <typename condition, typename result_t, typename propagator_state_t,
             typename stepper_t>
-  static bool check(const condition& c, const result_t& /*result*/,
-                    propagator_state_t& state, const stepper_t& stepper) {
+  static bool
+  check(const condition& c, const result_t& /*result*/,
+        propagator_state_t& state, const stepper_t& stepper) {
     return c(state, stepper);
   }
 };
@@ -54,8 +56,9 @@ template <typename first, typename... others>
 struct abort_list_impl<first, others...> {
   template <typename T, typename result_t, typename propagator_state_t,
             typename stepper_t>
-  static bool check(const T& conditions_tuple, const result_t& result,
-                    propagator_state_t& state, const stepper_t& stepper) {
+  static bool
+  check(const T& conditions_tuple, const result_t& result,
+        propagator_state_t& state, const stepper_t& stepper) {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<first>;
     using caller_type = condition_caller<has_result>;
@@ -79,8 +82,9 @@ template <typename last>
 struct abort_list_impl<last> {
   template <typename T, typename result_t, typename propagator_state_t,
             typename stepper_t>
-  static bool check(const T& conditions_tuple, const result_t& result,
-                    propagator_state_t& state, const stepper_t& stepper) {
+  static bool
+  check(const T& conditions_tuple, const result_t& result,
+        propagator_state_t& state, const stepper_t& stepper) {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<last>;
     const auto& this_condition = std::get<last>(conditions_tuple);
@@ -95,9 +99,9 @@ template <>
 struct abort_list_impl<> {
   template <typename T, typename result_t, typename propagator_state_t,
             typename stepper_t>
-  static bool check(const T& /*unused*/, const result_t& /*result*/,
-                    propagator_state_t& /*state*/,
-                    const stepper_t& /*unused*/) {
+  static bool
+  check(const T& /*unused*/, const result_t& /*result*/,
+        propagator_state_t& /*state*/, const stepper_t& /*unused*/) {
     return false;
   }
 };

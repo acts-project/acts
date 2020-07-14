@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
+auto
+Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
@@ -102,7 +103,8 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 }
 
 template <int mainGridSize, int trkGridSize, typename vfitter_t>
-auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
+auto
+Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
     doesPassTrackSelection(const BoundParameters& trk) const -> bool {
   // Get required track parameters
   const double d0 = trk.parameters()[ParID_t::eLOC_D0];

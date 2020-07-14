@@ -46,9 +46,9 @@ class GainMatrixUpdater {
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  Result<void> operator()(
-      const GeometryContext& /*gctx*/, track_state_t trackState,
-      const NavigationDirection& direction = forward) const {
+  Result<void>
+  operator()(const GeometryContext& /*gctx*/, track_state_t trackState,
+             const NavigationDirection& direction = forward) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     // let's make sure the types are consistent
     using SourceLink = typename track_state_t::SourceLink;
@@ -150,7 +150,8 @@ class GainMatrixUpdater {
   std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const;
+  const Logger&
+  logger() const;
 };
 
 }  // namespace Acts

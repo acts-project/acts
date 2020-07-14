@@ -37,12 +37,23 @@ class SimSourceLink {
   SimSourceLink() = default;
   SimSourceLink(SimSourceLink&&) = default;
   SimSourceLink(const SimSourceLink&) = default;
-  SimSourceLink& operator=(SimSourceLink&&) = default;
-  SimSourceLink& operator=(const SimSourceLink&) = default;
+  SimSourceLink&
+  operator=(SimSourceLink&&) = default;
+  SimSourceLink&
+  operator=(const SimSourceLink&) = default;
 
-  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
-  constexpr const Acts::Surface& referenceSurface() const { return *m_surface; }
-  constexpr const ActsFatras::Hit& truthHit() const { return *m_truthHit; }
+  constexpr Acts::GeometryID
+  geometryId() const {
+    return m_geometryId;
+  }
+  constexpr const Acts::Surface&
+  referenceSurface() const {
+    return *m_surface;
+  }
+  constexpr const ActsFatras::Hit&
+  truthHit() const {
+    return *m_truthHit;
+  }
 
   Acts::FittableMeasurement<SimSourceLink> operator*() const {
     if (m_dim == 0) {
@@ -72,8 +83,8 @@ class SimSourceLink {
   const Acts::Surface* m_surface;
   const ActsFatras::Hit* m_truthHit;
 
-  friend constexpr bool operator==(const SimSourceLink& lhs,
-                                   const SimSourceLink& rhs) {
+  friend constexpr bool
+  operator==(const SimSourceLink& lhs, const SimSourceLink& rhs) {
     return lhs.m_truthHit == rhs.m_truthHit;
   }
 };

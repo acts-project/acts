@@ -45,8 +45,9 @@ class GlueVolumesDescriptor {
   ///
   /// @param bsf is the boundary surface face where the volume array is attached
   /// @param gvs is the array of volumes to be attached
-  void registerGlueVolumes(Acts::BoundarySurfaceFace bsf,
-                           std::shared_ptr<const TrackingVolumeArray> gvs);
+  void
+  registerGlueVolumes(Acts::BoundarySurfaceFace bsf,
+                      std::shared_ptr<const TrackingVolumeArray> gvs);
 
   /// Retrieve the glue volumes
   ///
@@ -54,15 +55,17 @@ class GlueVolumesDescriptor {
   /// array
   ///
   /// @return the shared pointer to the TrackingVolume array
-  std::shared_ptr<const TrackingVolumeArray> glueVolumes(
-      BoundarySurfaceFace bsf) const;
+  std::shared_ptr<const TrackingVolumeArray>
+  glueVolumes(BoundarySurfaceFace bsf) const;
 
   /// Retrieve the available Glue Faces
   /// @return the list of faces for which glue information is there
-  const std::vector<BoundarySurfaceFace>& glueFaces() const;
+  const std::vector<BoundarySurfaceFace>&
+  glueFaces() const;
 
   /// Dump it to the screen
-  std::string screenOutput() const;
+  std::string
+  screenOutput() const;
 
  private:
   std::map<BoundarySurfaceFace, std::shared_ptr<const TrackingVolumeArray>>
@@ -75,5 +78,6 @@ GlueVolumesDescriptor::glueFaces() const {
   return m_glueFaces;
 }
 
-std::ostream& operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
+std::ostream&
+operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
 }  // namespace Acts

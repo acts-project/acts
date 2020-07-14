@@ -10,7 +10,8 @@
 
 #include <filesystem>
 
-std::string Acts::Test::getDataPath(std::string_view relativePath) {
+std::string
+Acts::Test::getDataPath(std::string_view relativePath) {
   using std::filesystem::path;
 
   path dataDir(ACTS_TEST_DATA_DIR);

@@ -52,11 +52,14 @@ class MaterialProperties {
 
   MaterialProperties(MaterialProperties&& mprop) = default;
   MaterialProperties(const MaterialProperties&) = default;
-  MaterialProperties& operator=(MaterialProperties&&) = default;
-  MaterialProperties& operator=(const MaterialProperties&) = default;
+  MaterialProperties&
+  operator=(MaterialProperties&&) = default;
+  MaterialProperties&
+  operator=(const MaterialProperties&) = default;
 
   /// Scale the material thickness by the given factor.
-  void scaleThickness(float scale);
+  void
+  scaleThickness(float scale);
 
   /// Check if the material is valid, i.e. it is finite and not vacuum.
   constexpr operator bool() const {
@@ -64,13 +67,25 @@ class MaterialProperties {
   }
 
   /// Access the (average) material parameters.
-  constexpr const Material& material() const { return m_material; }
+  constexpr const Material&
+  material() const {
+    return m_material;
+  }
   /// Return the thickness.
-  constexpr float thickness() const { return m_thickness; }
+  constexpr float
+  thickness() const {
+    return m_thickness;
+  }
   /// Return the radiation length fraction.
-  constexpr float thicknessInX0() const { return m_thicknessInX0; }
+  constexpr float
+  thicknessInX0() const {
+    return m_thicknessInX0;
+  }
   /// Return the nuclear interaction length fraction.
-  constexpr float thicknessInL0() const { return m_thicknessInL0; }
+  constexpr float
+  thicknessInL0() const {
+    return m_thicknessInL0;
+  }
 
  private:
   Material m_material;
@@ -78,20 +93,20 @@ class MaterialProperties {
   float m_thicknessInX0 = 0.0f;
   float m_thicknessInL0 = 0.0f;
 
-  friend constexpr bool operator==(const MaterialProperties& lhs,
-                                   const MaterialProperties& rhs) {
+  friend constexpr bool
+  operator==(const MaterialProperties& lhs, const MaterialProperties& rhs) {
     // t/X0 and t/L0 are dependent variables and need not be checked
     return (lhs.m_material == rhs.m_material) and
            (lhs.m_thickness == rhs.m_thickness);
   }
-  friend constexpr bool operator!=(const MaterialProperties& lhs,
-                                   const MaterialProperties& rhs) {
+  friend constexpr bool
+  operator!=(const MaterialProperties& lhs, const MaterialProperties& rhs) {
     return !(lhs == rhs);
   }
 };
 
-std::ostream& operator<<(std::ostream& os,
-                         const MaterialProperties& materialProperties);
+std::ostream&
+operator<<(std::ostream& os, const MaterialProperties& materialProperties);
 
 // Useful typedefs
 using MaterialPropertiesVector = std::vector<MaterialProperties>;

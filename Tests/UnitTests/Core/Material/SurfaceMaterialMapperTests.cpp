@@ -26,7 +26,8 @@
 namespace Acts {
 
 /// @brief create a small tracking geometry to map some dummy material on
-std::shared_ptr<const TrackingGeometry> trackingGeometry() {
+std::shared_ptr<const TrackingGeometry>
+trackingGeometry() {
   using namespace Acts::UnitLiterals;
 
   BinUtility zbinned(8, -40, 40, open, binZ);

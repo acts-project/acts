@@ -39,12 +39,12 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   /// @todo chage od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
-  static MutableLayerPtr create(
-      std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const ConeBounds> cbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = Acts::active) {
+  static MutableLayerPtr
+  create(std::shared_ptr<const Transform3D> transform,
+         std::shared_ptr<const ConeBounds> cbounds,
+         std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+         std::unique_ptr<ApproachDescriptor> ad = nullptr,
+         LayerType laytyp = Acts::active) {
     return MutableLayerPtr(new ConeLayer(
         std::move(transform), std::move(cbounds), std::move(surfaceArray),
         thickness, std::move(ad), laytyp));
@@ -57,16 +57,19 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   ConeLayer(const ConeLayer& cla) = delete;
 
   /// Assignment operator for ConeLayers - delete
-  ConeLayer& operator=(const ConeLayer&) = delete;
+  ConeLayer&
+  operator=(const ConeLayer&) = delete;
 
   /// Destructor
   ~ConeLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
-  const ConeSurface& surfaceRepresentation() const override;
+  const ConeSurface&
+  surfaceRepresentation() const override;
 
   // Non-const version
-  ConeSurface& surfaceRepresentation() override;
+  ConeSurface&
+  surfaceRepresentation() override;
 
  protected:
   /// Private constructor with arguments

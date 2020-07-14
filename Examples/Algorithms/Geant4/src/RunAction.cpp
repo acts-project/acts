@@ -17,7 +17,8 @@ using namespace ActsExamples;
 
 RunAction* RunAction::s_instance = nullptr;
 
-RunAction* RunAction::instance() {
+RunAction*
+RunAction::instance() {
   return s_instance;
 }
 
@@ -33,13 +34,15 @@ RunAction::~RunAction() {
   s_instance = nullptr;
 }
 
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
+void
+RunAction::BeginOfRunAction(const G4Run* aRun) {
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   // initialize event cumulative quantities
   EventAction::instance()->clear();
 }
 
-void RunAction::EndOfRunAction(const G4Run* aRun) {
+void
+RunAction::EndOfRunAction(const G4Run* aRun) {
   G4int nofEvents = aRun->GetNumberOfEvent();
   if (nofEvents == 0)
     return;

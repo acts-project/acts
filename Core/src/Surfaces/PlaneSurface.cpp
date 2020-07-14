@@ -63,7 +63,8 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D> htrans,
                                  std::shared_ptr<const PlanarBounds> pbounds)
     : Surface(std::move(htrans)), m_bounds(std::move(pbounds)) {}
 
-Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
+Acts::PlaneSurface&
+Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
     Surface::operator=(other);
     m_bounds = other.m_bounds;
@@ -71,23 +72,26 @@ Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
+Acts::Surface::SurfaceType
+Acts::PlaneSurface::type() const {
   return Surface::Plane;
 }
 
-void Acts::PlaneSurface::localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lposition,
-                                       const Vector3D& /*gmom*/,
-                                       Vector3D& position) const {
+void
+Acts::PlaneSurface::localToGlobal(const GeometryContext& gctx,
+                                  const Vector2D& lposition,
+                                  const Vector3D& /*gmom*/,
+                                  Vector3D& position) const {
   Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
   /// the chance that there is no transform is almost 0, let's apply it
   position = transform(gctx) * loc3Dframe;
 }
 
-bool Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
-                                       const Vector3D& position,
-                                       const Vector3D& /*gmom*/,
-                                       Acts::Vector2D& lposition) const {
+bool
+Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& /*gmom*/,
+                                  Acts::Vector2D& lposition) const {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   lposition = Vector2D(loc3Dframe.x(), loc3Dframe.y());
@@ -97,19 +101,22 @@ bool Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
               : true);
 }
 
-std::string Acts::PlaneSurface::name() const {
+std::string
+Acts::PlaneSurface::name() const {
   return "Acts::PlaneSurface";
 }
 
-const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
+const Acts::SurfaceBounds&
+Acts::PlaneSurface::bounds() const {
   if (m_bounds) {
     return (*m_bounds.get());
   }
   return s_noBounds;
 }
 
-Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+Acts::Polyhedron
+Acts::PlaneSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                             size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;

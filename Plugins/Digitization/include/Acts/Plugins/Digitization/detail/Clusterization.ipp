@@ -12,7 +12,8 @@
 #include <vector>
 
 template <typename cell_t>
-std::vector<std::vector<cell_t>> Acts::createClusters(
+std::vector<std::vector<cell_t>>
+Acts::createClusters(
     std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap, size_t nBins0,
     bool commonCorner, double energyCut) {
   // the output
@@ -38,10 +39,11 @@ std::vector<std::vector<cell_t>> Acts::createClusters(
 }
 
 template <typename cell_t>
-void Acts::fillCluster(
-    std::vector<std::vector<cell_t>>& mergedCells,
-    std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap, size_t index,
-    size_t nBins0, bool commonCorner, double energyCut) {
+void
+Acts::fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
+                  std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
+                  size_t index, size_t nBins0, bool commonCorner,
+                  double energyCut) {
   // go recursively through all neighbours of this cell, if present
   // calculate neighbour indices first
   constexpr int iMin = -1;

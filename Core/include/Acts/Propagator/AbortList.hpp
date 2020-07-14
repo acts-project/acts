@@ -61,14 +61,14 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// Default move assignment operator
   ///
   /// @param aborters The source action list
-  AbortList<aborters_t...>& operator=(
-      const AbortList<aborters_t...>& aborters) = default;
+  AbortList<aborters_t...>&
+  operator=(const AbortList<aborters_t...>& aborters) = default;
 
   /// Default move assignment operator
   ///
   /// @param aborters The source action list
-  AbortList<aborters_t...>& operator=(AbortList<aborters_t...>&& aborters) =
-      default;
+  AbortList<aborters_t...>&
+  operator=(AbortList<aborters_t...>&& aborters) = default;
 
   /// Constructor from tuple
   ///
@@ -84,7 +84,8 @@ struct AbortList : public detail::Extendable<aborters_t...> {
 
   /// Append new entries and return a new condition
   template <typename... appendices_t>
-  AbortList<aborters_t..., appendices_t...> append(appendices_t... aps) const {
+  AbortList<aborters_t..., appendices_t...>
+  append(appendices_t... aps) const {
     auto catTuple =
         std::tuple_cat(tuple(), std::tuple<appendices_t...>(aps...));
     return AbortList<aborters_t..., appendices_t...>(std::move(catTuple));
@@ -101,8 +102,9 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
   template <typename result_t, typename propagator_state_t, typename stepper_t>
-  bool operator()(const result_t& result, propagator_state_t& state,
-                  const stepper_t& stepper) const {
+  bool
+  operator()(const result_t& result, propagator_state_t& state,
+             const stepper_t& stepper) const {
     // clang-format off
     static_assert(detail::all_of_v<concept::abort_condition_signature_check_v<
                         aborters_t,

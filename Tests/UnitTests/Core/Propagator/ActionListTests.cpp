@@ -87,14 +87,16 @@ struct DistanceObserver {
   DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+             result_type& result) const {
     result.distance = path_to_go - state.stepping.pathAccumulated;
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*unused*/,
+             const stepper_t& /*unused*/) const {}
 };
 
 /// A call counter struct as an actor
@@ -108,14 +110,16 @@ struct CallCounter {
   CallCounter() = default;
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                  result_type& r) const {
+  void
+  operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+             result_type& r) const {
     ++r.calls;
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*unused*/,
+             const stepper_t& /*unused*/) const {}
 };
 
 // This tests the implementation of the ActionList

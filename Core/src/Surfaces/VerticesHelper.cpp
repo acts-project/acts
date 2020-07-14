@@ -8,9 +8,10 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-std::vector<double> Acts::detail::VerticesHelper::phiSegments(
-    double phiMin, double phiMax, const std::vector<double>& phiRefs,
-    double phiTolerance) {
+std::vector<double>
+Acts::detail::VerticesHelper::phiSegments(double phiMin, double phiMax,
+                                          const std::vector<double>& phiRefs,
+                                          double phiTolerance) {
   // This is to ensure that the extrema are built regardless of number
   // of segments
   std::vector<double> phiSegments;
@@ -44,9 +45,11 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
   return phiSegments;
 }
 
-std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
-    double innerRx, double innerRy, double outerRx, double outerRy,
-    double avgPhi, double halfPhi, unsigned int lseg) {
+std::vector<Acts::Vector2D>
+Acts::detail::VerticesHelper::ellipsoidVertices(double innerRx, double innerRy,
+                                                double outerRx, double outerRy,
+                                                double avgPhi, double halfPhi,
+                                                unsigned int lseg) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
   std::vector<Vector2D> rvertices;  // return vertices
@@ -90,14 +93,16 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
   return rvertices;
 }
 
-std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
-    double innerR, double outerR, double avgPhi, double halfPhi,
-    unsigned int lseg) {
+std::vector<Acts::Vector2D>
+Acts::detail::VerticesHelper::circularVertices(double innerR, double outerR,
+                                               double avgPhi, double halfPhi,
+                                               unsigned int lseg) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            lseg);
 }
 
-bool Acts::detail::VerticesHelper::onHyperPlane(
+bool
+Acts::detail::VerticesHelper::onHyperPlane(
     const std::vector<Acts::Vector3D>& vertices, double tolerance) {
   // Obvious always on one surface
   if (vertices.size() < 4) {

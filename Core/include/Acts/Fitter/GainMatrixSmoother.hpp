@@ -46,9 +46,10 @@ class GainMatrixSmoother {
   ///
   /// @return The smoothed track parameters at the first measurement state
   template <typename source_link_t>
-  Result<void> operator()(const GeometryContext& /* gctx */,
-                          MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex) const {
+  Result<void>
+  operator()(const GeometryContext& /* gctx */,
+             MultiTrajectory<source_link_t>& trajectory,
+             size_t entryIndex) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
@@ -159,6 +160,7 @@ class GainMatrixSmoother {
   std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const;
+  const Logger&
+  logger() const;
 };
 }  // namespace Acts

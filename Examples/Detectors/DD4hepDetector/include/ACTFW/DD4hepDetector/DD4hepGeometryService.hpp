@@ -71,27 +71,32 @@ class DD4hepGeometryService final : public BareService {
 
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
-  dd4hep::DetElement dd4hepGeometry();
+  dd4hep::DetElement
+  dd4hepGeometry();
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)
-  TGeoNode* tgeoGeometry();
+  TGeoNode*
+  tgeoGeometry();
 
   /// Interface method to access to the interface of the DD4hep geometry
-  dd4hep::Detector* lcdd();
+  dd4hep::Detector*
+  lcdd();
 
   /// Interface method to access the ACTS TrackingGeometry
   ///
   /// @param gctx is the geometry context object
-  std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry(
-      const Acts::GeometryContext& gctx);
+  std::unique_ptr<const Acts::TrackingGeometry>
+  trackingGeometry(const Acts::GeometryContext& gctx);
 
  private:
   /// Private method to initiate building of the DD4hep geometry
-  FW::ProcessCode buildDD4hepGeometry();
+  FW::ProcessCode
+  buildDD4hepGeometry();
 
   /// Private method to initiate building of the ACTS tracking geometry
-  FW::ProcessCode buildTrackingGeometry(const Acts::GeometryContext& gctx);
+  FW::ProcessCode
+  buildTrackingGeometry(const Acts::GeometryContext& gctx);
 
   /// The config class
   Config m_cfg;

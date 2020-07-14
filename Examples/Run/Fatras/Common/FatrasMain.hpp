@@ -19,6 +19,7 @@ class IBaseDetector;
 /// @param argc number of command line arguments
 /// @param argv command line arguments
 /// @param detector detector instance
-int fatrasMain(int argc, char* argv[], std::shared_ptr<IBaseDetector> detector);
+int
+fatrasMain(int argc, char* argv[], std::shared_ptr<IBaseDetector> detector);
 
 }  // namespace FW

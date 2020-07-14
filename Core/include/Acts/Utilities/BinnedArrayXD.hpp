@@ -118,7 +118,8 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   /// Assignment operator
   /// - not allowed, use the same array
-  BinnedArrayXD& operator=(const BinnedArrayXD<T>& barr) = delete;
+  BinnedArrayXD&
+  operator=(const BinnedArrayXD<T>& barr) = delete;
 
   /// Destructor
   ~BinnedArrayXD() override = default;
@@ -130,7 +131,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bin triple filled during this access
   ///
   /// @return is the object in that bin
-  T object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final {
+  T
+  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
@@ -142,7 +144,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   // satisfy overload / override
-  T object(const Vector2D& lposition) const override {
+  T
+  object(const Vector2D& lposition) const override {
     std::array<size_t, 3> bins;
     return object(lposition, bins);
   }
@@ -153,7 +156,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
-  T object(const Vector3D& position, std::array<size_t, 3>& bins) const final {
+  T
+  object(const Vector3D& position, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
       bins[2] = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
@@ -165,19 +169,24 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   // satisfy overload / override
-  T object(const Vector3D& position) const override {
+  T
+  object(const Vector3D& position) const override {
     std::array<size_t, 3> bins;
     return object(position, bins);
   }
 
   /// Return all unqiue object
   /// @return vector of unique array objects
-  const std::vector<T>& arrayObjects() const final { return m_arrayObjects; }
+  const std::vector<T>&
+  arrayObjects() const final {
+    return m_arrayObjects;
+  }
 
   /// Return the object grid
   /// multiple entries are allowed and wanted
   /// @return internal object grid
-  const std::vector<std::vector<std::vector<T>>>& objectGrid() const final {
+  const std::vector<std::vector<std::vector<T>>>&
+  objectGrid() const final {
     return m_objectGrid;
   }
 
@@ -187,8 +196,8 @@ class BinnedArrayXD : public BinnedArray<T> {
   /// @param binTriple is the binning
   ///
   /// @return a vector of unique objects
-  std::vector<T> objectCluster(
-      const std::array<size_t, 3>& binTriple) const override {
+  std::vector<T>
+  objectCluster(const std::array<size_t, 3>& binTriple) const override {
     // prepare the return vector
     std::vector<T> rvector;
     // reference bin object to be excluded
@@ -229,7 +238,10 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   /// Return the BinUtility
   /// @return plain pointer to the bin utility of this array
-  const BinUtility* binUtility() const final { return (m_binUtility.get()); }
+  const BinUtility*
+  binUtility() const final {
+    return (m_binUtility.get());
+  }
 
  private:
   /// the data store - a 3D array at default

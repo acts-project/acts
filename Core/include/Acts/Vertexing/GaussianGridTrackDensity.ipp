@@ -95,7 +95,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
 }
 
 template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+void
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     addTrackGridToMainGrid(int zBin,
                            const Acts::ActsVectorF<trkGridSize>& trkGrid,
                            Acts::ActsVectorF<mainGridSize>& mainGrid) const {
@@ -103,7 +104,8 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 }
 
 template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+void
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     removeTrackGridFromMainGrid(
         int zBin, const Acts::ActsVectorF<trkGridSize>& trkGrid,
         Acts::ActsVectorF<mainGridSize>& mainGrid) const {
@@ -111,7 +113,8 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 }
 
 template <int mainGridSize, int trkGridSize>
-void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+void
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     modifyMainGridWithTrackGrid(int zBin,
                                 const Acts::ActsVectorF<trkGridSize>& trkGrid,
                                 Acts::ActsVectorF<mainGridSize>& mainGrid,
@@ -202,7 +205,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
 }
 
 template <int mainGridSize, int trkGridSize>
-float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
+float
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
     float d, float z, const Acts::SymMatrix2D& cov) const {
   float det = cov.determinant();
   float coef = 1 / (2 * M_PI * std::sqrt(det));
@@ -213,7 +217,8 @@ float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
 }
 
 template <int mainGridSize, int trkGridSize>
-int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
+int
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     getHighestSumZPosition(Acts::ActsVectorF<mainGridSize>& mainGrid) const {
   // Checks the first (up to) 3 density maxima, if they are close, checks which
   // one has the highest surrounding density sum (the two neighboring bins)
@@ -262,7 +267,8 @@ int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 }
 
 template <int mainGridSize, int trkGridSize>
-double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
+double
+Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
     const Acts::ActsVectorF<mainGridSize>& mainGrid, int pos) const {
   double sum = mainGrid(pos);
   // Sum up only the density contributions from the

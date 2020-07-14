@@ -58,7 +58,8 @@ struct DenseEnvironmentExtension {
   /// @param [in] state State of the propagator
   /// @return Boolean flag if the step would be valid
   template <typename propagator_state_t, typename stepper_t>
-  int bid(const propagator_state_t& state, const stepper_t& stepper) const {
+  int
+  bid(const propagator_state_t& state, const stepper_t& stepper) const {
     // Check for valid particle properties
     if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
         stepper.momentum(state.stepping) < state.options.momentumCutOff) {
@@ -87,10 +88,10 @@ struct DenseEnvironmentExtension {
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
-         const int i = 0, const double h = 0.,
-         const Vector3D& kprev = Vector3D()) {
+  bool
+  k(const propagator_state_t& state, const stepper_t& stepper, Vector3D& knew,
+    const Vector3D& bField, std::array<double, 4>& kQoP, const int i = 0,
+    const double h = 0., const Vector3D& kprev = Vector3D()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
@@ -142,8 +143,9 @@ struct DenseEnvironmentExtension {
   /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
+  bool
+  finalize(propagator_state_t& state, const stepper_t& stepper,
+           const double h) const {
     // Evaluate the new momentum
     double newMomentum =
         stepper.momentum(state.stepping) +
@@ -185,8 +187,9 @@ struct DenseEnvironmentExtension {
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
+  bool
+  finalize(propagator_state_t& state, const stepper_t& stepper, const double h,
+           FreeMatrix& D) const {
     return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
   }
 
@@ -200,8 +203,9 @@ struct DenseEnvironmentExtension {
   /// @param [out] D Transport matrix
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
-  bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+  bool
+  transportMatrix(propagator_state_t& state, const stepper_t& stepper,
+                  const double h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -346,7 +350,8 @@ struct DenseEnvironmentExtension {
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @param [in] state Deliverer of configurations
   template <typename propagator_state_t>
-  void initializeEnergyLoss(const propagator_state_t& state) {
+  void
+  initializeEnergyLoss(const propagator_state_t& state) {
     energy[0] = std::hypot(initialMomentum, state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialProperties slab(material, 1);
@@ -393,9 +398,10 @@ struct DenseEnvironmentExtension {
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_state_t, typename stepper_t>
-  void updateEnergyLoss(const double mass, const double h,
-                        const stepper_state_t& state, const stepper_t& stepper,
-                        const int i) {
+  void
+  updateEnergyLoss(const double mass, const double h,
+                   const stepper_state_t& state, const stepper_t& stepper,
+                   const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
     energy[i] = std::sqrt(currentMomentum * currentMomentum + mass * mass);
@@ -444,8 +450,8 @@ struct DenseStepperPropagatorOptions
   ///
   /// @param aborters The new aborter list to be used (internally)
   template <typename extended_aborter_list_t>
-  DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
-      extended_aborter_list_t aborters) const {
+  DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
+  extend(extended_aborter_list_t aborters) const {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
         eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over

@@ -67,7 +67,8 @@ bool debugMode = false;
 struct PlaneSelector {
   /// Call operator
   /// @param sf The input surface to be checked
-  bool operator()(const Surface& sf) const {
+  bool
+  operator()(const Surface& sf) const {
     return (sf.type() == Surface::Plane);
   }
 };

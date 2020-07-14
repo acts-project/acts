@@ -131,7 +131,8 @@ class PropagationAlgorithm : public BareAlgorithm {
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency
   /// @return is a process code indicating succes or not
-  FW::ProcessCode execute(const AlgorithmContext& context) const final override;
+  FW::ProcessCode
+  execute(const AlgorithmContext& context) const final override;
 
  private:
   Config m_cfg;  ///< the config class
@@ -139,8 +140,9 @@ class PropagationAlgorithm : public BareAlgorithm {
   /// Private helper method to create a corrleated covariance matrix
   /// @param[in] rnd is the random engine
   /// @param[in] gauss is a gaussian distribution to draw from
-  std::optional<Acts::BoundSymMatrix> generateCovariance(
-      FW::RandomEngine& rnd, std::normal_distribution<double>& gauss) const;
+  std::optional<Acts::BoundSymMatrix>
+  generateCovariance(FW::RandomEngine& rnd,
+                     std::normal_distribution<double>& gauss) const;
 
   /// Templated execute test method for
   /// charged and netural particles
@@ -153,9 +155,10 @@ class PropagationAlgorithm : public BareAlgorithm {
   ///
   /// @return collection of Propagation steps for further analysis
   template <typename parameters_t>
-  PropagationOutput executeTest(
-      const AlgorithmContext& context, const parameters_t& startParameters,
-      double pathLength = std::numeric_limits<double>::max()) const;
+  PropagationOutput
+  executeTest(const AlgorithmContext& context,
+              const parameters_t& startParameters,
+              double pathLength = std::numeric_limits<double>::max()) const;
 };
 
 #include "PropagationAlgorithm.ipp"

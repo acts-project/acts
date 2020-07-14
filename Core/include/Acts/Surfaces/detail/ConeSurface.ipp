@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+inline detail::RealQuadraticEquation
+ConeSurface::intersectionSolver(const GeometryContext& gctx,
+                                const Vector3D& position,
+                                const Vector3D& direction) const {
   // Transform into the local frame
   Transform3D invTrans = transform(gctx).inverse();
   Vector3D point1 = invTrans * position;
@@ -29,9 +30,11 @@ inline detail::RealQuadraticEquation ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-inline Intersection ConeSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline Intersection
+ConeSurface::intersectionEstimate(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& direction,
+                                  const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -58,9 +61,10 @@ inline Intersection ConeSurface::intersectionEstimate(
   return Intersection(transform(gctx) * solution, path, status);
 }
 
-inline SurfaceIntersection ConeSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline SurfaceIntersection
+ConeSurface::intersect(const GeometryContext& gctx, const Vector3D& position,
+                       const Vector3D& direction,
+                       const BoundaryCheck& bcheck) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 

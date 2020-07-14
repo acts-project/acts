@@ -30,7 +30,8 @@ FW::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   }
 }
 
-FW::ProcessCode FW::CsvPlanarClusterWriter::writeT(
+FW::ProcessCode
+FW::CsvPlanarClusterWriter::writeT(
     const AlgorithmContext& ctx,
     const FW::GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) {
   // retrieve simulated hits

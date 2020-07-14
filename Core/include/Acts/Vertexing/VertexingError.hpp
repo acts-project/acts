@@ -28,9 +28,13 @@ namespace detail {
 class VertexingErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "VertexingError"; }
+  const char*
+  name() const noexcept final {
+    return "VertexingError";
+  }
   // Return what each enum means in text
-  std::string message(int c) const final {
+  std::string
+  message(int c) const final {
     switch (static_cast<VertexingError>(c)) {
       case VertexingError::NumericFailure:
         return "Numeric failure in calculation.";
@@ -52,12 +56,14 @@ class VertexingErrorCategory : public std::error_category {
 }  // namespace detail
 
 // Declare a global function returning a static instance of the custom category
-extern inline const detail::VertexingErrorCategory& VertexingErrorCategory() {
+extern inline const detail::VertexingErrorCategory&
+VertexingErrorCategory() {
   static detail::VertexingErrorCategory c;
   return c;
 }
 
-inline std::error_code make_error_code(Acts::VertexingError e) {
+inline std::error_code
+make_error_code(Acts::VertexingError e) {
   return {static_cast<int>(e), Acts::VertexingErrorCategory()};
 }
 }  // namespace Acts

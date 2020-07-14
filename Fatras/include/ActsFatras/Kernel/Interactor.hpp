@@ -19,12 +19,18 @@ namespace ActsFatras {
 
 /// Do not select any surface, ever.
 struct NoSurface {
-  constexpr bool operator()(const Acts::Surface &) const { return false; }
+  constexpr bool
+  operator()(const Acts::Surface &) const {
+    return false;
+  }
 };
 
 /// Select every surface.
 struct EverySurface {
-  constexpr bool operator()(const Acts::Surface &) const { return true; }
+  constexpr bool
+  operator()(const Acts::Surface &) const {
+    return true;
+  }
 };
 
 /// Interactor result (and intermediate state).
@@ -71,8 +77,9 @@ struct Interactor {
     using action_type = Interactor;
 
     template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t &, const stepper_t &,
-                              const result_type &result) const {
+    constexpr bool
+    operator()(propagator_state_t &, const stepper_t &,
+               const result_type &result) const {
       return not result.isAlive;
     }
   };
@@ -95,8 +102,9 @@ struct Interactor {
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &state, stepper_t &stepper,
-                  result_type &result) const {
+  void
+  operator()(propagator_state_t &state, stepper_t &stepper,
+             result_type &result) const {
     assert(generator and "The generator pointer must be valid");
 
     // If we are on target, everything should have been done
@@ -179,7 +187,8 @@ struct Interactor {
 
   /// Pure observer interface. Does not apply to the Fatras simulator.
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &, stepper_t &) const {}
+  void
+  operator()(propagator_state_t &, stepper_t &) const {}
 };
 
 }  // namespace ActsFatras

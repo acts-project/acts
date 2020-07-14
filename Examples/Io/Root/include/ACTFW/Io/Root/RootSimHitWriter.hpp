@@ -51,15 +51,17 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   ~RootSimHitWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  protected:
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] hits are the hits to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& hits) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const SimHitContainer& hits) final override;
 
  private:
   Config m_cfg;

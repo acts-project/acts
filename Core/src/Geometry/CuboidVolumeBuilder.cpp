@@ -49,7 +49,8 @@ Acts::CuboidVolumeBuilder::buildSurface(
   return surface;
 }
 
-std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
+std::shared_ptr<const Acts::Layer>
+Acts::CuboidVolumeBuilder::buildLayer(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
   // Build the surface
@@ -69,7 +70,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
                                  std::make_shared<const Transform3D>(trafo));
 }
 
-std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
+std::pair<double, double>
+Acts::CuboidVolumeBuilder::binningRange(
     const GeometryContext& /*gctx*/,
     const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   using namespace UnitLiterals;
@@ -88,7 +90,8 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   return minMax;
 }
 
-std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
+std::shared_ptr<Acts::TrackingVolume>
+Acts::CuboidVolumeBuilder::buildVolume(
     const GeometryContext& gctx,
     Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   // Build transformation
@@ -163,7 +166,8 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   return trackVolume;
 }
 
-Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
+Acts::MutableTrackingVolumePtr
+Acts::CuboidVolumeBuilder::trackingVolume(
     const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
     Acts::VolumeBoundsPtr /*unused*/) const {
   // Build volumes

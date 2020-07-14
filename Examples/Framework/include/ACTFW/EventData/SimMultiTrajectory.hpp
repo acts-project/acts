@@ -71,7 +71,8 @@ struct SimMultiTrajectory {
   /// @brief assignment operator
   ///
   /// @param rhs The source SimMultiTrajectory
-  SimMultiTrajectory& operator=(const SimMultiTrajectory& rhs) {
+  SimMultiTrajectory&
+  operator=(const SimMultiTrajectory& rhs) {
     m_multiTrajectory = rhs.m_multiTrajectory;
     m_trackTips = rhs.m_trackTips;
     m_trackParameters = rhs.m_trackParameters;
@@ -81,7 +82,8 @@ struct SimMultiTrajectory {
   /// @brief assignment move operator
   ///
   /// @param rhs The source SimMultiTrajectory
-  SimMultiTrajectory& operator=(SimMultiTrajectory&& rhs) {
+  SimMultiTrajectory&
+  operator=(SimMultiTrajectory&& rhs) {
     m_multiTrajectory = std::move(rhs.m_multiTrajectory);
     m_trackTips = std::move(rhs.m_trackTips);
     m_trackParameters = std::move(rhs.m_trackParameters);
@@ -93,7 +95,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return Whether there is trajectory with provided entry index
-  bool hasTrajectory(const size_t& entryIndex) const {
+  bool
+  hasTrajectory(const size_t& entryIndex) const {
     return std::count(m_trackTips.begin(), m_trackTips.end(), entryIndex) > 0;
   }
 
@@ -102,7 +105,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return Whether having fitted track parameters or not
-  bool hasTrackParameters(const size_t& entryIndex) const {
+  bool
+  hasTrackParameters(const size_t& entryIndex) const {
     return m_trackParameters.count(entryIndex) > 0;
   }
 
@@ -121,7 +125,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return The fitted track parameters of the trajectory
-  const Acts::BoundParameters& trackParameters(const size_t& entryIndex) const {
+  const Acts::BoundParameters&
+  trackParameters(const size_t& entryIndex) const {
     auto it = m_trackParameters.find(entryIndex);
     if (it != m_trackParameters.end()) {
       return it->second;
@@ -137,8 +142,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return The truth particle counts in ascending order
-  std::vector<ParticleHitCount> identifyMajorityParticle(
-      const size_t& entryIndex) const;
+  std::vector<ParticleHitCount>
+  identifyMajorityParticle(const size_t& entryIndex) const;
 
  private:
   // The multiTrajectory

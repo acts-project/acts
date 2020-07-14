@@ -23,22 +23,25 @@ namespace detail {
 // extract the geometry identifier from a variety of types
 struct GeometryIdGetter {
   // explicit geometry identifier are just forwarded
-  constexpr Acts::GeometryID operator()(Acts::GeometryID geometryId) const {
+  constexpr Acts::GeometryID
+  operator()(Acts::GeometryID geometryId) const {
     return geometryId;
   }
   // encoded geometry ids are converted back to geometry identifiers.
-  constexpr Acts::GeometryID operator()(Acts::GeometryID::Value encoded) const {
+  constexpr Acts::GeometryID
+  operator()(Acts::GeometryID::Value encoded) const {
     return Acts::GeometryID(encoded);
   }
   // support elements in map-like structures.
   template <typename T>
-  constexpr Acts::GeometryID operator()(
-      const std::pair<Acts::GeometryID, T>& mapItem) const {
+  constexpr Acts::GeometryID
+  operator()(const std::pair<Acts::GeometryID, T>& mapItem) const {
     return mapItem.first;
   }
   // support elements that implement `.geometryId()`.
   template <typename T>
-  inline auto operator()(const T& thing) const
+  inline auto
+  operator()(const T& thing) const
       -> decltype(thing.geometryId(), Acts::GeometryID()) {
     return thing.geometryId();
   }
@@ -49,7 +52,8 @@ struct CompareGeometryId {
   using is_transparent = void;
   // compare two elements using the automatic key extraction.
   template <typename Left, typename Right>
-  constexpr bool operator()(Left&& lhs, Right&& rhs) const {
+  constexpr bool
+  operator()(Left&& lhs, Right&& rhs) const {
     return GeometryIdGetter()(lhs) < GeometryIdGetter()(rhs);
   }
 };
@@ -87,8 +91,9 @@ using GeometryIdMultimap = GeometryIdMultiset<std::pair<Acts::GeometryID, T>>;
 
 /// Select all elements within the given volume.
 template <typename T>
-inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID::Value volume) {
+inline Range<typename GeometryIdMultiset<T>::const_iterator>
+selectVolume(const GeometryIdMultiset<T>& container,
+             Acts::GeometryID::Value volume) {
   auto cmp = Acts::GeometryID().setVolume(volume);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
@@ -102,16 +107,16 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
   return makeRange(beg, end);
 }
 template <typename T>
-inline auto selectVolume(const GeometryIdMultiset<T>& container,
-                         Acts::GeometryID id) {
+inline auto
+selectVolume(const GeometryIdMultiset<T>& container, Acts::GeometryID id) {
   return selectVolume(container, id.volume());
 }
 
 /// Select all elements within the given layer.
 template <typename T>
-inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID::Value volume,
-    Acts::GeometryID::Value layer) {
+inline Range<typename GeometryIdMultiset<T>::const_iterator>
+selectLayer(const GeometryIdMultiset<T>& container,
+            Acts::GeometryID::Value volume, Acts::GeometryID::Value layer) {
   auto cmp = Acts::GeometryID().setVolume(volume).setLayer(layer);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
@@ -125,23 +130,23 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
   return makeRange(beg, end);
 }
 template <typename T>
-inline auto selectLayer(const GeometryIdMultiset<T>& container,
-                        Acts::GeometryID id) {
+inline auto
+selectLayer(const GeometryIdMultiset<T>& container, Acts::GeometryID id) {
   return selectLayer(container, id.volume(), id.layer());
 }
 
 /// Select all elements for the given module / sensitive surface.
 template <typename T>
-inline Range<typename GeometryIdMultiset<T>::const_iterator> selectModule(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID geoId) {
+inline Range<typename GeometryIdMultiset<T>::const_iterator>
+selectModule(const GeometryIdMultiset<T>& container, Acts::GeometryID geoId) {
   // module is the lowest level and defines a single geometry id value
   return makeRange(container.equal_range(geoId));
 }
 template <typename T>
-inline auto selectModule(const GeometryIdMultiset<T>& container,
-                         Acts::GeometryID::Value volume,
-                         Acts::GeometryID::Value layer,
-                         Acts::GeometryID::Value module) {
+inline auto
+selectModule(const GeometryIdMultiset<T>& container,
+             Acts::GeometryID::Value volume, Acts::GeometryID::Value layer,
+             Acts::GeometryID::Value module) {
   return selectModule(
       container,
       Acts::GeometryID().setVolume(volume).setLayer(layer).setSensitive(

@@ -23,10 +23,10 @@ struct AlignedDetector : public FW::IBaseDetector {
   /// The Store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
+  void
+  addOptions(boost::program_options::options_description& opt) const override;
 
-  std::pair<FW::IBaseDetector::TrackingGeometryPtr, ContextDecorators> finalize(
-      const boost::program_options::variables_map& vm,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+  std::pair<FW::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
+  finalize(const boost::program_options::variables_map& vm,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 };

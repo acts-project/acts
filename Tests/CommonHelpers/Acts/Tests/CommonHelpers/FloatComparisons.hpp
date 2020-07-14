@@ -65,7 +65,8 @@ using predicate_result = boost::test_tools::predicate_result;
 
 using ScalarComparison = std::function<predicate_result(double, double)>;
 
-ScalarComparison closeOrSmall(double reltol, double small) {
+ScalarComparison
+closeOrSmall(double reltol, double small) {
   return [=](double val, double ref) -> predicate_result {
     // Perform the comparison, exit on success
     if (std::abs(ref) >= small) {
@@ -92,7 +93,8 @@ ScalarComparison closeOrSmall(double reltol, double small) {
   };
 }
 
-ScalarComparison closeAbs(double abstol) {
+ScalarComparison
+closeAbs(double abstol) {
   return [=](double val, double ref) -> predicate_result {
     // Perform the comparison, exit on success
     if (std::abs(ref - val) <= abstol) {
@@ -112,9 +114,10 @@ ScalarComparison closeAbs(double abstol) {
 
 // Matrix comparison backend (called by Eigen-related compare() overloads)
 template <typename Derived1, typename Derived2>
-predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
-                               const Eigen::DenseBase<Derived2>& ref,
-                               ScalarComparison&& compareImpl) {
+predicate_result
+matrixCompare(const Eigen::DenseBase<Derived1>& val,
+              const Eigen::DenseBase<Derived2>& ref,
+              ScalarComparison&& compareImpl) {
   constexpr int rows1 = Eigen::DenseBase<Derived1>::RowsAtCompileTime;
   constexpr int rows2 = Eigen::DenseBase<Derived2>::RowsAtCompileTime;
   constexpr int cols1 = Eigen::DenseBase<Derived1>::ColsAtCompileTime;
@@ -161,8 +164,9 @@ predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
 //
 template <typename Container,
           typename Enable = typename Container::const_iterator>
-predicate_result compare(const Container& val, const Container& ref,
-                         ScalarComparison&& compareImpl) {
+predicate_result
+compare(const Container& val, const Container& ref,
+        ScalarComparison&& compareImpl) {
   // Make sure that the two input containers have the same number of items
   // (in order to provide better error reporting when they don't)
   size_t numVals = std::distance(std::cbegin(val), std::cend(val));
@@ -207,21 +211,22 @@ predicate_result compare(const Container& val, const Container& ref,
 
 // Eigen expression template frontend
 template <typename T, typename U>
-predicate_result compare(const Eigen::DenseBase<T>& val,
-                         const Eigen::DenseBase<U>& ref,
-                         ScalarComparison&& compareImpl) {
+predicate_result
+compare(const Eigen::DenseBase<T>& val, const Eigen::DenseBase<U>& ref,
+        ScalarComparison&& compareImpl) {
   return matrixCompare(val.eval(), ref.eval(), std::move(compareImpl));
 }
 
 // Eigen transform frontend
-predicate_result compare(const Transform3D& val, const Transform3D& ref,
-                         ScalarComparison&& compareImpl) {
+predicate_result
+compare(const Transform3D& val, const Transform3D& ref,
+        ScalarComparison&& compareImpl) {
   return matrixCompare(val.matrix(), ref.matrix(), std::move(compareImpl));
 }
 
 // Scalar frontend
-predicate_result compare(double val, double ref,
-                         ScalarComparison&& compareImpl) {
+predicate_result
+compare(double val, double ref, ScalarComparison&& compareImpl) {
   return compareImpl(val, ref);
 }
 }  // namespace float_compare_internal
@@ -229,38 +234,37 @@ predicate_result compare(double val, double ref,
 // ...and with all that, we can implement the CHECK_XYZ macros
 
 template <typename T, typename U>
-boost::test_tools::predicate_result checkCloseRel(const T& val, const U& ref,
-                                                  double reltol) {
+boost::test_tools::predicate_result
+checkCloseRel(const T& val, const U& ref, double reltol) {
   using namespace float_compare_internal;
   return compare(val, ref, closeOrSmall(reltol, 0.));
 }
 
 template <typename T, typename U>
-boost::test_tools::predicate_result checkCloseAbs(const T& val, const U& ref,
-                                                  double abstol) {
+boost::test_tools::predicate_result
+checkCloseAbs(const T& val, const U& ref, double abstol) {
   using namespace float_compare_internal;
   return compare(val, ref, closeAbs(abstol));
 }
 
 template <typename T>
-boost::test_tools::predicate_result checkSmall(const T& val, double small) {
+boost::test_tools::predicate_result
+checkSmall(const T& val, double small) {
   using namespace float_compare_internal;
   return compare(val, val, closeOrSmall(0., small));
 }
 
 template <typename T, typename U>
-boost::test_tools::predicate_result checkCloseOrSmall(const T& val,
-                                                      const U& ref,
-                                                      double reltol,
-                                                      double small) {
+boost::test_tools::predicate_result
+checkCloseOrSmall(const T& val, const U& ref, double reltol, double small) {
   using namespace float_compare_internal;
   return compare(val, ref, closeOrSmall(reltol, small));
 }
 
 template <typename Scalar, int dim>
-boost::test_tools::predicate_result checkCloseCovariance(
-    const ActsSymMatrix<Scalar, dim>& val,
-    const ActsSymMatrix<Scalar, dim>& ref, double tol) {
+boost::test_tools::predicate_result
+checkCloseCovariance(const ActsSymMatrix<Scalar, dim>& val,
+                     const ActsSymMatrix<Scalar, dim>& ref, double tol) {
   static_assert(dim != Eigen::Dynamic,
                 "Dynamic-size matrices are currently unsupported.");
 

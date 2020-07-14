@@ -58,20 +58,29 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Vector3D getField(SteppingState& /*unused*/,
-                    const Vector3D& /*unused*/) const {
+  Vector3D
+  getField(SteppingState& /*unused*/, const Vector3D& /*unused*/) const {
     // get the field from the cell
     return field;
   }
 
   /// Access method - position
-  Vector3D position(const SteppingState& state) const { return state.pos; }
+  Vector3D
+  position(const SteppingState& state) const {
+    return state.pos;
+  }
 
   /// Access method - direction
-  Vector3D direction(const SteppingState& state) const { return state.dir; }
+  Vector3D
+  direction(const SteppingState& state) const {
+    return state.dir;
+  }
 
   /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  double
+  momentum(const SteppingState& state) const {
+    return state.p;
+  }
 };
 
 /// @brief mockup of navigation state

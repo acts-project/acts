@@ -27,15 +27,18 @@ FW::EventGenerator::EventGenerator(const Config& cfg, Acts::Logging::Level lvl)
   }
 }
 
-std::string FW::EventGenerator::name() const {
+std::string
+FW::EventGenerator::name() const {
   return "EventGenerator";
 }
 
-std::pair<size_t, size_t> FW::EventGenerator::availableEvents() const {
+std::pair<size_t, size_t>
+FW::EventGenerator::availableEvents() const {
   return {0u, SIZE_MAX};
 }
 
-FW::ProcessCode FW::EventGenerator::read(const AlgorithmContext& ctx) {
+FW::ProcessCode
+FW::EventGenerator::read(const AlgorithmContext& ctx) {
   std::vector<SimVertex> event;
 
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);

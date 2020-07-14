@@ -15,13 +15,15 @@ namespace FW {
 HelloService::HelloService(const Config& cfg, Acts::Logging::Level level)
     : BareService("HelloService", level), m_cfg(cfg) {}
 
-void HelloService::startRun() {
+void
+HelloService::startRun() {
   // nothing to do for this example service.
   // in a real service this is would be a good place to run costly one-time
   // initialization.
 }
 
-void HelloService::prepare(AlgorithmContext& ctx) {
+void
+HelloService::prepare(AlgorithmContext& ctx) {
   // integer division should round down
   std::size_t blockIndex = ctx.eventNumber / m_cfg.eventsPerBlock;
   // add block index to the event store

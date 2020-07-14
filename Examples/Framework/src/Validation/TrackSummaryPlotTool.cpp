@@ -15,7 +15,8 @@ FW::TrackSummaryPlotTool::TrackSummaryPlotTool(
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("TrackSummaryPlotTool", lvl)) {}
 
-void FW::TrackSummaryPlotTool::book(
+void
+FW::TrackSummaryPlotTool::book(
     TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
@@ -47,7 +48,8 @@ void FW::TrackSummaryPlotTool::book(
       "nOutliers_vs_pT", "Number of outliers vs. pT", bPt, bNum);
 }
 
-void FW::TrackSummaryPlotTool::clear(
+void
+FW::TrackSummaryPlotTool::clear(
     TrackSummaryPlotCache& trackSummaryPlotCache) const {
   delete trackSummaryPlotCache.nStates_vs_eta;
   delete trackSummaryPlotCache.nMeasurements_vs_eta;
@@ -59,7 +61,8 @@ void FW::TrackSummaryPlotTool::clear(
   delete trackSummaryPlotCache.nHoles_vs_pt;
 }
 
-void FW::TrackSummaryPlotTool::write(
+void
+FW::TrackSummaryPlotTool::write(
     const TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache)
     const {
   ACTS_DEBUG("Write the plots to output file.");
@@ -73,7 +76,8 @@ void FW::TrackSummaryPlotTool::write(
   trackSummaryPlotCache.nHoles_vs_pt->Write();
 }
 
-void FW::TrackSummaryPlotTool::fill(
+void
+FW::TrackSummaryPlotTool::fill(
     TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache,
     const Acts::BoundParameters& fittedParameters, size_t nStates,
     size_t nMeasurements, size_t nOutliers, size_t nHoles) const {

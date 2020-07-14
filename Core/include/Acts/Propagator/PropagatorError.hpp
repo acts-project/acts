@@ -21,9 +21,13 @@ namespace detail {
 class PropagatorErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "PropagatorError"; }
+  const char*
+  name() const noexcept final {
+    return "PropagatorError";
+  }
   // Return what each enum means in text
-  std::string message(int c) const final {
+  std::string
+  message(int c) const final {
     switch (static_cast<PropagatorError>(c)) {
       case PropagatorError::Failure:
         return "Propagation failed";
@@ -37,12 +41,14 @@ class PropagatorErrorCategory : public std::error_category {
 }  // namespace detail
 
 // Declare a global function returning a static instance of the custom category
-extern inline const detail::PropagatorErrorCategory& PropagatorErrorCategory() {
+extern inline const detail::PropagatorErrorCategory&
+PropagatorErrorCategory() {
   static detail::PropagatorErrorCategory c;
   return c;
 }
 
-inline std::error_code make_error_code(Acts::PropagatorError e) {
+inline std::error_code
+make_error_code(Acts::PropagatorError e) {
   return {static_cast<int>(e), Acts::PropagatorErrorCategory()};
 }
 }  // namespace Acts

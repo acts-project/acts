@@ -20,7 +20,8 @@ class HelloLoggerAlgorithm : public FW::BareAlgorithm {
   HelloLoggerAlgorithm(Acts::Logging::Level level);
 
   // Log a few messages.
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  FW::ProcessCode
+  execute(const AlgorithmContext& ctx) const final override;
 };
 
 }  // namespace FW

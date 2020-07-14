@@ -39,7 +39,8 @@ class LineSurfaceStub : public LineSurface {
       : GeometryObject(), LineSurface(ls) { /* nop */
   }
 
-  LineSurfaceStub& operator=(const LineSurfaceStub& ls) {
+  LineSurfaceStub&
+  operator=(const LineSurfaceStub& ls) {
     LineSurface::operator=(ls);
     return *this;
   }
@@ -51,10 +52,16 @@ class LineSurfaceStub : public LineSurface {
   }
 
   /// Return method for the Surface type to avoid dynamic casts
-  SurfaceType type() const final { return Surface::Straw; }
+  SurfaceType
+  type() const final {
+    return Surface::Straw;
+  }
 
   /// Simply return true to show object exists and is callable
-  bool constructedOk() const { return true; }
+  bool
+  constructedOk() const {
+    return true;
+  }
 
   using Surface::normal;
 
@@ -64,8 +71,9 @@ class LineSurfaceStub : public LineSurface {
   /// @param lseg is ignored for a perigee @note ignored
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      size_t /*lseg*/) const final {
+  Polyhedron
+  polyhedronRepresentation(const GeometryContext& /*gctx*/,
+                           size_t /*lseg*/) const final {
     return Polyhedron({}, {}, {});
   }
 };

@@ -51,11 +51,13 @@ FW::CsvPlanarClusterReader::CsvPlanarClusterReader(
   });
 }
 
-std::string FW::CsvPlanarClusterReader::CsvPlanarClusterReader::name() const {
+std::string
+FW::CsvPlanarClusterReader::CsvPlanarClusterReader::name() const {
   return "CsvPlanarClusterReader";
 }
 
-std::pair<size_t, size_t> FW::CsvPlanarClusterReader::availableEvents() const {
+std::pair<size_t, size_t>
+FW::CsvPlanarClusterReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -64,21 +66,25 @@ struct CompareHitId {
   // support transparent comparision between identifiers and full objects
   using is_transparent = void;
   template <typename T>
-  constexpr bool operator()(const T& left, const T& right) const {
+  constexpr bool
+  operator()(const T& left, const T& right) const {
     return left.hit_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(uint64_t left_id, const T& right) const {
+  constexpr bool
+  operator()(uint64_t left_id, const T& right) const {
     return left_id < right.hit_id;
   }
   template <typename T>
-  constexpr bool operator()(const T& left, uint64_t right_id) const {
+  constexpr bool
+  operator()(const T& left, uint64_t right_id) const {
     return left.hit_id < right_id;
   }
 };
 
 /// Convert separate volume/layer/module id into a single geometry identifier.
-inline Acts::GeometryID extractGeometryId(const FW::HitData& data) {
+inline Acts::GeometryID
+extractGeometryId(const FW::HitData& data) {
   // if available, use the encoded geometry directly
   if (data.geometry_id != 0u) {
     return data.geometry_id;
@@ -92,7 +98,8 @@ inline Acts::GeometryID extractGeometryId(const FW::HitData& data) {
 }
 
 struct CompareGeometryId {
-  bool operator()(const FW::HitData& left, const FW::HitData& right) const {
+  bool
+  operator()(const FW::HitData& left, const FW::HitData& right) const {
     auto leftId = extractGeometryId(left).value();
     auto rightId = extractGeometryId(right).value();
     return leftId < rightId;
@@ -100,9 +107,9 @@ struct CompareGeometryId {
 };
 
 template <typename Data>
-inline std::vector<Data> readEverything(
-    const std::string& inputDir, const std::string& filename,
-    const std::vector<std::string>& optionalColumns, size_t event) {
+inline std::vector<Data>
+readEverything(const std::string& inputDir, const std::string& filename,
+               const std::vector<std::string>& optionalColumns, size_t event) {
   std::string path = FW::perEventFilepath(inputDir, filename, event);
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
@@ -115,8 +122,8 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<FW::HitData> readHitsByGeoId(const std::string& inputDir,
-                                         size_t event) {
+std::vector<FW::HitData>
+readHitsByGeoId(const std::string& inputDir, size_t event) {
   // geometry_id and t are optional columns
   auto hits = readEverything<FW::HitData>(inputDir, "hits.csv",
                                           {"geometry_id", "t"}, event);
@@ -125,8 +132,8 @@ std::vector<FW::HitData> readHitsByGeoId(const std::string& inputDir,
   return hits;
 }
 
-std::vector<FW::CellData> readCellsByHitId(const std::string& inputDir,
-                                           size_t event) {
+std::vector<FW::CellData>
+readCellsByHitId(const std::string& inputDir, size_t event) {
   // timestamp is an optional element
   auto cells =
       readEverything<FW::CellData>(inputDir, "cells.csv", {"timestamp"}, event);
@@ -135,8 +142,8 @@ std::vector<FW::CellData> readCellsByHitId(const std::string& inputDir,
   return cells;
 }
 
-std::vector<FW::TruthHitData> readTruthHitsByHitId(const std::string& inputDir,
-                                                   size_t event) {
+std::vector<FW::TruthHitData>
+readTruthHitsByHitId(const std::string& inputDir, size_t event) {
   // define all optional columns
   std::vector<std::string> optionalColumns = {
       "geometry_id", "tt",      "te",     "deltapx",
@@ -151,8 +158,8 @@ std::vector<FW::TruthHitData> readTruthHitsByHitId(const std::string& inputDir,
 
 }  // namespace
 
-FW::ProcessCode FW::CsvPlanarClusterReader::read(
-    const FW::AlgorithmContext& ctx) {
+FW::ProcessCode
+FW::CsvPlanarClusterReader::read(const FW::AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
   // monotonic. internally, we want continous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first

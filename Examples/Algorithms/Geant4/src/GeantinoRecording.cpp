@@ -47,8 +47,8 @@ GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
 // needed to allow std::unique_ptr<G4RunManager> with forward-declared class.
 GeantinoRecording::~GeantinoRecording() {}
 
-FW::ProcessCode GeantinoRecording::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+GeantinoRecording::execute(const FW::AlgorithmContext& ctx) const {
   // ensure exclusive access to the geant run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
 

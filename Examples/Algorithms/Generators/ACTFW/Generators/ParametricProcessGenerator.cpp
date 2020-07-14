@@ -19,8 +19,8 @@ FW::ParametricProcessGenerator::ParametricProcessGenerator(
       m_charge(ActsFatras::findCharge(m_cfg.pdg)),
       m_mass(ActsFatras::findMass(m_cfg.pdg)) {}
 
-std::vector<FW::SimVertex> FW::ParametricProcessGenerator::operator()(
-    FW::RandomEngine& rng) const {
+std::vector<FW::SimVertex>
+FW::ParametricProcessGenerator::operator()(FW::RandomEngine& rng) const {
   using UniformReal = std::uniform_real_distribution<double>;
   using UniformIndex = std::uniform_int_distribution<size_t>;
 

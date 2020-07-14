@@ -17,7 +17,8 @@ namespace FW {
 class Sequencer;
 class RandomNumbers;
 
-void setupEvgenInput(const Options::Variables& variables, Sequencer& sequencer,
-                     std::shared_ptr<const RandomNumbers> randomNumbers);
+void
+setupEvgenInput(const Options::Variables& variables, Sequencer& sequencer,
+                std::shared_ptr<const RandomNumbers> randomNumbers);
 
 }  // namespace FW

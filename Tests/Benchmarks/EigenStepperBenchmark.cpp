@@ -23,7 +23,8 @@ namespace po = boost::program_options;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   unsigned int toys = 1;
   double ptInGeV = 1;
   double BzInT = 1;

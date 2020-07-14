@@ -35,15 +35,18 @@ FW::CsvParticleReader::CsvParticleReader(
   }
 }
 
-std::string FW::CsvParticleReader::CsvParticleReader::name() const {
+std::string
+FW::CsvParticleReader::CsvParticleReader::name() const {
   return "CsvParticleReader";
 }
 
-std::pair<size_t, size_t> FW::CsvParticleReader::availableEvents() const {
+std::pair<size_t, size_t>
+FW::CsvParticleReader::availableEvents() const {
   return m_eventsRange;
 }
 
-FW::ProcessCode FW::CsvParticleReader::read(const FW::AlgorithmContext& ctx) {
+FW::ProcessCode
+FW::CsvParticleReader::read(const FW::AlgorithmContext& ctx) {
   SimParticleContainer::sequence_type unordered;
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",

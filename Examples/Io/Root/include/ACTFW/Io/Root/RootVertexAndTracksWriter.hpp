@@ -48,15 +48,17 @@ class RootVertexAndTracksWriter final
   ~RootVertexAndTracksWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] context is the algorithm context for event information
   /// @param [in] vertexAndTracksCollection is the VertexAndTracks collection
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const std::vector<VertexAndTracks>&
-                         vertexAndTracksCollection) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& context,
+         const std::vector<VertexAndTracks>& vertexAndTracksCollection)
+      final override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -177,7 +179,8 @@ class RootVertexAndTracksWriter final
   std::vector<double>* m_ptrCov66 = &m_cov66;
 
   /// @brief Clears all vectors
-  void ClearAll();
+  void
+  ClearAll();
 };
 
 }  // namespace FW

@@ -21,13 +21,17 @@ namespace FW {
 struct FixedMultiplicityGenerator {
   size_t n = 1;
 
-  size_t operator()(RandomEngine& /* unused */) const { return n; }
+  size_t
+  operator()(RandomEngine& /* unused */) const {
+    return n;
+  }
 };
 
 struct PoissonMultiplicityGenerator {
   size_t mu = 1;
 
-  size_t operator()(RandomEngine& rng) const {
+  size_t
+  operator()(RandomEngine& rng) const {
     return (0 < mu) ? std::poisson_distribution<size_t>(mu)(rng) : 0;
   }
 };

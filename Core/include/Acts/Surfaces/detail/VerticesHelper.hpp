@@ -26,9 +26,10 @@ namespace VerticesHelper {
 /// @param phiRef is a vector of reference phi values to be included as well
 /// @param phiTolerance is the tolerance for reference phi insertion
 /// @return a vector
-std::vector<double> phiSegments(double phiMin = -M_PI, double phiMax = M_PI,
-                                const std::vector<double>& phiRefs = {},
-                                double phiTolerance = 1e-6);
+std::vector<double>
+phiSegments(double phiMin = -M_PI, double phiMax = M_PI,
+            const std::vector<double>& phiRefs = {},
+            double phiTolerance = 1e-6);
 
 /// Helper method to create a regular 2 or 3 D segment
 ///  between two phi values
@@ -45,11 +46,11 @@ std::vector<double> phiSegments(double phiMin = -M_PI, double phiMax = M_PI,
 /// @param offset The out of plane offset position of the bow
 /// @param transform The transform applied (optional)
 template <typename vertex_t, typename transform_t>
-void createSegment(std::vector<vertex_t>& vertices,
-                   std::pair<double, double> rxy, double phi1, double phi2,
-                   unsigned int lseg, int addon = 0,
-                   const vertex_t& offset = vertex_t::Zero(),
-                   const transform_t& transform = transform_t::Identity()) {
+void
+createSegment(std::vector<vertex_t>& vertices, std::pair<double, double> rxy,
+              double phi1, double phi2, unsigned int lseg, int addon = 0,
+              const vertex_t& offset = vertex_t::Zero(),
+              const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
   unsigned int segs = std::abs(phi2 - phi1) / (2 * M_PI) * lseg;
   segs = segs > 0 ? segs : 1;
@@ -75,11 +76,10 @@ void createSegment(std::vector<vertex_t>& vertices,
 /// @param halfPhi The half phi sector if sector
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
-std::vector<Vector2D> ellipsoidVertices(double innerRx, double innerRy,
-                                        double outerRx, double outerRy,
-                                        double avgPhi = 0.,
-                                        double halfPhi = M_PI,
-                                        unsigned int lseg = 1);
+std::vector<Vector2D>
+ellipsoidVertices(double innerRx, double innerRy, double outerRx,
+                  double outerRy, double avgPhi = 0., double halfPhi = M_PI,
+                  unsigned int lseg = 1);
 
 /// Construct vertices on an disc/wheel-like bound object.
 ///
@@ -89,10 +89,9 @@ std::vector<Vector2D> ellipsoidVertices(double innerRx, double innerRy,
 /// @param halfPhi The half phi sector if sector
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
-std::vector<Vector2D> circularVertices(double innerR, double outerR,
-                                       double avgPhi = 0.,
-                                       double halfPhi = M_PI,
-                                       unsigned int lseg = 1);
+std::vector<Vector2D>
+circularVertices(double innerR, double outerR, double avgPhi = 0.,
+                 double halfPhi = M_PI, unsigned int lseg = 1);
 
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
@@ -105,8 +104,8 @@ std::vector<Vector2D> circularVertices(double innerR, double outerR,
 ///                 an `Vector2DType`.
 /// @return bool for inside/outside
 template <typename vertex_t, typename vertex_container_t>
-bool isInsidePolygon(const vertex_t& point,
-                     const vertex_container_t& vertices) {
+bool
+isInsidePolygon(const vertex_t& point, const vertex_container_t& vertices) {
   // when we move along the edges of a convex polygon, a point on the inside of
   // the polygon will always appear on the same side of each edge.
   // a point on the outside will switch sides at least once.
@@ -151,8 +150,9 @@ bool isInsidePolygon(const vertex_t& point,
 ///                 an `Vector2DType`.
 /// @return bool for inside/outside
 template <typename vertex_t>
-bool isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
-                       const vertex_t& upperRight) {
+bool
+isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
+                  const vertex_t& upperRight) {
   return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0]) &&
          (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
 }
@@ -162,8 +162,9 @@ bool isInsideRectangle(const vertex_t& point, const vertex_t& lowerLeft,
 /// @param vertices The list of vertices to test
 /// @param tolerance The allowed out of plane tolerance
 /// @return boolean to indicate if all points are inside/outside
-bool onHyperPlane(const std::vector<Vector3D>& vertices,
-                  double tolerance = s_onSurfaceTolerance);
+bool
+onHyperPlane(const std::vector<Vector3D>& vertices,
+             double tolerance = s_onSurfaceTolerance);
 
 }  // namespace VerticesHelper
 }  // namespace detail

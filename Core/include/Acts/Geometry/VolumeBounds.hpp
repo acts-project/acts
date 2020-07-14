@@ -70,13 +70,15 @@ class VolumeBounds {
   /// Return the bounds type - for persistency optimization
   ///
   /// @return is a BoundsType enum
-  virtual BoundsType type() const = 0;
+  virtual BoundsType
+  type() const = 0;
 
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
   ///
   /// @return of the stored values for this SurfaceBounds object
-  virtual std::vector<double> values() const = 0;
+  virtual std::vector<double>
+  values() const = 0;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -84,7 +86,8 @@ class VolumeBounds {
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  virtual bool inside(const Vector3D& gpos, double tol = 0.) const = 0;
+  virtual bool
+  inside(const Vector3D& gpos, double tol = 0.) const = 0;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -96,36 +99,40 @@ class VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  virtual OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const = 0;
+  virtual OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const = 0;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  virtual Volume::BoundingBox boundingBox(
-      const Transform3D* trf = nullptr, const Vector3D& envelope = {0, 0, 0},
-      const Volume* entity = nullptr) const = 0;
+  virtual Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return vector 3D to be used for the binning
-  virtual Vector3D binningOffset(BinningValue bValue) const;
+  virtual Vector3D
+  binningOffset(BinningValue bValue) const;
 
   /// Binning borders in double
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  virtual double binningBorder(BinningValue bValue) const;
+  virtual double
+  binningBorder(BinningValue bValue) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream to be dumped into
-  virtual std::ostream& toStream(std::ostream& sl) const = 0;
+  virtual std::ostream&
+  toStream(std::ostream& sl) const = 0;
 };
 
 /// Binning offset - overloaded for some R-binning types
@@ -134,14 +141,17 @@ inline Vector3D VolumeBounds::binningOffset(
   return Vector3D(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
+inline double
+VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
   return 0.;
 }
 
 /// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb);
+std::ostream&
+operator<<(std::ostream& sl, const VolumeBounds& vb);
 
-inline bool operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
+inline bool
+operator==(const VolumeBounds& lhs, const VolumeBounds& rhs) {
   if (&lhs == &rhs) {
     return true;
   }

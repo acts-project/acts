@@ -71,14 +71,16 @@ Acts::MaterialProperties::MaterialProperties(
   m_thicknessInL0 = thicknessInL0;
 }
 
-void Acts::MaterialProperties::scaleThickness(float scale) {
+void
+Acts::MaterialProperties::scaleThickness(float scale) {
   m_thickness *= scale;
   m_thicknessInX0 *= scale;
   m_thicknessInL0 *= scale;
 }
 
-std::ostream& Acts::operator<<(std::ostream& os,
-                               const MaterialProperties& materialProperties) {
+std::ostream&
+Acts::operator<<(std::ostream& os,
+                 const MaterialProperties& materialProperties) {
   os << materialProperties.material()
      << "|t=" << materialProperties.thickness();
   return os;

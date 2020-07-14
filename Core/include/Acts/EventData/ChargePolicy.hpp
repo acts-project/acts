@@ -31,27 +31,40 @@ class ChargedPolicy {
   /// @brief equality operator
   ///
   /// @return @c true if rhs has the same charge, otherwise @c false
-  bool operator==(const ChargedPolicy& rhs) const {
+  bool
+  operator==(const ChargedPolicy& rhs) const {
     return m_dCharge == rhs.m_dCharge;
   }
 
   /// @brief inequality operator
   ///
   /// @return @c true if rhs has a different charge, otherwise @c false
-  bool operator!=(const ChargedPolicy& rhs) const { return !(*this == rhs); }
+  bool
+  operator!=(const ChargedPolicy& rhs) const {
+    return !(*this == rhs);
+  }
 
   /// @brief retrieve stored value of the electric charge
   ///
   /// @return value for charge
-  double getCharge() const { return m_dCharge; }
+  double
+  getCharge() const {
+    return m_dCharge;
+  }
 
   /// @brief sets charge
   ///
   /// @param charge new value for the electric charge
-  void setCharge(double charge) { m_dCharge = charge; }
+  void
+  setCharge(double charge) {
+    m_dCharge = charge;
+  }
 
   /// @brief flip sign of electric charge
-  void flipSign() { m_dCharge *= -1.; }
+  void
+  flipSign() {
+    m_dCharge *= -1.;
+  }
 
  private:
   double m_dCharge;  ///< value of electric charge
@@ -74,16 +87,25 @@ class NeutralPolicy {
   /// @brief equality operator
   ///
   /// @return always @c true
-  bool operator==(const NeutralPolicy& /*other*/) const { return true; }
+  bool
+  operator==(const NeutralPolicy& /*other*/) const {
+    return true;
+  }
 
   /// @brief inequality operator
   ///
   /// @return always @c false
-  bool operator!=(const NeutralPolicy& rhs) const { return !(*this == rhs); }
+  bool
+  operator!=(const NeutralPolicy& rhs) const {
+    return !(*this == rhs);
+  }
 
   /// @brief get electric charge
   ///
   /// @return always 0
-  double getCharge() const { return 0.; }
+  double
+  getCharge() const {
+    return 0.;
+  }
 };
 }  // namespace Acts

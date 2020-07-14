@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-void Acts::AccumulatedVolumeMaterial::accumulate(
-    const MaterialProperties& mat) {
+void
+Acts::AccumulatedVolumeMaterial::accumulate(const MaterialProperties& mat) {
   // Replace the vacuum by matter or add matter to matter
   if (m_totalX0 == std::numeric_limits<double>::infinity()) {
     m_totalX0 = mat.thickness() / mat.material().X0();
@@ -34,7 +34,8 @@ void Acts::AccumulatedVolumeMaterial::accumulate(
   m_materialEntries++;
 }
 
-Acts::Material Acts::AccumulatedVolumeMaterial::average() {
+Acts::Material
+Acts::AccumulatedVolumeMaterial::average() {
   // nothing accumulated, material is vacuum
   if (m_materialEntries == 0) {
     return Material();

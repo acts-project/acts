@@ -14,33 +14,38 @@
 
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
-Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
-                                   const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
+                              const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, vertices());
 }
 
-double Acts::TrapezoidBounds::distanceToBoundary(
+double
+Acts::TrapezoidBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(lposition, vertices());
 }
 
-std::vector<Acts::Vector2D> Acts::TrapezoidBounds::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::TrapezoidBounds::vertices(unsigned int /*lseg*/) const {
   double minhx = get(TrapezoidBounds::eHalfLengthXnegY);
   double maxhx = get(TrapezoidBounds::eHalfLengthXposY);
   double hy = get(TrapezoidBounds::eHalfLengthY);
   return {{-minhx, -hy}, {minhx, -hy}, {maxhx, hy}, {-maxhx, hy}};
 }
 
-const Acts::RectangleBounds& Acts::TrapezoidBounds::boundingBox() const {
+const Acts::RectangleBounds&
+Acts::TrapezoidBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-std::ostream& Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::TrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::TrapezoidBounds:  (halfXnegY, halfXposY, halfY) = "

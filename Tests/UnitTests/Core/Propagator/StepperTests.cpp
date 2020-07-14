@@ -79,7 +79,8 @@ struct EndOfWorld {
   /// @param [in] stepper Stepper of the propagation
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  bool
+  operator()(propagator_state_t& state, const stepper_t& stepper) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
@@ -114,8 +115,9 @@ struct StepCollector {
   /// @param [in] stepper Stepper of the propagation
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
                               stepper.direction(state.stepping));

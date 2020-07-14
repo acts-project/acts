@@ -20,11 +20,12 @@
 namespace Acts {
 
 ///  helper function to create a cylinder
-TrackingVolumePtr constructCylinderVolume(
-    const GeometryContext& gctx, double surfaceHalfLengthZ, double surfaceR,
-    double surfaceRstagger, double surfaceZoverlap, double layerEnvelope,
-    double volumeEnvelope, double innerVolumeR, double outerVolumeR,
-    const std::string& name) {
+TrackingVolumePtr
+constructCylinderVolume(const GeometryContext& gctx, double surfaceHalfLengthZ,
+                        double surfaceR, double surfaceRstagger,
+                        double surfaceZoverlap, double layerEnvelope,
+                        double volumeEnvelope, double innerVolumeR,
+                        double outerVolumeR, const std::string& name) {
   ///  the surface transforms
   auto sfnPosition =
       Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
@@ -86,12 +87,10 @@ TrackingVolumePtr constructCylinderVolume(
 }
 
 ///  helper function to create a container
-MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
-                                                  TrackingVolumePtr iVolume,
-                                                  TrackingVolumePtr oVolume,
-                                                  double hVolumeR,
-                                                  double hVolumeHalflength,
-                                                  const std::string& name) {
+MutableTrackingVolumePtr
+constructContainerVolume(const GeometryContext& gctx, TrackingVolumePtr iVolume,
+                         TrackingVolumePtr oVolume, double hVolumeR,
+                         double hVolumeHalflength, const std::string& name) {
   ///  create the volume array
   using VAP = std::pair<TrackingVolumePtr, Vector3D>;
   std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(gctx, binR)},

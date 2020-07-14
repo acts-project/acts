@@ -41,8 +41,9 @@ class ObjSpacePointWriter : public WriterT<GeometryIdMultimap<T>> {
                       Acts::Logging::Level level = Acts::Logging::INFO);
 
  protected:
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const GeometryIdMultimap<T>& spacePoints);
+  ProcessCode
+  writeT(const AlgorithmContext& context,
+         const GeometryIdMultimap<T>& spacePoints);
 
  private:
   // since class iitself is templated, base class template must be fixed
@@ -64,7 +65,8 @@ inline FW::Obj::ObjSpacePointWriter<T>::ObjSpacePointWriter(
 }
 
 template <typename T>
-inline FW::ProcessCode FW::Obj::ObjSpacePointWriter<T>::writeT(
+inline FW::ProcessCode
+FW::Obj::ObjSpacePointWriter<T>::writeT(
     const FW::AlgorithmContext& context,
     const FW::GeometryIdMultimap<T>& spacePoints) {
   // open per-event file

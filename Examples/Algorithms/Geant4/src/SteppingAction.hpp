@@ -27,7 +27,8 @@ namespace ActsExamples {
 class SteppingAction final : public G4UserSteppingAction {
  public:
   /// Static access method to the instance
-  static SteppingAction* instance();
+  static SteppingAction*
+  instance();
 
   /// Construct the action and ensure singleton usage.
   SteppingAction();
@@ -36,18 +37,22 @@ class SteppingAction final : public G4UserSteppingAction {
   /// @brief Interface Method doing the step
   /// @note it creates and collects the MaterialInteraction entities
   /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) final override;
+  void
+  UserSteppingAction(const G4Step* step) final override;
 
   /// Clear the recorded steps.
-  void clear();
+  void
+  clear();
 
   /// Access the recorded material steps.
-  const std::vector<Acts::MaterialInteraction>& materialSteps() const {
+  const std::vector<Acts::MaterialInteraction>&
+  materialSteps() const {
     return m_materialSteps;
   }
 
   /// Access the recorded tracking steps.
-  const FW::SimHitContainer::sequence_type& trackSteps() const {
+  const FW::SimHitContainer::sequence_type&
+  trackSteps() const {
     return m_trackSteps;
   }
 

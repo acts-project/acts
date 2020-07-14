@@ -23,7 +23,8 @@ inline TrackStateProxy<SL, N, M, ReadOnly>::TrackStateProxy(
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-TrackStatePropMask TrackStateProxy<SL, N, M, ReadOnly>::getMask() const {
+TrackStatePropMask
+TrackStateProxy<SL, N, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
   PM mask = PM::None;
   if (hasPredicted()) {
@@ -50,8 +51,8 @@ TrackStatePropMask TrackStateProxy<SL, N, M, ReadOnly>::getMask() const {
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::parameters() const
-    -> Parameters {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::parameters() const -> Parameters {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
     idx = data().ismoothed;
@@ -65,8 +66,8 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::parameters() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::covariance() const
-    -> Covariance {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::covariance() const -> Covariance {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
     idx = data().ismoothed;
@@ -79,84 +80,86 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::covariance() const
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::predicted() const
-    -> Parameters {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::predicted() const -> Parameters {
   assert(data().ipredicted != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ipredicted).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const
-    -> Covariance {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const -> Covariance {
   assert(data().ipredicted != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ipredicted).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::filtered() const
-    -> Parameters {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::filtered() const -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ifiltered).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const
-    -> Covariance {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const -> Covariance {
   assert(data().ifiltered != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ifiltered).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const
-    -> Parameters {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ismoothed).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const
-    -> Covariance {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ismoothed).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const
-    -> Covariance {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const -> Covariance {
   assert(data().ijacobian != IndexData::kInvalid);
   return Covariance(m_traj->m_jac.col(data().ijacobian).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::projector() const
-    -> Projector {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::projector() const -> Projector {
   assert(data().iprojector != IndexData::kInvalid);
   return bitsetToMatrix<Projector>(m_traj->m_projectors[data().iprojector]);
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const
-    -> const SourceLink& {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink& {
   assert(data().iuncalibrated != IndexData::kInvalid);
   return m_traj->m_sourceLinks[data().iuncalibrated];
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibrated() const
-    -> Measurement {
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::calibrated() const -> Measurement {
   assert(data().icalibrated != IndexData::kInvalid);
   return Measurement(m_traj->m_meas.col(data().icalibrated).data());
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedSourceLink() const
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
   assert(data().icalibratedsourcelink != IndexData::kInvalid);
   return m_traj->m_sourceLinks[data().icalibratedsourcelink];
 }
 
 template <typename SL, size_t N, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
+inline auto
+TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
     -> MeasurementCovariance {
   assert(data().icalibrated != IndexData::kInvalid);
   return MeasurementCovariance(
@@ -166,8 +169,8 @@ inline auto TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
 }  // namespace detail_lt
 
 template <typename SL>
-inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
-                                                 size_t iprevious) {
+inline size_t
+MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask, size_t iprevious) {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
@@ -227,7 +230,8 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
 
 template <typename SL>
 template <typename F>
-void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
+void
+MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 
@@ -254,7 +258,8 @@ void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
 
 template <typename SL>
 template <typename F>
-void MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
+void
+MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
   static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 

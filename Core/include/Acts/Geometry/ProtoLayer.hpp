@@ -58,48 +58,57 @@ struct ProtoLayer {
   /// Get the parameters : min
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double min(BinningValue bval, bool addenv = true) const;
+  double
+  min(BinningValue bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double max(BinningValue bval, bool addenv = true) const;
+  double
+  max(BinningValue bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double medium(BinningValue bval, bool addenv = true) const;
+  double
+  medium(BinningValue bval, bool addenv = true) const;
 
   // Get the  parameters : max
   /// @param bval The accessed binning value
   /// @param addenv The steering if enevlope is added or not
-  double range(BinningValue bval, bool addenv = true) const;
+  double
+  range(BinningValue bval, bool addenv = true) const;
 
   /// Output to ostream
   /// @param sl the input ostream
-  std::ostream& toStream(std::ostream& sl) const;
+  std::ostream&
+  toStream(std::ostream& sl) const;
 
   /// Give access to the surfaces used/assigned to the ProtoLayer
-  const std::vector<const Surface*>& surfaces() const;
+  const std::vector<const Surface*>&
+  surfaces() const;
 
   /// Add a surface, this will also increase the extent
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surface The surface which is added to the ProtoLayer
-  void add(const GeometryContext& gctx, const Surface& surface);
+  void
+  add(const GeometryContext& gctx, const Surface& surface);
 
  private:
   /// Helper method which performs the actual min/max calculation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The surfaces to build this protolayer out of
-  void measure(const GeometryContext& gctx,
-               const std::vector<const Surface*>& surfaces);
+  void
+  measure(const GeometryContext& gctx,
+          const std::vector<const Surface*>& surfaces);
 
   /// Store the list of surfaces used for this proto layer
   std::vector<const Surface*> m_surfaces = {};
 };
 
-inline const std::vector<const Surface*>& ProtoLayer::surfaces() const {
+inline const std::vector<const Surface*>&
+ProtoLayer::surfaces() const {
   return m_surfaces;
 }
 

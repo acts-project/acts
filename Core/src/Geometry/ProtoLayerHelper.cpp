@@ -9,9 +9,10 @@
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
-std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
-    const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    const SortingConfig& sorting) const {
+std::vector<Acts::ProtoLayer>
+Acts::ProtoLayerHelper::protoLayers(const GeometryContext& gctx,
+                                    const std::vector<const Surface*>& surfaces,
+                                    const SortingConfig& sorting) const {
   std::vector<Acts::ProtoLayer> protoLayers;
 
   using SurfaceCluster = std::pair<Extent, std::vector<const Surface*>>;
@@ -51,7 +52,8 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   return protoLayers;
 }
 
-std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
+std::vector<Acts::ProtoLayer>
+Acts::ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     const std::vector<SortingConfig>& sortings) const {
   ACTS_DEBUG("Received " << surfaces.size() << " surfaces at input.");

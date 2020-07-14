@@ -15,8 +15,8 @@
 FW::HelloLoggerAlgorithm::HelloLoggerAlgorithm(Acts::Logging::Level level)
     : FW::BareAlgorithm("HelloLogger", level) {}
 
-FW::ProcessCode FW::HelloLoggerAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::HelloLoggerAlgorithm::execute(const AlgorithmContext& ctx) const {
   // using hard-coded data name should be avoided, but i'm a bit lazy tonight.
   auto block = ctx.eventStore.get<std::size_t>("eventBlock");
 

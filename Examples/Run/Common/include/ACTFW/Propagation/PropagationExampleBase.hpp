@@ -18,4 +18,5 @@ class IBaseDetector;
 /// @param argc the number of argumetns of the call
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
-int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector);
+int
+propagationExample(int argc, char* argv[], FW::IBaseDetector& detector);

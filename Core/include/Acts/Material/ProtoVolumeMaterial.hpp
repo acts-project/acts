@@ -48,20 +48,24 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ~ProtoVolumeMaterial() override = default;
 
   /// Return the BinUtility
-  const BinUtility& binUtility() const;
+  const BinUtility&
+  binUtility() const;
 
   /// Assignment operator
   ///
   /// @param vmproxy The source proxy
-  ProtoVolumeMaterial& operator=(const ProtoVolumeMaterial& vmproxy) = default;
+  ProtoVolumeMaterial&
+  operator=(const ProtoVolumeMaterial& vmproxy) = default;
 
   /// Return the material
-  const Material material(const Vector3D& /*position*/) const final;
+  const Material
+  material(const Vector3D& /*position*/) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
  private:
   BinUtility m_binUtility;
@@ -69,12 +73,13 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
 };
 
 /// Return the material
-inline const Acts::Material Acts::ProtoVolumeMaterial::material(
-    const Acts::Vector3D& /*position*/) const {
+inline const Acts::Material
+Acts::ProtoVolumeMaterial::material(const Acts::Vector3D& /*position*/) const {
   return m_material;
 }
 /// Return the bin Utility
-inline const Acts::BinUtility& Acts::ProtoVolumeMaterial::binUtility() const {
+inline const Acts::BinUtility&
+Acts::ProtoVolumeMaterial::binUtility() const {
   return m_binUtility;
 }
 

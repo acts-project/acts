@@ -53,62 +53,76 @@ class Vertex {
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
-  Vector3D position() const;
+  Vector3D
+  position() const;
 
   /// @return Returns time
-  ParValue_t time() const;
+  ParValue_t
+  time() const;
 
   /// @return Returns 4-position
-  const SpacePointVector& fullPosition() const;
+  const SpacePointVector&
+  fullPosition() const;
 
   /// @return Returns position covariance
-  ActsSymMatrixD<3> covariance() const;
+  ActsSymMatrixD<3>
+  covariance() const;
 
   /// @return Returns 4x4 covariance
-  const SpacePointSymMatrix& fullCovariance() const;
+  const SpacePointSymMatrix&
+  fullCovariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
-  const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
+  const std::vector<TrackAtVertex<input_track_t>>&
+  tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
-  std::pair<double, double> fitQuality() const;
+  std::pair<double, double>
+  fitQuality() const;
 
   /// @brief Set position and time
   ///
   /// @param position Vertex position
   /// @param time The time
-  void setPosition(const Vector3D& position, ParValue_t time = 0);
+  void
+  setPosition(const Vector3D& position, ParValue_t time = 0);
 
   /// @brief Set position and time
   ///
   /// @param fullPosition Vertex position and time
-  void setFullPosition(const SpacePointVector& fullPosition);
+  void
+  setFullPosition(const SpacePointVector& fullPosition);
 
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(ParValue_t time);
+  void
+  setTime(ParValue_t time);
 
   /// @brief Sets 3x3 covariance
   ///
   /// @param covariance Position covariance matrix
-  void setCovariance(const ActsSymMatrixD<3>& covariance);
+  void
+  setCovariance(const ActsSymMatrixD<3>& covariance);
 
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setFullCovariance(const SpacePointSymMatrix& covariance);
+  void
+  setFullCovariance(const SpacePointSymMatrix& covariance);
 
   /// @param tracks Vector of tracks at vertex
-  void setTracksAtVertex(
-      const std::vector<TrackAtVertex<input_track_t>>& tracks);
+  void
+  setTracksAtVertex(const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @param chiSquared Chi2 of fit
   /// @param numberDoF Number of degrees of freedom
-  void setFitQuality(double chiSquared, double numberDoF);
+  void
+  setFitQuality(double chiSquared, double numberDoF);
 
   /// @param fitQuality pair of (chi2, numberDoF)
-  void setFitQuality(std::pair<double, double> fitQuality);
+  void
+  setFitQuality(std::pair<double, double> fitQuality);
 
  private:
   SpacePointVector m_position = SpacePointVector::Zero();

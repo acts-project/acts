@@ -32,7 +32,8 @@ namespace Options {
 ///
 /// @param opt The provided object, where root specific options are attached
 template <typename options_t>
-void addTGeoGeometryOptions(options_t& opt) {
+void
+addTGeoGeometryOptions(options_t& opt) {
   opt.add_options()("geo-tgeo-filename",
                     po::value<std::string>()->default_value(""),
                     "Root file name.")(
@@ -140,8 +141,8 @@ void addTGeoGeometryOptions(options_t& opt) {
 ///
 /// @return a configuration object for a TGeoLayerBuilder
 template <typename variable_map_t>
-std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
-    const variable_map_t& vm) {
+std::vector<Acts::TGeoLayerBuilder::Config>
+readTGeoLayerBuilderConfigs(const variable_map_t& vm) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // General: subdetector naming

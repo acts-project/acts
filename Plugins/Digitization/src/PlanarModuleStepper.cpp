@@ -20,9 +20,11 @@ Acts::PlanarModuleStepper::PlanarModuleStepper(
     std::unique_ptr<const Logger> mlogger)
     : m_logger(std::move(mlogger)) {}
 
-std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
-    const GeometryContext& gctx, const DigitizationModule& dmodule,
-    const Vector3D& startPoint, const Vector3D& endPoint) const {
+std::vector<Acts::DigitizationStep>
+Acts::PlanarModuleStepper::cellSteps(const GeometryContext& gctx,
+                                     const DigitizationModule& dmodule,
+                                     const Vector3D& startPoint,
+                                     const Vector3D& endPoint) const {
   // create the return vector
   std::vector<DigitizationStep> cSteps;
 
@@ -70,9 +72,11 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
 }
 
 // calculate the steps caused by this track - fast simulation interface
-std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
-    const GeometryContext& gctx, const Acts::DigitizationModule& dmodule,
-    const Vector2D& moduleIntersection, const Vector3D& trackDirection) const {
+std::vector<Acts::DigitizationStep>
+Acts::PlanarModuleStepper::cellSteps(const GeometryContext& gctx,
+                                     const Acts::DigitizationModule& dmodule,
+                                     const Vector2D& moduleIntersection,
+                                     const Vector3D& trackDirection) const {
   // first, intersect the boundary surfaces
   auto boundarySurfaces = dmodule.boundarySurfaces();
   // intersect them - fast exit for cases where

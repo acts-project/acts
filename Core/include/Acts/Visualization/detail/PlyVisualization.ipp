@@ -7,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void PlyVisualization<T>::vertex(const Vector3D& vtx, ColorRGB color) {
+void
+PlyVisualization<T>::vertex(const Vector3D& vtx, ColorRGB color) {
   m_vertices.emplace_back(vtx.template cast<ValueType>(), color);
 }
 
 template <typename T>
-void PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs,
-                               ColorRGB color) {
+void
+PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs, ColorRGB color) {
   FaceType idxs;
   idxs.reserve(vtxs.size());
   for (const auto& vtx : vtxs) {
@@ -24,14 +25,16 @@ void PlyVisualization<T>::face(const std::vector<Vector3D>& vtxs,
 }
 
 template <typename T>
-void PlyVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
-                                const std::vector<FaceType>&, ColorRGB color) {
+void
+PlyVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
+                           const std::vector<FaceType>&, ColorRGB color) {
   face(vtxs, color);
 }
 
 template <typename T>
-void PlyVisualization<T>::line(const Vector3D& a, const Vector3D& b,
-                               ColorRGB color) {
+void
+PlyVisualization<T>::line(const Vector3D& a, const Vector3D& b,
+                          ColorRGB color) {
   vertex(a, color);
   size_t idx_a = m_vertices.size() - 1;
   vertex(b, color);
@@ -40,7 +43,8 @@ void PlyVisualization<T>::line(const Vector3D& a, const Vector3D& b,
 }
 
 template <typename T>
-void PlyVisualization<T>::write(const std::string& path) const {
+void
+PlyVisualization<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
   if (not IVisualization::hasExtension(path)) {
@@ -52,7 +56,8 @@ void PlyVisualization<T>::write(const std::string& path) const {
 }
 
 template <typename T>
-void PlyVisualization<T>::write(std::ostream& os) const {
+void
+PlyVisualization<T>::write(std::ostream& os) const {
   os << "ply\n";
   os << "format ascii 1.0\n";
   os << "element vertex " << m_vertices.size() << "\n";
@@ -94,7 +99,8 @@ void PlyVisualization<T>::write(std::ostream& os) const {
 }
 
 template <typename T>
-void PlyVisualization<T>::clear() {
+void
+PlyVisualization<T>::clear() {
   m_vertices.clear();
   m_faces.clear();
   m_edges.clear();

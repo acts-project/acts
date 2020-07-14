@@ -43,7 +43,8 @@ class TrackSelector final : public BareAlgorithm {
   TrackSelector(const Config& cfg,
                 Acts::Logging::Level level = Acts::Logging::INFO);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode
+  execute(const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

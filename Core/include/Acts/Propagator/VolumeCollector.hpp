@@ -33,7 +33,8 @@ struct VolumeSelector {
   /// Call operator to check if a volume should be selected
   ///
   /// @param volume is the test volume
-  bool operator()(const Acts::TrackingVolume& volume) const {
+  bool
+  operator()(const Acts::TrackingVolume& volume) const {
     if (selectMaterial && volume.volumeMaterial() != nullptr) {
       return true;
     }
@@ -86,8 +87,9 @@ struct VolumeCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // The current volume has been assigned by the navigator
     if (state.navigation.currentVolume &&
         selector(*state.navigation.currentVolume)) {
@@ -111,8 +113,9 @@ struct VolumeCollector {
   /// Pure observer interface
   /// - this does not apply to the volume collector
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const {
+  }
 
  private:
   /// The private propagation debug logging
@@ -127,8 +130,9 @@ struct VolumeCollector {
   /// length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);

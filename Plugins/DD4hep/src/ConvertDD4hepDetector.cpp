@@ -30,7 +30,8 @@
 #include "TGeoManager.h"
 
 namespace Acts {
-std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
+std::unique_ptr<const TrackingGeometry>
+convertDD4hepDetector(
     dd4hep::DetElement worldDetElement, Logging::Level loggingLevel,
     BinningType bTypePhi, BinningType bTypeR, BinningType bTypeZ,
     double layerEnvelopeR, double layerEnvelopeZ, double defaultLayerThickness,
@@ -111,11 +112,12 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
   return (trackingGeometryBuilder->trackingGeometry(gctx));
 }
 
-std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
-    dd4hep::DetElement subDetector, Logging::Level loggingLevel,
-    BinningType bTypePhi, BinningType bTypeR, BinningType bTypeZ,
-    double layerEnvelopeR, double layerEnvelopeZ,
-    double defaultLayerThickness) {
+std::shared_ptr<const CylinderVolumeBuilder>
+volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
+                     Logging::Level loggingLevel, BinningType bTypePhi,
+                     BinningType bTypeR, BinningType bTypeZ,
+                     double layerEnvelopeR, double layerEnvelopeZ,
+                     double defaultLayerThickness) {
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep(loggingLevel);
   // create local logger for conversion
@@ -489,8 +491,8 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
   }
 }
 
-std::shared_ptr<const Acts::CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
-    Logging::Level loggingLevel) {
+std::shared_ptr<const Acts::CylinderVolumeHelper>
+cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel) {
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
   Acts::LayerArrayCreator::Config lacConfig;
@@ -514,8 +516,9 @@ std::shared_ptr<const Acts::CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
   return cylinderVolumeHelper;
 }
 
-void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
-                             std::vector<dd4hep::DetElement>& compounds) {
+void
+collectCompounds_dd4hep(dd4hep::DetElement& detElement,
+                        std::vector<dd4hep::DetElement>& compounds) {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
@@ -534,8 +537,9 @@ void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
-                                std::vector<dd4hep::DetElement>& subdetectors) {
+void
+collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
+                           std::vector<dd4hep::DetElement>& subdetectors) {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
@@ -558,8 +562,9 @@ void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-void collectLayers_dd4hep(dd4hep::DetElement& detElement,
-                          std::vector<dd4hep::DetElement>& layers) {
+void
+collectLayers_dd4hep(dd4hep::DetElement& detElement,
+                     std::vector<dd4hep::DetElement>& layers) {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;
@@ -576,8 +581,9 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-                           std::vector<dd4hep::DetElement>& volumes) {
+void
+collectVolumes_dd4hep(dd4hep::DetElement& detElement,
+                      std::vector<dd4hep::DetElement>& volumes) {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
     dd4hep::DetElement childDetElement = child.second;

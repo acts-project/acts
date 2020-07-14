@@ -35,8 +35,8 @@ auto tGeometry = cGeometry();
 ///
 /// @return a string containing all written caracters
 
-static inline std::string run(IVisualization& helper, bool triangulate,
-                              const std::string& tag) {
+static inline std::string
+run(IVisualization& helper, bool triangulate, const std::string& tag) {
   std::stringstream cStream;
 
   ViewConfig viewSensitive = ViewConfig({0, 180, 240});

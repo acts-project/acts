@@ -26,8 +26,9 @@ FW::CsvParticleWriter::CsvParticleWriter(
   }
 }
 
-FW::ProcessCode FW::CsvParticleWriter::writeT(
-    const FW::AlgorithmContext& ctx, const SimParticleContainer& particles) {
+FW::ProcessCode
+FW::CsvParticleWriter::writeT(const FW::AlgorithmContext& ctx,
+                              const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
   dfe::NamedTupleCsvWriter<ParticleData> writer(pathParticles,

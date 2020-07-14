@@ -30,17 +30,41 @@ class InternalSpacePoint {
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
 
-  InternalSpacePoint<SpacePoint>& operator=(
-      const InternalSpacePoint<SpacePoint>&);
+  InternalSpacePoint<SpacePoint>&
+  operator=(const InternalSpacePoint<SpacePoint>&);
 
-  const float& x() const { return m_x; }
-  const float& y() const { return m_y; }
-  const float& z() const { return m_z; }
-  const float& radius() const { return m_r; }
-  float phi() const { return atan2f(m_y, m_x); }
-  const float& varianceR() const { return m_varianceR; }
-  const float& varianceZ() const { return m_varianceZ; }
-  const SpacePoint& sp() const { return m_sp; }
+  const float&
+  x() const {
+    return m_x;
+  }
+  const float&
+  y() const {
+    return m_y;
+  }
+  const float&
+  z() const {
+    return m_z;
+  }
+  const float&
+  radius() const {
+    return m_r;
+  }
+  float
+  phi() const {
+    return atan2f(m_y, m_x);
+  }
+  const float&
+  varianceR() const {
+    return m_varianceR;
+  }
+  const float&
+  varianceZ() const {
+    return m_varianceZ;
+  }
+  const SpacePoint&
+  sp() const {
+    return m_sp;
+  }
 
  protected:
   float m_x;               // x-coordinate in beam system coordinates

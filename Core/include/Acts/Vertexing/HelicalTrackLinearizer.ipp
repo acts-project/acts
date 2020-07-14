@@ -9,11 +9,12 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
-Acts::Result<Acts::LinearizedTrack> Acts::
-    HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundParameters& params, const SpacePointVector& linPoint,
-        const Acts::GeometryContext& gctx,
-        const Acts::MagneticFieldContext& mctx, State& state) const {
+Acts::Result<Acts::LinearizedTrack>
+Acts::HelicalTrackLinearizer<propagator_t, propagator_options_t>::
+    linearizeTrack(const BoundParameters& params,
+                   const SpacePointVector& linPoint,
+                   const Acts::GeometryContext& gctx,
+                   const Acts::MagneticFieldContext& mctx, State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface =

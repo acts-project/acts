@@ -57,7 +57,8 @@ std::default_random_engine generator(42);
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundParameters(IVisualization& helper) {
+static inline std::string
+testBoundParameters(IVisualization& helper) {
   std::stringstream ss;
 
   ViewConfig pcolor({20, 120, 20});
@@ -100,7 +101,8 @@ static inline std::string testBoundParameters(IVisualization& helper) {
   return ss.str();
 }
 
-static inline std::string testMultiTrajectory(IVisualization& helper) {
+static inline std::string
+testMultiTrajectory(IVisualization& helper) {
   std::stringstream ss;
 
   // Create a test context

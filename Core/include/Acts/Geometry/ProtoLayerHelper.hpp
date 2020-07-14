@@ -46,9 +46,10 @@ class ProtoLayerHelper {
   /// @param sorting The sorting setup, one single sorting
   ///
   /// @return A vector of ProtoLayers
-  std::vector<ProtoLayer> protoLayers(
-      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-      const SortingConfig& sorting) const;
+  std::vector<ProtoLayer>
+  protoLayers(const GeometryContext& gctx,
+              const std::vector<const Surface*>& surfaces,
+              const SortingConfig& sorting) const;
 
   /// Sort the surfaces into ProtoLayers, sequential sorting
   ///
@@ -57,16 +58,20 @@ class ProtoLayerHelper {
   /// @param sortings The sequential sorting setup
   ///
   /// @return A vector of ProtoLayers
-  std::vector<ProtoLayer> protoLayers(
-      const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-      const std::vector<SortingConfig>& sortings) const;
+  std::vector<ProtoLayer>
+  protoLayers(const GeometryContext& gctx,
+              const std::vector<const Surface*>& surfaces,
+              const std::vector<SortingConfig>& sortings) const;
 
  private:
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace Acts

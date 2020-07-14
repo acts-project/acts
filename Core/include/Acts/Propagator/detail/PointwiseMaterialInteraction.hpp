@@ -88,9 +88,9 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialProperties(
-      const propagator_state_t& state,
-      MaterialUpdateStage updateStage = fullUpdate) {
+  bool
+  evaluateMaterialProperties(const propagator_state_t& state,
+                             MaterialUpdateStage updateStage = fullUpdate) {
     // We are at the start surface
     if (surface == state.navigation.startSurface) {
       updateStage = postUpdate;
@@ -117,8 +117,9 @@ struct PointwiseMaterialInteraction {
   /// @param [in] multipleScattering Boolean to indiciate the application of
   /// multiple scattering
   /// @param [in] energyLoss Boolean to indiciate the application of energy loss
-  void evaluatePointwiseMaterialInteraction(bool multipleScattering,
-                                            bool energyLoss);
+  void
+  evaluatePointwiseMaterialInteraction(bool multipleScattering,
+                                       bool energyLoss);
 
   /// @brief Update the state
   ///
@@ -128,7 +129,8 @@ struct PointwiseMaterialInteraction {
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void updateState(propagator_state_t& state, const stepper_t& stepper) {
+  void
+  updateState(propagator_state_t& state, const stepper_t& stepper) {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
     const auto nextE = std::sqrt(mass * mass + momentum * momentum) -
@@ -153,7 +155,8 @@ struct PointwiseMaterialInteraction {
   /// @param [in] multipleScattering Boolean to indiciate the application of
   /// multiple scattering
   /// @param [in] energyLoss Boolean to indiciate the application of energy loss
-  void covarianceContributions(bool multipleScattering, bool energyLoss);
+  void
+  covarianceContributions(bool multipleScattering, bool energyLoss);
 
   /// @brief Convenience method for better readability
   ///
@@ -162,8 +165,9 @@ struct PointwiseMaterialInteraction {
   /// @param [in] updateMode The noise update mode (in default: add noise)
   ///
   /// @return The updated variance
-  double updateVariance(double variance, double change,
-                        NoiseUpdateMode updateMode = addNoise) const;
+  double
+  updateVariance(double variance, double change,
+                 NoiseUpdateMode updateMode = addNoise) const;
 };
 }  // namespace detail
 }  // end of namespace Acts

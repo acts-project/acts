@@ -11,7 +11,8 @@
 Acts::ProtoVolumeMaterial::ProtoVolumeMaterial(const BinUtility& binUtility)
     : m_binUtility(binUtility), m_material() {}
 
-std::ostream& Acts::ProtoVolumeMaterial::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::ProtoVolumeMaterial::toStream(std::ostream& sl) const {
   sl << "Acts::ProtoVolumeMaterial : " << std::endl;
   if (m_binUtility.bins(0) * m_binUtility.bins(1) * m_binUtility.bins(2) > 1) {
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.bins(0)

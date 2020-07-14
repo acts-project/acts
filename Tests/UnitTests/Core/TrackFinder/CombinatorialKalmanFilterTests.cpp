@@ -48,11 +48,13 @@ struct ExtendedMinimalSourceLink {
 
   const FittableMeasurement<ExtendedMinimalSourceLink>* meas{nullptr};
 
-  bool operator==(const ExtendedMinimalSourceLink& rhs) const {
+  bool
+  operator==(const ExtendedMinimalSourceLink& rhs) const {
     return meas == rhs.meas;
   }
 
-  const Surface& referenceSurface() const {
+  const Surface&
+  referenceSurface() const {
     return *MeasurementHelpers::getSurface(*meas);
   }
 
@@ -62,7 +64,8 @@ struct ExtendedMinimalSourceLink {
 };
 
 // helper function to create geometry ids
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+GeometryID
+makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 
@@ -114,8 +117,9 @@ struct MeasurementCreator {
   /// @param [in] state State of the propagator
   /// @param [out] result Vector of matching surfaces
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {

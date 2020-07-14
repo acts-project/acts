@@ -46,14 +46,16 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
 
   ~GenericCuboidVolumeBounds() override = default;
 
-  VolumeBounds::BoundsType type() const final {
+  VolumeBounds::BoundsType
+  type() const final {
     return VolumeBounds::eGenericCuboid;
   }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -61,7 +63,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  bool inside(const Vector3D& gpos, double tol = 0.) const override;
+  bool
+  inside(const Vector3D& gpos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -73,27 +76,30 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+  OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
-                                  const Volume* entity = nullptr) const final;
+  Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const final;
 
   /// @param sl is the output stream to be written into
-  std::ostream& toStream(std::ostream& sl) const override;
+  std::ostream&
+  toStream(std::ostream& sl) const override;
 
   /// Draw this shape using a visualization helper
   /// @param helper The visualizatin helper
   /// @param transform Optional transformation matrix
   ///
-  void draw(IVisualization& helper,
-            const Transform3D& transform = Transform3D::Identity()) const;
+  void
+  draw(IVisualization& helper,
+       const Transform3D& transform = Transform3D::Identity()) const;
 
  private:
   std::array<Vector3D, 8> m_vertices;
@@ -101,7 +107,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
 
   /// Private helper method to contruct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices
-  void construct() noexcept(false);
+  void
+  construct() noexcept(false);
 };
 
 }  // namespace Acts

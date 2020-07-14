@@ -29,8 +29,8 @@ FW::TrackFindingAlgorithm::TrackFindingAlgorithm(Config cfg,
   }
 }
 
-FW::ProcessCode FW::TrackFindingAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::TrackFindingAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
   // Read input data
   const auto sourceLinks =
       ctx.eventStore.get<SimSourceLinkContainer>(m_cfg.inputSourceLinks);

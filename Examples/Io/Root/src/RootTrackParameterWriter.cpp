@@ -56,7 +56,8 @@ FW::RootTrackParameterWriter::~RootTrackParameterWriter() {
   }
 }
 
-FW::ProcessCode FW::RootTrackParameterWriter::endRun() {
+FW::ProcessCode
+FW::RootTrackParameterWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -66,7 +67,8 @@ FW::ProcessCode FW::RootTrackParameterWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootTrackParameterWriter::writeT(
+FW::ProcessCode
+FW::RootTrackParameterWriter::writeT(
     const FW::AlgorithmContext& ctx,
     const std::vector<BoundTrackParameters>& trackParams) {
   if (m_outputFile == nullptr)

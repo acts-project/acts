@@ -58,9 +58,10 @@ class CsvPlanarClusterWriter final
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<Acts::PlanarModuleCluster>&
-                         clusters) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters)
+      final override;
 
  private:
   Config m_cfg;

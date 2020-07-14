@@ -35,8 +35,8 @@ struct EventDataView {
   /// Helper to find the egen values and corr angle
   ///
   /// @param covariance The covariance matrix
-  static inline std::array<double, 3> decomposeCovariance(
-      const ActsSymMatrixD<2>& covariance) {
+  static inline std::array<double, 3>
+  decomposeCovariance(const ActsSymMatrixD<2>& covariance) {
     double c00 = covariance(eLOC_0, eLOC_0);
     double c01 = covariance(eLOC_0, eLOC_1);
     double c11 = covariance(eLOC_1, eLOC_1);
@@ -61,10 +61,10 @@ struct EventDataView {
   /// @param offset The out of plane offset for visibility
   /// @param lposition The local anker point of the ellipse
   /// @param transform The transform to global
-  static inline std::vector<Vector3D> createEllipse(
-      double lambda0, double lambda1, double theta, size_t lseg, double offset,
-      const Vector2D& lposition = Vector2D(0., 0.),
-      const Transform3D& transform = Transform3D::Identity()) {
+  static inline std::vector<Vector3D>
+  createEllipse(double lambda0, double lambda1, double theta, size_t lseg,
+                double offset, const Vector2D& lposition = Vector2D(0., 0.),
+                const Transform3D& transform = Transform3D::Identity()) {
     double ctheta = std::cos(theta);
     double stheta = std::sin(theta);
 
@@ -94,10 +94,12 @@ struct EventDataView {
   /// @param transform The reference Frame transform
   /// @param locErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
-  static void drawCovarianceCartesian(
-      IVisualization& helper, const Vector2D& lposition,
-      const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
-      double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
+  static void
+  drawCovarianceCartesian(IVisualization& helper, const Vector2D& lposition,
+                          const ActsSymMatrixD<2>& covariance,
+                          const Transform3D& transform,
+                          double locErrorScale = 1,
+                          const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
   ///
@@ -108,11 +110,12 @@ struct EventDataView {
   /// @param directionScale The direction arror length
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
-  static void drawCovarianceAngular(
-      IVisualization& helper, const Vector3D& position,
-      const Vector3D& direction, const ActsSymMatrixD<2>& covariance,
-      double directionScale = 1, double angularErrorScale = 1,
-      const ViewConfig& viewConfig = s_viewParameter);
+  static void
+  drawCovarianceAngular(IVisualization& helper, const Vector3D& position,
+                        const Vector3D& direction,
+                        const ActsSymMatrixD<2>& covariance,
+                        double directionScale = 1, double angularErrorScale = 1,
+                        const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw bound parameters object
   ///
@@ -126,14 +129,14 @@ struct EventDataView {
   /// @param covConfig The visualization option for the covariance
   /// @param surfConfig The visualization option for the surface
   template <typename parameters_t>
-  static inline void drawBoundParameters(
-      IVisualization& helper, const parameters_t& parameters,
-      const GeometryContext& gctx = GeometryContext(),
-      double momentumScale = 1., double locErrorScale = 1.,
-      double angularErrorScale = 1.,
-      const ViewConfig& parConfig = s_viewParameter,
-      const ViewConfig& covConfig = s_viewParameter,
-      const ViewConfig& surfConfig = s_viewSensitive) {
+  static inline void
+  drawBoundParameters(IVisualization& helper, const parameters_t& parameters,
+                      const GeometryContext& gctx = GeometryContext(),
+                      double momentumScale = 1., double locErrorScale = 1.,
+                      double angularErrorScale = 1.,
+                      const ViewConfig& parConfig = s_viewParameter,
+                      const ViewConfig& covConfig = s_viewParameter,
+                      const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
       GeometryView::drawSurface(helper, parameters.referenceSurface(), gctx,
                                 Transform3D::Identity(), surfConfig);
@@ -191,17 +194,18 @@ struct EventDataView {
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
   template <typename source_link_t>
-  static inline void drawMultiTrajectory(
-      IVisualization& helper,
-      const Acts::MultiTrajectory<source_link_t>& multiTraj,
-      const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
-      double momentumScale = 1., double locErrorScale = 1.,
-      double angularErrorScale = 1.,
-      const ViewConfig& surfaceConfig = s_viewSensitive,
-      const ViewConfig& measurementConfig = s_viewMeasurement,
-      const ViewConfig& predictedConfig = s_viewPredicted,
-      const ViewConfig& filteredConfig = s_viewFiltered,
-      const ViewConfig& smoothedConfig = s_viewSmoothed) {
+  static inline void
+  drawMultiTrajectory(IVisualization& helper,
+                      const Acts::MultiTrajectory<source_link_t>& multiTraj,
+                      const size_t& entryIndex,
+                      const GeometryContext& gctx = GeometryContext(),
+                      double momentumScale = 1., double locErrorScale = 1.,
+                      double angularErrorScale = 1.,
+                      const ViewConfig& surfaceConfig = s_viewSensitive,
+                      const ViewConfig& measurementConfig = s_viewMeasurement,
+                      const ViewConfig& predictedConfig = s_viewPredicted,
+                      const ViewConfig& filteredConfig = s_viewFiltered,
+                      const ViewConfig& smoothedConfig = s_viewSmoothed) {
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states

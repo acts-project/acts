@@ -118,32 +118,39 @@ class TGeoLayerBuilder : public ILayerBuilder {
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector negativeLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the central layers
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector centralLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the layers at negative side
   ///
   /// @param gctx the geometry context for this build call
   ///
-  const LayerVector positiveLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
-  const std::string& identification() const final;
+  const std::string&
+  identification() const final;
 
   /// Set the configuration object
   /// @param config is the configuration struct
-  void setConfiguration(const Config& config);
+  void
+  setConfiguration(const Config& config);
 
   /// Get the configuration object
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// Set logging instance
-  void setLogger(std::unique_ptr<const Logger> newLogger);
+  void
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
   const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
@@ -157,7 +164,10 @@ class TGeoLayerBuilder : public ILayerBuilder {
   std::array<std::string, 3> m_layerTypes = {"Negative", "Central", "Positive"};
 
   /// Private access to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -170,17 +180,19 @@ class TGeoLayerBuilder : public ILayerBuilder {
   /// @param gcts the geometry context of this call
   /// @param layers is goint to be filled
   /// @param type is the indication which ones to build -1 | 0 | 1
-  void buildLayers(const GeometryContext& gctx, LayerVector& layers,
-                   int type = 0);
+  void
+  buildLayers(const GeometryContext& gctx, LayerVector& layers, int type = 0);
 
   /// Private helper method : register splitting input
-  void registerSplit(std::vector<double>& parameters, double test,
-                     double tolerance, std::pair<double, double>& range) const;
+  void
+  registerSplit(std::vector<double>& parameters, double test, double tolerance,
+                std::pair<double, double>& range) const;
 };
 
-inline void TGeoLayerBuilder::registerSplit(
-    std::vector<double>& parameters, double test, double tolerance,
-    std::pair<double, double>& range) const {
+inline void
+TGeoLayerBuilder::registerSplit(std::vector<double>& parameters, double test,
+                                double tolerance,
+                                std::pair<double, double>& range) const {
   bool found = false;
   // min/max setting
   range.first = std::min(range.first, test);
@@ -196,7 +208,8 @@ inline void TGeoLayerBuilder::registerSplit(
   }
 }
 
-inline TGeoLayerBuilder::Config TGeoLayerBuilder::getConfiguration() const {
+inline TGeoLayerBuilder::Config
+TGeoLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 
@@ -205,7 +218,8 @@ TGeoLayerBuilder::detectorElements() const {
   return m_elementStore;
 }
 
-inline const std::string& TGeoLayerBuilder::identification() const {
+inline const std::string&
+TGeoLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 

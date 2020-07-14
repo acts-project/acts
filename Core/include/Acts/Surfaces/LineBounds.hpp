@@ -43,12 +43,14 @@ class LineBounds : public SurfaceBounds {
 
   ~LineBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -58,40 +60,48 @@ class LineBounds : public SurfaceBounds {
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   ///
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   std::array<double, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> LineBounds::values() const {
+inline std::vector<double>
+LineBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void LineBounds::checkConsistency() noexcept(false) {
+inline void
+LineBounds::checkConsistency() noexcept(false) {
   if (get(eR) < 0.) {
     throw std::invalid_argument("LineBounds: zero radius.");
   }

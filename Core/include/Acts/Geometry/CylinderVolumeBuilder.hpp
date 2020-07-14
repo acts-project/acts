@@ -62,7 +62,8 @@ struct VolumeConfig {
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void adaptZ(const VolumeConfig& lConfig) {
+  void
+  adaptZ(const VolumeConfig& lConfig) {
     if (lConfig) {
       zMin = std::min(zMin, lConfig.zMin);
       zMax = std::max(zMax, lConfig.zMax);
@@ -73,7 +74,8 @@ struct VolumeConfig {
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void adaptR(const VolumeConfig& lConfig) {
+  void
+  adaptR(const VolumeConfig& lConfig) {
     if (lConfig) {
       rMin = std::min(rMin, lConfig.rMin);
       rMax = std::max(rMax, lConfig.rMax);
@@ -84,7 +86,8 @@ struct VolumeConfig {
   /// it will take the maximum/minimum values and just overwrite them
   ///
   /// @param [in] lConfig is the config to which it should be adapded
-  void adapt(const VolumeConfig& lConfig) {
+  void
+  adapt(const VolumeConfig& lConfig) {
     adaptZ(lConfig);
     adaptR(lConfig);
   }
@@ -95,7 +98,8 @@ struct VolumeConfig {
   ///
   /// @param [in] lConfig is the config to which it should be attached
   /// @note lConfig will be changed
-  void midPointAttachZ(VolumeConfig& lConfig) {
+  void
+  midPointAttachZ(VolumeConfig& lConfig) {
     if (lConfig.zMin >= zMax) {
       double zMid = 0.5 * (lConfig.zMin + zMax);
       lConfig.zMin = zMid;
@@ -111,7 +115,8 @@ struct VolumeConfig {
   /// it attaches the one volume config to the other one
   ///
   /// @param [in] lConfig is the confit to which it should be attached
-  void attachZ(const VolumeConfig& lConfig) {
+  void
+  attachZ(const VolumeConfig& lConfig) {
     if (lConfig.zMin >= zMax) {
       zMax = lConfig.zMin;
     } else {
@@ -123,7 +128,8 @@ struct VolumeConfig {
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the overlap in r exists
-  bool overlapsInR(const VolumeConfig& vConfig) const {
+  bool
+  overlapsInR(const VolumeConfig& vConfig) const {
     if (!present) {
       return false;
     }
@@ -134,7 +140,8 @@ struct VolumeConfig {
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the overlap in z exists
-  bool overlapsInZ(const VolumeConfig& vConfig) const {
+  bool
+  overlapsInZ(const VolumeConfig& vConfig) const {
     if (!present) {
       return false;
     }
@@ -145,7 +152,8 @@ struct VolumeConfig {
   ///
   /// @param [in] vConfig is the config against which is checked
   /// @return boolean if the current volume wraps the vConfig fully
-  bool wraps(const VolumeConfig& vConfig) const {
+  bool
+  wraps(const VolumeConfig& vConfig) const {
     if ((zMax <= vConfig.zMin) || (zMin >= vConfig.zMax)) {
       return true;
     }
@@ -155,26 +163,30 @@ struct VolumeConfig {
   /// Check if contained full set
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool contains(const VolumeConfig& vConfig) const {
+  bool
+  contains(const VolumeConfig& vConfig) const {
     return (containsInR(vConfig) && containsInZ(vConfig));
   }
 
   /// Check if contained radially
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool containsInR(const VolumeConfig& vConfig) const {
+  bool
+  containsInR(const VolumeConfig& vConfig) const {
     return (rMin >= vConfig.rMax);
   }
 
   /// Check if contained longitudinally
   ///
   /// @param [in] vConfig is the config against which is checked
-  bool containsInZ(const VolumeConfig& vConfig) const {
+  bool
+  containsInZ(const VolumeConfig& vConfig) const {
     return (vConfig.zMin > zMin && vConfig.zMax < zMax);
   }
 
   /// Method for output formatting
-  std::string toString() const {
+  std::string
+  toString() const {
     /// for screen output
     std::stringstream sl;
     sl << rMin << ", " << rMax << " / " << zMin << ", " << zMax;
@@ -213,7 +225,8 @@ struct WrappingConfig {
   WrappingConfig() = default;
 
   /// configure the new Volume
-  void configureContainerVolume() {
+  void
+  configureContainerVolume() {
     // set the container to be present
     containerVolumeConfig.present = true;
     std::string wConditionAddon = "";
@@ -258,7 +271,8 @@ struct WrappingConfig {
   }
 
   /// wrap, insert, attach
-  void wrapInsertAttach() {
+  void
+  wrapInsertAttach() {
     // action is only needed if an existing volume
     // is present
     if (existingVolumeConfig) {
@@ -398,7 +412,8 @@ struct WrappingConfig {
   }
 
   /// Method for output formatting
-  std::string toString() const {
+  std::string
+  toString() const {
     // for screen output
     std::stringstream sl;
     if (containerVolumeConfig) {
@@ -515,24 +530,28 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @return a mutable pointer to a new TrackingVolume which includes the
   ///         optionally provided exisitingVolume consistently for further
   ///         processing
-  MutableTrackingVolumePtr trackingVolume(
-      const GeometryContext& gctx, TrackingVolumePtr existingVolume = nullptr,
-      VolumeBoundsPtr externalBounds = nullptr) const override;
+  MutableTrackingVolumePtr
+  trackingVolume(const GeometryContext& gctx,
+                 TrackingVolumePtr existingVolume = nullptr,
+                 VolumeBoundsPtr externalBounds = nullptr) const override;
 
   /// Set configuration method
   ///
   /// @param [in] cvbConfig is the new configuration to be set
-  void setConfiguration(const Config& cvbConfig);
+  void
+  setConfiguration(const Config& cvbConfig);
 
   /// Get configuration method
   ///
   /// @return a copy of the config object
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// set logging instance
   ///
   /// @param [in] newLogger is the logging istance to be set
-  void setLogger(std::unique_ptr<const Logger> newLogger);
+  void
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Analyze the config to gather needed dimension
   ///
@@ -540,9 +559,9 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] lVector is the vector of layers that are parsed
   ///
   /// @return a VolumeConfig representing this layer
-  VolumeConfig analyzeContent(
-      const GeometryContext& gctx, const LayerVector& lVector,
-      const MutableTrackingVolumeVector& mtvVector) const;
+  VolumeConfig
+  analyzeContent(const GeometryContext& gctx, const LayerVector& lVector,
+                 const MutableTrackingVolumeVector& mtvVector) const;
 
  private:
   /// Configuration struct
@@ -551,7 +570,10 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// Private access to the logger
   ///
   /// @return a const reference to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -568,15 +590,15 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] sign distinguishes inside/outside testing
   ///
   /// @return boolean that indicates the test result
-  bool checkLayerContainment(const GeometryContext& gctx,
-                             VolumeConfig& layerConfig,
-                             const VolumeConfig& insideConfig,
-                             const VolumeConfig& volumeConfig, int sign) const;
+  bool
+  checkLayerContainment(const GeometryContext& gctx, VolumeConfig& layerConfig,
+                        const VolumeConfig& insideConfig,
+                        const VolumeConfig& volumeConfig, int sign) const;
 };
 
 /// Return the configuration object
-inline CylinderVolumeBuilder::Config CylinderVolumeBuilder::getConfiguration()
-    const {
+inline CylinderVolumeBuilder::Config
+CylinderVolumeBuilder::getConfiguration() const {
   return m_cfg;
 }
 

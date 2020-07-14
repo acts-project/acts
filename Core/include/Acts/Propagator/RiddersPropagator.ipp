@@ -8,7 +8,8 @@
 
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
-auto Acts::RiddersPropagator<propagator_t>::propagate(
+auto
+Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         CurvilinearParameters,
@@ -58,7 +59,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
-auto Acts::RiddersPropagator<propagator_t>::propagate(
+auto
+Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
@@ -128,7 +130,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 }
 
 template <typename propagator_t>
-bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
+bool
+Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
     const std::vector<Acts::BoundVector>& derivatives) const {
   // Test each component with each other
   for (unsigned int i = 0; i < derivatives.size(); i++) {
@@ -225,7 +228,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 }
 
 template <typename propagator_t>
-auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
+auto
+Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::array<std::vector<Acts::BoundVector>,
                      Acts::eBoundParametersSize>& derivatives,
     const Acts::BoundSymMatrix& startCov,
@@ -242,7 +246,8 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
 }
 
 template <typename propagator_t>
-Acts::BoundVector Acts::RiddersPropagator<propagator_t>::fitLinear(
+Acts::BoundVector
+Acts::RiddersPropagator<propagator_t>::fitLinear(
     const std::vector<Acts::BoundVector>& values,
     const std::vector<double>& deviations) const {
   BoundVector A;

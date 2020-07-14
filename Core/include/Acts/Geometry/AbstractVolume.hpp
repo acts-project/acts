@@ -55,16 +55,19 @@ class AbstractVolume : public Volume {
   ~AbstractVolume() override;
 
   /// Assignment operator - deleted
-  AbstractVolume& operator=(const AbstractVolume& vol) = delete;
+  AbstractVolume&
+  operator=(const AbstractVolume& vol) = delete;
 
   /// Method to return the BoundarySurfaces
   ///
   /// @return the vector of boundary surfaces
-  const std::vector<BoundarySurfacePtr>& boundarySurfaces() const;
+  const std::vector<BoundarySurfacePtr>&
+  boundarySurfaces() const;
 
  private:
   /// Private method to create BoundarySurfaces
-  void createBoundarySurfaces();
+  void
+  createBoundarySurfaces();
 
   /// boundary Surfaces for this volume
   std::vector<BoundarySurfacePtr> m_boundarySurfaces;

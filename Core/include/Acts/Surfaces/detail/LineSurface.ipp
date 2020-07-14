@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline void LineSurface::localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lposition,
-                                       const Vector3D& momentum,
-                                       Vector3D& position) const {
+inline void
+LineSurface::localToGlobal(const GeometryContext& gctx,
+                           const Vector2D& lposition, const Vector3D& momentum,
+                           Vector3D& position) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -22,10 +22,10 @@ inline void LineSurface::localToGlobal(const GeometryContext& gctx,
                       lposition[eLOC_R] * radiusAxisGlobal.normalized());
 }
 
-inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
-                                       const Vector3D& position,
-                                       const Vector3D& momentum,
-                                       Vector2D& lposition) const {
+inline bool
+LineSurface::globalToLocal(const GeometryContext& gctx,
+                           const Vector3D& position, const Vector3D& momentum,
+                           Vector2D& lposition) const {
   using VectorHelpers::perp;
 
   const auto& sTransform = transform(gctx);
@@ -43,13 +43,15 @@ inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
   return true;
 }
 
-inline std::string LineSurface::name() const {
+inline std::string
+LineSurface::name() const {
   return "Acts::LineSurface";
 }
 
-inline const RotationMatrix3D LineSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3D& /*unused*/,
-    const Vector3D& momentum) const {
+inline const RotationMatrix3D
+LineSurface::referenceFrame(const GeometryContext& gctx,
+                            const Vector3D& /*unused*/,
+                            const Vector3D& momentum) const {
   RotationMatrix3D mFrame;
   const auto& tMatrix = transform(gctx).matrix();
   Vector3D measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -63,33 +65,39 @@ inline const RotationMatrix3D LineSurface::referenceFrame(
   return mFrame;
 }
 
-inline double LineSurface::pathCorrection(const GeometryContext& /*unused*/,
-                                          const Vector3D& /*pos*/,
-                                          const Vector3D& /*mom*/) const {
+inline double
+LineSurface::pathCorrection(const GeometryContext& /*unused*/,
+                            const Vector3D& /*pos*/,
+                            const Vector3D& /*mom*/) const {
   return 1.;
 }
 
-inline const Vector3D LineSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+inline const Vector3D
+LineSurface::binningPosition(const GeometryContext& gctx,
+                             BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline const Vector3D LineSurface::normal(const GeometryContext& gctx,
-                                          const Vector2D& /*lpos*/) const {
+inline const Vector3D
+LineSurface::normal(const GeometryContext& gctx,
+                    const Vector2D& /*lpos*/) const {
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const SurfaceBounds& LineSurface::bounds() const {
+inline const SurfaceBounds&
+LineSurface::bounds() const {
   if (m_bounds) {
     return (*m_bounds.get());
   }
   return s_noBounds;
 }
 
-inline Intersection LineSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline Intersection
+LineSurface::intersectionEstimate(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& direction,
+                                  const BoundaryCheck& bcheck) const {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   const Vector3D& ma = position;
@@ -131,11 +139,12 @@ inline Intersection LineSurface::intersectionEstimate(
   return Intersection(position, std::numeric_limits<double>::max(), status);
 }
 
-inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
-                                              BoundToFreeMatrix& jacobian,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
-                                              const BoundVector& pars) const {
+inline void
+LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
+                                  BoundToFreeMatrix& jacobian,
+                                  const Vector3D& position,
+                                  const Vector3D& direction,
+                                  const BoundVector& pars) const {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -182,10 +191,12 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
 }
 
-inline const BoundRowVector LineSurface::derivativeFactors(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const RotationMatrix3D& rft,
-    const BoundToFreeMatrix& jacobian) const {
+inline const BoundRowVector
+LineSurface::derivativeFactors(const GeometryContext& gctx,
+                               const Vector3D& position,
+                               const Vector3D& direction,
+                               const RotationMatrix3D& rft,
+                               const BoundToFreeMatrix& jacobian) const {
   // the vector between position and center
   ActsRowVectorD<3> pc = (position - center(gctx)).transpose();
   // the longitudinal component vector (alogn local z)
@@ -211,9 +222,11 @@ inline const BoundRowVector LineSurface::derivativeFactors(
                          jacobian.block<3, eBoundParametersSize>(4, 0))));
 }
 
-inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-    const Vector3D& position, const Vector3D& direction) const {
+inline const AlignmentRowVector
+LineSurface::alignmentToPathDerivative(const GeometryContext& gctx,
+                                       const RotationMatrix3D& rotToLocalZAxis,
+                                       const Vector3D& position,
+                                       const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();

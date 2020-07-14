@@ -88,35 +88,42 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at negative side
-  const LayerVector negativeLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return the layers at the central sector
-  const LayerVector centralLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers at positive side
-  const LayerVector positiveLayers(const GeometryContext& gctx) const final;
+  const LayerVector
+  positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
   /// @return the string based identification of this configuration
-  const std::string& identification() const final;
+  const std::string&
+  identification() const final;
 
   /// set the configuration object
   /// @param config is the configuration struct
-  void setConfiguration(const Config& config);
+  void
+  setConfiguration(const Config& config);
 
   /// get the configuration object
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// set logging instance
-  void setLogger(std::unique_ptr<const Logger> logger);
+  void
+  setLogger(std::unique_ptr<const Logger> logger);
 
  private:
   /// configruation object
@@ -126,17 +133,20 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// Private helper method to be called for endcap layers
   ///
   /// @param gctx the geometry context for this build call
   ///
   /// @return  the layers for either endcap side
-  const LayerVector endcapLayers(
-      const GeometryContext& gctx,
-      const std::vector<dd4hep::DetElement>& dendcapLayers,
-      const std::string& side) const;
+  const LayerVector
+  endcapLayers(const GeometryContext& gctx,
+               const std::vector<dd4hep::DetElement>& dendcapLayers,
+               const std::string& side) const;
 
   /// Private helper function collecting all sensitive detector elements of a
   /// layer
@@ -144,7 +154,8 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// @param detElement the DD4hep::DetElement of the layer
   /// @param surfaces the vector of surfaces which should be filled with the
   /// sensitive detector elements
-  void resolveSensitive(
+  void
+  resolveSensitive(
       const dd4hep::DetElement& detElement,
       std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) const;
 
@@ -154,21 +165,24 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   /// created
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  std::shared_ptr<const Acts::Surface> createSensitiveSurface(
-      const dd4hep::DetElement& detElement, bool isDisc = false) const;
+  std::shared_ptr<const Acts::Surface>
+  createSensitiveSurface(const dd4hep::DetElement& detElement,
+                         bool isDisc = false) const;
 
   // Private helper function to convert the TGeo transformation matrix into
   // an Acts transformation matrix
   // @param tGeoTrans TGeo transformation matrix which should be converted
-  std::shared_ptr<const Acts::Transform3D> convertTransform(
-      const TGeoMatrix* tGeoTrans) const;
+  std::shared_ptr<const Acts::Transform3D>
+  convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 
-inline const std::string& DD4hepLayerBuilder::identification() const {
+inline const std::string&
+DD4hepLayerBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
-inline DD4hepLayerBuilder::Config DD4hepLayerBuilder::getConfiguration() const {
+inline DD4hepLayerBuilder::Config
+DD4hepLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 

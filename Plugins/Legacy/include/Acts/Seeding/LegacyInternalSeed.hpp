@@ -28,20 +28,39 @@ class InternalSeed {
                SPForSeed<SpacePoint>*&, float);
   InternalSeed(const InternalSeed<SpacePoint>&);
   virtual ~InternalSeed();
-  InternalSeed<SpacePoint>& operator=(const InternalSeed<SpacePoint>&);
+  InternalSeed<SpacePoint>&
+  operator=(const InternalSeed<SpacePoint>&);
 
-  SPForSeed<SpacePoint>* spacepoint0() { return m_s0; }
-  SPForSeed<SpacePoint>* spacepoint1() { return m_s1; }
-  SPForSeed<SpacePoint>* spacepoint2() { return m_s2; }
-  const float& z() const { return m_z; }
-  const float& quality() const { return m_q; }
+  SPForSeed<SpacePoint>*
+  spacepoint0() {
+    return m_s0;
+  }
+  SPForSeed<SpacePoint>*
+  spacepoint1() {
+    return m_s1;
+  }
+  SPForSeed<SpacePoint>*
+  spacepoint2() {
+    return m_s2;
+  }
+  const float&
+  z() const {
+    return m_z;
+  }
+  const float&
+  quality() const {
+    return m_q;
+  }
 
-  void set(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
-           SPForSeed<SpacePoint>*&, float);
+  void
+  set(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
+      float);
 
-  bool setQuality(float);
+  bool
+  setQuality(float);
 
-  bool set3(Acts::Legacy::Seed<SpacePoint>&);
+  bool
+  set3(Acts::Legacy::Seed<SpacePoint>&);
 
  protected:
   SPForSeed<SpacePoint>* m_s0;
@@ -65,8 +84,8 @@ inline InternalSeed<SpacePoint>::InternalSeed() {
 }
 
 template <typename SpacePoint>
-inline InternalSeed<SpacePoint>& InternalSeed<SpacePoint>::operator=(
-    const InternalSeed& sp) {
+inline InternalSeed<SpacePoint>&
+InternalSeed<SpacePoint>::operator=(const InternalSeed& sp) {
   if (&sp != this) {
     m_z = sp.m_z;
     m_q = sp.m_q;
@@ -108,9 +127,10 @@ inline InternalSeed<SpacePoint>::~InternalSeed() {}
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline void InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
-                                          SPForSeed<SpacePoint>*& s1,
-                                          SPForSeed<SpacePoint>*& s2, float z) {
+inline void
+InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
+                              SPForSeed<SpacePoint>*& s1,
+                              SPForSeed<SpacePoint>*& s2, float z) {
   m_z = z;
   m_s0 = s0;
   m_s1 = s1;
@@ -122,7 +142,8 @@ inline void InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline bool InternalSeed<SpacePoint>::set3(Acts::Legacy::Seed<SpacePoint>& s) {
+inline bool
+InternalSeed<SpacePoint>::set3(Acts::Legacy::Seed<SpacePoint>& s) {
   bool pixb = !m_s0->spacepoint->clusterList().second;
   bool pixt = !m_s2->spacepoint->clusterList().second;
 
@@ -150,7 +171,8 @@ inline bool InternalSeed<SpacePoint>::set3(Acts::Legacy::Seed<SpacePoint>& s) {
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline bool InternalSeed<SpacePoint>::setQuality(float q) {
+inline bool
+InternalSeed<SpacePoint>::setQuality(float q) {
   m_q = q;
   bool pixb = !m_s0->spacepoint->clusterList().second;
   bool pixt = !m_s2->spacepoint->clusterList().second;

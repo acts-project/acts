@@ -27,9 +27,13 @@ namespace detail {
 class KalmanFitterErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "KalmanFitterError"; }
+  const char*
+  name() const noexcept final {
+    return "KalmanFitterError";
+  }
   // Return what each enum means in text
-  std::string message(int c) const final {
+  std::string
+  message(int c) const final {
     switch (static_cast<KalmanFitterError>(c)) {
       case KalmanFitterError::ForwardUpdateFailed:
         return "Kalman forward update failed";
@@ -55,7 +59,8 @@ KalmanFitterErrorCategory() {
   return c;
 }
 
-inline std::error_code make_error_code(Acts::KalmanFitterError e) {
+inline std::error_code
+make_error_code(Acts::KalmanFitterError e) {
   return {static_cast<int>(e), Acts::KalmanFitterErrorCategory()};
 }
 }  // namespace Acts

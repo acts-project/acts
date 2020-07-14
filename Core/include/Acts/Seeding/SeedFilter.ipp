@@ -102,7 +102,8 @@ SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
 // after creating all seeds with a common middle space point, filter again
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+void
+SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         seedsPerSpM,

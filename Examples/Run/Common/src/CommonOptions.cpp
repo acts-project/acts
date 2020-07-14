@@ -15,8 +15,8 @@
 
 using namespace boost::program_options;
 
-boost::program_options::options_description FW::Options::makeDefaultOptions(
-    std::string caption) {
+boost::program_options::options_description
+FW::Options::makeDefaultOptions(std::string caption) {
   options_description opt(caption);
 
   opt.add_options()("help,h", "Produce help message");
@@ -31,7 +31,8 @@ boost::program_options::options_description FW::Options::makeDefaultOptions(
   return opt;
 }
 
-void FW::Options::addSequencerOptions(
+void
+FW::Options::addSequencerOptions(
     boost::program_options::options_description& opt) {
   // sequencer options
   opt.add_options()("events,n", value<size_t>(),
@@ -43,13 +44,15 @@ void FW::Options::addSequencerOptions(
       "Number of parallel jobs, negative for automatic.");
 }
 
-void FW::Options::addRandomNumbersOptions(
+void
+FW::Options::addRandomNumbersOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()("rnd-seed", value<uint64_t>()->default_value(1234567890u),
                     "Random numbers seed.");
 }
 
-void FW::Options::addGeometryOptions(
+void
+FW::Options::addGeometryOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
@@ -61,7 +64,8 @@ void FW::Options::addGeometryOptions(
       "Sub detectors for the output writing");
 }
 
-void FW::Options::addMaterialOptions(
+void
+FW::Options::addMaterialOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()(
       "mat-input-type", value<std::string>()->default_value("build"),
@@ -88,7 +92,8 @@ void FW::Options::addMaterialOptions(
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
 
-void FW::Options::addOutputOptions(
+void
+FW::Options::addOutputOptions(
     boost::program_options::options_description& opt) {
   // Add specific options for this example
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
@@ -105,8 +110,8 @@ void FW::Options::addOutputOptions(
       "Switch on to write '.txt' ouput file(s).");
 }
 
-void FW::Options::addInputOptions(
-    boost::program_options::options_description& opt) {
+void
+FW::Options::addInputOptions(boost::program_options::options_description& opt) {
   // Add specific options for this example
   opt.add_options()("input-dir", value<std::string>()->default_value(""),
                     "Input directory location.")(
@@ -122,9 +127,9 @@ void FW::Options::addInputOptions(
       "Switch on to read '.json' file(s).");
 }
 
-boost::program_options::variables_map FW::Options::parse(
-    const boost::program_options::options_description& opt, int argc,
-    char* argv[]) noexcept(false) {
+boost::program_options::variables_map
+FW::Options::parse(const boost::program_options::options_description& opt,
+                   int argc, char* argv[]) noexcept(false) {
   variables_map vm;
   store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);
@@ -163,12 +168,13 @@ boost::program_options::variables_map FW::Options::parse(
   return vm;
 }
 
-Acts::Logging::Level FW::Options::readLogLevel(
-    const boost::program_options::variables_map& vm) {
+Acts::Logging::Level
+FW::Options::readLogLevel(const boost::program_options::variables_map& vm) {
   return Acts::Logging::Level(vm["loglevel"].as<size_t>());
 }
 
-FW::Sequencer::Config FW::Options::readSequencerConfig(
+FW::Sequencer::Config
+FW::Options::readSequencerConfig(
     const boost::program_options::variables_map& vm) {
   Sequencer::Config cfg;
   cfg.skip = vm["skip"].as<size_t>();
@@ -184,7 +190,8 @@ FW::Sequencer::Config FW::Options::readSequencerConfig(
 }
 
 // Read the random numbers config.
-FW::RandomNumbers::Config FW::Options::readRandomNumbersConfig(
+FW::RandomNumbers::Config
+FW::Options::readRandomNumbersConfig(
     const boost::program_options::variables_map& vm) {
   FW::RandomNumbers::Config cfg;
   cfg.seed = vm["rnd-seed"].as<uint64_t>();

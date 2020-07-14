@@ -12,7 +12,8 @@
 
 namespace ActsFatras {
 
-std::ostream &operator<<(std::ostream &os, ProcessType processType) {
+std::ostream &
+operator<<(std::ostream &os, ProcessType processType) {
   os << static_cast<uint32_t>(processType);
   return os;
 }

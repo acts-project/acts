@@ -106,7 +106,8 @@ FW::RootVertexAndTracksWriter::~RootVertexAndTracksWriter() {
   }
 }
 
-FW::ProcessCode FW::RootVertexAndTracksWriter::endRun() {
+FW::ProcessCode
+FW::RootVertexAndTracksWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -116,7 +117,8 @@ FW::ProcessCode FW::RootVertexAndTracksWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-void FW::RootVertexAndTracksWriter::ClearAll() {
+void
+FW::RootVertexAndTracksWriter::ClearAll() {
   m_vx.clear();
   m_vy.clear();
   m_vz.clear();
@@ -171,7 +173,8 @@ void FW::RootVertexAndTracksWriter::ClearAll() {
   m_cov66.clear();
 }
 
-FW::ProcessCode FW::RootVertexAndTracksWriter::writeT(
+FW::ProcessCode
+FW::RootVertexAndTracksWriter::writeT(
     const AlgorithmContext& context,
     const std::vector<VertexAndTracks>& vertexAndTracksCollection) {
   if (m_outputFile == nullptr || vertexAndTracksCollection.empty()) {

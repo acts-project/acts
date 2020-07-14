@@ -44,35 +44,39 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Assignment operator
   ///
   /// @param hvm is the source material
-  HomogeneousVolumeMaterial& operator=(const HomogeneousVolumeMaterial& hvm) =
-      default;
+  HomogeneousVolumeMaterial&
+  operator=(const HomogeneousVolumeMaterial& hvm) = default;
 
   /// Equality operator
   ///
   /// @param hvm is the source material
-  bool operator==(const HomogeneousVolumeMaterial& hvm) const;
+  bool
+  operator==(const HomogeneousVolumeMaterial& hvm) const;
 
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  const Material material(const Vector3D& /*position*/) const final;
+  const Material
+  material(const Vector3D& /*position*/) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
  private:
   Material m_material = Material();
 };
 
-inline const Material HomogeneousVolumeMaterial::material(
-    const Vector3D& /*position*/) const {
+inline const Material
+HomogeneousVolumeMaterial::material(const Vector3D& /*position*/) const {
   return (m_material);
 }
 
-inline bool HomogeneousVolumeMaterial::operator==(
+inline bool
+HomogeneousVolumeMaterial::operator==(
     const HomogeneousVolumeMaterial& hvm) const {
   return (m_material == hvm.m_material);
 }

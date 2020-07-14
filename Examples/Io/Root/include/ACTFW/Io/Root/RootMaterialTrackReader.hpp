@@ -61,19 +61,25 @@ class RootMaterialTrackReader : public IReader {
   ~RootMaterialTrackReader();
 
   /// Framework name() method
-  std::string name() const final override;
+  std::string
+  name() const final override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t>
+  availableEvents() const final override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const FW::AlgorithmContext& context) final override;
+  ProcessCode
+  read(const FW::AlgorithmContext& context) final override;
 
  private:
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 
   /// The config class
   Config m_cfg;

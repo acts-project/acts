@@ -16,8 +16,8 @@ namespace {
 static constexpr char s_rangeSeparator = ':';
 }
 
-std::istream& FW::Options::operator>>(std::istream& is,
-                                      FW::Options::Interval& interval) {
+std::istream&
+FW::Options::operator>>(std::istream& is, FW::Options::Interval& interval) {
   std::string buf;
   is >> buf;
 
@@ -46,8 +46,9 @@ std::istream& FW::Options::operator>>(std::istream& is,
   return is;
 }
 
-std::ostream& FW::Options::operator<<(std::ostream& os,
-                                      const FW::Options::Interval& interval) {
+std::ostream&
+FW::Options::operator<<(std::ostream& os,
+                        const FW::Options::Interval& interval) {
   if (not interval.lower.has_value() and not interval.upper.has_value()) {
     os << "unbounded";
   } else {
@@ -62,16 +63,18 @@ std::ostream& FW::Options::operator<<(std::ostream& os,
   return os;
 }
 
-std::istream& FW::Options::operator>>(
-    std::istream& is, std::vector<FW::Options::Interval>& intervals) {
+std::istream&
+FW::Options::operator>>(std::istream& is,
+                        std::vector<FW::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     is >> interval;
   }
   return is;
 }
 
-std::ostream& FW::Options::operator<<(
-    std::ostream& os, const std::vector<FW::Options::Interval>& intervals) {
+std::ostream&
+FW::Options::operator<<(std::ostream& os,
+                        const std::vector<FW::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     os << interval;
   }
@@ -81,8 +84,9 @@ std::ostream& FW::Options::operator<<(
 namespace {
 /// Helper function to print multiple elements in a container.
 template <typename Iterator>
-inline std::ostream& printContainer(std::ostream& os, Iterator begin,
-                                    Iterator end, const char* separator) {
+inline std::ostream&
+printContainer(std::ostream& os, Iterator begin, Iterator end,
+               const char* separator) {
   for (auto it = begin; it != end; ++it) {
     if (it != begin) {
       os << separator;
@@ -93,14 +97,17 @@ inline std::ostream& printContainer(std::ostream& os, Iterator begin,
 }
 }  // namespace
 
-std::ostream& std::operator<<(std::ostream& os, const read_series& vec) {
+std::ostream&
+std::operator<<(std::ostream& os, const read_series& vec) {
   return printContainer(os, vec.begin(), vec.end(), " ");
 }
 
-std::ostream& std::operator<<(std::ostream& os, const read_range& vec) {
+std::ostream&
+std::operator<<(std::ostream& os, const read_range& vec) {
   return printContainer(os, vec.begin(), vec.end(), " ");
 }
 
-std::ostream& std::operator<<(std::ostream& os, const read_strings& vec) {
+std::ostream&
+std::operator<<(std::ostream& os, const read_strings& vec) {
   return printContainer(os, vec.begin(), vec.end(), " ");
 }

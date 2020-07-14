@@ -34,8 +34,8 @@ namespace Test {
 /// @param triMesh ist he test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
-inline static std::vector<std::string> testObjString(const std::string& tString,
-                                                     bool triMesh = false) {
+inline static std::vector<std::string>
+testObjString(const std::string& tString, bool triMesh = false) {
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid obj : ";
 
@@ -118,8 +118,8 @@ struct PlyElement {
 /// @param triMesh ist he test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
-inline static std::vector<std::string> testPlyString(const std::string& tString,
-                                                     bool triMesh = false) {
+inline static std::vector<std::string>
+testPlyString(const std::string& tString, bool triMesh = false) {
   std::vector<std::string> errorStrings;
   const std::string w = "[ Invalid ply : ";
 

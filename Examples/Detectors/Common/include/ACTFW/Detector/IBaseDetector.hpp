@@ -34,11 +34,11 @@ class IBaseDetector {
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   virtual ~IBaseDetector() = default;
-  virtual void addOptions(
-      boost::program_options::options_description& opt) const = 0;
+  virtual void
+  addOptions(boost::program_options::options_description& opt) const = 0;
 
-  virtual std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
-      const boost::program_options::variables_map& vm,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;
+  virtual std::pair<TrackingGeometryPtr, ContextDecorators>
+  finalize(const boost::program_options::variables_map& vm,
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;
 };
 }  // namespace FW

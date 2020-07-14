@@ -27,8 +27,8 @@ FW::TrackSelector::TrackSelector(const Config& cfg, Acts::Logging::Level level)
   }
 }
 
-FW::ProcessCode FW::TrackSelector::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::TrackSelector::execute(const FW::AlgorithmContext& ctx) const {
   std::vector<VertexAndTracks> selected;
 
   // get input tracks

@@ -97,7 +97,8 @@ namespace Test {
 #ifdef __GNUC__
 
 template <typename T>
-inline void assumeAccessed(T&& clobber) {
+inline void
+assumeAccessed(T&& clobber) {
   // This optimization barrier leverages the fact that inline ASM isn't smart,
   // and couldn't get smarter as the compiler would then need to be able to
   // parse and understand the side effects of arbitrary assembly statements,
@@ -125,7 +126,8 @@ inline void assumeAccessed(T&& clobber) {
 #else
 
 template <typename T>
-void assumeAccessed(T&& clobber) {
+void
+assumeAccessed(T&& clobber) {
   // FIXME: Find a reliable optimization barrier for MSVC. As a litmus test, the
   //        assembly generated for the following code should store "42" in
   //        memory twice, not once:
@@ -148,7 +150,8 @@ void assumeAccessed(T&& clobber) {
 // Has the same caveats as assumeAccessed().
 //
 template <typename T>
-inline void assumeRead(const T& clobber) {
+inline void
+assumeRead(const T& clobber) {
   // FIXME: I don't know of a finer-grained compiler optimization barrier that
   //        1/can be used when one only wants to fake a read and 2/works for
   //        all inputs (not just machine types), so for now this function is
@@ -164,7 +167,8 @@ inline void assumeRead(const T& clobber) {
 // Has the same caveats as assumeAccessed().
 //
 template <typename T>
-inline void assumeWritten(T& clobber) {
+inline void
+assumeWritten(T& clobber) {
   // FIXME: I don't know of a finer-grained compiler optimization barrier that
   //        1/can be used when one only wants to fake a write and 2/ works for
   //        all outputs (not just machine types), so for now this
@@ -193,7 +197,8 @@ struct MicroBenchmarkResult {
   // shouldn't give much credence to benchmarks with running times smaller than
   // a few hundreds of milliseconds.
   //
-  Duration totalTime() const {
+  Duration
+  totalTime() const {
     return std::accumulate(run_timings.cbegin(), run_timings.cend(),
                            Duration());
   }
@@ -217,7 +222,8 @@ struct MicroBenchmarkResult {
   // symmetric (and therefore the median can be used as an estimator of the
   // mean), but makes no assumption about iteration time distributions.
   //
-  Duration iterTimeAverage() const {
+  Duration
+  iterTimeAverage() const {
     assert(iters_per_run > 0);
     return runTimeMedian() / iters_per_run;
   }
@@ -228,13 +234,15 @@ struct MicroBenchmarkResult {
   // the underlying `runTimeError` analysis does. It also assumes that
   // per-iteration times are independent and identically distributed.
   //
-  Duration iterTimeError() const {
+  Duration
+  iterTimeError() const {
     assert(iters_per_run > 0);
     return runTimeError() / std::sqrt(iters_per_run);
   }
 
   // Sorted benchmark run times, used for computing outlier-robust statistics
-  std::vector<Duration> sortedRunTimes() const {
+  std::vector<Duration>
+  sortedRunTimes() const {
     std::vector<Duration> sorted_timings = run_timings;
     std::sort(sorted_timings.begin(), sorted_timings.end());
     return sorted_timings;
@@ -245,7 +253,8 @@ struct MicroBenchmarkResult {
   // This is an outlier-robust estimator of the mean benchmark run time if the
   // run time distribution is roughly symmetric.
   //
-  Duration runTimeMedian() const {
+  Duration
+  runTimeMedian() const {
     assert(run_timings.size() >= 1);
     const std::vector<Duration> sorted_timings = sortedRunTimes();
     const size_t midpoint = sorted_timings.size() / 2;
@@ -257,7 +266,8 @@ struct MicroBenchmarkResult {
   }
 
   // First and third quartiles of benchmark run time timings
-  std::pair<Duration, Duration> runTimeQuartiles() const {
+  std::pair<Duration, Duration>
+  runTimeQuartiles() const {
     // Unfortunately, quartile computations on datasets whose size is not a
     // multiple of 4 are not standardized. We use an interpolation- and
     // symmetry-based definition that follows all consensual properties:
@@ -300,7 +310,8 @@ struct MicroBenchmarkResult {
   // This analysis assumes that the run timing distribution is roughly normal,
   // outlier measurements aside.
   //
-  Duration runTimeRobustStddev() const {
+  Duration
+  runTimeRobustStddev() const {
     auto [firstq, thirdq] = runTimeQuartiles();
     return (thirdq - firstq) / (2. * std::sqrt(2.) * 0.4769362762044698733814);
   }
@@ -310,7 +321,8 @@ struct MicroBenchmarkResult {
   // This analysis assumes that the run timing distribution is approximately
   // normal, a few outliers aside.
   //
-  Duration runTimeError() const {
+  Duration
+  runTimeError() const {
     return 1.2533 * runTimeRobustStddev() / std::sqrt(run_timings.size());
   }
 
@@ -323,8 +335,8 @@ struct MicroBenchmarkResult {
   // confidence interval formulation can be applied and that the median run
   // time can be used as an estimator of the mean run time.
   //
-  friend std::ostream& operator<<(std::ostream& os,
-                                  const MicroBenchmarkResult& res) {
+  friend std::ostream&
+  operator<<(std::ostream& os, const MicroBenchmarkResult& res) {
     auto old_precision = os.precision();
     auto old_flags = os.flags();
     os << std::fixed << res.run_timings.size() << " runs of "
@@ -346,7 +358,8 @@ namespace benchmark_tools_internal {
 // General iteration of microBenchmark with inputs and outputs
 template <typename Callable, typename Input, typename Result>
 struct MicroBenchmarkIterImpl {
-  static inline void iter(const Callable& iteration, const Input& input) {
+  static inline void
+  iter(const Callable& iteration, const Input& input) {
     assumeWritten(iteration);
     assumeWritten(input);
     const auto result = iteration(input);
@@ -357,7 +370,8 @@ struct MicroBenchmarkIterImpl {
 // Specialization for void(Input) functors, where there is no output
 template <typename Callable, typename Input>
 struct MicroBenchmarkIterImpl<Callable, Input, void> {
-  static inline void iter(const Callable& iteration, const Input& input) {
+  static inline void
+  iter(const Callable& iteration, const Input& input) {
     assumeWritten(iteration);
     assumeWritten(input);
     iteration(input);
@@ -367,7 +381,8 @@ struct MicroBenchmarkIterImpl<Callable, Input, void> {
 // Specialization for Result(void) functors, where there is no input
 template <typename Callable, typename Result>
 struct MicroBenchmarkIterImpl<Callable, void, Result> {
-  static inline void iter(const Callable& iteration) {
+  static inline void
+  iter(const Callable& iteration) {
     assumeWritten(iteration);
     const auto result = iteration();
     assumeRead(result);
@@ -377,7 +392,8 @@ struct MicroBenchmarkIterImpl<Callable, void, Result> {
 // Specialization for void() functors, where there is no input and no output
 template <typename Callable>
 struct MicroBenchmarkIterImpl<Callable, void, void> {
-  static inline void iter(const Callable& iteration) {
+  static inline void
+  iter(const Callable& iteration) {
     assumeWritten(iteration);
     iteration();
   }
@@ -395,7 +411,8 @@ template <typename Callable, typename Input = void>
 struct MicroBenchmarkIter {
   constexpr static bool is_callable =
       concept ::exists<call_with_input_t, Callable, Input>;
-  static inline void iter(const Callable& iteration, const Input* input) {
+  static inline void
+  iter(const Callable& iteration, const Input* input) {
     static_assert(is_callable, "Gave callable that is not callable with input");
     if constexpr (is_callable) {
       using Result = std::invoke_result_t<Callable, const Input&>;
@@ -411,7 +428,8 @@ struct MicroBenchmarkIter<Callable, void> {
   constexpr static bool is_callable =
       concept ::exists<call_without_input_t, Callable>;
 
-  static inline void iter(const Callable& iteration, const void* = nullptr) {
+  static inline void
+  iter(const Callable& iteration, const void* = nullptr) {
     static_assert(is_callable,
                   "Gave callable that is not callable without input");
     if constexpr (is_callable) {
@@ -423,9 +441,9 @@ struct MicroBenchmarkIter<Callable, void> {
 
 // Common logic between iteration-based and data-based microBenchmark
 template <typename Callable>
-MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
-                                        size_t num_runs,
-                                        std::chrono::milliseconds warmup_time) {
+MicroBenchmarkResult
+microBenchmarkImpl(Callable&& run, size_t iters_per_run, size_t num_runs,
+                   std::chrono::milliseconds warmup_time) {
   using Clock = std::chrono::steady_clock;
 
   MicroBenchmarkResult result;
@@ -516,7 +534,8 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //
 
 template <typename Callable>
-MicroBenchmarkResult microBenchmark(
+MicroBenchmarkResult
+microBenchmark(
     Callable&& iteration, size_t iters_per_run, size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {
   return benchmark_tools_internal::microBenchmarkImpl(
@@ -536,7 +555,8 @@ MicroBenchmarkResult microBenchmark(
 // avoid the bias of always benchmarking on the same data, but don't want to
 // "see" the cost of random number generation in your benchmark timings.
 template <typename Callable, typename Input>
-MicroBenchmarkResult microBenchmark(
+MicroBenchmarkResult
+microBenchmark(
     Callable&& iterationWithInput, const std::vector<Input>& inputs,
     size_t num_runs = 20000,
     std::chrono::milliseconds warmup_time = std::chrono::milliseconds(2000)) {

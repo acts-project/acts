@@ -17,9 +17,9 @@
 namespace det {
 namespace utils {
 
-std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
-    double halflengthX, double halflengthZ, double thickness,
-    const dd4hep::Segmentation& segmentation) {
+std::shared_ptr<const Acts::DigitizationModule>
+rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
+                      const dd4hep::Segmentation& segmentation) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
   halflengthX *= scalor;
@@ -48,9 +48,9 @@ std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
   return nullptr;
 }
 
-std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
-    double halflengthX, double halflengthZ, double thickness, double gridSizeX,
-    double gridSizeZ) {
+std::shared_ptr<const Acts::DigitizationModule>
+rectangleDigiModuleXZ(double halflengthX, double halflengthZ, double thickness,
+                      double gridSizeX, double gridSizeZ) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
   halflengthX *= scalor;
@@ -73,9 +73,10 @@ std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModuleXZ(
                                                            thickness, 1, 0));
 }
 
-std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
-    double minHalflengthX, double maxHalflengthX, double halflengthZ,
-    double thickness, const dd4hep::Segmentation& segmentation) {
+std::shared_ptr<const Acts::DigitizationModule>
+trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
+                        double halflengthZ, double thickness,
+                        const dd4hep::Segmentation& segmentation) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
   minHalflengthX *= scalor;
@@ -107,9 +108,10 @@ std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
   return nullptr;
 }
 
-std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
-    double minHalflengthX, double maxHalflengthX, double halflengthZ,
-    double thickness, double gridSizeX, double gridSizeZ) {
+std::shared_ptr<const Acts::DigitizationModule>
+trapezoidalDigiModuleXZ(double minHalflengthX, double maxHalflengthX,
+                        double halflengthZ, double thickness, double gridSizeX,
+                        double gridSizeZ) {
   // convert to ACTS units
   double scalor = Acts::units::_cm;
   minHalflengthX *= scalor;
@@ -134,10 +136,10 @@ std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
                                                            thickness, 1, 0));
 }
 
-dd4hep::xml::Component getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
-                                        const std::string& nodeName,
-                                        const std::string& attrName,
-                                        const std::string& attrValue) {
+dd4hep::xml::Component
+getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
+                 const std::string& nodeName, const std::string& attrName,
+                 const std::string& attrValue) {
   for (dd4hep::xml::Collection_t xCompColl(mother, nodeName.c_str());
        nullptr != xCompColl; ++xCompColl) {
     if (xCompColl.attr<std::string>(attrName.c_str()) == attrValue) {
@@ -148,9 +150,10 @@ dd4hep::xml::Component getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
   return dd4hep::xml::Component(nullptr);
 }
 
-double getAttrValueWithFallback(const dd4hep::xml::Component& node,
-                                const std::string& attrName,
-                                const double& defaultValue) {
+double
+getAttrValueWithFallback(const dd4hep::xml::Component& node,
+                         const std::string& attrName,
+                         const double& defaultValue) {
   if (node.hasAttr(_Unicode(attrName.c_str()))) {
     return node.attr<double>(attrName.c_str());
   } else {

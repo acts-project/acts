@@ -109,10 +109,10 @@ class ZScanVertexFinder {
   ///
   /// @return Vector of vertices, filled with a single
   ///         vertex (for consistent interfaces)
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex<InputTrack_t>>>
+  find(const std::vector<const InputTrack_t*>& trackVector,
+       const VertexingOptions<InputTrack_t>& vertexingOptions,
+       State& state) const;
 
  private:
   Config m_cfg;
@@ -128,7 +128,10 @@ class ZScanVertexFinder {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace Acts

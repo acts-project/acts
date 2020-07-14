@@ -31,7 +31,8 @@
 
 #include <cuda_profiler_api.h>
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+std::vector<const SpacePoint*>
+readFile(std::string filename) {
   std::string line;
   int layer;
   std::vector<const SpacePoint*> readSP;
@@ -71,7 +72,8 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
   return readSP;
 }
 
-int main(int argc, char** argv) {
+int
+main(int argc, char** argv) {
   auto start_pre = std::chrono::system_clock::now();
 
   std::string file{"sp.txt"};

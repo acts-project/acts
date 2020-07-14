@@ -69,7 +69,8 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
           nullptr);
 
   /// Identifier
-  Identifier identifier() const override final;
+  Identifier
+  identifier() const override final;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -77,21 +78,24 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   ///
   /// @note this is called from the surface().transform(gctx) in the PROXY
   /// mode
-  const Acts::Transform3D& transform(
-      const Acts::GeometryContext& gctx) const override;
+  const Acts::Transform3D&
+  transform(const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this identifier,
-  const Acts::Surface& surface() const final override;
+  const Acts::Surface&
+  surface() const final override;
 
   /// Set the identifier after construction (sometimes needed)
-  void assignIdentifier(const Identifier& identifier);
+  void
+  assignIdentifier(const Identifier& identifier);
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final override;
+  double
+  thickness() const final override;
 
   /// Retrieve the DigitizationModule
-  const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const final override;
+  const std::shared_ptr<const Acts::DigitizationModule>
+  digitizationModule() const final override;
 
  private:
   /// the element representation
@@ -111,26 +115,30 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       nullptr;
 };
 
-inline void FW::Generic::GenericDetectorElement::assignIdentifier(
+inline void
+FW::Generic::GenericDetectorElement::assignIdentifier(
     const Identifier& identifier) {
   m_elementIdentifier = identifier;
 }
 
-inline Identifier FW::Generic::GenericDetectorElement::identifier() const {
+inline Identifier
+FW::Generic::GenericDetectorElement::identifier() const {
   return m_elementIdentifier;
 }
 
-inline const Acts::Transform3D& FW::Generic::GenericDetectorElement::transform(
+inline const Acts::Transform3D&
+FW::Generic::GenericDetectorElement::transform(
     const Acts::GeometryContext& /*gctx*/) const {
   return *m_elementTransform;
 }
 
-inline const Acts::Surface& FW::Generic::GenericDetectorElement::surface()
-    const {
+inline const Acts::Surface&
+FW::Generic::GenericDetectorElement::surface() const {
   return *m_elementSurface;
 }
 
-inline double FW::Generic::GenericDetectorElement::thickness() const {
+inline double
+FW::Generic::GenericDetectorElement::thickness() const {
   return m_elementThickness;
 }
 

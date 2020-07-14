@@ -26,7 +26,8 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
       m_propagator(std::move(propagator)),
       m_logger(std::move(slogger)) {}
 
-Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+Acts::SurfaceMaterialMapper::State
+Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
@@ -45,7 +46,8 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
   return mState;
 }
 
-void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
+void
+Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
@@ -94,8 +96,9 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
   }
 }
 
-void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
-                                                 const Surface& surface) const {
+void
+Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
+                                            const Surface& surface) const {
   auto surfaceMaterial = surface.surfaceMaterial();
   // Check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
@@ -138,7 +141,8 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   }
 }
 
-void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
+void
+Acts::SurfaceMaterialMapper::collectMaterialVolumes(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
@@ -163,7 +167,8 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
   }
 }
 
-void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
+void
+Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   // iterate over the map to call the total average
   for (auto& accMaterial : mState.accumulatedMaterial) {
     ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
@@ -172,7 +177,8 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void Acts::SurfaceMaterialMapper::mapMaterialTrack(
+void
+Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,

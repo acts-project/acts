@@ -19,7 +19,8 @@ using namespace ActsExamples;
 
 EventAction* EventAction::s_instance = nullptr;
 
-EventAction* EventAction::instance() {
+EventAction*
+EventAction::instance() {
   return s_instance;
 }
 
@@ -35,12 +36,14 @@ EventAction::~EventAction() {
   s_instance = nullptr;
 }
 
-void EventAction::BeginOfEventAction(const G4Event*) {
+void
+EventAction::BeginOfEventAction(const G4Event*) {
   // reset the collection of material steps
   SteppingAction::instance()->clear();
 }
 
-void EventAction::EndOfEventAction(const G4Event* event) {
+void
+EventAction::EndOfEventAction(const G4Event* event) {
   const auto* rawPos = event->GetPrimaryVertex();
   // access the initial direction of the track
   G4ThreeVector rawDir = PrimaryGeneratorAction::instance()->direction();
@@ -57,7 +60,8 @@ void EventAction::EndOfEventAction(const G4Event* event) {
 }
 
 /// Clear the recorded data.
-void EventAction::clear() {
+void
+EventAction::clear() {
   m_materialTracks.clear();
 }
 
@@ -65,7 +69,7 @@ void EventAction::clear() {
 ///
 /// This only contains valid data after the end-of-event action has been
 /// executed.
-const std::vector<Acts::RecordedMaterialTrack>& EventAction::materialTracks()
-    const {
+const std::vector<Acts::RecordedMaterialTrack>&
+EventAction::materialTracks() const {
   return m_materialTracks;
 }

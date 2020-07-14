@@ -130,7 +130,10 @@ class FiniteStateMachine {
 
   /// Get the current state of of the FSM (as a variant).
   /// @return StateVariant The current state of the FSM.
-  const StateVariant& getState() const noexcept { return m_state; }
+  const StateVariant&
+  getState() const noexcept {
+    return m_state;
+  }
 
  public:
   /// Sets the state to a given one. Triggers `on_exit` and `on_enter` for the
@@ -140,7 +143,8 @@ class FiniteStateMachine {
   /// @param state Instance of the target state
   /// @param args The additional arguments
   template <typename State, typename... Args>
-  void setState(State state, Args&&... args) {
+  void
+  setState(State state, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
     // call on exit function
@@ -158,7 +162,8 @@ class FiniteStateMachine {
   /// @param state State instance to check against
   /// @return Whether the FSM is in the given state.
   template <typename S>
-  bool is(const S& /*state*/) const noexcept {
+  bool
+  is(const S& /*state*/) const noexcept {
     return is<S>();
   }
 
@@ -167,7 +172,8 @@ class FiniteStateMachine {
   /// @tparam State type to check against
   /// @return Whether the FSM is in the given state.
   template <typename S>
-  bool is() const noexcept {
+  bool
+  is() const noexcept {
     if (std::get_if<S>(&m_state)) {
       return true;
     }
@@ -176,7 +182,10 @@ class FiniteStateMachine {
 
   /// Returns whether the FSM is in the terminated state.
   /// @return Whether the FSM is in the terminated state.
-  bool terminated() const noexcept { return is<Terminated>(); }
+  bool
+  terminated() const noexcept {
+    return is<Terminated>();
+  }
 
  protected:
   /// Handles processing of an event.
@@ -188,7 +197,8 @@ class FiniteStateMachine {
   /// @return Variant state type, signifying if a transition is supposed to
   ///         happen.
   template <typename Event, typename... Args>
-  event_return process_event(Event&& event, Args&&... args) {
+  event_return
+  process_event(Event&& event, Args&&... args) {
     Derived& child = static_cast<Derived&>(*this);
 
     child.on_process(event);
@@ -218,7 +228,8 @@ class FiniteStateMachine {
   /// @param event Instance of the event being triggere
   /// @param args Additional arguments
   template <typename Event, typename... Args>
-  void dispatch(Event&& event, Args&&... args) {
+  void
+  dispatch(Event&& event, Args&&... args) {
     auto new_state = process_event(std::forward<Event>(event), args...);
     if (new_state) {
       std::visit(

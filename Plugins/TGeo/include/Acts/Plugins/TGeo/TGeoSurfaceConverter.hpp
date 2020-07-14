@@ -77,15 +77,16 @@ struct TGeoSurfaceConverter {
   /// @param scalor The unit scalor between TGeo and Acts
   ///
   /// @return shared pointer to a surface
-  static std::shared_ptr<Surface> toSurface(
-      const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-      const std::string& axes, double scalor = 10.) noexcept(false);
+  static std::shared_ptr<Surface>
+  toSurface(const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
+            const std::string& axes, double scalor = 10.) noexcept(false);
 
   /// Transalte TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
   /// @param degree The input in degree
   /// @return angle in radians
-  static double toRadian(double degree) {
+  static double
+  toRadian(double degree) {
     if (degree > 180.) {
       degree -= 360;
     }

@@ -116,7 +116,8 @@ class RiddersPropagator {
   /// @param [in] derivatives Derivatives of a single parameter
   ///
   /// @return Boolean result whether a phi jump occured
-  bool inconsistentDerivativesOnDisc(
+  bool
+  inconsistentDerivativesOnDisc(
       const std::vector<BoundVector>& derivatives) const;
 
   /// @brief This function wiggles one dimension of the starting parameters,
@@ -134,10 +135,11 @@ class RiddersPropagator {
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
-  std::vector<BoundVector> wiggleDimension(
-      const options_t& options, const parameters_t& startPars,
-      const unsigned int param, const Surface& target,
-      const BoundVector& nominal, const std::vector<double>& deviations) const;
+  std::vector<BoundVector>
+  wiggleDimension(const options_t& options, const parameters_t& startPars,
+                  const unsigned int param, const Surface& target,
+                  const BoundVector& nominal,
+                  const std::vector<double>& deviations) const;
 
   /// @brief This function propagates the covariance matrix
   ///
@@ -145,10 +147,11 @@ class RiddersPropagator {
   /// @param [in] startCov Starting covariance
   ///
   /// @return Propagated covariance matrix
-  const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, eBoundParametersSize>&
-          derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+  const Covariance
+  calculateCovariance(const std::array<std::vector<BoundVector>,
+                                       eBoundParametersSize>& derivatives,
+                      const Covariance& startCov,
+                      const std::vector<double>& deviations) const;
 
   /// @brief This function fits a linear function through the final state
   /// parametrisations
@@ -156,8 +159,9 @@ class RiddersPropagator {
   /// @param [in] values Vector containing the final state parametrisations
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values,
-                        const std::vector<double>& deviations) const;
+  BoundVector
+  fitLinear(const std::vector<BoundVector>& values,
+            const std::vector<double>& deviations) const;
 
   /// Propagator
   propagator_t m_propagator;

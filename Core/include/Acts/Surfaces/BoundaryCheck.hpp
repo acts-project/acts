@@ -67,7 +67,8 @@ class BoundaryCheck {
   /// The check takes into account whether tolerances or covariances are defined
   /// for the boundary check.
   template <typename Vector2DContainer>
-  bool isInside(const Vector2D& point, const Vector2DContainer& vertices) const;
+  bool
+  isInside(const Vector2D& point, const Vector2DContainer& vertices) const;
 
   /// Check if the point is inside a box aligned with the local axes.
   ///
@@ -79,8 +80,9 @@ class BoundaryCheck {
   ///
   /// The check takes into account whether tolerances or covariances are defined
   /// for the boundary check.
-  bool isInside(const Vector2D& point, const Vector2D& lowerLeft,
-                const Vector2D& upperRight) const;
+  bool
+  isInside(const Vector2D& point, const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
   /// Calculate the signed, weighted, closest distance to a polygonal boundary.
   ///
@@ -94,8 +96,8 @@ class BoundaryCheck {
   /// If a covariance is defined, the distance is the corresponding Mahalanobis
   /// distance. Otherwise, it is the Eucleadian distance.
   template <typename Vector2DContainer>
-  double distance(const Vector2D& point,
-                  const Vector2DContainer& vertices) const;
+  double
+  distance(const Vector2D& point, const Vector2DContainer& vertices) const;
 
   /// Calculate the signed, weighted, closest distance to an aligned box.
   ///
@@ -108,8 +110,9 @@ class BoundaryCheck {
   ///
   /// If a covariance is defined, the distance is the corresponding Mahalanobis
   /// distance. Otherwise, it is the Eucleadian distance.
-  double distance(const Vector2D& point, const Vector2D& lowerLeft,
-                  const Vector2D& upperRight) const;
+  double
+  distance(const Vector2D& point, const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
   enum class Type {
     eNone,      ///< disable boundary check
@@ -118,36 +121,44 @@ class BoundaryCheck {
   };
 
   /// Broadcast the type
-  Type type() const;
+  Type
+  type() const;
 
   // Broadcast the tolerance
-  const Vector2D& tolerance() const;
+  const Vector2D&
+  tolerance() const;
 
   // Return the covariance matrix
-  SymMatrix2D covariance() const;
+  SymMatrix2D
+  covariance() const;
 
  private:
   /// Return a new BoundaryCheck with updated covariance.
   /// @param jacobian Tranform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
   ///          for the tolerance based check.
-  BoundaryCheck transformed(const ActsMatrixD<2, 2>& jacobian) const;
+  BoundaryCheck
+  transformed(const ActsMatrixD<2, 2>& jacobian) const;
 
   /// Check if the distance vector is within the absolute or relative limits.
-  bool isTolerated(const Vector2D& delta) const;
+  bool
+  isTolerated(const Vector2D& delta) const;
 
   /// Compute vector norm based on the covariance.
-  double squaredNorm(const Vector2D& x) const;
+  double
+  squaredNorm(const Vector2D& x) const;
 
   /// Calculate the closest point on the polygon.
   template <typename Vector2DContainer>
-  Vector2D computeClosestPointOnPolygon(
-      const Vector2D& point, const Vector2DContainer& vertices) const;
+  Vector2D
+  computeClosestPointOnPolygon(const Vector2D& point,
+                               const Vector2DContainer& vertices) const;
 
   /// Calculate the closest point on the box
-  Vector2D computeEuclideanClosestPointOnRectangle(
-      const Vector2D& point, const Vector2D& lowerLeft,
-      const Vector2D& upperRight) const;
+  Vector2D
+  computeEuclideanClosestPointOnRectangle(const Vector2D& point,
+                                          const Vector2D& lowerLeft,
+                                          const Vector2D& upperRight) const;
 
   /// metric weight matrix: identity for absolute mode or inverse covariance
   SymMatrix2D m_weight;
@@ -168,15 +179,18 @@ class BoundaryCheck {
 
 }  // namespace Acts
 
-inline Acts::BoundaryCheck::Type Acts::BoundaryCheck::type() const {
+inline Acts::BoundaryCheck::Type
+Acts::BoundaryCheck::type() const {
   return m_type;
 }
 
-inline const Acts::Vector2D& Acts::BoundaryCheck::tolerance() const {
+inline const Acts::Vector2D&
+Acts::BoundaryCheck::tolerance() const {
   return m_tolerance;
 }
 
-inline Acts::SymMatrix2D Acts::BoundaryCheck::covariance() const {
+inline Acts::SymMatrix2D
+Acts::BoundaryCheck::covariance() const {
   return m_weight.inverse();
 }
 
@@ -198,8 +212,8 @@ inline Acts::BoundaryCheck::BoundaryCheck(const SymMatrix2D& localCovariance,
       m_tolerance(sigmaMax, 0),
       m_type(Type::eChi2) {}
 
-inline Acts::BoundaryCheck Acts::BoundaryCheck::transformed(
-    const ActsMatrixD<2, 2>& jacobian) const {
+inline Acts::BoundaryCheck
+Acts::BoundaryCheck::transformed(const ActsMatrixD<2, 2>& jacobian) const {
   BoundaryCheck bc = *this;
   if (m_type == Type::eAbsolute) {
     // project tolerances to the new system. depending on the jacobian we need
@@ -213,8 +227,9 @@ inline Acts::BoundaryCheck Acts::BoundaryCheck::transformed(
 }
 
 template <typename Vector2DContainer>
-inline bool Acts::BoundaryCheck::isInside(
-    const Vector2D& point, const Vector2DContainer& vertices) const {
+inline bool
+Acts::BoundaryCheck::isInside(const Vector2D& point,
+                              const Vector2DContainer& vertices) const {
   if (m_type == Type::eNone) {
     // The null boundary check always succeeds
     return true;
@@ -241,9 +256,9 @@ inline bool Acts::BoundaryCheck::isInside(
   }
 }
 
-inline bool Acts::BoundaryCheck::isInside(const Vector2D& point,
-                                          const Vector2D& lowerLeft,
-                                          const Vector2D& upperRight) const {
+inline bool
+Acts::BoundaryCheck::isInside(const Vector2D& point, const Vector2D& lowerLeft,
+                              const Vector2D& upperRight) const {
   if (detail::VerticesHelper::isInsideRectangle(point, lowerLeft, upperRight)) {
     return true;
   } else {
@@ -268,17 +283,19 @@ inline bool Acts::BoundaryCheck::isInside(const Vector2D& point,
 }
 
 template <typename Vector2DContainer>
-inline double Acts::BoundaryCheck::distance(
-    const Acts::Vector2D& point, const Vector2DContainer& vertices) const {
+inline double
+Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
+                              const Vector2DContainer& vertices) const {
   // TODO 2017-04-06 msmk: this should be calculable directly
   double d = squaredNorm(point - computeClosestPointOnPolygon(point, vertices));
   d = std::sqrt(d);
   return detail::VerticesHelper::isInsidePolygon(point, vertices) ? -d : d;
 }
 
-inline double Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
-                                            const Vector2D& lowerLeft,
-                                            const Vector2D& upperRight) const {
+inline double
+Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
+                              const Vector2D& lowerLeft,
+                              const Vector2D& upperRight) const {
   if (m_type == Type::eNone || m_type == Type::eAbsolute) {
     // compute closest point on box
     double d = (point - computeEuclideanClosestPointOnRectangle(
@@ -298,7 +315,8 @@ inline double Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
   }
 }
 
-inline bool Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const {
+inline bool
+Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const {
   if (m_type == Type::eNone) {
     return true;
   } else if (m_type == Type::eAbsolute) {
@@ -310,12 +328,14 @@ inline bool Acts::BoundaryCheck::isTolerated(const Vector2D& delta) const {
   }
 }
 
-inline double Acts::BoundaryCheck::squaredNorm(const Vector2D& x) const {
+inline double
+Acts::BoundaryCheck::squaredNorm(const Vector2D& x) const {
   return (x.transpose() * m_weight * x).value();
 }
 
 template <typename Vector2DContainer>
-inline Acts::Vector2D Acts::BoundaryCheck::computeClosestPointOnPolygon(
+inline Acts::Vector2D
+Acts::BoundaryCheck::computeClosestPointOnPolygon(
     const Acts::Vector2D& point, const Vector2DContainer& vertices) const {
   // calculate the closest position on the segment between `ll0` and `ll1` to
   // the point as measured by the metric induced by the weight matrix

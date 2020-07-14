@@ -80,23 +80,29 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// Assignment operator
   ///
   /// @param bobo is the source volume bounds to be assigned
-  CuboidVolumeBounds& operator=(const CuboidVolumeBounds& bobo);
+  CuboidVolumeBounds&
+  operator=(const CuboidVolumeBounds& bobo);
 
   ~CuboidVolumeBounds() override = default;
 
-  VolumeBounds::BoundsType type() const final { return VolumeBounds::eCuboid; }
+  VolumeBounds::BoundsType
+  type() const final {
+    return VolumeBounds::eCuboid;
+  }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3D& pos, double tol = 0.) const override;
+  bool
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -108,33 +114,39 @@ class CuboidVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+  OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
-                                  const Volume* entity = nullptr) const final;
+  Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
   /// Output Method for std::ostream
   ///
   /// @param sl is ostream operator to be dumped into
-  std::ostream& toStream(std::ostream& sl) const override;
+  std::ostream&
+  toStream(std::ostream& sl) const override;
 
  private:
   /// Templated dumpT method
   /// @tparam stream_t The type fo the dump stream
   /// @param dt The dump stream object
   template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
+  stream_t&
+  dumpT(stream_t& dt) const;
 
   /// The bound values ordered in a fixed size array
   std::array<double, eSize> m_values;
@@ -144,26 +156,31 @@ class CuboidVolumeBounds : public VolumeBounds {
   std::shared_ptr<const RectangleBounds> m_zxBounds{nullptr};
 
   /// Create the surface bounds
-  void buildSurfaceBounds();
+  void
+  buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline bool CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
+inline bool
+CuboidVolumeBounds::inside(const Vector3D& pos, double tol) const {
   return (std::abs(pos.x()) <= get(eHalfLengthX) + tol &&
           std::abs(pos.y()) <= get(eHalfLengthY) + tol &&
           std::abs(pos.z()) <= get(eHalfLengthZ) + tol);
 }
 
-inline std::vector<double> CuboidVolumeBounds::values() const {
+inline std::vector<double>
+CuboidVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
+inline void
+CuboidVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eHalfLengthX) <= 0 or get(eHalfLengthY) <= 0 or
       get(eHalfLengthZ) <= 0.) {
     throw std::invalid_argument(
@@ -172,7 +189,8 @@ inline void CuboidVolumeBounds::checkConsistency() noexcept(false) {
 }
 
 template <class stream_t>
-stream_t& CuboidVolumeBounds::dumpT(stream_t& dt) const {
+stream_t&
+CuboidVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::CuboidVolumeBounds: (halfLengthX, halfLengthY, halfLengthZ) = ";

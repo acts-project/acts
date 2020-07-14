@@ -49,9 +49,10 @@ class ITrackingVolumeBuilder {
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
-  virtual MutableTrackingVolumePtr trackingVolume(
-      const GeometryContext& gctx, TrackingVolumePtr oppositeVolume = nullptr,
-      VolumeBoundsPtr outsideBounds = nullptr) const = 0;
+  virtual MutableTrackingVolumePtr
+  trackingVolume(const GeometryContext& gctx,
+                 TrackingVolumePtr oppositeVolume = nullptr,
+                 VolumeBoundsPtr outsideBounds = nullptr) const = 0;
 };
 
 }  // namespace Acts

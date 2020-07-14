@@ -31,7 +31,8 @@ namespace ActsExamples {
 class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
  public:
   /// Static access method
-  static PrimaryGeneratorAction* instance();
+  static PrimaryGeneratorAction*
+  instance();
 
   /// Construct the action and ensure singleton usage.
   PrimaryGeneratorAction(const G4String& particleName = "geantino",
@@ -40,13 +41,20 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
   ~PrimaryGeneratorAction() final override;
 
   /// Interface method to generate the primary
-  void GeneratePrimaries(G4Event*) final override;
+  void
+  GeneratePrimaries(G4Event*) final override;
 
   /// Access method to get the initial direction
-  const G4ThreeVector& direction() const { return m_direction; }
+  const G4ThreeVector&
+  direction() const {
+    return m_direction;
+  }
 
   /// Access method to get the initial position
-  const G4ThreeVector& position() const { return m_position; }
+  const G4ThreeVector&
+  position() const {
+    return m_position;
+  }
 
  private:
   /// Instance of the PrimaryGeneratorAction

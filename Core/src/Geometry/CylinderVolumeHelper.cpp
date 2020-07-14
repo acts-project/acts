@@ -32,15 +32,16 @@ Acts::CylinderVolumeHelper::CylinderVolumeHelper(
 }
 
 // configuration
-void Acts::CylinderVolumeHelper::setConfiguration(
+void
+Acts::CylinderVolumeHelper::setConfiguration(
     const Acts::CylinderVolumeHelper::Config& cvhConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = cvhConfig;
 }
 
-void Acts::CylinderVolumeHelper::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void
+Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
@@ -406,7 +407,8 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
 
 /** private helper method to estimate and check the dimensions of a tracking
  * volume */
-bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
+bool
+Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const GeometryContext& gctx, const LayerVector& layers,
     const CylinderVolumeBounds*& cylinderVolumeBounds,
     std::shared_ptr<const Transform3D>& transform, double& rMinClean,
@@ -564,7 +566,8 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   return true;
 }
 
-bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
+bool
+Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tVolume,
     bool rBinned, double rMin, double rGlueMin, double rMax, double zMin,
     double zMax) const {
@@ -717,7 +720,8 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
 }
 
 /** private helper method to fill the glue volumes (or the volume itself in) */
-void Acts::CylinderVolumeHelper::glueTrackingVolumes(
+void
+Acts::CylinderVolumeHelper::glueTrackingVolumes(
     const GeometryContext& gctx, const std::shared_ptr<TrackingVolume>& tvolOne,
     BoundarySurfaceFace faceOne, const std::shared_ptr<TrackingVolume>& tvolTwo,
     BoundarySurfaceFace faceTwo, double rMin, double rGlueMin, double rMax,
@@ -900,7 +904,8 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
 }
 
 /** Private method - helper method not to duplicate code */
-void Acts::CylinderVolumeHelper::addFaceVolumes(
+void
+Acts::CylinderVolumeHelper::addFaceVolumes(
     const std::shared_ptr<TrackingVolume>& tvol, BoundarySurfaceFace glueFace,
     TrackingVolumeVector& vols) const {
   ACTS_VERBOSE("Adding face volumes of face " << glueFace << " for the volume '"
@@ -966,9 +971,10 @@ Acts::CylinderVolumeHelper::createCylinderLayer(double z, double r,
       thickness);
 }
 
-std::shared_ptr<const Acts::Layer> Acts::CylinderVolumeHelper::createDiscLayer(
-    double z, double rMin, double rMax, double thickness, int binsPhi,
-    int binsR) const {
+std::shared_ptr<const Acts::Layer>
+Acts::CylinderVolumeHelper::createDiscLayer(double z, double rMin, double rMax,
+                                            double thickness, int binsPhi,
+                                            int binsR) const {
   ACTS_VERBOSE("Creating a DiscLayer at position " << z << " and rMin/rMax "
                                                    << rMin << " / " << rMax);
 

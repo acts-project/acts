@@ -51,14 +51,16 @@ class GeometryHierarchyMapJsonConverter {
   ///
   /// @param container Geometry hierarchy map that should be encoded
   /// @return Encoded Json object
-  nlohmann::json toJson(const Container& container) const;
+  nlohmann::json
+  toJson(const Container& container) const;
 
   /// Decode a Json object into a geometry hierarchy map.
   ///
   /// @param encoded Json object that should be decoded
   /// @return Decoded geometry hierarchy map
   /// @throw std::invalid_argument in case of format errors
-  Container fromJson(const nlohmann::json& encoded) const;
+  Container
+  fromJson(const nlohmann::json& encoded) const;
 
  private:
   static constexpr const char* const kHeaderKey = "acts-geometry-hierarchy-map";
@@ -69,7 +71,8 @@ class GeometryHierarchyMapJsonConverter {
 
   std::string m_valueIdentifier;
 
-  static nlohmann::json encodeIdentifier(GeometryID id) {
+  static nlohmann::json
+  encodeIdentifier(GeometryID id) {
     nlohmann::json encoded;
     // only store non-zero identifiers
     if (id.volume()) {
@@ -89,7 +92,8 @@ class GeometryHierarchyMapJsonConverter {
     }
     return encoded;
   }
-  static GeometryID decodeIdentifier(const nlohmann::json& encoded) {
+  static GeometryID
+  decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryID()
         .setVolume(encoded.value("volume", GeometryID::Value(0u)))
         .setBoundary(encoded.value("boundary", GeometryID::Value(0u)))
@@ -102,7 +106,8 @@ class GeometryHierarchyMapJsonConverter {
 // implementations
 
 template <typename value_t>
-nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
+nlohmann::json
+GeometryHierarchyMapJsonConverter<value_t>::toJson(
     const Container& container) const {
   // encode header
   nlohmann::json encoded = nlohmann::json::object();
@@ -122,7 +127,8 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
 }
 
 template <typename value_t>
-auto GeometryHierarchyMapJsonConverter<value_t>::fromJson(
+auto
+GeometryHierarchyMapJsonConverter<value_t>::fromJson(
     const nlohmann::json& encoded) const -> Container {
   // verify json format header
   auto header = encoded.find(kHeaderKey);

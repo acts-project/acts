@@ -22,9 +22,10 @@ using namespace dd4hep;
 /// @param x_routing the xml description of the routing
 /// @param layerR the layer radii to connect
 template <typename volume_t>
-void buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
-                        const xml_comp_t& x_routing,
-                        const std::vector<double>& layerR) {
+void
+buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
+                   const xml_comp_t& x_routing,
+                   const std::vector<double>& layerR) {
   // Grab the cables & route them outwards
   unsigned int nphi = x_routing.nphi();
 
@@ -91,9 +92,10 @@ void buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
 /// @param x_routing the xml description of the routing
 /// @param endcapZ the layer z positions to connect
 template <typename volume_t>
-void buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
-                        const xml_comp_t& x_routing,
-                        const std::vector<double>& endcapZ) {
+void
+buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
+                   const xml_comp_t& x_routing,
+                   const std::vector<double>& endcapZ) {
   // Grab the cables & route them outwards
   unsigned int nphi = x_routing.nphi();
 
@@ -157,9 +159,10 @@ void buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
 /// @param x_mother_comp the xml description of teh mother component
 /// @param layerR the layer radii contaienr to add the new one
 template <typename volume_t>
-void buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
-                          const xml_comp_t& x_mother_comp,
-                          std::vector<double>& layerR) {
+void
+buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
+                     const xml_comp_t& x_mother_comp,
+                     std::vector<double>& layerR) {
   size_t supportNum = 0;
   for (xml_coll_t sup(x_mother_comp, _U(support)); sup; ++sup, ++supportNum) {
     xml_comp_t x_support = sup;
@@ -193,8 +196,9 @@ void buildSupportCylinder(Detector& oddd, volume_t& motherVolume,
 /// @param x_mother_comp the xml description of teh mother component
 /// @param layerR the layer radii contaienr to add the new one
 template <typename volume_t>
-void buildCoolingRings(Detector& oddd, volume_t& motherVolume,
-                       const xml_comp_t& x_mother_comp) {
+void
+buildCoolingRings(Detector& oddd, volume_t& motherVolume,
+                  const xml_comp_t& x_mother_comp) {
   size_t cringNum = 0;
   for (xml_coll_t cring(x_mother_comp, _Unicode(cooling_ring)); cring;
        ++cring, ++cringNum) {

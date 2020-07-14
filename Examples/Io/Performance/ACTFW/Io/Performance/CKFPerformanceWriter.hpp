@@ -62,11 +62,13 @@ class CKFPerformanceWriter final : public WriterT<TrajectoryContainer> {
   ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  private:
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoryContainer& trajectories) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const TrajectoryContainer& trajectories) final override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

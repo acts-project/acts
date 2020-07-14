@@ -30,24 +30,27 @@ Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
                                      const Transform3D& transf)
     : GeometryObject(), LineSurface(gctx, other, transf) {}
 
-Acts::PerigeeSurface& Acts::PerigeeSurface::operator=(
-    const PerigeeSurface& other) {
+Acts::PerigeeSurface&
+Acts::PerigeeSurface::operator=(const PerigeeSurface& other) {
   if (this != &other) {
     LineSurface::operator=(other);
   }
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::PerigeeSurface::type() const {
+Acts::Surface::SurfaceType
+Acts::PerigeeSurface::type() const {
   return Surface::Perigee;
 }
 
-std::string Acts::PerigeeSurface::name() const {
+std::string
+Acts::PerigeeSurface::name() const {
   return "Acts::PerigeeSurface";
 }
 
-std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
-                                             std::ostream& sl) const {
+std::ostream&
+Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
+                               std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
@@ -58,8 +61,9 @@ std::ostream& Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
   return sl;
 }
 
-Acts::Polyhedron Acts::PerigeeSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t /*lseg*/) const {
+Acts::Polyhedron
+Acts::PerigeeSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                               size_t /*lseg*/) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;

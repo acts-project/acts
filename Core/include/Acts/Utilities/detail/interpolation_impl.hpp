@@ -36,18 +36,22 @@ namespace detail {
 template <typename Point1, typename Point2, typename Point3, typename Value>
 struct can_interpolate {
   template <typename C>
-  static auto value_type_test(C* c)
+  static auto
+  value_type_test(C* c)
       -> decltype(C(std::declval<double>() * std::declval<C>() +
                     std::declval<double>() * std::declval<C>()),
                   std::true_type());
   template <typename C>
-  static std::false_type value_type_test(...);
+  static std::false_type
+  value_type_test(...);
 
   template <typename C>
-  static auto point_type_test(C* c)
+  static auto
+  point_type_test(C* c)
       -> decltype(double(std::declval<C>()[0]), std::true_type());
   template <typename C>
-  static std::false_type point_type_test(...);
+  static std::false_type
+  point_type_test(...);
 
   static const bool value =
       std::is_same<std::true_type,
@@ -103,8 +107,9 @@ struct interpolate_impl;
 template <typename T, class Point1, class Point2, class Point3, size_t D,
           size_t N>
 struct interpolate_impl {
-  static T run(const Point1& pos, const Point2& lowerLeft,
-               const Point3& upperRight, const std::array<T, N>& fields) {
+  static T
+  run(const Point1& pos, const Point2& lowerLeft, const Point3& upperRight,
+      const std::array<T, N>& fields) {
     // get distance to lower boundary relative to total bin width
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
@@ -121,8 +126,9 @@ struct interpolate_impl {
 // simple linear interpolation in 1D
 template <typename T, class Point1, class Point2, class Point3, size_t D>
 struct interpolate_impl<T, Point1, Point2, Point3, D, 2u> {
-  static T run(const Point1& pos, const Point2& lowerLeft,
-               const Point3& upperRight, const std::array<T, 2u>& fields) {
+  static T
+  run(const Point1& pos, const Point2& lowerLeft, const Point3& upperRight,
+      const std::array<T, 2u>& fields) {
     // get distance to lower boundary relative to total bin width
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 

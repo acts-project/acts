@@ -85,9 +85,10 @@ Acts::TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
 }
 
-const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
-    const GeometryContext& /*gctx*/, const Vector3D& position,
-    const double tol) const {
+const Acts::TrackingVolume*
+Acts::TrackingVolume::lowestTrackingVolume(const GeometryContext& /*gctx*/,
+                                           const Vector3D& position,
+                                           const double tol) const {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
     return (m_confinedVolumes->object(position).get());
@@ -103,12 +104,13 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
   return this;
 }
 
-const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
-    const {
+const Acts::TrackingVolumeBoundaries&
+Acts::TrackingVolume::boundarySurfaces() const {
   return (m_boundarySurfaces);
 }
 
-void Acts::TrackingVolume::connectDenseBoundarySurfaces(
+void
+Acts::TrackingVolume::connectDenseBoundarySurfaces(
     MutableTrackingVolumeVector& confinedDenseVolumes) {
   if (!confinedDenseVolumes.empty()) {
     NavigationDirection navDir;
@@ -149,7 +151,8 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
   }
 }
 
-void Acts::TrackingVolume::createBoundarySurfaces() {
+void
+Acts::TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
@@ -170,10 +173,11 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   }
 }
 
-void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
-                                              BoundarySurfaceFace bsfMine,
-                                              TrackingVolume* neighbor,
-                                              BoundarySurfaceFace bsfNeighbor) {
+void
+Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
+                                         BoundarySurfaceFace bsfMine,
+                                         TrackingVolume* neighbor,
+                                         BoundarySurfaceFace bsfNeighbor) {
   // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
   Vector3D bPosition(binningPosition(gctx, binR));
@@ -213,7 +217,8 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   }
 }
 
-void Acts::TrackingVolume::glueTrackingVolumes(
+void
+Acts::TrackingVolume::glueTrackingVolumes(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace bsfNeighbor) {
@@ -251,7 +256,8 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   }
 }
 
-void Acts::TrackingVolume::assignBoundaryMaterial(
+void
+Acts::TrackingVolume::assignBoundaryMaterial(
     std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
     BoundarySurfaceFace bsFace) {
   auto bSurface = m_boundarySurfaces.at(bsFace);
@@ -259,7 +265,8 @@ void Acts::TrackingVolume::assignBoundaryMaterial(
   surface->assignSurfaceMaterial(std::move(surfaceMaterial));
 }
 
-void Acts::TrackingVolume::updateBoundarySurface(
+void
+Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace bsf,
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs,
     bool checkmaterial) {
@@ -276,20 +283,22 @@ void Acts::TrackingVolume::updateBoundarySurface(
   m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
-void Acts::TrackingVolume::registerGlueVolumeDescriptor(
-    GlueVolumesDescriptor* gvd) {
+void
+Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd) {
   delete m_glueVolumeDescriptor;
   m_glueVolumeDescriptor = gvd;
 }
 
-Acts::GlueVolumesDescriptor& Acts::TrackingVolume::glueVolumesDescriptor() {
+Acts::GlueVolumesDescriptor&
+Acts::TrackingVolume::glueVolumesDescriptor() {
   if (m_glueVolumeDescriptor == nullptr) {
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;
   }
   return (*m_glueVolumeDescriptor);
 }
 
-void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
+void
+Acts::TrackingVolume::synchronizeLayers(double envelope) const {
   // case a : Layers exist
   // msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of
   // TrackingVolume '" << volumeName() << "'." << endreq;
@@ -323,7 +332,8 @@ void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
   }
 }
 
-void Acts::TrackingVolume::interlinkLayers() {
+void
+Acts::TrackingVolume::interlinkLayers() {
   if (m_confinedLayers) {
     auto& layers = m_confinedLayers->arrayObjects();
 
@@ -353,7 +363,8 @@ void Acts::TrackingVolume::interlinkLayers() {
   }
 }
 
-void Acts::TrackingVolume::closeGeometry(
+void
+Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) {
   // insert the volume into the map
@@ -448,7 +459,8 @@ void Acts::TrackingVolume::closeGeometry(
   }
 }
 
-void Acts::TrackingVolume::visitSurfaces(
+void
+Acts::TrackingVolume::visitSurfaces(
     const std::function<void(const Acts::Surface*)>& visitor) const {
   if (!m_confinedVolumes) {
     // no sub volumes => loop over the confined layers
@@ -565,7 +577,8 @@ Acts::TrackingVolume::compatibleBoundaries(
   return bIntersections;
 }
 
-std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
+std::vector<Acts::LayerIntersection>
+Acts::TrackingVolume::compatibleLayers(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const NavigationOptions<Layer>& options) const {
   // the layer intersections which are valid
@@ -618,8 +631,8 @@ std::vector<Acts::LayerIntersection> Acts::TrackingVolume::compatibleLayers(
 
 namespace {
 template <typename T>
-std::vector<const Acts::Volume*> intersectSearchHierarchy(
-    const T obj, const Acts::Volume::BoundingBox* lnode) {
+std::vector<const Acts::Volume*>
+intersectSearchHierarchy(const T obj, const Acts::Volume::BoundingBox* lnode) {
   std::vector<const Acts::Volume*> hits;
   hits.reserve(20);  // arbitrary
   do {

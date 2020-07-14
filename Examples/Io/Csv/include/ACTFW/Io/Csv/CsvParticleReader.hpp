@@ -43,20 +43,26 @@ class CsvParticleReader final : public IReader {
   /// @params lvl is the logging level
   CsvParticleReader(const Config& cfg, Acts::Logging::Level lvl);
 
-  std::string name() const final override;
+  std::string
+  name() const final override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t>
+  availableEvents() const final override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const FW::AlgorithmContext& ctx) final override;
+  ProcessCode
+  read(const FW::AlgorithmContext& ctx) final override;
 
  private:
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

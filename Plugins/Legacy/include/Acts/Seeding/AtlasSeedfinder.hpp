@@ -57,19 +57,22 @@ class AtlasSeedfinder {
   ///////////////////////////////////////////////////////////////////
 
   template <class RandIter>
-  void newEvent(int, RandIter, RandIter);
+  void
+  newEvent(int, RandIter, RandIter);
 
   //////////////////////////////////////////////////////////////////
   // Method to initialize seeds production
   //////////////////////////////////////////////////////////////////
-  void find3Sp();
+  void
+  find3Sp();
 
   ///////////////////////////////////////////////////////////////////
   // Iterator through seeds pseudo collection produced accordingly
   // methods find
   ///////////////////////////////////////////////////////////////////
 
-  const Seed<SpacePoint>* next();
+  const Seed<SpacePoint>*
+  next();
 
   ///////////////////////////////////////////////////////////////////
   // Configuration
@@ -81,8 +84,8 @@ class AtlasSeedfinder {
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   AtlasSeedfinder(const AtlasSeedfinder<SpacePoint>&) = delete;
-  AtlasSeedfinder<SpacePoint>& operator=(const AtlasSeedfinder<SpacePoint>&) =
-      delete;
+  AtlasSeedfinder<SpacePoint>&
+  operator=(const AtlasSeedfinder<SpacePoint>&) = delete;
   //@}
   ///////////////////////////////////////////////////////////////////
   // Protected data and methods
@@ -198,30 +201,43 @@ class AtlasSeedfinder {
   // Protected methods
   ///////////////////////////////////////////////////////////////////
 
-  void buildFrameWork();
-  void buildBeamFrameWork();
+  void
+  buildFrameWork();
+  void
+  buildBeamFrameWork();
 
-  SPForSeed<SpacePoint>* newSpacePoint(SpacePoint* const&);
+  SPForSeed<SpacePoint>*
+  newSpacePoint(SpacePoint* const&);
 
-  void newOneSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
-                  SPForSeed<SpacePoint>*&, float, float);
+  void
+  newOneSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
+             SPForSeed<SpacePoint>*&, float, float);
 
-  void newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*&,
-                                          SPForSeed<SpacePoint>*&, float);
+  void
+  newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*&,
+                                     SPForSeed<SpacePoint>*&, float);
 
-  void fillSeeds();
-  void fillLists();
-  void erase();
-  void production3Sp();
-  void production3Sp(typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*, int,
-                     int, int&);
+  void
+  fillSeeds();
+  void
+  fillLists();
+  void
+  erase();
+  void
+  production3Sp();
+  void
+  production3Sp(typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*,
+                typename std::list<SPForSeed<SpacePoint>*>::iterator*, int, int,
+                int&);
 
-  void findNext();
-  bool isZCompatible(float&);
-  void convertToBeamFrameWork(SpacePoint* const&, float*);
+  void
+  findNext();
+  bool
+  isZCompatible(float&);
+  void
+  convertToBeamFrameWork(SpacePoint* const&, float*);
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -229,7 +245,8 @@ class AtlasSeedfinder {
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline const Seed<SpacePoint>* AtlasSeedfinder<SpacePoint>::next() {
+inline const Seed<SpacePoint>*
+AtlasSeedfinder<SpacePoint>::next() {
   do {
     if (i_seed == i_seede) {
       findNext();
@@ -243,7 +260,8 @@ inline const Seed<SpacePoint>* AtlasSeedfinder<SpacePoint>::next() {
 }
 
 template <typename SpacePoint>
-inline bool AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv) {
+inline bool
+AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv) {
   if (Zv < m_zminU || Zv > m_zmaxU) {
     return false;
   } else {
@@ -256,8 +274,8 @@ inline bool AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv) {
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline SPForSeed<SpacePoint>* AtlasSeedfinder<SpacePoint>::newSpacePoint(
-    SpacePoint* const& sp) {
+inline SPForSeed<SpacePoint>*
+AtlasSeedfinder<SpacePoint>::newSpacePoint(SpacePoint* const& sp) {
   SPForSeed<SpacePoint>* sps;
 
   float r[3];
@@ -291,9 +309,9 @@ inline SPForSeed<SpacePoint>* AtlasSeedfinder<SpacePoint>::newSpacePoint(
 class comCurvature {
  public:
   template <typename SpacePoint>
-  bool operator()(
-      const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
-      const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2) {
+  bool
+  operator()(const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
+             const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2) {
     return i1.first < i2.first;
   }
 };

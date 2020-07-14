@@ -63,7 +63,8 @@ class PassiveLayerBuilder : public ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return  the layers at negative side
-  const LayerVector negativeLayers(const GeometryContext& gctx) const override;
+  const LayerVector
+  negativeLayers(const GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method
   ///
@@ -71,7 +72,8 @@ class PassiveLayerBuilder : public ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return the layers at the central sector
-  const LayerVector centralLayers(const GeometryContext& gctx) const override;
+  const LayerVector
+  centralLayers(const GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method
   ///
@@ -79,11 +81,13 @@ class PassiveLayerBuilder : public ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return  the layers at positive side
-  const LayerVector positiveLayers(const GeometryContext& gctx) const override;
+  const LayerVector
+  positiveLayers(const GeometryContext& gctx) const override;
 
   /// Name identification
   /// @return the string based identification
-  const std::string& identification() const override {
+  const std::string&
+  identification() const override {
     return m_cfg.layerIdentification;
   }
 
@@ -91,15 +95,18 @@ class PassiveLayerBuilder : public ILayerBuilder {
   ///
   /// @param plConfig is a configuration struct
   /// it overwrites the current configuration
-  void setConfiguration(const Config& plConfig);
+  void
+  setConfiguration(const Config& plConfig);
 
   /// Get configuration method
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// Set logging instance
   ///
   /// @param newLogger the logger instance
-  void setLogger(std::unique_ptr<const Logger> newLogger);
+  void
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
  protected:
   Config m_cfg;  //!< configuration
@@ -112,16 +119,20 @@ class PassiveLayerBuilder : public ILayerBuilder {
   /// @param side is the side of the layer to be built
   ///
   /// @return  the layers at positive side
-  const LayerVector endcapLayers(const GeometryContext& gctx, int side) const;
+  const LayerVector
+  endcapLayers(const GeometryContext& gctx, int side) const;
 
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 };
 
-inline PassiveLayerBuilder::Config PassiveLayerBuilder::getConfiguration()
-    const {
+inline PassiveLayerBuilder::Config
+PassiveLayerBuilder::getConfiguration() const {
   return m_cfg;
 }
 

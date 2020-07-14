@@ -34,9 +34,15 @@ class MockTrack {
     // nop
   }
 
-  Vector3D momentum() const { return m_mom; }
+  Vector3D
+  momentum() const {
+    return m_mom;
+  }
 
-  Vector3D position() const { return m_pos; }
+  Vector3D
+  position() const {
+    return m_pos;
+  }
 
  private:
   Vector3D m_mom;

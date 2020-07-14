@@ -24,7 +24,8 @@
 using namespace Acts::UnitLiterals;
 using namespace FW;
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   // setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

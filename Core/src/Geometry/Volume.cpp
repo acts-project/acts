@@ -63,8 +63,9 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 
 Acts::Volume::~Volume() = default;
 
-const Acts::Vector3D Acts::Volume::binningPosition(
-    const GeometryContext& /*gctx*/, Acts::BinningValue bValue) const {
+const Acts::Vector3D
+Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
+                              Acts::BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
@@ -76,7 +77,8 @@ const Acts::Vector3D Acts::Volume::binningPosition(
 }
 
 // assignment operator
-Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
+Acts::Volume&
+Acts::Volume::operator=(const Acts::Volume& vol) {
   if (this != &vol) {
     m_transform = vol.m_transform;
     m_center = vol.m_center;
@@ -85,7 +87,8 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   return *this;
 }
 
-bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
+bool
+Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
   if (!m_transform) {
     return (volumeBounds()).inside(gpos, tol);
   }
@@ -93,16 +96,18 @@ bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
-std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
+std::ostream&
+Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
   sl << "Volume with " << vol.volumeBounds() << std::endl;
   return sl;
 }
 
-Acts::Volume::BoundingBox Acts::Volume::boundingBox(
-    const Vector3D& envelope) const {
+Acts::Volume::BoundingBox
+Acts::Volume::boundingBox(const Vector3D& envelope) const {
   return m_volumeBounds->boundingBox(m_transform.get(), envelope, this);
 }
 
-const Acts::Volume::BoundingBox& Acts::Volume::orientedBoundingBox() const {
+const Acts::Volume::BoundingBox&
+Acts::Volume::orientedBoundingBox() const {
   return m_orientedBoundingBox;
 }

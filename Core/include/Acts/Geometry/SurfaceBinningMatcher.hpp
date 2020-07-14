@@ -32,8 +32,9 @@ struct SurfaceBinningMatcher {
   /// @param bValue the binning value for the binning
   /// @param one first surface for checking
   /// @param other second surface for checking
-  bool operator()(const Acts::GeometryContext& gctx, Acts::BinningValue bValue,
-                  const Acts::Surface* one, const Acts::Surface* other) const {
+  bool
+  operator()(const Acts::GeometryContext& gctx, Acts::BinningValue bValue,
+             const Acts::Surface* one, const Acts::Surface* other) const {
     // Fast exit
     if (one == other) {
       return true;

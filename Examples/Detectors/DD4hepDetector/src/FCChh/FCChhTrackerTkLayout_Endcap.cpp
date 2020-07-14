@@ -17,9 +17,10 @@ using dd4hep::xml::Component;
 using dd4hep::xml::Dimension;
 
 namespace det {
-static dd4hep::Ref_t createTkLayoutTrackerEndcap(
-    dd4hep::Detector& lcdd, dd4hep::xml::Handle_t xmlElement,
-    dd4hep::SensitiveDetector sensDet) {
+static dd4hep::Ref_t
+createTkLayoutTrackerEndcap(dd4hep::Detector& lcdd,
+                            dd4hep::xml::Handle_t xmlElement,
+                            dd4hep::SensitiveDetector sensDet) {
   // shorthands
   dd4hep::xml::DetElement xmlDet =
       static_cast<dd4hep::xml::DetElement>(xmlElement);

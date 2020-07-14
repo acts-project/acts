@@ -62,7 +62,8 @@ Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
   throw_assert(dbounds, "nullptr as DiscBounds");
 }
 
-Acts::DiscSurface& Acts::DiscSurface::operator=(const DiscSurface& other) {
+Acts::DiscSurface&
+Acts::DiscSurface::operator=(const DiscSurface& other) {
   if (this != &other) {
     Acts::Surface::operator=(other);
     m_bounds = other.m_bounds;
@@ -70,14 +71,16 @@ Acts::DiscSurface& Acts::DiscSurface::operator=(const DiscSurface& other) {
   return *this;
 }
 
-Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
+Acts::Surface::SurfaceType
+Acts::DiscSurface::type() const {
   return Surface::Disc;
 }
 
-void Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                      const Vector2D& lposition,
-                                      const Vector3D& /*gmom*/,
-                                      Vector3D& position) const {
+void
+Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
+                                 const Vector2D& lposition,
+                                 const Vector3D& /*gmom*/,
+                                 Vector3D& position) const {
   // create the position in the local 3d frame
   Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
                       lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
@@ -86,18 +89,19 @@ void Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
   position = transform(gctx) * loc3Dframe;
 }
 
-bool Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
-                                      const Vector3D& position,
-                                      const Vector3D& /*gmom*/,
-                                      Vector2D& lposition) const {
+bool
+Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D& position,
+                                 const Vector3D& /*gmom*/,
+                                 Vector2D& lposition) const {
   // transport it to the globalframe (very unlikely that this is not needed)
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   lposition = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
   return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
 
-const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
-    const Vector2D& locpol) const {
+const Acts::Vector2D
+Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const {
   const DiscTrapezoidBounds* dtbo =
       dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
   if (dtbo != nullptr) {
@@ -118,32 +122,37 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
                   locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
 }
 
-const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
-    const GeometryContext& gctx, const Vector2D& lposition) const {
+const Acts::Vector3D
+Acts::DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
+                                          const Vector2D& lposition) const {
   Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 
-const Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
-    const GeometryContext& gctx, const Vector3D& position,
-    double /*unused*/) const {
+const Acts::Vector2D
+Acts::DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
+                                          const Vector3D& position,
+                                          double /*unused*/) const {
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
-std::string Acts::DiscSurface::name() const {
+std::string
+Acts::DiscSurface::name() const {
   return "Acts::DiscSurface";
 }
 
-const Acts::SurfaceBounds& Acts::DiscSurface::bounds() const {
+const Acts::SurfaceBounds&
+Acts::DiscSurface::bounds() const {
   if (m_bounds) {
     return (*(m_bounds.get()));
   }
   return s_noBounds;
 }
 
-Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
-    const GeometryContext& gctx, size_t lseg) const {
+Acts::Polyhedron
+Acts::DiscSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                            size_t lseg) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;

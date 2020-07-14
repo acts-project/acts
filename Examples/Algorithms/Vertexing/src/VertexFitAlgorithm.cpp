@@ -32,8 +32,8 @@ FWE::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
 
 /// @brief Algorithm that receives a set of tracks belonging to a common
 /// vertex and fits the associated vertex to it
-FW::ProcessCode FWE::VertexFitAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FWE::VertexFitAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;

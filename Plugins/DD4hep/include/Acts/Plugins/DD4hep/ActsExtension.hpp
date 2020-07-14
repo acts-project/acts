@@ -53,63 +53,72 @@ class ActsExtension {
   ///
   /// @param tag the entry identifier in the value store
   /// @param type the (optional) category in the value store
-  double getValue(const std::string& tag,
-                  const std::string& category = "") const noexcept(false);
+  double
+  getValue(const std::string& tag, const std::string& category = "") const
+      noexcept(false);
 
   /// Add the parameter to the store
   ///
   /// @param value the value to be added
   /// @param tag the entry identifier in the value store
   /// @param type the (optional) category in the value store
-  void addValue(double value, const std::string& tag,
-                const std::string& category = "");
+  void
+  addValue(double value, const std::string& tag,
+           const std::string& category = "");
 
   /// Check if the ActsExtension has a value (with optional category)
   ///
   /// @param type the primary identifier in the flag store
   /// @param type the (optional) category in the flag store
-  bool hasValue(const std::string& tag, const std::string& category = "") const;
+  bool
+  hasValue(const std::string& tag, const std::string& category = "") const;
 
   /// Check if the ActsExtension has a value (with optional category)
   ///
   /// @param type the primary identifier in the flag store
   /// @param type the (optional) category in the flag store
-  bool hasType(const std::string& type, const std::string& category = "") const;
+  bool
+  hasType(const std::string& type, const std::string& category = "") const;
 
   /// Add the characteristics
   ///
   /// @param type the primary identifier in the flag store
   /// @param category the (optional) category in the flag store
   /// @param the word to be stored
-  void addType(const std::string& type, const std::string& category = "",
-               const std::string& word = "");
+  void
+  addType(const std::string& type, const std::string& category = "",
+          const std::string& word = "");
 
   /// Get the string content
   ///
   /// @param type the primary identifier in the flag store
   /// @param category the (optional) category in the flag store
-  const std::string getType(const std::string& type,
-                            const std::string& category = "") const
+  const std::string
+  getType(const std::string& type, const std::string& category = "") const
       noexcept(false);
 
   /// Output to string
-  std::string toString() const;
+  std::string
+  toString() const;
 
  private:
   /// Templated helper method
   template <typename T>
-  void addT(std::map<std::string, T>& map, const T& val, const std::string& tag,
-            const std::string& category, const T& catDeco);
+  void
+  addT(std::map<std::string, T>& map, const T& val, const std::string& tag,
+       const std::string& category, const T& catDeco);
 
   /// Templated helper method
   template <typename T>
-  const T getT(const std::map<std::string, T>& map, const std::string& tag,
-               const std::string& category = "") const noexcept(false);
+  const T
+  getT(const std::map<std::string, T>& map, const std::string& tag,
+       const std::string& category = "") const noexcept(false);
 
   /// Templated helper method
   template <typename T>
-  bool hasT(const std::map<std::string, T>& map, const std::string& tag,
-            const std::string& category = "") const;
+  bool
+  hasT(const std::map<std::string, T>& map, const std::string& tag,
+       const std::string& category = "") const;
 
   /// Multiple flags to be stored, existance defines set
   std::map<std::string, std::string> m_flagStore;
@@ -120,9 +129,9 @@ class ActsExtension {
 
 // Templated helper method to get from the value/type store
 template <typename T>
-const T ActsExtension::getT(const std::map<std::string, T>& map,
-                            const std::string& tag,
-                            const std::string& category) const noexcept(false) {
+const T
+ActsExtension::getT(const std::map<std::string, T>& map, const std::string& tag,
+                    const std::string& category) const noexcept(false) {
   std::string ctag = "/";
   if (!category.empty()) {
     ctag += category;
@@ -142,9 +151,10 @@ const T ActsExtension::getT(const std::map<std::string, T>& map,
 
 // Templated helper method to set from the value/type store
 template <typename T>
-void ActsExtension::addT(std::map<std::string, T>& map, const T& val,
-                         const std::string& tag, const std::string& category,
-                         const T& catDeco) {
+void
+ActsExtension::addT(std::map<std::string, T>& map, const T& val,
+                    const std::string& tag, const std::string& category,
+                    const T& catDeco) {
   std::string ctag = "/";
   if (!category.empty()) {
     ctag += category;
@@ -157,9 +167,9 @@ void ActsExtension::addT(std::map<std::string, T>& map, const T& val,
 
 // Templated helper method to get from the value/type store
 template <typename T>
-bool ActsExtension::hasT(const std::map<std::string, T>& map,
-                         const std::string& tag,
-                         const std::string& category) const {
+bool
+ActsExtension::hasT(const std::map<std::string, T>& map, const std::string& tag,
+                    const std::string& category) const {
   std::string ctag = "/";
   if (!category.empty()) {
     ctag += category;

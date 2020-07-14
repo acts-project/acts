@@ -187,17 +187,18 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 }
 
 template <typename input_track_t, typename linearizer_t>
-bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    isAlreadyInList(
-        Vertex<input_track_t>* vtx,
-        const std::vector<Vertex<input_track_t>*>& verticesVec) const {
+bool
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::isAlreadyInList(
+    Vertex<input_track_t>* vtx,
+    const std::vector<Vertex<input_track_t>*>& verticesVec) const {
   return std::find(verticesVec.begin(), verticesVec.end(), vtx) !=
          verticesVec.end();
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::
-    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::prepareVertexForFit(
+Acts::Result<void>
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
+    prepareVertexForFit(
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // The current vertex info object
@@ -259,8 +260,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-Acts::Result<void> Acts::
-    AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::setWeightsAndUpdate(
+Acts::Result<void>
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
+    setWeightsAndUpdate(
         State& state, const linearizer_t& linearizer,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
@@ -323,8 +325,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
 }
 
 template <typename input_track_t, typename linearizer_t>
-bool Acts::AdaptiveMultiVertexFitter<
-    input_track_t, linearizer_t>::checkSmallShift(State& state) const {
+bool
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::checkSmallShift(
+    State& state) const {
   for (auto vtx : state.vertexCollection) {
     Vector3D diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                     vtx->fullPosition().template head<3>();
@@ -339,8 +342,9 @@ bool Acts::AdaptiveMultiVertexFitter<
 }
 
 template <typename input_track_t, typename linearizer_t>
-void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    doVertexSmoothing(State& state, const GeometryContext& geoContext) const {
+void
+Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::doVertexSmoothing(
+    State& state, const GeometryContext& geoContext) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       KalmanVertexTrackUpdater::update<input_track_t>(

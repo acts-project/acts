@@ -240,10 +240,16 @@ struct InputTrack {
   InputTrack(const BoundParameters& params, int id)
       : m_parameters(params), m_id(id) {}
 
-  const BoundParameters& parameters() const { return m_parameters; }
+  const BoundParameters&
+  parameters() const {
+    return m_parameters;
+  }
   // store e.g. link to original objects here
 
-  int id() const { return m_id; }
+  int
+  id() const {
+    return m_id;
+  }
 
  private:
   BoundParameters m_parameters;

@@ -217,14 +217,26 @@ struct BoundParameterTraits<BoundParametersIndices::eBoundLoc1> {
 };
 template <>
 struct BoundParameterTraits<BoundParametersIndices::eBoundPhi> {
-  static constexpr double pMin() { return -M_PI; }
-  static constexpr double pMax() { return M_PI; }
+  static constexpr double
+  pMin() {
+    return -M_PI;
+  }
+  static constexpr double
+  pMax() {
+    return M_PI;
+  }
   using type = cyclic_parameter<double, pMin, pMax>;
 };
 template <>
 struct BoundParameterTraits<BoundParametersIndices::eBoundTheta> {
-  static constexpr double pMin() { return 0; }
-  static constexpr double pMax() { return M_PI; }
+  static constexpr double
+  pMin() {
+    return 0;
+  }
+  static constexpr double
+  pMax() {
+    return M_PI;
+  }
   using type = bound_parameter<double, pMin, pMax>;
 };
 template <>

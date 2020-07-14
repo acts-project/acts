@@ -34,8 +34,8 @@ namespace VolumeViewTest {
 ///
 /// @return a string containing all written caracters
 
-static inline std::string run(IVisualization& helper, bool triangulate,
-                              const std::string& tag) {
+static inline std::string
+run(IVisualization& helper, bool triangulate, const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
   std::stringstream cStream;

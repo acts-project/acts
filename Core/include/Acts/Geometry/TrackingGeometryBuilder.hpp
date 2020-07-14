@@ -71,28 +71,34 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// @param gctx geometry context of that building call
   ///
   /// @return a unique pointer to a TrackingGeometry
-  std::unique_ptr<const TrackingGeometry> trackingGeometry(
-      const GeometryContext& gctx) const final;
+  std::unique_ptr<const TrackingGeometry>
+  trackingGeometry(const GeometryContext& gctx) const final;
 
   /// Set configuration method
   ///
   /// @param cgbConfig is the new configuration struct
-  void setConfiguration(const Config& cgbConfig);
+  void
+  setConfiguration(const Config& cgbConfig);
 
   /// Get configuration method
   /// @return the current configuration
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
-  void setLogger(std::unique_ptr<const Logger> newLogger);
+  void
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
  private:
   /// Configuration member
   Config m_cfg;
 
   /// Private access method to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;

@@ -183,7 +183,8 @@ class BinningData {
   /// Assignment operator
   ///
   /// @param bdata is the source object
-  BinningData& operator=(const BinningData& bdata) {
+  BinningData&
+  operator=(const BinningData& bdata) {
     if (this != &bdata) {
       type = bdata.type;
       option = bdata.option;
@@ -216,13 +217,17 @@ class BinningData {
   ~BinningData() = default;
 
   /// Return the number of bins - including sub bins
-  size_t bins() const { return m_totalBins; }
+  size_t
+  bins() const {
+    return m_totalBins;
+  }
 
   /// Decrement the bin
   /// - boolean indicates if decrement actually worked
   ///
   /// @param bin is the bin to be decremented
-  bool decrement(size_t& bin) const {
+  bool
+  decrement(size_t& bin) const {
     size_t sbin = bin;
     bin = bin > 0 ? bin - 1 : (option == open ? bin : m_bins - 1);
     return (sbin != bin);
@@ -232,7 +237,8 @@ class BinningData {
   /// - boolean indicates if decrement actually worked
   ///
   /// @param bin the bin to be incremented
-  bool increment(size_t& bin) const {
+  bool
+  increment(size_t& bin) const {
     size_t sbin = bin;
     bin = bin + 1 < m_bins ? bin + 1 : (option == open ? bin : 0);
     return (sbin != bin);
@@ -240,7 +246,8 @@ class BinningData {
 
   /// Return the boundaries  - including sub boundaries
   /// @return vector of floats indicating the boundary values
-  const std::vector<float>& boundaries() const {
+  const std::vector<float>&
+  boundaries() const {
     if (subBinningData) {
       return m_totalBoundaries;
     }
@@ -252,7 +259,8 @@ class BinningData {
   /// @param lposition assumes the correct local position expression
   ///
   /// @return float value according to the binning setup
-  float value(const Vector2D& lposition) const {
+  float
+  value(const Vector2D& lposition) const {
     // ordered after occurence
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX ||
         binvalue == binH) {
@@ -269,7 +277,8 @@ class BinningData {
   /// @param position is the global position
   ///
   /// @return float value according to the binning setup
-  float value(const Vector3D& position) const {
+  float
+  value(const Vector3D& position) const {
     using VectorHelpers::eta;
     using VectorHelpers::perp;
     using VectorHelpers::phi;
@@ -295,7 +304,8 @@ class BinningData {
   /// @param bin is the bin for which the center value is requested
   ///
   /// @return float value according to the bin center
-  float center(size_t bin) const {
+  float
+  center(size_t bin) const {
     const std::vector<float>& bvals = boundaries();
     // take the center between bin boundaries
     float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
@@ -307,7 +317,8 @@ class BinningData {
   /// @param position is the search position in global coordinated
   ///
   /// @return boolen if this is inside() method is true
-  bool inside(const Vector3D& position) const {
+  bool
+  inside(const Vector3D& position) const {
     // closed one is always inside
     if (option == closed) {
       return true;
@@ -323,7 +334,8 @@ class BinningData {
   /// @param lposition is the search position in global coordinated
   ///
   /// @return boolen if this is inside() method is true
-  bool inside(const Vector2D& lposition) const {
+  bool
+  inside(const Vector2D& lposition) const {
     // closed one is always inside
     if (option == closed) {
       return true;
@@ -339,7 +351,8 @@ class BinningData {
   /// @param lposition is the search position in local coordinated
   ///
   /// @return bin according tot this
-  size_t searchLocal(const Vector2D& lposition) const {
+  size_t
+  searchLocal(const Vector2D& lposition) const {
     if (zdim) {
       return 0;
     }
@@ -351,7 +364,8 @@ class BinningData {
   /// @param position is the search position in global coordinated
   ///
   /// @return bin according tot this
-  size_t searchGlobal(const Vector3D& position) const {
+  size_t
+  searchGlobal(const Vector3D& position) const {
     if (zdim) {
       return 0;
     }
@@ -363,7 +377,8 @@ class BinningData {
   /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
-  size_t search(float value) const {
+  size_t
+  search(float value) const {
     if (zdim) {
       return 0;
     }
@@ -378,7 +393,8 @@ class BinningData {
   /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
-  size_t searchWithSubStructure(float value) const {
+  size_t
+  searchWithSubStructure(float value) const {
     // find the masterbin with the correct function pointer
     size_t masterbin = (*m_functionPtr)(value, *this);
     // additive sub binning -
@@ -402,7 +418,8 @@ class BinningData {
   /// @todo check if this can be changed
   ///
   /// @return integer that indicates which direction to move
-  int nextDirection(const Vector3D& position, const Vector3D& dir) const {
+  int
+  nextDirection(const Vector3D& position, const Vector3D& dir) const {
     if (zdim) {
       return 0;
     }
@@ -419,7 +436,8 @@ class BinningData {
   /// it is set to max
   ///
   /// @return the center value of the bin is given
-  float centerValue(size_t bin) const {
+  float
+  centerValue(size_t bin) const {
     if (zdim) {
       return 0.5 * (min + max);
     }
@@ -433,7 +451,8 @@ class BinningData {
   /// takes a bin entry and returns the lower/higher bound
   /// respecting open/closed
   /// @return low/high bounds
-  std::vector<size_t> neighbourRange(size_t bin) const {
+  std::vector<size_t>
+  neighbourRange(size_t bin) const {
     size_t low = bin;
     size_t high = bin;
     // decrement and increment
@@ -460,7 +479,8 @@ class BinningData {
   size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
 
   /// helper method to set the sub structure
-  void checkSubStructure() {
+  void
+  checkSubStructure() {
     // sub structure is only checked when sBinData is defined
     if (subBinningData) {
       m_totalBoundaries.clear();
@@ -511,8 +531,8 @@ class BinningData {
 
   // Equidistant search
   // - fastest method
-  static size_t searchEquidistantWithBoundary(float value,
-                                              const BinningData& bData) {
+  static size_t
+  searchEquidistantWithBoundary(float value, const BinningData& bData) {
     // vanilla
 
     int bin = ((value - bData.min) / bData.step);
@@ -534,8 +554,8 @@ class BinningData {
 
   // Linear search in arbitrary vector
   // - superior in O(10) searches
-  static size_t searchInVectorWithBoundary(float value,
-                                           const BinningData& bData) {
+  static size_t
+  searchInVectorWithBoundary(float value, const BinningData& bData) {
     // lower boundary
     if (value <= bData.m_boundaries[0]) {
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
@@ -557,8 +577,8 @@ class BinningData {
 
   // A binary search with in an arbitrary vector
   //    - faster than vector search for O(50) objects
-  static size_t binarySearchWithBoundary(float value,
-                                         const BinningData& bData) {
+  static size_t
+  binarySearchWithBoundary(float value, const BinningData& bData) {
     // Binary search in an array of n values to locate value
     if (value <= bData.m_boundaries[0]) {
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;

@@ -16,11 +16,12 @@ namespace FW {
 namespace Options {
 
 /// Add options for a particle-gun-like event generator.
-void addParticleGunOptions(boost::program_options::options_description& opt);
+void
+addParticleGunOptions(boost::program_options::options_description& opt);
 
 /// Create the event generator config from particle-gun options.
-EventGenerator::Config readParticleGunOptions(
-    const boost::program_options::variables_map& vm);
+EventGenerator::Config
+readParticleGunOptions(const boost::program_options::variables_map& vm);
 
 }  // namespace Options
 }  // namespace FW

@@ -24,8 +24,9 @@ using namespace dd4hep;
 ///
 // @return a pair for a template module assembly and detector element
 struct ODDModuleHelper {
-  static std::pair<Assembly, DetElement> assembleTrapezoidalModule(
-      Detector& oddd, SensitiveDetector& sens, const xml_comp_t& x_module);
+  static std::pair<Assembly, DetElement>
+  assembleTrapezoidalModule(Detector& oddd, SensitiveDetector& sens,
+                            const xml_comp_t& x_module);
 
   /// This method assemples a rectangular module for the
   /// pixel and strip detectors
@@ -39,7 +40,7 @@ struct ODDModuleHelper {
   /// It excpects `module_component` xml childs
   ///
   // @return a pair for a template module assembly and detector element
-  static std::pair<Assembly, DetElement> assembleRectangularModule(
-      Detector& oddd, SensitiveDetector& sens, const xml_comp_t& x_module,
-      double& ylength);
+  static std::pair<Assembly, DetElement>
+  assembleRectangularModule(Detector& oddd, SensitiveDetector& sens,
+                            const xml_comp_t& x_module, double& ylength);
 };

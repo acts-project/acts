@@ -246,7 +246,8 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 }
 
 template <typename external_spacepoint_t, typename platform_t>
-void Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
+void
+Seedfinder<external_spacepoint_t, platform_t>::transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) const {

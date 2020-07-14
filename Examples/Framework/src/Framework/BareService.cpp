@@ -14,15 +14,18 @@ BareService::BareService(std::string name, Acts::Logging::Level level)
     : m_name(std::move(name)),
       m_logger(Acts::getDefaultLogger(m_name, level)) {}
 
-std::string BareService::name() const {
+std::string
+BareService::name() const {
   return m_name;
 }
 
-void BareService::startRun() {
+void
+BareService::startRun() {
   // nothing to do in the default implementation
 }
 
-void BareService::prepare(AlgorithmContext&) {
+void
+BareService::prepare(AlgorithmContext&) {
   // nothing to do in the default implementation
 }
 

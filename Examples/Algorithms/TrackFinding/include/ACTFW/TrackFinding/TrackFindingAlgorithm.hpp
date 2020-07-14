@@ -38,7 +38,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
-  static TrackFinderFunction makeTrackFinderFunction(
+  static TrackFinderFunction
+  makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       Options::BFieldVariant magneticField, Acts::Logging::Level lvl);
 
@@ -65,7 +66,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
-  FW::ProcessCode execute(const FW::AlgorithmContext& ctx) const final override;
+  FW::ProcessCode
+  execute(const FW::AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

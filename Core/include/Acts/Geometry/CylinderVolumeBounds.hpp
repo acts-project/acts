@@ -128,23 +128,27 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   ~CylinderVolumeBounds() override = default;
 
-  CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
+  CylinderVolumeBounds&
+  operator=(const CylinderVolumeBounds& cylbo) = default;
 
-  VolumeBounds::BoundsType type() const final {
+  VolumeBounds::BoundsType
+  type() const final {
     return VolumeBounds::eCylinder;
   }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool inside(const Vector3D& pos, double tol = 0.) const override;
+  bool
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -156,34 +160,41 @@ class CylinderVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+  OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
-                                  const Volume* entity = nullptr) const final;
+  Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const final;
 
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
-  Vector3D binningOffset(BinningValue bValue) const override;
+  Vector3D
+  binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
   ///
   /// @param bValue is the type used for the binning
-  double binningBorder(BinningValue bValue) const override;
+  double
+  binningBorder(BinningValue bValue) const override;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const override;
+  std::ostream&
+  toStream(std::ostream& sl) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   /// The internal version of the bounds can be float/double
@@ -199,20 +210,23 @@ class CylinderVolumeBounds : public VolumeBounds {
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Helper method to create the surface bounds
-  void buildSurfaceBounds();
+  void
+  buildSurfaceBounds();
 
   /// Templated dumpT method
   /// @tparam stream_t The type fo the dump stream
   /// @param dt The dump stream object
   template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
+  stream_t&
+  dumpT(stream_t& dt) const;
 };
 
-inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
-                                         double tol) const {
+inline bool
+CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   double ros = perp(pos);
@@ -225,7 +239,8 @@ inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
   return (insideZ && insideR && insidePhi);
 }
 
-inline Vector3D CylinderVolumeBounds::binningOffset(BinningValue bValue)
+inline Vector3D
+CylinderVolumeBounds::binningOffset(BinningValue bValue)
     const {  // the medium radius is taken for r-type binning
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.);
@@ -233,7 +248,8 @@ inline Vector3D CylinderVolumeBounds::binningOffset(BinningValue bValue)
   return VolumeBounds::binningOffset(bValue);
 }
 
-inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
+inline double
+CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
   if (bValue == Acts::binR) {
     return 0.5 * (get(eMaxR) - get(eMinR));
   }
@@ -244,7 +260,8 @@ inline double CylinderVolumeBounds::binningBorder(BinningValue bValue) const {
 }
 
 template <class stream_t>
-stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
+stream_t&
+CylinderVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::CylinderVolumeBounds: (rMin, rMax, halfZ, halfPhi, "
@@ -254,13 +271,15 @@ stream_t& CylinderVolumeBounds::dumpT(stream_t& dt) const {
   return dt;
 }
 
-inline std::vector<double> CylinderVolumeBounds::values() const {
+inline std::vector<double>
+CylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void CylinderVolumeBounds::checkConsistency() noexcept(false) {
+inline void
+CylinderVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) >= get(eMaxR)) {
     throw std::invalid_argument("CylinderVolumeBounds: invalid radial input.");
   }

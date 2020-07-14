@@ -34,13 +34,14 @@ Acts::ConeBounds::ConeBounds(const std::array<double, eSize>& values) noexcept(
   checkConsistency();
 }
 
-Acts::SurfaceBounds::BoundsType Acts::ConeBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::ConeBounds::type() const {
   return SurfaceBounds::eCone;
 }
 
 /// Shift r-phi coordinate to be centered around the average phi.
-Acts::Vector2D Acts::ConeBounds::shifted(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2D
+Acts::ConeBounds::shifted(const Acts::Vector2D& lposition) const {
   using Acts::detail::radian_sym;
 
   auto x = r(lposition[eLOC_Z]);  // cone radius at the local position
@@ -53,22 +54,24 @@ Acts::Vector2D Acts::ConeBounds::shifted(
   return shifted;
 }
 
-bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
-                              const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
+                         const Acts::BoundaryCheck& bcheck) const {
   auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
   return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get(eMinZ)),
                          Vector2D(rphiHalf, get(eMaxZ)));
 }
 
-double Acts::ConeBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
+double
+Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lposition) const {
   auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
   return BoundaryCheck(true).distance(shifted(lposition),
                                       Vector2D(-rphiHalf, get(eMinZ)),
                                       Vector2D(rphiHalf, get(eMaxZ)));
 }
 
-std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::ConeBounds: (tanAlpha, minZ, maxZ, halfPhiSector, averagePhi) "

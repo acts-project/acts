@@ -57,26 +57,28 @@ struct SurfaceArrayCreatorFixture {
   ~SurfaceArrayCreatorFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
   template <typename... Args>
-  SurfaceArrayCreator::ProtoAxis createEquidistantAxis(Args&&... args) {
+  SurfaceArrayCreator::ProtoAxis
+  createEquidistantAxis(Args&&... args) {
     return m_SAC.createEquidistantAxis(std::forward<Args>(args)...);
   }
 
   template <typename... Args>
-  SurfaceArrayCreator::ProtoAxis createVariableAxis(Args&&... args) {
+  SurfaceArrayCreator::ProtoAxis
+  createVariableAxis(Args&&... args) {
     return m_SAC.createVariableAxis(std::forward<Args>(args)...);
   }
 
   template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
             typename... Args>
-  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> makeSurfaceGridLookup2D(
-      Args&&... args) {
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
+  makeSurfaceGridLookup2D(Args&&... args) {
     return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
         std::forward<Args>(args)...);
   }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
-                               double zbase = 0, double r = 10, double w = 2,
-                               double h = 1) {
+  SrfVec
+  fullPhiTestSurfacesEC(size_t n = 10, double shift = 0, double zbase = 0,
+                        double r = 10, double w = 2, double h = 1) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
@@ -104,9 +106,10 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(size_t n = 10, double shift = 0,
-                                double zbase = 0, double incl = M_PI / 9.,
-                                double w = 2, double h = 1.5) {
+  SrfVec
+  fullPhiTestSurfacesBRL(size_t n = 10, double shift = 0, double zbase = 0,
+                         double incl = M_PI / 9., double w = 2,
+                         double h = 1.5) {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
@@ -136,10 +139,11 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3D& origin = {0, 0, 1.5},
-      const Transform3D& pretrans = Transform3D::Identity(),
-      const Vector3D& dir = {0, 0, 1}) {
+  SrfVec
+  straightLineSurfaces(size_t n = 10., double step = 3,
+                       const Vector3D& origin = {0, 0, 1.5},
+                       const Transform3D& pretrans = Transform3D::Identity(),
+                       const Vector3D& dir = {0, 0, 1}) {
     SrfVec res;
     for (size_t i = 0; i < n; ++i) {
       Transform3D trans;
@@ -163,7 +167,8 @@ struct SurfaceArrayCreatorFixture {
     return res;
   }
 
-  SrfVec makeBarrel(int nPhi, int nZ, double w, double h) {
+  SrfVec
+  makeBarrel(int nPhi, int nZ, double w, double h) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
 
@@ -224,7 +229,8 @@ struct SurfaceArrayCreatorFixture {
   }
 };
 
-void draw_surfaces(SrfVec surfaces, const std::string& fname) {
+void
+draw_surfaces(SrfVec surfaces, const std::string& fname) {
   std::ofstream os;
   os.open(fname);
 

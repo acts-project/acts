@@ -28,14 +28,16 @@ class MaterialWiper : public IMaterialDecorator {
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  void decorate(Surface& surface) const final {
+  void
+  decorate(Surface& surface) const final {
     surface.assignSurfaceMaterial(nullptr);
   }
 
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  virtual void decorate(TrackingVolume& volume) const final {
+  virtual void
+  decorate(TrackingVolume& volume) const final {
     volume.assignVolumeMaterial(nullptr);
   }
 };

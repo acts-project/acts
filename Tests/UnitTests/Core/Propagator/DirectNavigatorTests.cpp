@@ -78,8 +78,9 @@ double oversteppingMaxStepSize = 1_mm;
 /// @param charge is the charge of the particle
 /// @param index is the run index from the test
 template <typename rpropagator_t, typename dpropagator_t>
-void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
-             double phi, double theta, int charge, double time, int index) {
+void
+runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
+        double phi, double theta, int charge, double time, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {

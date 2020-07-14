@@ -39,12 +39,13 @@ namespace Acts {
 namespace IntegrationTest {
 
 // Create a mapper from the a text file
-InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
-        localToGlobalBin,
-    std::string fieldMapFile = "Field.txt", double lengthUnit = 1.,
-    double BFieldUnit = 1., size_t nPoints = 100000, bool firstOctant = false) {
+InterpolatedBFieldMap::FieldMapper<3, 3>
+readFieldXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                  std::array<size_t, 3> nBinsXYZ)>
+                 localToGlobalBin,
+             std::string fieldMapFile = "Field.txt", double lengthUnit = 1.,
+             double BFieldUnit = 1., size_t nPoints = 100000,
+             bool firstOctant = false) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -81,8 +82,8 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
 }
 
 // create a bfiel map from a mapper
-std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
-    std::string fieldMapFile = "Field.txt") {
+std::shared_ptr<const InterpolatedBFieldMap>
+atlasBField(std::string fieldMapFile = "Field.txt") {
   // Declare the mapper
   concept ::AnyFieldLookup<> mapper;
   double lengthUnit = UnitConstants::mm;

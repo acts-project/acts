@@ -55,7 +55,10 @@ struct ParticleSimulator {
         localLogger(Acts::getDefaultLogger("Simulator", lvl)) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
-  const Acts::Logger &logger() const { return *localLogger; }
+  const Acts::Logger &
+  logger() const {
+    return *localLogger;
+  }
 
   /// Simulate a single particle without secondaries.
   ///
@@ -67,10 +70,10 @@ struct ParticleSimulator {
   ///
   /// @tparam generator_t is the type of the random number generator
   template <typename generator_t>
-  Acts::Result<InteractorResult> simulate(
-      const Acts::GeometryContext &geoCtx,
-      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
-      const Particle &particle) const {
+  Acts::Result<InteractorResult>
+  simulate(const Acts::GeometryContext &geoCtx,
+           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+           const Particle &particle) const {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
@@ -188,12 +191,12 @@ struct Simulator {
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename generator_t, typename input_particles_t,
             typename output_particles_t, typename hits_t>
-  Acts::Result<std::vector<FailedParticle>> simulate(
-      const Acts::GeometryContext &geoCtx,
-      const Acts::MagneticFieldContext &magCtx, generator_t &generator,
-      const input_particles_t &inputParticles,
-      output_particles_t &simulatedParticlesInitial,
-      output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
+  Acts::Result<std::vector<FailedParticle>>
+  simulate(const Acts::GeometryContext &geoCtx,
+           const Acts::MagneticFieldContext &magCtx, generator_t &generator,
+           const input_particles_t &inputParticles,
+           output_particles_t &simulatedParticlesInitial,
+           output_particles_t &simulatedParticlesFinal, hits_t &hits) const {
     assert(
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
@@ -269,7 +272,8 @@ struct Simulator {
   /// This also enforces mutual-exclusivity of the two charge selections. If
   /// both charge selections evaluate true, they are probably not setup
   /// correctly and not simulating them at all is a reasonable fall-back.
-  bool selectParticle(const Particle &particle) const {
+  bool
+  selectParticle(const Particle &particle) const {
     const bool isValidCharged = selectCharged(particle);
     const bool isValidNeutral = selectNeutral(particle);
     assert(not(isValidCharged and isValidNeutral) and
@@ -282,9 +286,9 @@ struct Simulator {
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename particles_t, typename hits_t>
-  void copyOutputs(const InteractorResult &result,
-                   particles_t &particlesInitial, particles_t &particlesFinal,
-                   hits_t &hits) const {
+  void
+  copyOutputs(const InteractorResult &result, particles_t &particlesInitial,
+              particles_t &particlesFinal, hits_t &hits) const {
     // initial particle state was already pushed to the container before
     // store final particle state at the end of the simulation
     particlesFinal.push_back(result.particle);
@@ -311,8 +315,8 @@ struct Simulator {
   ///       ordered according to their generation number.
   ///
   template <typename particles_t>
-  static void renumberTailParticleIds(particles_t &particles,
-                                      std::size_t lastValid) {
+  static void
+  renumberTailParticleIds(particles_t &particles, std::size_t lastValid) {
     // iterate over adjacent pairs; potentially modify the second element.
     // assume e.g. a primary particle 2 with generation=subparticle=0 that
     // generates two secondaries during simulation. we have the following

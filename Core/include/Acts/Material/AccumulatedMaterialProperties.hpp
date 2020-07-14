@@ -50,13 +50,13 @@ class AccumulatedMaterialProperties {
 
   /// Default assignment operator
   /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties& operator=(
-      const AccumulatedMaterialProperties& amp) = default;
+  AccumulatedMaterialProperties&
+  operator=(const AccumulatedMaterialProperties& amp) = default;
 
   /// Default move assignment operator
   /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties& operator=(
-      AccumulatedMaterialProperties&& amp) = default;
+  AccumulatedMaterialProperties&
+  operator=(AccumulatedMaterialProperties&& amp) = default;
 
   /// Accumulation operator
   /// @brief this adds the material properties to event store
@@ -71,12 +71,14 @@ class AccumulatedMaterialProperties {
   ///
   /// @param amp the source Accumulated properties
   /// @param pathCorreciton is the correction to nominal incident
-  void accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
+  void
+  accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
 
   /// Average the information accumulated for one track
   /// - in case of an empty hit this will just increase the event counter
   /// @param emtpyHit indicate an empty hit
-  void trackAverage(bool emptyHit = false);
+  void
+  trackAverage(bool emptyHit = false);
 
   /// Average the information accumulated during the entire
   /// mapping process
@@ -88,7 +90,8 @@ class AccumulatedMaterialProperties {
   /// The latter can be used when parallelising the mapping
   /// to several jobs
   ///
-  std::pair<MaterialProperties, unsigned int> totalAverage();
+  std::pair<MaterialProperties, unsigned int>
+  totalAverage();
 
  private:
   double m_eventPathInX0{0.};  //!< event: accumulate the thickness in X0
@@ -108,8 +111,9 @@ class AccumulatedMaterialProperties {
   unsigned int m_totalEvents{0};  //!< the number of events
 };
 
-inline void AccumulatedMaterialProperties::accumulate(
-    const MaterialProperties& amp, double pathCorrection) {
+inline void
+AccumulatedMaterialProperties::accumulate(const MaterialProperties& amp,
+                                          double pathCorrection) {
   m_eventPathInX0 += amp.thicknessInX0();
   m_eventPathInL0 += amp.thicknessInL0();
   double t = amp.thickness();
@@ -123,7 +127,8 @@ inline void AccumulatedMaterialProperties::accumulate(
   m_eventPathCorrection += pathCorrection * t;
 }
 
-inline void AccumulatedMaterialProperties::trackAverage(bool emptyHit) {
+inline void
+AccumulatedMaterialProperties::trackAverage(bool emptyHit) {
   // Increase the total event count either for empty hit or by touched hit
   if (emptyHit || m_eventPath > 0.) {
     ++m_totalEvents;

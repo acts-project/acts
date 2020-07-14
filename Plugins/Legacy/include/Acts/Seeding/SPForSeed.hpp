@@ -43,25 +43,60 @@ class SPForSeed {
   SPForSeed(SpacePoint* const&, const float*, const float*);
   SPForSeed(const SPForSeed&);
   virtual ~SPForSeed();
-  SPForSeed& operator=(const SPForSeed&);
+  SPForSeed&
+  operator=(const SPForSeed&);
 
-  void set(SpacePoint* const&, const float*);
-  void set(SpacePoint* const&, const float*, const float*);
-  void setQuality(float);
-  void setParam(const float&);
+  void
+  set(SpacePoint* const&, const float*);
+  void
+  set(SpacePoint* const&, const float*, const float*);
+  void
+  setQuality(float);
+  void
+  setParam(const float&);
 
   const SpacePoint* spacepoint;
-  const float& x() const { return m_x; }
-  const float& y() const { return m_y; }
-  const float& z() const { return m_z; }
-  const float& radius() const { return m_r; }
-  float phi() const { return atan2(m_y, m_x); }
-  const float& covr() const { return m_covr; }
-  const float& covz() const { return m_covz; }
-  const float& param() const { return m_param; }
-  const float& quality() const { return m_q; }
+  const float&
+  x() const {
+    return m_x;
+  }
+  const float&
+  y() const {
+    return m_y;
+  }
+  const float&
+  z() const {
+    return m_z;
+  }
+  const float&
+  radius() const {
+    return m_r;
+  }
+  float
+  phi() const {
+    return atan2(m_y, m_x);
+  }
+  const float&
+  covr() const {
+    return m_covr;
+  }
+  const float&
+  covz() const {
+    return m_covz;
+  }
+  const float&
+  param() const {
+    return m_param;
+  }
+  const float&
+  quality() const {
+    return m_q;
+  }
 
-  const int& surface() const { return m_surface; }
+  const int&
+  surface() const {
+    return m_surface;
+  }
 
  protected:
   float m_x;     // x-coordinate in beam system coordinates
@@ -94,8 +129,8 @@ inline SPForSeed<SpacePoint>::SPForSeed() {
 }
 
 template <typename SpacePoint>
-inline SPForSeed<SpacePoint>& SPForSeed<SpacePoint>::operator=(
-    const SPForSeed<SpacePoint>& sp) {
+inline SPForSeed<SpacePoint>&
+SPForSeed<SpacePoint>::operator=(const SPForSeed<SpacePoint>& sp) {
   if (&sp != this) {
     spacepoint = sp.spacepoint;
     m_x = sp.m_x;
@@ -143,7 +178,8 @@ inline SPForSeed<SpacePoint>::~SPForSeed() {}
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r) {
+inline void
+SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r) {
   spacepoint = sp;
   m_x = r[0];
   m_y = r[1];
@@ -182,8 +218,9 @@ inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r) {
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r,
-                                       const float* sc) {
+inline void
+SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r,
+                           const float* sc) {
   spacepoint = sp;
   m_x = r[0];
   m_y = r[1];
@@ -237,11 +274,13 @@ inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r,
   //      }
 }
 template <typename SpacePoint>
-inline void SPForSeed<SpacePoint>::setParam(const float& p) {
+inline void
+SPForSeed<SpacePoint>::setParam(const float& p) {
   m_param = p;
 }
 template <typename SpacePoint>
-inline void SPForSeed<SpacePoint>::setQuality(float q) {
+inline void
+SPForSeed<SpacePoint>::setQuality(float q) {
   if (q <= m_q) {
     m_q = q;
   }

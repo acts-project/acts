@@ -83,7 +83,8 @@ FW::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
   }
 }
 
-FW::ProcessCode FW::RootPlanarClusterWriter::endRun() {
+FW::ProcessCode
+FW::RootPlanarClusterWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -92,7 +93,8 @@ FW::ProcessCode FW::RootPlanarClusterWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
+FW::ProcessCode
+FW::RootPlanarClusterWriter::writeT(
     const AlgorithmContext& ctx,
     const FW::GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) {
   // retrieve simulated hits

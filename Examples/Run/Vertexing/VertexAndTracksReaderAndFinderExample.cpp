@@ -22,7 +22,8 @@ using namespace FW;
 ///
 /// @param argc The argument count
 /// @param argv The argument list
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   using namespace boost::program_options;
   // setup and parse options
   auto desc = Options::makeDefaultOptions();

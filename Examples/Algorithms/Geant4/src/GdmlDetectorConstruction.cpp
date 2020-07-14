@@ -15,7 +15,8 @@ using namespace ActsExamples;
 GdmlDetectorConstruction::GdmlDetectorConstruction(std::string path)
     : G4VUserDetectorConstruction(), m_path(std::move(path)) {}
 
-G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
+G4VPhysicalVolume*
+GdmlDetectorConstruction::Construct() {
   G4GDMLParser parser;
   // TODO how to handle errors
   parser.Read(m_path);

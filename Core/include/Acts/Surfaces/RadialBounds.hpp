@@ -58,12 +58,14 @@ class RadialBounds : public DiscBounds {
 
   ~RadialBounds() override = default;
 
-  SurfaceBounds::BoundsType type() const final;
+  SurfaceBounds::BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
@@ -71,56 +73,69 @@ class RadialBounds : public DiscBounds {
   /// @param bcheck boundary check directive
   ///
   /// @return is a boolean indicating the operation success
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary calculation
   ///
   /// @param lposition local 2D position in surface coordinate frame
   ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Outstream operator
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Return method for inner Radius
-  double rMin() const final;
+  double
+  rMin() const final;
 
   /// Return method for outer Radius
-  double rMax() const final;
+  double
+  rMax() const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
   /// Returns true for full phi coverage
-  bool coversFullAzimuth() const final;
+  bool
+  coversFullAzimuth() const final;
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final;
+  bool
+  insideRadialBounds(double R, double tolerance = 0.) const final;
 
   /// Return a reference radius for binning
-  double binningValueR() const final;
+  double
+  binningValueR() const final;
 
   /// Return a reference radius for binning
-  double binningValuePhi() const final;
+  double
+  binningValuePhi() const final;
 
  private:
   std::array<double, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Private helper method to shift a local position
   /// within the bounds
   ///
   /// @param lposition The local position in polar coordinates
-  Vector2D shifted(const Vector2D& lposition) const;
+  Vector2D
+  shifted(const Vector2D& lposition) const;
 
   /// This method returns the xy coordinates of vertices along
   /// the radial bounds
@@ -132,40 +147,49 @@ class RadialBounds : public DiscBounds {
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg) const final;
 };
 
-inline double RadialBounds::rMin() const {
+inline double
+RadialBounds::rMin() const {
   return get(eMinR);
 }
 
-inline double RadialBounds::rMax() const {
+inline double
+RadialBounds::rMax() const {
   return get(eMaxR);
 }
 
-inline bool RadialBounds::coversFullAzimuth() const {
+inline bool
+RadialBounds::coversFullAzimuth() const {
   return (get(eHalfPhiSector) == M_PI);
 }
 
-inline bool RadialBounds::insideRadialBounds(double R, double tolerance) const {
+inline bool
+RadialBounds::insideRadialBounds(double R, double tolerance) const {
   return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
 }
 
-inline double RadialBounds::binningValueR() const {
+inline double
+RadialBounds::binningValueR() const {
   return 0.5 * (get(eMinR) + get(eMaxR));
 }
 
-inline double RadialBounds::binningValuePhi() const {
+inline double
+RadialBounds::binningValuePhi() const {
   return get(eAveragePhi);
 }
 
-inline std::vector<double> RadialBounds::values() const {
+inline std::vector<double>
+RadialBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void RadialBounds::checkConsistency() noexcept(false) {
+inline void
+RadialBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }

@@ -58,13 +58,19 @@ class ElementFraction {
   ElementFraction(ElementFraction&&) = default;
   ElementFraction(const ElementFraction&) = default;
   ~ElementFraction() = default;
-  ElementFraction& operator=(ElementFraction&&) = default;
-  ElementFraction& operator=(const ElementFraction&) = default;
+  ElementFraction&
+  operator=(ElementFraction&&) = default;
+  ElementFraction&
+  operator=(const ElementFraction&) = default;
 
   /// The element atomic number.
-  constexpr uint8_t element() const { return m_element; }
+  constexpr uint8_t
+  element() const {
+    return m_element;
+  }
   /// The relative fraction of this element.
-  constexpr float fraction() const {
+  constexpr float
+  fraction() const {
     return static_cast<float>(m_fraction) / UINT8_MAX;
   }
 
@@ -74,12 +80,14 @@ class ElementFraction {
   // element fraction in the compound scaled to the [0,256) range.
   uint8_t m_fraction;
 
-  friend constexpr bool operator==(ElementFraction lhs, ElementFraction rhs) {
+  friend constexpr bool
+  operator==(ElementFraction lhs, ElementFraction rhs) {
     return (lhs.m_fraction == rhs.m_fraction) and
            (lhs.m_element == rhs.m_element);
   }
   /// Sort by fraction for fastest access to the most probable element.
-  friend constexpr bool operator<(ElementFraction lhs, ElementFraction rhs) {
+  friend constexpr bool
+  operator<(ElementFraction lhs, ElementFraction rhs) {
     return lhs.m_fraction < rhs.m_fraction;
   }
   friend class MaterialComposition;
@@ -113,23 +121,34 @@ class MaterialComposition {
   MaterialComposition(MaterialComposition&&) = default;
   MaterialComposition(const MaterialComposition&) = default;
   ~MaterialComposition() = default;
-  MaterialComposition& operator=(MaterialComposition&&) = default;
-  MaterialComposition& operator=(const MaterialComposition&) = default;
+  MaterialComposition&
+  operator=(MaterialComposition&&) = default;
+  MaterialComposition&
+  operator=(const MaterialComposition&) = default;
 
   // Support range-based iteration over contained elements.
-  auto begin() const { return m_elements.begin(); }
-  auto end() const { return m_elements.end(); }
+  auto
+  begin() const {
+    return m_elements.begin();
+  }
+  auto
+  end() const {
+    return m_elements.end();
+  }
 
   /// Check if the composed material is valid, i.e. it is not vacuum.
   operator bool() const { return !m_elements.empty(); }
   /// Return the number of elements.
-  size_t size() const { return m_elements.size(); }
+  size_t
+  size() const {
+    return m_elements.size();
+  }
 
  private:
   std::vector<ElementFraction> m_elements;
 
-  friend inline bool operator==(const MaterialComposition& lhs,
-                                const MaterialComposition& rhs) {
+  friend inline bool
+  operator==(const MaterialComposition& lhs, const MaterialComposition& rhs) {
     return (lhs.m_elements == rhs.m_elements);
   }
 };

@@ -32,8 +32,9 @@ StraightLineStepper::curvilinearState(State& state) const {
       state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
 }
 
-void StraightLineStepper::update(State& state, const FreeVector& parameters,
-                                 const Covariance& covariance) const {
+void
+StraightLineStepper::update(State& state, const FreeVector& parameters,
+                            const Covariance& covariance) const {
   state.pos = parameters.template segment<3>(eFreePos0);
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
   state.p = std::abs(1. / parameters[eFreeQOverP]);
@@ -42,22 +43,25 @@ void StraightLineStepper::update(State& state, const FreeVector& parameters,
   state.cov = covariance;
 }
 
-void StraightLineStepper::update(State& state, const Vector3D& uposition,
-                                 const Vector3D& udirection, double up,
-                                 double time) const {
+void
+StraightLineStepper::update(State& state, const Vector3D& uposition,
+                            const Vector3D& udirection, double up,
+                            double time) const {
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
   state.t = time;
 }
 
-void StraightLineStepper::covarianceTransport(State& state) const {
+void
+StraightLineStepper::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
                               state.derivative, state.jacToGlobal, state.dir);
 }
 
-void StraightLineStepper::covarianceTransport(State& state,
-                                              const Surface& surface) const {
+void
+StraightLineStepper::covarianceTransport(State& state,
+                                         const Surface& surface) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;

@@ -46,13 +46,16 @@ class WriterT : public IWriter {
           Acts::Logging::Level level);
 
   /// Provide the name of the writer
-  std::string name() const final override;
+  std::string
+  name() const final override;
 
   /// Read the object and call the type-specific member function.
-  ProcessCode write(const AlgorithmContext& context) final override;
+  ProcessCode
+  write(const AlgorithmContext& context) final override;
 
   /// No-op default implementation.
-  ProcessCode endRun() override;
+  ProcessCode
+  endRun() override;
 
  protected:
   /// Type-specific write function implementation
@@ -60,10 +63,13 @@ class WriterT : public IWriter {
   /// @param [in] context is the algorithm context that guarantees event
   ///        consistency
   /// @tparam [in] is the templeted collection to be written
-  virtual ProcessCode writeT(const AlgorithmContext& context,
-                             const write_data_t& t) = 0;
+  virtual ProcessCode
+  writeT(const AlgorithmContext& context, const write_data_t& t) = 0;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 
  private:
   std::string m_objectName;
@@ -88,17 +94,19 @@ FW::WriterT<write_data_t>::WriterT(std::string objectName,
 }
 
 template <typename write_data_t>
-inline std::string FW::WriterT<write_data_t>::name() const {
+inline std::string
+FW::WriterT<write_data_t>::name() const {
   return m_writerName;
 }
 
 template <typename write_data_t>
-inline FW::ProcessCode FW::WriterT<write_data_t>::endRun() {
+inline FW::ProcessCode
+FW::WriterT<write_data_t>::endRun() {
   return ProcessCode::SUCCESS;
 }
 
 template <typename write_data_t>
-inline FW::ProcessCode FW::WriterT<write_data_t>::write(
-    const AlgorithmContext& context) {
+inline FW::ProcessCode
+FW::WriterT<write_data_t>::write(const AlgorithmContext& context) {
   return writeT(context, context.eventStore.get<write_data_t>(m_objectName));
 }

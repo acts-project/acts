@@ -17,12 +17,14 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-void GenericDetector::addOptions(
+void
+GenericDetector::addOptions(
     boost::program_options::options_description& opt) const {
   FW::Options::addGenericGeometryOptions(opt);
 }
 
-auto GenericDetector::finalize(
+auto
+GenericDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {

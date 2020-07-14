@@ -73,8 +73,8 @@ Vector3D origin(0., 0., 0.);
 Vector3D originStraw(0.3_m, -0.2_m, 11_m);
 
 template <typename surface_t>
-MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
-                                      double theta) {
+MicroBenchmarkResult
+intersectionTest(const surface_t& surface, double phi, double theta) {
   // Shoot at it
   double cosPhi = std::cos(phi);
   double sinPhi = std::sin(phi);

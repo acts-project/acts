@@ -14,8 +14,8 @@ using dd4hep::PlacedVolume;
 using dd4hep::Tube;
 using dd4hep::Volume;
 
-static dd4hep::Ref_t create_element(dd4hep::Detector& lcdd, xml_h e,
-                                    dd4hep::SensitiveDetector) {
+static dd4hep::Ref_t
+create_element(dd4hep::Detector& lcdd, xml_h e, dd4hep::SensitiveDetector) {
   xml_det_t x_det = e;
   std::string det_name = x_det.nameStr();
   // Make DetElement

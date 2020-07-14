@@ -34,7 +34,8 @@ FW::TruthVerticesToTracksAlgorithm::TruthVerticesToTracksAlgorithm(
   }
 }
 
-FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
+FW::ProcessCode
+FW::TruthVerticesToTracksAlgorithm::execute(
     const AlgorithmContext& context) const {
   const auto& vertexCollection =
       context.eventStore.get<std::vector<FW::SimVertex>>(m_cfg.input);
@@ -150,7 +151,8 @@ FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
   return FW::ProcessCode::SUCCESS;
 }
 
-void FW::TruthVerticesToTracksAlgorithm::correctPhiThetaPeriodicity(
+void
+FW::TruthVerticesToTracksAlgorithm::correctPhiThetaPeriodicity(
     double& phiIn, double& thetaIn) const {
   double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
   if (tmpPhi > M_PI) {

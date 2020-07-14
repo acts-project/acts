@@ -66,10 +66,11 @@ struct CylindricalTrackingGeometry {
   /// @param nPhi The number of phi modules
   ///
   /// @return A vector of Surfaces
-  std::vector<const Surface*> surfacesRing(
-      DetectorStore& detStore, double moduleHalfXminY, double moudleHalfXmaxY,
-      double moduleHalfY, double moduleThickness, double moduleTilt,
-      double ringRadius, double ringZ, double zStagger, int nPhi) {
+  std::vector<const Surface*>
+  surfacesRing(DetectorStore& detStore, double moduleHalfXminY,
+               double moudleHalfXmaxY, double moduleHalfY,
+               double moduleThickness, double moduleTilt, double ringRadius,
+               double ringZ, double zStagger, int nPhi) {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
@@ -126,11 +127,12 @@ struct CylindricalTrackingGeometry {
   /// @param binningSchema The number of bins in phi/z
   ///
   /// @return A vector of Surfaces
-  std::vector<const Surface*> surfacesCylinder(
-      DetectorStore& detStore, double moduleHalfX, double moduleHalfY,
-      double moduleThickness, double moduleTiltPhi, double layerRadius,
-      double radialStagger, double longitudinalOverlap,
-      const std::pair<int, int>& binningSchema) {
+  std::vector<const Surface*>
+  surfacesCylinder(DetectorStore& detStore, double moduleHalfX,
+                   double moduleHalfY, double moduleThickness,
+                   double moduleTiltPhi, double layerRadius,
+                   double radialStagger, double longitudinalOverlap,
+                   const std::pair<int, int>& binningSchema) {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
@@ -181,9 +183,10 @@ struct CylindricalTrackingGeometry {
 
   /// Helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
-  std::vector<Vector3D> modulePositionsCylinder(
-      double radius, double zStagger, double moduleHalfLength, double lOverlap,
-      const std::pair<int, int>& binningSchema) {
+  std::vector<Vector3D>
+  modulePositionsCylinder(double radius, double zStagger,
+                          double moduleHalfLength, double lOverlap,
+                          const std::pair<int, int>& binningSchema) {
     int nPhiBins = binningSchema.first;
     int nZbins = binningSchema.second;
     // prepare the return value
@@ -211,7 +214,8 @@ struct CylindricalTrackingGeometry {
   }
 
   // @brief Call operator for the creation method of the tracking geometry
-  std::shared_ptr<const TrackingGeometry> operator()() {
+  std::shared_ptr<const TrackingGeometry>
+  operator()() {
     using namespace Acts::UnitLiterals;
 
     Logging::Level surfaceLLevel = Logging::INFO;

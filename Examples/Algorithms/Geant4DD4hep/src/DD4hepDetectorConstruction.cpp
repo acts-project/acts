@@ -21,7 +21,8 @@ DD4hepDetectorConstruction::DD4hepDetectorConstruction(
     : G4VUserDetectorConstruction(), m_detector(detector) {}
 
 // See DD4hep::Simulation::Geant4DetectorConstruction::Construct()
-G4VPhysicalVolume* DD4hepDetectorConstruction::Construct() {
+G4VPhysicalVolume*
+DD4hepDetectorConstruction::Construct() {
   dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
   dd4hep::DetElement world = m_detector.world();
   dd4hep::sim::Geant4Converter conv(m_detector, dd4hep::INFO);

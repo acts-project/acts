@@ -25,7 +25,8 @@ struct ParticleHitCount {
 };
 
 /// Identify all particles that contribute to the proto track and count hits.
-void identifyContributingParticles(
+void
+identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
     std::vector<ParticleHitCount>& particleHitCount);

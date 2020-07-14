@@ -58,14 +58,16 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   ~RootTrajectoryWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoryContainer& trajectories) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const TrajectoryContainer& trajectories) final override;
 
  private:
   Config m_cfg;             ///< The config class

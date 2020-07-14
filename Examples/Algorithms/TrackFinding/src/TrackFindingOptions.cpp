@@ -13,7 +13,8 @@
 
 #include "Acts/Geometry/GeometryID.hpp"
 
-void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
+void
+FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
@@ -24,8 +25,8 @@ void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
       "surface for CKF source link selection");
 }
 
-FW::TrackFindingAlgorithm::Config FW::Options::readTrackFindingConfig(
-    const FW::Options::Variables& variables) {
+FW::TrackFindingAlgorithm::Config
+FW::Options::readTrackFindingConfig(const FW::Options::Variables& variables) {
   auto chi2Max = variables["ckf-slselection-chi2max"].template as<double>();
   auto nMax = variables["ckf-slselection-nmax"].template as<size_t>();
 

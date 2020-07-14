@@ -31,7 +31,8 @@
 #include "ACTFW/Propagation/PropagationOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 
-int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
+int
+propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
   // Setup and parse options
   auto desc = FW::Options::makeDefaultOptions();
   FW::Options::addSequencerOptions(desc);

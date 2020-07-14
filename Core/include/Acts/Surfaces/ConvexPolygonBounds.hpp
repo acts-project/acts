@@ -27,19 +27,22 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
  public:
   /// Output Method for std::ostream
   /// @param sl is the ostream to be written into
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
  protected:
   /// Return a rectangle bounds instance that encloses a set of vertices.
   /// @param vertices A collection of vertices to enclose.
   /// @return Enclosing rectangle.
   template <typename coll_t>
-  static RectangleBounds makeBoundingBox(const coll_t& vertices);
+  static RectangleBounds
+  makeBoundingBox(const coll_t& vertices);
 
   /// Calculates whether a set of vertices forms a convex polygon. This is
   /// generic over the number of vertices, so it's factored out of the concrete
@@ -47,7 +50,8 @@ class ConvexPolygonBoundsBase : public PlanarBounds {
   /// @param vertices A collection of vertices.
   /// throws a logic error if this is not the case
   template <typename coll_t>
-  static void convex_impl(const coll_t& vertices) noexcept(false);
+  static void
+  convex_impl(const coll_t& vertices) noexcept(false);
 };
 
 /// This is the actual implementation of the bounds.
@@ -93,21 +97,23 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   ~ConvexPolygonBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
   /// @param bcheck The `BoundaryCheck` object handling tolerances.
   /// @return Whether the points is inside
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Return the smallest distance to any point on the boundary of this bounds
   /// object.
   /// @param lposition The local position to get the distance to
   /// @return The smallest distance to the boundary.
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///
@@ -117,11 +123,13 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg = 1) const final;
 
   /// Return a rectangle bounds object that encloses this polygon.
   /// @return The rectangular bounds
-  const RectangleBounds& boundingBox() const final;
+  const RectangleBounds&
+  boundingBox() const final;
 
  private:
   vertex_array m_vertices;
@@ -129,7 +137,8 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
 
   /// Return whether this bounds class is in fact convex
   /// throws a log error if not
-  void checkConsistency() const noexcept(false);
+  void
+  checkConsistency() const noexcept(false);
 };
 
 /// Tag to trigger specialization of a dynamic polygon
@@ -154,21 +163,23 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return whether a local 2D point lies inside of the bounds defined by this
   /// object.
   /// @param lposition The local position to check
   /// @param bcheck The `BoundaryCheck` object handling tolerances.
   /// @return Whether the points is inside
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Return the smallest distance to any point on the boundary of this bounds
   /// object.
   /// @param lpos The lposition position to get the distance to
   /// @return The smallest distance to the boundary.
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///
@@ -178,13 +189,15 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg = 1) const final;
 
   ///
   /// Return a rectangle bounds object that encloses this polygon.
   /// @return The rectangular bounds
   ///
-  const RectangleBounds& boundingBox() const final;
+  const RectangleBounds&
+  boundingBox() const final;
 
  private:
   boost::container::small_vector<Vector2D, 10> m_vertices;
@@ -192,7 +205,8 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
 
   /// Return whether this bounds class is in fact convex
   /// thorws a logic error if not
-  void checkConsistency() const noexcept(false);
+  void
+  checkConsistency() const noexcept(false);
 };
 
 }  // namespace Acts

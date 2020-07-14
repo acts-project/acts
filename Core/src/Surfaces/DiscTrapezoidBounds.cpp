@@ -20,17 +20,20 @@ Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
   checkConsistency();
 }
 
-Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::DiscTrapezoidBounds::type() const {
   return SurfaceBounds::eDiscTrapezoid;
 }
 
-Acts::Vector2D Acts::DiscTrapezoidBounds::toLocalCartesian(
+Acts::Vector2D
+Acts::DiscTrapezoidBounds::toLocalCartesian(
     const Acts::Vector2D& lposition) const {
   return {lposition[eLOC_R] * std::sin(lposition[eLOC_PHI] - get(eAveragePhi)),
           lposition[eLOC_R] * std::cos(lposition[eLOC_PHI] - get(eAveragePhi))};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
+Acts::ActsMatrixD<2, 2>
+Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Acts::Vector2D& lposition) const {
   ActsMatrixD<2, 2> jacobian;
   jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - get(eAveragePhi));
@@ -40,8 +43,9 @@ Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
   return jacobian;
 }
 
-bool Acts::DiscTrapezoidBounds::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::DiscTrapezoidBounds::inside(const Acts::Vector2D& lposition,
+                                  const Acts::BoundaryCheck& bcheck) const {
   Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
                          {get(eHalfLengthXmaxR), get(eMaxR)},
                          {-get(eHalfLengthXmaxR), get(eMaxR)},
@@ -51,7 +55,8 @@ bool Acts::DiscTrapezoidBounds::inside(
                                                vertices);
 }
 
-double Acts::DiscTrapezoidBounds::distanceToBoundary(
+double
+Acts::DiscTrapezoidBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
                          {get(eHalfLengthXmaxR), get(eMaxR)},
@@ -60,8 +65,8 @@ double Acts::DiscTrapezoidBounds::distanceToBoundary(
   return BoundaryCheck(true).distance(toLocalCartesian(lposition), vertices);
 }
 
-std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::DiscTrapezoidBounds::vertices(unsigned int /*lseg*/) const {
   Vector2D cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
   Vector2D nAxis(cAxis.y(), -cAxis.x());
   return {get(eMinR) * cAxis - get(eHalfLengthXminR) * nAxis,
@@ -71,7 +76,8 @@ std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
 }
 
 // ostream operator overload
-std::ostream& Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::DiscTrapezoidBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::DiscTrapezoidBounds: (innerRadius, outerRadius, "

@@ -47,9 +47,10 @@ namespace Generic {
 /// @param moduleHalfLength is the module length (longitudinal)
 /// @param lOverlap is the overlap of the modules (longitudinal)
 /// @binningSchema is the way the bins are laid out rphi x z
-std::vector<Acts::Vector3D> modulePositionsCylinder(
-    double radius, double zStagger, double moduleHalfLength, double lOverlap,
-    const std::pair<int, int>& binningSchema);
+std::vector<Acts::Vector3D>
+modulePositionsCylinder(double radius, double zStagger, double moduleHalfLength,
+                        double lOverlap,
+                        const std::pair<int, int>& binningSchema);
 
 /// Helper method for positioning
 /// @param z is the z position of the ring
@@ -57,10 +58,9 @@ std::vector<Acts::Vector3D> modulePositionsCylinder(
 /// @param phiStagger is the radial staggering along phi
 /// @param lOverlap is the overlap of the modules
 /// @parm nPhiBins is the number of bins in phi
-std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
-                                                double phiStagger,
-                                                double phiSubStagger,
-                                                int nPhiBins);
+std::vector<Acts::Vector3D>
+modulePositionsRing(double z, double radius, double phiStagger,
+                    double phiSubStagger, int nPhiBins);
 
 /// Helper method for positioning
 /// @param z is the nominal z posiiton of the dis
@@ -72,11 +72,12 @@ std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
 /// @param outerRadius is the outer Radius for the disc
 /// @param discBinning is the binning setup in r, phi
 /// @param moduleHalfLength is pair of phibins and module length
-std::vector<std::vector<Acts::Vector3D>> modulePositionsDisc(
-    double z, double ringStagger, std::vector<double> phiStagger,
-    std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<size_t>& discBinning,
-    const std::vector<double>& moduleHalfLength);
+std::vector<std::vector<Acts::Vector3D>>
+modulePositionsDisc(double z, double ringStagger,
+                    std::vector<double> phiStagger,
+                    std::vector<double> phiSubStagger, double innerRadius,
+                    double outerRadius, const std::vector<size_t>& discBinning,
+                    const std::vector<double>& moduleHalfLength);
 
 /// Global method to build the generic tracking geometry
 ///
@@ -98,7 +99,8 @@ std::vector<std::vector<Acts::Vector3D>> modulePositionsDisc(
 /// @param volumeLLevel is the volume building logging level
 /// return a unique vector to the tracking geometry
 template <typename detector_element_t>
-std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
+std::unique_ptr<const Acts::TrackingGeometry>
+buildDetector(
     const typename detector_element_t::ContextType& gctx,
     std::vector<std::vector<std::shared_ptr<detector_element_t>>>&
         detectorStore,

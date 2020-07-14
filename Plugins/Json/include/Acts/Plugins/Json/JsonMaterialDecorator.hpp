@@ -57,7 +57,8 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  void decorate(Surface& surface) const final {
+  void
+  decorate(Surface& surface) const final {
     // Clear the material if registered to do so
     if (m_clearSurfaceMaterial) {
       surface.assignSurfaceMaterial(nullptr);
@@ -72,7 +73,8 @@ class JsonMaterialDecorator : public IMaterialDecorator {
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  void decorate(TrackingVolume& volume) const final {
+  void
+  decorate(TrackingVolume& volume) const final {
     // Clear the material if registered to do so
     if (m_clearVolumeMaterial) {
       volume.assignVolumeMaterial(nullptr);

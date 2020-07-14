@@ -31,11 +31,13 @@ namespace {
 // tolerance used for floating point comparison in this translation unit
 const double tol = 1e-6;
 
-double get_cyclic_value(double value, double min, double max) {
+double
+get_cyclic_value(double value, double min, double max) {
   return value - (max - min) * std::floor((value - min) / (max - min));
 }
 
-double get_cyclic_difference(double a, double b, double min, double max) {
+double
+get_cyclic_difference(double a, double b, double min, double max) {
   const double period = max - min;
   const double half_period = period / 2;
   a = get_cyclic_value(a, min, max);
@@ -48,7 +50,8 @@ double get_cyclic_difference(double a, double b, double min, double max) {
   return diff;
 }
 
-void check_residuals_for_bound_parameters() {
+void
+check_residuals_for_bound_parameters() {
   const double max = BoundParameterType<eBoundTheta>::max;
   const double min = BoundParameterType<eBoundTheta>::min;
   double theta_1 = 0.7 * M_PI;
@@ -112,7 +115,8 @@ void check_residuals_for_bound_parameters() {
   CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 }
 
-void check_residuals_for_cyclic_parameters() {
+void
+check_residuals_for_cyclic_parameters() {
   const double max = BoundParameterType<eBoundPhi>::max;
   const double min = BoundParameterType<eBoundPhi>::min;
 
@@ -147,7 +151,8 @@ void check_residuals_for_cyclic_parameters() {
   CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
 }
 
-void random_residual_tests() {
+void
+random_residual_tests() {
   // random number generators
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
@@ -227,7 +232,8 @@ void random_residual_tests() {
   }
 }
 
-void free_random_residual_tests() {
+void
+free_random_residual_tests() {
   // random number generators
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);

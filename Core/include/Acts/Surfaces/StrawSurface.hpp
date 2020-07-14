@@ -78,13 +78,16 @@ class StrawSurface : public LineSurface {
   /// Assignment operator
   ///
   /// @param other is the source surface for copying
-  StrawSurface& operator=(const StrawSurface& other);
+  StrawSurface&
+  operator=(const StrawSurface& other);
 
   /// Return the surface type
-  SurfaceType type() const final;
+  SurfaceType
+  type() const final;
 
   /// Return properly formatted class name for screen output */
-  std::string name() const final;
+  std::string
+  name() const final;
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -94,15 +97,18 @@ class StrawSurface : public LineSurface {
   /// are given @note if lseg is set to 1 then only the straw is created
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const final;
+  Polyhedron
+  polyhedronRepresentation(const GeometryContext& gctx,
+                           size_t lseg) const final;
 };
 
-inline Surface::SurfaceType StrawSurface::type() const {
+inline Surface::SurfaceType
+StrawSurface::type() const {
   return Surface::Straw;
 }
 
-inline std::string Acts::StrawSurface::name() const {
+inline std::string
+Acts::StrawSurface::name() const {
   return "Acts::StrawSurface";
 }
 

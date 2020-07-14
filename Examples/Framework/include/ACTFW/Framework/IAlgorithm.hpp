@@ -24,10 +24,12 @@ class IAlgorithm {
   virtual ~IAlgorithm() = default;
 
   /// The algorithm name.
-  virtual std::string name() const = 0;
+  virtual std::string
+  name() const = 0;
 
   /// Execute the algorithm for one event.
-  virtual ProcessCode execute(const AlgorithmContext& context) const = 0;
+  virtual ProcessCode
+  execute(const AlgorithmContext& context) const = 0;
 };
 
 }  // namespace FW

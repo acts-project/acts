@@ -63,9 +63,11 @@ class RectangleBounds : public PlanarBounds {
 
   ~RectangleBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -74,14 +76,15 @@ class RectangleBounds : public PlanarBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///
@@ -91,33 +94,41 @@ class RectangleBounds : public PlanarBounds {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
-  const RectangleBounds& boundingBox() const final;
+  const RectangleBounds&
+  boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream for the dump
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const;
+  double
+  get(BoundValues bValue) const;
 
   /// Access to the half length in X
-  double halfLengthX() const;
+  double
+  halfLengthX() const;
 
   /// Access to the half length in Y
-  double halfLengthY() const;
+  double
+  halfLengthY() const;
 
   /// Get the min vertex defining the bounds
   /// @return The min vertex
-  const Vector2D& min() const;
+  const Vector2D&
+  min() const;
 
   /// Get the max vertex defining the bounds
   /// @return The max vertex
-  const Vector2D& max() const;
+  const Vector2D&
+  max() const;
 
  private:
   Vector2D m_min;
@@ -125,34 +136,42 @@ class RectangleBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline SurfaceBounds::BoundsType RectangleBounds::type() const {
+inline SurfaceBounds::BoundsType
+RectangleBounds::type() const {
   return SurfaceBounds::eRectangle;
 }
 
-inline const Vector2D& RectangleBounds::min() const {
+inline const Vector2D&
+RectangleBounds::min() const {
   return m_min;
 }
 
-inline const Vector2D& RectangleBounds::max() const {
+inline const Vector2D&
+RectangleBounds::max() const {
   return m_max;
 }
 
-inline double RectangleBounds::halfLengthX() const {
+inline double
+RectangleBounds::halfLengthX() const {
   return 0.5 * (m_max.x() - m_min.x());
 }
 
-inline double RectangleBounds::halfLengthY() const {
+inline double
+RectangleBounds::halfLengthY() const {
   return 0.5 * (m_max.y() - m_min.y());
 }
 
-inline std::vector<double> RectangleBounds::values() const {
+inline std::vector<double>
+RectangleBounds::values() const {
   return {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
 }
 
-inline double RectangleBounds::get(BoundValues bValue) const {
+inline double
+RectangleBounds::get(BoundValues bValue) const {
   switch (bValue) {
     case eMinX:
       return m_min.x();
@@ -168,7 +187,8 @@ inline double RectangleBounds::get(BoundValues bValue) const {
   }
 }
 
-inline void RectangleBounds::checkConsistency() noexcept(false) {
+inline void
+RectangleBounds::checkConsistency() noexcept(false) {
   if (get(eMinX) > get(eMaxX)) {
     throw std::invalid_argument("RectangleBounds: invalid local x setup");
   }

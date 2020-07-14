@@ -31,10 +31,12 @@ class IContextDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  virtual ProcessCode decorate(AlgorithmContext& context) = 0;
+  virtual ProcessCode
+  decorate(AlgorithmContext& context) = 0;
 
   /// @brief decorator name() for screen output
-  virtual const std::string& name() const = 0;
+  virtual const std::string&
+  name() const = 0;
 };
 
 }  // namespace FW

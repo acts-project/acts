@@ -36,7 +36,8 @@ FWE::AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
+FW::ProcessCode
+FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */

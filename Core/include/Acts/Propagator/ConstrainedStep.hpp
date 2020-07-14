@@ -42,7 +42,8 @@ struct ConstrainedStep {
   ///
   /// @param value is the new value to be updated
   /// @param type is the constraint type
-  void update(const double& value, Type type, bool releaseStep = false) {
+  void
+  update(const double& value, Type type, bool releaseStep = false) {
     if (releaseStep) {
       release(type);
     }
@@ -56,7 +57,8 @@ struct ConstrainedStep {
   /// it depends on the direction
   ///
   /// @param type is the constraint type to be released
-  void release(Type type) {
+  void
+  release(Type type) {
     double mvalue = (direction == forward)
                         ? (*std::max_element(values.begin(), values.end()))
                         : (*std::min_element(values.begin(), values.end()));
@@ -77,7 +79,8 @@ struct ConstrainedStep {
   /// exposed to the Propagator, this adapts also the direction
   ///
   /// @param value is the new accuracy value
-  ConstrainedStep& operator=(const double& value) {
+  ConstrainedStep&
+  operator=(const double& value) {
     /// set the accuracy value
     values[accuracy] = value;
     // set/update the direction
@@ -97,23 +100,29 @@ struct ConstrainedStep {
   /// Access to a specific value
   ///
   /// @param type is the resquested parameter type
-  double value(Type type) const { return values[type]; }
+  double
+  value(Type type) const {
+    return values[type];
+  }
 
   /// Return the maximum step constraint
   /// @return The max step constraint
-  double max() const {
+  double
+  max() const {
     return (*std::max_element(values.begin(), values.end()));
   }
 
   /// Return the minimum step constraint
   /// @return The min step constraint
-  double min() const {
+  double
+  min() const {
     return (*std::min_element(values.begin(), values.end()));
   }
 
   /// Access to currently leading min type
   ///
-  Type currentType() const {
+  Type
+  currentType() const {
     if (direction == forward) {
       return Type(std::min_element(values.begin(), values.end()) -
                   values.begin());
@@ -123,10 +132,12 @@ struct ConstrainedStep {
   }
 
   /// return the split value as string for debugging
-  std::string toString() const;
+  std::string
+  toString() const;
 };
 
-inline std::string ConstrainedStep::toString() const {
+inline std::string
+ConstrainedStep::toString() const {
   std::stringstream dstream;
 
   // Helper method to avoid unreadable screen output

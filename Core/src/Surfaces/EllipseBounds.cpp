@@ -17,17 +17,20 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::SurfaceBounds::BoundsType Acts::EllipseBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::EllipseBounds::type() const {
   return SurfaceBounds::eEllipse;
 }
 
-static inline double square(double x) {
+static inline double
+square(double x) {
   return x * x;
 }
 
 /// @warning This **only** works for tolerance-based checks
-bool Acts::EllipseBounds::inside(const Vector2D& lposition,
-                                 const BoundaryCheck& bcheck) const {
+bool
+Acts::EllipseBounds::inside(const Vector2D& lposition,
+                            const BoundaryCheck& bcheck) const {
   double tol0 = bcheck.m_tolerance[0];
   double tol1 = bcheck.m_tolerance[1];
   double phi =
@@ -51,8 +54,8 @@ bool Acts::EllipseBounds::inside(const Vector2D& lposition,
 // and m_values.at(EllipseBounds::bv_rMaxX) ~=
 // m_values.at(EllipseBounds::bv_rMaxY)
 //
-double Acts::EllipseBounds::distanceToBoundary(
-    const Vector2D& lposition) const {
+double
+Acts::EllipseBounds::distanceToBoundary(const Vector2D& lposition) const {
   double r = perp(lposition);
   if (r == 0) {
     return std::min(get(eInnerRx), get(eOuterRx));
@@ -115,19 +118,21 @@ double Acts::EllipseBounds::distanceToBoundary(
   return sf;
 }
 
-std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
-    unsigned int lseg) const {
+std::vector<Acts::Vector2D>
+Acts::EllipseBounds::vertices(unsigned int lseg) const {
   return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),
       get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
 
-const Acts::RectangleBounds& Acts::EllipseBounds::boundingBox() const {
+const Acts::RectangleBounds&
+Acts::EllipseBounds::boundingBox() const {
   return m_boundingBox;
 }
 
 // ostream operator overload
-std::ostream& Acts::EllipseBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::EllipseBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::EllipseBounds:  (innerRadius0, outerRadius0, innerRadius1, "

@@ -63,7 +63,8 @@ FW::CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-FW::ProcessCode FW::CKFPerformanceWriter::endRun() {
+FW::ProcessCode
+FW::CKFPerformanceWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
@@ -75,8 +76,9 @@ FW::ProcessCode FW::CKFPerformanceWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::CKFPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
+FW::ProcessCode
+FW::CKFPerformanceWriter::writeT(const AlgorithmContext& ctx,
+                                 const TrajectoryContainer& trajectories) {
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundParameters>;
 

@@ -26,7 +26,8 @@ namespace po = boost::program_options;
 ///
 /// @param opt The provided object, where root specific options are attached
 template <typename options_t>
-void addGenericGeometryOptions(options_t& opt) {
+void
+addGenericGeometryOptions(options_t& opt) {
   opt.add_options()("geo-generic-buildlevel",
                     po::value<size_t>()->default_value(3),
                     "The building level: 0 - pixel barrel only, 1 - pixel "

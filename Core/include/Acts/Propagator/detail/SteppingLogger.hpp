@@ -51,8 +51,9 @@ struct SteppingLogger {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // don't log if you have reached the target
     if (sterile or state.navigation.targetReached) {
       return;
@@ -76,8 +77,9 @@ struct SteppingLogger {
   /// Pure observer interface
   /// - this does not apply to the logger
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*unused*/,
+             const stepper_t& /*unused*/) const {}
 };
 
 }  // namespace detail

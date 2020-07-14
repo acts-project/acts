@@ -19,7 +19,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-void FW::ParticleSelector::addOptions(FW::Options::Description& desc) {
+void
+FW::ParticleSelector::addOptions(FW::Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
   using Options::Interval;
@@ -41,8 +42,8 @@ void FW::ParticleSelector::addOptions(FW::Options::Description& desc) {
   opt("remove-neutral", bool_switch(), "Remove neutral particles");
 }
 
-FW::ParticleSelector::Config FW::ParticleSelector::readConfig(
-    const FW::Options::Variables& vars) {
+FW::ParticleSelector::Config
+FW::ParticleSelector::readConfig(const FW::Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
@@ -93,8 +94,8 @@ FW::ParticleSelector::ParticleSelector(const Config& cfg,
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
 }
 
-FW::ProcessCode FW::ParticleSelector::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::ParticleSelector::execute(const FW::AlgorithmContext& ctx) const {
   using SimEvent = std::vector<SimVertex>;
 
   // prepare input/ output types

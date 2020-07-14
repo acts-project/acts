@@ -25,7 +25,8 @@ Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(
   }
 }
 
-void Acts::GlueVolumesDescriptor::registerGlueVolumes(
+void
+Acts::GlueVolumesDescriptor::registerGlueVolumes(
     Acts::BoundarySurfaceFace bsf,
     std::shared_ptr<const TrackingVolumeArray> gvs) {
   // register the face
@@ -48,7 +49,8 @@ Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const {
   return nullptr;
 }
 
-std::string Acts::GlueVolumesDescriptor::screenOutput() const {
+std::string
+Acts::GlueVolumesDescriptor::screenOutput() const {
   std::stringstream sl;
   sl << "Acts::GlueVolumesDescriptor: " << std::endl;
   const std::vector<Acts::BoundarySurfaceFace>& glueFaceVector = glueFaces();
@@ -70,8 +72,8 @@ std::string Acts::GlueVolumesDescriptor::screenOutput() const {
   return sl.str();
 }
 
-std::ostream& Acts::operator<<(std::ostream& sl,
-                               const GlueVolumesDescriptor& gvd) {
+std::ostream&
+Acts::operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd) {
   sl << gvd.screenOutput();
   return sl;
 }

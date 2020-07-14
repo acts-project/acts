@@ -78,7 +78,8 @@ class LineSurface : public Surface {
   /// Assignment operator
   ///
   /// @param slsf is the source surface dor copying
-  LineSurface& operator=(const LineSurface& other);
+  LineSurface&
+  operator=(const LineSurface& other);
 
   /// Normal vector return
   ///
@@ -86,8 +87,8 @@ class LineSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// @return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  const Vector3D
+  normal(const GeometryContext& gctx, const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -99,8 +100,8 @@ class LineSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  const Vector3D
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -114,9 +115,9 @@ class LineSurface : public Surface {
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
-  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& momentum) const final;
+  const RotationMatrix3D
+  referenceFrame(const GeometryContext& gctx, const Vector3D& position,
+                 const Vector3D& momentum) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -129,10 +130,10 @@ class LineSurface : public Surface {
   /// @param direction is the direction at of the parameters
   ///
   /// @param pars is the paranmeters vector
-  void initJacobianToGlobal(const GeometryContext& gctx,
-                            BoundToFreeMatrix& jacobian,
-                            const Vector3D& position, const Vector3D& direction,
-                            const BoundVector& pars) const final;
+  void
+  initJacobianToGlobal(const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
+                       const Vector3D& position, const Vector3D& direction,
+                       const BoundVector& pars) const final;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -145,10 +146,10 @@ class LineSurface : public Surface {
   /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
-  const BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const RotationMatrix3D& rft,
-      const BoundToFreeMatrix& jacobian) const final;
+  const BoundRowVector
+  derivativeFactors(const GeometryContext& gctx, const Vector3D& position,
+                    const Vector3D& direction, const RotationMatrix3D& rft,
+                    const BoundToFreeMatrix& jacobian) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -158,8 +159,9 @@ class LineSurface : public Surface {
   /// @param lposition is the local position to be transformed
   /// @param momentum is the global momentum (used to sign the closest approach)
   /// @param position is the global position which is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum, Vector3D& position) const final;
+  void
+  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                const Vector3D& momentum, Vector3D& position) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -199,8 +201,9 @@ class LineSurface : public Surface {
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum, Vector2D& lposition) const final;
+  bool
+  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                const Vector3D& momentum, Vector2D& lposition) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -238,24 +241,27 @@ class LineSurface : public Surface {
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const BoundaryCheck& bcheck = false) const final;
+  Intersection
+  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+                       const Vector3D& direction,
+                       const BoundaryCheck& bcheck = false) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& momentum) const override;
+  double
+  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                 const Vector3D& momentum) const override;
 
   /// This method returns the bounds of the Surface by reference */
-  const SurfaceBounds& bounds() const final;
+  const SurfaceBounds&
+  bounds() const final;
 
   /// Return properly formatted class name for screen output */
-  std::string name() const override;
+  std::string
+  name() const override;
 
   /// Calculate the derivative of path length w.r.t. alignment parameters of the
   /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
@@ -268,9 +274,11 @@ class LineSurface : public Surface {
   /// @param direction The direction of the track
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  const AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-      const Vector3D& position, const Vector3D& direction) const final;
+  const AlignmentRowVector
+  alignmentToPathDerivative(const GeometryContext& gctx,
+                            const RotationMatrix3D& rotToLocalZAxis,
+                            const Vector3D& position,
+                            const Vector3D& direction) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -280,8 +288,9 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+  const LocalCartesianToBoundLocalMatrix
+  localCartesianToBoundLocalDerivative(const GeometryContext& gctx,
+                                       const Vector3D& position) const final;
 
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
@@ -293,8 +302,9 @@ class LineSurface : public Surface {
   /// @param position is the global position
   /// @param momentum is the momentum
   /// @param lposition is the local position to be filled
-  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
-                          const Vector3D& momentum, Vector2D& lposition) const;
+  bool
+  globalToLocalPlain(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& momentum, Vector2D& lposition) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

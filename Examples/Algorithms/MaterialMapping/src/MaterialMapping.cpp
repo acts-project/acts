@@ -87,8 +87,8 @@ FW::MaterialMapping::~MaterialMapping() {
   }
 }
 
-FW::ProcessCode FW::MaterialMapping::execute(
-    const FW::AlgorithmContext& context) const {
+FW::ProcessCode
+FW::MaterialMapping::execute(const FW::AlgorithmContext& context) const {
   if (m_cfg.materialSurfaceMapper) {
     // Write to the collection to the EventStore
     std::vector<Acts::RecordedMaterialTrack> mtrackCollection =

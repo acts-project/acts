@@ -52,11 +52,11 @@ struct SpacePointParameters {
 /// @param [in] maxAnglePhi2 Maximum squared phi angle between two clusters
 ///
 /// @return The squared sum within configuration parameters, otherwise -1
-double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
-                                   const Vector3D& posVertex,
-                                   const double maxDistance,
-                                   const double maxAngleTheta2,
-                                   const double maxAnglePhi2) {
+double
+differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
+                            const Vector3D& posVertex, const double maxDistance,
+                            const double maxAngleTheta2,
+                            const double maxAnglePhi2) {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > maxDistance) {
     return -1.;
@@ -92,8 +92,9 @@ double differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2,
 /// @param [in] segment Segmentation of the detector element
 ///
 /// @return Pair containing the top and bottom end
-std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
-    const Vector2D& local, const CartesianSegmentation* segment) {
+std::pair<Vector2D, Vector2D>
+findLocalTopAndBottomEnd(const Vector2D& local,
+                         const CartesianSegmentation* segment) {
   auto& binData = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -132,8 +133,9 @@ std::pair<Vector2D, Vector2D> findLocalTopAndBottomEnd(
 /// 1. if it failed
 /// @note The meaning of the parameter is explained in more detail in the
 /// function body
-double calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
-                                   const Vector3D& q, const Vector3D& r) {
+double
+calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
+                            const Vector3D& q, const Vector3D& r) {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
   /// The underlying assumption is that the best point is given by the closest
@@ -167,8 +169,9 @@ double calcPerpendicularProjection(const Vector3D& a, const Vector3D& c,
 /// between strip detector elements
 ///
 /// @return indicator if the test was successful
-bool recoverSpacePoint(SpacePointParameters& spaPoPa,
-                       double stripLengthGapTolerance) {
+bool
+recoverSpacePoint(SpacePointParameters& spaPoPa,
+                  double stripLengthGapTolerance) {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
   if (stripLengthGapTolerance <= 0.) {
@@ -259,11 +262,11 @@ bool recoverSpacePoint(SpacePointParameters& spaPoPa,
 /// detector element length
 ///
 /// @return Boolean statement whether the space point calculation was succesful
-bool calculateSpacePoint(const std::pair<Vector3D, Vector3D>& stripEnds1,
-                         const std::pair<Vector3D, Vector3D>& stripEnds2,
-                         const Vector3D& posVertex,
-                         SpacePointParameters& spaPoPa,
-                         const double stripLengthTolerance) {
+bool
+calculateSpacePoint(const std::pair<Vector3D, Vector3D>& stripEnds1,
+                    const std::pair<Vector3D, Vector3D>& stripEnds2,
+                    const Vector3D& posVertex, SpacePointParameters& spaPoPa,
+                    const double stripLengthTolerance) {
   /// The following algorithm is meant for finding the position on the first
   /// strip if there is a corresponding cluster on the second strip. The
   /// resulting point is a point x on the first surfaces. This point is
@@ -313,7 +316,8 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::SpacePointBuilder(
     : m_cfg(std::move(cfg)) {}
 
 template <typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+Acts::Vector2D
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -322,7 +326,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
 }
 
 template <typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::Vector3D
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -335,7 +340,8 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
+void
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::makeClusterPairs(
     const GeometryContext& gctx,
     const std::vector<const Cluster*>& clustersFront,
     const std::vector<const Cluster*>& clustersBack,
@@ -407,7 +413,8 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
+void
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     const GeometryContext& gctx,
     const std::vector<std::pair<const Cluster*, const Cluster*>>& clusterPairs,
     std::vector<Acts::SpacePoint<Cluster>>& spacePoints) const {

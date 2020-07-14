@@ -56,41 +56,49 @@ class DuplicationPlotTool {
   /// @brief book the duplication plots
   ///
   /// @param duplicationPlotCache the cache for duplication plots
-  void book(DuplicationPlotCache& duplicationPlotCache) const;
+  void
+  book(DuplicationPlotCache& duplicationPlotCache) const;
 
   /// @brief fill duplication rate w.r.t. fitted track parameters
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the (truth-matched) reconstructed track is duplicated or not
-  void fill(DuplicationPlotCache& duplicationPlotCache,
-            const Acts::BoundParameters& fittedParameters, bool status) const;
+  void
+  fill(DuplicationPlotCache& duplicationPlotCache,
+       const Acts::BoundParameters& fittedParameters, bool status) const;
 
   /// @brief fill number of duplicated tracks for a truth particle seed
   ///
   /// @param duplicationPlotCache cache object for duplication plots
   /// @param truthParticle the truth Particle
   /// @param nDuplicatedTracks the number of duplicated tracks
-  void fill(DuplicationPlotCache& duplicationPlotCache,
-            const ActsFatras::Particle& truthParticle,
-            size_t nDuplicatedTracks) const;
+  void
+  fill(DuplicationPlotCache& duplicationPlotCache,
+       const ActsFatras::Particle& truthParticle,
+       size_t nDuplicatedTracks) const;
 
   /// @brief write the duplication plots to file
   ///
   /// @param duplicationPlotCache cache object for duplication plots
-  void write(const DuplicationPlotCache& duplicationPlotCache) const;
+  void
+  write(const DuplicationPlotCache& duplicationPlotCache) const;
 
   /// @brief delete the duplication plots
   ///
   /// @param duplicationPlotCache cache object for duplication plots
-  void clear(DuplicationPlotCache& duplicationPlotCache) const;
+  void
+  clear(DuplicationPlotCache& duplicationPlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The Config class
   std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
   /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

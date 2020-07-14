@@ -15,13 +15,16 @@ namespace ActsFatras {
 
 /// No-op particle selector that selects all particles.
 struct EveryParticle {
-  constexpr bool operator()(const Particle &) const { return true; }
+  constexpr bool
+  operator()(const Particle &) const {
+    return true;
+  }
 };
 
 // No-op input selector that selects all configurations.
 struct EveryInput {
-  constexpr bool operator()(const Particle &,
-                            const Acts::MaterialProperties &) const {
+  constexpr bool
+  operator()(const Particle &, const Acts::MaterialProperties &) const {
     return true;
   }
 };
@@ -29,8 +32,8 @@ struct EveryInput {
 /// Enable usage of a particle selector as an input selector.
 template <typename ParticleSelector>
 struct AsInputSelector : public ParticleSelector {
-  bool operator()(const Particle &particle,
-                  const Acts::MaterialProperties &) const {
+  bool
+  operator()(const Particle &particle, const Acts::MaterialProperties &) const {
     return ParticleSelector::operator()(particle);
   }
 };
@@ -72,8 +75,9 @@ struct Process {
   ///
   /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
-  bool operator()(generator_t &generator, const Acts::MaterialProperties &slab,
-                  Particle &particle, std::vector<Particle> &generated) const {
+  bool
+  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+             Particle &particle, std::vector<Particle> &generated) const {
     // not selecting this process is not a break condition
     if (not selectInput(particle, slab)) {
       return false;

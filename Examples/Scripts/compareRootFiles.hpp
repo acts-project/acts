@@ -31,7 +31,8 @@ class AnyVector {
   // Returns a pair containing the type-erased vector and a pointer to the
   // underlying concrete vector.
   template <typename T, typename... Args>
-  static std::pair<AnyVector, std::vector<T>*> create(Args&&... args) {
+  static std::pair<AnyVector, std::vector<T>*>
+  create(Args&&... args) {
     std::vector<T>* vector = new std::vector<T>(std::forward<Args>(args)...);
     std::function<void()> deleter = [vector] { delete vector; };
     return std::make_pair(
@@ -48,7 +49,8 @@ class AnyVector {
   }
 
   // Move-assign a type-erased vector
-  AnyVector& operator=(AnyVector&& other) {
+  AnyVector&
+  operator=(AnyVector&& other) {
     if (&other != this) {
       m_vector = other.m_vector;
       m_deleter = std::move(other.m_deleter);
@@ -59,7 +61,8 @@ class AnyVector {
 
   // Forbid copies of type-erased vectors
   AnyVector(const AnyVector&) = delete;
-  AnyVector& operator=(const AnyVector&) = delete;
+  AnyVector&
+  operator=(const AnyVector&) = delete;
 
   // Delete a type-erased vector
   ~AnyVector() {
@@ -84,7 +87,8 @@ enum class Ordering { SMALLER, EQUAL, GREATER };
 // In general, any type which implements comparison operators that behave as a
 // mathematical total order can use this comparison function...
 template <typename T>
-Ordering compare(const T& x, const T& y) {
+Ordering
+compare(const T& x, const T& y) {
   if (x < y) {
     return Ordering::SMALLER;
   } else if (x == y) {
@@ -96,7 +100,8 @@ Ordering compare(const T& x, const T& y) {
 
 // ...but we'll want to tweak that a little for floats, to handle NaNs better...
 template <typename T>
-Ordering compareFloat(const T& x, const T& y) {
+Ordering
+compareFloat(const T& x, const T& y) {
   if (std::isless(x, y)) {
     return Ordering::SMALLER;
   } else if (std::isgreater(x, y)) {
@@ -107,19 +112,22 @@ Ordering compareFloat(const T& x, const T& y) {
 }
 
 template <>
-Ordering compare(const float& x, const float& y) {
+Ordering
+compare(const float& x, const float& y) {
   return compareFloat(x, y);
 }
 
 template <>
-Ordering compare(const double& x, const double& y) {
+Ordering
+compare(const double& x, const double& y) {
   return compareFloat(x, y);
 }
 
 // ...and for vectors, where the default lexicographic comparison cannot
 // efficiently tell all of what we want in a single vector iteration pass.
 template <typename U>
-Ordering compare(const std::vector<U>& v1, const std::vector<U>& v2) {
+Ordering
+compare(const std::vector<U>& v1, const std::vector<U>& v2) {
   // First try to order by size...
   if (v1.size() < v2.size()) {
     return Ordering::SMALLER;
@@ -152,8 +160,9 @@ using IndexSwapper = std::function<void(std::size_t, std::size_t)>;
 
 // Selection sort has pertty bad asymptotic scaling, but it is non-recursive
 // and in-place, which makes it a good choice for smaller inputs
-void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
-                   const IndexComparator& compare, const IndexSwapper& swap) {
+void
+selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
+              const IndexComparator& compare, const IndexSwapper& swap) {
   using namespace std;
   for (size_t targetIndex = firstIndex; targetIndex < lastIndex;
        ++targetIndex) {
@@ -170,8 +179,9 @@ void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
 }
 
 // Quick sort is used as the top-level sorting algorithm for our datasets
-void quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
-               const IndexComparator& compare, const IndexSwapper& swap) {
+void
+quickSort(const std::size_t firstIndex, const std::size_t lastIndex,
+          const IndexComparator& compare, const IndexSwapper& swap) {
   // We switch to non-recursive selection sort when the range becomes too small.
   // This optimization voids the need for detection of 0- and 1-element input.
   static const std::size_t NON_RECURSIVE_THRESHOLD = 25;
@@ -253,7 +263,10 @@ struct BranchComparisonHarness {
   // Function which loads the active event data for the current branch. This is
   // to be performed for each branch and combined with TTreeReader-based event
   // iteration on both trees.
-  void loadCurrentEvent() { (*m_eventLoaderPtr)(); }
+  void
+  loadCurrentEvent() {
+    (*m_eventLoaderPtr)();
+  }
 
   // Functors which compare two events within a given tree and order them
   // with respect to one another, and which swap two events. By combining such
@@ -283,10 +296,9 @@ struct BranchComparisonHarness {
 
   // Type-erased factory of branch comparison harnesses, taking ROOT run-time
   // type information as input in order to select an appropriate C++ constructor
-  static BranchComparisonHarness create(TreeMetadata& treeMetadata,
-                                        const std::string& branchName,
-                                        const EDataType dataType,
-                                        const std::string& className) {
+  static BranchComparisonHarness
+  create(TreeMetadata& treeMetadata, const std::string& branchName,
+         const EDataType dataType, const std::string& className) {
     switch (dataType) {
       case kChar_t:
         return BranchComparisonHarness::create<char>(treeMetadata, branchName);
@@ -336,8 +348,8 @@ struct BranchComparisonHarness {
   // Under the hood, the top-level factory calls the following function
   // template, parametrized with the proper C++ data type
   template <typename T>
-  static BranchComparisonHarness create(TreeMetadata& treeMetadata,
-                                        const std::string& branchName) {
+  static BranchComparisonHarness
+  create(TreeMetadata& treeMetadata, const std::string& branchName) {
     // Our result will eventually go there
     BranchComparisonHarness result;
 
@@ -407,7 +419,8 @@ struct BranchComparisonHarness {
   class IEventLoader {
    public:
     virtual ~IEventLoader() = default;
-    virtual void operator()() = 0;
+    virtual void
+    operator()() = 0;
   };
 
   template <typename T>
@@ -421,7 +434,8 @@ struct BranchComparisonHarness {
           branch1Data(tree1Data),
           branch2Data(tree2Data) {}
 
-    void operator()() final override {
+    void
+    operator()() final override {
       branch1Data.push_back(*branch1Reader);
       branch2Data.push_back(*branch2Reader);
     }
@@ -436,9 +450,9 @@ struct BranchComparisonHarness {
 
   // This helper factory helps building branches associated with std::vectors
   // of data, which are the only STL collection that we support at the moment.
-  static BranchComparisonHarness createVector(TreeMetadata& treeMetadata,
-                                              const std::string& branchName,
-                                              const std::string elemType) {
+  static BranchComparisonHarness
+  createVector(TreeMetadata& treeMetadata, const std::string& branchName,
+               const std::string elemType) {
 // We support vectors of different types by switching across type (strings)
 #define CREATE_VECTOR__HANDLE_TYPE(type_name)                       \
   if (elemType == #type_name) {                                     \
@@ -469,14 +483,16 @@ struct BranchComparisonHarness {
   // This helper method provides general string conversion for all supported
   // branch event data types.
   template <typename T>
-  static std::string toString(const T& data) {
+  static std::string
+  toString(const T& data) {
     std::ostringstream oss;
     oss << data;
     return oss.str();
   }
 
   template <typename U>
-  static std::string toString(const std::vector<U>& vector) {
+  static std::string
+  toString(const std::vector<U>& vector) {
     std::ostringstream oss{"{ "};
     for (const auto& data : vector) {
       oss << data << "  \t";

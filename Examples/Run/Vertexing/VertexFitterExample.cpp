@@ -29,7 +29,8 @@ using namespace FW;
 ///
 /// @param argc The argument count
 /// @param argv The argument list
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   // setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

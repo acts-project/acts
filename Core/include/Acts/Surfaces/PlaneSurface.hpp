@@ -79,7 +79,8 @@ class PlaneSurface : public Surface {
   /// Assignment operator
   ///
   /// @param other The source PlaneSurface for assignment
-  PlaneSurface& operator=(const PlaneSurface& other);
+  PlaneSurface&
+  operator=(const PlaneSurface& other);
 
   /// Normal vector return
   ///
@@ -87,8 +88,8 @@ class PlaneSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  const Vector3D
+  normal(const GeometryContext& gctx, const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -100,14 +101,16 @@ class PlaneSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  const Vector3D
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
 
   /// Return the surface type
-  SurfaceType type() const override;
+  SurfaceType
+  type() const override;
 
   /// Return method for bounds object of this surfrace
-  const SurfaceBounds& bounds() const override;
+  const SurfaceBounds&
+  bounds() const override;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
@@ -118,9 +121,9 @@ class PlaneSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   /// @param position global 3D position to be filled (given by reference for
   /// method symmetry)
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum,
-                     Vector3D& position) const override;
+  void
+  localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                const Vector3D& momentum, Vector3D& position) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
@@ -135,9 +138,9 @@ class PlaneSurface : public Surface {
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum,
-                     Vector2D& lposition) const override;
+  bool
+  globalToLocal(const GeometryContext& gctx, const Vector3D& position,
+                const Vector3D& momentum, Vector2D& lposition) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
@@ -147,8 +150,9 @@ class PlaneSurface : public Surface {
   /// @note this is the final implementation of the pathCorrection function
   ///
   /// @return a double representing the scaling factor
-  double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
-                        const Vector3D& direction) const final;
+  double
+  pathCorrection(const GeometryContext& gctx, const Vector3D& position,
+                 const Vector3D& direction) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -176,10 +180,10 @@ class PlaneSurface : public Surface {
   /// - perpendicular to the normal of the plane
   ///
   /// @return the Intersection object
-  Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const BoundaryCheck& bcheck = false) const final;
+  Intersection
+  intersectionEstimate(const GeometryContext& gctx, const Vector3D& position,
+                       const Vector3D& direction,
+                       const BoundaryCheck& bcheck = false) const final;
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -189,11 +193,13 @@ class PlaneSurface : public Surface {
   /// are given
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t lseg) const override;
+  Polyhedron
+  polyhedronRepresentation(const GeometryContext& gctx,
+                           size_t lseg) const override;
 
   /// Return properly formatted class name for screen output
-  std::string name() const override;
+  std::string
+  name() const override;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -203,8 +209,9 @@ class PlaneSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position) const final;
+  const LocalCartesianToBoundLocalMatrix
+  localCartesianToBoundLocalDerivative(const GeometryContext& gctx,
+                                       const Vector3D& position) const final;
 
  protected:
   /// the bounds of this surface

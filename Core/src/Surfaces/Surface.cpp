@@ -37,10 +37,10 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
 
 Acts::Surface::~Surface() = default;
 
-bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
-                                const Vector3D& position,
-                                const Vector3D& momentum,
-                                const BoundaryCheck& bcheck) const {
+bool
+Acts::Surface::isOnSurface(const GeometryContext& gctx,
+                           const Vector3D& position, const Vector3D& momentum,
+                           const BoundaryCheck& bcheck) const {
   // create the local position
   Vector2D lposition{0., 0.};
   // global to local transformation
@@ -52,9 +52,11 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   return false;
 }
 
-const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
-    const GeometryContext& gctx, const FreeVector& derivatives,
-    const Vector3D& position, const Vector3D& direction) const {
+const Acts::AlignmentToBoundMatrix
+Acts::Surface::alignmentToBoundDerivative(const GeometryContext& gctx,
+                                          const FreeVector& derivatives,
+                                          const Vector3D& position,
+                                          const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
@@ -111,7 +113,8 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   return alignToBound;
 }
 
-const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
+const Acts::AlignmentRowVector
+Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -134,15 +137,18 @@ const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-std::shared_ptr<Acts::Surface> Acts::Surface::getSharedPtr() {
+std::shared_ptr<Acts::Surface>
+Acts::Surface::getSharedPtr() {
   return shared_from_this();
 }
 
-std::shared_ptr<const Acts::Surface> Acts::Surface::getSharedPtr() const {
+std::shared_ptr<const Acts::Surface>
+Acts::Surface::getSharedPtr() const {
   return shared_from_this();
 }
 
-Acts::Surface& Acts::Surface::operator=(const Surface& other) {
+Acts::Surface&
+Acts::Surface::operator=(const Surface& other) {
   if (&other != this) {
     GeometryObject::operator=(other);
     // detector element, identifier & layer association are unique
@@ -154,7 +160,8 @@ Acts::Surface& Acts::Surface::operator=(const Surface& other) {
   return *this;
 }
 
-bool Acts::Surface::operator==(const Surface& other) const {
+bool
+Acts::Surface::operator==(const Surface& other) const {
   // (a) fast exit for pointer comparison
   if (&other == this) {
     return true;
@@ -187,8 +194,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
 }
 
 // overload dump for stream operator
-std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
-                                      std::ostream& sl) const {
+std::ostream&
+Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
@@ -211,6 +218,7 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   return sl;
 }
 
-bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
+bool
+Acts::Surface::operator!=(const Acts::Surface& sf) const {
   return !(operator==(sf));
 }

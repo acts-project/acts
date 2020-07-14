@@ -60,7 +60,7 @@ using ChargedElectroMagneticPhysicsList =
 /// Construct the standard electro-magnetic physics list for charged particles.
 ///
 /// @param minimumAbsMomentum lower p cut on output particles
-ChargedElectroMagneticPhysicsList makeChargedElectroMagneticPhysicsList(
-    double minimumAbsMomentum);
+ChargedElectroMagneticPhysicsList
+makeChargedElectroMagneticPhysicsList(double minimumAbsMomentum);
 
 }  // namespace ActsFatras

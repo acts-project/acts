@@ -39,7 +39,8 @@ class IMaterialWriter {
   /// The single wirter class
   ///
   /// @param detMaterial the detector material maps
-  virtual void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) = 0;
+  virtual void
+  writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) = 0;
 };
 
 /// @class MaterialWriterT
@@ -58,7 +59,8 @@ class MaterialWriterT : virtual public IMaterialWriter {
   /// The single wirter class
   ///
   /// @param detMaterial the detector material maps
-  void writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) {
+  void
+  writeMaterial(const Acts::DetectorMaterialMaps& detMaterial) {
     m_impl.write(detMaterial);
   }
 

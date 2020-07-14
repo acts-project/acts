@@ -101,8 +101,9 @@ struct MeasurementCreator {
   /// @param [in] state State of the propagator
   /// @param [out] result Vector of matching surfaces
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
@@ -188,7 +189,8 @@ struct MaterialScattering {
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper of the propagation
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if there is a surface with material and a covariance is existing
     if (state.navigation.currentSurface &&
         state.navigation.currentSurface->surfaceMaterial() &&
@@ -233,7 +235,8 @@ struct MinimalOutlierFinder {
   ///
   /// @return Whether it's outlier or not
   template <typename track_state_t>
-  bool operator()(const track_state_t& trackState) const {
+  bool
+  operator()(const track_state_t& trackState) const {
     double chi2 = trackState.chi2();
     if (std::abs(chi2) < chi2Tolerance) {
       return false;

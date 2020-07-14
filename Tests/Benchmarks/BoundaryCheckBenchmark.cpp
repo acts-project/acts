@@ -20,7 +20,8 @@
 
 using namespace Acts;
 
-int main(int /*argc*/, char** /*argv[]*/) {
+int
+main(int /*argc*/, char** /*argv[]*/) {
   // === PROBLEM DATA ===
 
   // Trapezoidal area of interest

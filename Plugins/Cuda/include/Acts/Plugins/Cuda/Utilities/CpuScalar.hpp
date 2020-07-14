@@ -46,9 +46,15 @@ class CpuScalar {
     }
   }
 
-  var_t* get() { return m_hostPtr; }
+  var_t*
+  get() {
+    return m_hostPtr;
+  }
 
-  void Set(var_t val) { m_hostPtr[0] = val; }
+  void
+  Set(var_t val) {
+    m_hostPtr[0] = val;
+  }
 
  private:
   var_t* m_hostPtr;

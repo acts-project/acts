@@ -35,22 +35,42 @@ class GeometryID {
   GeometryID(GeometryID&&) = default;
   GeometryID(const GeometryID&) = default;
   ~GeometryID() = default;
-  GeometryID& operator=(GeometryID&&) = default;
-  GeometryID& operator=(const GeometryID&) = default;
+  GeometryID&
+  operator=(GeometryID&&) = default;
+  GeometryID&
+  operator=(const GeometryID&) = default;
 
   /// Return the encoded value.
-  constexpr Value value() const { return m_value; }
+  constexpr Value
+  value() const {
+    return m_value;
+  }
 
   /// Return the volume identifier.
-  constexpr Value volume() const { return getBits(volume_mask); }
+  constexpr Value
+  volume() const {
+    return getBits(volume_mask);
+  }
   /// Return the boundary identifier.
-  constexpr Value boundary() const { return getBits(boundary_mask); }
+  constexpr Value
+  boundary() const {
+    return getBits(boundary_mask);
+  }
   /// Return the layer identifier.
-  constexpr Value layer() const { return getBits(layer_mask); }
+  constexpr Value
+  layer() const {
+    return getBits(layer_mask);
+  }
   /// Return the approach identifier.
-  constexpr Value approach() const { return getBits(approach_mask); }
+  constexpr Value
+  approach() const {
+    return getBits(approach_mask);
+  }
   /// Return the sensitive identifier.
-  constexpr Value sensitive() const { return getBits(sensitive_mask); }
+  constexpr Value
+  sensitive() const {
+    return getBits(sensitive_mask);
+  }
 
  private:
   // clang-format off
@@ -64,7 +84,8 @@ class GeometryID {
   Value m_value = 0;
 
   /// Extract the bit shift necessary to access the masked values.
-  static constexpr int extractShift(Value mask) {
+  static constexpr int
+  extractShift(Value mask) {
     // use compiler builtin to extract the number of trailing bits from the
     // mask. the builtin should be available on all supported compilers.
     // need unsigned long long version (...ll) to ensure uint64_t compatibility.
@@ -72,18 +93,22 @@ class GeometryID {
     return __builtin_ctzll(mask);
   }
   /// Extract the masked bits from the encoded value.
-  constexpr Value getBits(Value mask) const {
+  constexpr Value
+  getBits(Value mask) const {
     return (m_value & mask) >> extractShift(mask);
   }
 
-  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool
+  operator==(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool
+  operator<(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value < rhs.m_value;
   }
 };
 
-std::ostream& operator<<(std::ostream& os, GeometryID id);
+std::ostream&
+operator<<(std::ostream& os, GeometryID id);
 
 }  // namespace Acts

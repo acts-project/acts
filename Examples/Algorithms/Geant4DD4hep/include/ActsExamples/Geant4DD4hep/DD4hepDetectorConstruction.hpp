@@ -24,7 +24,8 @@ class DD4hepDetectorConstruction final : public G4VUserDetectorConstruction {
   ///
   /// Transfers ownership of the created object as all volumes (including world)
   /// are deleted in ~G4PhysicalVolumeStore().
-  G4VPhysicalVolume* Construct() final override;
+  G4VPhysicalVolume*
+  Construct() final override;
 
  private:
   dd4hep::Detector& m_detector;

@@ -44,13 +44,21 @@ struct SimVertex {
   SimVertex() = default;
   SimVertex(const SimVertex&) = default;
   SimVertex(SimVertex&&) = default;
-  SimVertex& operator=(const SimVertex&) = default;
-  SimVertex& operator=(SimVertex&&) = default;
+  SimVertex&
+  operator=(const SimVertex&) = default;
+  SimVertex&
+  operator=(SimVertex&&) = default;
 
   /// The vertex three-position.
-  auto position() const { return position4.head<3>(); }
+  auto
+  position() const {
+    return position4.head<3>();
+  }
   /// The vertex time.
-  Scalar time() const { return position4[3]; }
+  Scalar
+  time() const {
+    return position4[3];
+  }
 };
 
 }  // namespace FW

@@ -60,7 +60,8 @@ class FatrasAlgorithm final : public BareAlgorithm {
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override {
+  FW::ProcessCode
+  execute(const AlgorithmContext& ctx) const final override {
     // read input containers
     const auto& inputParticles =
         ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);

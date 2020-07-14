@@ -34,7 +34,8 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
   /// @tparam two second object
   ///
   /// @return boolen indicator
-  bool operator()(T one, T two) const {
+  bool
+  operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
     using Acts::VectorHelpers::phi;
@@ -72,7 +73,10 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
     }
   }
 
-  BinningValue binningValue() const { return m_binningValue; }
+  BinningValue
+  binningValue() const {
+    return m_binningValue;
+  }
 
  private:
   BinningValue m_binningValue;  ///< the binning value
@@ -101,7 +105,8 @@ class DistanceSorterT : public std::binary_function<T, T, bool> {
   /// @tparam two second object
   ///
   /// @return boolen indicator
-  bool operator()(T one, T two) const {
+  bool
+  operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
     using Acts::VectorHelpers::phi;
@@ -182,7 +187,8 @@ class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
   /// @tparam two second object
   ///
   /// @return boolen indicator
-  bool operator()(T one, T two) const {
+  bool
+  operator()(T one, T two) const {
     // get the pos one / pos two
     Vector3D posOne =
         m_transform

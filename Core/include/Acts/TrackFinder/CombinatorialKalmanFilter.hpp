@@ -230,7 +230,10 @@ class CombinatorialKalmanFilter {
   propagator_t m_propagator;
 
   /// Logger getter to support macros
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
@@ -277,8 +280,9 @@ class CombinatorialKalmanFilter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
+    void
+    operator()(propagator_state_t& state, const stepper_t& stepper,
+               result_type& result) const {
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       // This following is added due to the fact that the navigation
@@ -450,8 +454,9 @@ class CombinatorialKalmanFilter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void reset(propagator_state_t& state, stepper_t& stepper,
-               result_type& result) const {
+    void
+    reset(propagator_state_t& state, stepper_t& stepper,
+          result_type& result) const {
       // Remember the propagation state has been reset
       result.reset = true;
 
@@ -504,8 +509,9 @@ class CombinatorialKalmanFilter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, result_type& result) const {
+    Result<void>
+    filter(const Surface* surface, propagator_state_t& state,
+           const stepper_t& stepper, result_type& result) const {
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
@@ -734,12 +740,15 @@ class CombinatorialKalmanFilter {
     /// @param sharedTip The tip of state with shared source link
     ///
     /// @return The tip of added state and its state
-    Result<std::pair<size_t, TipState>> addSourcelinkState(
-        const TrackStatePropMask& stateMask, const BoundState& boundState,
-        const source_link_t& sourcelink, bool isOutlier, result_type& result,
-        std::reference_wrapper<const GeometryContext> geoContext,
-        const size_t& prevTip, const TipState& prevTipState,
-        size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX) const {
+    Result<std::pair<size_t, TipState>>
+    addSourcelinkState(const TrackStatePropMask& stateMask,
+                       const BoundState& boundState,
+                       const source_link_t& sourcelink, bool isOutlier,
+                       result_type& result,
+                       std::reference_wrapper<const GeometryContext> geoContext,
+                       const size_t& prevTip, const TipState& prevTipState,
+                       size_t neighborTip = SIZE_MAX,
+                       size_t sharedTip = SIZE_MAX) const {
       // Inherit the tip state from the previous and will be updated later
       TipState tipState = prevTipState;
 
@@ -827,9 +836,10 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    size_t addHoleState(const TrackStatePropMask& stateMask,
-                        const BoundState& boundState, result_type& result,
-                        size_t prevTip = SIZE_MAX) const {
+    size_t
+    addHoleState(const TrackStatePropMask& stateMask,
+                 const BoundState& boundState, result_type& result,
+                 size_t prevTip = SIZE_MAX) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
@@ -870,10 +880,10 @@ class CombinatorialKalmanFilter {
     /// @param prevTip The index of the previous state
     ///
     /// @return The tip of added state
-    size_t addPassiveState(const TrackStatePropMask& stateMask,
-                           const CurvilinearState& curvilinearState,
-                           result_type& result,
-                           size_t prevTip = SIZE_MAX) const {
+    size_t
+    addPassiveState(const TrackStatePropMask& stateMask,
+                    const CurvilinearState& curvilinearState,
+                    result_type& result, size_t prevTip = SIZE_MAX) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE(
@@ -915,7 +925,8 @@ class CombinatorialKalmanFilter {
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
-    void materialInteractor(
+    void
+    materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
       // Indicator if having material
@@ -967,8 +978,9 @@ class CombinatorialKalmanFilter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
-                          result_type& result) const {
+    Result<void>
+    finalize(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
       // The tip of the track being smoothed
       const auto& currentTip = result.trackTips.at(result.iSmoothed);
 
@@ -1036,7 +1048,10 @@ class CombinatorialKalmanFilter {
     const Logger* m_logger;
 
     /// Getter for the logger, to support logging macros
-    const Logger& logger() const { return *m_logger; }
+    const Logger&
+    logger() const {
+      return *m_logger;
+    }
 
     /// The CombinatorialKalmanFilter updater
     updater_t m_updater;
@@ -1065,8 +1080,9 @@ class CombinatorialKalmanFilter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result) const {
+    bool
+    operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+               const result_t& result) const {
       if (!result.result.ok()) {
         return true;
       }

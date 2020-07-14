@@ -51,7 +51,8 @@ class ParametricProcessGenerator {
   ParametricProcessGenerator(const Config& cfg);
 
   /// Generate a single process vertex with the given number of particles.
-  std::vector<SimVertex> operator()(RandomEngine& rng) const;
+  std::vector<SimVertex>
+  operator()(RandomEngine& rng) const;
 
  private:
   Config m_cfg;

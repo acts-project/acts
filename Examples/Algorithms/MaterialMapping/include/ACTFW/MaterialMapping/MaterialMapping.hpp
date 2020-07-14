@@ -100,7 +100,8 @@ class MaterialMapping : public FW::BareAlgorithm {
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
-  FW::ProcessCode execute(const AlgorithmContext& context) const final override;
+  FW::ProcessCode
+  execute(const AlgorithmContext& context) const final override;
 
  private:
   Config m_cfg;  //!< internal config object

@@ -50,11 +50,12 @@ class Segmentation {
   /// where the readout is given : -1, 0, 1 possible
   /// @param lorentzAngle is the lorentz angle measured from the local z
   /// towards x axis
-  virtual void createSegmentationSurfaces(
-      SurfacePtrVector& boundarySurfaces,
-      SurfacePtrVector& segmentationSurfacesX,
-      SurfacePtrVector& segmentationSurfacesY, double halfThickness,
-      int readoutDirection, double lorentzAngle) const = 0;
+  virtual void
+  createSegmentationSurfaces(SurfacePtrVector& boundarySurfaces,
+                             SurfacePtrVector& segmentationSurfacesX,
+                             SurfacePtrVector& segmentationSurfacesY,
+                             double halfThickness, int readoutDirection,
+                             double lorentzAngle) const = 0;
 
   /// Get the digitization cell fropm a 3D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
@@ -62,7 +63,8 @@ class Segmentation {
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual DigitizationCell cell(const Vector3D& position) const = 0;
+  virtual DigitizationCell
+  cell(const Vector3D& position) const = 0;
 
   /// Get the digitization cell fropm a 2D position
   /// - ignores the shift, i.e. assumenes in to be in cell frame
@@ -70,14 +72,16 @@ class Segmentation {
   /// @param position is the position for which the cell is requested
   ///
   /// @return is a cell with cell ids
-  virtual DigitizationCell cell(const Vector2D& position) const = 0;
+  virtual DigitizationCell
+  cell(const Vector2D& position) const = 0;
 
   /// Calculate the cell Position from the Id
   ///
   /// @param cId is the digitization cell
   ///
   /// @return the center position of the associated cell
-  virtual Vector2D cellPosition(const DigitizationCell& cId) const = 0;
+  virtual Vector2D
+  cellPosition(const DigitizationCell& cId) const = 0;
 
   /// Fill the associated digitsation cell from the start and end position in 3D
   /// correct for lorentz effect if needed
@@ -89,16 +93,17 @@ class Segmentation {
   /// @param lorentzAngle is the lorentz angle measured from local z towards x
   ///
   /// @return is a fully calculated digitzation step
-  virtual DigitizationStep digitizationStep(const Vector3D& start,
-                                            const Vector3D& end,
-                                            double halfThickness,
-                                            int readoutDirection,
-                                            double lorentzAngle) const = 0;
+  virtual DigitizationStep
+  digitizationStep(const Vector3D& start, const Vector3D& end,
+                   double halfThickness, int readoutDirection,
+                   double lorentzAngle) const = 0;
 
   /// return the surface bounds by reference
-  virtual const SurfaceBounds& moduleBounds() const = 0;
+  virtual const SurfaceBounds&
+  moduleBounds() const = 0;
 
   /// return the bin utility that defines the readout
-  virtual const BinUtility& binUtility() const = 0;
+  virtual const BinUtility&
+  binUtility() const = 0;
 };
 }  // namespace Acts

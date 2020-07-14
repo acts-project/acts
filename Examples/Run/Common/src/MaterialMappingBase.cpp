@@ -32,8 +32,8 @@
 
 namespace po = boost::program_options;
 
-int materialMappingExample(int argc, char* argv[],
-                           FW::IBaseDetector& detector) {
+int
+materialMappingExample(int argc, char* argv[], FW::IBaseDetector& detector) {
   // Setup and parse options
   auto desc = FW::Options::makeDefaultOptions();
   FW::Options::addSequencerOptions(desc);

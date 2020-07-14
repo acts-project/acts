@@ -15,7 +15,8 @@
 Acts::FsmwMode1dFinder::FsmwMode1dFinder(double firstFraction, double fraction)
     : m_firstFraction(firstFraction), m_fraction(fraction) {}
 
-Acts::Result<double> Acts::FsmwMode1dFinder::getMode(
+Acts::Result<double>
+Acts::FsmwMode1dFinder::getMode(
     std::vector<std::pair<double, double>> inputVector) const {
   if (inputVector.empty()) {
     return VertexingError::EmptyInput;

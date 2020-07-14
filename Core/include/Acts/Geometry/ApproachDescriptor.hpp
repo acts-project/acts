@@ -39,7 +39,8 @@ class ApproachDescriptor {
   /// Links the layer to the approach surfaces
   ///
   /// @param lay is the layer to be assigned
-  virtual void registerLayer(const Layer& lay) = 0;
+  virtual void
+  registerLayer(const Layer& lay) = 0;
 
   /// @brief Get the surface on approach
   ///
@@ -49,16 +50,19 @@ class ApproachDescriptor {
   /// @param bcheck is the boundary check directive
   ///
   /// @return is a surface intersection
-  virtual ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const = 0;
+  virtual ObjectIntersection<Surface>
+  approachSurface(const GeometryContext& gctx, const Vector3D& position,
+                  const Vector3D& direction,
+                  const BoundaryCheck& bcheck) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
-  virtual const std::vector<const Surface*>& containedSurfaces() const = 0;
+  virtual const std::vector<const Surface*>&
+  containedSurfaces() const = 0;
 
   /// Non-const version
-  virtual std::vector<const Surface*>& containedSurfaces() = 0;
+  virtual std::vector<const Surface*>&
+  containedSurfaces() = 0;
 };
 
 }  // namespace Acts

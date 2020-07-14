@@ -55,18 +55,25 @@ class SingleTrackParameters {
   /// @brief access position in global coordinate system
   ///
   /// @return 3D vector with global position
-  Vector3D position() const { return m_vPosition; }
+  Vector3D
+  position() const {
+    return m_vPosition;
+  }
 
   /// @brief access momentum in global coordinate system
   ///
   /// @return 3D vector with global momentum
-  Vector3D momentum() const { return m_vMomentum; }
+  Vector3D
+  momentum() const {
+    return m_vMomentum;
+  }
 
   /// @brief equality operator
   ///
   /// @return @c true of both objects have the same charge policy, parameter
   /// values, position and momentum, otherwise @c false
-  bool operator==(const SingleTrackParameters& rhs) const {
+  bool
+  operator==(const SingleTrackParameters& rhs) const {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
@@ -81,24 +88,34 @@ class SingleTrackParameters {
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  double charge() const { return m_oChargePolicy.getCharge(); }
+  double
+  charge() const {
+    return m_oChargePolicy.getCharge();
+  }
 
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return get<ParDef::eT>(); }
+  double
+  time() const {
+    return get<ParDef::eT>();
+  }
 
   /// @brief access to the internally stored ParameterSet
   ///
   /// @return ParameterSet object holding parameter values and their covariance
   /// matrix
-  const FullParameterSet& getParameterSet() const { return m_oParameters; }
+  const FullParameterSet&
+  getParameterSet() const {
+    return m_oParameters;
+  }
 
   /// @brief access associated surface defining the coordinate system for track
   ///        parameters and their covariance
   ///
   /// @return associated surface
-  virtual const Surface& referenceSurface() const = 0;
+  virtual const Surface&
+  referenceSurface() const = 0;
 
   /// @brief access covariance matrix of track parameters
   ///
@@ -108,7 +125,8 @@ class SingleTrackParameters {
   /// @return raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const {
+  const std::optional<CovMatrix_t>&
+  covariance() const {
     return getParameterSet().getCovariance();
   }
 
@@ -117,7 +135,10 @@ class SingleTrackParameters {
   /// @return Eigen vector of dimension Acts::eBoundParametersSize with values
   /// of the track parameters
   ///         (in the order as defined by the ParID_t enumeration)
-  ParVector_t parameters() const { return getParameterSet().getParameters(); }
+  ParVector_t
+  parameters() const {
+    return getParameterSet().getParameters();
+  }
 
   /// @brief access track parameter
   ///
@@ -127,7 +148,8 @@ class SingleTrackParameters {
   ///
   /// @sa ParameterSet::get
   template <ParID_t par>
-  ParValue_t get() const {
+  ParValue_t
+  get() const {
     return getParameterSet().template getParameter<par>();
   }
 
@@ -137,17 +159,27 @@ class SingleTrackParameters {
   ///
   /// @return value of the requested track parameter uncertainty
   template <ParID_t par>
-  ParValue_t uncertainty() const {
+  ParValue_t
+  uncertainty() const {
     return getParameterSet().template getUncertainty<par>();
   }
 
   /// @brief convenience method to retrieve transverse momentum
-  double pT() const { return VectorHelpers::perp(momentum()); }
+  double
+  pT() const {
+    return VectorHelpers::perp(momentum());
+  }
 
   /// @brief convenience method to retrieve pseudorapidity
-  double eta() const { return VectorHelpers::eta(momentum()); }
+  double
+  eta() const {
+    return VectorHelpers::eta(momentum());
+  }
 
-  FullParameterSet& getParameterSet() { return m_oParameters; }
+  FullParameterSet&
+  getParameterSet() {
+    return m_oParameters;
+  }
 
   /// @brief output stream operator
   ///
@@ -156,8 +188,8 @@ class SingleTrackParameters {
   /// TrackParameters::print method.
   ///
   /// @return modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleTrackParameters& stp) {
+  friend std::ostream&
+  operator<<(std::ostream& out, const SingleTrackParameters& stp) {
     stp.print(out);
     return out;
   }
@@ -206,8 +238,8 @@ class SingleTrackParameters {
   /// @brief copy assignment operator
   ///
   /// @param rhs object to be copied
-  SingleTrackParameters<ChargePolicy>& operator=(
-      const SingleTrackParameters<ChargePolicy>& rhs) {
+  SingleTrackParameters<ChargePolicy>&
+  operator=(const SingleTrackParameters<ChargePolicy>& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = rhs.m_oChargePolicy;
@@ -222,8 +254,8 @@ class SingleTrackParameters {
   /// @brief move assignment operator
   ///
   /// @param rhs object to be movied into `*this`
-  SingleTrackParameters<ChargePolicy>& operator=(
-      SingleTrackParameters<ChargePolicy>&& rhs) {
+  SingleTrackParameters<ChargePolicy>&
+  operator=(SingleTrackParameters<ChargePolicy>&& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       m_oChargePolicy = std::move(rhs.m_oChargePolicy);
@@ -244,8 +276,9 @@ class SingleTrackParameters {
   /// @note This function is triggered when called with an argument of a type
   ///       different from Acts::local_parameter
   template <typename T>
-  void updateGlobalCoordinates(const GeometryContext& /*gctx*/,
-                               const T& /*unused*/) {
+  void
+  updateGlobalCoordinates(const GeometryContext& /*gctx*/,
+                          const T& /*unused*/) {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
         getParameterSet().getParameters());
   }
@@ -254,8 +287,9 @@ class SingleTrackParameters {
   ///
   /// @note This function is triggered when called with an argument of a type
   /// Acts::local_parameter
-  void updateGlobalCoordinates(const GeometryContext& gctx,
-                               const local_parameter& /*unused*/) {
+  void
+  updateGlobalCoordinates(const GeometryContext& gctx,
+                          const local_parameter& /*unused*/) {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
         gctx, getParameterSet().getParameters(), this->referenceSurface());
   }
@@ -263,7 +297,8 @@ class SingleTrackParameters {
   /// @brief print information to output stream
   ///
   /// @return modified output stream object
-  std::ostream& print(std::ostream& sl) const {
+  std::ostream&
+  print(std::ostream& sl) const {
     // set stream output format
     auto old_precision = sl.precision(7);
     auto old_flags = sl.setf(std::ios::fixed);

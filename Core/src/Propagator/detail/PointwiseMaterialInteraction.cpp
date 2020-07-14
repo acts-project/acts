@@ -12,7 +12,8 @@
 
 namespace Acts {
 namespace detail {
-void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
+void
+PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
     bool multipleScattering, bool energyLoss) {
   if (energyLoss) {
     Eloss = computeEnergyLossBethe(slab, pdg, mass, qOverP, q);
@@ -23,8 +24,9 @@ void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
   }
 }
 
-void PointwiseMaterialInteraction::covarianceContributions(
-    bool multipleScattering, bool energyLoss) {
+void
+PointwiseMaterialInteraction::covarianceContributions(bool multipleScattering,
+                                                      bool energyLoss) {
   // Compute contributions from interactions
   if (multipleScattering) {
     // TODO use momentum before or after energy loss in backward mode?
@@ -44,8 +46,9 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
 }
 
-double PointwiseMaterialInteraction::updateVariance(
-    double variance, double change, NoiseUpdateMode updateMode) const {
+double
+PointwiseMaterialInteraction::updateVariance(double variance, double change,
+                                             NoiseUpdateMode updateMode) const {
   // Add/Subtract the change
   // Protect the variance against becoming negative
   return std::max(0., variance + std::copysign(change, updateMode));

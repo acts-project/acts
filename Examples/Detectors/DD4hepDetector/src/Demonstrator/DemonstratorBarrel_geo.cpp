@@ -20,8 +20,8 @@ using namespace dd4hep;
  layers possibly containing modules.
  */
 
-static Ref_t create_element(Detector& lcdd, xml_h xml,
-                            dd4hep::SensitiveDetector sens) {
+static Ref_t
+create_element(Detector& lcdd, xml_h xml, dd4hep::SensitiveDetector sens) {
   xml_det_t x_det = xml;
   std::string barrelName = x_det.nameStr();
   // Make dd4hep::DetElement

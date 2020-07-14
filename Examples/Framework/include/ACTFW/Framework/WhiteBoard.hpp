@@ -32,7 +32,8 @@ class WhiteBoard {
 
   // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
-  WhiteBoard& operator=(const WhiteBoard&) = delete;
+  WhiteBoard&
+  operator=(const WhiteBoard&) = delete;
 
   /// Store an object on the white board and transfer ownership.
   ///
@@ -40,7 +41,8 @@ class WhiteBoard {
   /// @param object Movable reference to the transferable object
   /// @throws std::invalid_argument on empty or duplicate name
   template <typename T>
-  void add(const std::string& name, T&& object);
+  void
+  add(const std::string& name, T&& object);
 
   /// Get access to a stored object.
   ///
@@ -48,13 +50,15 @@ class WhiteBoard {
   /// @return reference to the stored object
   /// @throws std::out_of_range if no object is stored under the requested name
   template <typename T>
-  const T& get(const std::string& name) const;
+  const T&
+  get(const std::string& name) const;
 
  private:
   // type-erased value holder for move-constructible types
   struct IHolder {
     virtual ~IHolder() = default;
-    virtual const std::type_info& type() const = 0;
+    virtual const std::type_info&
+    type() const = 0;
   };
   template <typename T,
             typename =
@@ -63,13 +67,19 @@ class WhiteBoard {
     T value;
 
     HolderT(T&& v) : value(std::move(v)) {}
-    const std::type_info& type() const { return typeid(T); }
+    const std::type_info&
+    type() const {
+      return typeid(T);
+    }
   };
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::unique_ptr<IHolder>> m_store;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW
@@ -78,7 +88,8 @@ inline FW::WhiteBoard::WhiteBoard(std::unique_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)) {}
 
 template <typename T>
-inline void FW::WhiteBoard::add(const std::string& name, T&& object) {
+inline void
+FW::WhiteBoard::add(const std::string& name, T&& object) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
@@ -90,7 +101,8 @@ inline void FW::WhiteBoard::add(const std::string& name, T&& object) {
 }
 
 template <typename T>
-inline const T& FW::WhiteBoard::get(const std::string& name) const {
+inline const T&
+FW::WhiteBoard::get(const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     throw std::out_of_range("Object '" + name + "' does not exists");

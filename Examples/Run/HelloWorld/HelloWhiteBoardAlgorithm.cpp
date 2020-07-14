@@ -23,8 +23,8 @@ FW::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
   }
 }
 
-FW::ProcessCode FW::HelloWhiteBoardAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::HelloWhiteBoardAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
   // event-store is append-only and always returns a const reference.
   ACTS_INFO("Reading HelloDataCollection " << m_cfg.input);
   const auto& in = ctx.eventStore.get<HelloDataCollection>(m_cfg.input);

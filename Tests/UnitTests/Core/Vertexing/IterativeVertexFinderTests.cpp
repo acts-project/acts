@@ -71,7 +71,10 @@ std::uniform_int_distribution<> nTracksDist(5, 15);
 struct InputTrack {
   InputTrack(const BoundParameters& params) : m_parameters(params) {}
 
-  const BoundParameters& parameters() const { return m_parameters; }
+  const BoundParameters&
+  parameters() const {
+    return m_parameters;
+  }
 
   // store e.g. link to original objects here
 

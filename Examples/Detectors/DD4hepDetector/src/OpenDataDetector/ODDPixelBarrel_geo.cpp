@@ -15,9 +15,10 @@
 using namespace std;
 using namespace dd4hep;
 
-static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
-                                   Assembly& staveAssembly, double staveHlength,
-                                   double ylength) {
+static void
+completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
+                       Assembly& staveAssembly, double staveHlength,
+                       double ylength) {
   unsigned int nModules = x_stave.nmodules();
 
   // Place carbon foam structure
@@ -82,7 +83,8 @@ static void completeStaveStructure(Detector& oddd, xml_comp_t& x_stave,
   }
 }
 
-static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
+static Ref_t
+create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
   xml_det_t x_det = xml;
   string detName = x_det.nameStr();
 

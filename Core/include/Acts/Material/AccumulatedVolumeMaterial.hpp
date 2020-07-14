@@ -20,12 +20,14 @@ namespace Acts {
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
-  void accumulate(const MaterialProperties& mat);
+  void
+  accumulate(const MaterialProperties& mat);
 
   /// Compute the average material collected so far.
   ///
   /// @returns Vacuum properties if no matter has been accumulated yet.
-  Material average();
+  Material
+  average();
 
  private:
   double m_totalX0{std::numeric_limits<double>::infinity()};

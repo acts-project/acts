@@ -27,12 +27,14 @@ struct unbound_parameter {
   /// @return identical input parameter value
   ///
   template <typename T>
-  static T getValue(const T& input) {
+  static T
+  getValue(const T& input) {
     return input;
   }
 
   template <typename T>
-  static T getDifference(const T& first, const T& second) {
+  static T
+  getDifference(const T& first, const T& second) {
     return first - second;
   }
 };
@@ -72,12 +74,14 @@ struct bound_parameter {
   ///         @c bound_parameter<U,MIN,MAX>::max.
   ///
   template <typename U>
-  static U getValue(const U& input) {
+  static U
+  getValue(const U& input) {
     return (input > max) ? max : ((input < min) ? min : input);
   }
 
   template <typename U>
-  static U getDifference(const U& first, const U& second) {
+  static U
+  getDifference(const U& first, const U& second) {
     return getValue(first) - getValue(second);
   }
 };
@@ -112,7 +116,8 @@ struct cyclic_parameter {
   ///         parameter type.
   ///
   template <typename U>
-  static U getValue(const U& input) {
+  static U
+  getValue(const U& input) {
     if (min <= input && input < max) {
       return input;
     } else {
@@ -121,7 +126,8 @@ struct cyclic_parameter {
   }
 
   template <typename U>
-  static U getDifference(const U& first, const U& second) {
+  static U
+  getDifference(const U& first, const U& second) {
     static constexpr U half_period = (max - min) / 2;
     U tmp = getValue(first) - getValue(second);
     return (tmp < -half_period

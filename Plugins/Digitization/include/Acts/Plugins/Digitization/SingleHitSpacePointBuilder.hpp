@@ -33,7 +33,8 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param cluster vector of clusters
   /// @param spacePointStorage storage of the results
-  void calculateSpacePoints(
+  void
+  calculateSpacePoints(
       const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
       std::vector<SpacePoint<Cluster>>& spacePointStorage) const;
 
@@ -44,7 +45,8 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D localCoords(const Cluster& cluster) const;
+  Vector2D
+  localCoords(const Cluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   ///
@@ -52,8 +54,8 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D globalCoords(const GeometryContext& gctx,
-                        const Cluster& cluster) const;
+  Vector3D
+  globalCoords(const GeometryContext& gctx, const Cluster& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/Plugins/Digitization/detail/SingleHitSpacePointBuilder.ipp"

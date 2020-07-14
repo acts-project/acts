@@ -27,9 +27,11 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
-    const GeometryContext& gctx, const LayerVector& layersInput, double min,
-    double max, BinningType bType, BinningValue bValue) const {
+std::unique_ptr<const Acts::LayerArray>
+Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
+                                    const LayerVector& layersInput, double min,
+                                    double max, BinningType bType,
+                                    BinningValue bValue) const {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
                                         << " layers at input.");
   ACTS_VERBOSE("       min/max provided : " << min << " / " << max);
@@ -168,9 +170,11 @@ std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
                                                          std::move(binUtility));
 }
 
-std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
-    const GeometryContext& gctx, const Layer& layer, BinningValue bValue,
-    double offset) const {
+std::shared_ptr<Acts::Surface>
+Acts::LayerArrayCreator::createNavigationSurface(const GeometryContext& gctx,
+                                                 const Layer& layer,
+                                                 BinningValue bValue,
+                                                 double offset) const {
   // surface reference
   const Surface& layerSurface = layer.surfaceRepresentation();
   // translation to be applied

@@ -26,7 +26,8 @@
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+std::vector<const SpacePoint*>
+readFile(std::string filename) {
   std::string line;
   int layer;
   std::vector<const SpacePoint*> readSP;
@@ -66,7 +67,8 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
   return readSP;
 }
 
-int main(int argc, char** argv) {
+int
+main(int argc, char** argv) {
   std::string file{"sp.txt"};
   bool help(false);
   bool quiet(false);

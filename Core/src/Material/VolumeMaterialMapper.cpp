@@ -37,7 +37,8 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
       m_propagator(std::move(propagator)),
       m_logger(std::move(slogger)) {}
 
-Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
+Acts::VolumeMaterialMapper::State
+Acts::VolumeMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
@@ -50,7 +51,8 @@ Acts::VolumeMaterialMapper::State Acts::VolumeMaterialMapper::createState(
   return mState;
 }
 
-void Acts::VolumeMaterialMapper::resolveMaterialVolume(
+void
+Acts::VolumeMaterialMapper::resolveMaterialVolume(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
@@ -74,8 +76,9 @@ void Acts::VolumeMaterialMapper::resolveMaterialVolume(
   }
 }
 
-void Acts::VolumeMaterialMapper::checkAndInsert(
-    State& mState, const TrackingVolume& volume) const {
+void
+Acts::VolumeMaterialMapper::checkAndInsert(State& mState,
+                                           const TrackingVolume& volume) const {
   auto volumeMaterial = volume.volumeMaterial();
   // Check if the volume has a proxy
   if (volumeMaterial != nullptr) {
@@ -121,7 +124,8 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   }
 }
 
-void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
+void
+Acts::VolumeMaterialMapper::collectMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
@@ -182,7 +186,8 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
   }
 }
 
-void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
+void
+Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
   // iterate over the volumes
   for (auto& recMaterial : mState.recordedMaterial) {
     ACTS_DEBUG("Create the material for volume  " << recMaterial.first);
@@ -230,7 +235,8 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
   }
 }
 
-void Acts::VolumeMaterialMapper::mapMaterialTrack(
+void
+Acts::VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,

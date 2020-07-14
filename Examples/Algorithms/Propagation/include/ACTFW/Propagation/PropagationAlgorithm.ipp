@@ -46,7 +46,8 @@ PropagationAlgorithm<propagator_t>::PropagationAlgorithm(
 /// @param [in] pathLength the maximal path length to go
 template <typename propagator_t>
 template <typename parameters_t>
-PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
+PropagationOutput
+PropagationAlgorithm<propagator_t>::executeTest(
     const AlgorithmContext& context, const parameters_t& startParameters,
     double pathLength) const {
   ACTS_DEBUG("Test propagation/extrapolation starts");
@@ -110,7 +111,8 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
 }
 
 template <typename propagator_t>
-ProcessCode PropagationAlgorithm<propagator_t>::execute(
+ProcessCode
+PropagationAlgorithm<propagator_t>::execute(
     const AlgorithmContext& context) const {
   // Create a random number generator
   FW::RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);

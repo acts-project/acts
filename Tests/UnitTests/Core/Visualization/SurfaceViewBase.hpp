@@ -44,8 +44,8 @@ namespace SurfaceViewTest {
 /// @param tag The test tag (mode) identification
 ///
 /// @return an overall string including all written output
-static inline std::string run(IVisualization& helper, bool triangulate,
-                              const std::string& tag) {
+static inline std::string
+run(IVisualization& helper, bool triangulate, const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
   std::stringstream cStream;

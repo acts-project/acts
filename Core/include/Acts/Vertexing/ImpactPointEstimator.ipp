@@ -14,12 +14,11 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
-    propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
-                                               const BoundParameters& trkParams,
-                                               const Vector3D& vtxPos,
-                                               State& state) const {
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    calculate3dDistance(const GeometryContext& gctx,
+                        const BoundParameters& trkParams,
+                        const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -130,12 +129,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
-    propagator_options_t>::performNewtonApproximation(const Vector3D& trkPos,
-                                                      const Vector3D& vtxPos,
-                                                      double phi, double theta,
-                                                      double r) const {
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    performNewtonApproximation(const Vector3D& trkPos, const Vector3D& vtxPos,
+                               double phi, double theta, double r) const {
   double sinNewPhi = -std::sin(phi);
   double cosNewPhi = std::cos(phi);
 

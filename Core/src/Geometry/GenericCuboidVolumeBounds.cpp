@@ -35,8 +35,9 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
   construct();
 }
 
-bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
-                                             double tol) const {
+bool
+Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
+                                        double tol) const {
   constexpr std::array<size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
   bool ref = std::signbit((gpos - m_vertices[vtxs[0]]).dot(m_normals[0]));
@@ -54,7 +55,8 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
   return true;
 }
 
-Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces
+Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Transform3D* transform) const {
   OrientedSurfaces oSurfaces;
 
@@ -120,8 +122,8 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
-    std::ostream& sl) const {
+std::ostream&
+Acts::GenericCuboidVolumeBounds::toStream(std::ostream& sl) const {
   sl << "Acts::GenericCuboidVolumeBounds: vertices (x, y, z) =\n";
   for (size_t i = 0; i < 8; i++) {
     if (i > 0) {
@@ -132,7 +134,8 @@ std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
   return sl;
 }
 
-void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
+void
+Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   // calculate approximate center of gravity first, so we can make sure
   // the normals point inwards
   Vector3D cog(0, 0, 0);
@@ -178,7 +181,8 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 }
 
-std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
+std::vector<double>
+Acts::GenericCuboidVolumeBounds::values() const {
   std::vector<double> rvalues;
   rvalues.reserve(eSize);
   for (size_t iv = 0; iv < 8; ++iv) {
@@ -189,9 +193,10 @@ std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
   return rvalues;
 }
 
-Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
-    const Volume* entity) const {
+Acts::Volume::BoundingBox
+Acts::GenericCuboidVolumeBounds::boundingBox(const Acts::Transform3D* trf,
+                                             const Vector3D& envelope,
+                                             const Volume* entity) const {
   Vector3D vmin, vmax;
 
   Transform3D transform = Transform3D::Identity();
@@ -211,8 +216,9 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
   return {entity, vmin - envelope, vmax + envelope};
 }
 
-void Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
-                                           const Transform3D& transform) const {
+void
+Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
+                                      const Transform3D& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,
                        const auto& d) {
     helper.face(std::vector<Vector3D>(

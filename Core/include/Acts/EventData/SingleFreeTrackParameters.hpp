@@ -68,7 +68,10 @@ class SingleFreeTrackParameters {
   /// @brief Access all parameters
   ///
   /// @return Vector containing the store parameters
-  FreeVector parameters() const { return m_oParameters.getParameters(); }
+  FreeVector
+  parameters() const {
+    return m_oParameters.getParameters();
+  }
 
   /// @brief Access to a single parameter
   ///
@@ -101,21 +104,24 @@ class SingleFreeTrackParameters {
   /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const {
+  const std::optional<CovMatrix_t>&
+  covariance() const {
     return m_oParameters.getCovariance();
   }
 
   /// @brief access position in global coordinate system
   ///
   /// @return 3D vector with global position
-  Vector3D position() const {
+  Vector3D
+  position() const {
     return parameters().template segment<3>(eFreePos0);
   }
 
   /// @brief access momentum in global coordinate system
   ///
   /// @return 3D vector with global momentum
-  Vector3D momentum() const {
+  Vector3D
+  momentum() const {
     return parameters().template segment<3>(eFreeDir0) /
            std::abs(get<eFreeQOverP>());
   }
@@ -123,18 +129,27 @@ class SingleFreeTrackParameters {
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  double charge() const { return m_oChargePolicy.getCharge(); }
+  double
+  charge() const {
+    return m_oChargePolicy.getCharge();
+  }
 
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return get<eFreeTime>(); }
+  double
+  time() const {
+    return get<eFreeTime>();
+  }
 
   /// @brief access to the internally stored FreeParameterSet
   ///
   /// @return FreeParameterSet object holding parameter values and their
   /// covariance matrix
-  const FullFreeParameterSet& getParameterSet() const { return m_oParameters; }
+  const FullFreeParameterSet&
+  getParameterSet() const {
+    return m_oParameters;
+  }
 
   /// @brief Equality operator
   ///
@@ -142,7 +157,8 @@ class SingleFreeTrackParameters {
   ///
   /// @return Boolean value whether the objects can be casted into each
   /// other and the content of the member variables is the same
-  bool operator==(const SingleFreeTrackParameters& rhs) const {
+  bool
+  operator==(const SingleFreeTrackParameters& rhs) const {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
     if (!casted) {
       return false;
@@ -155,7 +171,8 @@ class SingleFreeTrackParameters {
   /// @brief inequality operator
   ///
   /// @return `not (*this == rhs)`
-  bool operator!=(const SingleFreeTrackParameters& rhs) const {
+  bool
+  operator!=(const SingleFreeTrackParameters& rhs) const {
     return !(*this == rhs);
   }
 
@@ -178,7 +195,8 @@ class SingleFreeTrackParameters {
   /// @param [in, out] sl The output stream
   ///
   /// @return The modified output stream object @p sl
-  std::ostream& print(std::ostream& sl) const {
+  std::ostream&
+  print(std::ostream& sl) const {
     // Set stream output format
     auto old_precision = sl.precision(7);
     auto old_flags = sl.setf(std::ios::fixed);
@@ -207,8 +225,8 @@ class SingleFreeTrackParameters {
   /// @param [in] sfp The object that will be printed
   ///
   /// @return Modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleFreeTrackParameters& sfp) {
+  friend std::ostream&
+  operator<<(std::ostream& out, const SingleFreeTrackParameters& sfp) {
     sfp.print(out);
     return out;
   }

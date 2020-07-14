@@ -26,7 +26,8 @@ Acts::DD4hepVolumeBuilder::DD4hepVolumeBuilder(
 
 Acts::DD4hepVolumeBuilder::~DD4hepVolumeBuilder() = default;
 
-void Acts::DD4hepVolumeBuilder::setConfiguration(
+void
+Acts::DD4hepVolumeBuilder::setConfiguration(
     const Acts::DD4hepVolumeBuilder::Config& config) {
   m_cfg = config;
 }

@@ -158,22 +158,25 @@ class ProtoLayerCreatorT {
   /// @param gctx The geometry context for this construction call
   /// @param detectorStore The reference store for the detector elements
   /// @return the protolayers and surfaces on the negative detector side
-  std::vector<ProtoLayerSurfaces> negativeProtoLayers(
-      const Acts::GeometryContext& gctx, DetectorStore& detectorStore) const;
+  std::vector<ProtoLayerSurfaces>
+  negativeProtoLayers(const Acts::GeometryContext& gctx,
+                      DetectorStore& detectorStore) const;
 
   /// @brief construct the central layers
   /// @param gctx The geometry context for this construction call
   /// @param detectorStore The reference store for the detector elements
   /// @return the protolayers and surfaces on the central detector side
-  std::vector<ProtoLayerSurfaces> centralProtoLayers(
-      const Acts::GeometryContext& gctx, DetectorStore& detectorStore) const;
+  std::vector<ProtoLayerSurfaces>
+  centralProtoLayers(const Acts::GeometryContext& gctx,
+                     DetectorStore& detectorStore) const;
 
   /// @brief construct the positive side layers
   /// @param gctx The geometry context for this construction call
   /// @param detectorStore The reference store for the detector elements
   /// @return the protolayers and surfaces on the  positive detector side
-  std::vector<ProtoLayerSurfaces> positiveProtoLayers(
-      const Acts::GeometryContext& gctx, DetectorStore& detectorStore) const;
+  std::vector<ProtoLayerSurfaces>
+  positiveProtoLayers(const Acts::GeometryContext& gctx,
+                      DetectorStore& detectorStore) const;
 
  private:
   /// @brief private helper method to create the proto layers on the
@@ -182,9 +185,9 @@ class ProtoLayerCreatorT {
   /// @param detectorStore The reference store for the detector elements
   /// @param side is the indiciator whether to build on negative/positive
   /// @return the protolayers and surfaces on the neg/pos detector side
-  std::vector<ProtoLayerSurfaces> createProtoLayers(
-      const Acts::GeometryContext& gctx, DetectorStore& detectorStore,
-      int side) const;
+  std::vector<ProtoLayerSurfaces>
+  createProtoLayers(const Acts::GeometryContext& gctx,
+                    DetectorStore& detectorStore, int side) const;
 
   /// Configuration member
   Config m_cfg;
@@ -193,7 +196,10 @@ class ProtoLayerCreatorT {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 template <typename detector_element_t>

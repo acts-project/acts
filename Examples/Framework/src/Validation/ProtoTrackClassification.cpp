@@ -12,7 +12,8 @@
 
 #include "ACTFW/Utilities/Range.hpp"
 
-void FW::identifyContributingParticles(
+void
+FW::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
     std::vector<FW::ParticleHitCount>& particleHitCount) {

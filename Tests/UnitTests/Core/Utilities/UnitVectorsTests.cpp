@@ -148,9 +148,10 @@ BOOST_AUTO_TEST_CASE(DirectionPhiTheta) {
 
 namespace {
 template <typename Direction, typename RefUnitU, typename RefUnitV>
-void testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
-                     const Eigen::MatrixBase<RefUnitU>& refU,
-                     const Eigen::MatrixBase<RefUnitV>& refV) {
+void
+testCurvilinear(const Eigen::MatrixBase<Direction>& direction,
+                const Eigen::MatrixBase<RefUnitU>& refU,
+                const Eigen::MatrixBase<RefUnitV>& refV) {
   const auto u = Acts::makeCurvilinearUnitU(direction);
   const auto uv = Acts::makeCurvilinearUnitVectors(direction);
   // verify normalization

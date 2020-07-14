@@ -20,7 +20,8 @@ using Acts::GeometryID;
 using nlohmann::json;
 
 // helper function to create geometry ids.
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+GeometryID
+makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 
@@ -30,7 +31,8 @@ struct Thing {
   double x = 1.0;
   int y = 23;
 
-  friend constexpr bool operator==(const Thing& lhs, const Thing& rhs) {
+  friend constexpr bool
+  operator==(const Thing& lhs, const Thing& rhs) {
     return (lhs.x == rhs.x) and (lhs.y == rhs.y);
   }
 };
@@ -38,16 +40,19 @@ struct Thing {
 // custom Json encoder/decoder. naming is mandated by nlohman::json and thus can
 // not match our naming guidelines.
 
-void to_json(json& j, const Thing& t) {
+void
+to_json(json& j, const Thing& t) {
   j = json{{"x", t.x}, {"y", t.y}};
 }
 
-void from_json(const json& j, Thing& t) {
+void
+from_json(const json& j, Thing& t) {
   j.at("x").get_to(t.x);
   j.at("y").get_to(t.y);
 }
 
-std::ostream& operator<<(std::ostream& os, const Thing& t) {
+std::ostream&
+operator<<(std::ostream& os, const Thing& t) {
   os << nlohmann::json(t);
   return os;
 }

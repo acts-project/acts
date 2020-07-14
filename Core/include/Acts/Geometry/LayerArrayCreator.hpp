@@ -55,19 +55,23 @@ class LayerArrayCreator : public ILayerArrayCreator {
   /// @param bValue is the value in which the binning should be done
   ///
   /// @return unique pointer to a newly created LayerArray
-  std::unique_ptr<const LayerArray> layerArray(
-      const GeometryContext& gctx, const LayerVector& layersInput, double min,
-      double max, BinningType bType = arbitrary,
-      BinningValue bValue = binX) const override;
+  std::unique_ptr<const LayerArray>
+  layerArray(const GeometryContext& gctx, const LayerVector& layersInput,
+             double min, double max, BinningType bType = arbitrary,
+             BinningValue bValue = binX) const override;
 
   /// set logging instance
-  void setLogger(std::unique_ptr<const Logger> logger) {
+  void
+  setLogger(std::unique_ptr<const Logger> logger) {
     m_logger = std::move(logger);
   }
 
  private:
   /// Private access method to the logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger = nullptr;
@@ -79,10 +83,9 @@ class LayerArrayCreator : public ILayerArrayCreator {
   ///
   /// @param bValue is the Binning value for the layer array
   /// @param offset is the sift for the navigation layer
-  std::shared_ptr<Surface> createNavigationSurface(const GeometryContext& gctx,
-                                                   const Layer& layer,
-                                                   BinningValue bValue,
-                                                   double offset) const;
+  std::shared_ptr<Surface>
+  createNavigationSurface(const GeometryContext& gctx, const Layer& layer,
+                          BinningValue bValue, double offset) const;
 };
 
 }  // namespace Acts

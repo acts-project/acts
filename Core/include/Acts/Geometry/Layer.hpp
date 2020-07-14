@@ -94,25 +94,31 @@ class Layer : public virtual GeometryObject {
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
   ///
   /// @param lay is the source layer for assignment
-  Layer& operator=(const Layer&) = delete;
+  Layer&
+  operator=(const Layer&) = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
-  const SurfaceArray* surfaceArray() const;
+  const SurfaceArray*
+  surfaceArray() const;
 
   /// Non-const version
-  SurfaceArray* surfaceArray();
+  SurfaceArray*
+  surfaceArray();
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @note the layer can be hosting many surfaces, but this is the global
   /// one to which one can extrapolate
-  virtual const Surface& surfaceRepresentation() const = 0;
+  virtual const Surface&
+  surfaceRepresentation() const = 0;
 
   // Non-const version
-  virtual Surface& surfaceRepresentation() = 0;
+  virtual Surface&
+  surfaceRepresentation() = 0;
 
   /// Return the Thickness of the Layer
   /// this is by definition along the normal vector of the surfaceRepresentation
-  double thickness() const;
+  double
+  thickness() const;
 
   /// geometrical isOnLayer() method
   ///
@@ -123,14 +129,17 @@ class Layer : public virtual GeometryObject {
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
-  virtual bool isOnLayer(const GeometryContext& gctx, const Vector3D& position,
-                         const BoundaryCheck& bcheck = true) const;
+  virtual bool
+  isOnLayer(const GeometryContext& gctx, const Vector3D& position,
+            const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
-  const ApproachDescriptor* approachDescriptor() const;
+  const ApproachDescriptor*
+  approachDescriptor() const;
 
   /// Non-const version of the approach descriptor
-  ApproachDescriptor* approachDescriptor();
+  ApproachDescriptor*
+  approachDescriptor();
 
   /// Accept layer according to the following collection directives
   ///
@@ -138,7 +147,8 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return a boolean whether the layer is accepted for processing
   template <typename options_t>
-  bool resolve(const options_t& options) const {
+  bool
+  resolve(const options_t& options) const {
     return resolve(options.resolveSensitive, options.resolveMaterial,
                    options.resolvePassive);
   }
@@ -150,8 +160,9 @@ class Layer : public virtual GeometryObject {
   /// @param resolvePassive is the prescription to find all passive surfaces
   ///
   /// @return a boolean whether the layer is accepted for processing
-  virtual bool resolve(bool resolveSensitive, bool resolveMaterial,
-                       bool resolvePassive) const;
+  virtual bool
+  resolve(bool resolveSensitive, bool resolveMaterial,
+          bool resolvePassive) const;
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
@@ -164,9 +175,9 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return list of intersection of surfaces on the layer
   template <typename options_t>
-  std::vector<SurfaceIntersection> compatibleSurfaces(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const options_t& options) const;
+  std::vector<SurfaceIntersection>
+  compatibleSurfaces(const GeometryContext& gctx, const Vector3D& position,
+                     const Vector3D& direction, const options_t& options) const;
 
   /// Surface seen on approach
   ///
@@ -182,10 +193,9 @@ class Layer : public virtual GeometryObject {
   ///
   /// @return the Surface intersection of the approach surface
   template <typename options_t>
-  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
-                                              const options_t& options) const;
+  const SurfaceIntersection
+  surfaceOnApproach(const GeometryContext& gctx, const Vector3D& position,
+                    const Vector3D& direction, const options_t& options) const;
 
   /// Fast navigation to next layer
   ///
@@ -194,21 +204,25 @@ class Layer : public virtual GeometryObject {
   /// @param direction is the direction for the search
   ///
   /// @return the pointer to the next layer
-  const Layer* nextLayer(const GeometryContext& gctx, const Vector3D& position,
-                         const Vector3D& direction) const;
+  const Layer*
+  nextLayer(const GeometryContext& gctx, const Vector3D& position,
+            const Vector3D& direction) const;
 
   /// Get the confining TrackingVolume
   ///
   /// @return the pointer to the enclosing volume
-  const TrackingVolume* trackingVolume() const;
+  const TrackingVolume*
+  trackingVolume() const;
 
   ///  Return the abstract volume that represents the layer
   ///
   /// @return the representing volume of the layer
-  const AbstractVolume* representingVolume() const;
+  const AbstractVolume*
+  representingVolume() const;
 
   /// return the LayerType
-  LayerType layerType() const;
+  LayerType
+  layerType() const;
 
  protected:
   /// Constructor with pointer to SurfaceArray (passing ownership)
@@ -230,7 +244,8 @@ class Layer : public virtual GeometryObject {
   ///  - SubSurface array boundaries are NOT resized
   ///
   /// @param tvol is the tracking volume the layer is confined
-  void encloseTrackingVolume(const TrackingVolume& tvol);
+  void
+  encloseTrackingVolume(const TrackingVolume& tvol);
 
   /// the previous Layer according to BinGenUtils
   NextLayers m_nextLayers;
@@ -281,8 +296,9 @@ class Layer : public virtual GeometryObject {
   ///        optionally the surface material to where they belong
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
-  void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     const GeometryID& layerID);
+  void
+  closeGeometry(const IMaterialDecorator* materialDecorator,
+                const GeometryID& layerID);
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is

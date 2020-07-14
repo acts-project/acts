@@ -59,11 +59,12 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param clusterPairs storage of the cluster pairs
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
-  void makeClusterPairs(const GeometryContext& gctx,
-                        const std::vector<const Cluster*>& clustersFront,
-                        const std::vector<const Cluster*>& clustersBack,
-                        std::vector<std::pair<const Cluster*, const Cluster*>>&
-                            clusterPairs) const;
+  void
+  makeClusterPairs(const GeometryContext& gctx,
+                   const std::vector<const Cluster*>& clustersFront,
+                   const std::vector<const Cluster*>& clustersBack,
+                   std::vector<std::pair<const Cluster*, const Cluster*>>&
+                       clusterPairs) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
@@ -72,7 +73,8 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param clusterPairs pairs of clusters that are space point candidates
   /// @param spacePoints storage of the results
   /// @note If no configuration is set, the default values will be used
-  void calculateSpacePoints(
+  void
+  calculateSpacePoints(
       const GeometryContext& gctx,
       const std::vector<std::pair<const Cluster*, const Cluster*>>&
           clusterPairs,
@@ -87,21 +89,22 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D localCoords(const Cluster& cluster) const;
+  Vector2D
+  localCoords(const Cluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D globalCoords(const GeometryContext& gctx,
-                        const Cluster& cluster) const;
+  Vector3D
+  globalCoords(const GeometryContext& gctx, const Cluster& cluster) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  std::pair<Vector3D, Vector3D> endsOfStrip(const GeometryContext& gctx,
-                                            const Cluster& cluster) const;
+  std::pair<Vector3D, Vector3D>
+  endsOfStrip(const GeometryContext& gctx, const Cluster& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"

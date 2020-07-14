@@ -26,7 +26,8 @@ namespace Options {
 /// @param [in] opt_t The options object where the specific digitization
 /// options are attached to
 template <typename aopt_t>
-void addMaterialMappingOptions(aopt_t& opt) {
+void
+addMaterialMappingOptions(aopt_t& opt) {
   opt.add_options()("mat-mapping-collection",
                     po::value<std::string>()->default_value("material-tracks"),
                     "Collection name of the material tracks for reading.")(

@@ -37,8 +37,8 @@ class ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return  the layers at negative side
-  virtual const LayerVector negativeLayers(
-      const GeometryContext& gctx) const = 0;
+  virtual const LayerVector
+  negativeLayers(const GeometryContext& gctx) const = 0;
 
   /// LayerBuilder interface method
   ///
@@ -46,8 +46,8 @@ class ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return the layers at the central sector
-  virtual const LayerVector centralLayers(
-      const GeometryContext& gctx) const = 0;
+  virtual const LayerVector
+  centralLayers(const GeometryContext& gctx) const = 0;
 
   /// LayerBuilder interface method
   ///
@@ -55,12 +55,13 @@ class ILayerBuilder {
   /// which the geometry is built
   ///
   /// @return  the layers at positive side
-  virtual const LayerVector positiveLayers(
-      const GeometryContext& gctx) const = 0;
+  virtual const LayerVector
+  positiveLayers(const GeometryContext& gctx) const = 0;
 
   /// Name identification
   /// @return the string based identification
-  virtual const std::string& identification() const = 0;
+  virtual const std::string&
+  identification() const = 0;
 };
 
 }  // namespace Acts

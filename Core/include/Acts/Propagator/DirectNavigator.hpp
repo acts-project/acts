@@ -66,8 +66,9 @@ class DirectNavigator {
     /// @param state the entire propagator state
     /// @param r the result of this Actor
     template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                    result_type& r) const {
+    void
+    operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+               result_type& r) const {
       // Only act once
       if (not r.initialized) {
         // Initialize the surface sequence
@@ -80,8 +81,9 @@ class DirectNavigator {
 
     /// Actor operator call - resultless, unused
     template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*unused*/,
-                    const stepper_t& /*unused*/) const {}
+    void
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const {}
   };
 
   /// Nested State struct
@@ -124,7 +126,8 @@ class DirectNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  status(propagator_state_t& state, const stepper_t& stepper) const {
     // Screen output
     debugLog(state, [&] { return std::string("Entering navigator::status."); });
 
@@ -185,7 +188,8 @@ class DirectNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  target(propagator_state_t& state, const stepper_t& stepper) const {
     // Screen output
     debugLog(state, [&] { return std::string("Entering navigator::target."); });
 
@@ -249,8 +253,9 @@ class DirectNavigator {
   ///      prefix and length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::string vName = "Direct Navigator";
       std::vector<std::string> lines;

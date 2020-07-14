@@ -12,7 +12,8 @@
 #include <dfe/dfe_io_dsv.hpp>
 #include <limits>
 
-void FW::Options::addCsvWriterOptions(FW::Options::Description& desc) {
+void
+FW::Options::addCsvWriterOptions(FW::Options::Description& desc) {
   using namespace boost::program_options;
 
   desc.add_options()(
@@ -22,8 +23,8 @@ void FW::Options::addCsvWriterOptions(FW::Options::Description& desc) {
       "csv-tg-perevent", bool_switch(), "Write tracking geometry per event.");
 }
 
-FW::CsvParticleWriter::Config FW::Options::readCsvParticleWriterConfig(
-    const FW::Options::Variables& vm) {
+FW::CsvParticleWriter::Config
+FW::Options::readCsvParticleWriterConfig(const FW::Options::Variables& vm) {
   FW::CsvParticleWriter::Config cfg;
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();

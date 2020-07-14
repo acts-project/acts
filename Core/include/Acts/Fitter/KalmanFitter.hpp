@@ -202,7 +202,10 @@ class KalmanFitter {
   propagator_t m_propagator;
 
   /// Logger getter to support macros
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// Owned logging instance
   std::shared_ptr<const Logger> m_logger;
@@ -244,8 +247,9 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
+    void
+    operator()(propagator_state_t& state, const stepper_t& stepper,
+               result_type& result) const {
       ACTS_VERBOSE("KalmanFitter step");
 
       // This following is added due to the fact that the navigation
@@ -370,8 +374,9 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state objecte
     template <typename propagator_state_t, typename stepper_t>
-    void reverse(propagator_state_t& state, stepper_t& stepper,
-                 result_type& result) const {
+    void
+    reverse(propagator_state_t& state, stepper_t& stepper,
+            result_type& result) const {
       // Remember the navigation direciton has been reserved
       result.reset = true;
 
@@ -440,8 +445,9 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, result_type& result) const {
+    Result<void>
+    filter(const Surface* surface, propagator_state_t& state,
+           const stepper_t& stepper, result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -604,10 +610,9 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> backwardFilter(const Surface* surface,
-                                propagator_state_t& state,
-                                const stepper_t& stepper,
-                                result_type& result) const {
+    Result<void>
+    backwardFilter(const Surface* surface, propagator_state_t& state,
+                   const stepper_t& stepper, result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -731,7 +736,8 @@ class KalmanFitter {
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t>
-    void materialInteractor(
+    void
+    materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
       // Indicator if having material
@@ -783,8 +789,9 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
-                          result_type& result) const {
+    Result<void>
+    finalize(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
       // Remember you smoothed the track states
       result.smoothed = true;
 
@@ -855,7 +862,10 @@ class KalmanFitter {
     const Logger* m_logger;
 
     /// Getter for the logger, to support logging macros
-    const Logger& logger() const { return *m_logger; }
+    const Logger&
+    logger() const {
+      return *m_logger;
+    }
 
     /// The Kalman updater
     updater_t m_updater;
@@ -881,8 +891,9 @@ class KalmanFitter {
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result) const {
+    bool
+    operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+               const result_t& result) const {
       if (!result.result.ok()) {
         return true;
       }
@@ -910,9 +921,10 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename parameters_t = BoundParameters>
-  auto fit(const std::vector<source_link_t>& sourcelinks,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
+  auto
+  fit(const std::vector<source_link_t>& sourcelinks,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
       -> std::enable_if_t<!isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,
@@ -1002,10 +1014,11 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
             typename parameters_t = BoundParameters>
-  auto fit(const std::vector<source_link_t>& sourcelinks,
-           const start_parameters_t& sParameters,
-           const KalmanFitterOptions<outlier_finder_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence) const
+  auto
+  fit(const std::vector<source_link_t>& sourcelinks,
+      const start_parameters_t& sParameters,
+      const KalmanFitterOptions<outlier_finder_t>& kfOptions,
+      const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
     static_assert(SourceLinkConcept<source_link_t>,

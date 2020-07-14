@@ -45,9 +45,9 @@ using VolumeTrajectoryStateContainer =
 ///
 /// @return The trajectory summary info
 template <typename source_link_t>
-TrajectoryState trajectoryState(
-    const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex) {
+TrajectoryState
+trajectoryState(const Acts::MultiTrajectory<source_link_t>& multiTraj,
+                const size_t& entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     trajState.nStates++;
@@ -77,9 +77,10 @@ TrajectoryState trajectoryState(
 /// @return The trajectory summary info at different sub-detectors (i.e.
 /// different volumes)
 template <typename source_link_t>
-VolumeTrajectoryStateContainer trajectoryState(
-    const Acts::MultiTrajectory<source_link_t>& multiTraj,
-    const size_t& entryIndex, const std::vector<GeometryID::Value>& volumeIds) {
+VolumeTrajectoryStateContainer
+trajectoryState(const Acts::MultiTrajectory<source_link_t>& multiTraj,
+                const size_t& entryIndex,
+                const std::vector<GeometryID::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
@@ -117,8 +118,9 @@ VolumeTrajectoryStateContainer trajectoryState(
 ///
 /// @return Free parameters representation of the filtered parameters
 template <typename track_state_proxy_t>
-FreeVector freeFiltered(const GeometryContext& gctx,
-                        const track_state_proxy_t& trackStateProxy) {
+FreeVector
+freeFiltered(const GeometryContext& gctx,
+             const track_state_proxy_t& trackStateProxy) {
   return detail::coordinate_transformation::boundParameters2freeParameters(
       gctx, trackStateProxy.filtered(), trackStateProxy.referenceSurface());
 }
@@ -132,8 +134,9 @@ FreeVector freeFiltered(const GeometryContext& gctx,
 ///
 /// @return Free parameters representation of the smoothed parameters
 template <typename track_state_proxy_t>
-FreeVector freeSmoothed(const GeometryContext& gctx,
-                        const track_state_proxy_t& trackStateProxy) {
+FreeVector
+freeSmoothed(const GeometryContext& gctx,
+             const track_state_proxy_t& trackStateProxy) {
   return detail::coordinate_transformation::boundParameters2freeParameters(
       gctx, trackStateProxy.smoothed(), trackStateProxy.referenceSurface());
 }

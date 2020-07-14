@@ -48,12 +48,13 @@ namespace detail {
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<BoundParameters, BoundMatrix, double> boundState(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath, const Surface& surface);
+std::tuple<BoundParameters, BoundMatrix, double>
+boundState(std::reference_wrapper<const GeometryContext> geoContext,
+           BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+           FreeMatrix& transportJacobian, FreeVector& derivatives,
+           BoundToFreeMatrix& jacobianLocalToGlobal,
+           const FreeVector& parameters, bool covTransport,
+           double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -75,11 +76,12 @@ std::tuple<BoundParameters, BoundMatrix, double> boundState(
 ///   - the curvilinear parameters at given position
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath);
+std::tuple<CurvilinearParameters, BoundMatrix, double>
+curvilinearState(BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+                 FreeMatrix& transportJacobian, FreeVector& derivatives,
+                 BoundToFreeMatrix& jacobianLocalToGlobal,
+                 const FreeVector& parameters, bool covTransport,
+                 double accumulatedPath);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -96,12 +98,12 @@ std::tuple<CurvilinearParameters, BoundMatrix, double> curvilinearState(
 /// @param [in] surface is the surface to which the covariance is
 ///        forwarded to
 /// @note No check is done if the position is actually on the surface
-void covarianceTransport(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    const Surface& surface);
+void
+covarianceTransport(std::reference_wrapper<const GeometryContext> geoContext,
+                    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+                    FreeMatrix& transportJacobian, FreeVector& derivatives,
+                    BoundToFreeMatrix& jacobianLocalToGlobal,
+                    const FreeVector& parameters, const Surface& surface);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
 /// current position in parameter space
@@ -114,10 +116,10 @@ void covarianceTransport(
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
-void covarianceTransport(BoundSymMatrix& covarianceMatrix,
-                         BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-                         FreeVector& derivatives,
-                         BoundToFreeMatrix& jacobianLocalToGlobal,
-                         const Vector3D& direction);
+void
+covarianceTransport(BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+                    FreeMatrix& transportJacobian, FreeVector& derivatives,
+                    BoundToFreeMatrix& jacobianLocalToGlobal,
+                    const Vector3D& direction);
 }  // namespace detail
 }  // namespace Acts

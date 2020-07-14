@@ -28,14 +28,16 @@ class TrackingGeometry;
 
 /// @brief selector for finding surface
 struct MaterialSurface {
-  bool operator()(const Surface& sf) const {
+  bool
+  operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
   }
 };
 
 /// @brief selector for finding volume
 struct MaterialVolume {
-  bool operator()(const TrackingVolume& vf) const {
+  bool
+  operator()(const TrackingVolume& vf) const {
     return (vf.volumeMaterial() != nullptr);
   }
 };
@@ -127,9 +129,9 @@ class SurfaceMaterialMapper {
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State createState(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    const TrackingGeometry& tGeometry) const;
+  State
+  createState(const GeometryContext& gctx, const MagneticFieldContext& mctx,
+              const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -138,7 +140,8 @@ class SurfaceMaterialMapper {
   /// class type
   ///
   /// @param mState
-  void finalizeMaps(State& mState) const;
+  void
+  finalizeMaps(State& mState) const;
 
   /// Process/map a single track
   ///
@@ -147,31 +150,37 @@ class SurfaceMaterialMapper {
   ///
   /// @note the RecordedMaterialProperties of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+  void
+  mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
-  void resolveMaterialSurfaces(State& mState,
-                               const TrackingVolume& tVolume) const;
+  void
+  resolveMaterialSurfaces(State& mState, const TrackingVolume& tVolume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void checkAndInsert(State& /*mState*/, const Surface& surface) const;
+  void
+  checkAndInsert(State& /*mState*/, const Surface& surface) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void collectMaterialVolumes(State& /*mState*/,
-                              const TrackingVolume& tVolume) const;
+  void
+  collectMaterialVolumes(State& /*mState*/,
+                         const TrackingVolume& tVolume) const;
 
   /// Standard logger method
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// The configuration object
   Config m_cfg;

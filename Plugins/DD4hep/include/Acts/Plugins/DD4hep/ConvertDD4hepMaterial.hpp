@@ -28,7 +28,8 @@ class Layer;
 /// @param loggingLevel is the output level for the conversion
 ///
 /// @return a map of the identification string and a surface material
-void addCylinderLayerProtoMaterial(
+void
+addCylinderLayerProtoMaterial(
     dd4hep::DetElement detElement, Layer& cylinderLayer,
     Logging::Level loggingLevel = Logging::Level::INFO);
 
@@ -41,9 +42,9 @@ void addCylinderLayerProtoMaterial(
 /// @param loggingLevel is the output level for the conversion
 ///
 /// @return a map of the identification string and a surface material
-void addDiscLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& discLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+void
+addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+                          Logging::Level loggingLevel = Logging::Level::INFO);
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
@@ -52,7 +53,8 @@ void addDiscLayerProtoMaterial(
 /// @param aExtension the ActsExtension for the binning parameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
-void addLayerProtoMaterial(
+void
+addLayerProtoMaterial(
     const ActsExtension& actsExtension, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
@@ -64,7 +66,8 @@ void addLayerProtoMaterial(
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param firstBinning string lookup for first bin
 /// @param binning the Binning prescription for the ActsExtension
-std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
+std::shared_ptr<Acts::ProtoSurfaceMaterial>
+createProtoMaterial(
     const ActsExtension& actsExtension, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning);
@@ -80,8 +83,9 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
 /// @param x_material the material tag to be inspected
 /// @param actsExtension the extension that is augmented
 /// @param baseTag the xml tag to be checked
-void xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
-                               ActsExtension& actsExtension,
-                               const std::string& baseTag);
+void
+xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
+                          ActsExtension& actsExtension,
+                          const std::string& baseTag);
 
 }  // namespace Acts

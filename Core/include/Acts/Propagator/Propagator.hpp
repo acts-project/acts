@@ -88,8 +88,8 @@ struct PropagatorOptions {
   ///
   /// @param aborters The new aborter list to be used (internally)
   template <typename extended_aborter_list_t>
-  PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
-      extended_aborter_list_t aborters) const {
+  PropagatorOptions<action_list_t, extended_aborter_list_t>
+  extend(extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
         geoContext, magFieldContext);
     // Copy the options over
@@ -322,7 +322,8 @@ class Propagator final {
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  Result<result_t> propagate_impl(propagator_state_t& state) const;
+  Result<result_t>
+  propagate_impl(propagator_state_t& state) const;
 
  public:
   /// @brief Propagate track parameters
@@ -395,8 +396,9 @@ class Propagator final {
   /// @param state the propagator state for the debug flag, prefix/length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const;
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const;
 };
 
 }  // namespace Acts

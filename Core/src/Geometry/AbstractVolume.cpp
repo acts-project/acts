@@ -27,7 +27,8 @@ Acts::AbstractVolume::boundarySurfaces() const {
   return m_boundarySurfaces;
 }
 
-void Acts::AbstractVolume::createBoundarySurfaces() {
+void
+Acts::AbstractVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<AbstractVolume>;
 
   // Transform Surfaces To BoundarySurfaces

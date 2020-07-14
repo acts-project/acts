@@ -45,8 +45,8 @@ class FsmwMode1dFinder {
   /// @param inputVector Input collection to calculate mode from
   ///
   /// @return mode value
-  Result<double> getMode(
-      std::vector<std::pair<double, double>> inputVector) const;
+  Result<double>
+  getMode(std::vector<std::pair<double, double>> inputVector) const;
 
  private:
   double m_firstFraction = 0.5;

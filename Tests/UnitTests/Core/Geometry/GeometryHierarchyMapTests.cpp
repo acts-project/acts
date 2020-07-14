@@ -17,7 +17,8 @@ namespace {
 using Acts::GeometryID;
 
 // helper function to create geometry ids
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+GeometryID
+makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
 }
 

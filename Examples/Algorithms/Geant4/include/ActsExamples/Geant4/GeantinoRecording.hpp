@@ -48,7 +48,8 @@ class GeantinoRecording final : public FW::BareAlgorithm {
   GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);
   ~GeantinoRecording();
 
-  FW::ProcessCode execute(const FW::AlgorithmContext& ctx) const final override;
+  FW::ProcessCode
+  execute(const FW::AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

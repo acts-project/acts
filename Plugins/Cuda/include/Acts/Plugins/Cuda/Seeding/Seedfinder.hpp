@@ -40,8 +40,8 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda> {
   //@{
   Seedfinder() = delete;
   Seedfinder(const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
-  Seedfinder<external_spacepoint_t, Acts::Cuda>& operator=(
-      const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
+  Seedfinder<external_spacepoint_t, Acts::Cuda>&
+  operator=(const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -53,8 +53,9 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda> {
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+  std::vector<Seed<external_spacepoint_t> >
+  createSeedsForGroup(sp_range_t bottomSPs, sp_range_t middleSPs,
+                      sp_range_t topSPs) const;
 
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;

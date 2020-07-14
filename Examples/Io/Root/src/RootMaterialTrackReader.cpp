@@ -67,16 +67,18 @@ FW::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_step_rho;
 }
 
-std::string FW::RootMaterialTrackReader::name() const {
+std::string
+FW::RootMaterialTrackReader::name() const {
   return m_cfg.name;
 }
 
-std::pair<size_t, size_t> FW::RootMaterialTrackReader::availableEvents() const {
+std::pair<size_t, size_t>
+FW::RootMaterialTrackReader::availableEvents() const {
   return {0u, m_events};
 }
 
-FW::ProcessCode FW::RootMaterialTrackReader::read(
-    const FW::AlgorithmContext& context) {
+FW::ProcessCode
+FW::RootMaterialTrackReader::read(const FW::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded material from tracks.");
   // read in the material track
   if (m_inputChain && context.eventNumber < m_events) {

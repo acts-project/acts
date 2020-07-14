@@ -44,10 +44,9 @@ class PlanarModuleStepper {
   /// @param endPoint is the end postion of the stepping
   ///
   /// @return is the vector of digitization steps
-  std::vector<DigitizationStep> cellSteps(const GeometryContext& gctx,
-                                          const DigitizationModule& dmodule,
-                                          const Vector3D& startPoint,
-                                          const Vector3D& endPoint) const;
+  std::vector<DigitizationStep>
+  cellSteps(const GeometryContext& gctx, const DigitizationModule& dmodule,
+            const Vector3D& startPoint, const Vector3D& endPoint) const;
 
   /// Calculate the steps caused by this track - fast simulation interface
   ///
@@ -57,21 +56,25 @@ class PlanarModuleStepper {
   /// @param trackDirection is the track direction at the instersection
   ///
   /// @return is the vector of digitization steps
-  std::vector<DigitizationStep> cellSteps(const GeometryContext& gctx,
-                                          const DigitizationModule& dmodule,
-                                          const Vector2D& moduleIntersection,
-                                          const Vector3D& trackDirection) const;
+  std::vector<DigitizationStep>
+  cellSteps(const GeometryContext& gctx, const DigitizationModule& dmodule,
+            const Vector2D& moduleIntersection,
+            const Vector3D& trackDirection) const;
 
   /// Set logging instance
   ///
   /// @param logger is the logging instance to be set
-  void setLogger(std::unique_ptr<const Logger> logger) {
+  void
+  setLogger(std::unique_ptr<const Logger> logger) {
     m_logger = std::move(logger);
   }
 
  private:
   /// Private access method to the logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

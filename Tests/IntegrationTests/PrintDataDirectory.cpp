@@ -16,7 +16,8 @@
 
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
-int main(void) {
+int
+main(void) {
   std::cout << Acts::Test::getDataPath("") << std::endl;
   std::cout << Acts::Test::getDataPath("missing-dir/does_not_exists.txt")
             << std::endl;

@@ -32,14 +32,16 @@ Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
 
 Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder() = default;
 
-void Acts::CylinderVolumeBuilder::setConfiguration(
+void
+Acts::CylinderVolumeBuilder::setConfiguration(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = cvbConfig;
 }
 
-void Acts::CylinderVolumeBuilder::setLogger(
+void
+Acts::CylinderVolumeBuilder::setLogger(
     std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
@@ -481,7 +483,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 }
 
 // -----------------------------
-Acts::VolumeConfig Acts::CylinderVolumeBuilder::analyzeContent(
+Acts::VolumeConfig
+Acts::CylinderVolumeBuilder::analyzeContent(
     const GeometryContext& gctx, const LayerVector& lVector,
     const MutableTrackingVolumeVector& mtvVector) const {
   // @TODO add envelope tolerance

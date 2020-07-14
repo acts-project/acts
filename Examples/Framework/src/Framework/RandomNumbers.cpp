@@ -18,13 +18,13 @@
 
 FW::RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
 
-FW::RandomEngine FW::RandomNumbers::spawnGenerator(
-    const AlgorithmContext& context) const {
+FW::RandomEngine
+FW::RandomNumbers::spawnGenerator(const AlgorithmContext& context) const {
   return RandomEngine(generateSeed(context));
 }
 
-uint64_t FW::RandomNumbers::generateSeed(
-    const AlgorithmContext& context) const {
+uint64_t
+FW::RandomNumbers::generateSeed(const AlgorithmContext& context) const {
   // use Cantor pairing function to generate a unique generator id from
   // algorithm and event number to get a consistent seed
   // see https://en.wikipedia.org/wiki/Pairing_function#Cantor_pairing_function

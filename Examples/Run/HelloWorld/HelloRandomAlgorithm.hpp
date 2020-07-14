@@ -36,7 +36,8 @@ class HelloRandomAlgorithm : public FW::BareAlgorithm {
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  FW::ProcessCode
+  execute(const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

@@ -12,9 +12,10 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
-                                            TrackAtVertex<input_track_t>& track,
-                                            const Vertex<input_track_t>& vtx) {
+void
+Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
+                                       TrackAtVertex<input_track_t>& track,
+                                       const Vertex<input_track_t>& vtx) {
   const Vector3D vtxPos = vtx.fullPosition().template head<3>();
 
   // Get the linearized track

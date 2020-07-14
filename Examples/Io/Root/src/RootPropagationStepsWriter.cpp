@@ -74,7 +74,8 @@ FW::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
   }
 }
 
-FW::ProcessCode FW::RootPropagationStepsWriter::endRun() {
+FW::ProcessCode
+FW::RootPropagationStepsWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -83,7 +84,8 @@ FW::ProcessCode FW::RootPropagationStepsWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootPropagationStepsWriter::writeT(
+FW::ProcessCode
+FW::RootPropagationStepsWriter::writeT(
     const AlgorithmContext& context,
     const std::vector<PropagationSteps>& stepCollection) {
   // Exclusive access to the tree while writing

@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename vfitter_t, typename track_density_t>
-auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
+auto
+Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {

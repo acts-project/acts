@@ -35,10 +35,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
-                                                   const Vector3D& nnormal,
-                                                   double angleT,
-                                                   double angleU) {
+std::shared_ptr<Transform3D>
+createPlanarTransform(const Vector3D& nposition, const Vector3D& nnormal,
+                      double angleT, double angleU) {
   // the rotation of the destination surface
   Vector3D T = nnormal.normalized();
   Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
@@ -66,9 +65,9 @@ std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
-                                                      double angleX,
-                                                      double angleY) {
+std::shared_ptr<Transform3D>
+createCylindricTransform(const Vector3D& nposition, double angleX,
+                         double angleY) {
   Transform3D ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
@@ -78,12 +77,12 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 }
 
 template <typename Propagator_type>
-Vector3D constant_field_propagation(const Propagator_type& propagator,
-                                    double pT, double phi, double theta,
-                                    double charge, double time, double Bz,
-                                    double disttol = 0.1 *
-                                                     Acts::UnitConstants::um,
-                                    bool debug = false) {
+Vector3D
+constant_field_propagation(const Propagator_type& propagator, double pT,
+                           double phi, double theta, double charge, double time,
+                           double Bz,
+                           double disttol = 0.1 * Acts::UnitConstants::um,
+                           bool debug = false) {
   using namespace Acts::UnitLiterals;
   namespace VH = VectorHelpers;
 
@@ -164,11 +163,12 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
 }
 
 template <typename Propagator_type>
-void foward_backward(const Propagator_type& propagator, double pT, double phi,
-                     double theta, double charge, double plimit,
-                     double disttol = 1 * Acts::UnitConstants::um,
-                     double momtol = 10 * Acts::UnitConstants::keV,
-                     bool debug = false) {
+void
+foward_backward(const Propagator_type& propagator, double pT, double phi,
+                double theta, double charge, double plimit,
+                double disttol = 1 * Acts::UnitConstants::um,
+                double momtol = 10 * Acts::UnitConstants::keV,
+                bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -235,10 +235,11 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
 
 // test propagation to cylinder
 template <typename Propagator_type>
-std::pair<Vector3D, double> to_cylinder(
-    const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double /*rand3*/,
-    bool covtransport = false, bool debug = false) {
+std::pair<Vector3D, double>
+to_cylinder(const Propagator_type& propagator, double pT, double phi,
+            double theta, double charge, double plimit, double rand1,
+            double rand2, double /*rand3*/, bool covtransport = false,
+            bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -310,10 +311,11 @@ std::pair<Vector3D, double> to_cylinder(
 
 // test propagation to most surfaces
 template <typename Propagator_type, typename SurfaceType>
-std::pair<Vector3D, double> to_surface(
-    const Propagator_type& propagator, double pT, double phi, double theta,
-    double charge, double plimit, double rand1, double rand2, double rand3,
-    bool planar = true, bool covtransport = false, bool debug = false) {
+std::pair<Vector3D, double>
+to_surface(const Propagator_type& propagator, double pT, double phi,
+           double theta, double charge, double plimit, double rand1,
+           double rand2, double rand3, bool planar = true,
+           bool covtransport = false, bool debug = false) {
   using namespace Acts::UnitLiterals;
   using DebugOutput = DebugOutputActor;
 
@@ -443,9 +445,10 @@ std::pair<Vector3D, double> to_surface(
 }
 
 template <typename Propagator_type>
-Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
-                                  double phi, double theta, double charge,
-                                  double plimit, bool debug = false) {
+Covariance
+covariance_curvilinear(const Propagator_type& propagator, double pT, double phi,
+                       double theta, double charge, double plimit,
+                       bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
@@ -490,11 +493,11 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
 
 template <typename Propagator_type, typename StartSurfaceType,
           typename DestSurfaceType>
-Covariance covariance_bound(const Propagator_type& propagator, double pT,
-                            double phi, double theta, double charge,
-                            double plimit, double rand1, double rand2,
-                            double rand3, bool startPlanar = true,
-                            bool destPlanar = true, bool debug = false) {
+Covariance
+covariance_bound(const Propagator_type& propagator, double pT, double phi,
+                 double theta, double charge, double plimit, double rand1,
+                 double rand2, double rand3, bool startPlanar = true,
+                 bool destPlanar = true, bool debug = false) {
   using namespace Acts::UnitLiterals;
 
   // setup propagation options

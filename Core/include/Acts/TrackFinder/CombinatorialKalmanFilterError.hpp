@@ -28,11 +28,13 @@ namespace detail {
 class CombinatorialKalmanFilterErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final {
+  const char*
+  name() const noexcept final {
     return "CombinatorialKalmanFilterError";
   }
   // Return what each enum means in text
-  std::string message(int c) const final {
+  std::string
+  message(int c) const final {
     switch (static_cast<CombinatorialKalmanFilterError>(c)) {
       case CombinatorialKalmanFilterError::UpdateFailed:
         return "Kalman update failed";
@@ -61,7 +63,8 @@ CombinatorialKalmanFilterErrorCategory() {
   return c;
 }
 
-inline std::error_code make_error_code(Acts::CombinatorialKalmanFilterError e) {
+inline std::error_code
+make_error_code(Acts::CombinatorialKalmanFilterError e) {
   return {static_cast<int>(e), Acts::CombinatorialKalmanFilterErrorCategory()};
 }
 }  // namespace Acts

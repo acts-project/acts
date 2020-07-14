@@ -77,21 +77,24 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
 
   ~CutoutCylinderVolumeBounds() override = default;
 
-  VolumeBounds::BoundsType type() const final {
+  VolumeBounds::BoundsType
+  type() const final {
     return VolumeBounds::eCutoutCylinder;
   }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// Inside method to test whether a point is inside the shape
   ///
   /// @param gpos The point to test
   /// @param tol The tolerance to test with
   /// @return Whether the point is inside or not.
-  bool inside(const Vector3D& gpos, double tol = 0) const override;
+  bool
+  inside(const Vector3D& gpos, double tol = 0) const override;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -103,8 +106,8 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+  OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const override;
 
   /// Construct bounding box for this shape
   ///
@@ -112,19 +115,24 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
-                                  const Volume* entity = nullptr) const final;
+  Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const final;
 
   /// Write information about this instance to an outstream
   ///
   /// @param sl The outstream
   /// @return The outstream
-  std::ostream& toStream(std::ostream& sl) const override;
+  std::ostream&
+  toStream(std::ostream& sl) const override;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   std::array<double, eSize> m_values;
@@ -137,20 +145,24 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   std::shared_ptr<const DiscBounds> m_innerDiscBounds{nullptr};
 
   /// Create the surface bound objects
-  void buildSurfaceBounds();
+  void
+  buildSurfaceBounds();
 
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> CutoutCylinderVolumeBounds::values() const {
+inline std::vector<double>
+CutoutCylinderVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
+inline void
+CutoutCylinderVolumeBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMedR) <= 0. or get(eMaxR) <= 0. or
       get(eMinR) >= get(eMedR) or get(eMinR) >= get(eMaxR) or
       get(eMedR) >= get(eMaxR)) {

@@ -40,7 +40,8 @@ const double bMagCenter = 2_T;
 const size_t nBinsR = 150;
 const size_t nBinsZ = 200;
 
-auto makeFieldMap(const SolenoidBField& field) {
+auto
+makeFieldMap(const SolenoidBField& field) {
   std::ofstream ostr("solenoidmap.csv");
   ostr << "i;j;r;z;B_r;B_z" << std::endl;
 

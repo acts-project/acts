@@ -34,36 +34,42 @@ ProtoLayer::ProtoLayer(
   measure(gctx, m_surfaces);
 }
 
-double ProtoLayer::min(BinningValue bval, bool addenv) const {
+double
+ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
     return extent.min(bval) - envelope[bval].first;
   }
   return extent.min(bval);
 }
 
-double ProtoLayer::max(BinningValue bval, bool addenv) const {
+double
+ProtoLayer::max(BinningValue bval, bool addenv) const {
   if (addenv) {
     return extent.max(bval) + envelope[bval].second;
   }
   return extent.max(bval);
 }
 
-double ProtoLayer::medium(BinningValue bval, bool addenv) const {
+double
+ProtoLayer::medium(BinningValue bval, bool addenv) const {
   return 0.5 * (min(bval, addenv) + max(bval, addenv));
 }
 
-double ProtoLayer::range(BinningValue bval, bool addenv) const {
+double
+ProtoLayer::range(BinningValue bval, bool addenv) const {
   return std::abs(max(bval, addenv) - min(bval, addenv));
 }
 
-std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
+std::ostream&
+ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
   extent.toStream(sl);
   return sl;
 }
 
-void ProtoLayer::measure(const GeometryContext& gctx,
-                         const std::vector<const Surface*>& surfaces) {
+void
+ProtoLayer::measure(const GeometryContext& gctx,
+                    const std::vector<const Surface*>& surfaces) {
   for (const auto& sf : surfaces) {
     auto sfPolyhedron = sf->polyhedronRepresentation(gctx, 1);
     const DetectorElementBase* element = sf->associatedDetectorElement();
@@ -84,7 +90,8 @@ void ProtoLayer::measure(const GeometryContext& gctx,
   }
 }
 
-void ProtoLayer::add(const GeometryContext& gctx, const Surface& surface) {
+void
+ProtoLayer::add(const GeometryContext& gctx, const Surface& surface) {
   m_surfaces.push_back(&surface);
   measure(gctx, m_surfaces);
 }

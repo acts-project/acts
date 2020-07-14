@@ -26,19 +26,22 @@ class IReader {
   virtual ~IReader() = default;
 
   /// The reader name.
-  virtual std::string name() const = 0;
+  virtual std::string
+  name() const = 0;
 
   /// Provide range of available events or [0, SIZE_MAX) if undefined.
   ///
   /// The upper limit is exclusive, i.e. [0,3) means events 0, 1, and 2.
-  virtual std::pair<size_t, size_t> availableEvents() const = 0;
+  virtual std::pair<size_t, size_t>
+  availableEvents() const = 0;
 
   /// Read data for the requested event and write it into the event store.
   ///
   /// As a result of the parallelization and/or skipping events, this method
   /// will most likely not be called in order. Implementations must use the
   /// event number provided to select the proper data to be read.
-  virtual ProcessCode read(const AlgorithmContext& context) = 0;
+  virtual ProcessCode
+  read(const AlgorithmContext& context) = 0;
 };
 
 }  // namespace FW

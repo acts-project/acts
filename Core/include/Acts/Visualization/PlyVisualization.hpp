@@ -35,28 +35,35 @@ class PlyVisualization : public IVisualization {
   using VertexType = ActsVector<ValueType, 3>;
 
   /// @copydoc Acts::IVisualization::vertex()
-  void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
+  void
+  vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::line()
-  void face(const std::vector<Vector3D>& vtxs,
-            ColorRGB color = {120, 120, 120}) final;
+  void
+  face(const std::vector<Vector3D>& vtxs,
+       ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::faces()
-  void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
-             ColorRGB color = {120, 120, 120}) final;
+  void
+  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
+        ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::face()
-  void line(const Vector3D& a, const Vector3D& b,
-            ColorRGB color = {120, 120, 120}) final;
+  void
+  line(const Vector3D& a, const Vector3D& b,
+       ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization::write()
-  void write(const std::string& path) const final;
+  void
+  write(const std::string& path) const final;
 
   /// @copydoc Acts::IVisualization::write()
-  void write(std::ostream& os) const final;
+  void
+  write(std::ostream& os) const final;
 
   /// @copydoc Acts::IVisualization::clear()
-  void clear() final;
+  void
+  clear() final;
 
  private:
   std::vector<std::pair<VertexType, ColorRGB>> m_vertices;

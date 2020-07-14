@@ -74,8 +74,9 @@ struct TGeoParser {
   /// @param state [out] The parseing state configuration, passed through
   /// @param options [in] The parsing options as requiremed
   /// @param gmatrix The current built-up transform to global at this depth
-  static void select(State& state, const Options& options,
-                     const TGeoMatrix& gmatrix = TGeoIdentity("ID"));
+  static void
+  select(State& state, const Options& options,
+         const TGeoMatrix& gmatrix = TGeoIdentity("ID"));
 };
 
 }  // namespace Acts

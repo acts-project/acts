@@ -57,8 +57,9 @@ struct MaterialCollector {
   /// @param stepper The stepper in use
   /// @param result is the result object to be filled
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     if (state.navigation.currentSurface) {
       if (state.navigation.currentSurface == state.navigation.targetSurface and
           not state.navigation.targetReached) {
@@ -153,7 +154,8 @@ struct MaterialCollector {
   /// Pure observer interface
   /// - this does not apply to the surface collector
   template <typename propagator_state_t>
-  void operator()(propagator_state_t& /*state*/) const {}
+  void
+  operator()(propagator_state_t& /*state*/) const {}
 
  private:
   /// The private propagation debug logging
@@ -168,8 +170,9 @@ struct MaterialCollector {
   /// length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);

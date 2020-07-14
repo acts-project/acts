@@ -47,34 +47,39 @@ class ObjVisualization : public IVisualization {
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
   /// @copydoc Acts::IVisualization::vertex()
-  void vertex(const Vector3D& vtx, ColorRGB color = {0, 0, 0}) final;
+  void
+  vertex(const Vector3D& vtx, ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::line()
-  void line(const Vector3D& a, const Vector3D& b,
-            ColorRGB color = {0, 0, 0}) final;
+  void
+  line(const Vector3D& a, const Vector3D& b, ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::face()
-  void face(const std::vector<Vector3D>& vtxs,
-            ColorRGB color = {0, 0, 0}) final;
+  void
+  face(const std::vector<Vector3D>& vtxs, ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::faces()
-  void faces(const std::vector<Vector3D>& vtxs,
-             const std::vector<FaceType>& faces,
-             ColorRGB color = {0, 0, 0}) final;
+  void
+  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>& faces,
+        ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization::write()
-  void write(const std::string& path) const final;
+  void
+  write(const std::string& path) const final;
 
   /// @copydoc Acts::IVisualization::write()
-  void write(std::ostream& os) const final;
+  void
+  write(std::ostream& os) const final;
 
   /// Write the object and the material file
   /// @param os the output stream for the object
   /// @param mos the output stream for the auxiliary material file
-  void write(std::ostream& os, std::ostream& mos) const;
+  void
+  write(std::ostream& os, std::ostream& mos) const;
 
   ///  @copydoc Acts::IVisualization::clear()
-  void clear() final;
+  void
+  clear() final;
 
  private:
   /// The output parameters

@@ -8,7 +8,8 @@
 
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 
-bool Acts::TGeoPrimitivesHelper::match(const char* first, const char* second) {
+bool
+Acts::TGeoPrimitivesHelper::match(const char* first, const char* second) {
   // If we reach at the end of both strings, we are done
   if (*first == '\0' && *second == '\0') {
     return true;
@@ -36,8 +37,9 @@ bool Acts::TGeoPrimitivesHelper::match(const char* first, const char* second) {
   return false;
 }
 
-bool Acts::TGeoPrimitivesHelper::match(const std::vector<std::string>& first,
-                                       const char* second) {
+bool
+Acts::TGeoPrimitivesHelper::match(const std::vector<std::string>& first,
+                                  const char* second) {
   for (const auto& f : first) {
     if (match(f.c_str(), second)) {
       return true;

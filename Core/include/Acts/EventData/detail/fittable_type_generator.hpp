@@ -62,7 +62,8 @@ namespace hana = boost::hana;
  * @tparam W End of the range (exclusive)
  */
 template <size_t W>
-constexpr auto unique_ordered_sublists() {
+constexpr auto
+unique_ordered_sublists() {
   using namespace hana::literals;
   // generate an empty tuple to start off
   constexpr auto combinations = hana::make_tuple(hana::make_tuple());
@@ -89,7 +90,8 @@ constexpr auto unique_ordered_sublists() {
  * @tparam W The size of the parameter pack to generate the sublists over.
  */
 template <template <ParID_t...> class meas_meta, size_t W>
-constexpr auto type_generator() {
+constexpr auto
+type_generator() {
   // generate sublists
   constexpr auto sublists = unique_ordered_sublists<W>();
   // map each sublist (tuple of paramater indices) into a measurement using

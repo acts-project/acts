@@ -40,8 +40,9 @@ struct MatrixCache {
 /// @param vtx Vertex to be updated
 /// @param trk Track to be used for updating the vertex
 template <typename input_track_t>
-void updateVertexWithTrack(Vertex<input_track_t>& vtx,
-                           TrackAtVertex<input_track_t>& trk);
+void
+updateVertexWithTrack(Vertex<input_track_t>& vtx,
+                      TrackAtVertex<input_track_t>& trk);
 
 /// @brief Updates vertex position
 ///
@@ -53,9 +54,10 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
 ///
 /// @return Vertex with updated position and covariance
 template <typename input_track_t>
-void updatePosition(const Acts::Vertex<input_track_t>& vtx,
-                    const Acts::LinearizedTrack& linTrack, double trackWeight,
-                    int sign, MatrixCache& matrixCache);
+void
+updatePosition(const Acts::Vertex<input_track_t>& vtx,
+               const Acts::LinearizedTrack& linTrack, double trackWeight,
+               int sign, MatrixCache& matrixCache);
 
 namespace detail {
 
@@ -66,8 +68,9 @@ namespace detail {
 ///
 /// @return Chi2
 template <typename input_track_t>
-double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
-                          const MatrixCache& matrixCache);
+double
+vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
+                   const MatrixCache& matrixCache);
 
 /// @brief Calculates chi2 of refitted track parameters
 /// w.r.t. updated vertex
@@ -77,8 +80,9 @@ double vertexPositionChi2(const Vertex<input_track_t>& oldVtx,
 ///
 /// @return Chi2
 template <typename input_track_t>
-double trackParametersChi2(const LinearizedTrack& linTrack,
-                           const MatrixCache& matrixCache);
+double
+trackParametersChi2(const LinearizedTrack& linTrack,
+                    const MatrixCache& matrixCache);
 
 /// @brief Adds or removes (depending on `sign`) tracks from vertex
 /// and updates the vertex
@@ -87,8 +91,8 @@ double trackParametersChi2(const LinearizedTrack& linTrack,
 /// @param trk Track to be added to/removed from vtx
 /// @param sign +1 (add track) or -1 (remove track)
 template <typename input_track_t>
-void update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk,
-            int sign);
+void
+update(Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign);
 }  // Namespace detail
 
 }  // Namespace KalmanVertexUpdater

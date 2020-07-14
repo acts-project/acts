@@ -79,14 +79,16 @@ class AdaptiveMultiVertexFitter {
     State() = default;
 
     // Adds a vertex to trackToVerticesMultiMap
-    void addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
+    void
+    addVertexToMultiMap(Vertex<InputTrack_t>& vtx) {
       for (auto trk : vtxInfoMap[&vtx].trackLinks) {
         trackToVerticesMultiMap.emplace(trk, &vtx);
       }
     }
 
     // Removes a vertex from trackToVerticesMultiMap
-    void removeVertexFromMultiMap(Vertex<InputTrack_t>& vtx) {
+    void
+    removeVertexFromMultiMap(Vertex<InputTrack_t>& vtx) {
       for (auto iter = trackToVerticesMultiMap.begin();
            iter != trackToVerticesMultiMap.end();) {
         if (iter->second == &vtx) {
@@ -172,8 +174,8 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fit(
-      State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
+  Result<void>
+  fit(State& state, const std::vector<Vertex<InputTrack_t>*>& verticesToFit,
       const Linearizer_t& linearizer,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -200,10 +202,10 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> addVtxToFit(
-      State& state, Vertex<InputTrack_t>& newVertex,
-      const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void>
+  addVtxToFit(State& state, Vertex<InputTrack_t>& newVertex,
+              const Linearizer_t& linearizer,
+              const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
  private:
   /// Configuration object
@@ -220,7 +222,10 @@ class AdaptiveMultiVertexFitter {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// @brief The actual fit function, performs a simultaneous
   ///   fit of all vertices in state.vertexCollection
@@ -230,9 +235,9 @@ class AdaptiveMultiVertexFitter {
   /// @param vertexingOptions Vertexing options
   ///
   /// @return Result<void> object
-  Result<void> fitImpl(
-      State& state, const Linearizer_t& linearizer,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<void>
+  fitImpl(State& state, const Linearizer_t& linearizer,
+          const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Tests if vertex is already in list of vertices or not
   ///
@@ -240,9 +245,9 @@ class AdaptiveMultiVertexFitter {
   /// @param verticesVec Vector of vertices to search
   ///
   /// @return True if vtx is already in verticesVec
-  bool isAlreadyInList(
-      Vertex<InputTrack_t>* vtx,
-      const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
+  bool
+  isAlreadyInList(Vertex<InputTrack_t>* vtx,
+                  const std::vector<Vertex<InputTrack_t>*>& verticesVec) const;
 
   /// @brief Prepares vertex object for the actual fit, i.e.
   /// all TrackAtVertex objects at current vertex will obtain
@@ -252,7 +257,8 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param vtx The vertex object
   /// @param vertexingOptions Vertexing options
-  Result<void> prepareVertexForFit(
+  Result<void>
+  prepareVertexForFit(
       State& state, Vertex<InputTrack_t>* vtx,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
@@ -262,7 +268,8 @@ class AdaptiveMultiVertexFitter {
   /// @param state The state object
   /// @param currentVtx Current vertex
   /// @param vertexingOptions Vertexing options
-  Result<void> setAllVertexCompatibilities(
+  Result<void>
+  setAllVertexCompatibilities(
       State& state, Vertex<InputTrack_t>* currentVtx,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
@@ -272,7 +279,8 @@ class AdaptiveMultiVertexFitter {
   /// @param state The state object
   /// @param linearizer The track linearizer
   /// @param vertexingOptions Vertexing options
-  Result<void> setWeightsAndUpdate(
+  Result<void>
+  setWeightsAndUpdate(
       State& state, const Linearizer_t& linearizer,
       const VertexingOptions<input_track_t>& vertexingOptions) const;
 
@@ -284,8 +292,9 @@ class AdaptiveMultiVertexFitter {
   /// @param trk The track
   ///
   /// @return Vector of compatibility values
-  std::vector<double> collectTrackToVertexCompatibilities(
-      State& state, const InputTrack_t* trk) const;
+  std::vector<double>
+  collectTrackToVertexCompatibilities(State& state,
+                                      const InputTrack_t* trk) const;
 
   /// @brief Determines if vertex position has shifted more than
   /// m_cfg.maxRelativeShift in last iteration
@@ -293,14 +302,16 @@ class AdaptiveMultiVertexFitter {
   /// @param state The state object
   ///
   /// @return False if shift was larger than maxRelativeShift
-  bool checkSmallShift(State& state) const;
+  bool
+  checkSmallShift(State& state) const;
 
   /// @brief Updates tracks for current vertex with knowledge
   /// of current vertex position
   ///
   /// @param state The state object
   /// @param geoContext The geometry context
-  void doVertexSmoothing(State& state, const GeometryContext& geoContext) const;
+  void
+  doVertexSmoothing(State& state, const GeometryContext& geoContext) const;
 };
 
 }  // namespace Acts

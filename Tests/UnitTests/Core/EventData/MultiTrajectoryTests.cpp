@@ -32,7 +32,8 @@ using SourceLink = MinimalSourceLink;
 using Parameters = BoundVector;
 using Covariance = BoundSymMatrix;
 
-CurvilinearParameters make_params() {
+CurvilinearParameters
+make_params() {
   // generate arbitrary positive, definite matrix
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
@@ -65,8 +66,8 @@ struct TestTrackState {
 /// @return Tuple containing a @c TestTrackState and the @c FittableMeasurement
 /// that were generated in this function
 template <typename track_state_t>
-auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
-                    size_t dim = 3) {
+auto
+fillTrackState(track_state_t& ts, TrackStatePropMask mask, size_t dim = 3) {
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                  Vector3D{0., 0., 1.});
 

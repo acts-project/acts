@@ -47,8 +47,8 @@ using SpacePointGrid =
 class SpacePointGridCreator {
  public:
   template <typename external_spacepoint_t>
-  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>> createGrid(
-      const Acts::SpacePointGridConfig& config);
+  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>>
+  createGrid(const Acts::SpacePointGridConfig& config);
 };
 }  // namespace Acts
 #include "Acts/Seeding/SpacePointGrid.ipp"

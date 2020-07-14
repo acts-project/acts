@@ -36,9 +36,9 @@ struct Scattering {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  std::array<Particle, 0> operator()(generator_t &generator,
-                                     const Acts::MaterialProperties &slab,
-                                     Particle &particle) const {
+  std::array<Particle, 0>
+  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+             Particle &particle) const {
     // the scattered direction can be computed by rotating the initial
     // direction around a vector orthogonal to the initial direction, i.e. the
     // scattering deflector, by the scattering angle. there are an infinite

@@ -8,7 +8,8 @@
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
-std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   std::vector<Vector2D> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
   for (size_t i = 0; i < vtxs.size(); i++) {
@@ -22,7 +23,8 @@ std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   return sl;
 }
 
-std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
+std::vector<double>
+Acts::ConvexPolygonBoundsBase::values() const {
   std::vector<double> values;
   for (const auto& vtx : vertices()) {
     values.push_back(vtx.x());
@@ -41,18 +43,21 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
   return SurfaceBounds::eConvexPolygon;
 }
 
-bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
+bool
+Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
     const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_vertices);
 }
 
-double Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::distanceToBoundary(
+double
+Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<
-    Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::vertices(
+    unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 
@@ -61,7 +66,8 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::boundingBox() const {
   return m_boundingBox;
 }
 
-void Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
+void
+Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::checkConsistency() const
     noexcept(false) {
   convex_impl(m_vertices);
 }

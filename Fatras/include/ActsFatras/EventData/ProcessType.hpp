@@ -20,6 +20,7 @@ enum class ProcessType : uint32_t {
   eUndefined = 0,
 };
 
-std::ostream &operator<<(std::ostream &os, ProcessType processType);
+std::ostream &
+operator<<(std::ostream &os, ProcessType processType);
 
 }  // namespace ActsFatras

@@ -21,8 +21,8 @@ FW::Contextual::PayloadDecorator::PayloadDecorator(
   }
 }
 
-FW::ProcessCode FW::Contextual::PayloadDecorator::decorate(
-    AlgorithmContext& context) {
+FW::ProcessCode
+FW::Contextual::PayloadDecorator::decorate(AlgorithmContext& context) {
   // Start with the nominal map
   std::vector<Acts::Transform3D> aStore = m_nominalStore;
 
@@ -41,7 +41,8 @@ FW::ProcessCode FW::Contextual::PayloadDecorator::decorate(
   return ProcessCode::SUCCESS;
 }
 
-void FW::Contextual::PayloadDecorator::parseGeometry(
+void
+FW::Contextual::PayloadDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
   // Double-visit - first count
   size_t nTransforms = 0;

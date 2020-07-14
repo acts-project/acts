@@ -21,7 +21,8 @@ struct HelloData {
   double t;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const HelloData& data) {
+inline std::ostream&
+operator<<(std::ostream& os, const HelloData& data) {
   os << data.x << ", " << data.a << ", " << data.b << ", " << data.t;
   return os;
 }

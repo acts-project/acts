@@ -21,7 +21,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-void PayloadDetector::addOptions(
+void
+PayloadDetector::addOptions(
     boost::program_options::options_description& opt) const {
   /// Add the generic geometry options
   FW::Options::addGenericGeometryOptions(opt);
@@ -37,7 +38,8 @@ void PayloadDetector::addOptions(
       "Output log level of the alignment decorator.");
 }
 
-auto PayloadDetector::finalize(
+auto
+PayloadDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {

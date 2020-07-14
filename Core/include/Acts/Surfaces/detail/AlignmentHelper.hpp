@@ -30,7 +30,8 @@ using RotationToAxes =
 ///
 /// @return Derivative of local frame x/y/z axis vector w.r.t. its
 /// rotation angles (extrinsic Euler angles) around global x/y/z axis
-RotationToAxes rotationToLocalAxesDerivative(const RotationMatrix3D& rotation);
+RotationToAxes
+rotationToLocalAxesDerivative(const RotationMatrix3D& rotation);
 
 }  // namespace detail
 

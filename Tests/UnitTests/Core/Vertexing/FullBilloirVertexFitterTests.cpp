@@ -237,7 +237,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 struct InputTrack {
   InputTrack(const BoundParameters& params) : m_parameters(params) {}
 
-  const BoundParameters& parameters() const { return m_parameters; }
+  const BoundParameters&
+  parameters() const {
+    return m_parameters;
+  }
 
   // store e.g. link to original objects here
 

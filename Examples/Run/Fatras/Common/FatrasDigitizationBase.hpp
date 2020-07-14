@@ -21,7 +21,8 @@ namespace FW {
 class Sequencer;
 class RandomNumbers;
 
-void setupDigitization(
+void
+setupDigitization(
     Options::Variables& variables, Sequencer& sequencer,
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);

@@ -16,7 +16,8 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-auto Acts::materialMapperRZ(
+auto
+Acts::materialMapperRZ(
     const std::function<size_t(std::array<size_t, 2> binsRZ,
                                std::array<size_t, 2> nBinsRZ)>&
         materialVectorToGridMapper,
@@ -98,7 +99,8 @@ auto Acts::materialMapperRZ(
                                                                std::move(grid));
 }
 
-auto Acts::materialMapperXYZ(
+auto
+Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
         materialVectorToGridMapper,

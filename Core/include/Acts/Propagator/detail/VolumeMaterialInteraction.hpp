@@ -78,7 +78,8 @@ struct VolumeMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialProperties(const propagator_state_t& state) {
+  bool
+  evaluateMaterialProperties(const propagator_state_t& state) {
     pathCorrection = 0;
     if (state.navigation.currentVolume != nullptr &&
         state.navigation.currentVolume->volumeMaterial() != nullptr) {

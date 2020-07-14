@@ -41,7 +41,8 @@ class GeometryObject {
   /// Assignment operator
   ///
   /// @param geoID the source geoID
-  GeometryObject& operator=(const GeometryObject& geoID) {
+  GeometryObject&
+  operator=(const GeometryObject& geoID) {
     if (&geoID != this) {
       m_geoID = geoID.m_geoID;
     }
@@ -49,7 +50,8 @@ class GeometryObject {
   }
 
   /// @return the geometry id by reference
-  const GeometryID& geoID() const;
+  const GeometryID&
+  geoID() const;
 
   /// Force a binning position method
   ///
@@ -57,8 +59,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual const Vector3D binningPosition(const GeometryContext& gctx,
-                                         BinningValue bValue) const = 0;
+  virtual const Vector3D
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///
@@ -66,28 +68,32 @@ class GeometryObject {
   /// @param bValue is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
-  virtual double binningPositionValue(const GeometryContext& gctx,
-                                      BinningValue bValue) const;
+  virtual double
+  binningPositionValue(const GeometryContext& gctx, BinningValue bValue) const;
 
   /// Set the value
   ///
   /// @param geoID the geometry identifier to be assigned
-  void assignGeoID(const GeometryID& geoID);
+  void
+  assignGeoID(const GeometryID& geoID);
 
  protected:
   GeometryID m_geoID;
 };
 
-inline const GeometryID& GeometryObject::geoID() const {
+inline const GeometryID&
+GeometryObject::geoID() const {
   return m_geoID;
 }
 
-inline void GeometryObject::assignGeoID(const GeometryID& geoID) {
+inline void
+GeometryObject::assignGeoID(const GeometryID& geoID) {
   m_geoID = geoID;
 }
 
-inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
-                                                   BinningValue bValue) const {
+inline double
+GeometryObject::binningPositionValue(const GeometryContext& gctx,
+                                     BinningValue bValue) const {
   return VectorHelpers::cast(binningPosition(gctx, bValue), bValue);
 }
 }  // namespace Acts

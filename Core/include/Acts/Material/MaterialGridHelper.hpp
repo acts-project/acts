@@ -39,8 +39,8 @@ using MaterialGrid3D =
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid2D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2);
+Grid2D
+createGrid(std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2);
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -52,9 +52,9 @@ Grid2D createGrid(std::array<double, 3> gridAxis1,
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid3D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2,
-                  std::array<double, 3> gridAxis3);
+Grid3D
+createGrid(std::array<double, 3> gridAxis1, std::array<double, 3> gridAxis2,
+           std::array<double, 3> gridAxis3);
 
 /// @brief return a function that return the coordinate corresponding to type of
 /// bin
@@ -62,8 +62,8 @@ Grid3D createGrid(std::array<double, 3> gridAxis1,
 /// @param [in] Type of bin
 ///
 /// @return a coordinate transform function
-std::function<double(Acts::Vector3D)> globalToLocalFromBin(
-    Acts::BinningValue& type);
+std::function<double(Acts::Vector3D)>
+globalToLocalFromBin(Acts::BinningValue& type);
 
 /// @brief Create a 2DGrid using a BinUtility.
 /// Also determine the coresponding global to local transform and grid mapping
@@ -73,7 +73,8 @@ std::function<double(Acts::Vector3D)> globalToLocalFromBin(
 /// @param [in] Global to local transform to be updated.
 ///
 /// @return the 3D grid
-Grid2D createGrid2D(
+Grid2D
+createGrid2D(
     const BinUtility& bins,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
 
@@ -85,7 +86,8 @@ Grid2D createGrid2D(
 /// @param [in] Global to local transform to be updated.
 ///
 /// @return the 3D grid
-Grid3D createGrid3D(
+Grid3D
+createGrid3D(
     const BinUtility& bins,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 
@@ -98,7 +100,8 @@ Grid3D createGrid3D(
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid2D mapMaterialPoints(
+MaterialGrid2D
+mapMaterialPoints(
     Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
 
@@ -111,7 +114,8 @@ MaterialGrid2D mapMaterialPoints(
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid3D mapMaterialPoints(
+MaterialGrid3D
+mapMaterialPoints(
     Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 

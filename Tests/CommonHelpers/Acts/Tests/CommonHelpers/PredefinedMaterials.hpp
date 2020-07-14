@@ -18,25 +18,29 @@
 namespace Acts {
 namespace Test {
 
-constexpr Material makeBeryllium() {
+constexpr Material
+makeBeryllium() {
   using namespace UnitLiterals;
   return {35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3};
 }
 
-constexpr Material makeSilicon() {
+constexpr Material
+makeSilicon() {
   using namespace UnitLiterals;
   return {9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3};
 }
 
 /// Build material slab corresponding to 1 radiation and interaction length.
-MaterialProperties makeUnitSlab() {
+MaterialProperties
+makeUnitSlab() {
   using namespace UnitLiterals;
   // silicon-like material with higher X0 and lower L0
   return {20_cm, 20_cm, 28.0855, 14, 2.329_g / 1_cm3, 20_cm};
 }
 
 /// Build material slab corresponding to 1% of radiation and interaction length.
-MaterialProperties makePercentSlab() {
+MaterialProperties
+makePercentSlab() {
   auto slab = makeUnitSlab();
   slab.scaleThickness(0.01);
   return slab;

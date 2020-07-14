@@ -85,7 +85,8 @@ class ResPlotTool {
   /// @brief book the histograms
   ///
   /// @param resPlotCache the cache for residual/pull histograms
-  void book(ResPlotCache& resPlotCache) const;
+  void
+  book(ResPlotCache& resPlotCache) const;
 
   /// @brief fill the histograms
   ///
@@ -93,32 +94,39 @@ class ResPlotTool {
   /// @param gctx the geometry context
   /// @param truthParticle the truth particle
   /// @param fittedParamters the fitted parameters at perigee surface
-  void fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
-            const ActsFatras::Particle& truthParticle,
-            const Acts::BoundParameters& fittedParamters) const;
+  void
+  fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
+       const ActsFatras::Particle& truthParticle,
+       const Acts::BoundParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details
   ///
   /// into separate histograms
   /// @param resPlotCache the cache object for residual/pull histograms
-  void refinement(ResPlotCache& resPlotCache) const;
+  void
+  refinement(ResPlotCache& resPlotCache) const;
 
   /// @brief write the histograms to output file
   ///
   /// @param resPlotCache the cache object for residual/pull histograms
-  void write(const ResPlotCache& resPlotCache) const;
+  void
+  write(const ResPlotCache& resPlotCache) const;
 
   /// @brief delele the histograms
   ///
   /// @param resPlotCache the cache object for residual/pull histograms
-  void clear(ResPlotCache& resPlotCache) const;
+  void
+  clear(ResPlotCache& resPlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The config class
   std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
   /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

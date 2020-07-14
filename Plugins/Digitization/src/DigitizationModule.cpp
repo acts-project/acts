@@ -35,7 +35,8 @@ Acts::DigitizationModule::DigitizationModule(
       halfThickness, readoutDirection, lorentzAngle);
 }
 
-const Acts::SurfacePtrVector Acts::DigitizationModule::segmentationSurfaces(
+const Acts::SurfacePtrVector
+Acts::DigitizationModule::segmentationSurfaces(
     const Acts::DigitizationCell& entryCids,
     const Acts::DigitizationCell& exitCids) const {
   SurfacePtrVector sSurfaces;
@@ -67,8 +68,9 @@ const Acts::SurfacePtrVector Acts::DigitizationModule::segmentationSurfaces(
   return sSurfaces;
 }
 
-const Acts::SurfacePtrVector Acts::DigitizationModule::stepSurfaces(
-    const Vector3D& start, const Vector3D& end) const {
+const Acts::SurfacePtrVector
+Acts::DigitizationModule::stepSurfaces(const Vector3D& start,
+                                       const Vector3D& end) const {
   // prepare the return vector
   SurfacePtrVector stepSurfaces;
 

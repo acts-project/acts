@@ -41,7 +41,8 @@ namespace FW {
 namespace Options {
 
 // common bfield options, with a bf prefix
-void addBFieldOptions(boost::program_options::options_description& opt) {
+void
+addBFieldOptions(boost::program_options::options_description& opt) {
   opt.add_options()("bf-map", po::value<std::string>()->default_value(""),
                     "Set this string to point to the bfield source file."
                     "That can either be a '.txt', a '.csv' or a '.root' file. "
@@ -81,7 +82,8 @@ void addBFieldOptions(boost::program_options::options_description& opt) {
 }
 
 // create the bfield maps
-BFieldVariant readBField(const boost::program_options::variables_map& vm) {
+BFieldVariant
+readBField(const boost::program_options::variables_map& vm) {
   std::string bfieldmap = "constfield";
 
   enum BFieldMapType { constant = 0, root = 1, text = 2 };

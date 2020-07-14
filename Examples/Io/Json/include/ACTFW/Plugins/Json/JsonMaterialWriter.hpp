@@ -57,12 +57,14 @@ class JsonMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void write(const Acts::DetectorMaterialMaps& detMaterial);
+  void
+  write(const Acts::DetectorMaterialMaps& detMaterial);
 
   /// Write out the material map from Geometry
   ///
   /// @param tGeometry is the TrackingGeometry
-  void write(const Acts::TrackingGeometry& tGeometry);
+  void
+  write(const Acts::TrackingGeometry& tGeometry);
 
  private:
   /// The config class of the converter
@@ -72,7 +74,10 @@ class JsonMaterialWriter {
   std::string m_fileName;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 };
 
 }  // namespace Json

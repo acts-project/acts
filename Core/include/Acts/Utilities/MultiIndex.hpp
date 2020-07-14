@@ -42,7 +42,10 @@ class MultiIndex {
   };
 
   /// Construct a MultiIndex with all levels set to zero.
-  static constexpr MultiIndex Zeros() { return MultiIndex(0u); }
+  static constexpr MultiIndex
+  Zeros() {
+    return MultiIndex(0u);
+  }
   /// Construct a MultiIndex from values for multiple level.
   ///
   /// This functionality must be implemented as a static, named constructor
@@ -51,7 +54,8 @@ class MultiIndex {
   /// encoded value and encoding only the first level would have the same
   /// signature and could not be distinguished.
   template <typename... Us>
-  static constexpr MultiIndex Encode(Us&&... us) {
+  static constexpr MultiIndex
+  Encode(Us&&... us) {
     static_assert(sizeof...(Us) <= NumLevels,
                   "Can only encode as many levels as in the MultiIndex");
 
@@ -69,23 +73,31 @@ class MultiIndex {
   MultiIndex() = default;
   MultiIndex(const MultiIndex&) = default;
   MultiIndex(MultiIndex&) = default;
-  MultiIndex& operator=(const MultiIndex&) = default;
-  MultiIndex& operator=(MultiIndex&&) = default;
+  MultiIndex&
+  operator=(const MultiIndex&) = default;
+  MultiIndex&
+  operator=(MultiIndex&&) = default;
   /// Allow setting the MultiIndex from an already encoded value.
-  constexpr MultiIndex& operator=(Value encoded) {
+  constexpr MultiIndex&
+  operator=(Value encoded) {
     m_value = encoded;
     return *this;
   }
 
   /// Get the encoded value of all index levels.
-  constexpr Value value() const { return m_value; }
+  constexpr Value
+  value() const {
+    return m_value;
+  }
   /// Get the value for the index level.
-  constexpr Value level(std::size_t lvl) const {
+  constexpr Value
+  level(std::size_t lvl) const {
     assert((lvl < NumLevels) and "Index level outside allowed range");
     return (m_value >> shift(lvl)) & mask(lvl);
   }
   /// Set the value of the index level.
-  constexpr MultiIndex& set(std::size_t lvl, Value val) {
+  constexpr MultiIndex&
+  set(std::size_t lvl, Value val) {
     assert((lvl < NumLevels) and "Index level outside allowed range");
     // mask of valid bits at the encoded positions for the index level
     Value shiftedMask = (mask(lvl) << shift(lvl));
@@ -97,7 +109,8 @@ class MultiIndex {
   }
 
   /// Create index with the selected level increased and levels below zeroed.
-  constexpr MultiIndex makeNextSibling(std::size_t lvl) const {
+  constexpr MultiIndex
+  makeNextSibling(std::size_t lvl) const {
     assert((lvl < NumLevels) and "Index level outside allowed range");
     // remove lower levels by shifting the upper levels to the left edge
     Value upper = (m_value >> shift(lvl));
@@ -105,7 +118,8 @@ class MultiIndex {
     return ((upper + 1u) << shift(lvl));
   }
   /// Create index with every level below the selected level maximized.
-  constexpr MultiIndex makeLastDescendant(std::size_t lvl) const {
+  constexpr MultiIndex
+  makeLastDescendant(std::size_t lvl) const {
     assert((lvl < NumLevels) and "Index level outside allowed range");
     // mask everything below the selected level
     Value maskLower = (Value(1u) << shift(lvl)) - 1u;
@@ -116,7 +130,8 @@ class MultiIndex {
  private:
   // per-level mask and right-most bit position for shifting
   static constexpr std::array<std::size_t, NumLevels> s_bits{BitsPerLevel...};
-  static constexpr std::size_t shift(std::size_t lvl) {
+  static constexpr std::size_t
+  shift(std::size_t lvl) {
     std::size_t s = 0u;
     // sum up all bits below the requested level
     for (std::size_t i = (lvl + 1); i < s_bits.size(); ++i) {
@@ -124,19 +139,23 @@ class MultiIndex {
     }
     return s;
   }
-  static constexpr Value mask(std::size_t lvl) {
+  static constexpr Value
+  mask(std::size_t lvl) {
     return (Value(1u) << s_bits[lvl]) - 1u;
   }
 
   Value m_value;
 
-  friend constexpr bool operator<(MultiIndex lhs, MultiIndex rhs) {
+  friend constexpr bool
+  operator<(MultiIndex lhs, MultiIndex rhs) {
     return lhs.m_value < rhs.m_value;
   }
-  friend constexpr bool operator==(MultiIndex lhs, MultiIndex rhs) {
+  friend constexpr bool
+  operator==(MultiIndex lhs, MultiIndex rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend inline std::ostream& operator<<(std::ostream& os, MultiIndex idx) {
+  friend inline std::ostream&
+  operator<<(std::ostream& os, MultiIndex idx) {
     // one level is always defined
     os << idx.level(0u);
     for (std::size_t lvl = 1; lvl < NumLevels; ++lvl) {
@@ -152,8 +171,8 @@ class MultiIndex {
 namespace std {
 template <typename Storage, std::size_t... BitsPerLevel>
 struct hash<Acts::MultiIndex<Storage, BitsPerLevel...>> {
-  auto operator()(Acts::MultiIndex<Storage, BitsPerLevel...> idx) const
-      noexcept {
+  auto
+  operator()(Acts::MultiIndex<Storage, BitsPerLevel...> idx) const noexcept {
     return std::hash<Storage>()(idx.value());
   }
 };

@@ -69,24 +69,28 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
 
   ~TGeoDetectorElement() override;
 
-  Identifier identifier() const final;
+  Identifier
+  identifier() const final;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3D& transform(const GeometryContext& gctx) const final;
+  const Transform3D&
+  transform(const GeometryContext& gctx) const final;
 
   /// Return surface associated with this identifier, which should come from the
-  const Surface& surface() const final;
+  const Surface&
+  surface() const final;
 
   /// Retrieve the DigitizationModule
-  const std::shared_ptr<const DigitizationModule> digitizationModule()
-      const final {
+  const std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final {
     return nullptr;
   };
 
   /// Returns the thickness of the module
-  double thickness() const final;
+  double
+  thickness() const final;
 
  private:
   /// Pointer to TGeoNode (not owned)
@@ -107,20 +111,23 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   std::shared_ptr<Surface> m_surface{nullptr};
 };
 
-inline Identifier TGeoDetectorElement::identifier() const {
+inline Identifier
+TGeoDetectorElement::identifier() const {
   return m_identifier;
 }
 
-inline const Transform3D& TGeoDetectorElement::transform(
-    const GeometryContext& /*gctx*/) const {
+inline const Transform3D&
+TGeoDetectorElement::transform(const GeometryContext& /*gctx*/) const {
   return (*m_transform);
 }
 
-inline const Surface& TGeoDetectorElement::surface() const {
+inline const Surface&
+TGeoDetectorElement::surface() const {
   return (*m_surface);
 }
 
-inline double TGeoDetectorElement::thickness() const {
+inline double
+TGeoDetectorElement::thickness() const {
   return m_thickness;
 }
 

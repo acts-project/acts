@@ -71,45 +71,55 @@ class ConeBounds : public SurfaceBounds {
 
   ~ConeBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// inside method for local position
   ///
   /// @param lposition is the local position to be checked
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+  bool
+  inside(const Vector2D& lposition,
+         const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input obect
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Return the radius at a specific z values
   ///
   /// @param z is the z value for which r is requested
   /// @return is the r value associated with z
-  double r(double z) const;
+  double
+  r(double z) const;
 
   /// Return tangent of alpha (pre-computed)
-  double tanAlpha() const;
+  double
+  tanAlpha() const;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   std::array<double, eSize> m_values;
@@ -117,29 +127,35 @@ class ConeBounds : public SurfaceBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Private helper functin to shift a local 2D position
   ///
   /// @param lposition The original local position
-  Vector2D shifted(const Vector2D& lposition) const;
+  Vector2D
+  shifted(const Vector2D& lposition) const;
 };
 
-inline double ConeBounds::r(double z) const {
+inline double
+ConeBounds::r(double z) const {
   return std::abs(z * m_tanAlpha);
 }
 
-inline double ConeBounds::tanAlpha() const {
+inline double
+ConeBounds::tanAlpha() const {
   return m_tanAlpha;
 }
 
-inline std::vector<double> ConeBounds::values() const {
+inline std::vector<double>
+ConeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void ConeBounds::checkConsistency() noexcept(false) {
+inline void
+ConeBounds::checkConsistency() noexcept(false) {
   if (get(eAlpha) < 0. or get(eAlpha) >= M_PI) {
     throw std::invalid_argument("ConeBounds: invalid open angle.");
   }

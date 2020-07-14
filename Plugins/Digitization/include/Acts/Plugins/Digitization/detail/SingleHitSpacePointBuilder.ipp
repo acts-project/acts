@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+Acts::Vector2D
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
@@ -16,7 +17,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
 }
 
 template <typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::Vector3D
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -29,7 +31,8 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
 }
 
 template <typename Cluster>
-void Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
+void
+Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::calculateSpacePoints(
     const GeometryContext& gctx, const std::vector<const Cluster*>& clusters,
     std::vector<Acts::SpacePoint<Cluster>>& spacePointStorage) const {
   // Set the space point for all stored hits

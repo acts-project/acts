@@ -54,7 +54,8 @@ struct HitSurfaceSelector {
   bool passive = false;
 
   /// Check if the surface should be used.
-  bool operator()(const Acts::Surface& surface) const {
+  bool
+  operator()(const Acts::Surface& surface) const {
     if (sensitive and surface.associatedDetectorElement()) {
       return true;
     }
@@ -80,7 +81,8 @@ struct HitSurfaceSelector {
 /// @param randomNumberSvc The random number service to be used for the
 /// simulation
 template <typename magnetic_field_t>
-void setupSimulationAlgorithms(
+void
+setupSimulationAlgorithms(
     const FW::Options::Variables& variables, FW::Sequencer& sequencer,
     std::shared_ptr<const FW::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
@@ -200,7 +202,8 @@ void setupSimulationAlgorithms(
 
 }  // namespace
 
-void FW::setupSimulation(
+void
+FW::setupSimulation(
     const FW::Options::Variables& variables, FW::Sequencer& sequencer,
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {

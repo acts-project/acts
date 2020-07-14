@@ -26,16 +26,25 @@ class SurfaceBoundsStub : public SurfaceBounds {
 
   ~SurfaceBoundsStub() override { /*nop*/
   }
-  BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> values() const override { return m_values; }
-  bool inside(const Vector2D& /*lpos*/,
-              const BoundaryCheck& /*bcheck*/) const final {
+  BoundsType
+  type() const final {
+    return SurfaceBounds::eOther;
+  }
+  std::vector<double>
+  values() const override {
+    return m_values;
+  }
+  bool
+  inside(const Vector2D& /*lpos*/,
+         const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }
-  double distanceToBoundary(const Vector2D& /*lpos*/) const final {
+  double
+  distanceToBoundary(const Vector2D& /*lpos*/) const final {
     return 10.;
   }
-  std::ostream& toStream(std::ostream& sl) const final {
+  std::ostream&
+  toStream(std::ostream& sl) const final {
     sl << "SurfaceBoundsStub";
     return sl;
   }

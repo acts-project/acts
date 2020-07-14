@@ -34,10 +34,11 @@ using UniformDist = std::uniform_real_distribution<double>;
 using RandomEngine = std::mt19937;
 
 template <typename field_t, typename field_context_t>
-void accessStepWise(field_t& bField, field_context_t& bFieldContext,
-                    size_t events, size_t theta_steps, double theta_0,
-                    double theta_step, size_t phi_steps, double phi_0,
-                    double phi_step, size_t access_steps, double access_step) {
+void
+accessStepWise(field_t& bField, field_context_t& bFieldContext, size_t events,
+               size_t theta_steps, double theta_0, double theta_step,
+               size_t phi_steps, double phi_0, double phi_step,
+               size_t access_steps, double access_step) {
   std::cout << "[>>>] Start: step-wise access pattern ... " << std::endl;
   size_t mismatched = 0;
   // initialize the field cache
@@ -81,8 +82,9 @@ void accessStepWise(field_t& bField, field_context_t& bFieldContext,
 }
 
 template <typename field_t, typename field_context_t>
-void accessRandom(field_t& bField, field_context_t& bFieldContext,
-                  size_t totalSteps, double radius) {
+void
+accessRandom(field_t& bField, field_context_t& bFieldContext, size_t totalSteps,
+             double radius) {
   std::cout << "[>>>] Start: random access pattern ... " << std::endl;
   size_t mismatched = 0;
   RandomEngine rng;
@@ -117,7 +119,8 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
 ///
 /// @param argc The argument count
 /// @param argv The argument list
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   // Declare the supported program options.
   auto desc = FW::Options::makeDefaultOptions();
   FW::Options::addSequencerOptions(desc);

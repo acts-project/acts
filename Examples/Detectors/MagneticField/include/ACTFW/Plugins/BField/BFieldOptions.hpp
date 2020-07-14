@@ -57,10 +57,12 @@ using BFieldVariant = std::variant<std::shared_ptr<InterpolatedBFieldMap2D>,
                                    std::shared_ptr<FW::BField::ScalableBField>>;
 
 // common bfield options, with a bf prefix
-void addBFieldOptions(boost::program_options::options_description& opt);
+void
+addBFieldOptions(boost::program_options::options_description& opt);
 
 // create the bfield maps
-BFieldVariant readBField(const boost::program_options::variables_map& vm);
+BFieldVariant
+readBField(const boost::program_options::variables_map& vm);
 
 }  // namespace Options
 }  // namespace FW

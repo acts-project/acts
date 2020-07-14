@@ -167,7 +167,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
 
 /// Convert method
 ///
-json Acts::JsonGeometryConverter::materialMapsToJson(
+json
+Acts::JsonGeometryConverter::materialMapsToJson(
     const DetectorMaterialMaps& maps) {
   DetectorRep detRep;
   // Collect all GeometryIDs per VolumeID for the formatted output
@@ -221,7 +222,8 @@ json Acts::JsonGeometryConverter::materialMapsToJson(
 }
 
 /// Create Json from a detector represenation
-json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
+json
+Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
   json detectorj;
   ACTS_VERBOSE("a2j: Writing json from detector representation");
   ACTS_VERBOSE("a2j: Found entries for " << detRep.volumes.size()
@@ -348,8 +350,8 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
 }
 
 /// Create the Volume Material
-const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
-    const json& material) {
+const Acts::IVolumeMaterial*
+Acts::JsonGeometryConverter::jsonToVolumeMaterial(const json& material) {
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
@@ -433,15 +435,17 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   return vMaterial;
 }
 
-json Acts::JsonGeometryConverter::trackingGeometryToJson(
+json
+Acts::JsonGeometryConverter::trackingGeometryToJson(
     const Acts::TrackingGeometry& tGeometry) {
   DetectorRep detRep;
   convertToRep(detRep, *tGeometry.highestTrackingVolume());
   return detectorRepToJson(detRep);
 }
 
-void Acts::JsonGeometryConverter::convertToRep(
-    DetectorRep& detRep, const Acts::TrackingVolume& tVolume) {
+void
+Acts::JsonGeometryConverter::convertToRep(DetectorRep& detRep,
+                                          const Acts::TrackingVolume& tVolume) {
   // The writer reader volume representation
   VolumeRep volRep;
   volRep.volumeName = tVolume.volumeName();
@@ -523,8 +527,8 @@ void Acts::JsonGeometryConverter::convertToRep(
   return;
 }
 
-Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
-    const Acts::Layer& tLayer) {
+Acts::JsonGeometryConverter::LayerRep
+Acts::JsonGeometryConverter::convertToRep(const Acts::Layer& tLayer) {
   LayerRep layRep;
   // fill layer ID information
   layRep.layerID = tLayer.geoID();
@@ -589,7 +593,8 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
   return layRep;
 }
 
-json Acts::JsonGeometryConverter::surfaceMaterialToJson(
+json
+Acts::JsonGeometryConverter::surfaceMaterialToJson(
     const Acts::ISurfaceMaterial& sMaterial) {
   json smj;
 
@@ -691,7 +696,8 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
   return smj;
 }
 
-json Acts::JsonGeometryConverter::volumeMaterialToJson(
+json
+Acts::JsonGeometryConverter::volumeMaterialToJson(
     const Acts::IVolumeMaterial& vMaterial) {
   json smj;
   // A bin utility needs to be written
@@ -807,8 +813,9 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
   return smj;
 }
 
-void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
-                                                   const Surface* surface) {
+void
+Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
+                                              const Surface* surface) {
   // Get the ID of the surface (redundant but help readability)
   std::ostringstream SurfaceID;
   SurfaceID << surface->geoID();
@@ -867,8 +874,8 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
 }
 
 /// Create the BinUtility for this
-Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
-    const json& bin) {
+Acts::BinUtility
+Acts::JsonGeometryConverter::jsonToBinUtility(const json& bin) {
   // finding the iterator position to determine the binning value
   auto bit = std::find(Acts::binningValueNames.begin(),
                        Acts::binningValueNames.end(), bin[0]);
@@ -885,8 +892,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
   return Acts::BinUtility(bins, min, max, bopt, bval);
 }
 
-Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
-    const Acts::Surface& surface) {
+Acts::BinUtility
+Acts::JsonGeometryConverter::DefaultBin(const Acts::Surface& surface) {
   Acts::BinUtility bUtility;
 
   const Acts::SurfaceBounds& surfaceBounds = surface.bounds();
@@ -930,8 +937,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
   return bUtility;
 }
 
-Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
-    const Acts::TrackingVolume& volume) {
+Acts::BinUtility
+Acts::JsonGeometryConverter::DefaultBin(const Acts::TrackingVolume& volume) {
   Acts::BinUtility bUtility;
 
   auto cyBounds =

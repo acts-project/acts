@@ -21,7 +21,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "XML/XMLElements.h"
 
-std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
+std::shared_ptr<Acts::ProtoSurfaceMaterial>
+Acts::createProtoMaterial(
     const ActsExtension& actsExtension, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning) {
@@ -49,7 +50,8 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
   return std::make_shared<Acts::ProtoSurfaceMaterial>(bu);
 }
 
-void Acts::addLayerProtoMaterial(
+void
+Acts::addLayerProtoMaterial(
     const ActsExtension& actsExtension, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning) {
@@ -83,9 +85,10 @@ void Acts::addLayerProtoMaterial(
   }
 }
 
-void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
-                                         Layer& cylinderLayer,
-                                         Logging::Level loggingLevel) {
+void
+Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                    Layer& cylinderLayer,
+                                    Logging::Level loggingLevel) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
@@ -98,9 +101,10 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
   }
 }
 
-void Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
-                                     ActsExtension& actsExtension,
-                                     const std::string& baseTag) {
+void
+Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
+                                ActsExtension& actsExtension,
+                                const std::string& baseTag) {
   // Add the layer material flag
   actsExtension.addType(baseTag);
   // prepare everything here
@@ -123,9 +127,9 @@ void Acts::xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
   }
 }
 
-void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
-                                     Layer& discLayer,
-                                     Logging::Level loggingLevel) {
+void
+Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+                                Logging::Level loggingLevel) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());

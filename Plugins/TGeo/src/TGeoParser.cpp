@@ -15,9 +15,10 @@
 
 #include <iostream>
 
-void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
-                              const Acts::TGeoParser::Options& options,
-                              const TGeoMatrix& gmatrix) {
+void
+Acts::TGeoParser::select(Acts::TGeoParser::State& state,
+                         const Acts::TGeoParser::Options& options,
+                         const TGeoMatrix& gmatrix) {
   // Volume is present
   if (state.volume != nullptr) {
     std::string volumeName = state.volume->GetName();

@@ -10,14 +10,17 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::updateVertexWithTrack(
+void
+Acts::KalmanVertexUpdater::updateVertexWithTrack(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk) {
   detail::update<input_track_t>(vtx, trk, 1);
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::detail::update(
-    Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
+void
+Acts::KalmanVertexUpdater::detail::update(Vertex<input_track_t>& vtx,
+                                          TrackAtVertex<input_track_t>& trk,
+                                          int sign) {
   double trackWeight = trk.trackWeight;
 
   MatrixCache matrixCache;
@@ -60,7 +63,8 @@ void Acts::KalmanVertexUpdater::detail::update(
 }
 
 template <typename input_track_t>
-void Acts::KalmanVertexUpdater::updatePosition(
+void
+Acts::KalmanVertexUpdater::updatePosition(
     const Acts::Vertex<input_track_t>& vtx,
     const Acts::LinearizedTrack& linTrack, double trackWeight, int sign,
     MatrixCache& matrixCache) {
@@ -102,7 +106,8 @@ void Acts::KalmanVertexUpdater::updatePosition(
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
+double
+Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
     const Vertex<input_track_t>& oldVtx, const MatrixCache& matrixCache) {
   Vector3D posDiff = matrixCache.newVertexPos - oldVtx.position();
 
@@ -111,7 +116,8 @@ double Acts::KalmanVertexUpdater::detail::vertexPositionChi2(
 }
 
 template <typename input_track_t>
-double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
+double
+Acts::KalmanVertexUpdater::detail::trackParametersChi2(
     const LinearizedTrack& linTrack, const MatrixCache& matrixCache) {
   // Track properties
   const ActsMatrixD<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);

@@ -34,12 +34,14 @@ class IService {
   virtual ~IService() = default;
 
   /// The service name.
-  virtual std::string name() const = 0;
+  virtual std::string
+  name() const = 0;
 
   /// Start-of-run hook to be called before any events are processed.
   ///
   /// Should throw an exception for non-recoverable errors.
-  virtual void startRun() = 0;
+  virtual void
+  startRun() = 0;
 
   /// Prepare per-event information.
   ///
@@ -48,7 +50,8 @@ class IService {
   /// operations should be better implemented as an regular algorithm.
   ///
   /// Should throw an exception on non-recoverable errors.
-  virtual void prepare(AlgorithmContext& ctx) = 0;
+  virtual void
+  prepare(AlgorithmContext& ctx) = 0;
 };
 
 }  // namespace FW

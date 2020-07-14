@@ -19,18 +19,20 @@ namespace FW {
 /// @return Canonical path to the directory.
 ///
 /// Will create missing directories and throw on any error.
-std::string ensureWritableDirectory(const std::string& dir);
+std::string
+ensureWritableDirectory(const std::string& dir);
 
 /// Join dir and name into one path with correct handling of empty dirs.
-std::string joinPaths(const std::string& dir, const std::string& name);
+std::string
+joinPaths(const std::string& dir, const std::string& name);
 
 /// Construct a file path of the form `[<dir>/]event<XXXXXXXXX>-<name>`.
 ///
 /// @params dir output directory, current directory if empty
 /// @params name basic filename
 /// @params event event number
-std::string perEventFilepath(const std::string& dir, const std::string& name,
-                             size_t event);
+std::string
+perEventFilepath(const std::string& dir, const std::string& name, size_t event);
 
 /// Determine the range of available events in a directory of per-event files.
 ///
@@ -40,7 +42,7 @@ std::string perEventFilepath(const std::string& dir, const std::string& name,
 /// @returns {0, 0} when no matching files could be found
 ///
 /// Event files must be named `[<dir>/]event<XXXXXXXXX>-<name>` to be considered
-std::pair<size_t, size_t> determineEventFilesRange(const std::string& dir,
-                                                   const std::string& name);
+std::pair<size_t, size_t>
+determineEventFilesRange(const std::string& dir, const std::string& name);
 
 }  // namespace FW

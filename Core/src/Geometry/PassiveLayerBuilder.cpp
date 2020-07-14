@@ -26,29 +26,31 @@ Acts::PassiveLayerBuilder::PassiveLayerBuilder(
   setConfiguration(plConfig);
 }
 
-void Acts::PassiveLayerBuilder::setConfiguration(
+void
+Acts::PassiveLayerBuilder::setConfiguration(
     const PassiveLayerBuilder::Config& plConfig) {
   //!< @todo add configuration check
   m_cfg = plConfig;
 }
 
-void Acts::PassiveLayerBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void
+Acts::PassiveLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::positiveLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::PassiveLayerBuilder::positiveLayers(const GeometryContext& gctx) const {
   return endcapLayers(gctx, 1);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::negativeLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::PassiveLayerBuilder::negativeLayers(const GeometryContext& gctx) const {
   return endcapLayers(gctx, -1);
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
-    const Acts::GeometryContext& /*gctx*/, int side) const {
+const Acts::LayerVector
+Acts::PassiveLayerBuilder::endcapLayers(const Acts::GeometryContext& /*gctx*/,
+                                        int side) const {
   LayerVector eLayers;
   // pos/neg layers
   size_t numpnLayers = m_cfg.posnegLayerPositionZ.size();
@@ -92,7 +94,8 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
   return eLayers;
 }
 
-const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
+const Acts::LayerVector
+Acts::PassiveLayerBuilder::centralLayers(
     const Acts::GeometryContext& /*gctx*/) const {
   LayerVector cLayers;
   // the central layers

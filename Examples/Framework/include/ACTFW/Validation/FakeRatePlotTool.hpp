@@ -60,15 +60,17 @@ class FakeRatePlotTool {
   /// @brief book the fake rate plots
   ///
   /// @param fakeRatePlotCache the cache for fake rate plots
-  void book(FakeRatePlotCache& fakeRatePlotCache) const;
+  void
+  book(FakeRatePlotCache& fakeRatePlotCache) const;
 
   /// @brief fill fake rate w.r.t. fitted track parameters
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const Acts::BoundParameters& fittedParameters, bool status) const;
+  void
+  fill(FakeRatePlotCache& fakeRatePlotCache,
+       const Acts::BoundParameters& fittedParameters, bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed
@@ -77,26 +79,32 @@ class FakeRatePlotTool {
   /// @param truthParticle the truth Particle
   /// @param nTruthMatchedTracks the number of truth-Matched tracks
   /// @param nFakeTracks the number of fake tracks
-  void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const ActsFatras::Particle& truthParticle,
-            size_t nTruthMatchedTracks, size_t nFakeTracks) const;
+  void
+  fill(FakeRatePlotCache& fakeRatePlotCache,
+       const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
+       size_t nFakeTracks) const;
 
   /// @brief write the fake rate plots to file
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
-  void write(const FakeRatePlotCache& fakeRatePlotCache) const;
+  void
+  write(const FakeRatePlotCache& fakeRatePlotCache) const;
 
   /// @brief delete the fake rate plots
   ///
   /// @param fakeRatePlotCache cache object for fake rate plots
-  void clear(FakeRatePlotCache& fakeRatePlotCache) const;
+  void
+  clear(FakeRatePlotCache& fakeRatePlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The Config class
   std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
   /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

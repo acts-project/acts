@@ -71,8 +71,8 @@ FW::DigitizationAlgorithm::DigitizationAlgorithm(
   });
 }
 
-FW::ProcessCode FW::DigitizationAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::DigitizationAlgorithm::execute(const AlgorithmContext& ctx) const {
   // Prepare the input and output collections
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);

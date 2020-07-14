@@ -16,8 +16,8 @@ FW::Contextual::AlignmentDecorator::AlignmentDecorator(
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-FW::ProcessCode FW::Contextual::AlignmentDecorator::decorate(
-    AlgorithmContext& context) {
+FW::ProcessCode
+FW::Contextual::AlignmentDecorator::decorate(AlgorithmContext& context) {
   // We need to lock the Decorator
   std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);
 

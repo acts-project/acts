@@ -67,12 +67,14 @@ class EllipseBounds : public PlanarBounds {
 
   ~EllipseBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
@@ -81,14 +83,15 @@ class EllipseBounds : public PlanarBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///
@@ -99,17 +102,23 @@ class EllipseBounds : public PlanarBounds {
   /// the extremas in all direction
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg) const final;
 
   // Bounding box representation
-  const RectangleBounds& boundingBox() const final;
+  const RectangleBounds&
+  boundingBox() const final;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   std::array<double, eSize> m_values;
@@ -117,16 +126,19 @@ class EllipseBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> EllipseBounds::values() const {
+inline std::vector<double>
+EllipseBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void EllipseBounds::checkConsistency() noexcept(false) {
+inline void
+EllipseBounds::checkConsistency() noexcept(false) {
   if (get(eInnerRx) >= get(eOuterRx) or get(eInnerRx) < 0. or
       get(eOuterRx) <= 0.) {
     throw std::invalid_argument("EllipseBounds: invalid along x axis");

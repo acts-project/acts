@@ -71,7 +71,8 @@ class Frustum {
   /// @param far_distance The distance to the virtual "far plane" at which point
   /// the side planes terminate visually.
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, value_type far_distance = 10) const;
+  void
+  draw(IVisualization& helper, value_type far_distance = 10) const;
 
   /// Draw a representation of this frustum as an SVG string to an outstream
   /// @note This is only available for the 2D case.
@@ -82,27 +83,38 @@ class Frustum {
   /// the side lines terminate visually.
   /// @param unit Multiplicative factor to apply to internal distances
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type far_distance = 1, value_type unit = 20.) const;
+  std::ostream&
+  svg(std::ostream& os, value_type w, value_type h, value_type far_distance = 1,
+      value_type unit = 20.) const;
 
   /// Getter for the oriogin of the frustum
   /// @return The origin of the frustum
-  const VertexType& origin() const { return m_origin; }
+  const VertexType&
+  origin() const {
+    return m_origin;
+  }
 
   /// Getter for the direction of the frustum
   /// @return The direction of the frustum
-  const VertexType& dir() const { return m_normals[0]; }
+  const VertexType&
+  dir() const {
+    return m_normals[0];
+  }
 
   /// Getter for the normal vectors of the planes defining this frustum.
   /// @return Array containing the normal vectors for all planes.
   /// @note The size of the array that is returned is fixed to `number of sides
   /// + 1`
-  const std::array<VertexType, SIDES + 1>& normals() const { return m_normals; }
+  const std::array<VertexType, SIDES + 1>&
+  normals() const {
+    return m_normals;
+  }
 
   /// Transforms this frustum using a given transform and returns a new instance
   /// @param trf The transform to apply
   /// @return A copy of this frustum with the transform @p trf applied.
-  Frustum<value_t, DIM, SIDES> transformed(const transform_type& trf) const;
+  Frustum<value_t, DIM, SIDES>
+  transformed(const transform_type& trf) const;
 
  private:
   // private constructor with pre-calculated normals

@@ -39,15 +39,18 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D> transform,
   }
 }
 
-const Acts::PlaneSurface& Acts::PlaneLayer::surfaceRepresentation() const {
+const Acts::PlaneSurface&
+Acts::PlaneLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::PlaneSurface& Acts::PlaneLayer::surfaceRepresentation() {
+Acts::PlaneSurface&
+Acts::PlaneLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void Acts::PlaneLayer::buildApproachDescriptor() {
+void
+Acts::PlaneLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces

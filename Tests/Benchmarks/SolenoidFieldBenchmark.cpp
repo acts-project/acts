@@ -19,7 +19,8 @@
 
 using namespace Acts::UnitLiterals;
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   size_t iters_map = 5e2;
   size_t iters_solenoid = 3;
   size_t runs_solenoid = 1000;

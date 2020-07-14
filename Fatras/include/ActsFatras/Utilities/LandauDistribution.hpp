@@ -36,14 +36,18 @@ class LandauDistribution {
     param_type() = default;
     param_type(const param_type &) = default;
     param_type(param_type &&) = default;
-    param_type &operator=(const param_type &) = default;
-    param_type &operator=(param_type &&) = default;
+    param_type &
+    operator=(const param_type &) = default;
+    param_type &
+    operator=(param_type &&) = default;
 
     /// Parameters should be EqualityComparable
-    friend bool operator==(const param_type &lhs, const param_type &rhs) {
+    friend bool
+    operator==(const param_type &lhs, const param_type &rhs) {
       return (lhs.location == rhs.location) and (lhs.scale == rhs.scale);
     }
-    friend bool operator!=(const param_type &lhs, const param_type &rhs) {
+    friend bool
+    operator!=(const param_type &lhs, const param_type &rhs) {
       return not(lhs == rhs);
     }
   };
@@ -58,47 +62,65 @@ class LandauDistribution {
   LandauDistribution() = default;
   LandauDistribution(const LandauDistribution &) = default;
   LandauDistribution(LandauDistribution &&) = default;
-  LandauDistribution &operator=(const LandauDistribution &) = default;
-  LandauDistribution &operator=(LandauDistribution &&) = default;
+  LandauDistribution &
+  operator=(const LandauDistribution &) = default;
+  LandauDistribution &
+  operator=(LandauDistribution &&) = default;
 
   /// Reset any possible internal state. Noop, since there is no internal state.
-  void reset() {}
+  void
+  reset() {}
   /// Return the currently configured distribution parameters.
-  param_type param() const { return m_cfg; }
+  param_type
+  param() const {
+    return m_cfg;
+  }
   /// Set the distribution parameters.
-  void param(const param_type &cfg) { m_cfg = cfg; }
+  void
+  param(const param_type &cfg) {
+    m_cfg = cfg;
+  }
 
   /// The minimum value the distribution generates.
-  result_type min() const { return -std::numeric_limits<double>::infinity(); }
+  result_type
+  min() const {
+    return -std::numeric_limits<double>::infinity();
+  }
   /// The maximum value the distribution generates.
-  result_type max() const { return std::numeric_limits<double>::infinity(); }
+  result_type
+  max() const {
+    return std::numeric_limits<double>::infinity();
+  }
 
   /// Generate a random number from the configured Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &generator) {
+  result_type
+  operator()(Generator &generator) {
     return (*this)(generator, m_cfg);
   }
   /// Generate a random number from the given Landau distribution.
   template <typename Generator>
-  result_type operator()(Generator &generator, const param_type &params) {
+  result_type
+  operator()(Generator &generator, const param_type &params) {
     const auto z = std::uniform_real_distribution<double>()(generator);
     return params.location + params.scale * quantile(z);
   }
 
   /// Provide standard comparison operators
-  friend bool operator==(const LandauDistribution &lhs,
-                         const LandauDistribution &rhs) {
+  friend bool
+  operator==(const LandauDistribution &lhs, const LandauDistribution &rhs) {
     return lhs.m_cfg == rhs.m_cfg;
   }
-  friend bool operator!=(const LandauDistribution &lhs,
-                         const LandauDistribution &rhs) {
+  friend bool
+  operator!=(const LandauDistribution &lhs, const LandauDistribution &rhs) {
     return !(lhs == rhs);
   }
 
  private:
   param_type m_cfg;
 
-  static double quantile(double z);
+  static double
+  quantile(double z);
 };
 
 }  // namespace ActsFatras

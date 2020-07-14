@@ -79,8 +79,8 @@ class FullBilloirVertexFitter {
   /// @param state The state object
   ///
   /// @return Fitted vertex
-  Result<Vertex<input_track_t>> fit(
-      const std::vector<const input_track_t*>& paramVector,
+  Result<Vertex<input_track_t>>
+  fit(const std::vector<const input_track_t*>& paramVector,
       const linearizer_t& linearizer,
       const VertexingOptions<input_track_t>& vertexingOptions,
       State& state) const;

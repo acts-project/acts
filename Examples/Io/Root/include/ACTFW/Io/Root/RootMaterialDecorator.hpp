@@ -102,7 +102,8 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  void decorate(Acts::Surface& surface) const final {
+  void
+  decorate(Acts::Surface& surface) const final {
     // Null out the material for this surface
     if (m_clearSurfaceMaterial) {
       surface.assignSurfaceMaterial(nullptr);
@@ -117,7 +118,8 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  void decorate(Acts::TrackingVolume& volume) const final {
+  void
+  decorate(Acts::TrackingVolume& volume) const final {
     // Null out the material for this volume
     if (m_clearSurfaceMaterial) {
       volume.assignVolumeMaterial(nullptr);
@@ -145,7 +147,10 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   bool m_clearSurfaceMaterial{true};
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 };
 
 }  // namespace FW

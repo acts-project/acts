@@ -181,75 +181,92 @@ class JsonGeometryConverter {
   /// Convert method
   ///
   /// @param surfaceMaterialMap The indexed material map collection
-  nlohmann::json materialMapsToJson(const DetectorMaterialMaps& maps);
+  nlohmann::json
+  materialMapsToJson(const DetectorMaterialMaps& maps);
 
   /// Write method
   ///
   /// @param tGeometry is the tracking geometry which contains the material
-  nlohmann::json trackingGeometryToJson(const TrackingGeometry& tGeometry);
+  nlohmann::json
+  trackingGeometryToJson(const TrackingGeometry& tGeometry);
 
  private:
   /// Convert to internal representation method, recursive call
   ///
   /// @param tGeometry is the tracking geometry which contains the material
-  void convertToRep(DetectorRep& detRep, const TrackingVolume& tVolume);
+  void
+  convertToRep(DetectorRep& detRep, const TrackingVolume& tVolume);
 
   /// Convert to internal representation method
   ///
   /// @param tGeometry is the tracking geometry which contains the material
-  LayerRep convertToRep(const Layer& tLayer);
+  LayerRep
+  convertToRep(const Layer& tLayer);
 
   /// Create the Surface Material from Json
   /// - factory method, ownership given
   /// @param material is the json part representing a material object
-  const ISurfaceMaterial* jsonToSurfaceMaterial(const nlohmann::json& material);
+  const ISurfaceMaterial*
+  jsonToSurfaceMaterial(const nlohmann::json& material);
 
   /// Create the Volume Material from Json
   /// - factory method, ownership given
   /// @param material is the json part representing a material object
-  const IVolumeMaterial* jsonToVolumeMaterial(const nlohmann::json& material);
+  const IVolumeMaterial*
+  jsonToVolumeMaterial(const nlohmann::json& material);
 
   /// Create the Material Matrix from Json
   ///
   /// @param data is the json part representing a material data array
-  MaterialPropertiesMatrix jsonToMaterialMatrix(const nlohmann::json& data);
+  MaterialPropertiesMatrix
+  jsonToMaterialMatrix(const nlohmann::json& data);
 
   /// Create the BinUtility for from Json
-  BinUtility jsonToBinUtility(const nlohmann::json& bin);
+  BinUtility
+  jsonToBinUtility(const nlohmann::json& bin);
 
   /// Create Json from a detector represenation
-  nlohmann::json detectorRepToJson(const DetectorRep& detRep);
+  nlohmann::json
+  detectorRepToJson(const DetectorRep& detRep);
 
   /// SurfaceMaterial to Json
   ///
   /// @param the SurfaceMaterial
-  nlohmann::json surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
+  nlohmann::json
+  surfaceMaterialToJson(const ISurfaceMaterial& sMaterial);
 
   /// VolumeMaterial to Json
   ///
   /// @param the VolumeMaterial
-  nlohmann::json volumeMaterialToJson(const IVolumeMaterial& vMaterial);
+  nlohmann::json
+  volumeMaterialToJson(const IVolumeMaterial& vMaterial);
 
   /// Add surface information to json surface
   ///
   /// @param The json surface The surface
-  void addSurfaceToJson(nlohmann::json& sjson, const Surface* surface);
+  void
+  addSurfaceToJson(nlohmann::json& sjson, const Surface* surface);
 
   /// Default BinUtility to create proto material
   ///
   /// @param the Surface
-  Acts::BinUtility DefaultBin(const Acts::Surface& surface);
+  Acts::BinUtility
+  DefaultBin(const Acts::Surface& surface);
 
   /// Default BinUtility to create proto material
   ///
   /// @param the Volume
-  Acts::BinUtility DefaultBin(const Acts::TrackingVolume& volume);
+  Acts::BinUtility
+  DefaultBin(const Acts::TrackingVolume& volume);
 
   /// The config class
   Config m_cfg;
 
   /// Private access to the logging instance
-  const Logger& logger() const { return *m_cfg.logger; }
+  const Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 };
 
 }  // namespace Acts

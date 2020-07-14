@@ -24,9 +24,10 @@ Expected xml structure:
 @author: Joschka Lingemann
 */
 
-static dd4hep::Ref_t createSimpleLayeredCylinder(
-    dd4hep::Detector& lcdd, dd4hep::xml::Handle_t xmlElement,
-    dd4hep::SensitiveDetector sensDet) {
+static dd4hep::Ref_t
+createSimpleLayeredCylinder(dd4hep::Detector& lcdd,
+                            dd4hep::xml::Handle_t xmlElement,
+                            dd4hep::SensitiveDetector sensDet) {
   dd4hep::xml::DetElement xmlDet =
       static_cast<dd4hep::xml::DetElement>(xmlElement);
   std::string name = xmlDet.nameStr();

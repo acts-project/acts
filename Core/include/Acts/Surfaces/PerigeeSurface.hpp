@@ -58,13 +58,16 @@ class PerigeeSurface : public LineSurface {
   /// Assignment operator
   ///
   /// @param other is the source surface to be assigned
-  PerigeeSurface& operator=(const PerigeeSurface& other);
+  PerigeeSurface&
+  operator=(const PerigeeSurface& other);
 
   /// Return the surface type
-  SurfaceType type() const final;
+  SurfaceType
+  type() const final;
 
   /// Return properly formatted class name for screen output */
-  std::string name() const final;
+  std::string
+  name() const final;
 
   /// Output Method for std::ostream
   ///
@@ -72,8 +75,8 @@ class PerigeeSurface : public LineSurface {
   /// @param sl is the ostream to be dumped into
   ///
   /// @return ostreamn obect which was streamed into
-  std::ostream& toStream(const GeometryContext& gctx,
-                         std::ostream& sl) const final;
+  std::ostream&
+  toStream(const GeometryContext& gctx, std::ostream& sl) const final;
 
   /// Return a Polyhedron for the surfaces
   ///
@@ -81,8 +84,9 @@ class PerigeeSurface : public LineSurface {
   /// @param lseg is ignored for a perigee @note ignored
   ///
   /// @return A list of vertices and a face/facett description of it
-  Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
-                                      size_t /*ignored*/) const final;
+  Polyhedron
+  polyhedronRepresentation(const GeometryContext& gctx,
+                           size_t /*ignored*/) const final;
 };
 
 }  // namespace Acts

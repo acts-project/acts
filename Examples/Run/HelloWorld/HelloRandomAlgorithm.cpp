@@ -25,8 +25,8 @@ FW::HelloRandomAlgorithm::HelloRandomAlgorithm(
   }
 }
 
-FW::ProcessCode FW::HelloRandomAlgorithm::execute(
-    const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::HelloRandomAlgorithm::execute(const AlgorithmContext& ctx) const {
   ACTS_INFO("Running random number generation");
 
   // Create the local random number generator

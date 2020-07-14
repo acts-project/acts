@@ -36,8 +36,8 @@ FWE::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(const Config& cfg,
 
 /// @brief Tutorial algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices using the AMVF
-FW::ProcessCode FWE::TutorialAMVFAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FWE::TutorialAMVFAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
   // Get the input track collection

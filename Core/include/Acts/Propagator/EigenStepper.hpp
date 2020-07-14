@@ -178,7 +178,8 @@ class EigenStepper {
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D getField(State& state, const Vector3D& pos) const {
+  Vector3D
+  getField(State& state, const Vector3D& pos) const {
     // get the field from the cell
     return m_bField.getField(pos, state.fieldCache);
   }
@@ -186,27 +187,42 @@ class EigenStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const { return state.pos; }
+  Vector3D
+  position(const State& state) const {
+    return state.pos;
+  }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const { return state.dir; }
+  Vector3D
+  direction(const State& state) const {
+    return state.dir;
+  }
 
   /// Actual momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return state.p; }
+  double
+  momentum(const State& state) const {
+    return state.p;
+  }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return state.q; }
+  double
+  charge(const State& state) const {
+    return state.q;
+  }
 
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t; }
+  double
+  time(const State& state) const {
+    return state.t;
+  }
 
   /// Update surface status
   ///
@@ -216,8 +232,9 @@ class EigenStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
-                                           const BoundaryCheck& bcheck) const {
+  Intersection::Status
+  updateSurfaceStatus(State& state, const Surface& surface,
+                      const BoundaryCheck& bcheck) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(*this, state,
                                                            surface, bcheck);
   }
@@ -233,8 +250,9 @@ class EigenStepper {
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+  void
+  updateStepSize(State& state, const object_intersection_t& oIntersection,
+                 bool release = true) const {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
@@ -243,8 +261,9 @@ class EigenStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
   /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+  void
+  setStepSize(State& state, double stepSize,
+              ConstrainedStep::Type stype = ConstrainedStep::actor) const {
     state.previousStepSize = state.stepSize;
     state.stepSize.update(stepSize, stype, true);
   }
@@ -252,21 +271,24 @@ class EigenStepper {
   /// Release the Step size
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
+  void
+  releaseStepSize(State& state) const {
     state.stepSize.release(ConstrainedStep::actor);
   }
 
   /// Output the Step Size - single component
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
-  std::string outputStepSize(const State& state) const {
+  std::string
+  outputStepSize(const State& state) const {
     return state.stepSize.toString();
   }
 
   /// Overstep limit
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double overstepLimit(const State& /*state*/) const {
+  double
+  overstepLimit(const State& /*state*/) const {
     // A dynamic overstep limit could sit here
     return -m_overstepLimit;
   }
@@ -285,7 +307,8 @@ class EigenStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface) const;
+  BoundState
+  boundState(State& state, const Surface& surface) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -298,14 +321,16 @@ class EigenStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state) const;
+  CurvilinearState
+  curvilinearState(State& state) const;
 
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
-  void update(State& state, const FreeVector& parameters,
-              const Covariance& covariance) const;
+  void
+  update(State& state, const FreeVector& parameters,
+         const Covariance& covariance) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -313,8 +338,9 @@ class EigenStepper {
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
-  void update(State& state, const Vector3D& uposition,
-              const Vector3D& udirection, double up, double time) const;
+  void
+  update(State& state, const Vector3D& uposition, const Vector3D& udirection,
+         double up, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
@@ -323,7 +349,8 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   ///
   /// @return the full transport jacobian
-  void covarianceTransport(State& state) const;
+  void
+  covarianceTransport(State& state) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -334,7 +361,8 @@ class EigenStepper {
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @note no check is done if the position is actually on the surface
-  void covarianceTransport(State& state, const Surface& surface) const;
+  void
+  covarianceTransport(State& state, const Surface& surface) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -347,7 +375,8 @@ class EigenStepper {
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  Result<double>
+  step(propagator_state_t& state) const;
 
  private:
   /// Magnetic field inside of the detector

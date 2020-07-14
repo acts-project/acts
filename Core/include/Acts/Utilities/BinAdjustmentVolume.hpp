@@ -25,8 +25,8 @@ namespace Acts {
 /// @param cBounds the Cylinder volume bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderVolumeBounds& cBounds) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const CylinderVolumeBounds& cBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
@@ -76,8 +76,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param cBounds the Cuboid volume bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CuboidVolumeBounds& cBounds) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const CuboidVolumeBounds& cBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
@@ -127,7 +127,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param Volume to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const Volume& volume) {
   auto cyBounds =
       dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
   auto cuBounds =

@@ -38,7 +38,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// The function does not assert any functionality, it just ensures
 /// the interface compiles
 template <class BField_t>
-void testInterfaceConsistency(const BField_t& field) {
+void
+testInterfaceConsistency(const BField_t& field) {
   using Cache_t = typename BField_t::Cache;
   Vector3D pos(0, 0, 0);
   Vector3D B;
@@ -67,19 +68,35 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBFieldInterfaceConsistency) {
 BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency) {
   // define dummy mapper and field cell, we don't need them to do anything
   struct DummyFieldCell {
-    Vector3D getField(const Vector3D&) const { return {0, 0, 0}; }
-    bool isInside(const Vector3D&) const { return true; }
+    Vector3D
+    getField(const Vector3D&) const {
+      return {0, 0, 0};
+    }
+    bool
+    isInside(const Vector3D&) const {
+      return true;
+    }
   };
 
   struct DummyMapper : DummyFieldCell {
     using FieldCell = DummyFieldCell;
 
-    DummyFieldCell getFieldCell(const Vector3D&) const {
+    DummyFieldCell
+    getFieldCell(const Vector3D&) const {
       return DummyFieldCell();
     }
-    std::vector<size_t> getNBins() const { return {42}; }
-    std::vector<double> getMin() const { return {5}; }
-    std::vector<double> getMax() const { return {15}; }
+    std::vector<size_t>
+    getNBins() const {
+      return {42};
+    }
+    std::vector<double>
+    getMin() const {
+      return {5};
+    }
+    std::vector<double>
+    getMax() const {
+      return {15};
+    }
   };
 
   DummyMapper m;

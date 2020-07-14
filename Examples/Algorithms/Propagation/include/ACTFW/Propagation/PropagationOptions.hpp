@@ -26,7 +26,8 @@ namespace Options {
 ///
 /// @tparam aopt_t Type of the options class from boost
 template <typename aopt_t>
-void addPropagationOptions(aopt_t& opt) {
+void
+addPropagationOptions(aopt_t& opt) {
   opt.add_options()(
       "prop-debug", po::value<bool>()->default_value(false),
       "Run in debug mode, will create propagation screen output.")(
@@ -92,8 +93,8 @@ void addPropagationOptions(aopt_t& opt) {
 ///
 /// @returns a Config object for the ExtrapolationAlgorithm
 template <typename vmap_t, typename propagator_t>
-typename FW::PropagationAlgorithm<propagator_t>::Config readPropagationConfig(
-    const vmap_t& vm, propagator_t propagator) {
+typename FW::PropagationAlgorithm<propagator_t>::Config
+readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
   typename FW::PropagationAlgorithm<propagator_t>::Config pAlgConfig(
       std::move(propagator));
 

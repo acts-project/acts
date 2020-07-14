@@ -21,10 +21,12 @@ Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D> transform,
     : ConeSurface(std::move(transform), std::move(cbounds)),
       Layer(std::move(surfaceArray), thickness, std::move(ade), laytyp) {}
 
-const Acts::ConeSurface& Acts::ConeLayer::surfaceRepresentation() const {
+const Acts::ConeSurface&
+Acts::ConeLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::ConeSurface& Acts::ConeLayer::surfaceRepresentation() {
+Acts::ConeSurface&
+Acts::ConeLayer::surfaceRepresentation() {
   return (*this);
 }

@@ -13,28 +13,32 @@
 #include <iomanip>
 #include <iostream>
 
-bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
-                                   const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
+                              const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_min, m_max);
 }
 
-double Acts::RectangleBounds::distanceToBoundary(
+double
+Acts::RectangleBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(lposition, min(), max());
 }
 
-std::vector<Acts::Vector2D> Acts::RectangleBounds::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::RectangleBounds::vertices(unsigned int /*lseg*/) const {
   // counter-clockwise starting from bottom-left corner
   return {m_min, {m_max.x(), m_min.y()}, m_max, {m_min.x(), m_max.y()}};
 }
 
-const Acts::RectangleBounds& Acts::RectangleBounds::boundingBox() const {
+const Acts::RectangleBounds&
+Acts::RectangleBounds::boundingBox() const {
   return (*this);
 }
 
 // ostream operator overload
-std::ostream& Acts::RectangleBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::RectangleBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RectangleBounds:  (hlX, hlY) = "

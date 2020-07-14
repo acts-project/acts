@@ -44,15 +44,16 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   ~RootTrackParameterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trackParams are parameters to write
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const std::vector<BoundTrackParameters>& trackParams) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const std::vector<BoundTrackParameters>& trackParams) final override;
 
  private:
   Config m_cfg;             ///< The config class

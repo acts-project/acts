@@ -30,73 +30,89 @@ class SurfaceStub : public Surface {
   }
 
   /// Return method for the Surface type to avoid dynamic casts
-  SurfaceType type() const final { return Surface::Other; }
+  SurfaceType
+  type() const final {
+    return Surface::Other;
+  }
 
   /// Return method for the normal vector of the surface
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& /*lpos*/) const final {
+  const Vector3D
+  normal(const GeometryContext& gctx, const Vector2D& /*lpos*/) const final {
     return normal(gctx);
   }
 
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D&) const final {
+  const Vector3D
+  normal(const GeometryContext& gctx, const Vector3D&) const final {
     return normal(gctx);
   }
 
-  const Vector3D normal(const GeometryContext& /*gctx*/) const final {
+  const Vector3D
+  normal(const GeometryContext& /*gctx*/) const final {
     return Vector3D{0., 0., 0.};
   }
 
   /// Return method for SurfaceBounds
-  const SurfaceBounds& bounds() const final {
+  const SurfaceBounds&
+  bounds() const final {
     return s_noBounds;  // need to improve this for meaningful test
   }
 
   /// Local to global transformation
-  void localToGlobal(const GeometryContext& /*gctx*/, const Vector2D& /*lpos*/,
-                     const Vector3D& /*gmom*/, Vector3D& /*gpos*/) const final {
+  void
+  localToGlobal(const GeometryContext& /*gctx*/, const Vector2D& /*lpos*/,
+                const Vector3D& /*gmom*/, Vector3D& /*gpos*/) const final {
     // nop
   }
 
   /// Global to local transformation
-  bool globalToLocal(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
-                     const Vector3D& /*gmom*/, Vector2D& lpos) const final {
+  bool
+  globalToLocal(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
+                const Vector3D& /*gmom*/, Vector2D& lpos) const final {
     lpos = Vector2D{20., 20.};
     return true;
   }
 
   /// Calculation of the path correction for incident
-  double pathCorrection(const GeometryContext& /*cxt*/,
-                        const Vector3D& /*gpos*/,
-                        const Vector3D& /*gmom*/) const final {
+  double
+  pathCorrection(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
+                 const Vector3D& /*gmom*/) const final {
     return 0.0;
   }
 
   /// Straight line intersection schema from parameters
-  Intersection intersectionEstimate(
-      const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
-      const Vector3D& /*gdir*/, const BoundaryCheck& /*bcheck*/) const final {
+  Intersection
+  intersectionEstimate(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
+                       const Vector3D& /*gdir*/,
+                       const BoundaryCheck& /*bcheck*/) const final {
     const Intersection is{Vector3D{1, 1, 1}, 20.,
                           Intersection::Status::reachable};
     return is;
   }
 
   /// Inherited from GeometryObject base
-  const Vector3D binningPosition(const GeometryContext& /*txt*/,
-                                 BinningValue /*bValue*/) const final {
+  const Vector3D
+  binningPosition(const GeometryContext& /*txt*/,
+                  BinningValue /*bValue*/) const final {
     const Vector3D v{0.0, 0.0, 0.0};
     return v;
   }
 
   /// Return properly formatted class name
-  std::string name() const final { return std::string("SurfaceStub"); }
+  std::string
+  name() const final {
+    return std::string("SurfaceStub");
+  }
 
   /// Simply return true to check a method can be called on a constructed object
-  bool constructedOk() const { return true; }
+  bool
+  constructedOk() const {
+    return true;
+  }
 
   /// Return a Polyhedron for the surfaces
-  Polyhedron polyhedronRepresentation(const GeometryContext& /*gctx*/,
-                                      size_t /*lseg */) const final {
+  Polyhedron
+  polyhedronRepresentation(const GeometryContext& /*gctx*/,
+                           size_t /*lseg */) const final {
     std::vector<Vector3D> vertices;
     std::vector<std::vector<size_t>> faces;
     std::vector<std::vector<size_t>> triangularMesh;
@@ -105,9 +121,9 @@ class SurfaceStub : public Surface {
   }
 
   // Cartesian 3D to local bound derivative
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
-      const GeometryContext& /*unused*/,
-      const Vector3D& /*unused*/) const final {
+  const LocalCartesianToBoundLocalMatrix
+  localCartesianToBoundLocalDerivative(const GeometryContext& /*unused*/,
+                                       const Vector3D& /*unused*/) const final {
     return LocalCartesianToBoundLocalMatrix::Identity();
   };
 

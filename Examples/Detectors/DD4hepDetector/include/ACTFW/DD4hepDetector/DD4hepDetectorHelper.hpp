@@ -111,9 +111,9 @@ struct DD4hepDetectorHelper {
   /// @param halflengthY The half length in y of the detector module
   /// @param thickness The thickness of the detector module
   /// @param segmentation the DD4hep segmentation
-  static std::shared_ptr<const Acts::DigitizationModule> rectangleDigiModule(
-      double halflengthX, double halflengthY, double thickness,
-      const dd4hep::Segmentation& segmentation);
+  static std::shared_ptr<const Acts::DigitizationModule>
+  rectangleDigiModule(double halflengthX, double halflengthY, double thickness,
+                      const dd4hep::Segmentation& segmentation);
 
   /// Global method to build an Acts::DigitizationModule with trapezoidal
   /// segmentation.
@@ -127,9 +127,10 @@ struct DD4hepDetectorHelper {
   /// @param halflengthY The half length in y of the detector module
   /// @param thickness The thickness of the detector module
   /// @param segmentation the DD4hep segmentation
-  static std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModule(
-      double minHalflengthX, double maxHalflengthX, double halflengthY,
-      double thickness, const dd4hep::Segmentation& segmentation);
+  static std::shared_ptr<const Acts::DigitizationModule>
+  trapezoidalDigiModule(double minHalflengthX, double maxHalflengthX,
+                        double halflengthY, double thickness,
+                        const dd4hep::Segmentation& segmentation);
 };
 
 }  // end of namespace DD4hep

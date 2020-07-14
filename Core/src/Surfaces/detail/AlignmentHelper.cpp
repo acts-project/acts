@@ -8,8 +8,8 @@
 
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
-Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
-    const RotationMatrix3D& rotation) {
+Acts::detail::RotationToAxes
+Acts::detail::rotationToLocalAxesDerivative(const RotationMatrix3D& rotation) {
   // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.
   // first rotation around x axis, then y axis, last z axis
   // The elements stored in rotAngles is (rotZ, rotY, rotX)

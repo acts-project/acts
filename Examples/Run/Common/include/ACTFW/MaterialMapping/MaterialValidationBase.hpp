@@ -18,5 +18,5 @@ class IBaseDetector;
 /// @param argc the number of argumetns of the call
 /// @param atgv the argument list
 /// @param detector the detector instance
-int materialValidationExample(int argc, char* argv[],
-                              FW::IBaseDetector& detector);
+int
+materialValidationExample(int argc, char* argv[], FW::IBaseDetector& detector);

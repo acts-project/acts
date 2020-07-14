@@ -39,12 +39,13 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @todo move ApproachDescriptor to unqique_ptr
   ///
   /// @return a sharted pointer to the new layer
-  static MutableLayerPtr create(
-      const std::shared_ptr<const Transform3D>& transform,
-      const std::shared_ptr<const DiscBounds>& dbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = Acts::passive) {
+  static MutableLayerPtr
+  create(const std::shared_ptr<const Transform3D>& transform,
+         const std::shared_ptr<const DiscBounds>& dbounds,
+         std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+         double thickness = 0.,
+         std::unique_ptr<ApproachDescriptor> ad = nullptr,
+         LayerType laytyp = Acts::passive) {
     return MutableLayerPtr(new DiscLayer(transform, dbounds,
                                          std::move(surfaceArray), thickness,
                                          std::move(ad), laytyp));
@@ -57,21 +58,25 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   DiscLayer(const DiscLayer& cla) = delete;
 
   /// Assignment operator for DiscLayers - deleted
-  DiscLayer& operator=(const DiscLayer&) = delete;
+  DiscLayer&
+  operator=(const DiscLayer&) = delete;
 
   /// Destructor
   ~DiscLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
-  const DiscSurface& surfaceRepresentation() const override;
+  const DiscSurface&
+  surfaceRepresentation() const override;
 
   // Non-const version
-  DiscSurface& surfaceRepresentation() override;
+  DiscSurface&
+  surfaceRepresentation() override;
 
  private:
   /// build approach surfaces
-  void buildApproachDescriptor();
+  void
+  buildApproachDescriptor();
 
  protected:
   // Constructor with DiscSurface components and pointer to SurfaceArray

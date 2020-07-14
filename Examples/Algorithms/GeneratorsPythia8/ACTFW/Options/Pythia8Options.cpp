@@ -16,7 +16,8 @@
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-void FW::Options::addPythia8Options(
+void
+FW::Options::addPythia8Options(
     boost::program_options::options_description& opt) {
   using namespace boost::program_options;
 
@@ -43,8 +44,9 @@ void FW::Options::addPythia8Options(
       "evg-shuffle", bool_switch(), "Randomnly shuffle the vertex order.");
 }
 
-FW::EventGenerator::Config FW::Options::readPythia8Options(
-    const boost::program_options::variables_map& vm, Acts::Logging::Level lvl) {
+FW::EventGenerator::Config
+FW::Options::readPythia8Options(const boost::program_options::variables_map& vm,
+                                Acts::Logging::Level lvl) {
   Pythia8Generator::Config hard;
   hard.pdgBeam0 = static_cast<Acts::PdgParticle>(vm["evg-beam0"].as<int32_t>());
   hard.pdgBeam1 = static_cast<Acts::PdgParticle>(vm["evg-beam1"].as<int32_t>());

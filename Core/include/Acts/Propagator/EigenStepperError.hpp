@@ -25,9 +25,13 @@ namespace detail {
 class EigenStepperErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "EigenStepperError"; }
+  const char*
+  name() const noexcept final {
+    return "EigenStepperError";
+  }
   // Return what each enum means in text
-  std::string message(int c) const final {
+  std::string
+  message(int c) const final {
     switch (static_cast<EigenStepperError>(c)) {
       case EigenStepperError::StepSizeStalled:
         return "Step size fell below minimum threshold";
@@ -49,7 +53,8 @@ EigenStepperErrorCategory() {
   return c;
 }
 
-inline std::error_code make_error_code(Acts::EigenStepperError e) {
+inline std::error_code
+make_error_code(Acts::EigenStepperError e) {
   return {static_cast<int>(e), Acts::EigenStepperErrorCategory()};
 }
 }  // namespace Acts

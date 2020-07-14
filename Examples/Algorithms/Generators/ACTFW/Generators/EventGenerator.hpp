@@ -67,14 +67,20 @@ class EventGenerator final : public FW::IReader {
   EventGenerator(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Name of the reader.
-  std::string name() const override final;
+  std::string
+  name() const override final;
   /// Available events range. Always return [0,SIZE_MAX) since we generate them.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t>
+  availableEvents() const final override;
   /// Generate an event.
-  ProcessCode read(const AlgorithmContext& context) override final;
+  ProcessCode
+  read(const AlgorithmContext& context) override final;
 
  private:
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;

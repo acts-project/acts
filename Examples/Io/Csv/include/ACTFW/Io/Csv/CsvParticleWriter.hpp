@@ -55,8 +55,9 @@ class CsvParticleWriter final : public WriterT<SimParticleContainer> {
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const FW::AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final override;
+  ProcessCode
+  writeT(const FW::AlgorithmContext& ctx,
+         const SimParticleContainer& particles) final override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct

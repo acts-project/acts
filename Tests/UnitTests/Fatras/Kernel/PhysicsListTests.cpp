@@ -25,8 +25,9 @@ struct SterileProcess {
 
   /// call operator
   template <typename generator_t, typename detector_t, typename particle_t>
-  bool operator()(generator_t &, const detector_t &, particle_t &,
-                  std::vector<particle_t> &) const {
+  bool
+  operator()(generator_t &, const detector_t &, particle_t &,
+             std::vector<particle_t> &) const {
     return false;
   }
 };
@@ -35,8 +36,9 @@ struct SterileProcess {
 struct FatalProcess {
   /// call operator
   template <typename generator_t, typename detector_t, typename particle_t>
-  bool operator()(generator_t &, const detector_t &, particle_t &,
-                  std::vector<particle_t> &) const {
+  bool
+  operator()(generator_t &, const detector_t &, particle_t &,
+             std::vector<particle_t> &) const {
     return true;
   }
 };

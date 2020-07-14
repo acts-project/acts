@@ -31,7 +31,10 @@ class NullBField final {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Vector3D getField(const Vector3D& /*position*/) const { return m_BField; }
+  Vector3D
+  getField(const Vector3D& /*position*/) const {
+    return m_BField;
+  }
 
   /// @brief retrieve magnetic field value
   ///
@@ -41,7 +44,8 @@ class NullBField final {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Vector3D getField(const Vector3D& /*position*/, Cache& /*cache*/) const {
+  Vector3D
+  getField(const Vector3D& /*position*/, Cache& /*cache*/) const {
     return m_BField;
   }
 
@@ -55,8 +59,9 @@ class NullBField final {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3D getFieldGradient(const Vector3D& /*position*/,
-                            ActsMatrixD<3, 3>& /*derivative*/) const {
+  Vector3D
+  getFieldGradient(const Vector3D& /*position*/,
+                   ActsMatrixD<3, 3>& /*derivative*/) const {
     return m_BField;
   }
 
@@ -71,9 +76,9 @@ class NullBField final {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3D getFieldGradient(const Vector3D& /*position*/,
-                            ActsMatrixD<3, 3>& /*derivative*/,
-                            Cache& /*cache*/) const {
+  Vector3D
+  getFieldGradient(const Vector3D& /*position*/,
+                   ActsMatrixD<3, 3>& /*derivative*/, Cache& /*cache*/) const {
     return m_BField;
   }
 
@@ -83,7 +88,10 @@ class NullBField final {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   /// @note The method will always return true for the null B-Field
-  bool isInside(const Vector3D& /*position*/) const { return true; }
+  bool
+  isInside(const Vector3D& /*position*/) const {
+    return true;
+  }
 
  private:
   /// magnetic field vector

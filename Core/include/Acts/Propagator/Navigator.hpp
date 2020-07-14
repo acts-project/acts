@@ -229,7 +229,8 @@ class Navigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  status(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -372,7 +373,8 @@ class Navigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  target(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -426,7 +428,8 @@ class Navigator {
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  initialize(propagator_state_t& state, const stepper_t& stepper) const {
     // Call the navigation helper prior to actual navigation
     debugLog(state, [&] { return std::string("Initialization."); });
 
@@ -511,9 +514,10 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t,
             typename navigation_surfaces_t, typename navigation_iter_t>
-  bool status(propagator_state_t& state, const stepper_t& stepper,
-              navigation_surfaces_t& navSurfaces,
-              const navigation_iter_t& navIter) const {
+  bool
+  status(propagator_state_t& state, const stepper_t& stepper,
+         navigation_surfaces_t& navSurfaces,
+         const navigation_iter_t& navIter) const {
     // No surfaces, status check will be done on layer
     if (navSurfaces.empty() or navIter == navSurfaces.end()) {
       return false;
@@ -557,8 +561,8 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool targetSurfaces(propagator_state_t& state,
-                      const stepper_t& stepper) const {
+  bool
+  targetSurfaces(propagator_state_t& state, const stepper_t& stepper) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -664,7 +668,8 @@ class Navigator {
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
+  bool
+  targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -840,8 +845,8 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool targetBoundaries(propagator_state_t& state,
-                        const stepper_t& stepper) const {
+  bool
+  targetBoundaries(propagator_state_t& state, const stepper_t& stepper) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -987,8 +992,8 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  void initializeTarget(propagator_state_t& state,
-                        const stepper_t& stepper) const {
+  void
+  initializeTarget(propagator_state_t& state, const stepper_t& stepper) const {
     if (state.navigation.targetVolume and
         state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
@@ -1067,8 +1072,9 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
-                       const Layer* cLayer = nullptr) const {
+  bool
+  resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
+                  const Layer* cLayer = nullptr) const {
     // get the layer and layer surface
     auto layerSurface = cLayer ? state.navigation.startSurface
                                : state.navigation.navLayerIter->representation;
@@ -1137,8 +1143,8 @@ class Navigator {
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool resolveLayers(propagator_state_t& state,
-                     const stepper_t& stepper) const {
+  bool
+  resolveLayers(propagator_state_t& state, const stepper_t& stepper) const {
     debugLog(state,
              [&] { return std::string("Searching for compatible layers."); });
 
@@ -1220,7 +1226,8 @@ class Navigator {
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
+  bool
+  inactive(propagator_state_t& state, const stepper_t& stepper) const {
     // Void behavior in case no tracking geometry is present
     if (!trackingGeometry) {
       return true;
@@ -1272,8 +1279,9 @@ class Navigator {
   ///      prefix and length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::string vName = "No Volume";
       if (state.navigation.currentVolume) {

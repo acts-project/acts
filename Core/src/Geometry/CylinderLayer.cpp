@@ -47,16 +47,18 @@ Acts::CylinderLayer::CylinderLayer(
   }
 }
 
-const Acts::CylinderSurface& Acts::CylinderLayer::surfaceRepresentation()
-    const {
+const Acts::CylinderSurface&
+Acts::CylinderLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::CylinderSurface& Acts::CylinderLayer::surfaceRepresentation() {
+Acts::CylinderSurface&
+Acts::CylinderLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void Acts::CylinderLayer::buildApproachDescriptor() {
+void
+Acts::CylinderLayer::buildApproachDescriptor() {
   // delete and reset as you build a new one
   m_approachDescriptor.reset(nullptr);
 

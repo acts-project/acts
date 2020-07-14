@@ -25,18 +25,19 @@ Acts::TGeoLayerBuilder::TGeoLayerBuilder(
 
 Acts::TGeoLayerBuilder::~TGeoLayerBuilder() = default;
 
-void Acts::TGeoLayerBuilder::setConfiguration(
+void
+Acts::TGeoLayerBuilder::setConfiguration(
     const Acts::TGeoLayerBuilder::Config& config) {
   m_cfg = config;
 }
 
-void Acts::TGeoLayerBuilder::setLogger(
-    std::unique_ptr<const Logger> newLogger) {
+void
+Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::negativeLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::TGeoLayerBuilder::negativeLayers(const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector nVector;
@@ -44,8 +45,8 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::negativeLayers(
   return nVector;
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::centralLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::TGeoLayerBuilder::centralLayers(const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector cVector;
@@ -53,8 +54,8 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::centralLayers(
   return cVector;
 }
 
-const Acts::LayerVector Acts::TGeoLayerBuilder::positiveLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::TGeoLayerBuilder::positiveLayers(const GeometryContext& gctx) const {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector pVector;
@@ -62,8 +63,9 @@ const Acts::LayerVector Acts::TGeoLayerBuilder::positiveLayers(
   return pVector;
 }
 
-void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
-                                         LayerVector& layers, int type) {
+void
+Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
+                                    LayerVector& layers, int type) {
   // Bail out if you have no gGeoManager
   if (gGeoManager == nullptr) {
     ACTS_WARNING("No gGeoManager found - bailing out.");

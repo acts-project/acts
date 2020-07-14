@@ -8,13 +8,15 @@
 
 #include "ACTFW/Plugins/HepMC3/HepMC3Writer.hpp"
 
-bool FW::HepMC3WriterAscii::writeEvent(
-    HepMC3::WriterAscii& writer, std::shared_ptr<HepMC3::GenEvent> event) {
+bool
+FW::HepMC3WriterAscii::writeEvent(HepMC3::WriterAscii& writer,
+                                  std::shared_ptr<HepMC3::GenEvent> event) {
   // Write event from storage
   writer.write_event(*event);
   return true;
 }
 
-bool FW::HepMC3WriterAscii::status(HepMC3::WriterAscii& writer) {
+bool
+FW::HepMC3WriterAscii::status(HepMC3::WriterAscii& writer) {
   return writer.failed();
 }

@@ -10,8 +10,9 @@
 // TrackingVolume.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-inline const Acts::Layer* TrackingVolume::associatedLayer(
-    const GeometryContext& /*gctx*/, const Vector3D& position) const {
+inline const Acts::Layer*
+TrackingVolume::associatedLayer(const GeometryContext& /*gctx*/,
+                                const Vector3D& position) const {
   // confined static layers - highest hierarchy
   if (m_confinedLayers != nullptr) {
     return (m_confinedLayers->object(position).get());

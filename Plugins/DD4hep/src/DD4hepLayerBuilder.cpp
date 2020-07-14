@@ -40,12 +40,14 @@ Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
 
 Acts::DD4hepLayerBuilder::~DD4hepLayerBuilder() = default;
 
-void Acts::DD4hepLayerBuilder::setConfiguration(
+void
+Acts::DD4hepLayerBuilder::setConfiguration(
     const Acts::DD4hepLayerBuilder::Config& config) {
   m_cfg = config;
 }
 
-const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
+const Acts::LayerVector
+Acts::DD4hepLayerBuilder::endcapLayers(
     const GeometryContext& gctx,
     const std::vector<dd4hep::DetElement>& dendcapLayers,
     const std::string& side) const {
@@ -164,13 +166,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
   return layers;
 }
 
-const Acts::LayerVector Acts::DD4hepLayerBuilder::negativeLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::DD4hepLayerBuilder::negativeLayers(const GeometryContext& gctx) const {
   return endcapLayers(gctx, m_cfg.negativeLayers, "negative");
 }
 
-const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::DD4hepLayerBuilder::centralLayers(const GeometryContext& gctx) const {
   LayerVector layers;
   if (m_cfg.centralLayers.empty()) {
     ACTS_VERBOSE(" No layers handed over for central volume!");
@@ -278,12 +280,13 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
   return layers;
 }
 
-const Acts::LayerVector Acts::DD4hepLayerBuilder::positiveLayers(
-    const GeometryContext& gctx) const {
+const Acts::LayerVector
+Acts::DD4hepLayerBuilder::positiveLayers(const GeometryContext& gctx) const {
   return endcapLayers(gctx, m_cfg.positiveLayers, "positive");
 }
 
-void Acts::DD4hepLayerBuilder::resolveSensitive(
+void
+Acts::DD4hepLayerBuilder::resolveSensitive(
     const dd4hep::DetElement& detElement,
     std::vector<std::shared_ptr<const Acts::Surface>>& surfaces) const {
   const dd4hep::DetElement::Children& children = detElement.children();

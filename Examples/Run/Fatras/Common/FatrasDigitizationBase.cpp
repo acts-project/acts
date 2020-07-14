@@ -19,7 +19,8 @@
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
 
-void FW::setupDigitization(
+void
+FW::setupDigitization(
     FW::Options::Variables& vars, FW::Sequencer& sequencer,
     std::shared_ptr<const FW::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {

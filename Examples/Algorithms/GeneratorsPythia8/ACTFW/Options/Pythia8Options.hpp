@@ -16,14 +16,16 @@ namespace Options {
 
 /// Options for a Pythia8-based event-generator w/ hard scatter, variable
 /// pile-up, and smeared vertices.
-void addPythia8Options(boost::program_options::options_description& opt);
+void
+addPythia8Options(boost::program_options::options_description& opt);
 
 /// Create the event generator config from the options
 ///
 /// This builds a full event generator with separate hard scatter and pileup.
 /// Not just the Pythia8 process generators to simplify the handling.
-EventGenerator::Config readPythia8Options(
-    const boost::program_options::variables_map& vm, Acts::Logging::Level lvl);
+EventGenerator::Config
+readPythia8Options(const boost::program_options::variables_map& vm,
+                   Acts::Logging::Level lvl);
 
 }  // namespace Options
 }  // namespace FW

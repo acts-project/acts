@@ -22,12 +22,14 @@ struct HepMC3WriterAscii {
   /// @return boolean indicator if the writing was successful
   /// @note HepMC3 does not state a success or failure. The returned argument is
   /// always true.
-  bool writeEvent(HepMC3::WriterAscii& writer,
-                  std::shared_ptr<HepMC3::GenEvent> event);
+  bool
+  writeEvent(HepMC3::WriterAscii& writer,
+             std::shared_ptr<HepMC3::GenEvent> event);
 
   /// @brief Reports the status of the writer
   /// @param writer writer of run files
   /// @return boolean status indicator
-  bool status(HepMC3::WriterAscii& writer);
+  bool
+  status(HepMC3::WriterAscii& writer);
 };
 }  // namespace FW

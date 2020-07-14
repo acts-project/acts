@@ -47,7 +47,8 @@ struct VoidAuctioneer {
   /// @param [in] vCandidates Candidates that are treated as valid extensions
   /// @return The to vCandidates identical list of valid extensions
   template <long unsigned int N>
-  std::array<bool, N> operator()(std::array<int, N> vCandidates) const {
+  std::array<bool, N>
+  operator()(std::array<int, N> vCandidates) const {
     std::array<bool, N> valids;
 
     for (unsigned int i = 0; i < vCandidates.size(); i++) {
@@ -68,7 +69,8 @@ struct FirstValidAuctioneer {
   /// @param [in] vCandidates Candidates for a valid extension
   /// @return List with at most one valid extension
   template <long unsigned int N>
-  std::array<bool, N> operator()(std::array<int, N> vCandidates) const {
+  std::array<bool, N>
+  operator()(std::array<int, N> vCandidates) const {
     std::array<bool, N> valids = {};
 
     for (unsigned int i = 0; i < vCandidates.size(); i++) {
@@ -95,7 +97,8 @@ struct HighestValidAuctioneer {
   /// @param [in] vCandidates Candidates for a valid extension
   /// @return List with at most one valid extension
   template <long unsigned int N>
-  std::array<bool, N> operator()(std::array<int, N> vCandidates) const {
+  std::array<bool, N>
+  operator()(std::array<int, N> vCandidates) const {
     std::array<bool, N> valids = {};
 
     auto highscore = std::max_element(vCandidates.begin(), vCandidates.end());

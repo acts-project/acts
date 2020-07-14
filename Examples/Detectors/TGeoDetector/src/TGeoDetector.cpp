@@ -14,13 +14,15 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
-void TGeoDetector::addOptions(
+void
+TGeoDetector::addOptions(
     boost::program_options::options_description& opt) const {
   FW::Options::addTGeoGeometryOptions(opt);
 }
 
-auto TGeoDetector::finalize(const boost::program_options::variables_map& vm,
-                            std::shared_ptr<const Acts::IMaterialDecorator>)
+auto
+TGeoDetector::finalize(const boost::program_options::variables_map& vm,
+                       std::shared_ptr<const Acts::IMaterialDecorator>)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext tGeoContext;
   TrackingGeometryPtr tgeoTrackingGeometry =

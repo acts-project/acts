@@ -26,7 +26,8 @@ FW::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
     m_lcdd->destroyInstance();
 }
 
-FW::ProcessCode FW::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
+FW::ProcessCode
+FW::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   m_lcdd = &(dd4hep::Detector::getInstance());
   for (auto& file : m_cfg.xmlFileNames) {
     m_lcdd->fromCompact(file.c_str());
@@ -38,7 +39,8 @@ FW::ProcessCode FW::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
   return FW::ProcessCode::SUCCESS;
 }
 
-dd4hep::DetElement FW::DD4hep::DD4hepGeometryService::dd4hepGeometry() {
+dd4hep::DetElement
+FW::DD4hep::DD4hepGeometryService::dd4hepGeometry() {
   if (!m_dd4hepGeometry)
     buildDD4hepGeometry();
   return m_dd4hepGeometry;
@@ -51,13 +53,15 @@ FW::DD4hep::DD4hepGeometryService::DD4hepGeometryService::lcdd() {
   return m_lcdd;
 }
 
-TGeoNode* FW::DD4hep::DD4hepGeometryService::tgeoGeometry() {
+TGeoNode*
+FW::DD4hep::DD4hepGeometryService::tgeoGeometry() {
   if (!m_dd4hepGeometry)
     buildDD4hepGeometry();
   return m_dd4hepGeometry.placement().ptr();
 }
 
-FW::ProcessCode FW::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
+FW::ProcessCode
+FW::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
   // Set the tracking geometry
   m_trackingGeometry = Acts::convertDD4hepDetector(

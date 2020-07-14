@@ -68,12 +68,14 @@ class CylinderBounds : public SurfaceBounds {
 
   ~CylinderBounds() override = default;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -82,8 +84,8 @@ class CylinderBounds : public SurfaceBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover
@@ -91,24 +93,30 @@ class CylinderBounds : public SurfaceBounds {
   /// @param position is the position in the cylinder frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
-  bool inside3D(const Vector3D& position,
-                const BoundaryCheck& bcheck = true) const;
+  bool
+  inside3D(const Vector3D& position, const BoundaryCheck& bcheck = true) const;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
   /// Returns true for full phi coverage
-  bool coversFullAzimuth() const;
+  bool
+  coversFullAzimuth() const;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
  private:
   /// The bound radius, half Z, half phi and average phi
@@ -118,27 +126,33 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Helper method to shift into the phi-frame
   /// @param lposition the polar coordinates in the global frame
-  Vector2D shifted(const Vector2D& lposition) const;
+  Vector2D
+  shifted(const Vector2D& lposition) const;
 
   /// Return the jacobian into the polar coordinate
-  ActsMatrixD<2, 2> jacobian() const;
+  ActsMatrixD<2, 2>
+  jacobian() const;
 };
 
-inline std::vector<double> CylinderBounds::values() const {
+inline std::vector<double>
+CylinderBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline bool CylinderBounds::coversFullAzimuth() const {
+inline bool
+CylinderBounds::coversFullAzimuth() const {
   return m_closed;
 }
 
-inline void CylinderBounds::checkConsistency() noexcept(false) {
+inline void
+CylinderBounds::checkConsistency() noexcept(false) {
   if (get(eR) <= 0.) {
     throw std::invalid_argument("CylinderBounds: invalid radial setup.");
   }

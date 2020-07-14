@@ -30,9 +30,9 @@ struct Highland {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  double operator()(generator_t &generator,
-                    const Acts::MaterialProperties &slab,
-                    Particle &particle) const {
+  double
+  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+             Particle &particle) const {
     // compute the planar scattering angle
     const auto theta0 = Acts::computeMultipleScatteringTheta0(
         slab, particle.pdg(), particle.mass(),

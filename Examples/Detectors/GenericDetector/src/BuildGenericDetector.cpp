@@ -13,9 +13,10 @@ namespace FW {
 namespace Generic {
 
 /// helper method for cylinder
-std::vector<Acts::Vector3D> modulePositionsCylinder(
-    double radius, double zStagger, double moduleHalfLength, double lOverlap,
-    const std::pair<int, int>& binningSchema) {
+std::vector<Acts::Vector3D>
+modulePositionsCylinder(double radius, double zStagger, double moduleHalfLength,
+                        double lOverlap,
+                        const std::pair<int, int>& binningSchema) {
   int nPhiBins = binningSchema.first;
   int nZbins = binningSchema.second;
   // prepare the return value
@@ -43,11 +44,12 @@ std::vector<Acts::Vector3D> modulePositionsCylinder(
 }
 
 /// helper method for disc
-std::vector<std::vector<Acts::Vector3D>> modulePositionsDisc(
-    double z, double ringStagger, std::vector<double> phiStagger,
-    std::vector<double> phiSubStagger, double innerRadius, double outerRadius,
-    const std::vector<size_t>& discBinning,
-    const std::vector<double>& moduleHalfLength) {
+std::vector<std::vector<Acts::Vector3D>>
+modulePositionsDisc(double z, double ringStagger,
+                    std::vector<double> phiStagger,
+                    std::vector<double> phiSubStagger, double innerRadius,
+                    double outerRadius, const std::vector<size_t>& discBinning,
+                    const std::vector<double>& moduleHalfLength) {
   // calculate the radii
   std::vector<double> radii;
   // calculate the radial borders
@@ -99,10 +101,9 @@ std::vector<std::vector<Acts::Vector3D>> modulePositionsDisc(
 }
 
 /// Helper method for positioning
-std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
-                                                double phiStagger,
-                                                double phiSubStagger,
-                                                int nPhiBins) {
+std::vector<Acts::Vector3D>
+modulePositionsRing(double z, double radius, double phiStagger,
+                    double phiSubStagger, int nPhiBins) {
   // create and fill the positions
   std::vector<Acts::Vector3D> rPositions;
   rPositions.reserve(nPhiBins);

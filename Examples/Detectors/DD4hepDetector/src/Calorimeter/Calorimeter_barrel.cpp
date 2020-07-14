@@ -13,7 +13,8 @@
 using namespace std;
 using namespace dd4hep;
 
-static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector) {
+static Ref_t
+create_element(Detector& oddd, xml_h xml, SensitiveDetector) {
   xml_det_t x_det = xml;
   string detName = x_det.nameStr();
 

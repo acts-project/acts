@@ -61,12 +61,14 @@ class DiscTrapezoidBounds : public DiscBounds {
 
   ~DiscTrapezoidBounds() override = default;
 
-  SurfaceBounds::BoundsType type() const final;
+  SurfaceBounds::BoundsType
+  type() const final;
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
@@ -74,52 +76,68 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
   /// @param bcheck is the boundary check directive
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck = true) const final;
+  bool
+  inside(const Vector2D& lposition,
+         const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
   /// This method returns inner radius
-  double rMin() const final;
+  double
+  rMin() const final;
 
   /// This method returns outer radius
-  double rMax() const final;
+  double
+  rMax() const final;
 
   /// This method returns the center radius
-  double rCenter() const;
+  double
+  rCenter() const;
 
   /// This method returns the stereo angle
-  double stereo() const;
+  double
+  stereo() const;
 
   /// This method returns the halfPhiSector which is covered by the disc
-  double halfPhiSector() const;
+  double
+  halfPhiSector() const;
 
   /// This method returns the half length in Y (this is Rmax -Rmin)
-  double halfLengthY() const;
+  double
+  halfLengthY() const;
 
   /// Returns true for full phi coverage - obviously false here
-  bool coversFullAzimuth() const final;
+  bool
+  coversFullAzimuth() const final;
 
   /// Checks if this is inside the radial coverage
   /// given the a tolerance
-  bool insideRadialBounds(double R, double tolerance = 0.) const final;
+  bool
+  insideRadialBounds(double R, double tolerance = 0.) const final;
 
   /// Return a reference radius for binning
-  double binningValueR() const final;
+  double
+  binningValueR() const final;
 
   /// Return a reference phi for binning
-  double binningValuePhi() const final;
+  double
+  binningValuePhi() const final;
 
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in xy)
@@ -130,47 +148,56 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @note that the number of segments are ignored for this surface
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg) const final;
 
  private:
   std::array<double, eSize> m_values;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Private helper method to convert a local postion
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  Vector2D toLocalCartesian(const Vector2D& lposition) const;
+  Vector2D
+  toLocalCartesian(const Vector2D& lposition) const;
 
   /// Jacobian
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;
+  ActsMatrixD<2, 2>
+  jacobianToLocalCartesian(const Vector2D& lposition) const;
 };
 
-inline double DiscTrapezoidBounds::rMin() const {
+inline double
+DiscTrapezoidBounds::rMin() const {
   return get(eMinR);
 }
 
-inline double DiscTrapezoidBounds::rMax() const {
+inline double
+DiscTrapezoidBounds::rMax() const {
   return get(eMaxR);
 }
 
-inline double DiscTrapezoidBounds::stereo() const {
+inline double
+DiscTrapezoidBounds::stereo() const {
   return get(eStereo);
 }
 
-inline double DiscTrapezoidBounds::halfPhiSector() const {
+inline double
+DiscTrapezoidBounds::halfPhiSector() const {
   auto minHalfPhi = std::asin(get(eHalfLengthXminR) / get(eMinR));
   auto maxHalfPhi = std::asin(get(eHalfLengthXmaxR) / get(eMaxR));
   return std::max(minHalfPhi, maxHalfPhi);
 }
 
-inline double DiscTrapezoidBounds::rCenter() const {
+inline double
+DiscTrapezoidBounds::rCenter() const {
   double rmin = get(eMinR);
   double rmax = get(eMaxR);
   double hxmin = get(eHalfLengthXminR);
@@ -180,7 +207,8 @@ inline double DiscTrapezoidBounds::rCenter() const {
   return 0.5 * (hmin + hmax);
 }
 
-inline double DiscTrapezoidBounds::halfLengthY() const {
+inline double
+DiscTrapezoidBounds::halfLengthY() const {
   double rmin = get(eMinR);
   double rmax = get(eMaxR);
   double hxmin = get(eHalfLengthXminR);
@@ -190,30 +218,35 @@ inline double DiscTrapezoidBounds::halfLengthY() const {
   return 0.5 * (hmax - hmin);
 }
 
-inline bool DiscTrapezoidBounds::coversFullAzimuth() const {
+inline bool
+DiscTrapezoidBounds::coversFullAzimuth() const {
   return false;
 }
 
-inline bool DiscTrapezoidBounds::insideRadialBounds(double R,
-                                                    double tolerance) const {
+inline bool
+DiscTrapezoidBounds::insideRadialBounds(double R, double tolerance) const {
   return (R + tolerance > get(eMinR) and R - tolerance < get(eMaxR));
 }
 
-inline double DiscTrapezoidBounds::binningValueR() const {
+inline double
+DiscTrapezoidBounds::binningValueR() const {
   return 0.5 * (get(eMinR) + get(eMaxR));
 }
 
-inline double DiscTrapezoidBounds::binningValuePhi() const {
+inline double
+DiscTrapezoidBounds::binningValuePhi() const {
   return get(eAveragePhi);
 }
 
-inline std::vector<double> DiscTrapezoidBounds::values() const {
+inline std::vector<double>
+DiscTrapezoidBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void DiscTrapezoidBounds::checkConsistency() noexcept(false) {
+inline void
+DiscTrapezoidBounds::checkConsistency() noexcept(false) {
   if (get(eMinR) < 0. or get(eMaxR) <= 0. or get(eMinR) > get(eMaxR)) {
     throw std::invalid_argument("DiscTrapezoidBounds: invalid radial setup.");
   }

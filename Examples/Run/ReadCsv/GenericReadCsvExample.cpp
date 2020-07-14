@@ -20,7 +20,8 @@
 #include "ACTFW/Printers/PrintHits.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   GenericDetector detector;
 
   // setup and parse options

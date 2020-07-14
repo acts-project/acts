@@ -47,8 +47,9 @@ struct TargetOptions {
 /// @param state the propagator cache for the debug flag, prefix/stream
 /// @param logAction is a callable function that returns a streamable object
 template <typename propagator_state_t>
-void targetDebugLog(propagator_state_t& state, const std::string& status,
-                    const std::function<std::string()>& logAction) {
+void
+targetDebugLog(propagator_state_t& state, const std::string& status,
+               const std::function<std::string()>& logAction) {
   if (state.options.debug) {
     std::stringstream dstream;
     dstream << " " << status << " ";
@@ -73,8 +74,8 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state,
-                  const stepper_t& /*unused*/) const {
+  bool
+  operator()(propagator_state_t& state, const stepper_t& /*unused*/) const {
     if (state.navigation.targetReached) {
       return true;
     }
@@ -118,7 +119,8 @@ struct SurfaceReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  bool
+  operator()(propagator_state_t& state, const stepper_t& stepper) const {
     return (*this)(state, stepper, *state.navigation.targetSurface);
   }
 
@@ -131,8 +133,9 @@ struct SurfaceReached {
   /// @param [in] stepper Stepper used for the progation
   /// @param [in] targetSurface The target surface
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const Surface& targetSurface) const {
+  bool
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             const Surface& targetSurface) const {
     if (state.navigation.targetReached) {
       return true;
     }
@@ -212,8 +215,8 @@ struct EndOfWorldReached {
   ///
   /// @param [in,out] state The propagation state object
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state,
-                  const stepper_t& /*unused*/) const {
+  bool
+  operator()(propagator_state_t& state, const stepper_t& /*unused*/) const {
     if (state.navigation.currentVolume != nullptr) {
       return false;
     }

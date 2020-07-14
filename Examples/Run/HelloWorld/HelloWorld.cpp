@@ -20,7 +20,8 @@
 #include "HelloService.hpp"
 #include "HelloWhiteBoardAlgorithm.hpp"
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   // setup options
   // every component should have an associated option setup function
   // that should be called here.

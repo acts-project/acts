@@ -82,12 +82,13 @@ class LayerCreator {
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  MutableLayerPtr cylinderLayer(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
-      size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+  MutableLayerPtr
+  cylinderLayer(const GeometryContext& gctx,
+                std::vector<std::shared_ptr<const Surface>> surfaces,
+                size_t binsPhi, size_t binsZ,
+                std::optional<ProtoLayer> _protoLayer = std::nullopt,
+                std::shared_ptr<const Transform3D> transform = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a cylindrical layer
   ///
@@ -106,13 +107,13 @@ class LayerCreator {
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  MutableLayerPtr cylinderLayer(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces,
-      BinningType bTypePhi, BinningType bTypeZ,
-      std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+  MutableLayerPtr
+  cylinderLayer(const GeometryContext& gctx,
+                std::vector<std::shared_ptr<const Surface>> surfaces,
+                BinningType bTypePhi, BinningType bTypeZ,
+                std::optional<ProtoLayer> _protoLayer = std::nullopt,
+                std::shared_ptr<const Transform3D> transform = nullptr,
+                std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a disc layer
   ///
@@ -131,12 +132,13 @@ class LayerCreator {
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  MutableLayerPtr discLayer(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
-      size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+  MutableLayerPtr
+  discLayer(const GeometryContext& gctx,
+            std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
+            size_t binsPhi,
+            std::optional<ProtoLayer> _protoLayer = std::nullopt,
+            std::shared_ptr<const Transform3D> transform = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a disc layer
   ///
@@ -155,13 +157,13 @@ class LayerCreator {
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  MutableLayerPtr discLayer(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
-      BinningType bTypePhi,
-      std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+  MutableLayerPtr
+  discLayer(const GeometryContext& gctx,
+            std::vector<std::shared_ptr<const Surface>> surfaces,
+            BinningType bTypeR, BinningType bTypePhi,
+            std::optional<ProtoLayer> _protoLayer = std::nullopt,
+            std::shared_ptr<const Transform3D> transform = nullptr,
+            std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a plane layer
   ///
@@ -184,27 +186,31 @@ class LayerCreator {
   /// ApproachDescriptor will be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
-  MutableLayerPtr planeLayer(
-      const GeometryContext& gctx,
-      std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
-      size_t bins2, BinningValue bValue,
-      std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
-      std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
+  MutableLayerPtr
+  planeLayer(const GeometryContext& gctx,
+             std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
+             size_t bins2, BinningValue bValue,
+             std::optional<ProtoLayer> _protoLayer = std::nullopt,
+             std::shared_ptr<const Transform3D> transform = nullptr,
+             std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
-  void setConfiguration(const Config& lcConfig);
+  void
+  setConfiguration(const Config& lcConfig);
 
   /// Access th configuration object
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the logger instance
-  void setLogger(std::unique_ptr<const Logger> newLogger);
+  void
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   // associate surfaces contained by this layer to this layer
-  void associateSurfacesToLayer(Layer& layer) const;
+  void
+  associateSurfacesToLayer(Layer& layer) const;
 
  private:
   /// Validates that all the sensitive surfaces are actually accessible through
@@ -212,20 +218,24 @@ class LayerCreator {
   ///
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
-  bool checkBinning(const GeometryContext& gctx,
-                    const SurfaceArray& sArray) const;
+  bool
+  checkBinning(const GeometryContext& gctx, const SurfaceArray& sArray) const;
 
   /// configuration object
   Config m_cfg;
 
   /// Private acces method to the logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
 };
 
-inline LayerCreator::Config LayerCreator::getConfiguration() const {
+inline LayerCreator::Config
+LayerCreator::getConfiguration() const {
   return m_cfg;
 }
 

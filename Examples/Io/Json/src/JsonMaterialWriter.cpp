@@ -27,7 +27,8 @@ FW::Json::JsonMaterialWriter::JsonMaterialWriter(
 
 FW::Json::JsonMaterialWriter::~JsonMaterialWriter() {}
 
-void FW::Json::JsonMaterialWriter::write(
+void
+FW::Json::JsonMaterialWriter::write(
     const Acts::DetectorMaterialMaps& detMaterial) {
   // Evoke the converter
   Acts::JsonGeometryConverter jmConverter(m_cfg);
@@ -37,8 +38,8 @@ void FW::Json::JsonMaterialWriter::write(
   ofj << std::setw(4) << jout << std::endl;
 }
 
-void FW::Json::JsonMaterialWriter::write(
-    const Acts::TrackingGeometry& tGeometry) {
+void
+FW::Json::JsonMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
   // Evoke the converter
   Acts::JsonGeometryConverter jmConverter(m_cfg);
   auto jout = jmConverter.trackingGeometryToJson(tGeometry);

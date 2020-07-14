@@ -29,8 +29,8 @@ class IVisualization {
   /// @param vtx The vertex position
   /// @param color The color
   ///
-  virtual void vertex(const Vector3D& vtx,
-                      ColorRGB color = {120, 120, 120}) = 0;
+  virtual void
+  vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a face that connects a list of vertices.
   /// @note Depending on the helper implementation, out of plane vertices might
@@ -38,8 +38,8 @@ class IVisualization {
   /// @param vtxs The vertices that make up the face
   /// @param color The color of the face
   ///
-  virtual void face(const std::vector<Vector3D>& vtxs,
-                    ColorRGB color = {120, 120, 120}) = 0;
+  virtual void
+  face(const std::vector<Vector3D>& vtxs, ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a faces that connects a list of vertices - expert only
   ///
@@ -49,30 +49,34 @@ class IVisualization {
   /// @param faces The face presectiotions (i.e. connecting vertices)
   /// @param color The color of the face
   ///
-  virtual void faces(const std::vector<Vector3D>& vtxs,
-                     const std::vector<FaceType>& faces,
-                     ColorRGB color = {120, 120, 120}) = 0;
+  virtual void
+  faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>& faces,
+        ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a line from a vertex to another
   /// @param a The start vertex
   /// @param b The end vertex
   /// @param color The color of the line
   ///
-  virtual void line(const Vector3D& a, const Vector3D& b,
-                    ColorRGB color = {120, 120, 120}) = 0;
+  virtual void
+  line(const Vector3D& a, const Vector3D& b,
+       ColorRGB color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.
   /// @param os The output stream for file
-  virtual void write(std::ostream& os) const = 0;
+  virtual void
+  write(std::ostream& os) const = 0;
 
   /// Write the content of the helper to an outstream.
   /// @param path is the file system path for writing the file
   /// @note wil change to std::filesystem::path once gcc9 is standard
-  virtual void write(const std::string& path) const = 0;
+  virtual void
+  write(const std::string& path) const = 0;
 
   /// Remove all contents of this helper
   ///
-  virtual void clear() = 0;
+  virtual void
+  clear() = 0;
 
   /// Below are helper functions, which share the same interface as the ones
   /// above, but explicitly accept float values (instead of double), converts
@@ -81,18 +85,19 @@ class IVisualization {
 
   /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorRGB)
   ///
-  void vertex(const Vector3F& vtx, ColorRGB color = {120, 120, 120});
+  void
+  vertex(const Vector3F& vtx, ColorRGB color = {120, 120, 120});
 
   /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorRGB)
   ///
-  void face(const std::vector<Vector3F>& vtxs,
-            ColorRGB color = {120, 120, 120});
+  void
+  face(const std::vector<Vector3F>& vtxs, ColorRGB color = {120, 120, 120});
 
   ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
   /// ColorRGB)
   ///
-  void line(const Vector3F& a, const Vector3F& b,
-            ColorRGB color = {120, 120, 120});
+  void
+  line(const Vector3F& a, const Vector3F& b, ColorRGB color = {120, 120, 120});
 
  protected:
   /// Helper: check for extension
@@ -100,7 +105,8 @@ class IVisualization {
   /// @note this is a placeholder for std::filesystem::has_extension
   /// which needs special linking until gcc9
   /// @param path the path to be checked
-  bool hasExtension(const std::string& path) const;
+  bool
+  hasExtension(const std::string& path) const;
 
   /// Helper: replace the extension
   ///
@@ -108,13 +114,15 @@ class IVisualization {
   /// which needs special linking until gcc9
   /// @param path [in,out] the path to be changed
   /// @param suffix the extension to be added
-  void replaceExtension(std::string& path, const std::string& suffix) const;
+  void
+  replaceExtension(std::string& path, const std::string& suffix) const;
 };
 
 /// Overload of the << operator to facilitate writing to streams.
 /// @param os The output stream
 /// @param hlp The helper instance
-inline std::ostream& operator<<(std::ostream& os, const IVisualization& hlp) {
+inline std::ostream&
+operator<<(std::ostream& os, const IVisualization& hlp) {
   hlp.write(os);
   return os;
 }

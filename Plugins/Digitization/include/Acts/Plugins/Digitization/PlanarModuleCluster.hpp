@@ -54,12 +54,14 @@ class PlanarModuleCluster
   /// access to the digitization cells
   ///
   /// @return the vector to the digitization cells
-  const std::vector<DigitizationCell>& digitizationCells() const;
+  const std::vector<DigitizationCell>&
+  digitizationCells() const;
 
   /// access to the digitization module
   ///
   /// @return the pointer to the digitization module
-  const DigitizationModule* digitizationModule() const;
+  const DigitizationModule*
+  digitizationModule() const;
 
  private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
@@ -71,8 +73,8 @@ PlanarModuleCluster::digitizationCells() const {
   return m_digitizationCells;
 }
 
-inline const DigitizationModule* PlanarModuleCluster::digitizationModule()
-    const {
+inline const DigitizationModule*
+PlanarModuleCluster::digitizationModule() const {
   return m_digitizationModule;
 }
 }  // namespace Acts

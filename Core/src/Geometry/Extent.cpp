@@ -10,7 +10,8 @@
 
 #include <ostream>
 
-std::ostream& Acts::Extent::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::Extent::toStream(std::ostream& sl) const {
   sl << "Extent in space : " << std::endl;
   for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
     sl << "  - value :" << std::setw(10) << binningValueNames[ib]
@@ -21,6 +22,7 @@ std::ostream& Acts::Extent::toStream(std::ostream& sl) const {
 }
 
 // Overload of << operator for std::ostream for debug output
-std::ostream& Acts::operator<<(std::ostream& sl, const Extent& ext) {
+std::ostream&
+Acts::operator<<(std::ostream& sl, const Extent& ext) {
   return ext.toStream(sl);
 }

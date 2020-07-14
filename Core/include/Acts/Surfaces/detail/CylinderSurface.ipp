@@ -6,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector3D CylinderSurface::rotSymmetryAxis(
-    const GeometryContext& gctx) const {
+inline const Vector3D
+CylinderSurface::rotSymmetryAxis(const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
-inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const Transform3D& transform, const Vector3D& position,
-    const Vector3D& direction) const {
+inline detail::RealQuadraticEquation
+CylinderSurface::intersectionSolver(const Transform3D& transform,
+                                    const Vector3D& position,
+                                    const Vector3D& direction) const {
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
 
@@ -34,9 +35,11 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-inline Intersection CylinderSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline Intersection
+CylinderSurface::intersectionEstimate(const GeometryContext& gctx,
+                                      const Vector3D& position,
+                                      const Vector3D& direction,
+                                      const BoundaryCheck& bcheck) const {
   const auto& gctxTransform = transform(gctx);
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctxTransform, position, direction);
@@ -64,9 +67,10 @@ inline Intersection CylinderSurface::intersectionEstimate(
   return Intersection(solution, path, status);
 }
 
-inline SurfaceIntersection CylinderSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline SurfaceIntersection
+CylinderSurface::intersect(const GeometryContext& gctx,
+                           const Vector3D& position, const Vector3D& direction,
+                           const BoundaryCheck& bcheck) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation

@@ -31,7 +31,8 @@
 using namespace Acts::UnitLiterals;
 using namespace FW;
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   GenericDetector detector;
 
   // setup and parse options

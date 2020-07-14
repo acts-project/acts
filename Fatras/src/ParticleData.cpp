@@ -22,7 +22,8 @@
 
 // Find an element within a data column using sorted pdg numbers as the index.
 template <typename ColumnContainer>
-static inline auto findByPdg(int32_t pdg, const ColumnContainer& column)
+static inline auto
+findByPdg(int32_t pdg, const ColumnContainer& column)
     -> std::optional<std::decay_t<decltype(column[0])>> {
   // should be a static_assert, but that seems to fail on LLVM
   assert((std::size(column) == kParticlesCount) and "Inconsistent column size");
@@ -40,7 +41,8 @@ static inline auto findByPdg(int32_t pdg, const ColumnContainer& column)
   return std::make_optional(column[std::distance(beg, pos)]);
 }
 
-float ActsFatras::findCharge(Acts::PdgParticle pdg) {
+float
+ActsFatras::findCharge(Acts::PdgParticle pdg) {
   const auto q3 = findByPdg(static_cast<int32_t>(pdg), kParticlesThreeCharge);
   if (q3.has_value()) {
     // convert three charge to regular charge in native units
@@ -51,17 +53,20 @@ float ActsFatras::findCharge(Acts::PdgParticle pdg) {
   }
 }
 
-float ActsFatras::findMass(Acts::PdgParticle pdg) {
+float
+ActsFatras::findMass(Acts::PdgParticle pdg) {
   const auto mass = findByPdg(static_cast<int32_t>(pdg), kParticlesMassMeV);
   // for medium- to high-pt, zero mass is a reasonable fall-back.
   return mass.value_or(0.0f) * Acts::UnitConstants::MeV;
 }
 
-std::string_view ActsFatras::findName(Acts::PdgParticle pdg) {
+std::string_view
+ActsFatras::findName(Acts::PdgParticle pdg) {
   return findByPdg(static_cast<int32_t>(pdg), kParticlesName).value_or("");
 }
 
-std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
+std::ostream&
+Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
   const auto name = ActsFatras::findName(pdg);
   os << static_cast<int32_t>(pdg);
   if (not name.empty()) {

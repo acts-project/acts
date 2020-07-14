@@ -19,7 +19,8 @@ FW::FakeRatePlotTool::FakeRatePlotTool(const FW::FakeRatePlotTool::Config& cfg,
                                        Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("FakeRatePlotTool", lvl)) {}
 
-void FW::FakeRatePlotTool::book(
+void
+FW::FakeRatePlotTool::book(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
@@ -62,7 +63,8 @@ void FW::FakeRatePlotTool::book(
       "fakerate_vs_phi", "Tracking fake rate;#phi;Fake rate", bPhi);
 }
 
-void FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
+void
+FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
   delete fakeRatePlotCache.nReco_vs_pT;
   delete fakeRatePlotCache.nTruthMatched_vs_pT;
   delete fakeRatePlotCache.nFake_vs_pT;
@@ -74,7 +76,8 @@ void FW::FakeRatePlotTool::clear(FakeRatePlotCache& fakeRatePlotCache) const {
   delete fakeRatePlotCache.fakeRate_vs_phi;
 }
 
-void FW::FakeRatePlotTool::write(
+void
+FW::FakeRatePlotTool::write(
     const FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   fakeRatePlotCache.nReco_vs_pT->Write();
@@ -88,7 +91,8 @@ void FW::FakeRatePlotTool::write(
   fakeRatePlotCache.fakeRate_vs_phi->Write();
 }
 
-void FW::FakeRatePlotTool::fill(
+void
+FW::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const Acts::BoundParameters& fittedParameters, bool status) const {
   const auto& momentum = fittedParameters.momentum();
@@ -101,7 +105,8 @@ void FW::FakeRatePlotTool::fill(
   PlotHelpers::fillEff(fakeRatePlotCache.fakeRate_vs_phi, fit_phi, status);
 }
 
-void FW::FakeRatePlotTool::fill(
+void
+FW::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
     size_t nFakeTracks) const {

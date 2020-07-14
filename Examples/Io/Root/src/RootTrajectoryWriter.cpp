@@ -235,7 +235,8 @@ FW::RootTrajectoryWriter::~RootTrajectoryWriter() {
   }
 }
 
-FW::ProcessCode FW::RootTrajectoryWriter::endRun() {
+FW::ProcessCode
+FW::RootTrajectoryWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -246,8 +247,9 @@ FW::ProcessCode FW::RootTrajectoryWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootTrajectoryWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
+FW::ProcessCode
+FW::RootTrajectoryWriter::writeT(const AlgorithmContext& ctx,
+                                 const TrajectoryContainer& trajectories) {
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;
 

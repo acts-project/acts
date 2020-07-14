@@ -48,23 +48,28 @@ class Sequencer {
   /// Add a service to the set of services.
   ///
   /// @throws std::invalid_argument if the service is NULL.
-  void addService(std::shared_ptr<IService> service);
+  void
+  addService(std::shared_ptr<IService> service);
   /// Add a context decorator to the set of context decorators.
   ///
   /// @throws std::invalid_argument if the decorator is NULL.
-  void addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
+  void
+  addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
   /// Add a reader to the set of readers.
   ///
   /// @throws std::invalid_argument if the reader is NULL.
-  void addReader(std::shared_ptr<IReader> reader);
+  void
+  addReader(std::shared_ptr<IReader> reader);
   /// Append an algorithm to the sequence of algorithms.
   ///
   /// @throws std::invalid_argument if the algorithm is NULL.
-  void addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
+  void
+  addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
   /// Add a writer to the set of writers.
   ///
   /// @throws std::invalid_argument if the writer is NULL.
-  void addWriter(std::shared_ptr<IWriter> writer);
+  void
+  addWriter(std::shared_ptr<IWriter> writer);
 
   /// Run the event loop.
   ///
@@ -92,13 +97,16 @@ class Sequencer {
   /// This will run the start-of-run hook for all configured services, run all
   /// configured readers, algorithms, and writers for each event, then invoke
   /// the end-of-run hook for all configured writers.
-  int run();
+  int
+  run();
 
  private:
   /// List of all configured algorithm names.
-  std::vector<std::string> listAlgorithmNames() const;
+  std::vector<std::string>
+  listAlgorithmNames() const;
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
-  std::pair<size_t, size_t> determineEventsRange() const;
+  std::pair<size_t, size_t>
+  determineEventsRange() const;
 
   Config m_cfg;
   std::vector<std::shared_ptr<IService>> m_services;
@@ -108,7 +116,10 @@ class Sequencer {
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

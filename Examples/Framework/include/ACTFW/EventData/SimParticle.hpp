@@ -16,16 +16,17 @@ namespace FW {
 namespace detail {
 struct CompareParticleId {
   using is_transparent = void;
-  constexpr bool operator()(const ActsFatras::Particle& lhs,
-                            const ActsFatras::Particle& rhs) const {
+  constexpr bool
+  operator()(const ActsFatras::Particle& lhs,
+             const ActsFatras::Particle& rhs) const {
     return lhs.particleId() < rhs.particleId();
   }
-  constexpr bool operator()(ActsFatras::Barcode lhs,
-                            const ActsFatras::Particle& rhs) const {
+  constexpr bool
+  operator()(ActsFatras::Barcode lhs, const ActsFatras::Particle& rhs) const {
     return lhs < rhs.particleId();
   }
-  constexpr bool operator()(const ActsFatras::Particle& lhs,
-                            ActsFatras::Barcode rhs) const {
+  constexpr bool
+  operator()(const ActsFatras::Particle& lhs, ActsFatras::Barcode rhs) const {
     return lhs.particleId() < rhs;
   }
 };

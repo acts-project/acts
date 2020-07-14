@@ -21,8 +21,9 @@
 #include <memory>
 #include <vector>
 
-bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
-                                              double tol) const {
+bool
+Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
+                                         double tol) const {
   // first check whether we are in the outer envelope at all (ignore r_med)
   using VectorHelpers::perp;
   using VectorHelpers::phi;
@@ -43,7 +44,8 @@ bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3D& gpos,
   return !insideRInner || !insideZInner;  // we are not, inside bounds
 }
 
-Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces
+Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
     const Transform3D* transform) const {
   OrientedSurfaces oSurfaces;
 
@@ -121,7 +123,8 @@ Acts::OrientedSurfaces Acts::CutoutCylinderVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
+Acts::Volume::BoundingBox
+Acts::CutoutCylinderVolumeBounds::boundingBox(
     const Acts::Transform3D* trf, const Acts::Vector3D& envelope,
     const Acts::Volume* entity) const {
   Vector3D vmin, vmax;
@@ -137,8 +140,8 @@ Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
   return trf == nullptr ? box : box.transformed(*trf);
 }
 
-std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
-    std::ostream& sl) const {
+std::ostream&
+Acts::CutoutCylinderVolumeBounds::toStream(std::ostream& sl) const {
   sl << "Acts::CutoutCylinderVolumeBounds(\n";
   sl << "rmin = " << get(eMinR) << " rmed = " << get(eMedR)
      << " rmax = " << get(eMaxR) << "\n";
@@ -146,7 +149,8 @@ std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
   return sl;
 }
 
-void Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
+void
+Acts::CutoutCylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     double hlChoke = (get(eHalfLengthZ) - get(eHalfLengthZcutout)) * 0.5;
     m_innerCylinderBounds =

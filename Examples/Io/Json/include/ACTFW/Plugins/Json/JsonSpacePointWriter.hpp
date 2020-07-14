@@ -43,9 +43,9 @@ class JsonSpacePointWriter : public WriterT<GeometryIdMultimap<T>> {
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
  protected:
-  FW::ProcessCode writeT(
-      const FW::AlgorithmContext& context,
-      const GeometryIdMultimap<T>& spacePoints) final override;
+  FW::ProcessCode
+  writeT(const FW::AlgorithmContext& context,
+         const GeometryIdMultimap<T>& spacePoints) final override;
 
  private:
   // since class itself is templated, base class template must be fixed
@@ -68,7 +68,8 @@ FW::Json::JsonSpacePointWriter<T>::JsonSpacePointWriter(
 }
 
 template <class T>
-FW::ProcessCode FW::Json::JsonSpacePointWriter<T>::writeT(
+FW::ProcessCode
+FW::Json::JsonSpacePointWriter<T>::writeT(
     const FW::AlgorithmContext& context,
     const GeometryIdMultimap<T>& spacePoints) {
   // open per-event file

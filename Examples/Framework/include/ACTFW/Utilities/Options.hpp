@@ -39,10 +39,12 @@ struct Interval {
 ///
 /// @note The more common range notation uses `lower-upper` but the `-`
 ///       separator complicates the parsing of negative values.
-std::istream& operator>>(std::istream& is, Interval& interval);
+std::istream&
+operator>>(std::istream& is, Interval& interval);
 
 /// Print an interval as `lower:upper`.
-std::ostream& operator<<(std::ostream& os, const Interval& interval);
+std::ostream&
+operator<<(std::ostream& os, const Interval& interval);
 
 /// Extract an interval from an input of the form 'lower:upper'.
 ///
@@ -51,11 +53,12 @@ std::ostream& operator<<(std::ostream& os, const Interval& interval);
 ///
 /// @note The more common range notation uses `lower-upper` but the `-`
 ///       separator complicates the parsing of negative values.
-std::istream& operator>>(std::istream& is, std::vector<Interval>& intervals);
+std::istream&
+operator>>(std::istream& is, std::vector<Interval>& intervals);
 
 /// Print an interval as `lower:upper`.
-std::ostream& operator<<(std::ostream& os,
-                         const std::vector<Interval>& intervals);
+std::ostream&
+operator<<(std::ostream& os, const std::vector<Interval>& intervals);
 
 }  // namespace Options
 }  // namespace FW
@@ -67,10 +70,13 @@ using read_strings = std::vector<std::string>;
 // Overloads must exist in the `std` namespace so ADL-lookup can find them.
 namespace std {
 
-std::ostream& operator<<(std::ostream& os, const read_series& vec);
+std::ostream&
+operator<<(std::ostream& os, const read_series& vec);
 
-std::ostream& operator<<(std::ostream& os, const read_range& vec);
+std::ostream&
+operator<<(std::ostream& os, const read_range& vec);
 
-std::ostream& operator<<(std::ostream& os, const read_strings& vec);
+std::ostream&
+operator<<(std::ostream& os, const read_strings& vec);
 
 }  // namespace std

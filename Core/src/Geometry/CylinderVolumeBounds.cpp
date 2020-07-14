@@ -54,7 +54,8 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
   buildSurfaceBounds();
 }
 
-Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces
+Acts::CylinderVolumeBounds::orientedSurfaces(
     const Transform3D* transformPtr) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
@@ -111,7 +112,8 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
+void
+Acts::CylinderVolumeBounds::buildSurfaceBounds() {
   if (get(eMinR) > s_epsilon) {
     m_innerCylinderBounds = std::make_shared<const CylinderBounds>(
         get(eMinR), get(eHalfLengthZ), get(eHalfPhiSector), get(eAveragePhi));
@@ -127,13 +129,15 @@ void Acts::CylinderVolumeBounds::buildSurfaceBounds() {
   }
 }
 
-std::ostream& Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT<std::ostream>(sl);
 }
 
-Acts::Volume::BoundingBox Acts::CylinderVolumeBounds::boundingBox(
-    const Transform3D* trf, const Vector3D& envelope,
-    const Volume* entity) const {
+Acts::Volume::BoundingBox
+Acts::CylinderVolumeBounds::boundingBox(const Transform3D* trf,
+                                        const Vector3D& envelope,
+                                        const Volume* entity) const {
   double xmax, xmin, ymax, ymin;
   xmax = get(eMaxR);
 

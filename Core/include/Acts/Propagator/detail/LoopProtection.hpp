@@ -24,7 +24,8 @@ struct LoopProtection {
   /// @param [in,out] state State object provided for the call
   /// @param [in] stepper Stepper used
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper) const {
     // Estimate the loop protection limit
     if (state.options.loopProtection) {
       // Get the field at the start position
@@ -67,8 +68,9 @@ struct LoopProtection {
   ///      prefix and length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::vector<std::string> lines;
       std::string input = logAction();

@@ -10,37 +10,44 @@
 
 namespace Acts {
 
-inline const SurfaceArray* Layer::surfaceArray() const {
+inline const SurfaceArray*
+Layer::surfaceArray() const {
   return m_surfaceArray.get();
 }
 
-inline SurfaceArray* Layer::surfaceArray() {
+inline SurfaceArray*
+Layer::surfaceArray() {
   return const_cast<SurfaceArray*>(m_surfaceArray.get());
 }
 
-inline double Layer::thickness() const {
+inline double
+Layer::thickness() const {
   return m_layerThickness;
 }
 
-inline LayerType Layer::layerType() const {
+inline LayerType
+Layer::layerType() const {
   return m_layerType;
 }
 
-inline const TrackingVolume* Layer::trackingVolume() const {
+inline const TrackingVolume*
+Layer::trackingVolume() const {
   return m_trackingVolume;
 }
 
-inline void Layer::encloseTrackingVolume(const TrackingVolume& tvol) {
+inline void
+Layer::encloseTrackingVolume(const TrackingVolume& tvol) {
   m_trackingVolume = &(tvol);
 }
 
-inline const AbstractVolume* Layer::representingVolume() const {
+inline const AbstractVolume*
+Layer::representingVolume() const {
   return m_representingVolume.get();
 }
 
-inline const Layer* Layer::nextLayer(const GeometryContext& /*gctx*/,
-                                     const Vector3D& position,
-                                     const Vector3D& direction) const {
+inline const Layer*
+Layer::nextLayer(const GeometryContext& /*gctx*/, const Vector3D& position,
+                 const Vector3D& direction) const {
   // no binutility -> no chance to find out the direction
   if (m_nextLayerUtility == nullptr) {
     return nullptr;
@@ -50,8 +57,9 @@ inline const Layer* Layer::nextLayer(const GeometryContext& /*gctx*/,
              : m_nextLayers.second;
 }
 
-inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
-                           bool resolvePassive) const {
+inline bool
+Layer::resolve(bool resolveSensitive, bool resolveMaterial,
+               bool resolvePassive) const {
   if (resolvePassive) {
     return true;
   }
@@ -67,9 +75,10 @@ inline bool Layer::resolve(bool resolveSensitive, bool resolveMaterial,
 }
 
 template <typename options_t>
-std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options) const {
+std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const GeometryContext& gctx, const Vector3D& position,
+                          const Vector3D& direction,
+                          const options_t& options) const {
   // the list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
   // remember the surfaces for duplicate removal
@@ -209,9 +218,10 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
 }
 
 template <typename options_t>
-const SurfaceIntersection Layer::surfaceOnApproach(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const options_t& options) const {
+const SurfaceIntersection
+Layer::surfaceOnApproach(const GeometryContext& gctx, const Vector3D& position,
+                         const Vector3D& direction,
+                         const options_t& options) const {
   // resolve directive based by options
   // - options.resolvePassive is on -> always
   // - options.resolveSensitive is on -> always
@@ -278,9 +288,9 @@ const SurfaceIntersection Layer::surfaceOnApproach(
   return checkIntersection(sIntersection);
 }
 
-inline bool Layer::isOnLayer(const GeometryContext& gctx,
-                             const Vector3D& position,
-                             const BoundaryCheck& bcheck) const {
+inline bool
+Layer::isOnLayer(const GeometryContext& gctx, const Vector3D& position,
+                 const BoundaryCheck& bcheck) const {
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(position);
   }

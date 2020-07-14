@@ -130,11 +130,15 @@ struct FW::TrackFinderPerformanceWriter::Impl {
     prtTree->Branch("ntracks_majority", &prtNumTracksMajority);
   }
 
-  const Acts::Logger& logger() const { return _logger; }
+  const Acts::Logger&
+  logger() const {
+    return _logger;
+  }
 
-  void write(uint64_t eventId, const SimParticleContainer& particles,
-             const HitParticlesMap& hitParticlesMap,
-             const ProtoTrackContainer& tracks) {
+  void
+  write(uint64_t eventId, const SimParticleContainer& particles,
+        const HitParticlesMap& hitParticlesMap,
+        const ProtoTrackContainer& tracks) {
     // compute the inverse mapping on-the-fly
     const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
     // How often a particle was reconstructed.
@@ -224,7 +228,8 @@ struct FW::TrackFinderPerformanceWriter::Impl {
     }
   }
   /// Write everything to disk and close the file.
-  void close() {
+  void
+  close() {
     if (not file) {
       ACTS_ERROR("Output file is not available");
       return;
@@ -243,7 +248,8 @@ FW::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
   // explicit destructor needed for pimpl idiom to work
 }
 
-FW::ProcessCode FW::TrackFinderPerformanceWriter::writeT(
+FW::ProcessCode
+FW::TrackFinderPerformanceWriter::writeT(
     const FW::AlgorithmContext& ctx, const FW::ProtoTrackContainer& tracks) {
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_impl->cfg.inputParticles);
@@ -253,7 +259,8 @@ FW::ProcessCode FW::TrackFinderPerformanceWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::TrackFinderPerformanceWriter::endRun() {
+FW::ProcessCode
+FW::TrackFinderPerformanceWriter::endRun() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }

@@ -44,8 +44,14 @@ class AxisAlignedBoundingBox {
    public:
     explicit NamedType(const T& value) : m_value(value) {}
     explicit NamedType(T&& value) : m_value(std::move(value)) {}
-    T& get() { return m_value; }
-    const T& get() const { return m_value; }
+    T&
+    get() {
+      return m_value;
+    }
+    const T&
+    get() const {
+      return m_value;
+    }
 
    private:
     T m_value;
@@ -135,9 +141,9 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<VertexType, VertexType> wrap(
-      const std::vector<const self_t*>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
+  static std::pair<VertexType, VertexType>
+  wrap(const std::vector<const self_t*>& boxes,
+       vertex_array_type envelope = vertex_array_type::Zero());
 
   /**
    * Helper function to calculate the size of a bounding box enclosing @p boxes.
@@ -146,9 +152,9 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<VertexType, VertexType> wrap(
-      const std::vector<self_t*>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
+  static std::pair<VertexType, VertexType>
+  wrap(const std::vector<self_t*>& boxes,
+       vertex_array_type envelope = vertex_array_type::Zero());
 
   /**
    * Helper function to calculate the size of a bounding box enclosing @p boxes.
@@ -157,16 +163,17 @@ class AxisAlignedBoundingBox {
    * @param envelope Optional envelop to add/subtract to dimension.
    * @return Pair of vertixes: min and max.
    */
-  static std::pair<VertexType, VertexType> wrap(
-      const std::vector<self_t>& boxes,
-      vertex_array_type envelope = vertex_array_type::Zero());
+  static std::pair<VertexType, VertexType>
+  wrap(const std::vector<self_t>& boxes,
+       vertex_array_type envelope = vertex_array_type::Zero());
 
   /**
    * Calculate whether a point is inside this box.
    * @param point The point to test.
    * @return Whether the point is inside or not.
    */
-  bool intersect(const VertexType& point) const;
+  bool
+  intersect(const VertexType& point) const;
 
   /**
    * @brief Implements the slab method for Ray/AABB intersections.
@@ -183,7 +190,8 @@ class AxisAlignedBoundingBox {
    * @param ray The ray to intersect with
    * @return Whether the ray intersects this AABB
    */
-  bool intersect(const Ray<value_type, DIM>& ray) const;
+  bool
+  intersect(const Ray<value_type, DIM>& ray) const;
 
   /**
    * Check if a frustum intersects with this bounding box.
@@ -197,78 +205,90 @@ class AxisAlignedBoundingBox {
    * @return Whether the frustum intersects this AABB
    */
   template <size_t sides>
-  bool intersect(const Frustum<value_type, DIM, sides>& fr) const;
+  bool
+  intersect(const Frustum<value_type, DIM, sides>& fr) const;
 
   /**
    * Set the skip node (bounding box)
    * @param skip The target skip node pointer
    */
-  void setSkip(self_t* skip);
+  void
+  setSkip(self_t* skip);
 
   /**
    * Get the skip node for this box
    * @return The skip node pointer
    */
-  const self_t* getSkip() const;
+  const self_t*
+  getSkip() const;
 
   /**
    * Get the left child (i.e. the first of the children that are inside this
    * bounding box).
    * @return The lest most child.
    */
-  const self_t* getLeftChild() const;
+  const self_t*
+  getLeftChild() const;
 
   /**
    * Check whether this node as an associated entity. If it does not have one,
    * this is a purely abstract container box.
    * @return Whether the box has an entity attached.
    */
-  bool hasEntity() const;
+  bool
+  hasEntity() const;
 
   /**
    * Return the entity associated with this box. This might be nullptr if there
    * is no entity attached.
    * @return The entity pointer, might be nullptr
    */
-  const entity_t* entity() const;
+  const entity_t*
+  entity() const;
 
   /**
    * Set the entity associated with with this box.
    * @param entity The entity
    */
-  void setEntity(const entity_t* entity);
+  void
+  setEntity(const entity_t* entity);
 
   /**
    * Get the center position of this bounding box.
    * @return The center position
    */
-  const VertexType& center() const;
+  const VertexType&
+  center() const;
 
   /**
    * Get the minimum vertex
    * @return The minimum vertex
    */
-  const VertexType& min() const;
+  const VertexType&
+  min() const;
 
   /**
    * Get the maximum vertex
    * @return The maximum vertex
    */
-  const VertexType& max() const;
+  const VertexType&
+  max() const;
 
   /**
    * Write information about this bounding box to a stream.
    * @param os The output stream.
    * @return The stream given as an argument.
    */
-  std::ostream& toStream(std::ostream& os) const;
+  std::ostream&
+  toStream(std::ostream& os) const;
 
   /**
    * Transforms this bounding box using the given transform. This method
    * modifies the box it is called on.
    * @param trf The transform
    */
-  void transform(const transform_type& trf);
+  void
+  transform(const transform_type& trf);
 
   /**
    * Transforms this bounding box using the given transfom. This method returns
@@ -277,7 +297,8 @@ class AxisAlignedBoundingBox {
    * @param trf The transform
    * @return The transformed bounding box
    */
-  self_t transformed(const transform_type& trf) const;
+  self_t
+  transformed(const transform_type& trf) const;
 
   /**
    * Draw this bounding box using the given visualization helper. This method is
@@ -288,8 +309,9 @@ class AxisAlignedBoundingBox {
    * @param trf An optional transform to apply first.
    */
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, std::array<int, 3> color = {120, 120, 120},
-            const transform_type& trf = transform_type::Identity()) const;
+  void
+  draw(IVisualization& helper, std::array<int, 3> color = {120, 120, 120},
+       const transform_type& trf = transform_type::Identity()) const;
 
   /**
    * Draw this bounding box as SVG. This method is only available for the 2D
@@ -304,18 +326,18 @@ class AxisAlignedBoundingBox {
    * @return The outstream given in @p os.
    */
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type unit = 10, std::string label = "",
-                    std::string fillcolor = "grey") const;
+  std::ostream&
+  svg(std::ostream& os, value_type w, value_type h, value_type unit = 10,
+      std::string label = "", std::string fillcolor = "grey") const;
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
-  std::pair<VertexType, VertexType> transformVertices(
-      const transform_type& trf) const;
+  std::pair<VertexType, VertexType>
+  transformVertices(const transform_type& trf) const;
 
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  std::pair<VertexType, VertexType> transformVertices(
-      const transform_type& trf) const;
+  std::pair<VertexType, VertexType>
+  transformVertices(const transform_type& trf) const;
 
   const entity_t* m_entity;
   VertexType m_vmin;
@@ -342,9 +364,10 @@ class AxisAlignedBoundingBox {
  * @return Pointer to the top most bounding box, containing the entire octree
  */
 template <typename box_t>
-box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                   const std::vector<box_t*>& prims, size_t max_depth = 1,
-                   typename box_t::value_type envelope1 = 0);
+box_t*
+make_octree(std::vector<std::unique_ptr<box_t>>& store,
+            const std::vector<box_t*>& prims, size_t max_depth = 1,
+            typename box_t::value_type envelope1 = 0);
 
 /**
  * Overload of the << operator for bounding boxes.
@@ -356,8 +379,8 @@ box_t* make_octree(std::vector<std::unique_ptr<box_t>>& store,
  * @return The given output stream.
  */
 template <typename T, typename U, size_t V>
-std::ostream& operator<<(std::ostream& os,
-                         const AxisAlignedBoundingBox<T, U, V>& box);
+std::ostream&
+operator<<(std::ostream& os, const AxisAlignedBoundingBox<T, U, V>& box);
 
 }  // namespace Acts
 

@@ -34,7 +34,8 @@ struct DigitizationCell {
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
-  virtual void addCell(const DigitizationCell& dc, bool analogueReadout) {
+  virtual void
+  addCell(const DigitizationCell& dc, bool analogueReadout) {
     if (analogueReadout) {
       data += dc.data;
     }
@@ -45,7 +46,10 @@ struct DigitizationCell {
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
-  virtual double depositedEnergy() const { return data; }
+  virtual double
+  depositedEnergy() const {
+    return data;
+  }
 };
 
 /// @brief DigitizationStep for further handling

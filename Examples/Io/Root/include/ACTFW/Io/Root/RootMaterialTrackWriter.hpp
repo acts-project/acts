@@ -67,7 +67,8 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework intialize method
-  FW::ProcessCode endRun() final override;
+  FW::ProcessCode
+  endRun() final override;
 
  protected:
   // This implementation holds the actual writing method
@@ -75,9 +76,10 @@ class RootMaterialTrackWriter
   ///
   /// @param ctx The Algorithm context with per event information
   /// @param clusters is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const std::vector<Acts::RecordedMaterialTrack>&
-                         materialtracks) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const std::vector<Acts::RecordedMaterialTrack>& materialtracks)
+      final override;
 
  private:
   /// The config class

@@ -152,10 +152,10 @@ class IterativeVertexFinder {
   /// @param state State for fulfilling interfaces
   ///
   /// @return Collection of vertices found by finder
-  Result<std::vector<Vertex<InputTrack_t>>> find(
-      const std::vector<const InputTrack_t*>& trackVector,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<std::vector<Vertex<InputTrack_t>>>
+  find(const std::vector<const InputTrack_t*>& trackVector,
+       const VertexingOptions<InputTrack_t>& vertexingOptions,
+       State& state) const;
 
  private:
   /// Configuration object
@@ -172,22 +172,26 @@ class IterativeVertexFinder {
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// @brief Method that calls seed finder to retrieve a vertex seed
   ///
   /// @param seedTracks Seeding tracks
   /// @param vertexingOptions Vertexing options
-  Result<Vertex<InputTrack_t>> getVertexSeed(
-      const std::vector<const InputTrack_t*>& seedTracks,
-      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+  Result<Vertex<InputTrack_t>>
+  getVertexSeed(const std::vector<const InputTrack_t*>& seedTracks,
+                const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
   /// @brief Removes all tracks in perigeesToFit from seedTracks
   ///
   /// @param perigeesToFit Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
-  void removeAllTracks(const std::vector<const InputTrack_t*>& perigeesToFit,
-                       std::vector<const InputTrack_t*>& seedTracks) const;
+  void
+  removeAllTracks(const std::vector<const InputTrack_t*>& perigeesToFit,
+                  std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
   /// a given track is to a given vertex
@@ -196,10 +200,11 @@ class IterativeVertexFinder {
   /// @param vertex The vertex
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<double> getCompatibility(
-      const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
-      const VertexingOptions<InputTrack_t>& vertexingOptions,
-      State& state) const;
+  Result<double>
+  getCompatibility(const BoundParameters& params,
+                   const Vertex<InputTrack_t>& vertex,
+                   const VertexingOptions<InputTrack_t>& vertexingOptions,
+                   State& state) const;
 
   /// @brief Function that removes used tracks compatible with
   /// current vertex (`myVertex`) from `perigeesToFit` and `seedTracks`
@@ -210,7 +215,8 @@ class IterativeVertexFinder {
   /// @param seedTracks Tracks used for vertex seeding
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<void> removeUsedCompatibleTracks(
+  Result<void>
+  removeUsedCompatibleTracks(
       Vertex<InputTrack_t>& myVertex,
       std::vector<const InputTrack_t*>& perigeesToFit,
       std::vector<const InputTrack_t*>& seedTracks,
@@ -225,7 +231,8 @@ class IterativeVertexFinder {
   /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<void> fillPerigeesToFit(
+  Result<void>
+  fillPerigeesToFit(
       const std::vector<const InputTrack_t*>& perigeeList,
       const Vertex<InputTrack_t>& seedVertex,
       std::vector<const InputTrack_t*>& perigeesToFitOut,
@@ -245,7 +252,8 @@ class IterativeVertexFinder {
   /// @param state The state object
   ///
   /// @return Bool if currentVertex is still a good vertex
-  Result<bool> reassignTracksToNewVertex(
+  Result<bool>
+  reassignTracksToNewVertex(
       std::vector<Vertex<InputTrack_t>>& vertexCollection,
       Vertex<InputTrack_t>& currentVertex,
       std::vector<const InputTrack_t*>& perigeesToFit,
@@ -261,7 +269,8 @@ class IterativeVertexFinder {
   /// weightThreshold
   ///
   /// @return Number of significant tracks
-  int countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;
+  int
+  countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;
 };
 
 }  // namespace Acts

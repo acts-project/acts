@@ -46,8 +46,9 @@ struct SurfaceArrayFixture {
   SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
   ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
 
-  SrfVec fullPhiTestSurfacesEC(size_t n = 10, double shift = 0,
-                               double zbase = 0, double r = 10) {
+  SrfVec
+  fullPhiTestSurfacesEC(size_t n = 10, double shift = 0, double zbase = 0,
+                        double r = 10) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
@@ -73,9 +74,10 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  SrfVec fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
-                                double incl = M_PI / 9., double w = 2,
-                                double h = 1.5) {
+  SrfVec
+  fullPhiTestSurfacesBRL(int n = 10, double shift = 0, double zbase = 0,
+                         double incl = M_PI / 9., double w = 2,
+                         double h = 1.5) {
     SrfVec res;
 
     double phiStep = 2 * M_PI / n;
@@ -103,10 +105,11 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  SrfVec straightLineSurfaces(
-      size_t n = 10., double step = 3, const Vector3D& origin = {0, 0, 1.5},
-      const Transform3D& pretrans = Transform3D::Identity(),
-      const Vector3D& dir = {0, 0, 1}) {
+  SrfVec
+  straightLineSurfaces(size_t n = 10., double step = 3,
+                       const Vector3D& origin = {0, 0, 1.5},
+                       const Transform3D& pretrans = Transform3D::Identity(),
+                       const Vector3D& dir = {0, 0, 1}) {
     SrfVec res;
     for (size_t i = 0; i < n; ++i) {
       Transform3D trans;
@@ -130,7 +133,8 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  SrfVec makeBarrel(int nPhi, int nZ, double w, double h) {
+  SrfVec
+  makeBarrel(int nPhi, int nZ, double w, double h) {
     double z0 = -(nZ - 1) * w;
     SrfVec res;
 
@@ -144,7 +148,8 @@ struct SurfaceArrayFixture {
     return res;
   }
 
-  void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
+  void
+  draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
     std::ofstream os;
     os.open(fname);
 

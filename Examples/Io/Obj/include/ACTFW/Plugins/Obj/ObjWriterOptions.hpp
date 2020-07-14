@@ -26,7 +26,8 @@ namespace Options {
 ///
 /// @param opt The options object, where string based options are attached
 template <typename aopt_t>
-void addObjWriterOptions(aopt_t& opt) {
+void
+addObjWriterOptions(aopt_t& opt) {
   opt.add_options()("obj-precision", po::value<int>()->default_value(6),
                     "Floating number output precission.")(
       "obj-scalor", po::value<double>()->default_value(1.),
@@ -64,7 +65,8 @@ void addObjWriterOptions(aopt_t& opt) {
 
 /// read the evgen options and return a Config file
 template <class amap_t>
-FW::Obj::ObjTrackingGeometryWriter::Config readObjTrackingGeometryWriterConfig(
+FW::Obj::ObjTrackingGeometryWriter::Config
+readObjTrackingGeometryWriterConfig(
     const amap_t& vm, const std::string& name,
     Acts::Logging::Level loglevel = Acts::Logging::INFO) {
   FW::Obj::ObjTrackingGeometryWriter::Config objTgConfig(name, loglevel);

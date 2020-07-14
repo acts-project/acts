@@ -55,32 +55,33 @@ class AlignedDetectorElement : public Generic::GenericDetectorElement {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform(gctx)
-  const Acts::Transform3D& transform(
-      const Acts::GeometryContext& gctx) const final override;
+  const Acts::Transform3D&
+  transform(const Acts::GeometryContext& gctx) const final override;
 
   /// Return the nominal local to global transform
   ///
   /// @note the geometry context will hereby be ignored
-  const Acts::Transform3D& nominalTransform(
-      const Acts::GeometryContext& gctx) const;
+  const Acts::Transform3D&
+  nominalTransform(const Acts::GeometryContext& gctx) const;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @param alignedTransform is a new transform
   /// @oaram iov is the batch for which it is meant
-  void addAlignedTransform(std::unique_ptr<Acts::Transform3D> alignedTransform,
-                           unsigned int iov);
+  void
+  addAlignedTransform(std::unique_ptr<Acts::Transform3D> alignedTransform,
+                      unsigned int iov);
 
   /// Return the set of alignment transforms in flight
-  const std::vector<std::unique_ptr<Acts::Transform3D>>& alignedTransforms()
-      const;
+  const std::vector<std::unique_ptr<Acts::Transform3D>>&
+  alignedTransforms() const;
 
  private:
   std::vector<std::unique_ptr<Acts::Transform3D>> m_alignedTransforms;
 };
 
-inline const Acts::Transform3D& AlignedDetectorElement::transform(
-    const Acts::GeometryContext& gctx) const {
+inline const Acts::Transform3D&
+AlignedDetectorElement::transform(const Acts::GeometryContext& gctx) const {
   // Check if a different transform than the nominal exists
   if (m_alignedTransforms.size()) {
     // cast into the right context object
@@ -91,12 +92,14 @@ inline const Acts::Transform3D& AlignedDetectorElement::transform(
   return nominalTransform(gctx);
 }
 
-inline const Acts::Transform3D& AlignedDetectorElement::nominalTransform(
+inline const Acts::Transform3D&
+AlignedDetectorElement::nominalTransform(
     const Acts::GeometryContext& gctx) const {
   return GenericDetectorElement::transform(gctx);
 }
 
-inline void AlignedDetectorElement::addAlignedTransform(
+inline void
+AlignedDetectorElement::addAlignedTransform(
     std::unique_ptr<Acts::Transform3D> alignedTransform, unsigned int iov) {
   // most standard case, it's just a new one:
   auto cios = m_alignedTransforms.size();

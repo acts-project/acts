@@ -20,12 +20,14 @@ struct HepMC3ReaderAscii {
   /// @param reader reader of run files
   /// @param event storage of the read event
   /// @return boolean indicator if the reading was successful
-  bool readEvent(HepMC3::ReaderAscii& reader,
-                 std::shared_ptr<HepMC3::GenEvent> event);
+  bool
+  readEvent(HepMC3::ReaderAscii& reader,
+            std::shared_ptr<HepMC3::GenEvent> event);
 
   /// @brief Reports the status of the reader
   /// @param reader reader of run files
   /// @return boolean status indicator
-  bool status(HepMC3::ReaderAscii& reader);
+  bool
+  status(HepMC3::ReaderAscii& reader);
 };
 }  // namespace FW

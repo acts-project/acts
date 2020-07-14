@@ -8,8 +8,9 @@
 
 #include "Acts/Material/MaterialGridHelper.hpp"
 
-Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2) {
+Acts::Grid2D
+Acts::createGrid(std::array<double, 3> gridAxis1,
+                 std::array<double, 3> gridAxis2) {
   // get the number of bins
   size_t nBinsAxis1 = gridAxis1[2];
   size_t nBinsAxis2 = gridAxis2[2];
@@ -35,9 +36,10 @@ Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
   return Acts::Grid2D(std::make_tuple(std::move(axis1), std::move(axis2)));
 }
 
-Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2,
-                              std::array<double, 3> gridAxis3) {
+Acts::Grid3D
+Acts::createGrid(std::array<double, 3> gridAxis1,
+                 std::array<double, 3> gridAxis2,
+                 std::array<double, 3> gridAxis3) {
   // get the number of bins
   size_t nBinsAxis1 = gridAxis1[2];
   size_t nBinsAxis2 = gridAxis2[2];
@@ -70,8 +72,8 @@ Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
       std::make_tuple(std::move(axis1), std::move(axis2), std::move(axis3)));
 }
 
-std::function<double(Acts::Vector3D)> Acts::globalToLocalFromBin(
-    Acts::BinningValue& type) {
+std::function<double(Acts::Vector3D)>
+Acts::globalToLocalFromBin(Acts::BinningValue& type) {
   std::function<double(Acts::Vector3D)> transfoGlobalToLocal;
 
   switch (type) {
@@ -116,7 +118,8 @@ std::function<double(Acts::Vector3D)> Acts::globalToLocalFromBin(
   return transfoGlobalToLocal;
 }
 
-Acts::Grid2D Acts::createGrid2D(
+Acts::Grid2D
+Acts::createGrid2D(
     const Acts::BinUtility& bins,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
@@ -159,7 +162,8 @@ Acts::Grid2D Acts::createGrid2D(
   return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
 }
 
-Acts::Grid3D Acts::createGrid3D(
+Acts::Grid3D
+Acts::createGrid3D(
     const Acts::BinUtility& bins,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
@@ -210,7 +214,8 @@ Acts::Grid3D Acts::createGrid3D(
                            std::move(gridAxis3)));
 }
 
-Acts::MaterialGrid2D Acts::mapMaterialPoints(
+Acts::MaterialGrid2D
+Acts::mapMaterialPoints(
     Acts::Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
   // Walk over each point
@@ -239,7 +244,8 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   return mGrid;
 }
 
-Acts::MaterialGrid3D Acts::mapMaterialPoints(
+Acts::MaterialGrid3D
+Acts::mapMaterialPoints(
     Acts::Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
   // Walk over each point

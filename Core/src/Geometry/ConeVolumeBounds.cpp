@@ -83,7 +83,8 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
   checkConsistency();
 }
 
-Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
+Acts::OrientedSurfaces
+Acts::ConeVolumeBounds::orientedSurfaces(
     const Transform3D* transformPtr) const {
   // The transform - apply when given
   Transform3D transform =
@@ -168,7 +169,8 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   return oSurfaces;
 }
 
-void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
+void
+Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
   if (innerRmin() > outerRmin() or innerRmax() > outerRmax()) {
     throw std::invalid_argument("ConeVolumeBounds: invalid radial input.");
   }
@@ -188,7 +190,8 @@ void Acts::ConeVolumeBounds::checkConsistency() noexcept(false) {
   }
 }
 
-bool Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
+bool
+Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
@@ -235,7 +238,8 @@ bool Acts::ConeVolumeBounds::inside(const Vector3D& pos, double tol) const {
   return true;
 }
 
-void Acts::ConeVolumeBounds::buildSurfaceBounds() {
+void
+Acts::ConeVolumeBounds::buildSurfaceBounds() {
   // Build inner cone or inner cylinder
   if (get(eInnerAlpha) > s_epsilon) {
     m_innerTanAlpha = std::tan(get(eInnerAlpha));
@@ -287,13 +291,15 @@ void Acts::ConeVolumeBounds::buildSurfaceBounds() {
 }
 
 // ostream operator overload
-std::ostream& Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::ConeVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT(sl);
 }
 
-Acts::Volume::BoundingBox Acts::ConeVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
-    const Volume* entity) const {
+Acts::Volume::BoundingBox
+Acts::ConeVolumeBounds::boundingBox(const Acts::Transform3D* trf,
+                                    const Vector3D& envelope,
+                                    const Volume* entity) const {
   Vector3D vmin(-outerRmax(), -outerRmax(), -0.5 * get(eHalfLengthZ));
   Vector3D vmax(outerRmax(), outerRmax(), 0.5 * get(eHalfLengthZ));
   Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);

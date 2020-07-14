@@ -36,24 +36,30 @@ class Pythia8Generator {
     std::vector<std::string> settings = {{"HardQCD:all = on"}};
   };
 
-  static std::function<std::vector<SimVertex>(RandomEngine&)> makeFunction(
-      const Config& cfg, Acts::Logging::Level lvl);
+  static std::function<std::vector<SimVertex>(RandomEngine&)>
+  makeFunction(const Config& cfg, Acts::Logging::Level lvl);
 
   // try to prevent pythia breakage by forbidding copying
   Pythia8Generator() = delete;
   Pythia8Generator(const Pythia8Generator&) = delete;
   Pythia8Generator(Pythia8Generator&&) = delete;
-  Pythia8Generator& operator=(const Pythia8Generator&) = delete;
-  Pythia8Generator& operator=(Pythia8Generator&& other) = delete;
+  Pythia8Generator&
+  operator=(const Pythia8Generator&) = delete;
+  Pythia8Generator&
+  operator=(Pythia8Generator&& other) = delete;
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
   ~Pythia8Generator();
 
-  std::vector<SimVertex> operator()(RandomEngine& rng);
+  std::vector<SimVertex>
+  operator()(RandomEngine& rng);
 
  private:
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return (*m_logger); }
+  const Acts::Logger&
+  logger() const {
+    return (*m_logger);
+  }
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;

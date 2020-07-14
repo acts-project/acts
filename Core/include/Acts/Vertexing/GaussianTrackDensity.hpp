@@ -111,10 +111,11 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
-  std::pair<double, double> globalMaximumWithWidth(
-      State& state, const std::vector<const input_track_t*>& trackList,
-      const std::function<BoundParameters(input_track_t)>& extractParameters)
-      const;
+  std::pair<double, double>
+  globalMaximumWithWidth(State& state,
+                         const std::vector<const input_track_t*>& trackList,
+                         const std::function<BoundParameters(input_track_t)>&
+                             extractParameters) const;
 
   /// @brief Calculates the z position of the global maximum
   ///
@@ -124,10 +125,11 @@ class GaussianTrackDensity {
   /// InputTrack
   ///
   /// @return z position of the global maximum
-  double globalMaximum(State& state,
-                       const std::vector<const input_track_t*>& trackList,
-                       const std::function<BoundParameters(input_track_t)>&
-                           extractParameters) const;
+  double
+  globalMaximum(State& state,
+                const std::vector<const input_track_t*>& trackList,
+                const std::function<BoundParameters(input_track_t)>&
+                    extractParameters) const;
 
  private:
   /// The configuration
@@ -139,10 +141,10 @@ class GaussianTrackDensity {
   /// @param trackList All input tracks
   /// @param extractParameters Function extracting BoundParameters from
   /// InputTrack
-  void addTracks(State& state,
-                 const std::vector<const input_track_t*>& trackList,
-                 const std::function<BoundParameters(input_track_t)>&
-                     extractParameters) const;
+  void
+  addTracks(State& state, const std::vector<const input_track_t*>& trackList,
+            const std::function<BoundParameters(input_track_t)>&
+                extractParameters) const;
 
   /// @brief Evaluate the density function and its two first
   /// derivatives at the specified coordinate along the beamline
@@ -151,8 +153,8 @@ class GaussianTrackDensity {
   /// @param z z-position along the beamline
   ///
   /// @return Track density, first and second derivatives
-  std::tuple<double, double, double> trackDensityAndDerivatives(State& state,
-                                                                double z) const;
+  std::tuple<double, double, double>
+  trackDensityAndDerivatives(State& state, double z) const;
 
   /// @brief Update the current maximum values
   ///
@@ -161,9 +163,9 @@ class GaussianTrackDensity {
   /// @param newSecondDerivative The new second derivative
   /// @return The max z position, the max value at z position, the max second
   /// derivative
-  std::tuple<double, double, double> updateMaximum(
-      double newZ, double newValue, double newSecondDerivative, double maxZ,
-      double maxValue, double maxSecondDerivative) const;
+  std::tuple<double, double, double>
+  updateMaximum(double newZ, double newValue, double newSecondDerivative,
+                double maxZ, double maxValue, double maxSecondDerivative) const;
 
   /// @brief Calculates the step size
   ///
@@ -172,7 +174,8 @@ class GaussianTrackDensity {
   /// @param ddy Second derivative
   ///
   /// @return The step size
-  double stepSize(double y, double dy, double ddy) const;
+  double
+  stepSize(double y, double dy, double ddy) const;
 
   // Helper class to evaluate and store track density at specific position
   class GaussianTrackDensityStore {
@@ -181,10 +184,12 @@ class GaussianTrackDensity {
     GaussianTrackDensityStore(double z_coordinate) : m_z(z_coordinate) {}
 
     // Add the contribution of a single track to the density
-    void addTrackToDensity(const TrackEntry& entry);
+    void
+    addTrackToDensity(const TrackEntry& entry);
 
     // Return density, first and second derivatives
-    inline std::tuple<double, double, double> densityAndDerivatives() const {
+    inline std::tuple<double, double, double>
+    densityAndDerivatives() const {
       return {m_density, m_firstDerivative, m_secondDerivative};
     }
 

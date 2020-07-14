@@ -49,21 +49,32 @@ class CpuVector {
     }
   }
 
-  var_t* get(size_t offset = 0) { return m_hostPtr + offset; }
+  var_t*
+  get(size_t offset = 0) {
+    return m_hostPtr + offset;
+  }
 
-  void set(size_t offset, var_t val) { m_hostPtr[offset] = val; }
+  void
+  set(size_t offset, var_t val) {
+    m_hostPtr[offset] = val;
+  }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset) {
+  void
+  copyD2H(var_t* devPtr, size_t len, size_t offset) {
     cudaMemcpy(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                cudaMemcpyDeviceToHost);
   }
 
-  void copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
+  void
+  copyD2H(var_t* devPtr, size_t len, size_t offset, cudaStream_t* stream) {
     cudaMemcpyAsync(m_hostPtr + offset, devPtr, len * sizeof(var_t),
                     cudaMemcpyDeviceToHost, *stream);
   }
 
-  void zeros() { memset(m_hostPtr, 0, m_size * sizeof(var_t)); }
+  void
+  zeros() {
+    memset(m_hostPtr, 0, m_size * sizeof(var_t));
+  }
 
  private:
   var_t* m_hostPtr;

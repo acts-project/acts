@@ -9,8 +9,9 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 template <typename coll_t>
-void Acts::ConvexPolygonBoundsBase::convex_impl(
-    const coll_t& vertices) noexcept(false) {
+void
+Acts::ConvexPolygonBoundsBase::convex_impl(const coll_t& vertices) noexcept(
+    false) {
   static_assert(std::is_same<typename coll_t::value_type, Vector2D>::value,
                 "Must be collection of Vector2D");
 
@@ -49,8 +50,8 @@ void Acts::ConvexPolygonBoundsBase::convex_impl(
 }
 
 template <typename coll_t>
-Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
-    const coll_t& vertices) {
+Acts::RectangleBounds
+Acts::ConvexPolygonBoundsBase::makeBoundingBox(const coll_t& vertices) {
   Vector2D vmax, vmin;
   vmax = vertices[0];
   vmin = vertices[0];
@@ -94,34 +95,39 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
 }
 
 template <int N>
-Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::ConvexPolygonBounds<N>::type() const {
   return SurfaceBounds::eConvexPolygon;
 }
 
 template <int N>
-bool Acts::ConvexPolygonBounds<N>::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::ConvexPolygonBounds<N>::inside(const Acts::Vector2D& lposition,
+                                     const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_vertices);
 }
 
 template <int N>
-double Acts::ConvexPolygonBounds<N>::distanceToBoundary(
+double
+Acts::ConvexPolygonBounds<N>::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(lposition, m_vertices);
 }
 
 template <int N>
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<N>::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::ConvexPolygonBounds<N>::vertices(unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }
 
 template <int N>
-const Acts::RectangleBounds& Acts::ConvexPolygonBounds<N>::boundingBox() const {
+const Acts::RectangleBounds&
+Acts::ConvexPolygonBounds<N>::boundingBox() const {
   return m_boundingBox;
 }
 
 template <int N>
-void Acts::ConvexPolygonBounds<N>::checkConsistency() const noexcept(false) {
+void
+Acts::ConvexPolygonBounds<N>::checkConsistency() const noexcept(false) {
   convex_impl(m_vertices);
 }

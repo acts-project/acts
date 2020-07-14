@@ -27,9 +27,9 @@ class RandomNumbers;
 /// @param sequencer the framework sequencer
 /// @param randomNumbers the random numbers tools
 /// @param trackingGeometry the tracking geometry
-void setupSimulation(
-    const Options::Variables& variables, Sequencer& sequencer,
-    std::shared_ptr<const RandomNumbers> randomNumbers,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
+void
+setupSimulation(const Options::Variables& variables, Sequencer& sequencer,
+                std::shared_ptr<const RandomNumbers> randomNumbers,
+                std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
 
 }  // namespace FW

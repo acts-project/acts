@@ -29,13 +29,16 @@ class IWriter {
   virtual ~IWriter() = default;
 
   /// The writer name.
-  virtual std::string name() const = 0;
+  virtual std::string
+  name() const = 0;
 
   /// Write data from one event.
-  virtual ProcessCode write(const AlgorithmContext& context) = 0;
+  virtual ProcessCode
+  write(const AlgorithmContext& context) = 0;
 
   /// End the run (e.g. aggregate statistics, write down output, close files).
-  virtual ProcessCode endRun() = 0;
+  virtual ProcessCode
+  endRun() = 0;
 };
 
 }  // namespace FW

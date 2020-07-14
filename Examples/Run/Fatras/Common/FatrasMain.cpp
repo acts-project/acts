@@ -28,8 +28,9 @@
 #include "FatrasEvgenBase.hpp"
 #include "FatrasSimulationBase.hpp"
 
-int FW::fatrasMain(int argc, char* argv[],
-                   std::shared_ptr<FW::IBaseDetector> detector) {
+int
+FW::fatrasMain(int argc, char* argv[],
+               std::shared_ptr<FW::IBaseDetector> detector) {
   using boost::program_options::value;
 
   // setup and parse options

@@ -68,7 +68,8 @@ FW::RootParticleWriter::~RootParticleWriter() {
   }
 }
 
-FW::ProcessCode FW::RootParticleWriter::endRun() {
+FW::ProcessCode
+FW::RootParticleWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -78,8 +79,9 @@ FW::ProcessCode FW::RootParticleWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootParticleWriter::writeT(
-    const AlgorithmContext& ctx, const SimParticleContainer& particles) {
+FW::ProcessCode
+FW::RootParticleWriter::writeT(const AlgorithmContext& ctx,
+                               const SimParticleContainer& particles) {
   if (not m_outputFile) {
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;

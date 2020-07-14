@@ -34,7 +34,8 @@ struct FitterFunctionImpl {
 
   FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
-  FW::FittingAlgorithm::FitterResult operator()(
+  FW::FittingAlgorithm::FitterResult
+  operator()(
       const std::vector<FW::SimSourceLink>& sourceLinks,
       const FW::TrackParameters& initialParameters,
       const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
@@ -43,7 +44,8 @@ struct FitterFunctionImpl {
 };
 }  // namespace
 
-FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
+FW::FittingAlgorithm::FitterFunction
+FW::FittingAlgorithm::makeFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
   using Updater = Acts::GainMatrixUpdater;

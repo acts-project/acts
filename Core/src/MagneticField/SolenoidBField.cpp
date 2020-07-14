@@ -21,7 +21,8 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config)) {
   m_scale = m_cfg.bMagCenter / field.norm();
 }
 
-Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position) const {
+Acts::Vector3D
+Acts::SolenoidBField::getField(const Vector3D& position) const {
   using VectorHelpers::perp;
   Vector2D rzPos(perp(position), position.z());
   Vector2D rzField = multiCoilField(rzPos, m_scale);
@@ -36,28 +37,32 @@ Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position) const {
   return xyzField;
 }
 
-Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position,
-                                              Cache& /*cache*/) const {
+Acts::Vector3D
+Acts::SolenoidBField::getField(const Vector3D& position,
+                               Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D Acts::SolenoidBField::getField(const Vector2D& position) const {
+Acts::Vector2D
+Acts::SolenoidBField::getField(const Vector2D& position) const {
   return multiCoilField(position, m_scale);
 }
 
-Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
+Acts::Vector3D
+Acts::SolenoidBField::getFieldGradient(
     const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/) const {
   return getField(position);
 }
 
-Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
-    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/,
-    Cache& /*cache*/) const {
+Acts::Vector3D
+Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
+                                       ActsMatrixD<3, 3>& /*derivative*/,
+                                       Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D Acts::SolenoidBField::multiCoilField(const Vector2D& pos,
-                                                    double scale) const {
+Acts::Vector2D
+Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const {
   // iterate over all coils
   Vector2D resultField(0, 0);
   for (size_t coil = 0; coil < m_cfg.nCoils; coil++) {
@@ -69,12 +74,13 @@ Acts::Vector2D Acts::SolenoidBField::multiCoilField(const Vector2D& pos,
   return resultField;
 }
 
-Acts::Vector2D Acts::SolenoidBField::singleCoilField(const Vector2D& pos,
-                                                     double scale) const {
+Acts::Vector2D
+Acts::SolenoidBField::singleCoilField(const Vector2D& pos, double scale) const {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
+double
+Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -111,7 +117,8 @@ double Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
   return r / pos[0] * constant * B;
 }
 
-double Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const {
+double
+Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -148,7 +155,8 @@ double Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const {
   return constant * B;
 }
 
-double Acts::SolenoidBField::k2(double r, double z) const {
+double
+Acts::SolenoidBField::k2(double r, double z) const {
   //  2           4Rr
   // k   =  ---------------
   //               2      2

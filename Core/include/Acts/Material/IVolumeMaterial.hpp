@@ -29,7 +29,8 @@ class IVolumeMaterial {
   ///
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
-  virtual const Material material(const Vector3D& position) const = 0;
+  virtual const Material
+  material(const Vector3D& position) const = 0;
 
   /// @brief output stream operator
   ///
@@ -37,14 +38,15 @@ class IVolumeMaterial {
   /// virtual IVolumeeMaterial::toStream method
   ///
   /// @return modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const IVolumeMaterial& vm) {
+  friend std::ostream&
+  operator<<(std::ostream& out, const IVolumeMaterial& vm) {
     vm.toStream(out);
     return out;
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  virtual std::ostream& toStream(std::ostream& sl) const = 0;
+  virtual std::ostream&
+  toStream(std::ostream& sl) const = 0;
 };
 
 }  // namespace Acts

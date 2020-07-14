@@ -43,21 +43,33 @@ class SimIdentifier : public Acts::MinimalSourceLink {
   SimIdentifier() = default;
   SimIdentifier(const SimIdentifier&) = default;
   SimIdentifier(SimIdentifier&&) = default;
-  SimIdentifier& operator=(const SimIdentifier&) = default;
-  SimIdentifier& operator=(SimIdentifier&&) = default;
+  SimIdentifier&
+  operator=(const SimIdentifier&) = default;
+  SimIdentifier&
+  operator=(SimIdentifier&&) = default;
 
   /// Assign from an identifier value.
-  SimIdentifier& operator=(Value value);
+  SimIdentifier&
+  operator=(Value value);
   /// Cast to an identifier value.
   operator Value() const { return m_value; }
 
   /// Explicit access the underlying identifier value.
-  Value value() const { return m_value; }
+  Value
+  value() const {
+    return m_value;
+  }
   /// Access all associated truth indices.
-  const std::vector<std::size_t>& indices() const { return m_indices; }
+  const std::vector<std::size_t>&
+  indices() const {
+    return m_indices;
+  }
 
   /// Attach a truth index to the identifier.
-  void addIndex(std::size_t index) { m_indices.push_back(index); }
+  void
+  addIndex(std::size_t index) {
+    m_indices.push_back(index);
+  }
 
  private:
   /// The stored identifier value.
@@ -65,11 +77,12 @@ class SimIdentifier : public Acts::MinimalSourceLink {
   /// Associated truth indices.
   std::vector<std::size_t> m_indices;
 
-  friend constexpr bool operator<(const SimIdentifier& lhs,
-                                  const SimIdentifier& rhs) {
+  friend constexpr bool
+  operator<(const SimIdentifier& lhs, const SimIdentifier& rhs) {
     return lhs.m_value < rhs.m_value;
   }
-  friend bool operator==(const SimIdentifier& lhs, const SimIdentifier& rhs) {
+  friend bool
+  operator==(const SimIdentifier& lhs, const SimIdentifier& rhs) {
     return lhs.m_value == rhs.m_value;
   }
 };

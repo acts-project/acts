@@ -43,21 +43,27 @@ namespace {
 
 template <typename T, typename propagator_state_t, typename stepper_t,
           typename result_t,
-          typename = decltype(std::declval<T>().operator()(
-              std::declval<propagator_state_t&>(), std::declval<stepper_t&>(),
-              std::declval<result_t&>()))>
-std::true_type test_action_with_result(int);
+          typename = decltype(std::declval<T>().
+                              operator()(std::declval<propagator_state_t&>(),
+                                         std::declval<stepper_t&>(),
+                                         std::declval<result_t&>()))>
+std::true_type
+test_action_with_result(int);
 
 template <typename, typename, typename, typename>
-std::false_type test_action_with_result(...);
+std::false_type
+test_action_with_result(...);
 
 template <typename T, typename propagator_state_t, typename stepper_t,
-          typename = decltype(std::declval<T>().operator()(
-              std::declval<propagator_state_t&>(), std::declval<stepper_t&>()))>
-std::true_type test_action_without_result(int);
+          typename = decltype(std::declval<T>().
+                              operator()(std::declval<propagator_state_t&>(),
+                                         std::declval<stepper_t&>()))>
+std::true_type
+test_action_without_result(int);
 
 template <typename>
-std::false_type test_action_without_result(...);
+std::false_type
+test_action_without_result(...);
 
 template <typename T, typename propagator_state_t, typename stepper_t,
           bool has_result = false>

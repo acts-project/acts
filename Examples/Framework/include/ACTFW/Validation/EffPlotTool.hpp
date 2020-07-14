@@ -47,32 +47,39 @@ class EffPlotTool {
   /// @brief book the efficiency plots
   ///
   /// @param effPlotCache the cache for efficiency plots
-  void book(EffPlotCache& effPlotCache) const;
+  void
+  book(EffPlotCache& effPlotCache) const;
 
   /// @brief fill efficiency plots
   ///
   /// @param effPlotCache cache object for efficiency plots
   /// @param truthParticle the truth Particle
   /// @param status the reconstruction status
-  void fill(EffPlotCache& effPlotCache,
-            const ActsFatras::Particle& truthParticle, bool status) const;
+  void
+  fill(EffPlotCache& effPlotCache, const ActsFatras::Particle& truthParticle,
+       bool status) const;
 
   /// @brief write the efficiency plots to file
   ///
   /// @param effPlotCache cache object for efficiency plots
-  void write(const EffPlotCache& effPlotCache) const;
+  void
+  write(const EffPlotCache& effPlotCache) const;
 
   /// @brief delete the efficiency plots
   ///
   /// @param effPlotCache cache object for efficiency plots
-  void clear(EffPlotCache& effPlotCache) const;
+  void
+  clear(EffPlotCache& effPlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The Config class
   std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
   /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

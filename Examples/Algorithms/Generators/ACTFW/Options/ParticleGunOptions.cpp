@@ -14,7 +14,8 @@
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-void FW::Options::addParticleGunOptions(
+void
+FW::Options::addParticleGunOptions(
     boost::program_options::options_description& opt) {
   using namespace boost::program_options;
 
@@ -46,7 +47,8 @@ void FW::Options::addParticleGunOptions(
       "flip the charge (and change PDG accordingly).");
 }
 
-FW::EventGenerator::Config FW::Options::readParticleGunOptions(
+FW::EventGenerator::Config
+FW::Options::readParticleGunOptions(
     const boost::program_options::variables_map& vm) {
   using namespace Acts::UnitLiterals;
 

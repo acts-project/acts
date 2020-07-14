@@ -38,8 +38,8 @@ class IterativeVertexFinderAlgorithm : public FW::BareAlgorithm {
 
   /// Framework execute method
   /// @param [in] context is the Algorithm context for event consistency
-  FW::ProcessCode execute(
-      const FW::AlgorithmContext& context) const final override;
+  FW::ProcessCode
+  execute(const FW::AlgorithmContext& context) const final override;
 
  private:
   /// The config class

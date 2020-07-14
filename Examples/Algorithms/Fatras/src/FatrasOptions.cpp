@@ -10,7 +10,8 @@
 
 #include <string>
 
-void FW::Options::addFatrasOptions(FW::Options::Description& desc) {
+void
+FW::Options::addFatrasOptions(FW::Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
 

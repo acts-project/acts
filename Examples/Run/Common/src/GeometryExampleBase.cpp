@@ -27,7 +27,8 @@
 #include "ACTFW/Utilities/Options.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 
-int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
+int
+processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
   // setup and parse options
   auto desc = FW::Options::makeDefaultOptions();
   FW::Options::addSequencerOptions(desc);

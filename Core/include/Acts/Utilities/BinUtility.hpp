@@ -98,7 +98,8 @@ class BinUtility {
   /// Assignment operator
   ///
   /// @param sbu is the source bin utility
-  BinUtility& operator=(const BinUtility& sbu) {
+  BinUtility&
+  operator=(const BinUtility& sbu) {
     if (this != &sbu) {
       m_binningData = sbu.m_binningData;
       m_transform = sbu.m_transform;
@@ -113,7 +114,8 @@ class BinUtility {
   /// Operator++ to make multidimensional BinUtility
   ///
   /// @param gbu is the additional BinUtility to be chosen
-  BinUtility& operator+=(const BinUtility& gbu) {
+  BinUtility&
+  operator+=(const BinUtility& gbu) {
     const std::vector<BinningData>& bData = gbu.binningData();
 
     if (m_transform == nullptr && gbu.transform() != nullptr) {
@@ -144,10 +146,16 @@ class BinUtility {
   ~BinUtility() = default;
 
   /// return the binning data vector
-  const std::vector<BinningData>& binningData() const { return m_binningData; }
+  const std::vector<BinningData>&
+  binningData() const {
+    return m_binningData;
+  }
 
   /// Return the total number of bins
-  size_t bins() const { return bins(0) * bins(1) * bins(2); }
+  size_t
+  bins() const {
+    return bins(0) * bins(1) * bins(2);
+  }
 
   /// Bin-triple fast access
   ///
@@ -156,7 +164,8 @@ class BinUtility {
   /// @param position is the 3D position to be evaluated
   ///
   /// @return is the bin value in 3D
-  std::array<size_t, 3> binTriple(const Vector3D& position) const {
+  std::array<size_t, 3>
+  binTriple(const Vector3D& position) const {
     /// transform or not
     const Vector3D& bPosition =
         m_itransform ? Vector3D((*m_itransform) * position) : position;
@@ -177,7 +186,8 @@ class BinUtility {
   /// @param ba is the bin dimension
   ///
   /// @return is the bin value
-  size_t bin(const Vector3D& position, size_t ba = 0) const {
+  size_t
+  bin(const Vector3D& position, size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
@@ -198,8 +208,8 @@ class BinUtility {
   /// @param ba is the binning accessor
   ///
   /// @return a vector of neighbour sizes
-  std::vector<size_t> neighbourRange(const Vector3D& position,
-                                     size_t ba = 0) const {
+  std::vector<size_t>
+  neighbourRange(const Vector3D& position, size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return {0};
     }
@@ -226,8 +236,9 @@ class BinUtility {
   /// @todo the
   ///
   /// @return the next bin
-  int nextDirection(const Vector3D& position, const Vector3D& direction,
-                    size_t ba = 0) const {
+  int
+  nextDirection(const Vector3D& position, const Vector3D& direction,
+                size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
@@ -245,7 +256,8 @@ class BinUtility {
   /// @param ba is the bin dimension
   ///
   /// @return bin calculated from local
-  size_t bin(const Vector2D& lposition, size_t ba = 0) const {
+  size_t
+  bin(const Vector2D& lposition, size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
@@ -255,7 +267,8 @@ class BinUtility {
   ///
   /// @param position is the global position to be evaluated
   /// @return is a boolean check
-  bool inside(const Vector3D& position) const {
+  bool
+  inside(const Vector3D& position) const {
     /// transform or not
     const Vector3D& bPosition =
         m_itransform ? Vector3D((*m_itransform) * position) : position;
@@ -273,7 +286,8 @@ class BinUtility {
   ///
   /// @param lposition is the local position to be evaluated
   /// @return is a boolean check
-  bool inside(const Vector2D& lposition) const {
+  bool
+  inside(const Vector2D& lposition) const {
     return true;
     std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
     for (; bdIter != m_binningData.end(); ++bdIter) {
@@ -286,14 +300,18 @@ class BinUtility {
 
   /// First bin maximal value
   /// @return the dimenstion of the binning data
-  size_t dimensions() const { return m_binningData.size(); }
+  size_t
+  dimensions() const {
+    return m_binningData.size();
+  }
 
   /// First bin maximal value
   ///
   /// @param ba is the binaccessor
   ///
   /// @return size_t is the maximal bin of the accessor entry
-  size_t max(size_t ba = 0) const {
+  size_t
+  max(size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       return 0;
     }
@@ -305,7 +323,8 @@ class BinUtility {
   /// @param ba is the binaccessor
   ///
   /// @return size_t is the bins of the accessor entry
-  size_t bins(size_t ba) const {
+  size_t
+  bins(size_t ba) const {
     if (ba >= m_binningData.size()) {
       return 1;
     }
@@ -315,14 +334,18 @@ class BinUtility {
   /// Transform applied to global positions before lookup
   ///
   /// @return Shared pointer to transform
-  std::shared_ptr<const Transform3D> transform() const { return m_transform; }
+  std::shared_ptr<const Transform3D>
+  transform() const {
+    return m_transform;
+  }
 
   /// The type/value of the binning
   ///
   /// @param ba is the binaccessor
   ///
   /// @return the binning value of the accessor entry
-  BinningValue binningValue(size_t ba = 0) const {
+  BinningValue
+  binningValue(size_t ba = 0) const {
     if (ba >= m_binningData.size()) {
       throw "dimension out of bounds";
     }
@@ -333,7 +356,8 @@ class BinUtility {
   /// - this creates a simple size_t from a triple object
   ///
   /// @param bin is the bin to be serialized
-  size_t serialize(const std::array<size_t, 3>& bin) const {
+  size_t
+  serialize(const std::array<size_t, 3>& bin) const {
     size_t serializedBin = bin[0];
     if (m_binningData.size() == 2) {
       serializedBin += bin[1] * m_binningData[0].bins();
@@ -347,7 +371,8 @@ class BinUtility {
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const {
+  std::ostream&
+  toStream(std::ostream& sl) const {
     sl << "BinUtility for " << m_binningData.size()
        << "- dimensional array:" << std::endl;
     std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
@@ -379,6 +404,7 @@ class BinUtility {
 };
 
 /// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const BinUtility& bgen);
+std::ostream&
+operator<<(std::ostream& sl, const BinUtility& bgen);
 
 }  // namespace Acts

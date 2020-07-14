@@ -14,7 +14,8 @@ namespace detail {
 
 /// Wrap a periodic value back into the nominal range.
 template <typename T>
-inline T wrap_periodic(T value, T start, T range) {
+inline T
+wrap_periodic(T value, T start, T range) {
   using std::floor;
   // only wrap if really necessary
   T diff = value - start;
@@ -25,13 +26,15 @@ inline T wrap_periodic(T value, T start, T range) {
 
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
-inline T radian_pos(T x) {
+inline T
+radian_pos(T x) {
   return wrap_periodic<T>(x, T(0), T(2 * M_PI));
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 template <typename T>
-inline T radian_sym(T x) {
+inline T
+radian_sym(T x) {
   return wrap_periodic<T>(x, T(-M_PI), T(2 * M_PI));
 }
 
@@ -39,7 +42,8 @@ inline T radian_sym(T x) {
 /// in the [-pi, pi) and [0, pi] ranges by ensuring
 /// the correct theta bounds
 template <typename T>
-inline std::pair<T, T> ensureThetaBounds(T phi, T theta) {
+inline std::pair<T, T>
+ensureThetaBounds(T phi, T theta) {
   T tmpPhi = radian_sym(phi);
 
   T tmpTht = std::fmod(theta, 2 * M_PI);

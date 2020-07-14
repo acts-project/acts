@@ -34,9 +34,10 @@ struct SplitEnergyLoss {
   double splitMomentumMin = 5_GeV;
 
   template <typename generator_t>
-  bool operator()(generator_t&, const Acts::MaterialProperties&,
-                  ActsFatras::Particle& particle,
-                  std::vector<ActsFatras::Particle>& generated) const {
+  bool
+  operator()(generator_t&, const Acts::MaterialProperties&,
+             ActsFatras::Particle& particle,
+             std::vector<ActsFatras::Particle>& generated) const {
     const auto p = particle.absMomentum();
     if (splitMomentumMin < p) {
       particle.setAbsMomentum(0.5 * p);
@@ -114,14 +115,16 @@ const auto dataset =
 
 // helper functions for tests
 template <typename Container>
-void sortByParticleId(Container& container) {
+void
+sortByParticleId(Container& container) {
   std::sort(container.begin(), container.end(),
             [](const auto& lhs, const auto& rhs) {
               return lhs.particleId() < rhs.particleId();
             });
 }
 template <typename Container>
-bool areParticleIdsUnique(const Container& sortedByParticleId) {
+bool
+areParticleIdsUnique(const Container& sortedByParticleId) {
   // assumes the container is sorted by particle id
   auto ret =
       std::adjacent_find(sortedByParticleId.begin(), sortedByParticleId.end(),
@@ -131,8 +134,8 @@ bool areParticleIdsUnique(const Container& sortedByParticleId) {
   return ret == sortedByParticleId.end();
 }
 template <typename Container, typename Value>
-bool containsParticleId(const Container& sortedByParticleId,
-                        const Value& value) {
+bool
+containsParticleId(const Container& sortedByParticleId, const Value& value) {
   return std::binary_search(sortedByParticleId.begin(),
                             sortedByParticleId.end(), value,
                             [](const auto& lhs, const auto& rhs) {

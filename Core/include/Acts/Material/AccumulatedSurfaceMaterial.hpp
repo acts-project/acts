@@ -62,20 +62,21 @@ class AccumulatedSurfaceMaterial {
   /// Assignment Move operator
   ///
   /// @param asma is the source object to be copied
-  AccumulatedSurfaceMaterial& operator=(AccumulatedSurfaceMaterial&& asma) =
-      default;
+  AccumulatedSurfaceMaterial&
+  operator=(AccumulatedSurfaceMaterial&& asma) = default;
 
   /// Assignment operator
   ///
   /// @param asma is the source object to be copied
-  AccumulatedSurfaceMaterial& operator=(
-      const AccumulatedSurfaceMaterial& asma) = default;
+  AccumulatedSurfaceMaterial&
+  operator=(const AccumulatedSurfaceMaterial& asma) = default;
 
   /// Destructor
   ~AccumulatedSurfaceMaterial() = default;
 
   /// Return the BinUtility
-  const BinUtility& binUtility() const;
+  const BinUtility&
+  binUtility() const;
 
   /// Assign a material properites object
   ///
@@ -83,9 +84,9 @@ class AccumulatedSurfaceMaterial {
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector2D& lp,
-                                   const MaterialProperties& mp,
-                                   double pathCorrection = 1.);
+  std::array<size_t, 3>
+  accumulate(const Vector2D& lp, const MaterialProperties& mp,
+             double pathCorrection = 1.);
 
   /// Assign a material properites object
   ///
@@ -93,32 +94,37 @@ class AccumulatedSurfaceMaterial {
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector3D& gp,
-                                   const MaterialProperties& mp,
-                                   double pathCorrection = 1.);
+  std::array<size_t, 3>
+  accumulate(const Vector3D& gp, const MaterialProperties& mp,
+             double pathCorrection = 1.);
 
   /// Average the information accumulated from one mapped track
   ///
   /// @param trackBins The bins that were touched by this event
   /// @param emptyHit indicator if this is an empty assignment
   /// If none is given, the average runs over all bins in the surface map
-  void trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {},
-                    bool emptyHit = false);
+  void
+  trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {},
+               bool emptyHit = false);
 
   /// Average the information accumulated from one mapped track
   ///
   /// @param gp global position for the bin assignment
   /// @param emptyHit indicator if this is an empty assignment
-  void trackAverage(const Vector3D& gp, bool emptyHit = false);
+  void
+  trackAverage(const Vector3D& gp, bool emptyHit = false);
 
   /// Total average creates SurfaceMaterial
-  std::unique_ptr<const ISurfaceMaterial> totalAverage();
+  std::unique_ptr<const ISurfaceMaterial>
+  totalAverage();
 
   /// Access to the accumulated material
-  const AccumulatedMatrix& accumulatedMaterial() const;
+  const AccumulatedMatrix&
+  accumulatedMaterial() const;
 
   /// Access to the split factor
-  double splitFactor() const;
+  double
+  splitFactor() const;
 
  private:
   /// The helper for the bin finding
@@ -131,7 +137,8 @@ class AccumulatedSurfaceMaterial {
   AccumulatedMatrix m_accumulatedMaterial;
 };
 
-inline const BinUtility& AccumulatedSurfaceMaterial::binUtility() const {
+inline const BinUtility&
+AccumulatedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
@@ -140,7 +147,8 @@ AccumulatedSurfaceMaterial::accumulatedMaterial() const {
   return (m_accumulatedMaterial);
 }
 
-inline double AccumulatedSurfaceMaterial::splitFactor() const {
+inline double
+AccumulatedSurfaceMaterial::splitFactor() const {
   return m_splitFactor;
 }
 }  // namespace Acts

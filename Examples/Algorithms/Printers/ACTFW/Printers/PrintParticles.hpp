@@ -24,7 +24,8 @@ class PrintParticles : public BareAlgorithm {
 
   PrintParticles(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode
+  execute(const AlgorithmContext& ctx) const;
 
  private:
   Config m_cfg;

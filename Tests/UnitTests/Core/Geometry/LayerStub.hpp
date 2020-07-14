@@ -34,16 +34,26 @@ class LayerStub : virtual public SurfaceStub, public Layer {
   ~LayerStub() override {}
 
   /// Assignment is deleted in the Layer baseclass
-  LayerStub& operator=(const LayerStub& lay) = delete;
+  LayerStub&
+  operator=(const LayerStub& lay) = delete;
 
   /// surfaceRepresentation is pure virtual in baseclass
-  const Surface& surfaceRepresentation() const override { return (*this); }
+  const Surface&
+  surfaceRepresentation() const override {
+    return (*this);
+  }
 
-  Surface& surfaceRepresentation() override { return (*this); }
+  Surface&
+  surfaceRepresentation() override {
+    return (*this);
+  }
 
   /// simply return true to show a method can be called on the constructed
   /// object
-  bool constructedOk() const { return true; }
+  bool
+  constructedOk() const {
+    return true;
+  }
 
   /// Other methods have implementation in baseclass
   /// templated 'onLayer()' from baseclass ?

@@ -42,12 +42,13 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr create(
-      const std::shared_ptr<const Transform3D>& transform,
-      const std::shared_ptr<const CylinderBounds>& cbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = passive) {
+  static MutableLayerPtr
+  create(const std::shared_ptr<const Transform3D>& transform,
+         const std::shared_ptr<const CylinderBounds>& cbounds,
+         std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+         double thickness = 0.,
+         std::unique_ptr<ApproachDescriptor> ad = nullptr,
+         LayerType laytyp = passive) {
     return MutableLayerPtr(new CylinderLayer(transform, cbounds,
                                              std::move(surfaceArray), thickness,
                                              std::move(ad), laytyp));
@@ -57,7 +58,8 @@ class CylinderLayer : public CylinderSurface, public Layer {
   CylinderLayer(const CylinderLayer& cla) = delete;
 
   /// Assignment operator for CylinderLayers - deleted
-  CylinderLayer& operator=(const CylinderLayer&) = delete;
+  CylinderLayer&
+  operator=(const CylinderLayer&) = delete;
 
   /// Default Constructor
   CylinderLayer() = delete;
@@ -67,14 +69,17 @@ class CylinderLayer : public CylinderSurface, public Layer {
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
-  const CylinderSurface& surfaceRepresentation() const override;
+  const CylinderSurface&
+  surfaceRepresentation() const override;
 
   // Non-const version
-  CylinderSurface& surfaceRepresentation() override;
+  CylinderSurface&
+  surfaceRepresentation() override;
 
  private:
   /// build approach surfaces */
-  void buildApproachDescriptor();
+  void
+  buildApproachDescriptor();
 
  protected:
   /// Private constructor for CylinderLayer, called by create(args*) factory

@@ -28,12 +28,14 @@ class IMaterialDecorator {
   /// Decorate a surface
   ///
   /// @param surface the non-cost surface that is decorated
-  virtual void decorate(Surface& surface) const = 0;
+  virtual void
+  decorate(Surface& surface) const = 0;
 
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  virtual void decorate(TrackingVolume& volume) const = 0;
+  virtual void
+  decorate(TrackingVolume& volume) const = 0;
 };
 
 }  // namespace Acts

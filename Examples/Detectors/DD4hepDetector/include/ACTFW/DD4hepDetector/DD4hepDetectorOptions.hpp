@@ -23,7 +23,8 @@ namespace FW {
 
 namespace Options {
 
-void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
+void
+sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
   std::vector<dd4hep::DetElement> tracker;
   std::vector<dd4hep::DetElement> eCal;
   std::vector<dd4hep::DetElement> hCal;
@@ -65,7 +66,8 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det) {
 
 /// the particle gun options, the are prefixes with gp
 template <typename aopt_t>
-void addDD4hepOptions(aopt_t& opt) {
+void
+addDD4hepOptions(aopt_t& opt) {
   opt.add_options()(
       "dd4hep-input",
       po::value<read_strings>()->multitoken()->default_value(
@@ -98,7 +100,8 @@ void addDD4hepOptions(aopt_t& opt) {
 
 /// read the particle gun options and return a Config file
 template <typename amap_t>
-FW::DD4hep::DD4hepGeometryService::Config readDD4hepConfig(const amap_t& vm) {
+FW::DD4hep::DD4hepGeometryService::Config
+readDD4hepConfig(const amap_t& vm) {
   FW::DD4hep::DD4hepGeometryService::Config gsConfig;
   gsConfig.logLevel =
       Acts::Logging::Level(vm["dd4hep-loglevel"].template as<size_t>());

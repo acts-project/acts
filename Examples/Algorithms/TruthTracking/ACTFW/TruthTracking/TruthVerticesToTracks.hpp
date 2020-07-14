@@ -75,7 +75,8 @@ class TruthVerticesToTracksAlgorithm : public BareAlgorithm {
   ///
   /// @param context is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
-  ProcessCode execute(const AlgorithmContext& context) const final override;
+  ProcessCode
+  execute(const AlgorithmContext& context) const final override;
 
  private:
   /// Config struct
@@ -85,7 +86,8 @@ class TruthVerticesToTracksAlgorithm : public BareAlgorithm {
   ///
   /// @param phiIn Phi
   /// @param thetaIn Theta
-  void correctPhiThetaPeriodicity(double& phiIn, double& thetaIn) const;
+  void
+  correctPhiThetaPeriodicity(double& phiIn, double& thetaIn) const;
 };
 
 }  // namespace FW

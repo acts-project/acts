@@ -17,12 +17,14 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-void EmptyDetector::addOptions(
+void
+EmptyDetector::addOptions(
     boost::program_options::options_description& opt) const {
   FW::Options::addEmptyGeometryOptions(opt);
 }
 
-auto EmptyDetector::finalize(
+auto
+EmptyDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> /*unused*/)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {

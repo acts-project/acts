@@ -73,10 +73,10 @@ class RootBFieldWriter {
   };
 
   /// Write down an interpolated magnetic field map
-  static void run(const Config& cfg,
-                  std::unique_ptr<const Acts::Logger> p_logger =
-                      Acts::getDefaultLogger("RootBFieldWriter",
-                                             Acts::Logging::INFO)) {
+  static void
+  run(const Config& cfg,
+      std::unique_ptr<const Acts::Logger> p_logger =
+          Acts::getDefaultLogger("RootBFieldWriter", Acts::Logging::INFO)) {
     // Set up (local) logging
     // @todo Remove dangerous using declaration once the logger macro
     // tolerates it

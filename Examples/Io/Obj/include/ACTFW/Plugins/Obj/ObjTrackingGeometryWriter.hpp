@@ -60,14 +60,16 @@ class ObjTrackingGeometryWriter {
 
   /// Framework name() method
   /// @return the name of the tool
-  std::string name() const;
+  std::string
+  name() const;
 
   /// The write interface
   /// @param context the Algorithm/Event context of this call
   /// @param tGeometry is the geometry to be written out
   /// @return ProcessCode to indicate success/failure
-  FW::ProcessCode write(const AlgorithmContext& context,
-                        const Acts::TrackingGeometry& tGeometry);
+  FW::ProcessCode
+  write(const AlgorithmContext& context,
+        const Acts::TrackingGeometry& tGeometry);
 
  private:
   Config m_cfg;  ///< the config class
@@ -75,11 +77,14 @@ class ObjTrackingGeometryWriter {
   /// process this volume
   /// @param context the Algorithm/Event context for this call
   /// @param tVolume the volume to be processed
-  void write(const AlgorithmContext& context,
-             const Acts::TrackingVolume& tVolume);
+  void
+  write(const AlgorithmContext& context, const Acts::TrackingVolume& tVolume);
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 };
 
 }  // namespace Obj

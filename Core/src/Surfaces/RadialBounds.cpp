@@ -14,39 +14,42 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::RadialBounds::type() const {
   return SurfaceBounds::eDisc;
 }
 
-Acts::Vector2D Acts::RadialBounds::shifted(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2D
+Acts::RadialBounds::shifted(const Acts::Vector2D& lposition) const {
   Vector2D tmp;
   tmp[eLOC_R] = lposition[eLOC_R];
   tmp[eLOC_PHI] = detail::radian_sym(lposition[eLOC_PHI] - get(eAveragePhi));
   return tmp;
 }
 
-bool Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
-                                const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
+                           const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(shifted(lposition),
                          Vector2D(get(eMinR), -get(eHalfPhiSector)),
                          Vector2D(get(eMaxR), get(eHalfPhiSector)));
 }
 
-double Acts::RadialBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
+double
+Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(
       shifted(lposition), Vector2D(get(eMinR), -get(eHalfPhiSector)),
       Vector2D(get(eMaxR), get(eHalfPhiSector)));
 }
 
-std::vector<Acts::Vector2D> Acts::RadialBounds::vertices(
-    unsigned int lseg) const {
+std::vector<Acts::Vector2D>
+Acts::RadialBounds::vertices(unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
       get(eMinR), get(eMaxR), get(eAveragePhi), get(eHalfPhiSector), lseg);
 }
 
-std::ostream& Acts::RadialBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::RadialBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::RadialBounds:  (innerRadius, outerRadius, hPhiSector, "

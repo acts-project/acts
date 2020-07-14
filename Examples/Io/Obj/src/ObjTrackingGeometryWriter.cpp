@@ -19,11 +19,13 @@ FW::Obj::ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(
     const FW::Obj::ObjTrackingGeometryWriter::Config& cfg)
     : m_cfg(cfg) {}
 
-std::string FW::Obj::ObjTrackingGeometryWriter::name() const {
+std::string
+FW::Obj::ObjTrackingGeometryWriter::name() const {
   return m_cfg.name;
 }
 
-FW::ProcessCode FW::Obj::ObjTrackingGeometryWriter::write(
+FW::ProcessCode
+FW::Obj::ObjTrackingGeometryWriter::write(
     const AlgorithmContext& context, const Acts::TrackingGeometry& tGeometry) {
   ACTS_DEBUG(">>Obj: Writer for TrackingGeometry object called.");
 
@@ -34,8 +36,9 @@ FW::ProcessCode FW::Obj::ObjTrackingGeometryWriter::write(
   return FW::ProcessCode::SUCCESS;
 }
 
-void FW::Obj::ObjTrackingGeometryWriter::write(
-    const AlgorithmContext& context, const Acts::TrackingVolume& tVolume) {
+void
+FW::Obj::ObjTrackingGeometryWriter::write(const AlgorithmContext& context,
+                                          const Acts::TrackingVolume& tVolume) {
   ACTS_DEBUG(">>Obj: Writer for TrackingVolume object called.");
 
   Acts::ObjVisualization objVis(m_cfg.outputPrecision, m_cfg.outputScalor);

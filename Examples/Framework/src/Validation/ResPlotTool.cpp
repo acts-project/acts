@@ -15,7 +15,8 @@ FW::ResPlotTool::ResPlotTool(const FW::ResPlotTool::Config& cfg,
                              Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {}
 
-void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
+void
+FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bPull = m_cfg.varBinning.at("Pull");
@@ -88,7 +89,8 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
   }
 }
 
-void FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
+void
+FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Delete the hists.");
   for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -109,8 +111,8 @@ void FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   }
 }
 
-void FW::ResPlotTool::write(
-    const ResPlotTool::ResPlotCache& resPlotCache) const {
+void
+FW::ResPlotTool::write(const ResPlotTool::ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Write the hists to output file.");
   for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -131,10 +133,11 @@ void FW::ResPlotTool::write(
   }
 }
 
-void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
-                           const Acts::GeometryContext& gctx,
-                           const ActsFatras::Particle& truthParticle,
-                           const Acts::BoundParameters& fittedParamters) const {
+void
+FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
+                      const Acts::GeometryContext& gctx,
+                      const ActsFatras::Particle& truthParticle,
+                      const Acts::BoundParameters& fittedParamters) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -192,8 +195,8 @@ void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
 
 // get the mean and width of residual/pull in each eta/pT bin and fill them into
 // histograms
-void FW::ResPlotTool::refinement(
-    ResPlotTool::ResPlotCache& resPlotCache) const {
+void
+FW::ResPlotTool::refinement(ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {

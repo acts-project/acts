@@ -22,7 +22,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-void AlignedDetector::addOptions(
+void
+AlignedDetector::addOptions(
     boost::program_options::options_description& opt) const {
   // Add the generic geometry options
   FW::Options::addGenericGeometryOptions(opt);
@@ -59,7 +60,8 @@ void AlignedDetector::addOptions(
       "Keep the first iov batch nominal.");
 }
 
-auto AlignedDetector::finalize(
+auto
+AlignedDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {

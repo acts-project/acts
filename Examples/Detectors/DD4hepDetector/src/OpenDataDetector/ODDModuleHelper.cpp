@@ -12,8 +12,10 @@
 using namespace std;
 using namespace dd4hep;
 
-std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
-    Detector& oddd, SensitiveDetector& sens, const xml_comp_t& x_module) {
+std::pair<Assembly, DetElement>
+ODDModuleHelper::assembleTrapezoidalModule(Detector& oddd,
+                                           SensitiveDetector& sens,
+                                           const xml_comp_t& x_module) {
   // The Module envelope volume
   Assembly moduleAssembly("module");
   // Visualization
@@ -100,9 +102,11 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
   return std::pair<Assembly, DetElement>(moduleAssembly, moduleElement);
 }
 
-std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
-    Detector& oddd, SensitiveDetector& sens, const xml_comp_t& x_module,
-    double& ylength) {
+std::pair<Assembly, DetElement>
+ODDModuleHelper::assembleRectangularModule(Detector& oddd,
+                                           SensitiveDetector& sens,
+                                           const xml_comp_t& x_module,
+                                           double& ylength) {
   // The Module envelope volume
   Assembly moduleAssembly("module");
   // Visualization

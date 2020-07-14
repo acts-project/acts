@@ -32,8 +32,9 @@ Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
   m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
 }
 
-std::ostream& Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
-                                           std::ostream& sl) const {
+std::ostream&
+Acts::SurfaceArray::toStream(const GeometryContext& /*gctx*/,
+                             std::ostream& sl) const {
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;
   sl << " - no surfaces: " << m_surfaces.size() << std::endl;

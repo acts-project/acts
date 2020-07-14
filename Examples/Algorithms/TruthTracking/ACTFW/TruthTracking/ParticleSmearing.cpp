@@ -28,8 +28,8 @@ FW::ParticleSmearing::ParticleSmearing(const Config& cfg,
   }
 }
 
-FW::ProcessCode FW::ParticleSmearing::execute(
-    const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::ParticleSmearing::execute(const AlgorithmContext& ctx) const {
   namespace vh = Acts::VectorHelpers;
 
   // setup input and output containers

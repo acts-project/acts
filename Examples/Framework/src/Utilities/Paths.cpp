@@ -17,7 +17,8 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-std::string FW::ensureWritableDirectory(const std::string& dir) {
+std::string
+FW::ensureWritableDirectory(const std::string& dir) {
   using namespace std::filesystem;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
@@ -29,7 +30,8 @@ std::string FW::ensureWritableDirectory(const std::string& dir) {
   return canonical(dir_path).native();
 }
 
-std::string FW::joinPaths(const std::string& dir, const std::string& name) {
+std::string
+FW::joinPaths(const std::string& dir, const std::string& name) {
   if (dir.empty()) {
     return name;
   } else {
@@ -37,8 +39,9 @@ std::string FW::joinPaths(const std::string& dir, const std::string& name) {
   }
 }
 
-std::string FW::perEventFilepath(const std::string& dir,
-                                 const std::string& name, size_t event) {
+std::string
+FW::perEventFilepath(const std::string& dir, const std::string& name,
+                     size_t event) {
   char prefix[64];
 
   snprintf(prefix, sizeof(prefix), "event%09zu-", event);
@@ -50,8 +53,8 @@ std::string FW::perEventFilepath(const std::string& dir,
   }
 }
 
-std::pair<size_t, size_t> FW::determineEventFilesRange(
-    const std::string& dir, const std::string& name) {
+std::pair<size_t, size_t>
+FW::determineEventFilesRange(const std::string& dir, const std::string& name) {
   using namespace std::filesystem;
 
   ACTS_LOCAL_LOGGER(

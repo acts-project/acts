@@ -28,8 +28,10 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 }
 
 // Assign a material properites object
-std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector2D& lp, const MaterialProperties& mp, double pathCorrection) {
+std::array<size_t, 3>
+Acts::AccumulatedSurfaceMaterial::accumulate(const Vector2D& lp,
+                                             const MaterialProperties& mp,
+                                             double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -41,8 +43,10 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 }
 
 // Assign a material properites object
-std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector3D& gp, const MaterialProperties& mp, double pathCorrection) {
+std::array<size_t, 3>
+Acts::AccumulatedSurfaceMaterial::accumulate(const Vector3D& gp,
+                                             const MaterialProperties& mp,
+                                             double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -53,8 +57,9 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 }
 
 // Void average for vacuum assignment
-void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3D& gp,
-                                                    bool emptyHit) {
+void
+Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3D& gp,
+                                               bool emptyHit) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].trackAverage();
   }
@@ -64,7 +69,8 @@ void Acts::AccumulatedSurfaceMaterial::trackAverage(const Vector3D& gp,
 }
 
 // Average the information accumulated during one event
-void Acts::AccumulatedSurfaceMaterial::trackAverage(
+void
+Acts::AccumulatedSurfaceMaterial::trackAverage(
     const std::vector<std::array<size_t, 3>>& trackBins, bool emptyHit) {
   // the homogeneous material case
   if (m_binUtility.dimensions() == 0) {

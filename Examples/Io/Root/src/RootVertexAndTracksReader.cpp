@@ -64,17 +64,18 @@ FW::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
   delete m_ptrTrkCov;
 }
 
-std::string FW::RootVertexAndTracksReader::name() const {
+std::string
+FW::RootVertexAndTracksReader::name() const {
   return "RootVertexAndTracksReader";
 }
 
-std::pair<size_t, size_t> FW::RootVertexAndTracksReader::availableEvents()
-    const {
+std::pair<size_t, size_t>
+FW::RootVertexAndTracksReader::availableEvents() const {
   return {0u, m_events};
 }
 
-FW::ProcessCode FW::RootVertexAndTracksReader::read(
-    const FW::AlgorithmContext& context) {
+FW::ProcessCode
+FW::RootVertexAndTracksReader::read(const FW::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read vertex and tracks.");
 
   if (m_inputChain && context.eventNumber < m_events) {

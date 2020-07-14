@@ -88,8 +88,9 @@ struct MaterialInteractor {
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&
@@ -164,15 +165,17 @@ struct MaterialInteractor {
 
   /// Material interaction has no pure observer.
   template <typename propagator_state_t>
-  void operator()(propagator_state_t& /* unused */) const {}
+  void
+  operator()(propagator_state_t& /* unused */) const {}
 
  private:
   /// @brief This function records the material effect
   ///
   /// @param [in] d Data cache container
   /// @param [in, out] result Result storage
-  void recordResult(const detail::PointwiseMaterialInteraction& d,
-                    result_type& result) const {
+  void
+  recordResult(const detail::PointwiseMaterialInteraction& d,
+               result_type& result) const {
     result.materialInX0 += d.slab.thicknessInX0();
     result.materialInL0 += d.slab.thicknessInL0();
     // Record the interaction if requested
@@ -197,8 +200,9 @@ struct MaterialInteractor {
   ///
   /// @param [in] d Data cache container
   /// @param [in, out] result Result storage
-  void recordResult(const detail::VolumeMaterialInteraction& d,
-                    result_type& result) const {
+  void
+  recordResult(const detail::VolumeMaterialInteraction& d,
+               result_type& result) const {
     // Record the interaction
     MaterialInteraction mi;
     mi.position = d.pos;
@@ -216,8 +220,9 @@ struct MaterialInteractor {
   /// @param [in] d Data cache container
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t>
-  void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
+  void
+  UpdateResult(propagator_state_t& state, const stepper_t& stepper,
+               result_type& result) const {
     // Update the previous interaction
     Vector3D shift = stepper.position(state.stepping) -
                      result.materialInteractions.back().position;
@@ -245,8 +250,9 @@ struct MaterialInteractor {
   /// length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);

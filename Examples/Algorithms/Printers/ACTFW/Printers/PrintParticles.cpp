@@ -18,8 +18,8 @@
 FW::PrintParticles::PrintParticles(const Config& cfg, Acts::Logging::Level lvl)
     : BareAlgorithm("PrintParticles", lvl), m_cfg(cfg) {}
 
-FW::ProcessCode FW::PrintParticles::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::PrintParticles::execute(const FW::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
   const auto& particles =

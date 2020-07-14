@@ -36,41 +36,66 @@ class GeometryID {
   GeometryID(GeometryID&&) = default;
   GeometryID(const GeometryID&) = default;
   ~GeometryID() = default;
-  GeometryID& operator=(GeometryID&&) = default;
-  GeometryID& operator=(const GeometryID&) = default;
+  GeometryID&
+  operator=(GeometryID&&) = default;
+  GeometryID&
+  operator=(const GeometryID&) = default;
 
   /// Return the encoded value.
-  constexpr Value value() const { return m_value; }
+  constexpr Value
+  value() const {
+    return m_value;
+  }
 
   /// Return the volume identifier.
-  constexpr Value volume() const { return getBits(kVolumeMask); }
+  constexpr Value
+  volume() const {
+    return getBits(kVolumeMask);
+  }
   /// Return the boundary identifier.
-  constexpr Value boundary() const { return getBits(kBoundaryMask); }
+  constexpr Value
+  boundary() const {
+    return getBits(kBoundaryMask);
+  }
   /// Return the layer identifier.
-  constexpr Value layer() const { return getBits(kLayerMask); }
+  constexpr Value
+  layer() const {
+    return getBits(kLayerMask);
+  }
   /// Return the approach identifier.
-  constexpr Value approach() const { return getBits(kApproachMask); }
+  constexpr Value
+  approach() const {
+    return getBits(kApproachMask);
+  }
   /// Return the sensitive identifier.
-  constexpr Value sensitive() const { return getBits(kSensitiveMask); }
+  constexpr Value
+  sensitive() const {
+    return getBits(kSensitiveMask);
+  }
 
   /// Set the volume identifier.
-  constexpr GeometryID& setVolume(Value volume) {
+  constexpr GeometryID&
+  setVolume(Value volume) {
     return setBits(kVolumeMask, volume);
   }
   /// Set the boundary identifier.
-  constexpr GeometryID& setBoundary(Value boundary) {
+  constexpr GeometryID&
+  setBoundary(Value boundary) {
     return setBits(kBoundaryMask, boundary);
   }
   /// Set the layer identifier.
-  constexpr GeometryID& setLayer(Value layer) {
+  constexpr GeometryID&
+  setLayer(Value layer) {
     return setBits(kLayerMask, layer);
   }
   /// Set the approach identifier.
-  constexpr GeometryID& setApproach(Value approach) {
+  constexpr GeometryID&
+  setApproach(Value approach) {
     return setBits(kApproachMask, approach);
   }
   /// Set the sensitive identifier.
-  constexpr GeometryID& setSensitive(Value sensitive) {
+  constexpr GeometryID&
+  setSensitive(Value sensitive) {
     return setBits(kSensitiveMask, sensitive);
   }
 
@@ -89,7 +114,8 @@ class GeometryID {
   Value m_value = 0;
 
   /// Extract the bit shift necessary to access the masked values.
-  static constexpr int extractShift(Value mask) {
+  static constexpr int
+  extractShift(Value mask) {
     // use compiler builtin to extract the number of trailing bits from the
     // mask. the builtin should be available on all supported compilers.
     // need unsigned long long version (...ll) to ensure uint64_t compatibility.
@@ -97,28 +123,34 @@ class GeometryID {
     return __builtin_ctzll(mask);
   }
   /// Extract the masked bits from the encoded value.
-  constexpr Value getBits(Value mask) const {
+  constexpr Value
+  getBits(Value mask) const {
     return (m_value & mask) >> extractShift(mask);
   }
   /// Set the masked bits to id in the encoded value.
-  constexpr GeometryID& setBits(Value mask, Value id) {
+  constexpr GeometryID&
+  setBits(Value mask, Value id) {
     m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
     // return *this here so we need to write less lines in the set... methods
     return *this;
   }
 
-  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool
+  operator==(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend constexpr bool operator!=(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool
+  operator!=(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value != rhs.m_value;
   }
-  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool
+  operator<(GeometryID lhs, GeometryID rhs) {
     return lhs.m_value < rhs.m_value;
   }
 };
 
-std::ostream& operator<<(std::ostream& os, GeometryID id);
+std::ostream&
+operator<<(std::ostream& os, GeometryID id);
 
 }  // namespace Acts
 
@@ -126,7 +158,8 @@ std::ostream& operator<<(std::ostream& os, GeometryID id);
 namespace std {
 template <>
 struct hash<Acts::GeometryID> {
-  auto operator()(Acts::GeometryID gid) const noexcept {
+  auto
+  operator()(Acts::GeometryID gid) const noexcept {
     return std::hash<Acts::GeometryID::Value>()(gid.value());
   }
 };

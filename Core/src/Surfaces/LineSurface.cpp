@@ -43,7 +43,8 @@ Acts::LineSurface::LineSurface(const GeometryContext& gctx,
       Surface(gctx, other, transf),
       m_bounds(other.m_bounds) {}
 
-Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
+Acts::LineSurface&
+Acts::LineSurface::operator=(const LineSurface& other) {
   if (this != &other) {
     Surface::operator=(other);
     m_bounds = other.m_bounds;

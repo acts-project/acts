@@ -34,7 +34,7 @@ class ITrackingGeometryBuilder {
   /// @param gctx ist the geometry context for witch the geometry is built
   ///
   /// @return unique pointer to a newly created TrackingGeometry
-  virtual std::unique_ptr<const TrackingGeometry> trackingGeometry(
-      const GeometryContext& gctx) const = 0;
+  virtual std::unique_ptr<const TrackingGeometry>
+  trackingGeometry(const GeometryContext& gctx) const = 0;
 };
 }  // namespace Acts

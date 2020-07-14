@@ -16,18 +16,20 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::CylinderBounds::type() const {
   return SurfaceBounds::eCylinder;
 }
 
-Acts::Vector2D Acts::CylinderBounds::shifted(
-    const Acts::Vector2D& lposition) const {
+Acts::Vector2D
+Acts::CylinderBounds::shifted(const Acts::Vector2D& lposition) const {
   return {Acts::detail::radian_sym((lposition[Acts::eLOC_RPHI] / get(eR)) -
                                    get(eAveragePhi)),
           lposition[Acts::eLOC_Z]};
 }
 
-Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
+Acts::ActsMatrixD<2, 2>
+Acts::CylinderBounds::jacobian() const {
   ActsMatrixD<2, 2> j;
   j(0, eLOC_RPHI) = 1 / get(eR);
   j(0, eLOC_Z) = 0;
@@ -36,16 +38,18 @@ Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
   return j;
 }
 
-bool Acts::CylinderBounds::inside(const Vector2D& lposition,
-                                  const BoundaryCheck& bcheck) const {
+bool
+Acts::CylinderBounds::inside(const Vector2D& lposition,
+                             const BoundaryCheck& bcheck) const {
   return bcheck.transformed(jacobian())
       .isInside(shifted(lposition),
                 Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
                 Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
-bool Acts::CylinderBounds::inside3D(const Vector3D& position,
-                                    const BoundaryCheck& bcheck) const {
+bool
+Acts::CylinderBounds::inside3D(const Vector3D& position,
+                               const BoundaryCheck& bcheck) const {
   // additional tolerance from the boundary check if configred
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
 
@@ -69,14 +73,16 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& position,
                 Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
-double Acts::CylinderBounds::distanceToBoundary(
+double
+Acts::CylinderBounds::distanceToBoundary(
     const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(
       shifted(lposition), Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
       Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
-std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, "

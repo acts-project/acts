@@ -14,11 +14,13 @@
 /// @param temp Temperature value
 ///
 /// @return exp(-1./2. * chi2 / temp)
-static double gaussFunc(double chi2, double temp) {
+static double
+gaussFunc(double chi2, double temp) {
   return std::exp(-chi2 / (2. * temp));
 }
 
-void Acts::AnnealingUtility::anneal(State& state) const {
+void
+Acts::AnnealingUtility::anneal(State& state) const {
   if (state.currentTemperatureIndex < m_cfg.setOfTemperatures.size() - 1) {
     ++state.currentTemperatureIndex;
   } else {
@@ -26,8 +28,9 @@ void Acts::AnnealingUtility::anneal(State& state) const {
   }
 }
 
-double Acts::AnnealingUtility::getWeight(
-    State& state, double chi2, const std::vector<double>& allChi2) const {
+double
+Acts::AnnealingUtility::getWeight(State& state, double chi2,
+                                  const std::vector<double>& allChi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 
@@ -42,7 +45,8 @@ double Acts::AnnealingUtility::getWeight(
   return 1. / denom;
 }
 
-double Acts::AnnealingUtility::getWeight(State& state, double chi2) const {
+double
+Acts::AnnealingUtility::getWeight(State& state, double chi2) const {
   const double currentTemp =
       m_cfg.setOfTemperatures[state.currentTemperatureIndex];
 

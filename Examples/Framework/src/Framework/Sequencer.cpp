@@ -31,7 +31,8 @@ FW::Sequencer::Sequencer(const Sequencer::Config& cfg)
   ROOT::EnableThreadSafety();
 }
 
-void FW::Sequencer::addService(std::shared_ptr<IService> service) {
+void
+FW::Sequencer::addService(std::shared_ptr<IService> service) {
   if (not service) {
     throw std::invalid_argument("Can not add empty/NULL service");
   }
@@ -39,7 +40,8 @@ void FW::Sequencer::addService(std::shared_ptr<IService> service) {
   ACTS_INFO("Added service '" << m_services.back()->name() << "'");
 }
 
-void FW::Sequencer::addContextDecorator(
+void
+FW::Sequencer::addContextDecorator(
     std::shared_ptr<IContextDecorator> decorator) {
   if (not decorator) {
     throw std::invalid_argument("Can not add empty/NULL context decorator");
@@ -48,7 +50,8 @@ void FW::Sequencer::addContextDecorator(
   ACTS_INFO("Added context decarator '" << m_decorators.back()->name() << "'");
 }
 
-void FW::Sequencer::addReader(std::shared_ptr<IReader> reader) {
+void
+FW::Sequencer::addReader(std::shared_ptr<IReader> reader) {
   if (not reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
@@ -56,7 +59,8 @@ void FW::Sequencer::addReader(std::shared_ptr<IReader> reader) {
   ACTS_INFO("Added reader '" << m_readers.back()->name() << "'");
 }
 
-void FW::Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
+void
+FW::Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
@@ -64,7 +68,8 @@ void FW::Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   ACTS_INFO("Added algorithm '" << m_algorithms.back()->name() << "'");
 }
 
-void FW::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
+void
+FW::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (not writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
@@ -72,7 +77,8 @@ void FW::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
 }
 
-std::vector<std::string> FW::Sequencer::listAlgorithmNames() const {
+std::vector<std::string>
+FW::Sequencer::listAlgorithmNames() const {
   std::vector<std::string> names;
 
   // WARNING this must be done in the same order as in the processing
@@ -99,15 +105,16 @@ namespace {
 // Saturated addition that does not overflow and exceed SIZE_MAX.
 //
 // From http://locklessinc.com/articles/sat_arithmetic/
-size_t saturatedAdd(size_t a, size_t b) {
+size_t
+saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
   res |= -(res < a);
   return res;
 }
 }  // namespace
 
-std::pair<std::size_t, std::size_t> FW::Sequencer::determineEventsRange()
-    const {
+std::pair<std::size_t, std::size_t>
+FW::Sequencer::determineEventsRange() const {
   constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
 
   // Note on skipping events:
@@ -180,7 +187,8 @@ struct StopWatch {
 
 // Convert duration to a printable string w/ reasonable unit.
 template <typename D>
-inline std::string asString(D duration) {
+inline std::string
+asString(D duration) {
   double ns = std::chrono::duration_cast<NanoSeconds>(duration).count();
   if (1e9 < std::abs(ns)) {
     return std::to_string(ns / 1e9) + " s";
@@ -195,7 +203,8 @@ inline std::string asString(D duration) {
 
 // Convert duration scaled to one event to a printable string.
 template <typename D>
-inline std::string perEvent(D duration, size_t numEvents) {
+inline std::string
+perEvent(D duration, size_t numEvents) {
   return asString(duration / numEvents) + "/event";
 }
 
@@ -208,9 +217,10 @@ struct TimingInfo {
   DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
 };
 
-void storeTiming(const std::vector<std::string>& identifiers,
-                 const std::vector<Duration>& durations, std::size_t numEvents,
-                 std::string path) {
+void
+storeTiming(const std::vector<std::string>& identifiers,
+            const std::vector<Duration>& durations, std::size_t numEvents,
+            std::string path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(std::move(path), 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
@@ -223,7 +233,8 @@ void storeTiming(const std::vector<std::string>& identifiers,
 }
 }  // namespace
 
-int FW::Sequencer::run() {
+int
+FW::Sequencer::run() {
   // measure overall wall clock
   Timepoint clockWallStart = Clock::now();
   // per-algorithm time measures

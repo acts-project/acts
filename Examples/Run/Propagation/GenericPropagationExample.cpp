@@ -13,7 +13,8 @@
 ///
 /// @param argc The argument count
 /// @param argv The argument list
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
   GenericDetector detector;
 

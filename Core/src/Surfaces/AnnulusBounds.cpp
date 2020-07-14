@@ -86,15 +86,16 @@ Acts::AnnulusBounds::AnnulusBounds(
   m_inRightModulePC = stripXYToModulePC(m_inRightStripXY);
 }
 
-std::vector<Acts::Vector2D> Acts::AnnulusBounds::corners() const {
+std::vector<Acts::Vector2D>
+Acts::AnnulusBounds::corners() const {
   auto rot = m_rotationStripPC.inverse();
 
   return {rot * m_outRightStripPC, rot * m_outLeftStripPC,
           rot * m_inLeftStripPC, rot * m_inRightStripPC};
 }
 
-std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
-    unsigned int lseg) const {
+std::vector<Acts::Vector2D>
+Acts::AnnulusBounds::vertices(unsigned int lseg) const {
   // List of vertices counter-clockwise starting with left inner
   std::vector<Acts::Vector2D> rvertices;
 
@@ -126,8 +127,9 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
   return rvertices;
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
-                                 double tolPhi) const {
+bool
+Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
+                            double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by m_phiAvg
   Vector2D locpo_rotated = m_rotationStripPC * lposition;
@@ -162,8 +164,9 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
   return true;
 }
 
-bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
-                                 const BoundaryCheck& bcheck) const {
+bool
+Acts::AnnulusBounds::inside(const Vector2D& lposition,
+                            const BoundaryCheck& bcheck) const {
   // locpo is PC in STRIP SYSTEM
   if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
     return inside(lposition, bcheck.tolerance()[eLOC_R],
@@ -322,8 +325,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
   }
 }
 
-double Acts::AnnulusBounds::distanceToBoundary(
-    const Vector2D& lposition) const {
+double
+Acts::AnnulusBounds::distanceToBoundary(const Vector2D& lposition) const {
   // find the closest point on all edges, calculate distance
   // return smallest one
   // closest distance is cartesian, we want the result in mm.
@@ -409,13 +412,14 @@ double Acts::AnnulusBounds::distanceToBoundary(
   return minDist;
 }
 
-Acts::Vector2D Acts::AnnulusBounds::stripXYToModulePC(
-    const Vector2D& vStripXY) const {
+Acts::Vector2D
+Acts::AnnulusBounds::stripXYToModulePC(const Vector2D& vStripXY) const {
   Vector2D vecModuleXY = vStripXY + m_shiftXY;
   return {vecModuleXY.norm(), VectorHelpers::phi(vecModuleXY)};
 }
 
-Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
+Acts::Vector2D
+Acts::AnnulusBounds::closestOnSegment(
     const Vector2D& a, const Vector2D& b, const Vector2D& p,
     const Eigen::Matrix<double, 2, 2>& weight) const {
   // connecting vector
@@ -428,17 +432,20 @@ Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
   return std::min(std::max(u, 0.0), 1.0) * n + a;
 }
 
-double Acts::AnnulusBounds::squaredNorm(
+double
+Acts::AnnulusBounds::squaredNorm(
     const Vector2D& v, const Eigen::Matrix<double, 2, 2>& weight) const {
   return (v.transpose() * weight * v).value();
 }
 
-Acts::Vector2D Acts::AnnulusBounds::moduleOrigin() const {
+Acts::Vector2D
+Acts::AnnulusBounds::moduleOrigin() const {
   return Eigen::Rotation2D<double>(m_phiAvg) * m_moduleOrigin;
 }
 
 // Ostream operator overload
-std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::AnnulusBounds:  (innerRadius, outerRadius, minPhi, maxPhi) = ";

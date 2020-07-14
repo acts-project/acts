@@ -12,7 +12,8 @@ Acts::GainMatrixUpdater::GainMatrixUpdater(
     std::shared_ptr<const Acts::Logger> logger)
     : m_logger(std::move(logger)) {}
 
-const Acts::Logger& Acts::GainMatrixUpdater::logger() const {
+const Acts::Logger&
+Acts::GainMatrixUpdater::logger() const {
   assert(m_logger);
   return *m_logger;
 }

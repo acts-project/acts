@@ -36,7 +36,8 @@ class SharedBField {
   /// @param [in] position global 3D position
   ///
   /// @return magnetic field vector at given position
-  Vector3D getField(const Vector3D& position) const {
+  Vector3D
+  getField(const Vector3D& position) const {
     return m_bField->getField(position);
   }
 
@@ -44,7 +45,8 @@ class SharedBField {
   ///
   /// @param [in] position global 3D position
   /// @param [in,out] cache Cache object, passed through to wrapped BField
-  Vector3D getField(const Vector3D& position, Cache& cache) const {
+  Vector3D
+  getField(const Vector3D& position, Cache& cache) const {
     return m_bField->getField(position, cache);
   }
 
@@ -56,8 +58,9 @@ class SharedBField {
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& derivative) const {
+  Vector3D
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& derivative) const {
     return m_bField->getFieldGradient(position, derivative);
   }
 
@@ -70,8 +73,9 @@ class SharedBField {
   ///
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Vector3D getFieldGradient(const Vector3D& position,
-                            ActsMatrixD<3, 3>& derivative, Cache& cache) const {
+  Vector3D
+  getFieldGradient(const Vector3D& position, ActsMatrixD<3, 3>& derivative,
+                   Cache& cache) const {
     return m_bField->getFieldGradient(position, derivative, cache);
   }
 

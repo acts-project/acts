@@ -38,7 +38,8 @@ FWE::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
+FW::ProcessCode
+FWE::IterativeVertexFinderAlgorithm::execute(
     const FW::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;

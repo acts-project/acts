@@ -36,16 +36,19 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
   }
 }
 
-const Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() const {
+const Acts::ApproachDescriptor*
+Acts::Layer::approachDescriptor() const {
   return m_approachDescriptor.get();
 }
 
-Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() {
+Acts::ApproachDescriptor*
+Acts::Layer::approachDescriptor() {
   return const_cast<ApproachDescriptor*>(m_approachDescriptor.get());
 }
 
-void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
-                                const GeometryID& layerID) {
+void
+Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
+                           const GeometryID& layerID) {
   // set the volumeID of this
   assignGeoID(layerID);
   // assign to the representing surface

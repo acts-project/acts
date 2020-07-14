@@ -85,7 +85,8 @@ class TrackingVolume : public Volume {
 
   TrackingVolume(const TrackingVolume&) = delete;
 
-  TrackingVolume& operator=(const TrackingVolume&) = delete;
+  TrackingVolume&
+  operator=(const TrackingVolume&) = delete;
 
   /// Factory constructor for a container TrackingVolume
   /// - by definition a Vacuum volume
@@ -96,11 +97,12 @@ class TrackingVolume : public Volume {
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
-  static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
-      const std::shared_ptr<const TrackingVolumeArray>& containedVolumes =
-          nullptr,
-      const std::string& volumeName = "undefined") {
+  static MutableTrackingVolumePtr
+  create(std::shared_ptr<const Transform3D> htrans,
+         VolumeBoundsPtr volumeBounds,
+         const std::shared_ptr<const TrackingVolumeArray>& containedVolumes =
+             nullptr,
+         const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(
         new TrackingVolume(std::move(htrans), std::move(volumeBounds),
                            containedVolumes, volumeName));
@@ -117,13 +119,13 @@ class TrackingVolume : public Volume {
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
-  static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
-      std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
-      std::vector<std::unique_ptr<const Volume>> descendants,
-      const Volume::BoundingBox* top,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      const std::string& volumeName = "undefined") {
+  static MutableTrackingVolumePtr
+  create(std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+         std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
+         std::vector<std::unique_ptr<const Volume>> descendants,
+         const Volume::BoundingBox* top,
+         std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+         const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
         std::move(htrans), std::move(volbounds), std::move(boxStore),
         std::move(descendants), top, std::move(volumeMaterial), volumeName));
@@ -140,13 +142,14 @@ class TrackingVolume : public Volume {
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
-  static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      std::unique_ptr<const LayerArray> containedLayers = nullptr,
-      std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
-      MutableTrackingVolumeVector denseVolumes = {},
-      const std::string& volumeName = "undefined") {
+  static MutableTrackingVolumePtr
+  create(std::shared_ptr<const Transform3D> htrans,
+         VolumeBoundsPtr volumeBounds,
+         std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+         std::unique_ptr<const LayerArray> containedLayers = nullptr,
+         std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
+         MutableTrackingVolumeVector denseVolumes = {},
+         const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
         std::move(htrans), std::move(volumeBounds), std::move(volumeMaterial),
         std::move(containedLayers), std::move(containedVolumes),
@@ -159,8 +162,8 @@ class TrackingVolume : public Volume {
   /// @param position is the associated global position
   ///
   /// @return plain pointer to layer object
-  const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& position) const;
+  const Layer*
+  associatedLayer(const GeometryContext& gctx, const Vector3D& position) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -173,9 +176,10 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  std::vector<LayerIntersection> compatibleLayers(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const NavigationOptions<Layer>& options) const;
+  std::vector<LayerIntersection>
+  compatibleLayers(const GeometryContext& gctx, const Vector3D& position,
+                   const Vector3D& direction,
+                   const NavigationOptions<Layer>& options) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -189,10 +193,10 @@ class TrackingVolume : public Volume {
   /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
-  std::vector<BoundaryIntersection> compatibleBoundaries(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const NavigationOptions<Surface>& options) const;
+  std::vector<BoundaryIntersection>
+  compatibleBoundaries(const GeometryContext& gctx, const Vector3D& position,
+                       const Vector3D& direction,
+                       const NavigationOptions<Surface>& options) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
@@ -204,7 +208,8 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return Vector of surface candidates
-  std::vector<SurfaceIntersection> compatibleSurfacesFromHierarchy(
+  std::vector<SurfaceIntersection>
+  compatibleSurfacesFromHierarchy(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, double angle,
       const NavigationOptions<Surface>& options) const;
@@ -216,19 +221,22 @@ class TrackingVolume : public Volume {
   /// @param tol Search position tolerance for dense volumes
   ///
   /// @return plain pointer to associated with the position
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& position,
-                                             const double tol = 0.) const;
+  const TrackingVolume*
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& position,
+                       const double tol = 0.) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
-  const LayerArray* confinedLayers() const;
+  const LayerArray*
+  confinedLayers() const;
 
   /// Return the confined volumes of this container array - if it exists
-  std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
+  std::shared_ptr<const TrackingVolumeArray>
+  confinedVolumes() const;
 
   /// Return the confined dense volumes
-  const MutableTrackingVolumeVector denseVolumes() const;
+  const MutableTrackingVolumeVector
+  denseVolumes() const;
 
   /// @brief Visit all sensitive surfaces
   ///
@@ -237,20 +245,24 @@ class TrackingVolume : public Volume {
   ///
   /// If a context is needed for the vist, the vistitor has to provide this
   /// e.g. as a private member
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  void
+  visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
-  const std::string& volumeName() const;
+  const std::string&
+  volumeName() const;
 
   /// Method to return the BoundarySurfaces
-  const TrackingVolumeBoundaries& boundarySurfaces() const;
+  const TrackingVolumeBoundaries&
+  boundarySurfaces() const;
 
   /// Return the material of the volume
-  const IVolumeMaterial* volumeMaterial() const;
+  const IVolumeMaterial*
+  volumeMaterial() const;
 
   /// Return the material of the volume as shared pointer
-  const std::shared_ptr<const IVolumeMaterial>& volumeMaterialSharedPtr() const;
+  const std::shared_ptr<const IVolumeMaterial>&
+  volumeMaterialSharedPtr() const;
 
   /// Set the boundary surface material description
   ///
@@ -259,7 +271,8 @@ class TrackingVolume : public Volume {
   /// the same material description, it is provided as a shared object
   ///
   /// @param material Material description of this volume
-  void assignBoundaryMaterial(
+  void
+  assignBoundaryMaterial(
       std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
       BoundarySurfaceFace bsFace);
 
@@ -270,7 +283,8 @@ class TrackingVolume : public Volume {
   /// the same material description, it is provided as a shared object
   ///
   /// @param material Material description of this volume
-  void assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
+  void
+  assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -280,9 +294,9 @@ class TrackingVolume : public Volume {
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
-  void glueTrackingVolume(const GeometryContext& gctx,
-                          BoundarySurfaceFace bsfMine, TrackingVolume* neighbor,
-                          BoundarySurfaceFace bsfNeighbor);
+  void
+  glueTrackingVolume(const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
+                     TrackingVolume* neighbor, BoundarySurfaceFace bsfNeighbor);
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -292,10 +306,10 @@ class TrackingVolume : public Volume {
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbor are the boudnary surface of the neighbors
-  void glueTrackingVolumes(
-      const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
-      const std::shared_ptr<TrackingVolumeArray>& neighbors,
-      BoundarySurfaceFace bsfNeighbor);
+  void
+  glueTrackingVolumes(const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
+                      const std::shared_ptr<TrackingVolumeArray>& neighbors,
+                      BoundarySurfaceFace bsfNeighbor);
 
   /// Provide a new BoundarySurface from the glueing
   ///
@@ -305,7 +319,8 @@ class TrackingVolume : public Volume {
   /// - if the old boundary surface had a material description
   ///   but the new one has not, keep the current one
   /// - in all other cases just assign the new boundary surface
-  void updateBoundarySurface(
+  void
+  updateBoundarySurface(
       BoundarySurfaceFace bsf,
       std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs,
       bool checkmaterial = true);
@@ -318,35 +333,42 @@ class TrackingVolume : public Volume {
   ///
   /// @param gvd register a new GlueVolumeDescriptor
   /// @todo update to shared/unique ptr
-  void registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd);
+  void
+  registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
   ///  - negativeFaceXY
   ///  - (faces YZ, ZY, radial faces)
   ///  - positiveFaceXY
-  GlueVolumesDescriptor& glueVolumesDescriptor();
+  GlueVolumesDescriptor&
+  glueVolumesDescriptor();
 
   /// Return whether this TrackingVolume has a BoundingVolumeHierarchy
   /// associated
   /// @return If it has a BVH or not.
-  bool hasBoundingVolumeHierarchy() const;
+  bool
+  hasBoundingVolumeHierarchy() const;
 
   /// Register the color code
   ///
   /// @param icolor is a color number
-  void registerColorCode(unsigned int icolor);
+  void
+  registerColorCode(unsigned int icolor);
 
   /// Get the color code
-  unsigned int colorCode() const;
+  unsigned int
+  colorCode() const;
 
   /// Return the MotherVolume - if it exists
-  const TrackingVolume* motherVolume() const;
+  const TrackingVolume*
+  motherVolume() const;
 
   /// Set the MotherVolume
   ///
   /// @param mvol is the mother volume
-  void setMotherVolume(const TrackingVolume* mvol);
+  void
+  setMotherVolume(const TrackingVolume* mvol);
 
  protected:
   /// Default constructor
@@ -392,17 +414,20 @@ class TrackingVolume : public Volume {
       const std::string& volumeName = "undefined");
 
  private:
-  void connectDenseBoundarySurfaces(
+  void
+  connectDenseBoundarySurfaces(
       MutableTrackingVolumeVector& confinedDenseVolumes);
 
   /// Create Boundary Surface
-  void createBoundarySurfaces();
+  void
+  createBoundarySurfaces();
 
   /// method to synchronize the layers with potentially updated volume bounds:
   /// - adapts the layer dimensions to the new volumebounds + envelope
   ///
   /// @param envelope is the clearance between volume boundary and layer
-  void synchronizeLayers(double envelope = 1.) const;
+  void
+  synchronizeLayers(double envelope = 1.) const;
 
   /// close the Geometry, i.e. set the GeometryID and assign material
   ///
@@ -413,12 +438,14 @@ class TrackingVolume : public Volume {
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
-  void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     std::map<std::string, const TrackingVolume*>& volumeMap,
-                     size_t& vol);
+  void
+  closeGeometry(const IMaterialDecorator* materialDecorator,
+                std::map<std::string, const TrackingVolume*>& volumeMap,
+                size_t& vol);
 
   /// interlink the layers in this TrackingVolume
-  void interlinkLayers();
+  void
+  interlinkLayers();
 
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
@@ -454,11 +481,13 @@ class TrackingVolume : public Volume {
   const Volume::BoundingBox* m_bvhTop{nullptr};
 };
 
-inline const std::string& TrackingVolume::volumeName() const {
+inline const std::string&
+TrackingVolume::volumeName() const {
   return m_name;
 }
 
-inline const IVolumeMaterial* TrackingVolume::volumeMaterial() const {
+inline const IVolumeMaterial*
+TrackingVolume::volumeMaterial() const {
   return m_volumeMaterial.get();
 }
 
@@ -467,16 +496,19 @@ TrackingVolume::volumeMaterialSharedPtr() const {
   return m_volumeMaterial;
 }
 
-inline void TrackingVolume::assignVolumeMaterial(
+inline void
+TrackingVolume::assignVolumeMaterial(
     std::shared_ptr<const IVolumeMaterial> material) {
   m_volumeMaterial = std::move(material);
 }
 
-inline const LayerArray* TrackingVolume::confinedLayers() const {
+inline const LayerArray*
+TrackingVolume::confinedLayers() const {
   return m_confinedLayers.get();
 }
 
-inline const MutableTrackingVolumeVector TrackingVolume::denseVolumes() const {
+inline const MutableTrackingVolumeVector
+TrackingVolume::denseVolumes() const {
   return m_confinedDenseVolumes;
 }
 
@@ -485,23 +517,28 @@ TrackingVolume::confinedVolumes() const {
   return m_confinedVolumes;
 }
 
-inline void TrackingVolume::registerColorCode(unsigned int icolor) {
+inline void
+TrackingVolume::registerColorCode(unsigned int icolor) {
   m_colorCode = icolor;
 }
 
-inline unsigned int TrackingVolume::colorCode() const {
+inline unsigned int
+TrackingVolume::colorCode() const {
   return m_colorCode;
 }
 
-inline const TrackingVolume* TrackingVolume::motherVolume() const {
+inline const TrackingVolume*
+TrackingVolume::motherVolume() const {
   return m_motherVolume;
 }
 
-inline void TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
+inline void
+TrackingVolume::setMotherVolume(const TrackingVolume* mvol) {
   m_motherVolume = mvol;
 }
 
-inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
+inline bool
+TrackingVolume::hasBoundingVolumeHierarchy() const {
   return m_bvhTop != nullptr;
 }
 

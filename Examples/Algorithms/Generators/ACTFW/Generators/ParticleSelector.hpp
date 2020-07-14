@@ -50,13 +50,16 @@ class ParticleSelector : public BareAlgorithm {
   };
 
   /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
+  static void
+  addOptions(Options::Description& desc);
   /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
+  static Config
+  readConfig(const Options::Variables& vars);
 
   ParticleSelector(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode
+  execute(const AlgorithmContext& ctx) const;
 
  private:
   Config m_cfg;

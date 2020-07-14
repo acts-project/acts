@@ -45,7 +45,8 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @brief Register the Layer to the surfaces
   ///
   /// @param lay is the layer to be registerd
-  void registerLayer(const Layer& lay) override;
+  void
+  registerLayer(const Layer& lay) override;
 
   /// Get the aproach surface to the layer
   ///
@@ -55,15 +56,18 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param bcheck The boundary check prescription
   ///
   /// @return : a SurfaceIntersection
-  ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const override;
+  ObjectIntersection<Surface>
+  approachSurface(const GeometryContext& gctx, const Vector3D& position,
+                  const Vector3D& direction,
+                  const BoundaryCheck& bcheck) const override;
 
   /// return all contained surfaces of this approach descriptor
-  const std::vector<const Surface*>& containedSurfaces() const override;
+  const std::vector<const Surface*>&
+  containedSurfaces() const override;
 
   /// Non-const version
-  std::vector<const Surface*>& containedSurfaces() override;
+  std::vector<const Surface*>&
+  containedSurfaces() override;
 
  private:
   /// approach surfaces with ownership control

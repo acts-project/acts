@@ -60,12 +60,12 @@ class PayloadDetectorElement : public Generic::GenericDetectorElement {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform(gctx)
-  const Acts::Transform3D& transform(
-      const Acts::GeometryContext& gctx) const final override;
+  const Acts::Transform3D&
+  transform(const Acts::GeometryContext& gctx) const final override;
 };
 
-inline const Acts::Transform3D& PayloadDetectorElement::transform(
-    const Acts::GeometryContext& gctx) const {
+inline const Acts::Transform3D&
+PayloadDetectorElement::transform(const Acts::GeometryContext& gctx) const {
   // cast into the right context object
   auto alignContext = std::any_cast<ContextType>(gctx);
   identifier_type idValue = identifier_type(identifier());

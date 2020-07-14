@@ -54,7 +54,8 @@ class TrackSummaryPlotTool {
   /// @brief book the track info plots
   ///
   /// @param trackSummaryPlotCache the cache for track info plots
-  void book(TrackSummaryPlotCache& trackSummaryPlotCache) const;
+  void
+  book(TrackSummaryPlotCache& trackSummaryPlotCache) const;
 
   /// @brief fill reco track info w.r.t. fitted track parameters
   ///
@@ -64,26 +65,32 @@ class TrackSummaryPlotTool {
   /// @param nMeasurements number of measurements
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
-  void fill(TrackSummaryPlotCache& trackSummaryPlotCache,
-            const Acts::BoundParameters& fittedParameters, size_t nStates,
-            size_t nMeasurments, size_t Outliers, size_t nHoles) const;
+  void
+  fill(TrackSummaryPlotCache& trackSummaryPlotCache,
+       const Acts::BoundParameters& fittedParameters, size_t nStates,
+       size_t nMeasurments, size_t Outliers, size_t nHoles) const;
 
   /// @brief write the track info plots to file
   ///
   /// @param trackSummaryPlotCache cache object for track info plots
-  void write(const TrackSummaryPlotCache& trackSummaryPlotCache) const;
+  void
+  write(const TrackSummaryPlotCache& trackSummaryPlotCache) const;
 
   /// @brief delete the track info plots
   ///
   /// @param trackSummaryPlotCache cache object for track info plots
-  void clear(TrackSummaryPlotCache& trackSummaryPlotCache) const;
+  void
+  clear(TrackSummaryPlotCache& trackSummaryPlotCache) const;
 
  private:
   Config m_cfg;                                  ///< The Config class
   std::unique_ptr<const Acts::Logger> m_logger;  ///< The logging instance
 
   /// The logger
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

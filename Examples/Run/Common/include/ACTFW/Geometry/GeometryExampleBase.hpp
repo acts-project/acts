@@ -14,4 +14,5 @@ class IBaseDetector;
 
 /// @brief method to process a geometry
 /// @param detector The detector descriptor instance
-int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector);
+int
+processGeometry(int argc, char* argv[], FW::IBaseDetector& detector);

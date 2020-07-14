@@ -143,7 +143,8 @@ struct ActorA {
   };
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
+  void
+  operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
 };
 
 struct ActorB {
@@ -152,15 +153,17 @@ struct ActorB {
   };
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
+  void
+  operator()(propagator_state_t&, const stepper_t&, result_type&) const {}
 };
 
 struct AborterWithResultA {
   using action_type = ActorA;
 
   template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const propagator_state_t&, const stepper_t&,
-                  const result_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&,
+             const result_t&) const {
     return true;
   }
 };
@@ -169,7 +172,8 @@ struct AborterWithResultInvalid {
   using action_type = ActorA;
 
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(const propagator_state_t&, const stepper_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&) const {
     return true;
   }
 };
@@ -178,28 +182,32 @@ struct AborterWithResultB {
   using action_type = ActorB;
 
   template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const propagator_state_t&, const stepper_t&,
-                  const result_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&,
+             const result_t&) const {
     return true;
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(const propagator_state_t&, const stepper_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&) const {
     return true;
   }
 };
 
 struct AborterWithoutResult {
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(const propagator_state_t&, const stepper_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&) const {
     return true;
   }
 };
 
 struct AborterWithoutResultInvalid {
   template <typename propagator_state_t, typename stepper_t, typename result_t>
-  bool operator()(const propagator_state_t&, const stepper_t&,
-                  const result_t&) const {
+  bool
+  operator()(const propagator_state_t&, const stepper_t&,
+             const result_t&) const {
     return true;
   }
 };

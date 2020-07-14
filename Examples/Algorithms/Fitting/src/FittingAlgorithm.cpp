@@ -32,8 +32,8 @@ FW::FittingAlgorithm::FittingAlgorithm(Config cfg, Acts::Logging::Level level)
   }
 }
 
-FW::ProcessCode FW::FittingAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::FittingAlgorithm::execute(const FW::AlgorithmContext& ctx) const {
   // Read input data
   const auto sourceLinks =
       ctx.eventStore.get<SimSourceLinkContainer>(m_cfg.inputSourceLinks);

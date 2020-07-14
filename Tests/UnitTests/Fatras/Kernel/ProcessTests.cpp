@@ -25,9 +25,9 @@ namespace {
 /// with momenta 1,2,3,4 GeV.
 struct MakeChildren {
   template <typename generator_t>
-  std::array<ActsFatras::Particle, 4> operator()(
-      generator_t &, const Acts::MaterialProperties &,
-      ActsFatras::Particle &) const {
+  std::array<ActsFatras::Particle, 4>
+  operator()(generator_t &, const Acts::MaterialProperties &,
+             ActsFatras::Particle &) const {
     // create daughter particles
     return {
         Particle().setAbsMomentum(1_GeV),
@@ -42,7 +42,8 @@ struct MakeChildren {
 struct HighP {
   double minP = 10_GeV;
 
-  bool operator()(const ActsFatras::Particle &particle) const {
+  bool
+  operator()(const ActsFatras::Particle &particle) const {
     return (minP <= particle.absMomentum());
   }
 };

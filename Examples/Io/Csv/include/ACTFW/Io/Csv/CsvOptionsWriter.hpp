@@ -17,18 +17,20 @@ namespace FW {
 namespace Options {
 
 // Add common CSV writer options.
-void addCsvWriterOptions(Description& desc);
+void
+addCsvWriterOptions(Description& desc);
 
 /// Read the CSV particle writer options.
-FW::CsvParticleWriter::Config readCsvParticleWriterConfig(const Variables& vm);
+FW::CsvParticleWriter::Config
+readCsvParticleWriterConfig(const Variables& vm);
 
 /// Read the CSV planar cluster writer options.
-FW::CsvPlanarClusterWriter::Config readCsvPlanarClusterWriterConfig(
-    const Variables& vm);
+FW::CsvPlanarClusterWriter::Config
+readCsvPlanarClusterWriterConfig(const Variables& vm);
 
 /// Read the CSV tracking geometry writer config.
-FW::CsvTrackingGeometryWriter::Config readCsvTrackingGeometryWriterConfig(
-    const Variables& vm);
+FW::CsvTrackingGeometryWriter::Config
+readCsvTrackingGeometryWriterConfig(const Variables& vm);
 
 }  // namespace Options
 }  // namespace FW

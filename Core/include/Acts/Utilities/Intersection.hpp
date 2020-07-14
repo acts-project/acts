@@ -52,7 +52,8 @@ struct Intersection {
   /// Smaller operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator<(const Intersection& si) const {
+  bool
+  operator<(const Intersection& si) const {
     if (status == Status::unreachable) {
       return false;
     }
@@ -67,7 +68,8 @@ struct Intersection {
   /// Greater operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator>(const Intersection& si) const {
+  bool
+  operator>(const Intersection& si) const {
     if (status == Status::unreachable) {
       return false;
     }
@@ -127,8 +129,8 @@ class ObjectIntersection {
   /// order the representing intersection
   ///
   /// @param oi is the source intersection for comparison
-  bool operator<(
-      const ObjectIntersection<object_t, representation_t>& oi) const {
+  bool
+  operator<(const ObjectIntersection<object_t, representation_t>& oi) const {
     return (intersection < oi.intersection);
   }
 
@@ -138,8 +140,8 @@ class ObjectIntersection {
   /// order the representing intersection
   ///
   /// @param oi is the source intersection for comparison
-  bool operator>(
-      const ObjectIntersection<object_t, representation_t>& oi) const {
+  bool
+  operator>(const ObjectIntersection<object_t, representation_t>& oi) const {
     return (intersection > oi.intersection);
   }
 };
@@ -153,7 +155,8 @@ struct SameSurfaceIntersection {
   /// @param i1 First intersection to test
   /// @param i2 Second intersection to test
   template <typename intersection_t>
-  bool operator()(const intersection_t& i1, const intersection_t& i2) const {
+  bool
+  operator()(const intersection_t& i1, const intersection_t& i2) const {
     return (i1.object == i2.object);
   }
 };

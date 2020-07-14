@@ -75,8 +75,9 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
 
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 3, int>>
-void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
-                                              value_type far_distance) const {
+void
+Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
+                                         value_type far_distance) const {
   static_assert(DIM == 3, "Drawing is only supported in 3D");
 
   // Iterate around normals, calculate cross with "far" plane
@@ -127,11 +128,10 @@ void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
 
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 2, int>>
-std::ostream& Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os,
-                                                      value_type w,
-                                                      value_type h,
-                                                      value_type far_distance,
-                                                      value_type unit) const {
+std::ostream&
+Acts::Frustum<value_t, DIM, SIDES>::svg(std::ostream& os, value_type w,
+                                        value_type h, value_type far_distance,
+                                        value_type unit) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
   VertexType mid(w / 2., h / 2.);

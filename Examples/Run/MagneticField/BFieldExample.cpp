@@ -26,7 +26,8 @@ struct always_false : std::false_type {};
 /// grid points and values of the map into root format. The Field can then be
 /// displayed using the root script printBField.cpp
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   using boost::program_options::value;
 
   // setup and parse options

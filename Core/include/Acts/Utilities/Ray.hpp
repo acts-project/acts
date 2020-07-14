@@ -36,31 +36,43 @@ class Ray {
 
   /// Getter for the origin
   /// @return The origin
-  const VertexType& origin() const { return m_origin; }
+  const VertexType&
+  origin() const {
+    return m_origin;
+  }
 
   /// Getter for the direction
   /// @return The direction
-  const VertexType& dir() const { return m_dir; }
+  const VertexType&
+  dir() const {
+    return m_dir;
+  }
 
   /// Getter for the element wise inverse of the direction.
   /// @return The element wise inverse.
-  const vertex_array_type& idir() const { return m_idir; }
+  const vertex_array_type&
+  idir() const {
+    return m_idir;
+  }
 
   /// Transforms this ray using a given transform and returns a new instance
   /// @param trf The transform to apply
   /// @return Copy of this ray with the transform applied
-  Ray<value_t, DIM> transformed(const transform_type& trf) const;
+  Ray<value_t, DIM>
+  transformed(const transform_type& trf) const;
 
   /// Write information on this instance to an outstream.
   /// @param os The out stream
   /// @return The out stream given as a nargument
-  std::ostream& toStream(std::ostream& os) const;
+  std::ostream&
+  toStream(std::ostream& os) const;
 
   /// Helper to draw this ray using a given visualization helper.
   /// @param helper The visualization helper
   /// @param far_distance The "length" of the drawn line representing the ray
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, value_type far_distance = 10) const;
+  void
+  draw(IVisualization& helper, value_type far_distance = 10) const;
 
  private:
   VertexType m_origin;
@@ -73,7 +85,8 @@ class Ray {
 /// @param ray The ray to write to @p os
 /// @return The outstream given in @p os
 template <typename T, size_t D>
-std::ostream& operator<<(std::ostream& os, const Ray<T, D>& ray) {
+std::ostream&
+operator<<(std::ostream& os, const Ray<T, D>& ray) {
   ray.dump(os);
   return os;
 }

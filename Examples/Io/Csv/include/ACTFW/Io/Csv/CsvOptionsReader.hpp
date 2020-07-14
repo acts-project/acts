@@ -19,11 +19,12 @@ namespace Options {
 // format-independent, generic input option.
 
 /// Read the CSV particle reader config.
-FW::CsvParticleReader::Config readCsvParticleReaderConfig(const Variables& vm);
+FW::CsvParticleReader::Config
+readCsvParticleReaderConfig(const Variables& vm);
 
 /// Read the CSV particle reader config.
-FW::CsvPlanarClusterReader::Config readCsvPlanarClusterReaderConfig(
-    const Variables& vm);
+FW::CsvPlanarClusterReader::Config
+readCsvPlanarClusterReaderConfig(const Variables& vm);
 
 }  // namespace Options
 }  // namespace FW

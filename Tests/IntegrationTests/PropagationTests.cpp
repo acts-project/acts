@@ -78,7 +78,8 @@ RiddersEigenPropagatorType repropagator(std::move(restepper));
 AtlasStepperType rastepper(bField);
 RiddersAtlasPropagatorType rapropagator(std::move(rastepper));
 
-DensePropagatorType setupDensePropagator() {
+DensePropagatorType
+setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {1.5_m, 0., 0.};
   vConf.length = {3_m, 1_m, 1_m};

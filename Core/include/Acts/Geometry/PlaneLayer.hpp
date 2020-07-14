@@ -33,12 +33,13 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  static MutableLayerPtr create(
-      std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const PlanarBounds> pbounds,
-      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
-      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
-      LayerType laytyp = Acts::active) {
+  static MutableLayerPtr
+  create(std::shared_ptr<const Transform3D> transform,
+         std::shared_ptr<const PlanarBounds> pbounds,
+         std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+         double thickness = 0.,
+         std::unique_ptr<ApproachDescriptor> ad = nullptr,
+         LayerType laytyp = Acts::active) {
     return MutableLayerPtr(new PlaneLayer(std::move(transform), pbounds,
                                           std::move(surfaceArray), thickness,
                                           std::move(ad), laytyp));
@@ -51,21 +52,25 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   PlaneLayer(const PlaneLayer& pla) = delete;
 
   /// Assignment operator for PlaneLayers - deleted
-  PlaneLayer& operator=(const PlaneLayer&) = delete;
+  PlaneLayer&
+  operator=(const PlaneLayer&) = delete;
 
   /// Destructor
   ~PlaneLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
-  const PlaneSurface& surfaceRepresentation() const override;
+  const PlaneSurface&
+  surfaceRepresentation() const override;
 
   // Non-const version
-  PlaneSurface& surfaceRepresentation() override;
+  PlaneSurface&
+  surfaceRepresentation() override;
 
  private:
   /// private helper method to build approach surfaces
-  void buildApproachDescriptor();
+  void
+  buildApproachDescriptor();
 
  protected:
   /// Private constructor for a PlaneLayer is called by create(args*)

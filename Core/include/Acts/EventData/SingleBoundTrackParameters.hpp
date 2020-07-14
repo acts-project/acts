@@ -167,8 +167,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   ~SingleBoundTrackParameters() = default;
 
   /// @brief copy assignment operator - charged/neutral
-  SingleBoundTrackParameters<ChargePolicy>& operator=(
-      const SingleBoundTrackParameters<ChargePolicy>& rhs) {
+  SingleBoundTrackParameters<ChargePolicy>&
+  operator=(const SingleBoundTrackParameters<ChargePolicy>& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
@@ -179,8 +179,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
   /// @brief move assignment operator - charged/neutral
   /// checks if the surface is free and in such a case delete-clones it
-  SingleBoundTrackParameters<ChargePolicy>& operator=(
-      SingleBoundTrackParameters<ChargePolicy>&& rhs) {
+  SingleBoundTrackParameters<ChargePolicy>&
+  operator=(SingleBoundTrackParameters<ChargePolicy>&& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
@@ -196,13 +196,17 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   template <ParID_t par>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void
+  set(const GeometryContext& gctx, ParValue_t newValue) {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
   }
 
   /// @brief access method to the reference surface
-  const Surface& referenceSurface() const final { return *m_pSurface; }
+  const Surface&
+  referenceSurface() const final {
+    return *m_pSurface;
+  }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -215,7 +219,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
+  RotationMatrix3D
+  referenceFrame(const GeometryContext& gctx) const {
     return std::move(
         m_pSurface->referenceFrame(gctx, this->position(), this->momentum()));
   }

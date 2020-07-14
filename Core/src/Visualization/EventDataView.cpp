@@ -8,7 +8,8 @@
 
 #include "Acts/Visualization/EventDataView.hpp"
 
-void Acts::EventDataView::drawCovarianceCartesian(
+void
+Acts::EventDataView::drawCovarianceCartesian(
     IVisualization& helper, const Vector2D& lposition,
     const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
     double locErrorScale, const ViewConfig& viewConfig) {
@@ -25,7 +26,8 @@ void Acts::EventDataView::drawCovarianceCartesian(
   Acts::GeometryView::drawPolyhedron(helper, ellipseHedron, viewConfig);
 }
 
-void Acts::EventDataView::drawCovarianceAngular(
+void
+Acts::EventDataView::drawCovarianceAngular(
     IVisualization& helper, const Vector3D& position, const Vector3D& direction,
     const ActsSymMatrixD<2>& covariance, double directionScale,
     double angularErrorScale, const ViewConfig& viewConfig) {

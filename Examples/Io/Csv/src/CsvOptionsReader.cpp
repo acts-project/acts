@@ -10,8 +10,8 @@
 
 #include <boost/program_options.hpp>
 
-FW::CsvParticleReader::Config FW::Options::readCsvParticleReaderConfig(
-    const Variables& vm) {
+FW::CsvParticleReader::Config
+FW::Options::readCsvParticleReaderConfig(const Variables& vm) {
   FW::CsvParticleReader::Config cfg;
   if (not vm["input-dir"].empty()) {
     cfg.inputDir = vm["input-dir"].as<std::string>();

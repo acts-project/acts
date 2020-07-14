@@ -42,7 +42,8 @@ FW::HitSmearing::HitSmearing(const Config& cfg, Acts::Logging::Level lvl)
   });
 }
 
-FW::ProcessCode FW::HitSmearing::execute(const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::HitSmearing::execute(const AlgorithmContext& ctx) const {
   // setup input and output containers
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);

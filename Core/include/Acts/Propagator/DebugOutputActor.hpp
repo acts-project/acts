@@ -37,8 +37,9 @@ struct DebugOutputActor {
   /// @param state is the mutable propagator state object
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+             result_type& result) const {
     // move the debug output from the state to
     // to the output actor if it is not set to mute
     // only when the target is reached (or later otherwise triggered)
@@ -52,8 +53,9 @@ struct DebugOutputActor {
   /// Pure observer interface
   /// - this does not apply to the output collector
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const {
+  }
 };
 
 }  // namespace Acts

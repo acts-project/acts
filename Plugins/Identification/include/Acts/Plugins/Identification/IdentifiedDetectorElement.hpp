@@ -30,11 +30,12 @@ class DigitizationModule;
 class IdentifiedDetectorElement : public DetectorElementBase {
  public:
   /// Retrieve the Identifier
-  virtual Identifier identifier() const = 0;
+  virtual Identifier
+  identifier() const = 0;
 
   /// Retrieve the DigitizationModule
-  virtual const std::shared_ptr<const DigitizationModule> digitizationModule()
-      const = 0;
+  virtual const std::shared_ptr<const DigitizationModule>
+  digitizationModule() const = 0;
 };
 
 }  // end of namespace Acts

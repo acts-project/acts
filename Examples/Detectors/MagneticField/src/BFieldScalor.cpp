@@ -17,7 +17,8 @@ FW::BField::BFieldScalor::BFieldScalor(
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-FW::ProcessCode FW::BField::BFieldScalor::decorate(AlgorithmContext& context) {
+FW::ProcessCode
+FW::BField::BFieldScalor::decorate(AlgorithmContext& context) {
   ScalableBFieldContext bFieldContext{
       std::pow(m_cfg.scalor, context.eventNumber)};
   context.magFieldContext = std::make_any<ScalableBFieldContext>(bFieldContext);

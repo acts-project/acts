@@ -21,9 +21,10 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-void Acts::GeometryView::drawPolyhedron(IVisualization& helper,
-                                        const Polyhedron& polyhedron,
-                                        const ViewConfig& ViewConfig) {
+void
+Acts::GeometryView::drawPolyhedron(IVisualization& helper,
+                                   const Polyhedron& polyhedron,
+                                   const ViewConfig& ViewConfig) {
   if (ViewConfig.visible) {
     if (not ViewConfig.triangulate) {
       helper.faces(polyhedron.vertices, polyhedron.faces, ViewConfig.color);
@@ -34,11 +35,11 @@ void Acts::GeometryView::drawPolyhedron(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawSurface(IVisualization& helper,
-                                     const Surface& surface,
-                                     const GeometryContext& gctx,
-                                     const Transform3D& transform,
-                                     const ViewConfig& ViewConfig) {
+void
+Acts::GeometryView::drawSurface(IVisualization& helper, const Surface& surface,
+                                const GeometryContext& gctx,
+                                const Transform3D& transform,
+                                const ViewConfig& ViewConfig) {
   Polyhedron surfaceHedron =
       surface.polyhedronRepresentation(gctx, ViewConfig.nSegments);
   if (not transform.isApprox(Transform3D::Identity())) {
@@ -47,13 +48,14 @@ void Acts::GeometryView::drawSurface(IVisualization& helper,
   drawPolyhedron(helper, surfaceHedron, ViewConfig);
 }
 
-void Acts::GeometryView::drawSurfaceArray(IVisualization& helper,
-                                          const SurfaceArray& surfaceArray,
-                                          const GeometryContext& gctx,
-                                          const Transform3D& transform,
-                                          const ViewConfig& sensitiveConfig,
-                                          const ViewConfig& passiveConfig,
-                                          const ViewConfig& gridConfig) {
+void
+Acts::GeometryView::drawSurfaceArray(IVisualization& helper,
+                                     const SurfaceArray& surfaceArray,
+                                     const GeometryContext& gctx,
+                                     const Transform3D& transform,
+                                     const ViewConfig& sensitiveConfig,
+                                     const ViewConfig& passiveConfig,
+                                     const ViewConfig& gridConfig) {
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
@@ -133,11 +135,12 @@ void Acts::GeometryView::drawSurfaceArray(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawVolume(IVisualization& helper,
-                                    const AbstractVolume& volume,
-                                    const GeometryContext& gctx,
-                                    const Transform3D& transform,
-                                    const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawVolume(IVisualization& helper,
+                               const AbstractVolume& volume,
+                               const GeometryContext& gctx,
+                               const Transform3D& transform,
+                               const ViewConfig& viewConfig) {
   auto bSurfaces = volume.boundarySurfaces();
   for (const auto& bs : bSurfaces) {
     drawSurface(helper, bs->surfaceRepresentation(), gctx, transform,
@@ -145,11 +148,12 @@ void Acts::GeometryView::drawVolume(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
-                                   const GeometryContext& gctx,
-                                   const ViewConfig& layerConfig,
-                                   const ViewConfig& sensitiveConfig,
-                                   const ViewConfig& gridConfig) {
+void
+Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
+                              const GeometryContext& gctx,
+                              const ViewConfig& layerConfig,
+                              const ViewConfig& sensitiveConfig,
+                              const ViewConfig& gridConfig) {
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
@@ -175,7 +179,8 @@ void Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
   }
 }
 
-void Acts::GeometryView::drawTrackingVolume(
+void
+Acts::GeometryView::drawTrackingVolume(
     IVisualization& helper, const TrackingVolume& tVolume,
     const GeometryContext& gctx, const ViewConfig& containerView,
     const ViewConfig& volumeView, const ViewConfig& layerView,
@@ -242,11 +247,12 @@ void Acts::GeometryView::drawTrackingVolume(
   }
 }
 
-void Acts::GeometryView::drawSegmentBase(IVisualization& helper,
-                                         const Vector3D& start,
-                                         const Vector3D& end, int arrows,
-                                         double arrowLength, double arrowWidth,
-                                         const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawSegmentBase(IVisualization& helper,
+                                    const Vector3D& start, const Vector3D& end,
+                                    int arrows, double arrowLength,
+                                    double arrowWidth,
+                                    const ViewConfig& viewConfig) {
   double thickness = viewConfig.lineThickness;
 
   // Draw the parameter shaft and cone
@@ -333,30 +339,34 @@ void Acts::GeometryView::drawSegmentBase(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawSegment(IVisualization& helper,
-                                     const Vector3D& start, const Vector3D& end,
-                                     const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawSegment(IVisualization& helper, const Vector3D& start,
+                                const Vector3D& end,
+                                const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 0, 0., 0., viewConfig);
 }
 
-void Acts::GeometryView::drawArrowBackward(
-    IVisualization& helper, const Vector3D& start, const Vector3D& end,
-    double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawArrowBackward(IVisualization& helper,
+                                      const Vector3D& start,
+                                      const Vector3D& end, double arrowLength,
+                                      double arrowWidth,
+                                      const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, -1, arrowLength, arrowWidth, viewConfig);
 }
 
-void Acts::GeometryView::drawArrowForward(IVisualization& helper,
-                                          const Vector3D& start,
-                                          const Vector3D& end,
-                                          double arrowLength, double arrowWidth,
-                                          const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawArrowForward(IVisualization& helper,
+                                     const Vector3D& start, const Vector3D& end,
+                                     double arrowLength, double arrowWidth,
+                                     const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 1, arrowLength, arrowWidth, viewConfig);
 }
 
-void Acts::GeometryView::drawArrowsBoth(IVisualization& helper,
-                                        const Vector3D& start,
-                                        const Vector3D& end, double arrowLength,
-                                        double arrowWidth,
-                                        const ViewConfig& viewConfig) {
+void
+Acts::GeometryView::drawArrowsBoth(IVisualization& helper,
+                                   const Vector3D& start, const Vector3D& end,
+                                   double arrowLength, double arrowWidth,
+                                   const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 2, arrowLength, arrowWidth, viewConfig);
 }

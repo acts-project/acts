@@ -9,6 +9,7 @@
 #include "ACTFW/ContextualDetector/AlignedDetector.hpp"
 #include "FatrasMain.hpp"
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
   return FW::fatrasMain(argc, argv, std::make_shared<AlignedDetector>());
 }

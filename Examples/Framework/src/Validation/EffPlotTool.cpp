@@ -18,7 +18,8 @@ FW::EffPlotTool::EffPlotTool(const FW::EffPlotTool::Config& cfg,
                              Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {}
 
-void FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
+void
+FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
@@ -34,23 +35,25 @@ void FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
       "trackeff_vs_phi", "Tracking efficiency;#phi;Efficiency", bPhi);
 }
 
-void FW::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
+void
+FW::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
   delete effPlotCache.trackEff_vs_pT;
   delete effPlotCache.trackEff_vs_eta;
   delete effPlotCache.trackEff_vs_phi;
 }
 
-void FW::EffPlotTool::write(
-    const EffPlotTool::EffPlotCache& effPlotCache) const {
+void
+FW::EffPlotTool::write(const EffPlotTool::EffPlotCache& effPlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   effPlotCache.trackEff_vs_pT->Write();
   effPlotCache.trackEff_vs_eta->Write();
   effPlotCache.trackEff_vs_phi->Write();
 }
 
-void FW::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
-                           const ActsFatras::Particle& truthParticle,
-                           bool status) const {
+void
+FW::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
+                      const ActsFatras::Particle& truthParticle,
+                      bool status) const {
   const auto t_phi = phi(truthParticle.unitDirection());
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();

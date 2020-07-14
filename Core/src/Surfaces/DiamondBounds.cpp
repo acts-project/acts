@@ -12,22 +12,24 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
-                                 const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
+                            const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, vertices());
 }
 
-double Acts::DiamondBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
+double
+Acts::DiamondBounds::distanceToBoundary(const Acts::Vector2D& lposition) const {
   return BoundaryCheck(true).distance(lposition, vertices());
 }
 
-std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
-    unsigned int /*lseg*/) const {
+std::vector<Acts::Vector2D>
+Acts::DiamondBounds::vertices(unsigned int /*lseg*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise
   double x1 = get(DiamondBounds::eHalfLengthXnegY);
@@ -39,11 +41,13 @@ std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
   return {{-x1, -y1}, {x1, -y1}, {x2, y2}, {x3, y3}, {-x3, y3}, {-x2, y2}};
 }
 
-const Acts::RectangleBounds& Acts::DiamondBounds::boundingBox() const {
+const Acts::RectangleBounds&
+Acts::DiamondBounds::boundingBox() const {
   return m_boundingBox;
 }
 
-std::ostream& Acts::DiamondBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::DiamondBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::DiamondBounds: (halfXatYneg, halfXatYzero, halfXatYpos, "

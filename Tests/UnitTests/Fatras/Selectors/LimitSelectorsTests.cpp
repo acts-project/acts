@@ -17,7 +17,8 @@ namespace {
 // Construct a particle that is close to its X0/L0 path limit.
 //
 // Passing a thin slab should still be Ok, but the thick slab should not.
-ActsFatras::Particle makeParticleCloseToLimit() {
+ActsFatras::Particle
+makeParticleCloseToLimit() {
   // create particle and move it close to the X0/L0 limit
   auto particle = Dataset::centralPion;
   particle.setMaterialPassed(0.125, 0.0125);

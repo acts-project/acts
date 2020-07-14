@@ -26,8 +26,9 @@ constexpr auto eps = std::numeric_limits<double>::epsilon();
 
 // Common test method that will be instantiated for each scattering model.
 template <typename Scattering>
-void test(const Scattering& scattering, uint32_t seed,
-          const ActsFatras::Particle& before) {
+void
+test(const Scattering& scattering, uint32_t seed,
+     const ActsFatras::Particle& before) {
   std::ranlux48 gen(seed);
   ActsFatras::Particle after = before;
 

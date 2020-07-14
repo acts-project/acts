@@ -26,8 +26,8 @@ class ITGeoIdentifierProvider {
   ///
   /// @param gctx is a geometry context object
   /// @param tgnode is a TGeoNode that is translated
-  virtual Identifier identify(const GeometryContext& gctx,
-                              const TGeoNode& tgnode) const = 0;
+  virtual Identifier
+  identify(const GeometryContext& gctx, const TGeoNode& tgnode) const = 0;
 };
 
 }  // namespace Acts

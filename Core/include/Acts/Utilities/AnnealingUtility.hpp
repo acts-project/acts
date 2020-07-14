@@ -45,7 +45,8 @@ class AnnealingUtility {
   AnnealingUtility(const Config& cfg = Config()) : m_cfg(cfg) {}
 
   /// Does the actual annealing step
-  void anneal(State& state) const;
+  void
+  anneal(State& state) const;
 
   /// @brief Weight access
   ///
@@ -55,15 +56,17 @@ class AnnealingUtility {
   /// of current track to all vertices it is currently attached to
   ///
   /// @return Calculated weight according to Eq.(5.46) in Ref.(1)
-  double getWeight(State& state, double chi2,
-                   const std::vector<double>& allChi2) const;
+  double
+  getWeight(State& state, double chi2,
+            const std::vector<double>& allChi2) const;
 
   /// @brief Weight access
   ///
   /// @param chi2 Chi^2
   ///
   /// @return Calculated weight
-  double getWeight(State& state, double chi2) const;
+  double
+  getWeight(State& state, double chi2) const;
 
  private:
   /// Configuration object

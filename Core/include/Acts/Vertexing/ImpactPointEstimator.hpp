@@ -94,10 +94,10 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return Distance
-  Result<double> calculate3dDistance(const GeometryContext& gctx,
-                                     const BoundParameters& trkParams,
-                                     const Vector3D& vtxPos,
-                                     State& state) const;
+  Result<double>
+  calculate3dDistance(const GeometryContext& gctx,
+                      const BoundParameters& trkParams, const Vector3D& vtxPos,
+                      State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -114,10 +114,11 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundParameters>> estimate3DImpactParameters(
-      const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos,
-      State& state) const;
+  Result<std::unique_ptr<const BoundParameters>>
+  estimate3DImpactParameters(const GeometryContext& gctx,
+                             const Acts::MagneticFieldContext& mctx,
+                             const BoundParameters& trkParams,
+                             const Vector3D& vtxPos, State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -129,9 +130,10 @@ class ImpactPointEstimator {
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
-                                          const BoundParameters* trkParams,
-                                          const Vector3D& vertexPos) const;
+  Result<double>
+  get3dVertexCompatibility(const GeometryContext& gctx,
+                           const BoundParameters* trkParams,
+                           const Vector3D& vertexPos) const;
 
   /// @brief Estimates the impact parameters and their errors of a given
   /// track w.r.t. a vertex by propagating the trajectory state
@@ -141,9 +143,11 @@ class ImpactPointEstimator {
   /// @param vtx Vertex the track belongs to
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
-  Result<ImpactParametersAndSigma> estimateImpactParameters(
-      const BoundParameters& track, const Vertex<input_track_t>& vtx,
-      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
+  Result<ImpactParametersAndSigma>
+  estimateImpactParameters(const BoundParameters& track,
+                           const Vertex<input_track_t>& vtx,
+                           const GeometryContext& gctx,
+                           const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object
@@ -160,9 +164,9 @@ class ImpactPointEstimator {
   /// @param r     Helix radius
   ///
   /// @return New phi value
-  Result<double> performNewtonApproximation(const Vector3D& trkPos,
-                                            const Vector3D& vtxPos, double phi,
-                                            double theta, double r) const;
+  Result<double>
+  performNewtonApproximation(const Vector3D& trkPos, const Vector3D& vtxPos,
+                             double phi, double theta, double r) const;
 
   /// @brief Helper function to calculate relative
   /// distance between track and vtxPos and the
@@ -176,10 +180,11 @@ class ImpactPointEstimator {
   /// @param momDir Momentum direction, to be
   ///   determined by method
   /// @param state The state object
-  Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
-                                      const BoundParameters& trkParams,
-                                      const Vector3D& vtxPos, Vector3D& deltaR,
-                                      Vector3D& momDir, State& state) const;
+  Result<void>
+  getDistanceAndMomentum(const GeometryContext& gctx,
+                         const BoundParameters& trkParams,
+                         const Vector3D& vtxPos, Vector3D& deltaR,
+                         Vector3D& momDir, State& state) const;
 };
 
 }  // namespace Acts

@@ -39,7 +39,8 @@ GeometryContext gctx = GeometryContext();
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string run(IVisualization& helper) {
+static inline std::string
+run(IVisualization& helper) {
   std::stringstream ss;
 
   ViewConfig lineView({0, 0, 255});

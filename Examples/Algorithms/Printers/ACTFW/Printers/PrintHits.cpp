@@ -22,7 +22,8 @@ FW::PrintHits::PrintHits(const FW::PrintHits::Config& cfg,
                          Acts::Logging::Level level)
     : BareAlgorithm("PrintHits", level), m_cfg(cfg) {}
 
-FW::ProcessCode FW::PrintHits::execute(const FW::AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::PrintHits::execute(const FW::AlgorithmContext& ctx) const {
   using Clusters = FW::GeometryIdMultimap<Acts::PlanarModuleCluster>;
   using HitParticlesMap = FW::IndexMultimap<ActsFatras::Barcode>;
   using HitIds = std::vector<size_t>;

@@ -48,10 +48,14 @@ class BFieldScalor : public IContextDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  ProcessCode decorate(AlgorithmContext& context) final override;
+  ProcessCode
+  decorate(AlgorithmContext& context) final override;
 
   /// @brief decorator name() for screen output
-  const std::string& name() const final override { return m_name; }
+  const std::string&
+  name() const final override {
+    return m_name;
+  }
 
  private:
   Config m_cfg;                                  ///< the configuration class
@@ -59,7 +63,10 @@ class BFieldScalor : public IContextDecorator {
   std::string m_name = "BFieldScalor";
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 }  // namespace BField
 

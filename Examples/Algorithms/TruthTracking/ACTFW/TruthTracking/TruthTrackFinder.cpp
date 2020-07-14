@@ -33,7 +33,8 @@ TruthTrackFinder::TruthTrackFinder(const Config& cfg, Acts::Logging::Level lvl)
   }
 }
 
-ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
+ProcessCode
+TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   // prepare input collections

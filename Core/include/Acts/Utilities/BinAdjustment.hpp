@@ -27,7 +27,8 @@ namespace Acts {
 /// @param rBounds the Radial bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
@@ -73,8 +74,8 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
 /// @param cBounds the Cylinder bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderBounds& cBounds) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds) {
   // Default constructor
   BinUtility uBinUtil;
   // The parameters from the cylinder bounds
@@ -124,7 +125,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @param Surface to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
+BinUtility
+adjustBinUtility(const BinUtility& bu, const Surface& surface) {
   // The surface type is a cylinder
   if (surface.type() == Surface::Cylinder) {
     // Cast to Cylinder bounds and return

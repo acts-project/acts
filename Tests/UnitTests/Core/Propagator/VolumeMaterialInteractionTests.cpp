@@ -47,15 +47,30 @@ struct State {
 struct Stepper {
   Stepper() = default;
 
-  Vector3D position(const StepperState& state) const { return state.pos; }
+  Vector3D
+  position(const StepperState& state) const {
+    return state.pos;
+  }
 
-  double time(const StepperState& state) const { return state.t; }
+  double
+  time(const StepperState& state) const {
+    return state.t;
+  }
 
-  Vector3D direction(const StepperState& state) const { return state.dir; }
+  Vector3D
+  direction(const StepperState& state) const {
+    return state.dir;
+  }
 
-  double momentum(const StepperState& state) const { return state.p; }
+  double
+  momentum(const StepperState& state) const {
+    return state.p;
+  }
 
-  double charge(const StepperState& state) const { return state.q; };
+  double
+  charge(const StepperState& state) const {
+    return state.q;
+  };
 };
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {

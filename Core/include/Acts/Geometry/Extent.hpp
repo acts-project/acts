@@ -42,8 +42,9 @@ struct Extent {
   /// @param other The source Extent
   /// @param bValue The binning value for the check (binValues for all)
   /// @param tolerance An additional tolerance for the intersection check
-  bool intersects(const Extent& other, BinningValue bVal = binValues,
-                  double tolerance = s_epsilon) {
+  bool
+  intersects(const Extent& other, BinningValue bVal = binValues,
+             double tolerance = s_epsilon) {
     // Helper to check
     auto checkRange = [&](BinningValue bvc) -> bool {
       auto& a = ranges[bvc];
@@ -67,7 +68,8 @@ struct Extent {
 
   /// Extend with another extent
   /// @param other is the source Extent
-  void extend(const Extent& other) {
+  void
+  extend(const Extent& other) {
     for (std::size_t ir = 0; ir < other.ranges.size(); ++ir) {
       ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
       ranges[ir].second = std::max(ranges[ir].second, other.ranges[ir].second);
@@ -76,39 +78,55 @@ struct Extent {
 
   /// Convert to output stream for screen output
   /// @param sl [in,out] The output stream
-  std::ostream& toStream(std::ostream& sl) const;
+  std::ostream&
+  toStream(std::ostream& sl) const;
 
   /// Access the minimum parameter
   /// @param bval the binning identification
-  double& min(BinningValue bval) { return ranges[bval].first; }
+  double&
+  min(BinningValue bval) {
+    return ranges[bval].first;
+  }
 
   /// Access the minimum parameter
   /// @param bval the binning identification
-  double min(BinningValue bval) const { return ranges[bval].first; }
+  double
+  min(BinningValue bval) const {
+    return ranges[bval].first;
+  }
 
   /// Access the max parameter
   /// @param bval the binning identification
-  double& max(BinningValue bval) { return ranges[bval].second; }
+  double&
+  max(BinningValue bval) {
+    return ranges[bval].second;
+  }
 
   /// Access the max parameter
   /// @param bval the binning identification
-  double max(BinningValue bval) const { return ranges[bval].second; }
+  double
+  max(BinningValue bval) const {
+    return ranges[bval].second;
+  }
 
   /// Access the medium parameter
   /// @param bval the binning identification
-  double medium(BinningValue bval) const {
+  double
+  medium(BinningValue bval) const {
     return 0.5 * (ranges[bval].first + ranges[bval].second);
   }
 
   /// Access the range - always positive
   /// @param bval the binning identification
-  double range(BinningValue bval) const {
+  double
+  range(BinningValue bval) const {
     return std::abs(ranges[bval].second - ranges[bval].first);
   }
 
   /// Check the vertex
   /// @param vtx the Vertex to be checked
-  void check(const Vector3D& vtx) {
+  void
+  check(const Vector3D& vtx) {
     // min/max value check
     auto minMax = [&](BinningValue bval, double value) -> void {
       ranges[bval].first = std::min(value, ranges[bval].first);
@@ -123,6 +141,7 @@ struct Extent {
 };
 
 /// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const Extent& ext);
+std::ostream&
+operator<<(std::ostream& sl, const Extent& ext);
 
 }  // namespace Acts

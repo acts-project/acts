@@ -82,8 +82,9 @@ bool debugModeBwdStep = false;
 /// @param charge is the charge of the particle
 /// @param index is the run index from the test
 template <typename propagator_t>
-void runTest(const propagator_t& prop, double pT, double phi, double theta,
-             int charge, double time, int index) {
+void
+runTest(const propagator_t& prop, double pT, double phi, double theta,
+        int charge, double time, int index) {
   double dcharge = -1 + 2 * charge;
 
   if (index < skip) {

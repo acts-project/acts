@@ -28,7 +28,8 @@ Acts::Material::Material(const ActsVectorF<5>& parameters)
                parameters[eRelativeAtomicMass], parameters[eNuclearCharge],
                parameters[eMassDensity]) {}
 
-float Acts::Material::molarElectronDensity() const {
+float
+Acts::Material::molarElectronDensity() const {
   using namespace Acts::UnitLiterals;
 
   // no material, no electron density
@@ -53,14 +54,16 @@ float Acts::Material::molarElectronDensity() const {
   return static_cast<float>(m_z * molarAtomicDensity);
 }
 
-float Acts::Material::meanExcitationEnergy() const {
+float
+Acts::Material::meanExcitationEnergy() const {
   using namespace Acts::UnitLiterals;
 
   // use approximative computation as defined in ATL-SOFT-PUB-2008-003
   return 16_eV * std::pow(m_z, 0.9f);
 }
 
-Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
+Acts::ActsVectorF<5>
+Acts::Material::classificationNumbers() const {
   ActsVectorF<5> parameters;
   parameters[eRadiationLength] = m_x0;
   parameters[eInteractionLength] = m_l0;
@@ -70,7 +73,8 @@ Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
   return parameters;
 }
 
-std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
+std::ostream&
+Acts::operator<<(std::ostream& os, const Material& material) {
   if (!material) {
     os << "vacuum";
   } else {

@@ -52,13 +52,15 @@ class RandomNumbers {
   /// It calls generateSeed() for an event driven seed
   ///
   /// @param context is the AlgorithmContext of the host algorithm
-  RandomEngine spawnGenerator(const AlgorithmContext& context) const;
+  RandomEngine
+  spawnGenerator(const AlgorithmContext& context) const;
 
   /// Generate a event and algorithm specific seed value.
   ///
   /// This should only be used in special cases e.g. where a custom
   /// random engine is used and `spawnGenerator` can not be used.
-  uint64_t generateSeed(const AlgorithmContext& context) const;
+  uint64_t
+  generateSeed(const AlgorithmContext& context) const;
 
  private:
   Config m_cfg;

@@ -58,7 +58,8 @@ struct CubicTrackingGeometry {
   }
 
   /// Call operator to build the standard cubic tracking geometry
-  std::shared_ptr<const TrackingGeometry> operator()() {
+  std::shared_ptr<const TrackingGeometry>
+  operator()() {
     using namespace UnitLiterals;
 
     // Set translation vectors

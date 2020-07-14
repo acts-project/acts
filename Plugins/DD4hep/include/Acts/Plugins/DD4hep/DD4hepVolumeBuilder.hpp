@@ -56,23 +56,28 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
   /// @brief Builder method for cylindrical, confined volume
   ///
   /// @return The vector of TrackingVolumes at the central sector
-  MutableTrackingVolumeVector centralVolumes() const final;
+  MutableTrackingVolumeVector
+  centralVolumes() const final;
 
   /// Name identification
   /// @return The string based identification of this configuration
-  const std::string& identification() const final;
+  const std::string&
+  identification() const final;
 
   /// Set the configuration object
   /// @param [in] Config is the configuration struct
-  void setConfiguration(const Config& config);
+  void
+  setConfiguration(const Config& config);
 
   /// Get the configuration object
   /// @return The used configuration struct
-  Config getConfiguration() const;
+  Config
+  getConfiguration() const;
 
   /// Set logging instance
   /// @param [in] logger Logger in use
-  void setLogger(std::unique_ptr<const Logger> logger);
+  void
+  setLogger(std::unique_ptr<const Logger> logger);
 
  private:
   /// Configruation object
@@ -83,23 +88,27 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
 
   /// Private access to the logger
   /// @return Used logger
-  const Logger& logger() const { return *m_logger; }
+  const Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// @brief Converter of the transformation of a volume from DD4hep to Acts
   /// formalism
   ///
   /// @param [in] tGeoTrans Transformation of the DD4hep DetElement
   /// @return Pointer to the corresponding Acts transformation
-  std::shared_ptr<const Acts::Transform3D> convertTransform(
-      const TGeoMatrix* tGeoTrans) const;
+  std::shared_ptr<const Acts::Transform3D>
+  convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 
-inline const std::string& DD4hepVolumeBuilder::identification() const {
+inline const std::string&
+DD4hepVolumeBuilder::identification() const {
   return m_cfg.configurationName;
 }
 
-inline DD4hepVolumeBuilder::Config DD4hepVolumeBuilder::getConfiguration()
-    const {
+inline DD4hepVolumeBuilder::Config
+DD4hepVolumeBuilder::getConfiguration() const {
   return m_cfg;
 }
 

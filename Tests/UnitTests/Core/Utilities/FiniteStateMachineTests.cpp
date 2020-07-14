@@ -39,46 +39,56 @@ struct fsm : FiniteStateMachine<fsm, states::Disconnected, states::Connecting,
                                 states::Pinging, states::Connected> {
   fsm() : fsm_base(states::Disconnected{}){};
 
-  event_return on_event(const states::Disconnected&, const events::Connect&) {
+  event_return
+  on_event(const states::Disconnected&, const events::Connect&) {
     return states::Connecting{};
   }
 
-  event_return on_event(const states::Connecting&, const events::Established&) {
+  event_return
+  on_event(const states::Connecting&, const events::Established&) {
     return states::Connected{};
   }
 
-  event_return on_event(const states::Connected&, const events::Ping&) {
+  event_return
+  on_event(const states::Connected&, const events::Ping&) {
     std::cout << "ping!" << std::endl;
     setState(states::Pinging{});
     return process_event(events::Pong{});
   }
 
-  event_return on_event(const states::Pinging&, const events::Pong&) {
+  event_return
+  on_event(const states::Pinging&, const events::Pong&) {
     std::cout << "pong!" << std::endl;
     return states::Connected{};
   }
 
-  event_return on_event(const states::Connected&, const events::Timeout&) {
+  event_return
+  on_event(const states::Connected&, const events::Timeout&) {
     return states::Connecting{};
   }
 
-  event_return on_event(const states::Connected&, const events::Disconnect&) {
+  event_return
+  on_event(const states::Connected&, const events::Disconnect&) {
     return states::Disconnected{};
   }
 
   template <typename State, typename Event>
-  event_return on_event(const State&, const Event&) const {
+  event_return
+  on_event(const State&, const Event&) const {
     return Terminated{};
   }
 
   template <typename State, typename... Args>
-  void on_enter(const State&, Args&&...) {}
+  void
+  on_enter(const State&, Args&&...) {}
 
   template <typename State, typename... Args>
-  void on_exit(const State&, Args&&...) {}
+  void
+  on_exit(const State&, Args&&...) {}
 
   template <typename... Args>
-  void on_process(Args&&...) {}
+  void
+  on_process(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_SUITE(Utilities)
@@ -115,34 +125,40 @@ struct fsm2
     : FiniteStateMachine<fsm2, states::Disconnected, states::Connected> {
   fsm2() : fsm_base(states::Disconnected{}){};
 
-  event_return on_event(const states::Disconnected&, const events::Connect&,
-                        double f) {
+  event_return
+  on_event(const states::Disconnected&, const events::Connect&, double f) {
     std::cout << "f: " << f << std::endl;
     return states::Connected{};
   }
 
-  event_return on_event(const states::Connected&, const events::Disconnect&) {
+  event_return
+  on_event(const states::Connected&, const events::Disconnect&) {
     std::cout << "disconnect!" << std::endl;
     return states::Disconnected{};
   }
 
   template <typename State, typename Event, typename... Args>
-  event_return on_event(const State&, const Event&, Args&&...) const {
+  event_return
+  on_event(const State&, const Event&, Args&&...) const {
     return Terminated{};
   }
 
   template <typename... Args>
-  void on_enter(const Terminated&, Args&&...) {
+  void
+  on_enter(const Terminated&, Args&&...) {
     throw std::runtime_error("FSM terminated!");
   }
 
   template <typename State, typename... Args>
-  void on_enter(const State&, Args&&...) {}
+  void
+  on_enter(const State&, Args&&...) {}
 
   template <typename State, typename... Args>
-  void on_exit(const State&, Args&&...) {}
+  void
+  on_exit(const State&, Args&&...) {}
   template <typename... Args>
-  void on_process(Args&&...) {}
+  void
+  on_process(Args&&...) {}
 };
 
 BOOST_AUTO_TEST_CASE(Arguments) {
@@ -184,49 +200,64 @@ struct fsm3 : FiniteStateMachine<fsm3, S1, S2, S3> {
   bool on_exit_called = false;
   bool on_enter_called = false;
   bool on_process_called = false;
-  void reset() {
+  void
+  reset() {
     on_exit_called = false;
     on_enter_called = false;
     on_process_called = false;
   }
 
   // S1 + E1 = S2
-  event_return on_event(const S1&, const E1&) { return S2{}; }
+  event_return
+  on_event(const S1&, const E1&) {
+    return S2{};
+  }
 
   // S2 + E1 = S2
   // external transition to self
-  event_return on_event(const S2&, const E1&) { return S2{}; }
+  event_return
+  on_event(const S2&, const E1&) {
+    return S2{};
+  }
 
   // S2 + E2
   // internal transition
-  event_return on_event(const S2&, const E2&) {
+  event_return
+  on_event(const S2&, const E2&) {
     return std::nullopt;
     // return S2{};
   }
 
   // S2 + E3 = S3
   // external transition
-  event_return on_event(const S2&, const E3&) { return S3{}; }
+  event_return
+  on_event(const S2&, const E3&) {
+    return S3{};
+  }
 
   // catchers
 
   template <typename State, typename Event, typename... Args>
-  event_return on_event(const State&, const Event&, Args&&...) const {
+  event_return
+  on_event(const State&, const Event&, Args&&...) const {
     return Terminated{};
   }
 
   template <typename State, typename... Args>
-  void on_enter(const State&, Args&&...) {
+  void
+  on_enter(const State&, Args&&...) {
     on_enter_called = true;
   }
 
   template <typename State, typename... Args>
-  void on_exit(const State&, Args&&...) {
+  void
+  on_exit(const State&, Args&&...) {
     on_exit_called = true;
   }
 
   template <typename... Args>
-  void on_process(Args&&...) {
+  void
+  on_process(Args&&...) {
     on_process_called = true;
   }
 };

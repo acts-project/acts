@@ -21,9 +21,9 @@ using namespace Acts::Logging;
 
 /// @cond
 namespace detail {
-std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
-                                            std::ostream* logfile,
-                                            Logging::Level lvl) {
+std::unique_ptr<const Logger>
+create_logger(const std::string& logger_name, std::ostream* logfile,
+              Logging::Level lvl) {
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
           std::make_unique<DefaultPrintPolicy>(logfile), logger_name));
@@ -31,7 +31,8 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-std::string failure_msg(const std::string& expected, const std::string& found) {
+std::string
+failure_msg(const std::string& expected, const std::string& found) {
   return std::string("'") + expected + "' != '" + found + "'";
 }
 }  // namespace detail

@@ -21,7 +21,8 @@ enum class SimulatorError {
 /// Construct and error_code from the enum.
 ///
 /// Must use snake_case naming for STL compatibility.
-std::error_code make_error_code(SimulatorError e);
+std::error_code
+make_error_code(SimulatorError e);
 
 }  // namespace detail
 }  // namespace ActsFatras

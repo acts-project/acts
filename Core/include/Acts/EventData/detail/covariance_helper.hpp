@@ -29,7 +29,8 @@ namespace detail {
 template <typename CovMatrix_t, signed int NumIter = 1>
 struct covariance_helper {
   /// check if the covariance is semi-positive and correction is attempted
-  static bool validate(CovMatrix_t& covariance) {
+  static bool
+  validate(CovMatrix_t& covariance) {
     if (covariance.hasNaN()) {
       return false;
     }
@@ -52,7 +53,8 @@ struct covariance_helper {
   }
 
   /// check if the covariance is semi-positive
-  static bool isSemiPositive(const CovMatrix_t& covariance) {
+  static bool
+  isSemiPositive(const CovMatrix_t& covariance) {
     if (covariance.hasNaN()) {
       return false;
     }
@@ -61,7 +63,8 @@ struct covariance_helper {
   }
 
   /// check if the covariance is positive
-  static bool isPositive(const CovMatrix_t& covariance) {
+  static bool
+  isPositive(const CovMatrix_t& covariance) {
     if (covariance.hasNaN()) {
       return false;
     }

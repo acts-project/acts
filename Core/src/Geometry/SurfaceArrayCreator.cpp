@@ -386,7 +386,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   //!< @todo implement - take from ATLAS complex TRT builder
 }
 
-std::vector<const Acts::Surface*> Acts::SurfaceArrayCreator::findKeySurfaces(
+std::vector<const Acts::Surface*>
+Acts::SurfaceArrayCreator::findKeySurfaces(
     const std::vector<const Surface*>& surfaces,
     const std::function<bool(const Surface*, const Surface*)>& equal) const {
   std::vector<const Surface*> keys;
@@ -406,7 +407,8 @@ std::vector<const Acts::Surface*> Acts::SurfaceArrayCreator::findKeySurfaces(
   return keys;
 }
 
-size_t Acts::SurfaceArrayCreator::determineBinCount(
+size_t
+Acts::SurfaceArrayCreator::determineBinCount(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
     BinningValue bValue) const {
   auto matcher = m_cfg.surfaceMatcher;
@@ -660,7 +662,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   return pAxis;
 }
 
-std::vector<Acts::Vector3D> Acts::SurfaceArrayCreator::makeGlobalVertices(
+std::vector<Acts::Vector3D>
+Acts::SurfaceArrayCreator::makeGlobalVertices(
     const GeometryContext& gctx, const Acts::Surface& surface,
     const std::vector<Acts::Vector2D>& locVertices) const {
   std::vector<Acts::Vector3D> globVertices;

@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename vfitter_t, typename sfinder_t>
-auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
+auto
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
@@ -149,7 +150,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
 }
 
 template <typename vfitter_t, typename sfinder_t>
-auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
+auto
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
     const std::vector<const InputTrack_t*>& seedTracks,
     const VertexingOptions<InputTrack_t>& vertexingOptions) const
     -> Result<Vertex<InputTrack_t>> {
@@ -177,7 +179,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
 }
 
 template <typename vfitter_t, typename sfinder_t>
-void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
+void
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
     const std::vector<const InputTrack_t*>& perigeesToFit,
     std::vector<const InputTrack_t*>& seedTracks) const {
   for (const auto& fitPerigee : perigeesToFit) {
@@ -523,7 +526,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
 }
 
 template <typename vfitter_t, typename sfinder_t>
-int Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
+int
+Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
     const Vertex<InputTrack_t>& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
                        [this](TrackAtVertex<InputTrack_t> trk) {

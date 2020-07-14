@@ -34,7 +34,8 @@ TruthSeedSelector::TruthSeedSelector(const Config& cfg,
   }
 }
 
-ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
+ProcessCode
+TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
   // prepare input collections

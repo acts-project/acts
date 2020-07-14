@@ -24,7 +24,8 @@ FW::FlattenEvent::FlattenEvent(const Config& cfg, Acts::Logging::Level lvl)
   }
 }
 
-FW::ProcessCode FW::FlattenEvent::execute(const AlgorithmContext& ctx) const {
+FW::ProcessCode
+FW::FlattenEvent::execute(const AlgorithmContext& ctx) const {
   // setup input and output containers
   const auto& event =
       ctx.eventStore.get<std::vector<SimVertex>>(m_cfg.inputEvent);

@@ -60,9 +60,11 @@ class TrapezoidBounds : public PlanarBounds {
 
   ~TrapezoidBounds() override;
 
-  BoundsType type() const final;
+  BoundsType
+  type() const final;
 
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -108,14 +110,15 @@ class TrapezoidBounds : public PlanarBounds {
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
-              const BoundaryCheck& bcheck) const final;
+  bool
+  inside(const Vector2D& lposition, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lposition is the local position to check for the distance
   /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
+  double
+  distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///
@@ -125,19 +128,25 @@ class TrapezoidBounds : public PlanarBounds {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2D>
+  vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
-  const RectangleBounds& boundingBox() const final;
+  const RectangleBounds&
+  boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
  private:
   std::array<double, eSize> m_values;
@@ -145,16 +154,19 @@ class TrapezoidBounds : public PlanarBounds {
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> TrapezoidBounds::values() const {
+inline std::vector<double>
+TrapezoidBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void TrapezoidBounds::checkConsistency() noexcept(false) {
+inline void
+TrapezoidBounds::checkConsistency() noexcept(false) {
   if (get(eHalfLengthXnegY) <= 0. or get(eHalfLengthXposY) <= 0.) {
     throw std::invalid_argument("TrapezoidBounds: invalid local x setup");
   }

@@ -71,13 +71,18 @@ class SeedFilter {
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
   /// for all seeds with the same middle space point
   /// @return vector of all InternalSeeds that not filtered out
-  virtual void filterSeeds_1SpFixed(
+  virtual void
+  filterSeeds_1SpFixed(
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           seedsPerSpM,
       std::vector<Seed<external_spacepoint_t>>& outVec) const;
-  const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
-  const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
+  const SeedFilterConfig
+  getSeedFilterConfig() const {
+    return m_cfg;
+  }
+  const IExperimentCuts<external_spacepoint_t>*
+  getExperimentCuts() const {
     return m_experimentCuts;
   }
 

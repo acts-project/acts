@@ -79,11 +79,13 @@ struct CKFSourceLinkSelector {
   /// @param isOutlier The indicator for outlier or not
   ///
   template <typename calibrator_t, typename source_link_t>
-  Result<void> operator()(
-      const calibrator_t& calibrator, const BoundParameters& predictedParams,
-      const std::vector<source_link_t>& sourcelinks,
-      std::vector<std::pair<size_t, double>>& sourcelinkChi2,
-      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier) const {
+  Result<void>
+  operator()(const calibrator_t& calibrator,
+             const BoundParameters& predictedParams,
+             const std::vector<source_link_t>& sourcelinks,
+             std::vector<std::pair<size_t, double>>& sourcelinkChi2,
+             std::vector<size_t>& sourcelinkCandidateIndices,
+             bool& isOutlier) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     using CovMatrix_t = typename BoundParameters::CovMatrix_t;
@@ -208,7 +210,8 @@ struct CKFSourceLinkSelector {
   std::shared_ptr<const Logger> m_logger{nullptr};
 
   /// Getter for the logger, to support logging macros
-  const Logger& logger() const {
+  const Logger&
+  logger() const {
     assert(m_logger);
     return *m_logger;
   }

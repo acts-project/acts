@@ -94,7 +94,8 @@ FW::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
   m_outputFile->Close();
 }
 
-FW::ProcessCode FW::RootMaterialTrackWriter::endRun() {
+FW::ProcessCode
+FW::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
   m_outputFile->cd();
@@ -102,7 +103,8 @@ FW::ProcessCode FW::RootMaterialTrackWriter::endRun() {
   return FW::ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
+FW::ProcessCode
+FW::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<Acts::RecordedMaterialTrack>& materialTracks) {
   // Exclusive access to the tree while writing

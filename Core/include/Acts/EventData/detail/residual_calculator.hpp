@@ -37,7 +37,8 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator {
   using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
 
-  static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
+  static ParVector_t
+  result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;
     residual_calculator_impl<parameter_indices_t, ParVector_t,
                              params...>::calculate(result, test, ref, 0);
@@ -48,8 +49,8 @@ struct residual_calculator {
 template <typename parameter_indices_t, typename R, parameter_indices_t first,
           parameter_indices_t... others>
 struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
-  static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
+  static void
+  calculate(R& result, const R& test, const R& ref, unsigned int pos) {
     result(pos) =
         ParameterTypeFor<parameter_indices_t, first>::type::getDifference(
             test(pos), ref(pos));
@@ -61,8 +62,8 @@ struct residual_calculator_impl<parameter_indices_t, R, first, others...> {
 
 template <typename parameter_indices_t, typename R, parameter_indices_t last>
 struct residual_calculator_impl<parameter_indices_t, R, last> {
-  static void calculate(R& result, const R& test, const R& ref,
-                        unsigned int pos) {
+  static void
+  calculate(R& result, const R& test, const R& ref, unsigned int pos) {
     result(pos) =
         ParameterTypeFor<parameter_indices_t, last>::type::getDifference(
             test(pos), ref(pos));

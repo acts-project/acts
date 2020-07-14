@@ -45,15 +45,18 @@ class RootVertexAndTracksReader final : public IReader {
   ~RootVertexAndTracksReader() final override;
 
   /// Framework name() method
-  std::string name() const final override;
+  std::string
+  name() const final override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t>
+  availableEvents() const final override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(const FW::AlgorithmContext& context) final override;
+  ProcessCode
+  read(const FW::AlgorithmContext& context) final override;
 
  private:
   /// The config class
@@ -81,7 +84,10 @@ class RootVertexAndTracksReader final : public IReader {
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 };
 
 }  // namespace FW

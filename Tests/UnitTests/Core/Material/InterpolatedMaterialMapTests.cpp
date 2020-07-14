@@ -27,7 +27,8 @@ constexpr unsigned int dim = 2;
 using grid_t = detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
                             detail::EquidistantAxis>;
 
-ActsVectorD<dim> trafoGlobalToLocal(const Vector3D& global) {
+ActsVectorD<dim>
+trafoGlobalToLocal(const Vector3D& global) {
   return {global.x(), global.y()};
 }
 

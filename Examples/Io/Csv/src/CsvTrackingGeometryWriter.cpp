@@ -40,7 +40,8 @@ CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
   }
 }
 
-std::string CsvTrackingGeometryWriter::name() const {
+std::string
+CsvTrackingGeometryWriter::name() const {
   return "CsvTrackingGeometryWriter";
 }
 
@@ -48,8 +49,9 @@ namespace {
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
 
 /// Write a single surface.
-void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
-                  const Acts::GeometryContext& geoCtx) {
+void
+writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
+             const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
 
   // encoded and partially decoded geometry identifier
@@ -121,8 +123,9 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
 }
 
 /// Write all child surfaces and descend into confined volumes.
-void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
-                 const Acts::GeometryContext& geoCtx) {
+void
+writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
+            const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
     for (auto layer : volume.confinedLayers()->arrayObjects()) {
@@ -149,7 +152,8 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
 }
 }  // namespace
 
-ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
+ProcessCode
+CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   if (not m_cfg.writePerEvent) {
     return ProcessCode::SUCCESS;
   }
@@ -160,7 +164,8 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode CsvTrackingGeometryWriter::endRun() {
+ProcessCode
+CsvTrackingGeometryWriter::endRun() {
   SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
                        m_cfg.outputPrecision);
   writeVolume(writer, *m_world, Acts::GeometryContext());

@@ -30,7 +30,8 @@ class SteppingAction;
 class EventAction final : public G4UserEventAction {
  public:
   /// Static access method
-  static EventAction* instance();
+  static EventAction*
+  instance();
 
   /// Construct the action and ensure singleton usage.
   EventAction();
@@ -39,21 +40,25 @@ class EventAction final : public G4UserEventAction {
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
   /// @note resets the material step action
-  void BeginOfEventAction(const G4Event* event) final override;
+  void
+  BeginOfEventAction(const G4Event* event) final override;
 
   /// Interface method for end of event
   /// @param event is the G4Event to be processed
   /// @note this method is writing out the material track records
-  void EndOfEventAction(const G4Event* event) final override;
+  void
+  EndOfEventAction(const G4Event* event) final override;
 
   /// Clear the recorded data.
-  void clear();
+  void
+  clear();
 
   /// Access the recorded material tracks.
   ///
   /// This only contains valid data after the end-of-event action has been
   /// executed.
-  const std::vector<Acts::RecordedMaterialTrack>& materialTracks() const;
+  const std::vector<Acts::RecordedMaterialTrack>&
+  materialTracks() const;
 
  private:
   /// Instance of the EventAction

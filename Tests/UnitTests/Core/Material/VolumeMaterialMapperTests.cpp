@@ -52,8 +52,9 @@ struct MaterialCollector {
   using result_type = this_result;
 
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     if (state.navigation.currentVolume != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(

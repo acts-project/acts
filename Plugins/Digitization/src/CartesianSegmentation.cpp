@@ -42,7 +42,8 @@ Acts::CartesianSegmentation::CartesianSegmentation(
 
 Acts::CartesianSegmentation::~CartesianSegmentation() = default;
 
-void Acts::CartesianSegmentation::createSegmentationSurfaces(
+void
+Acts::CartesianSegmentation::createSegmentationSurfaces(
     SurfacePtrVector& boundarySurfaces, SurfacePtrVector& segmentationSurfacesX,
     SurfacePtrVector& segmentationSurfacesY, double halfThickness,
     int readoutDirection, double lorentzAngle) const {
@@ -217,8 +218,8 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   }
 }
 
-Acts::Vector2D Acts::CartesianSegmentation::cellPosition(
-    const DigitizationCell& dCell) const {
+Acts::Vector2D
+Acts::CartesianSegmentation::cellPosition(const DigitizationCell& dCell) const {
   double bX = m_binUtility->bins(0) > 1
                   ? m_binUtility->binningData()[0].center(dCell.channel0)
                   : 0.;
@@ -230,9 +231,12 @@ Acts::Vector2D Acts::CartesianSegmentation::cellPosition(
 
 /** Get the digitization cell from 3D position, it used the projection to the
  * readout surface to estimate the 2D positon */
-Acts::DigitizationStep Acts::CartesianSegmentation::digitizationStep(
-    const Vector3D& startStep, const Vector3D& endStep, double halfThickness,
-    int readoutDirection, double lorentzAngle) const {
+Acts::DigitizationStep
+Acts::CartesianSegmentation::digitizationStep(const Vector3D& startStep,
+                                              const Vector3D& endStep,
+                                              double halfThickness,
+                                              int readoutDirection,
+                                              double lorentzAngle) const {
   Vector3D stepCenter = 0.5 * (startStep + endStep);
   // take the full drift length
   // this is the absolute drift in z

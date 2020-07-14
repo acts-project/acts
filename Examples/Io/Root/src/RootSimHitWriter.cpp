@@ -67,7 +67,8 @@ FW::RootSimHitWriter::~RootSimHitWriter() {
   }
 }
 
-FW::ProcessCode FW::RootSimHitWriter::endRun() {
+FW::ProcessCode
+FW::RootSimHitWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -77,8 +78,9 @@ FW::ProcessCode FW::RootSimHitWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootSimHitWriter::writeT(const AlgorithmContext& ctx,
-                                             const FW::SimHitContainer& hits) {
+FW::ProcessCode
+FW::RootSimHitWriter::writeT(const AlgorithmContext& ctx,
+                             const FW::SimHitContainer& hits) {
   if (not m_outputFile) {
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;

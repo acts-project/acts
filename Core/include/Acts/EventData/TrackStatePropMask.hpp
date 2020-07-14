@@ -32,8 +32,8 @@ enum struct TrackStatePropMask : uint8_t {
   All = std::numeric_limits<uint8_t>::max(),  // should be all ones
 };
 
-constexpr TrackStatePropMask operator|(TrackStatePropMask lhs,
-                                       TrackStatePropMask rhs) {
+constexpr TrackStatePropMask
+operator|(TrackStatePropMask lhs, TrackStatePropMask rhs) {
   return static_cast<TrackStatePropMask>(
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
@@ -46,36 +46,37 @@ constexpr TrackStatePropMask operator&(TrackStatePropMask lhs,
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
 }
 
-constexpr TrackStatePropMask operator^(TrackStatePropMask lhs,
-                                       TrackStatePropMask rhs) {
+constexpr TrackStatePropMask
+operator^(TrackStatePropMask lhs, TrackStatePropMask rhs) {
   return static_cast<TrackStatePropMask>(
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
 }
 
-constexpr TrackStatePropMask operator~(TrackStatePropMask op) {
+constexpr TrackStatePropMask
+operator~(TrackStatePropMask op) {
   return static_cast<TrackStatePropMask>(
       ~static_cast<std::underlying_type<TrackStatePropMask>::type>(op));
 }
 
-constexpr TrackStatePropMask& operator|=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
+constexpr TrackStatePropMask&
+operator|=(TrackStatePropMask& lhs, TrackStatePropMask rhs) {
   lhs = static_cast<TrackStatePropMask>(
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) |
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
   return lhs;
 }
 
-constexpr TrackStatePropMask& operator&=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
+constexpr TrackStatePropMask&
+operator&=(TrackStatePropMask& lhs, TrackStatePropMask rhs) {
   lhs = static_cast<TrackStatePropMask>(
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) &
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
   return lhs;
 }
 
-constexpr TrackStatePropMask& operator^=(TrackStatePropMask& lhs,
-                                         TrackStatePropMask rhs) {
+constexpr TrackStatePropMask&
+operator^=(TrackStatePropMask& lhs, TrackStatePropMask rhs) {
   lhs = static_cast<TrackStatePropMask>(
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));

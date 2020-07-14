@@ -18,7 +18,8 @@ using namespace ActsExamples;
 
 SteppingAction* SteppingAction::s_instance = nullptr;
 
-SteppingAction* SteppingAction::instance() {
+SteppingAction*
+SteppingAction::instance() {
   return s_instance;
 }
 
@@ -35,7 +36,8 @@ SteppingAction::~SteppingAction() {
   s_instance = nullptr;
 }
 
-void SteppingAction::UserSteppingAction(const G4Step* step) {
+void
+SteppingAction::UserSteppingAction(const G4Step* step) {
   // get the material
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
 
@@ -123,7 +125,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
   }
 }
 
-void SteppingAction::clear() {
+void
+SteppingAction::clear() {
   m_materialSteps.clear();
   m_trackSteps.clear();
 }

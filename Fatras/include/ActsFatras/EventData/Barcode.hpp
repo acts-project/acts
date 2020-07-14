@@ -99,31 +99,62 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   using Base::Value;
 
   /// Return the primary vertex identifier.
-  constexpr Value vertexPrimary() const { return level(0); }
+  constexpr Value
+  vertexPrimary() const {
+    return level(0);
+  }
   /// Return the secondary vertex identifier.
-  constexpr Value vertexSecondary() const { return level(1); }
+  constexpr Value
+  vertexSecondary() const {
+    return level(1);
+  }
   /// Return the particle identifier.
-  constexpr Value particle() const { return level(2); }
+  constexpr Value
+  particle() const {
+    return level(2);
+  }
   /// Return the generation identifier.
-  constexpr Value generation() const { return level(3); }
+  constexpr Value
+  generation() const {
+    return level(3);
+  }
   /// Return the sub-particle identifier.
-  constexpr Value subParticle() const { return level(4); }
+  constexpr Value
+  subParticle() const {
+    return level(4);
+  }
 
   /// Set the primary vertex identifier.
-  constexpr Barcode& setVertexPrimary(Value id) { return set(0, id), *this; }
+  constexpr Barcode&
+  setVertexPrimary(Value id) {
+    return set(0, id), *this;
+  }
   /// Set the secondary vertex identifier.
-  constexpr Barcode& setVertexSecondary(Value id) { return set(1, id), *this; }
+  constexpr Barcode&
+  setVertexSecondary(Value id) {
+    return set(1, id), *this;
+  }
   /// Set the parent particle identifier.
-  constexpr Barcode& setParticle(Value id) { return set(2, id), *this; }
+  constexpr Barcode&
+  setParticle(Value id) {
+    return set(2, id), *this;
+  }
   /// Set the particle identifier.
-  constexpr Barcode& setGeneration(Value id) { return set(3, id), *this; }
+  constexpr Barcode&
+  setGeneration(Value id) {
+    return set(3, id), *this;
+  }
   /// Set the process identifier.
-  constexpr Barcode& setSubParticle(Value id) { return set(4, id), *this; }
+  constexpr Barcode&
+  setSubParticle(Value id) {
+    return set(4, id), *this;
+  }
 
   /// Construct a new barcode representing a descendant particle.
   ///
   /// @param sub sub-particle index of the new barcode.
-  Barcode makeDescendant(Value sub = 0u) const {
+  Barcode
+  makeDescendant(Value sub = 0u) const {
     return Barcode(*this).setGeneration(generation() + 1).setSubParticle(sub);
   }
 };
@@ -134,7 +165,8 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
 namespace std {
 template <>
 struct hash<ActsFatras::Barcode> {
-  auto operator()(ActsFatras::Barcode barcode) const noexcept {
+  auto
+  operator()(ActsFatras::Barcode barcode) const noexcept {
     return std::hash<ActsFatras::Barcode::Value>()(barcode.value());
   }
 };

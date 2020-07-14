@@ -26,14 +26,16 @@ Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
   setConfiguration(cgbConfig);
 }
 
-void Acts::TrackingGeometryBuilder::setConfiguration(
+void
+Acts::TrackingGeometryBuilder::setConfiguration(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig) {
   // @todo check consistency
   // copy the configuration
   m_cfg = cgbConfig;
 }
 
-void Acts::TrackingGeometryBuilder::setLogger(
+void
+Acts::TrackingGeometryBuilder::setLogger(
     std::unique_ptr<const Logger> newLogger) {
   m_logger = std::move(newLogger);
 }

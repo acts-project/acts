@@ -11,26 +11,29 @@
 #include <iomanip>
 #include <iostream>
 
-Acts::SurfaceBounds::BoundsType Acts::LineBounds::type() const {
+Acts::SurfaceBounds::BoundsType
+Acts::LineBounds::type() const {
   return SurfaceBounds::eLine;
 }
 
-bool Acts::LineBounds::inside(const Acts::Vector2D& lposition,
-                              const Acts::BoundaryCheck& bcheck) const {
+bool
+Acts::LineBounds::inside(const Acts::Vector2D& lposition,
+                         const Acts::BoundaryCheck& bcheck) const {
   double r = get(LineBounds::eR);
   double halfLengthZ = get(LineBounds::eHalfLengthZ);
   return bcheck.isInside(lposition, Vector2D(-r, -halfLengthZ),
                          Vector2D(r, halfLengthZ));
 }
 
-double Acts::LineBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
+double
+Acts::LineBounds::distanceToBoundary(const Acts::Vector2D& lposition) const {
   // per definition the min Distance of a correct local position is r
   return lposition[Acts::eLOC_R];
 }
 
 // ostream operator overload
-std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
+std::ostream&
+Acts::LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::LineBounds: (radius, halflengthInZ) = ";

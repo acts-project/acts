@@ -18,13 +18,14 @@ namespace Options {
 /// Add TrackFinding options.
 ///
 /// @param desc The options description to add options to
-void addTrackFindingOptions(Description& desc);
+void
+addTrackFindingOptions(Description& desc);
 
 /// Read TrackFinding options to create the algorithm config.
 ///
 /// @param variables The variables to read from
-TrackFindingAlgorithm::Config readTrackFindingConfig(
-    const Variables& variables);
+TrackFindingAlgorithm::Config
+readTrackFindingConfig(const Variables& variables);
 
 }  // namespace Options
 }  // namespace FW

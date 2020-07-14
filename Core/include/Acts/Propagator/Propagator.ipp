@@ -10,7 +10,8 @@
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
-auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
+auto
+Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
     -> Result<result_t> {
   result_t result;
 
@@ -86,8 +87,9 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const propagator_options_t& options) const
+auto
+Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                  const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         CurvilinearParameters,
         typename propagator_options_t::action_list_type>> {
@@ -154,9 +156,10 @@ auto Acts::Propagator<S, N>::propagate(
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename target_aborter_t, typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const Surface& target,
-    const propagator_options_t& options) const
+auto
+Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                  const Surface& target,
+                                  const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         BoundParameters, typename propagator_options_t::action_list_type>> {
   static_assert(ParameterConcept<parameters_t>,
@@ -220,7 +223,8 @@ auto Acts::Propagator<S, N>::propagate(
 
 template <typename S, typename N>
 template <typename propagator_state_t>
-void Acts::Propagator<S, N>::debugLog(
+void
+Acts::Propagator<S, N>::debugLog(
     propagator_state_t& state,
     const std::function<std::string()>& logAction) const {
   if (state.options.debug) {

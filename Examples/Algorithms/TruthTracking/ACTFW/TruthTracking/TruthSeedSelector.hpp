@@ -57,7 +57,8 @@ class TruthSeedSelector final : public BareAlgorithm {
 
   TruthSeedSelector(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override final;
+  ProcessCode
+  execute(const AlgorithmContext& ctx) const override final;
 
  private:
   Config m_cfg;

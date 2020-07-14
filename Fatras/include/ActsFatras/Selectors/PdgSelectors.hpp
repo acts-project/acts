@@ -18,7 +18,8 @@ namespace ActsFatras {
 /// Particle and Antiparticle are treated as two separate types.
 template <Acts::PdgParticle Pdg>
 struct PdgSelector {
-  bool operator()(const Particle &particle) const {
+  bool
+  operator()(const Particle &particle) const {
     return (particle.pdg() == Pdg);
   }
 };
@@ -26,7 +27,8 @@ struct PdgSelector {
 /// Select particles and antiparticles of one specific type.
 template <Acts::PdgParticle Pdg>
 struct AbsPdgSelector {
-  bool operator()(const Particle &particle) const {
+  bool
+  operator()(const Particle &particle) const {
     return (makeAbsolutePdgParticle(particle.pdg()) ==
             makeAbsolutePdgParticle(Pdg));
   }
@@ -37,7 +39,8 @@ struct AbsPdgSelector {
 /// Particle and Antiparticle are treated as two separate types.
 template <Acts::PdgParticle Pdg>
 struct PdgExcluder {
-  bool operator()(const Particle &particle) const {
+  bool
+  operator()(const Particle &particle) const {
     return (particle.pdg() != Pdg);
   }
 };
@@ -45,7 +48,8 @@ struct PdgExcluder {
 /// Select all particles except for (anti-)particles of one specific type.
 template <Acts::PdgParticle Pdg>
 struct AbsPdgExcluder {
-  bool operator()(const Particle &particle) const {
+  bool
+  operator()(const Particle &particle) const {
     return (makeAbsolutePdgParticle(particle.pdg()) !=
             makeAbsolutePdgParticle(Pdg));
   }

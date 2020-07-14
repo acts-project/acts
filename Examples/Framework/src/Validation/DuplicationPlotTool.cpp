@@ -20,7 +20,8 @@ FW::DuplicationPlotTool::DuplicationPlotTool(
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {}
 
-void FW::DuplicationPlotTool::book(
+void
+FW::DuplicationPlotTool::book(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
@@ -52,7 +53,8 @@ void FW::DuplicationPlotTool::book(
       bNum);
 }
 
-void FW::DuplicationPlotTool::clear(
+void
+FW::DuplicationPlotTool::clear(
     DuplicationPlotCache& duplicationPlotCache) const {
   delete duplicationPlotCache.duplicationRate_vs_pT;
   delete duplicationPlotCache.duplicationRate_vs_eta;
@@ -62,9 +64,9 @@ void FW::DuplicationPlotTool::clear(
   delete duplicationPlotCache.nDuplicated_vs_phi;
 }
 
-void FW::DuplicationPlotTool::write(
-    const DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache)
-    const {
+void
+FW::DuplicationPlotTool::write(const DuplicationPlotTool::DuplicationPlotCache&
+                                   duplicationPlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   duplicationPlotCache.duplicationRate_vs_pT->Write();
   duplicationPlotCache.duplicationRate_vs_eta->Write();
@@ -74,7 +76,8 @@ void FW::DuplicationPlotTool::write(
   duplicationPlotCache.nDuplicated_vs_phi->Write();
 }
 
-void FW::DuplicationPlotTool::fill(
+void
+FW::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundParameters& fittedParameters, bool status) const {
   const auto& momentum = fittedParameters.momentum();
@@ -90,7 +93,8 @@ void FW::DuplicationPlotTool::fill(
                        status);
 }
 
-void FW::DuplicationPlotTool::fill(
+void
+FW::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
   const auto t_phi = phi(truthParticle.unitDirection());

@@ -64,7 +64,8 @@ FW::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   }
 }
 
-FW::ProcessCode FW::TrackFitterPerformanceWriter::endRun() {
+FW::ProcessCode
+FW::TrackFitterPerformanceWriter::endRun() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
@@ -79,7 +80,8 @@ FW::ProcessCode FW::TrackFitterPerformanceWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::TrackFitterPerformanceWriter::writeT(
+FW::ProcessCode
+FW::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
   // Read truth particles from input collection
   const auto& particles =

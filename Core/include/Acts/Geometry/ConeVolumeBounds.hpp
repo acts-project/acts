@@ -86,21 +86,27 @@ class ConeVolumeBounds : public VolumeBounds {
 
   ~ConeVolumeBounds() override = default;
 
-  ConeVolumeBounds& operator=(const ConeVolumeBounds& cobo) = default;
+  ConeVolumeBounds&
+  operator=(const ConeVolumeBounds& cobo) = default;
 
-  VolumeBounds::BoundsType type() const final { return VolumeBounds::eCone; }
+  VolumeBounds::BoundsType
+  type() const final {
+    return VolumeBounds::eCone;
+  }
 
   /// Return the bound values as dynamically sized vector
   ///
   /// @return this returns a copy of the internal values
-  std::vector<double> values() const final;
+  std::vector<double>
+  values() const final;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is the position in volume frame to be checked
   /// @param tol is the absolute tolerance to be applied
-  bool inside(const Vector3D& pos, double tol = 0.) const final;
+  bool
+  inside(const Vector3D& pos, double tol = 0.) const final;
 
   /// Oriented surfaces, i.e. the decomposed boundary surfaces and the
   /// according navigation direction into the volume given the normal
@@ -112,58 +118,72 @@ class ConeVolumeBounds : public VolumeBounds {
   /// It will throw an exception if the orientation prescription is not adequate
   ///
   /// @return a vector of surfaces bounding this volume
-  OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const final;
+  OrientedSurfaces
+  orientedSurfaces(const Transform3D* transform = nullptr) const final;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform
   /// @param envelope Optional envelope to add / subtract from min/max
   /// @param entity Entity to associate this bounding box with
   /// @return Constructed bounding box
-  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
-                                  const Vector3D& envelope = {0, 0, 0},
-                                  const Volume* entity = nullptr) const final;
+  Volume::BoundingBox
+  boundingBox(const Transform3D* trf = nullptr,
+              const Vector3D& envelope = {0, 0, 0},
+              const Volume* entity = nullptr) const final;
 
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
-  double get(BoundValues bValue) const { return m_values[bValue]; }
+  double
+  get(BoundValues bValue) const {
+    return m_values[bValue];
+  }
 
   // Return the derived innerRmin
-  double innerRmin() const;
+  double
+  innerRmin() const;
 
   // Return the derived innerRmin
-  double innerRmax() const;
+  double
+  innerRmax() const;
 
   // Return the derived inner tan(alpha)
-  double innerTanAlpha() const;
+  double
+  innerTanAlpha() const;
 
   // Return the derived outerRmin
-  double outerRmin() const;
+  double
+  outerRmin() const;
 
   // Return the derived outerRmax
-  double outerRmax() const;
+  double
+  outerRmax() const;
 
   // Return the derived outer tan(alpha)
-  double outerTanAlpha() const;
+  double
+  outerTanAlpha() const;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is ostream operator to be dumped into
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
  private:
   /// Check the input values for consistency,
   /// will throw a logic_exception if consistency is not given
-  void checkConsistency() noexcept(false);
+  void
+  checkConsistency() noexcept(false);
 
   /// Create the surface bounds
-  void buildSurfaceBounds();
+  void
+  buildSurfaceBounds();
 
   /// Templated dump methos
   /// @tparam stream_t The type of the stream for dumping
   /// @param dt The stream object
   template <class stream_t>
-  stream_t& dumpT(stream_t& dt) const;
+  stream_t&
+  dumpT(stream_t& dt) const;
 
   /// The bound values
   std::array<double, eSize> m_values;
@@ -184,38 +204,46 @@ class ConeVolumeBounds : public VolumeBounds {
   double m_outerTanAlpha = 0.;
 };
 
-inline double ConeVolumeBounds::innerRmin() const {
+inline double
+ConeVolumeBounds::innerRmin() const {
   return m_innerRmin;
 }
 
-inline double ConeVolumeBounds::innerRmax() const {
+inline double
+ConeVolumeBounds::innerRmax() const {
   return m_innerRmax;
 }
 
-inline double ConeVolumeBounds::innerTanAlpha() const {
+inline double
+ConeVolumeBounds::innerTanAlpha() const {
   return m_innerTanAlpha;
 }
 
-inline double ConeVolumeBounds::outerRmin() const {
+inline double
+ConeVolumeBounds::outerRmin() const {
   return m_outerRmin;
 }
 
-inline double ConeVolumeBounds::outerRmax() const {
+inline double
+ConeVolumeBounds::outerRmax() const {
   return m_outerRmax;
 }
 
-inline double ConeVolumeBounds::outerTanAlpha() const {
+inline double
+ConeVolumeBounds::outerTanAlpha() const {
   return m_outerTanAlpha;
 }
 
-inline std::vector<double> ConeVolumeBounds::values() const {
+inline std::vector<double>
+ConeVolumeBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
 template <class stream_t>
-stream_t& ConeVolumeBounds::dumpT(stream_t& dt) const {
+stream_t&
+ConeVolumeBounds::dumpT(stream_t& dt) const {
   dt << std::setiosflags(std::ios::fixed);
   dt << std::setprecision(5);
   dt << "Acts::ConeVolumeBounds : (innerAlpha, innerOffsetZ, outerAlpha,";

@@ -90,38 +90,43 @@ class LayerBuilderT : public Acts::ILayerBuilder {
                                            Acts::Logging::INFO));
 
   /// LayerBuilder interface method - returning the layers at negative side
-  const Acts::LayerVector negativeLayers(
-      const Acts::GeometryContext& gctx) const final override;
+  const Acts::LayerVector
+  negativeLayers(const Acts::GeometryContext& gctx) const final override;
 
   /// LayerBuilder interface method - returning the central layers
-  const Acts::LayerVector centralLayers(
-      const Acts::GeometryContext& gctx) const final override;
+  const Acts::LayerVector
+  centralLayers(const Acts::GeometryContext& gctx) const final override;
 
   /// LayerBuilder interface method - returning the layers at positive side
-  const Acts::LayerVector positiveLayers(
-      const Acts::GeometryContext& gctx) const final override;
+  const Acts::LayerVector
+  positiveLayers(const Acts::GeometryContext& gctx) const final override;
 
   /// ILayerBuilder method
-  const std::string& identification() const final override {
+  const std::string&
+  identification() const final override {
     return m_cfg.layerIdentification;
   }
 
  private:
-  const Acts::LayerVector constructEndcapLayers(
-      const Acts::GeometryContext& gctx, int side) const;
+  const Acts::LayerVector
+  constructEndcapLayers(const Acts::GeometryContext& gctx, int side) const;
 
   /// Configuration member
   Config m_cfg;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_logger;
+  }
 
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 template <typename detector_element_t>
-const Acts::LayerVector LayerBuilderT<detector_element_t>::centralLayers(
+const Acts::LayerVector
+LayerBuilderT<detector_element_t>::centralLayers(
     const Acts::GeometryContext& gctx) const {
   // create the vector
   Acts::LayerVector cLayers;
@@ -169,13 +174,15 @@ const Acts::LayerVector LayerBuilderT<detector_element_t>::centralLayers(
 }
 
 template <typename detector_element_t>
-const Acts::LayerVector LayerBuilderT<detector_element_t>::negativeLayers(
+const Acts::LayerVector
+LayerBuilderT<detector_element_t>::negativeLayers(
     const Acts::GeometryContext& gctx) const {
   return constructEndcapLayers(gctx, -1);
 }
 
 template <typename detector_element_t>
-const Acts::LayerVector LayerBuilderT<detector_element_t>::positiveLayers(
+const Acts::LayerVector
+LayerBuilderT<detector_element_t>::positiveLayers(
     const Acts::GeometryContext& gctx) const {
   return constructEndcapLayers(gctx, 1);
 }

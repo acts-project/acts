@@ -27,8 +27,9 @@ struct MockPhysicsList {
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool operator()(generator_t &, const Acts::MaterialProperties &,
-                  Particle &particle, std::vector<Particle> &generated) const {
+  bool
+  operator()(generator_t &, const Acts::MaterialProperties &,
+             Particle &particle, std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
@@ -50,12 +51,25 @@ struct MockStepper {
   using Scalar = MockStepperState::Scalar;
   using Vector3 = MockStepperState::Vector3;
 
-  auto position(MockStepperState &state) const { return state.position; }
-  auto time(MockStepperState &state) const { return state.time; }
-  auto direction(MockStepperState &state) const { return state.direction; }
-  auto momentum(MockStepperState &state) const { return state.momentum; }
-  void update(MockStepperState &state, const Vector3 &position,
-              const Vector3 &direction, Scalar momentum, Scalar time) {
+  auto
+  position(MockStepperState &state) const {
+    return state.position;
+  }
+  auto
+  time(MockStepperState &state) const {
+    return state.time;
+  }
+  auto
+  direction(MockStepperState &state) const {
+    return state.direction;
+  }
+  auto
+  momentum(MockStepperState &state) const {
+    return state.momentum;
+  }
+  void
+  update(MockStepperState &state, const Vector3 &position,
+         const Vector3 &direction, Scalar momentum, Scalar time) {
     state.position = position;
     state.time = time;
     state.direction = direction;
@@ -107,14 +121,16 @@ struct Fixture {
 };
 
 // make a surface without material.
-std::shared_ptr<Acts::Surface> makeEmptySurface() {
+std::shared_ptr<Acts::Surface>
+makeEmptySurface() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3D(1, 2, 3), Acts::Vector3D(1, 0, 0));
   return surface;
 }
 
 // make a surface with material.
-std::shared_ptr<Acts::Surface> makeMaterialSurface() {
+std::shared_ptr<Acts::Surface>
+makeMaterialSurface() {
   auto surface = makeEmptySurface();
   auto slab = Acts::Test::makePercentSlab();
   surface->assignSurfaceMaterial(

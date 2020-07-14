@@ -6,28 +6,33 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector3D PlaneSurface::normal(const GeometryContext& gctx,
-                                           const Vector2D& /*lpos*/) const {
+inline const Vector3D
+PlaneSurface::normal(const GeometryContext& gctx,
+                     const Vector2D& /*lpos*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D PlaneSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+inline const Vector3D
+PlaneSurface::binningPosition(const GeometryContext& gctx,
+                              BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                           const Vector3D& position,
-                                           const Vector3D& direction) const {
+inline double
+PlaneSurface::pathCorrection(const GeometryContext& gctx,
+                             const Vector3D& position,
+                             const Vector3D& direction) const {
   // We can ignore the global position here
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
-inline Intersection PlaneSurface::intersectionEstimate(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+inline Intersection
+PlaneSurface::intersectionEstimate(const GeometryContext& gctx,
+                                   const Vector3D& position,
+                                   const Vector3D& direction,
+                                   const BoundaryCheck& bcheck) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces

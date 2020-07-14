@@ -28,7 +28,8 @@ struct sinfo {
   float range_max;
 };
 
-std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
+std::ostream&
+Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
   os << "[ " << std::setw(3) << id.volume();
   os << " | " << std::setw(3) << id.boundary();
   os << " | " << std::setw(3) << id.layer();
@@ -39,8 +40,8 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
 
 /// Parse the surface map json file to associate the surface name to each id
 
-void Parse_Json(const json& Det,
-                std::map<std::string, std::string>& surface_name) {
+void
+Parse_Json(const json& Det, std::map<std::string, std::string>& surface_name) {
   std::string name;
   for (auto& [key, value] : Det.items()) {
     // Check if this the volume key
@@ -86,10 +87,11 @@ void Parse_Json(const json& Det,
 
 /// Initialise the information on each surface.
 
-void Initialise_info(sinfo& surface_info,
-                     const std::map<std::string, std::string>& surface_name,
-                     const uint64_t& id, const int& type, const float& pos,
-                     const float& range_min, const float& range_max) {
+void
+Initialise_info(sinfo& surface_info,
+                const std::map<std::string, std::string>& surface_name,
+                const uint64_t& id, const int& type, const float& pos,
+                const float& range_min, const float& range_max) {
   Acts::GeometryID ID(id);
   std::ostringstream layerID;
   layerID << ID;

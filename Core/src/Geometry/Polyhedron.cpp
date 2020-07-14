@@ -12,7 +12,8 @@
 
 #include <algorithm>
 
-void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
+void
+Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();
   vertices.insert(vertices.end(), other.vertices.begin(), other.vertices.end());
   /// Add the new faces with offsets
@@ -30,12 +31,14 @@ void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   join(triangularMesh, other.triangularMesh);
 }
 
-void Acts::Polyhedron::move(const Transform3D& transform) {
+void
+Acts::Polyhedron::move(const Transform3D& transform) {
   for_each(vertices.begin(), vertices.end(),
            [&](auto& v) { v = transform * v; });
 }
 
-Acts::Extent Acts::Polyhedron::extent(const Transform3D& transform) const {
+Acts::Extent
+Acts::Polyhedron::extent(const Transform3D& transform) const {
   Extent extent;
   auto vtxs = vertices;
   std::transform(vtxs.begin(), vtxs.end(), vtxs.begin(), [&](auto& v) {

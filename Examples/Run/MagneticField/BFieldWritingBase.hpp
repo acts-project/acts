@@ -17,8 +17,9 @@ namespace FW {
 namespace BField {
 
 template <typename bfield_t>
-void writeField(boost::program_options::variables_map vm,
-                std::shared_ptr<const bfield_t> bField) {
+void
+writeField(boost::program_options::variables_map vm,
+           std::shared_ptr<const bfield_t> bField) {
   using Writer = FW::RootBFieldWriter<bfield_t>;
   using Config = typename Writer::Config;
   using GridType = typename Writer::GridType;

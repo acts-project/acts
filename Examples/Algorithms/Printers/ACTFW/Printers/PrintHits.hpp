@@ -37,7 +37,8 @@ class PrintHits : public BareAlgorithm {
 
   PrintHits(const Config& cfg, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode
+  execute(const AlgorithmContext& ctx) const;
 
  private:
   Config m_cfg;

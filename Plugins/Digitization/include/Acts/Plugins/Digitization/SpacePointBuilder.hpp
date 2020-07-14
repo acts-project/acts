@@ -23,15 +23,24 @@ struct SpacePoint {
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
-  double x() const { return vector(0); }
+  double
+  x() const {
+    return vector(0);
+  }
 
   /// @brief Getter of the second element in @p spacePoint
   /// @return Second element in @p spacePoint
-  double y() const { return vector(1); }
+  double
+  y() const {
+    return vector(1);
+  }
 
   /// @brief Getter of the third element in @p spacePoint
   /// @return Third element in @p spacePoint
-  double z() const { return vector(2); }
+  double
+  z() const {
+    return vector(2);
+  }
 };
 
 /// @struct SpacePointBuilder

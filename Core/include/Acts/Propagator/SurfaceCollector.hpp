@@ -33,7 +33,8 @@ struct SurfaceSelector {
   /// Call operator to check if a surface should be selected
   ///
   /// @param surface is the test surface
-  bool operator()(const Acts::Surface& surface) const {
+  bool
+  operator()(const Acts::Surface& surface) const {
     if (selectSensitive && surface.associatedDetectorElement() != nullptr) {
       return true;
     }
@@ -86,8 +87,9 @@ struct SurfaceCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_type& result) const {
     // The current surface has been assigned by the navigator
     if (state.navigation.currentSurface &&
         selector(*state.navigation.currentSurface)) {
@@ -111,8 +113,9 @@ struct SurfaceCollector {
   /// Pure observer interface
   /// - this does not apply to the surface collector
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/,
-                  const stepper_t& /*unused*/) const {}
+  void
+  operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const {
+  }
 
  private:
   /// The private propagation debug logging
@@ -127,8 +130,9 @@ struct SurfaceCollector {
   /// length
   /// @param logAction is a callable function that returns a streamable object
   template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
+  void
+  debugLog(propagator_state_t& state,
+           const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);

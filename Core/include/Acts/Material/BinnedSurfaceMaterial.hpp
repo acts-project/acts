@@ -66,10 +66,12 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Assignment Move operator
-  BinnedSurfaceMaterial& operator=(BinnedSurfaceMaterial&& bsm) = default;
+  BinnedSurfaceMaterial&
+  operator=(BinnedSurfaceMaterial&& bsm) = default;
 
   /// Assignment operator
-  BinnedSurfaceMaterial& operator=(const BinnedSurfaceMaterial& bsm) = default;
+  BinnedSurfaceMaterial&
+  operator=(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Destructor
   ~BinnedSurfaceMaterial() override = default;
@@ -77,26 +79,32 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Scale operator
   ///
   /// @param scale is the scale factor for the full material
-  BinnedSurfaceMaterial& operator*=(double scale) final;
+  BinnedSurfaceMaterial&
+  operator*=(double scale) final;
 
   /// Return the BinUtility
-  const BinUtility& binUtility() const;
+  const BinUtility&
+  binUtility() const;
 
   /// @copydoc SurfaceMaterial::fullMaterial
-  const MaterialPropertiesMatrix& fullMaterial() const;
+  const MaterialPropertiesMatrix&
+  fullMaterial() const;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
-  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
+  const MaterialProperties&
+  materialProperties(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
-  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
+  const MaterialProperties&
+  materialProperties(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
-  const MaterialProperties& materialProperties(size_t bin0,
-                                               size_t bin1) const final;
+  const MaterialProperties&
+  materialProperties(size_t bin0, size_t bin1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  std::ostream& toStream(std::ostream& sl) const final;
+  std::ostream&
+  toStream(std::ostream& sl) const final;
 
  private:
   /// The helper for the bin finding
@@ -106,17 +114,18 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   MaterialPropertiesMatrix m_fullMaterial;
 };
 
-inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
+inline const BinUtility&
+BinnedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
-inline const MaterialPropertiesMatrix& BinnedSurfaceMaterial::fullMaterial()
-    const {
+inline const MaterialPropertiesMatrix&
+BinnedSurfaceMaterial::fullMaterial() const {
   return m_fullMaterial;
 }
 
-inline const MaterialProperties& BinnedSurfaceMaterial::materialProperties(
-    size_t bin0, size_t bin1) const {
+inline const MaterialProperties&
+BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const {
   return m_fullMaterial[bin1][bin0];
 }
 }  // namespace Acts

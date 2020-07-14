@@ -21,7 +21,8 @@ using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 /// @param [in] direction Normalised direction vector
 ///
 /// @return Projection Jacobian
-FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
+FreeToBoundMatrix
+freeToCurvilinearJacobian(const Vector3D& direction) {
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
@@ -82,10 +83,11 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
 ///
 /// @return The projection jacobian from global end parameters to its local
 /// equivalentconst
-FreeToBoundMatrix surfaceDerivative(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    const FreeVector& parameters, BoundToFreeMatrix& jacobianLocalToGlobal,
-    const FreeVector& derivatives, const Surface& surface) {
+FreeToBoundMatrix
+surfaceDerivative(std::reference_wrapper<const GeometryContext> geoContext,
+                  const FreeVector& parameters,
+                  BoundToFreeMatrix& jacobianLocalToGlobal,
+                  const FreeVector& derivatives, const Surface& surface) {
   // Initialize the transport final frame jacobian
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Initalize the jacobian to local, returns the transposed ref frame
@@ -118,9 +120,10 @@ FreeToBoundMatrix surfaceDerivative(
 ///
 /// @return The projection jacobian from global end parameters to its local
 /// equivalent
-const FreeToBoundMatrix surfaceDerivative(
-    const Vector3D& direction, BoundToFreeMatrix& jacobianLocalToGlobal,
-    const FreeVector& derivatives) {
+const FreeToBoundMatrix
+surfaceDerivative(const Vector3D& direction,
+                  BoundToFreeMatrix& jacobianLocalToGlobal,
+                  const FreeVector& derivatives) {
   // Transport the covariance
   const ActsRowVectorD<3> normVec(direction);
   const BoundRowVector sfactors =
@@ -143,11 +146,11 @@ const FreeToBoundMatrix surfaceDerivative(
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] surface The surface the represents the local parametrisation
-void reinitializeJacobians(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    const Surface& surface) {
+void
+reinitializeJacobians(std::reference_wrapper<const GeometryContext> geoContext,
+                      FreeMatrix& transportJacobian, FreeVector& derivatives,
+                      BoundToFreeMatrix& jacobianLocalToGlobal,
+                      const FreeVector& parameters, const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
 
@@ -177,10 +180,10 @@ void reinitializeJacobians(
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
-void reinitializeJacobians(FreeMatrix& transportJacobian,
-                           FreeVector& derivatives,
-                           BoundToFreeMatrix& jacobianLocalToGlobal,
-                           const Vector3D& direction) {
+void
+reinitializeJacobians(FreeMatrix& transportJacobian, FreeVector& derivatives,
+                      BoundToFreeMatrix& jacobianLocalToGlobal,
+                      const Vector3D& direction) {
   // Reset the jacobians
   transportJacobian = FreeMatrix::Identity();
   derivatives = FreeVector::Zero();
@@ -214,12 +217,13 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
 
 namespace detail {
 
-BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
-                      Covariance& covarianceMatrix, Jacobian& jacobian,
-                      FreeMatrix& transportJacobian, FreeVector& derivatives,
-                      BoundToFreeMatrix& jacobianLocalToGlobal,
-                      const FreeVector& parameters, bool covTransport,
-                      double accumulatedPath, const Surface& surface) {
+BoundState
+boundState(std::reference_wrapper<const GeometryContext> geoContext,
+           Covariance& covarianceMatrix, Jacobian& jacobian,
+           FreeMatrix& transportJacobian, FreeVector& derivatives,
+           BoundToFreeMatrix& jacobianLocalToGlobal,
+           const FreeVector& parameters, bool covTransport,
+           double accumulatedPath, const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -241,13 +245,12 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
   ;
 }
 
-CurvilinearState curvilinearState(Covariance& covarianceMatrix,
-                                  Jacobian& jacobian,
-                                  FreeMatrix& transportJacobian,
-                                  FreeVector& derivatives,
-                                  BoundToFreeMatrix& jacobianLocalToGlobal,
-                                  const FreeVector& parameters,
-                                  bool covTransport, double accumulatedPath) {
+CurvilinearState
+curvilinearState(Covariance& covarianceMatrix, Jacobian& jacobian,
+                 FreeMatrix& transportJacobian, FreeVector& derivatives,
+                 BoundToFreeMatrix& jacobianLocalToGlobal,
+                 const FreeVector& parameters, bool covTransport,
+                 double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
@@ -269,10 +272,11 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
                          accumulatedPath);
 }
 
-void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
-                         FreeMatrix& transportJacobian, FreeVector& derivatives,
-                         BoundToFreeMatrix& jacobianLocalToGlobal,
-                         const Vector3D& direction) {
+void
+covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
+                    FreeMatrix& transportJacobian, FreeVector& derivatives,
+                    BoundToFreeMatrix& jacobianLocalToGlobal,
+                    const Vector3D& direction) {
   // Build the full jacobian
   jacobianLocalToGlobal = transportJacobian * jacobianLocalToGlobal;
   const FreeToBoundMatrix jacToLocal =
@@ -290,12 +294,12 @@ void covarianceTransport(Covariance& covarianceMatrix, Jacobian& jacobian,
   jacobian = jacFull;
 }
 
-void covarianceTransport(
-    std::reference_wrapper<const GeometryContext> geoContext,
-    Covariance& covarianceMatrix, Jacobian& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    const Surface& surface) {
+void
+covarianceTransport(std::reference_wrapper<const GeometryContext> geoContext,
+                    Covariance& covarianceMatrix, Jacobian& jacobian,
+                    FreeMatrix& transportJacobian, FreeVector& derivatives,
+                    BoundToFreeMatrix& jacobianLocalToGlobal,
+                    const FreeVector& parameters, const Surface& surface) {
   // Build the full jacobian
   jacobianLocalToGlobal = transportJacobian * jacobianLocalToGlobal;
   const FreeToBoundMatrix jacToLocal = surfaceDerivative(

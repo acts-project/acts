@@ -90,55 +90,74 @@ struct PropagatorState {
     };
 
     /// Global particle position accessor
-    Vector3D position(const State& state) const { return state.pos; }
+    Vector3D
+    position(const State& state) const {
+      return state.pos;
+    }
 
     /// Momentum direction accessor
-    Vector3D direction(const State& state) const { return state.dir; }
+    Vector3D
+    direction(const State& state) const {
+      return state.dir;
+    }
 
     /// Momentum accessor
-    double momentum(const State& state) const { return state.p; }
+    double
+    momentum(const State& state) const {
+      return state.p;
+    }
 
     /// Charge access
-    double charge(const State& state) const { return state.q; }
+    double
+    charge(const State& state) const {
+      return state.q;
+    }
 
     /// Time access
-    double time(const State& state) const { return state.t; }
+    double
+    time(const State& state) const {
+      return state.t;
+    }
 
     /// Overstep limit access
-    double overstepLimit(const State& /*state*/) const {
+    double
+    overstepLimit(const State& /*state*/) const {
       return s_onSurfaceTolerance;
     }
 
-    Intersection::Status updateSurfaceStatus(
-        State& state, const Surface& surface,
-        const BoundaryCheck& bcheck) const {
+    Intersection::Status
+    updateSurfaceStatus(State& state, const Surface& surface,
+                        const BoundaryCheck& bcheck) const {
       return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck);
     }
 
     template <typename object_intersection_t>
-    void updateStepSize(State& state,
-                        const object_intersection_t& oIntersection,
-                        bool release = true) const {
+    void
+    updateStepSize(State& state, const object_intersection_t& oIntersection,
+                   bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
-    void setStepSize(
-        State& state, double stepSize,
-        ConstrainedStep::Type stype = ConstrainedStep::actor) const {
+    void
+    setStepSize(State& state, double stepSize,
+                ConstrainedStep::Type stype = ConstrainedStep::actor) const {
       state.previousStepSize = state.stepSize;
       state.stepSize.update(stepSize, stype, true);
     }
 
-    void releaseStepSize(State& state) const {
+    void
+    releaseStepSize(State& state) const {
       state.stepSize.release(ConstrainedStep::actor);
     }
 
-    std::string outputStepSize(const State& state) const {
+    std::string
+    outputStepSize(const State& state) const {
       return state.stepSize.toString();
     }
 
-    BoundState boundState(State& state, const Surface& surface) const {
+    BoundState
+    boundState(State& state, const Surface& surface) const {
       BoundParameters parameters(tgContext, std::nullopt, state.pos,
                                  state.p * state.dir, state.q, state.t,
                                  surface.getSharedPtr());
@@ -147,7 +166,8 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state) const {
+    CurvilinearState
+    curvilinearState(State& state) const {
       CurvilinearParameters parameters(std::nullopt, state.pos,
                                        state.p * state.dir, state.q, state.t);
       // Create the bound state
@@ -156,19 +176,23 @@ struct PropagatorState {
       return curvState;
     }
 
-    void update(State& /*state*/, const FreeVector& /*pars*/,
-                const Covariance& /*cov*/) const {}
+    void
+    update(State& /*state*/, const FreeVector& /*pars*/,
+           const Covariance& /*cov*/) const {}
 
-    void update(State& /*state*/, const Vector3D& /*uposition*/,
-                const Vector3D& /*udirection*/, double /*up*/,
-                double /*time*/) const {}
+    void
+    update(State& /*state*/, const Vector3D& /*uposition*/,
+           const Vector3D& /*udirection*/, double /*up*/,
+           double /*time*/) const {}
 
-    void covarianceTransport(State& /*state*/) const {}
+    void
+    covarianceTransport(State& /*state*/) const {}
 
-    void covarianceTransport(State& /*unused*/,
-                             const Surface& /*surface*/) const {}
+    void
+    covarianceTransport(State& /*unused*/, const Surface& /*surface*/) const {}
 
-    Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
+    Vector3D
+    getField(State& /*state*/, const Vector3D& /*pos*/) const {
       // get the field from the cell
       return Vector3D(0., 0., 0.);
     }
@@ -212,7 +236,8 @@ struct PropagatorState {
 };
 
 template <typename stepper_state_t>
-void step(stepper_state_t& sstate) {
+void
+step(stepper_state_t& sstate) {
   // update the cache position
   sstate.pos = sstate.pos + sstate.stepSize * sstate.dir;
   // create navigation parameters

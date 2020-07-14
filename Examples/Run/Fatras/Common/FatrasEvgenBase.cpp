@@ -19,9 +19,9 @@
 #include "ACTFW/Options/Pythia8Options.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 
-void FW::setupEvgenInput(
-    const FW::Options::Variables& vm, FW::Sequencer& sequencer,
-    std::shared_ptr<const FW::RandomNumbers> randomNumberSvc) {
+void
+FW::setupEvgenInput(const FW::Options::Variables& vm, FW::Sequencer& sequencer,
+                    std::shared_ptr<const FW::RandomNumbers> randomNumberSvc) {
   // Read the standard options
   auto logLevel = FW::Options::readLogLevel(vm);
 

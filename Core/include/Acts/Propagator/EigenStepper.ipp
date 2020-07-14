@@ -13,8 +13,9 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
 
 template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::boundState(State& state,
-                                             const Surface& surface) const
+auto
+Acts::EigenStepper<B, E, A>::boundState(State& state,
+                                        const Surface& surface) const
     -> BoundState {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
@@ -26,7 +27,8 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
 }
 
 template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
+auto
+Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
     -> CurvilinearState {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
@@ -37,9 +39,9 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state) const
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::update(State& state,
-                                         const FreeVector& parameters,
-                                         const Covariance& covariance) const {
+void
+Acts::EigenStepper<B, E, A>::update(State& state, const FreeVector& parameters,
+                                    const Covariance& covariance) const {
   state.pos = parameters.template segment<3>(eFreePos0);
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
   state.p = std::abs(1. / parameters[eFreeQOverP]);
@@ -49,10 +51,10 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::update(State& state,
-                                         const Vector3D& uposition,
-                                         const Vector3D& udirection, double up,
-                                         double time) const {
+void
+Acts::EigenStepper<B, E, A>::update(State& state, const Vector3D& uposition,
+                                    const Vector3D& udirection, double up,
+                                    double time) const {
   state.pos = uposition;
   state.dir = udirection;
   state.p = up;
@@ -60,14 +62,16 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
+void
+Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
                               state.derivative, state.jacToGlobal, state.dir);
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::covarianceTransport(
-    State& state, const Surface& surface) const {
+void
+Acts::EigenStepper<B, E, A>::covarianceTransport(State& state,
+                                                 const Surface& surface) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
@@ -78,8 +82,8 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
 
 template <typename B, typename E, typename A>
 template <typename propagator_state_t>
-Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
-    propagator_state_t& state) const {
+Acts::Result<double>
+Acts::EigenStepper<B, E, A>::step(propagator_state_t& state) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state

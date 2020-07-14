@@ -122,33 +122,40 @@ class RootMaterialWriter {
   /// Write out the material map
   ///
   /// @param detMaterial is the SurfaceMaterial and VolumeMaterial maps
-  void write(const Acts::DetectorMaterialMaps& detMaterial);
+  void
+  write(const Acts::DetectorMaterialMaps& detMaterial);
 
   /// Write out the material map from Geometry
   ///
   /// @param tGeometry is the TrackingGeometry
-  void write(const Acts::TrackingGeometry& tGeometry);
+  void
+  write(const Acts::TrackingGeometry& tGeometry);
 
  private:
   /// Collect the material from the tracking geometry
   ///
   /// @param tVolume The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
-  void collectMaterial(const Acts::TrackingVolume& tVolume,
-                       Acts::DetectorMaterialMaps& detMatMap);
+  void
+  collectMaterial(const Acts::TrackingVolume& tVolume,
+                  Acts::DetectorMaterialMaps& detMatMap);
 
   /// Collect the material from the tracking geometry
   ///
   /// @param tLayer The TrackingVolume for the material to be collected
   /// @param [in,out] detMatMap the map to be filled
-  void collectMaterial(const Acts::Layer& tLayer,
-                       Acts::DetectorMaterialMaps& detMatMap);
+  void
+  collectMaterial(const Acts::Layer& tLayer,
+                  Acts::DetectorMaterialMaps& detMatMap);
 
   /// The config class
   Config m_cfg;
 
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger&
+  logger() const {
+    return *m_cfg.logger;
+  }
 };
 
 }  // namespace FW

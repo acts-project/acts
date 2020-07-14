@@ -46,9 +46,9 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
-                                                      double angleX,
-                                                      double angleY) {
+std::shared_ptr<Transform3D>
+createCylindricTransform(const Vector3D& nposition, double angleX,
+                         double angleY) {
   Transform3D ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
@@ -64,10 +64,9 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
-                                                   const Vector3D& nnormal,
-                                                   double angleT,
-                                                   double angleU) {
+std::shared_ptr<Transform3D>
+createPlanarTransform(const Vector3D& nposition, const Vector3D& nnormal,
+                      double angleT, double angleU) {
   // the rotation of the destination surface
   Vector3D T = nnormal.normalized();
   Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
@@ -105,7 +104,8 @@ std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
 /// Az ->P[6]  dAz/   P[14]   P[22]   P[30]   P[38]   P[46]  P[54]
 /// CM ->P[7]  dCM/   P[15]   P[23]   P[31]   P[39]   P[47]  P[55]
 
-BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
+BoundToFreeMatrix
+convertToMatrix(const std::array<double, 60> P) {
   // initialize to zero
   BoundToFreeMatrix jMatrix = BoundToFreeMatrix::Zero();
   for (size_t j = 0; j < eBoundParametersSize; ++j) {
@@ -123,7 +123,8 @@ BoundToFreeMatrix convertToMatrix(const std::array<double, 60> P) {
 /// @tparam Parameters the parameter type
 /// @param pars the parameter object
 template <typename Parameters>
-void testJacobianToGlobal(const Parameters& pars) {
+void
+testJacobianToGlobal(const Parameters& pars) {
   // Jacobian creation for Propagator/Steppers
   // a) ATLAS stepper
   AtlasStepperType::State astepState(tgContext, mfContext, pars);

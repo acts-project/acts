@@ -55,7 +55,8 @@ enum BoundarySurfaceFace {
 
 };
 
-inline std::ostream& operator<<(std::ostream& os, BoundarySurfaceFace& face) {
+inline std::ostream&
+operator<<(std::ostream& os, BoundarySurfaceFace& face) {
   os << "BoundarySurfaceFace::";
 
   switch (face) {

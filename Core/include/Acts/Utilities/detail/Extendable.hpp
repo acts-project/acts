@@ -59,14 +59,14 @@ struct Extendable {
   /// Default move assignment operator
   ///
   /// @param extendable The source Extendable list
-  Extendable<extensions_t...>& operator=(
-      const Extendable<extensions_t...>& extendable) = default;
+  Extendable<extensions_t...>&
+  operator=(const Extendable<extensions_t...>& extendable) = default;
 
   /// Default move assignment operator
   ///
   /// @param extendable The source Extendable list
-  Extendable<extensions_t...>& operator=(
-      Extendable<extensions_t...>&& extendable) = default;
+  Extendable<extensions_t...>&
+  operator=(Extendable<extensions_t...>&& extendable) = default;
 
   /// Append new entries and return a new condition
   ///
@@ -74,8 +74,8 @@ struct Extendable {
   ///
   /// @param aps The extensions to be appended to the new Extendable
   template <typename... appendices_t>
-  Extendable<extensions_t..., appendices_t...> append(
-      appendices_t... aps) const {
+  Extendable<extensions_t..., appendices_t...>
+  append(appendices_t... aps) const {
     auto catTuple =
         std::tuple_cat(m_extensions, std::tuple<appendices_t...>(aps...));
     return Extendable<extensions_t..., appendices_t...>(std::move(catTuple));
@@ -85,7 +85,8 @@ struct Extendable {
   ///
   /// @tparam extension_t Type of the Extension to be retrieved
   template <typename extension_t>
-  const extension_t& get() const {
+  const extension_t&
+  get() const {
     return std::get<extension_t>(m_extensions);
   }
 
@@ -93,19 +94,26 @@ struct Extendable {
   ///
   /// @tparam extension_t Type of the Extension to be retrieved
   template <typename extension_t>
-  extension_t& get() {
+  extension_t&
+  get() {
     return std::get<extension_t>(m_extensions);
   }
 
   /// Const retrieval of the extension tuype
   ///
   /// @tparam extension_t Type of the Extension to be retrieved
-  const std::tuple<extensions_t...>& tuple() const { return m_extensions; }
+  const std::tuple<extensions_t...>&
+  tuple() const {
+    return m_extensions;
+  }
 
   /// Non-Const retrieval of the extendsion tuype
   ///
   /// @tparam extension_t Type of the Extension to be retrieved
-  std::tuple<extensions_t...>& tuple() { return m_extensions; }
+  std::tuple<extensions_t...>&
+  tuple() {
+    return m_extensions;
+  }
 
  private:
   std::tuple<extensions_t...> m_extensions;

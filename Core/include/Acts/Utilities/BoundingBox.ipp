@@ -108,14 +108,16 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::wrap(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+bool
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const VertexType& point) const {
   vertex_array_type t = (point - m_vmin).array() * m_iwidth;
   return t.minCoeff() >= 0 && t.maxCoeff() < 1;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+bool
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const Ray<value_type, DIM>& ray) const {
   const VertexType& origin = ray.origin();
   const vertex_array_type& idir = ray.idir();
@@ -145,7 +147,8 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t sides>
-bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+bool
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
     const Frustum<value_type, DIM, sides>& fr) const {
   const auto& normals = fr.normals();
   // Transform vmin and vmax into the coordinate system, at which the frustum is
@@ -183,8 +186,8 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setSkip(
-    self_t* skip) {
+void
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setSkip(self_t* skip) {
   // set next on this
   m_skip = skip;
   // find last child and set its skip
@@ -206,18 +209,20 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::getSkip() const {
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::hasEntity() const {
+bool
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::hasEntity() const {
   return m_entity != nullptr;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-const entity_t* Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::entity()
-    const {
+const entity_t*
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::entity() const {
   return m_entity;
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setEntity(
+void
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setEntity(
     const entity_t* entity) {
   m_entity = entity;
 }
@@ -241,7 +246,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::max() const {
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::toStream(
+std::ostream&
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::toStream(
     std::ostream& os) const {
   os << "AABB(ctr=(";
 
@@ -335,7 +341,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformVertices(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
-void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transform(
+void
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transform(
     const transform_type& trf) {
   std::tie(m_vmin, m_vmax) = transformVertices(trf);
 }
@@ -351,7 +358,8 @@ Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::transformed(
 
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 3, int>>
-void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
+void
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
     IVisualization& helper, std::array<int, 3> color,
     const transform_type& trf) const {
   static_assert(DIM == 3, "PLY output only supported in 3D");
@@ -386,7 +394,8 @@ void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::draw(
 
 template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 2, int>>
-std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
+std::ostream&
+Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     std::ostream& os, value_type w, value_type h, value_type unit,
     std::string label, std::string fillcolor) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
@@ -438,10 +447,10 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
 }
 
 template <typename box_t>
-box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
-                    size_t max_depth,
-                    typename box_t::vertex_array_type envelope,
-                    const std::vector<box_t*>& lprims, size_t depth) {
+box_t*
+octree_inner(std::vector<std::unique_ptr<box_t>>& store, size_t max_depth,
+             typename box_t::vertex_array_type envelope,
+             const std::vector<box_t*>& lprims, size_t depth) {
   using VertexType = typename box_t::VertexType;
 
   assert(lprims.size() > 0);
@@ -531,9 +540,10 @@ box_t* octree_inner(std::vector<std::unique_ptr<box_t>>& store,
 }
 
 template <typename box_t>
-box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
-                         const std::vector<box_t*>& prims, size_t max_depth,
-                         typename box_t::value_type envelope1) {
+box_t*
+Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
+                  const std::vector<box_t*>& prims, size_t max_depth,
+                  typename box_t::value_type envelope1) {
   static_assert(box_t::dim == 3, "Octree can only be created in 3D");
 
   using vertex_array_type = typename box_t::vertex_array_type;
@@ -545,8 +555,8 @@ box_t* Acts::make_octree(std::vector<std::unique_ptr<box_t>>& store,
 }
 
 template <typename T, typename U, size_t V>
-std::ostream& operator<<(std::ostream& os,
-                         const Acts::AxisAlignedBoundingBox<T, U, V>& box) {
+std::ostream&
+operator<<(std::ostream& os, const Acts::AxisAlignedBoundingBox<T, U, V>& box) {
   box.dump(os);
   return os;
 }

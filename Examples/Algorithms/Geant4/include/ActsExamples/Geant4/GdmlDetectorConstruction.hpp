@@ -20,7 +20,8 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   GdmlDetectorConstruction(std::string path);
 
   /// Read the file and parse it to construct the Geant4 description.
-  G4VPhysicalVolume* Construct() final override;
+  G4VPhysicalVolume*
+  Construct() final override;
 
  private:
   std::string m_path;

@@ -18,7 +18,8 @@ struct FrameworkRndmEngine : public Pythia8::RndmEngine {
   FW::RandomEngine& rng;
 
   FrameworkRndmEngine(FW::RandomEngine& rng_) : rng(rng_) {}
-  double flat() {
+  double
+  flat() {
     return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
   }
 };
@@ -53,8 +54,8 @@ FW::Pythia8Generator::Pythia8Generator(const FW::Pythia8Generator::Config& cfg,
 // needed to allow unique_ptr of forward-declared Pythia class
 FW::Pythia8Generator::~Pythia8Generator() {}
 
-std::vector<FW::SimVertex> FW::Pythia8Generator::operator()(
-    FW::RandomEngine& rng) {
+std::vector<FW::SimVertex>
+FW::Pythia8Generator::operator()(FW::RandomEngine& rng) {
   using namespace Acts::UnitLiterals;
 
   // first process vertex is the primary one at origin with time=0

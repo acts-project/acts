@@ -56,7 +56,10 @@ class ObjPropagationStepsWriter
   ~ObjPropagationStepsWriter() override = default;
 
   /// End-of-run hook
-  ProcessCode endRun() final override { return FW::ProcessCode::SUCCESS; }
+  ProcessCode
+  endRun() final override {
+    return FW::ProcessCode::SUCCESS;
+  }
 
  private:
   Config m_cfg;  ///!< Internal configuration represenation
@@ -64,7 +67,8 @@ class ObjPropagationStepsWriter
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface
-  ProcessCode writeT(
+  ProcessCode
+  writeT(
       const AlgorithmContext& context,
       const std::vector<std::vector<step_t>>& stepCollection) final override {
     // open per-event file

@@ -24,10 +24,12 @@ class IConfinedTrackingVolumeBuilder {
   virtual ~IConfinedTrackingVolumeBuilder() = default;
 
   /// Interface for constructing a vector of confined TrackingVolumes
-  virtual MutableTrackingVolumeVector centralVolumes() const = 0;
+  virtual MutableTrackingVolumeVector
+  centralVolumes() const = 0;
 
   /// Interface for retreiving the identification string of the confined volumes
-  virtual const std::string& identification() const = 0;
+  virtual const std::string&
+  identification() const = 0;
 };
 
 }  // namespace Acts

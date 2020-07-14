@@ -24,13 +24,15 @@ const double inf = std::numeric_limits<double>::infinity();
 namespace Acts {
 
 namespace Test {
-void dumpVertices(const RectangleBounds& r) {
+void
+dumpVertices(const RectangleBounds& r) {
   const auto& v = r.vertices();
   for (const auto& i : v) {
     std::cout << "(" << i[0] << ", " << i[1] << ")" << std::endl;
   }
 }
-bool approximatelyEqual(const Vector2D& a, const Vector2D& b) {
+bool
+approximatelyEqual(const Vector2D& a, const Vector2D& b) {
   const double dif0 = std::abs(a[0] - b[0]);
   const double dif1 = std::abs(a[1] - b[1]);
   const double tol = 1e-9;

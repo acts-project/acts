@@ -54,7 +54,8 @@ class TrackingGeometry {
 
   /// Access to the world volume
   /// @return plain pointer to the world volume
-  const TrackingVolume* highestTrackingVolume() const;
+  const TrackingVolume*
+  highestTrackingVolume() const;
 
   /// return the lowest tracking Volume
   ///
@@ -62,15 +63,16 @@ class TrackingGeometry {
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
-                                             const Vector3D& gp) const;
+  const TrackingVolume*
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
   /// @param name is the name for the volume search
   ///
   /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume* trackingVolume(const std::string& name) const;
+  const TrackingVolume*
+  trackingVolume(const std::string& name) const;
 
   /// Forward the associated Layer information
   ///
@@ -78,13 +80,14 @@ class TrackingGeometry {
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
-  const Layer* associatedLayer(const GeometryContext& gctx,
-                               const Vector3D& gp) const;
+  const Layer*
+  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Register the beam tube
   ///
   /// @param beam is the beam line surface
-  void registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
+  void
+  registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
 
   /// @brief surface representing the beam pipe
   ///
@@ -92,14 +95,15 @@ class TrackingGeometry {
   ///
   /// @return raw pointer to surface representing the beam pipe
   ///         (could be a null pointer)
-  const Surface* getBeamline() const;
+  const Surface*
+  getBeamline() const;
 
   /// @brief Visit all sensitive surfaces
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  void
+  visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
 
  private:
   /// The known world - and the beamline

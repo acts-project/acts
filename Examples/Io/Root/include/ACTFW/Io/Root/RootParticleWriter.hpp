@@ -51,15 +51,17 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   ~RootParticleWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode
+  endRun() final override;
 
  protected:
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final override;
+  ProcessCode
+  writeT(const AlgorithmContext& ctx,
+         const SimParticleContainer& particles) final override;
 
  private:
   Config m_cfg;

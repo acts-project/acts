@@ -26,8 +26,9 @@ static constexpr int width = 11;
 static constexpr int precision = 3;
 static constexpr char separator = ' ';
 
-static void printHeader(std::ostream& os, const Acts::MaterialProperties& slab,
-                        Acts::PdgParticle pdg, float mass, float charge) {
+static void
+printHeader(std::ostream& os, const Acts::MaterialProperties& slab,
+            Acts::PdgParticle pdg, float mass, float charge) {
   os << "# material: " << slab << '\n';
   os << "# particle pdg id: " << pdg << '\n';
   os << "# particle mass: " << mass / 1_MeV << "MeV\n";
@@ -49,8 +50,9 @@ static void printHeader(std::ostream& os, const Acts::MaterialProperties& slab,
   os << std::setw(width) << "sigma" << '\n';
 }
 
-static void printLine(std::ostream& os, float mass, float momentum, float delta,
-                      float deltaIon, float deltaRad, float sigma) {
+static void
+printLine(std::ostream& os, float mass, float momentum, float delta,
+          float deltaIon, float deltaRad, float sigma) {
   const auto energy = std::sqrt(mass * mass + momentum * momentum);
   const auto beta = momentum / energy;
   const auto betaGamma = momentum / mass;
@@ -64,7 +66,8 @@ static void printLine(std::ostream& os, float mass, float momentum, float delta,
   os << std::setw(width) << sigma / 1_MeV << '\n';
 }
 
-int main(int argc, char const* argv[]) {
+int
+main(int argc, char const* argv[]) {
   // handle input arguments
   if (argc != 6) {
     std::cerr << "usage: " << argv[0] << " thickness pdg p_min p_max n\n";

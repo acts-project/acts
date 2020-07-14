@@ -39,9 +39,9 @@ struct GeneralMixture {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  double operator()(generator_t &generator,
-                    const Acts::MaterialProperties &slab,
-                    Particle &particle) const {
+  double
+  operator()(generator_t &generator, const Acts::MaterialProperties &slab,
+             Particle &particle) const {
     double theta = 0.0;
 
     if (std::abs(particle.pdg()) != Acts::PdgParticle::eElectron) {
@@ -95,8 +95,8 @@ struct GeneralMixture {
 
   // helper methods for getting parameters and simulating
 
-  std::array<double, 4> getGaussian(double beta, double p, double tInX0,
-                                    double scale) const {
+  std::array<double, 4>
+  getGaussian(double beta, double p, double tInX0, double scale) const {
     std::array<double, 4> scattering_params;
     // Total standard deviation of mixture
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) * scale;
@@ -106,8 +106,9 @@ struct GeneralMixture {
     return scattering_params;
   }
 
-  std::array<double, 4> getGaussmix(double beta, double p, double tInX0,
-                                    double Z, double scale) const {
+  std::array<double, 4>
+  getGaussmix(double beta, double p, double tInX0, double Z,
+              double scale) const {
     std::array<double, 4> scattering_params;
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) *
                            scale;  // Total standard deviation of mixture
@@ -126,8 +127,9 @@ struct GeneralMixture {
     return scattering_params;
   }
 
-  std::array<double, 6> getSemigauss(double beta, double p, double tInX0,
-                                     double Z, double scale) const {
+  std::array<double, 6>
+  getSemigauss(double beta, double p, double tInX0, double Z,
+               double scale) const {
     std::array<double, 6> scattering_params;
     double N = tInX0 * 1.587E7 * std::pow(Z, 1.0 / 3.0) / (beta * beta) /
                (Z + 1) / std::log(287 / std::sqrt(Z));
@@ -159,8 +161,9 @@ struct GeneralMixture {
   ///
   /// @return a double value that represents the gaussian mixture
   template <typename generator_t>
-  double gaussmix(generator_t &generator,
-                  const std::array<double, 4> &scattering_params) const {
+  double
+  gaussmix(generator_t &generator,
+           const std::array<double, 4> &scattering_params) const {
     std::uniform_real_distribution<double> udist(0.0, 1.0);
     double sigma_tot = scattering_params[0];
     double var1 = scattering_params[1];
@@ -183,8 +186,9 @@ struct GeneralMixture {
   ///
   /// @return a double value that represents the gaussian mixture
   template <typename generator_t>
-  double semigauss(generator_t &generator,
-                   const std::array<double, 6> &scattering_params) const {
+  double
+  semigauss(generator_t &generator,
+            const std::array<double, 6> &scattering_params) const {
     std::uniform_real_distribution<double> udist(0.0, 1.0);
     double a = scattering_params[0];
     double b = scattering_params[1];

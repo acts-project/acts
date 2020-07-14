@@ -46,10 +46,11 @@ namespace {
 ///
 /// @return a process code
 template <typename bfield_t>
-FW::ProcessCode setupPropagation(
-    FW::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
-    std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
-    std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
+FW::ProcessCode
+setupPropagation(FW::Sequencer& sequencer, bfield_t bfield,
+                 po::variables_map& vm,
+                 std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
+                 std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
   auto logLevel = FW::Options::readLogLevel(vm);
 
@@ -90,7 +91,8 @@ FW::ProcessCode setupPropagation(
 /// @param tGeometry The TrackingGeometry object
 ///
 /// @return a process code
-FW::ProcessCode setupStraightLinePropagation(
+FW::ProcessCode
+setupStraightLinePropagation(
     FW::Sequencer& sequencer, po::variables_map& vm,
     std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
@@ -121,8 +123,8 @@ FW::ProcessCode setupStraightLinePropagation(
 
 }  // namespace
 
-int materialValidationExample(int argc, char* argv[],
-                              FW::IBaseDetector& detector) {
+int
+materialValidationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
   // Setup and parse options
   auto desc = FW::Options::makeDefaultOptions();
   FW::Options::addSequencerOptions(desc);

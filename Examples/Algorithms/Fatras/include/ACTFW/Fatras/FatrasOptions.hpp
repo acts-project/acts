@@ -24,7 +24,8 @@ namespace Options {
 /// Add Fatras options.
 ///
 /// @param desc The options description to add options to
-void addFatrasOptions(Description& desc);
+void
+addFatrasOptions(Description& desc);
 
 /// Read Fatras options to create the algorithm config.
 ///
@@ -32,8 +33,8 @@ void addFatrasOptions(Description& desc);
 /// @param vars         the variables to read from
 /// @param simulator    the simulation kernel
 template <typename simulator_t>
-typename FatrasAlgorithm<simulator_t>::Config readFatrasConfig(
-    const Variables& variables, simulator_t&& simulator) {
+typename FatrasAlgorithm<simulator_t>::Config
+readFatrasConfig(const Variables& variables, simulator_t&& simulator) {
   using namespace Acts::UnitLiterals;
   using Config = typename FatrasAlgorithm<simulator_t>::Config;
   using PMin = ActsFatras::Min<ActsFatras::Casts::P>;

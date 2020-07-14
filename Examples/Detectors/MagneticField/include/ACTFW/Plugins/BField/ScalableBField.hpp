@@ -57,7 +57,8 @@ class ScalableBField final {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Acts::Vector3D getField(const Acts::Vector3D& /*position*/) const {
+  Acts::Vector3D
+  getField(const Acts::Vector3D& /*position*/) const {
     return m_BField;
   }
 
@@ -69,8 +70,8 @@ class ScalableBField final {
   ///
   /// @note The @p position is ignored and only kept as argument to provide
   ///       a consistent interface with other magnetic field services.
-  Acts::Vector3D getField(const Acts::Vector3D& /*position*/,
-                          Cache& cache) const {
+  Acts::Vector3D
+  getField(const Acts::Vector3D& /*position*/, Cache& cache) const {
     return m_BField * cache.scalor;
   }
 
@@ -85,9 +86,9 @@ class ScalableBField final {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Acts::Vector3D getFieldGradient(
-      const Acts::Vector3D& /*position*/,
-      Acts::ActsMatrixD<3, 3>& /*derivative*/) const {
+  Acts::Vector3D
+  getFieldGradient(const Acts::Vector3D& /*position*/,
+                   Acts::ActsMatrixD<3, 3>& /*derivative*/) const {
     return m_BField;
   }
 
@@ -103,9 +104,10 @@ class ScalableBField final {
   ///       a consistent interface with other magnetic field services.
   /// @note currently the derivative is not calculated
   /// @todo return derivative
-  Acts::Vector3D getFieldGradient(const Acts::Vector3D& /*position*/,
-                                  Acts::ActsMatrixD<3, 3>& /*derivative*/,
-                                  Cache& cache) const {
+  Acts::Vector3D
+  getFieldGradient(const Acts::Vector3D& /*position*/,
+                   Acts::ActsMatrixD<3, 3>& /*derivative*/,
+                   Cache& cache) const {
     return m_BField * cache.scalor;
   }
 
@@ -115,19 +117,28 @@ class ScalableBField final {
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
   /// @note The method will always return true for the constant B-Field
-  bool isInside(const Acts::Vector3D& /*position*/) const { return true; }
+  bool
+  isInside(const Acts::Vector3D& /*position*/) const {
+    return true;
+  }
 
   /// @brief update magnetic field vector from components
   ///
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  void setField(double Bx, double By, double Bz) { m_BField << Bx, By, Bz; }
+  void
+  setField(double Bx, double By, double Bz) {
+    m_BField << Bx, By, Bz;
+  }
 
   /// @brief update magnetic field vector
   ///
   /// @param [in] B magnetic field vector in global coordinate system
-  void setField(const Acts::Vector3D& B) { m_BField = B; }
+  void
+  setField(const Acts::Vector3D& B) {
+    m_BField = B;
+  }
 
  private:
   /// magnetic field vector

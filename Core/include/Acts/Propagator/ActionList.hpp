@@ -60,14 +60,14 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActionList<actors_t...>& operator=(const ActionList<actors_t...>& actors) =
-      default;
+  ActionList<actors_t...>&
+  operator=(const ActionList<actors_t...>& actors) = default;
 
   /// Default move assignment operator
   ///
   /// @param actors The source action list
-  ActionList<actors_t...>& operator=(ActionList<actors_t...>&& actors) =
-      default;
+  ActionList<actors_t...>&
+  operator=(ActionList<actors_t...>&& actors) = default;
 
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
@@ -82,8 +82,9 @@ struct ActionList : public detail::Extendable<actors_t...> {
   ///
   /// @return bool type indiciating if the step size can be released
   template <typename propagator_state_t, typename stepper_t, typename result_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_t& result) const {
+  void
+  operator()(propagator_state_t& state, const stepper_t& stepper,
+             result_t& result) const {
     // clang-format off
     static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t, 
                                       propagator_state_t, stepper_t>...>,
