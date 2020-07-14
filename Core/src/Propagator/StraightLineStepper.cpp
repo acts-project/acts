@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
 
@@ -67,13 +67,18 @@ void StraightLineStepper::covarianceTransport(State& state,
                               state.jacToGlobal, parameters, surface);
 }
 
-void StraightLineStepper::resetState(
-    State& state, const BoundVector& boundParams,
-    const BoundSymMatrix& cov, const Surface& surface,
-    const NavigationDirection navDir, const double stepSize) const {
-using transformation = detail::coordinate_transformation;
+void StraightLineStepper::resetState(State& state,
+                                     const BoundVector& boundParams,
+                                     const BoundSymMatrix& cov,
+                                     const Surface& surface,
+                                     const NavigationDirection navDir,
+                                     const double stepSize) const {
+  using transformation = detail::coordinate_transformation;
   // Update the stepping state
-  update(state, transformation::boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
+  update(state,
+         transformation::boundParameters2freeParameters(state.geoContext,
+                                                        boundParams, surface),
+         cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;

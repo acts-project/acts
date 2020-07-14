@@ -10,9 +10,9 @@
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -199,7 +199,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams = detail::coordinate_transformation::boundParameters2freeParameters(tgContext, cp2.parameters(), cp2.referenceSurface());
+  FreeVector freeParams =
+      detail::coordinate_transformation::boundParameters2freeParameters(
+          tgContext, cp2.parameters(), cp2.referenceSurface());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 

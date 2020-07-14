@@ -12,6 +12,7 @@
 #include <functional>
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -21,7 +22,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -310,13 +310,15 @@ class AtlasStepper {
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSymMatrix& cov,
+      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     using transformation = detail::coordinate_transformation;
     // Update the stepping state
-    update(state, transformation::boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
+    update(state,
+           transformation::boundParameters2freeParameters(state.geoContext,
+                                                          boundParams, surface),
+           cov);
     state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;

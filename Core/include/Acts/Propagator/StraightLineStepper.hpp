@@ -145,8 +145,7 @@ class StraightLineStepper {
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams,
-      const BoundSymMatrix& cov,
+      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
 

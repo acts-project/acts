@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -32,7 +33,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -282,7 +282,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams = detail::coordinate_transformation::boundParameters2freeParameters(tgContext, cp2.parameters(), cp2.referenceSurface());
+  FreeVector freeParams =
+      detail::coordinate_transformation::boundParameters2freeParameters(
+          tgContext, cp2.parameters(), cp2.referenceSurface());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 

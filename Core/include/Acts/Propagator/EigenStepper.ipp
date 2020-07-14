@@ -6,21 +6,26 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 template <typename B, typename E, typename A>
 Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::resetState(
-    State& state, const BoundVector& boundParams,
-    const BoundSymMatrix& cov, const Surface& surface,
-    const NavigationDirection navDir, const double stepSize) const {
+void Acts::EigenStepper<B, E, A>::resetState(State& state,
+                                             const BoundVector& boundParams,
+                                             const BoundSymMatrix& cov,
+                                             const Surface& surface,
+                                             const NavigationDirection navDir,
+                                             const double stepSize) const {
   using transformation = detail::coordinate_transformation;
   // Update the stepping state
-  update(state, transformation::boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
+  update(state,
+         transformation::boundParameters2freeParameters(state.geoContext,
+                                                        boundParams, surface),
+         cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
