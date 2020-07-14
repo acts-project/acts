@@ -311,13 +311,13 @@ class AxisAlignedBoundingBox {
   /// Equality operator
   bool operator==(
       const AxisAlignedBoundingBox<entity_t, value_t, DIM>& other) const {
-    return (*m_entity == *other.m_entity) && (m_vmin == other.m_vmin) &&
+    return (m_entity == other.m_entity) && (m_vmin == other.m_vmin) &&
            (m_vmax == other.m_vmax) && (m_center == other.m_center) &&
            (m_width.isApprox(other.m_width)) &&
            (m_iwidth.isApprox(other.m_iwidth)) &&
-           (*m_left_child == *other.m_left_child) &&
-           (*m_right_child == *other.m_right_child) &&
-           (*m_skip == *other.m_skip);
+           (m_left_child == other.m_left_child) &&
+           (m_right_child == other.m_right_child) &&
+           (m_skip == other.m_skip);
   }
 
   /// Inequality operator

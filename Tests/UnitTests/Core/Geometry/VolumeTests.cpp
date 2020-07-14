@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   // Test a bounding box from the volume
    Vector3D envelope{7_mm, 8_mm, 9_mm};
    BOOST_TEST(volume.boundingBox(envelope) == bounds.boundingBox(&transform, envelope, &volume));
-   
+
    // Test the (in)equality operator
    Volume copy(volume);
    BOOST_TEST(volume == copy);
