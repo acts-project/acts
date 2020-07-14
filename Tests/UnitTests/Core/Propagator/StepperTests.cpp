@@ -273,9 +273,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());
   BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
 
-  /// Test the state reset
-  EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
-  
+  /// Test the state reset  
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
   Vector3D mom2(4.5, -5.5, 6.5);
@@ -289,6 +287,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double stepSize2 = -2. * stepSize;
   
   // Reset all possible parameters
+  EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), freeParams, *cp2.covariance(), cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_TEST(esStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -296,7 +295,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_TEST(esStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(esStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(esStateCopy.covTransport);
-  BOOST_TEST(esStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(esStateCopy.cov == cov2);
   BOOST_TEST(esStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(esStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(esStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
@@ -317,7 +316,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_TEST(esStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(esStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(esStateCopy.covTransport);
-  BOOST_TEST(esStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(esStateCopy.cov == cov2);
   BOOST_TEST(esStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(esStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(esStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
@@ -338,7 +337,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_TEST(esStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(esStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(esStateCopy.covTransport);
-  BOOST_TEST(esStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(esStateCopy.cov == cov2);
   BOOST_TEST(esStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(esStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(esStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));

@@ -619,19 +619,15 @@ class AtlasStepper {
   /// @param [in] pars The new track parameters at start
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const {
-    // state is ready - noting to do
-    if (state.state_ready) {
-      return;
-    }
-
+	Vector3D direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];
     state.pVector[2] = parameters[eFreePos2];
     state.pVector[3] = parameters[eFreeTime];
-    state.pVector[4] = parameters[eFreeDir0];
-    state.pVector[5] = parameters[eFreeDir1];
-    state.pVector[6] = parameters[eFreeDir2];
-    state.pVector[7] = parameters[eFreeQOverP];
+    state.pVector[4] = direction.x();
+    state.pVector[5] = direction.y();
+    state.pVector[6] = direction.z();
+    state.pVector[7] = std::copysign(parameters[eFreeQOverP], state.pVector[7]);
 
     // @todo: remove magic numbers - is that the charge ?
     if (std::abs(state.pVector[7]) < .000000000000001) {
@@ -645,7 +641,7 @@ class AtlasStepper {
     state.covTransport = true;
     state.useJacobian = true;
 
-    // now declare the state as ready
+    // declare the state as ready
     state.state_ready = true;
   }
 

@@ -190,9 +190,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());
   BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
 
-  /// Test the state reset
-  StraightLineStepper::State slsStateCopy(ps.stepping);
-  
+  /// Test the state reset  
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
   Vector3D mom2(4.5, -5.5, 6.5);
@@ -206,6 +204,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double stepSize2 = -2. * stepSize;
   
   // Reset all possible parameters
+  StraightLineStepper::State slsStateCopy(ps.stepping);
   sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(), cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -213,7 +212,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(slsStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(slsStateCopy.covTransport);
-  BOOST_TEST(slsStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
@@ -234,7 +233,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(slsStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(slsStateCopy.covTransport);
-  BOOST_TEST(slsStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
@@ -255,7 +254,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(slsStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(slsStateCopy.covTransport);
-  BOOST_TEST(slsStateCopy.cov != Covariance::Zero());
+  BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
   BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
