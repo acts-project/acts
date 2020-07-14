@@ -172,6 +172,14 @@ class EigenStepper {
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField);
 
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
+  /// @param [in] boundParams Parameters in bound parametrisation
+  /// @param [in] freeParams Parameters in free parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size 
   void resetState(
       State& state, const BoundVector& boundParams,
       const FreeVector& freeParams, const BoundSymMatrix& cov,
