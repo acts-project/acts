@@ -13,6 +13,10 @@
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 namespace Acts {
 namespace Test {
@@ -307,14 +311,13 @@ BOOST_AUTO_TEST_CASE(Reset) {
   double charge = 1.;
   BoundSymMatrix cov = 8.5 * Covariance::Identity();
   CurvilinearParameters cp(cov, pos, mom, charge, time);
-  FreeVector freeParams;
-  freeParams << -1.1, 2.2, -3.3, 4.4, -5.5, 6.6, -7.7, 8.8;
+  FreeVector freeParams = detail::coordinate_transformation::boundParameters2freeParameters(geoCtx, cp.parameters(), cp.referenceSurface());
   NavigationDirection ndir = forward;
   double stepSize = -256.;
 
   // Reset all possible parameters
   Stepper::State stateCopy(state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
@@ -335,7 +338,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset all possible parameters except the step size
   stateCopy = state.stepping;
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface(), ndir);
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
@@ -356,7 +359,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // Reset the least amount of parameters
   stateCopy = state.stepping;
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+  stepper.resetState(stateCopy, cp.parameters(), *cp.covariance(),
                      cp.referenceSurface());
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
@@ -374,6 +377,59 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_TEST(stateCopy.stepSize == std::numeric_limits<double>::max());
   BOOST_TEST(stateCopy.previousStepSize == state.stepping.previousStepSize);
   BOOST_TEST(stateCopy.tolerance == state.stepping.tolerance);
+  
+  // Reset using different surface shapes
+  // 1) Disc surface
+  // Setting some parameters
+  pos << 1.5, -2.5, 3.5;
+  mom << 4.5, -5.5, 6.5;
+  time = 7.5;
+  charge = 1.;
+  cov = 8.5 * Covariance::Identity();
+  Transform3D trafo = Transform3D::Identity();
+  auto disc = Surface::makeShared<DiscSurface>(std::make_shared<const Transform3D>(trafo));
+  BoundParameters boundDisc(geoCtx, cov, pos, mom, charge, time, disc);
+  
+  // Reset the state and test
+  Stepper::State stateDisc = state.stepping;
+  stepper.resetState(stateDisc, boundDisc.parameters(), *boundDisc.covariance(), boundDisc.referenceSurface());
+  BOOST_TEST(stateDisc.pVector != stateCopy.pVector);
+  BOOST_TEST(stateDisc.pVector != state.stepping.pVector);
+  
+  // 2) Perigee surface
+  // Setting some parameters
+  pos << 1.5, -2.5, 3.5;
+  mom << 4.5, -5.5, 6.5;
+  time = 7.5;
+  charge = 1.;
+  cov = 8.5 * Covariance::Identity();
+  auto perigee = Surface::makeShared<PerigeeSurface>(std::make_shared<const Transform3D>(trafo));
+  BoundParameters boundPerigee(geoCtx, cov, pos, mom, charge, time, perigee);
+  
+  // Reset the state and test
+  Stepper::State statePerigee = state.stepping;
+  stepper.resetState(statePerigee, boundPerigee.parameters(), *boundPerigee.covariance(), boundPerigee.referenceSurface());
+  BOOST_TEST(statePerigee.pVector != stateCopy.pVector);
+  BOOST_TEST(statePerigee.pVector != state.stepping.pVector);
+  BOOST_TEST(statePerigee.pVector != stateDisc.pVector);
+  
+  // 3) Straw surface
+  // Setting some parameters
+  pos << 1.5, -2.5, 3.5;
+  mom << 4.5, -5.5, 6.5;
+  time = 7.5;
+  charge = 1.;
+  cov = 8.5 * Covariance::Identity();
+  auto straw = Surface::makeShared<StrawSurface>(std::make_shared<const Transform3D>(trafo));
+  BoundParameters boundStraw(geoCtx, cov, pos, mom, charge, time, straw);
+  
+  // Reset the state and test
+  Stepper::State stateStraw = state.stepping;
+  stepper.resetState(stateStraw, boundStraw.parameters(), *boundStraw.covariance(), boundStraw.referenceSurface());
+  BOOST_TEST(stateStraw.pVector != stateCopy.pVector);
+  BOOST_TEST(stateStraw.pVector != state.stepping.pVector);
+  BOOST_TEST(stateStraw.pVector != stateDisc.pVector);
+  BOOST_TEST(stateStraw.pVector == statePerigee.pVector);
 }
 
 BOOST_AUTO_TEST_CASE(StepSize) {

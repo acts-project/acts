@@ -71,8 +71,9 @@ void StraightLineStepper::resetState(
     State& state, const BoundVector& boundParams,
     const BoundSymMatrix& cov, const Surface& surface,
     const NavigationDirection navDir, const double stepSize) const {
+using transformation = detail::coordinate_transformation;
   // Update the stepping state
-  update(state, boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
+  update(state, transformation::boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;

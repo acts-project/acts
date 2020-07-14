@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -198,14 +199,13 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams;
-  freeParams << -1.1, 2.2, -3.3, 4.4, -5.5, 6.6, -7.7, 8.8;
+  FreeVector freeParams = detail::coordinate_transformation::boundParameters2freeParameters(tgContext, cp2.parameters(), cp2.referenceSurface());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters
   StraightLineStepper::State slsStateCopy(ps.stepping);
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset all possible parameters except the step size
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface(), ndir);
   // Test all components
   BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Reset the least amount of parameters
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface());
   // Test all components
   BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());

@@ -32,6 +32,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -281,14 +282,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams;
-  freeParams << -1.1, 2.2, -3.3, 4.4, -5.5, 6.6, -7.7, 8.8;
+  FreeVector freeParams = detail::coordinate_transformation::boundParameters2freeParameters(tgContext, cp2.parameters(), cp2.referenceSurface());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters
   EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
-  es.resetState(esStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_TEST(esStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset all possible parameters except the step size
   esStateCopy = ps.stepping;
-  es.resetState(esStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
   BOOST_TEST(esStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Reset the least amount of parameters
   esStateCopy = ps.stepping;
-  es.resetState(esStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
   BOOST_TEST(esStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
