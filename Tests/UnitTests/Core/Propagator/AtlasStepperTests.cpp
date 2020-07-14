@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // ensure step does not result in an error
   stepper.step(state);
-     
+
   // Construct the parameters
   Vector3D pos(1.5, -2.5, 3.5);
   Vector3D mom(4.5, -5.5, 6.5);
@@ -311,16 +311,20 @@ BOOST_AUTO_TEST_CASE(Reset) {
   freeParams << -1.1, 2.2, -3.3, 4.4, -5.5, 6.6, -7.7, 8.8;
   NavigationDirection ndir = forward;
   double stepSize = -256.;
-  
+
   // Reset all possible parameters
   Stepper::State stateCopy(state.stepping);
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(), cp.referenceSurface(), ndir, stepSize);
+  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+                     cp.referenceSurface(), ndir, stepSize);
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
   BOOST_TEST(*stateCopy.covariance == cov);
-  BOOST_TEST(stepper.position(stateCopy) == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(stepper.direction(stateCopy) == freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_TEST(stepper.momentum(stateCopy) == std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_TEST(stepper.position(stateCopy) ==
+             freeParams.template segment<3>(eFreePos0));
+  BOOST_TEST(stepper.direction(stateCopy) ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(stepper.momentum(stateCopy) ==
+             std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(stepper.charge(stateCopy) == stepper.charge(state.stepping));
   BOOST_TEST(stepper.time(stateCopy) == freeParams[eFreeTime]);
   BOOST_TEST(stateCopy.navDir == ndir);
@@ -328,16 +332,20 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_TEST(stateCopy.stepSize == ndir * stepSize);
   BOOST_TEST(stateCopy.previousStepSize == state.stepping.previousStepSize);
   BOOST_TEST(stateCopy.tolerance == state.stepping.tolerance);
- 
- // Reset all possible parameters except the step size
- stateCopy = state.stepping;
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(), cp.referenceSurface(), ndir);
+
+  // Reset all possible parameters except the step size
+  stateCopy = state.stepping;
+  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+                     cp.referenceSurface(), ndir);
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
   BOOST_TEST(*stateCopy.covariance == cov);
-  BOOST_TEST(stepper.position(stateCopy) == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(stepper.direction(stateCopy) == freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_TEST(stepper.momentum(stateCopy) == std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_TEST(stepper.position(stateCopy) ==
+             freeParams.template segment<3>(eFreePos0));
+  BOOST_TEST(stepper.direction(stateCopy) ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(stepper.momentum(stateCopy) ==
+             std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(stepper.charge(stateCopy) == stepper.charge(state.stepping));
   BOOST_TEST(stepper.time(stateCopy) == freeParams[eFreeTime]);
   BOOST_TEST(stateCopy.navDir == ndir);
@@ -345,16 +353,20 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_TEST(stateCopy.stepSize == ndir * std::numeric_limits<double>::max());
   BOOST_TEST(stateCopy.previousStepSize == state.stepping.previousStepSize);
   BOOST_TEST(stateCopy.tolerance == state.stepping.tolerance);
-  
+
   // Reset the least amount of parameters
   stateCopy = state.stepping;
-  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(), cp.referenceSurface());
+  stepper.resetState(stateCopy, cp.parameters(), freeParams, *cp.covariance(),
+                     cp.referenceSurface());
   // Test all components
   BOOST_TEST(stateCopy.covTransport);
   BOOST_TEST(*stateCopy.covariance == cov);
-  BOOST_TEST(stepper.position(stateCopy) == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(stepper.direction(stateCopy) == freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_TEST(stepper.momentum(stateCopy) == std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_TEST(stepper.position(stateCopy) ==
+             freeParams.template segment<3>(eFreePos0));
+  BOOST_TEST(stepper.direction(stateCopy) ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(stepper.momentum(stateCopy) ==
+             std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(stepper.charge(stateCopy) == stepper.charge(state.stepping));
   BOOST_TEST(stepper.time(stateCopy) == freeParams[eFreeTime]);
   BOOST_TEST(stateCopy.navDir == forward);

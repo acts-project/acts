@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -89,13 +89,13 @@ struct PropagatorState {
       GeometryContext geoContext = GeometryContext();
     };
 
-  /// State resetter
-  void resetState(
-      State& /*unused*/, const BoundVector& /*unused*/,
-      const FreeVector& /*unused*/, const BoundSymMatrix& /*unused*/,
-      const Surface& /*unused*/, const NavigationDirection /*unused*/,
-      const double /*unused*/) const {}
-      
+    /// State resetter
+    void resetState(State& /*unused*/, const BoundVector& /*unused*/,
+                    const FreeVector& /*unused*/,
+                    const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
+                    const NavigationDirection /*unused*/,
+                    const double /*unused*/) const {}
+
     /// Global particle position accessor
     Vector3D position(const State& state) const { return state.pos; }
 

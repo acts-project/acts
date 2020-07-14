@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(sls.momentum(slsState) == slsState.p);
   BOOST_TEST(sls.charge(slsState) == slsState.q);
   BOOST_TEST(sls.time(slsState) == slsState.t);
-  
+
   //~ BOOST_TEST(sls.overstepLimit(slsState) == tolerance);
 
   // Step size modifies
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());
   BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
 
-  /// Test the state reset  
+  /// Test the state reset
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
   Vector3D mom2(4.5, -5.5, 6.5);
@@ -202,10 +202,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   freeParams << -1.1, 2.2, -3.3, 4.4, -5.5, 6.6, -7.7, 8.8;
   ndir = forward;
   double stepSize2 = -2. * stepSize;
-  
+
   // Reset all possible parameters
   StraightLineStepper::State slsStateCopy(ps.stepping);
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(), cp2.referenceSurface(), ndir, stepSize2);
+  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
   BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(slsStateCopy.jacToGlobal != ps.stepping.jacToGlobal);
@@ -214,7 +215,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.covTransport);
   BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(slsStateCopy.dir ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(slsStateCopy.q == ps.stepping.q);
   BOOST_TEST(slsStateCopy.t == freeParams[eFreeTime]);
@@ -223,40 +225,45 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.stepSize == ndir * stepSize2);
   BOOST_TEST(slsStateCopy.previousStepSize == ps.stepping.previousStepSize);
   BOOST_TEST(slsStateCopy.tolerance == ps.stepping.tolerance);
- 
- // Reset all possible parameters except the step size
- slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(), cp2.referenceSurface(), ndir);
+
+  // Reset all possible parameters except the step size
+  slsStateCopy = ps.stepping;
+  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+                 cp2.referenceSurface(), ndir);
   // Test all components
-    BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
+  BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(slsStateCopy.jacToGlobal != ps.stepping.jacToGlobal);
   BOOST_TEST(slsStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(slsStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(slsStateCopy.covTransport);
   BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(slsStateCopy.dir ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(slsStateCopy.q == ps.stepping.q);
   BOOST_TEST(slsStateCopy.t == freeParams[eFreeTime]);
   BOOST_TEST(slsStateCopy.navDir == ndir);
   BOOST_TEST(slsStateCopy.pathAccumulated == 0.);
-  BOOST_TEST(slsStateCopy.stepSize == ndir * std::numeric_limits<double>::max());
+  BOOST_TEST(slsStateCopy.stepSize ==
+             ndir * std::numeric_limits<double>::max());
   BOOST_TEST(slsStateCopy.previousStepSize == ps.stepping.previousStepSize);
   BOOST_TEST(slsStateCopy.tolerance == ps.stepping.tolerance);
-  
+
   // Reset the least amount of parameters
   slsStateCopy = ps.stepping;
-  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(), cp2.referenceSurface());
+  sls.resetState(slsStateCopy, cp2.parameters(), freeParams, *cp2.covariance(),
+                 cp2.referenceSurface());
   // Test all components
-    BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
+  BOOST_TEST(slsStateCopy.jacToGlobal != BoundToFreeMatrix::Zero());
   BOOST_TEST(slsStateCopy.jacToGlobal != ps.stepping.jacToGlobal);
   BOOST_TEST(slsStateCopy.jacTransport == FreeMatrix::Identity());
   BOOST_TEST(slsStateCopy.derivative == FreeVector::Zero());
   BOOST_TEST(slsStateCopy.covTransport);
   BOOST_TEST(slsStateCopy.cov == cov2);
   BOOST_TEST(slsStateCopy.pos == freeParams.template segment<3>(eFreePos0));
-  BOOST_TEST(slsStateCopy.dir == freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_TEST(slsStateCopy.dir ==
+             freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_TEST(slsStateCopy.p == std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_TEST(slsStateCopy.q == ps.stepping.q);
   BOOST_TEST(slsStateCopy.t == freeParams[eFreeTime]);
@@ -265,7 +272,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_TEST(slsStateCopy.stepSize == std::numeric_limits<double>::max());
   BOOST_TEST(slsStateCopy.previousStepSize == ps.stepping.previousStepSize);
   BOOST_TEST(slsStateCopy.tolerance == ps.stepping.tolerance);
-  
+
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
   BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);

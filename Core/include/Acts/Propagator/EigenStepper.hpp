@@ -179,7 +179,7 @@ class EigenStepper {
   /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] navDir Navigation direction
-  /// @param [in] stepSize Step size 
+  /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams,
       const FreeVector& freeParams, const BoundSymMatrix& cov,
