@@ -8,6 +8,7 @@
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 namespace Acts {
 
@@ -67,11 +68,11 @@ void StraightLineStepper::covarianceTransport(State& state,
 }
 
 void StraightLineStepper::resetState(
-    State& state, const BoundVector& boundParams, const FreeVector& freeParams,
+    State& state, const BoundVector& boundParams,
     const BoundSymMatrix& cov, const Surface& surface,
     const NavigationDirection navDir, const double stepSize) const {
   // Update the stepping state
-  update(state, freeParams, cov);
+  update(state, boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;

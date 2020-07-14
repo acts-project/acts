@@ -475,8 +475,6 @@ class CombinatorialKalmanFilter {
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, currentState),
                          currentState.filteredCovariance(),
                          currentState.referenceSurface(), state.stepping.navDir,
                          state.options.maxStepSize);

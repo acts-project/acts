@@ -21,6 +21,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -310,11 +311,11 @@ class AtlasStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams,
-      const FreeVector& freeParams, const BoundSymMatrix& cov,
+      const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
-    update(state, freeParams, cov);
+    update(state, boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
     state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;

@@ -402,8 +402,6 @@ class KalmanFitter {
 
           // Update the stepping state
           stepper.resetState(state.stepping, st.filtered(),
-                             MultiTrajectoryHelpers::freeFiltered(
-                                 state.options.geoContext, st),
                              st.filteredCovariance(), st.referenceSurface(),
                              backward, state.options.maxStepSize);
 

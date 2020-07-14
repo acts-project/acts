@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 template <typename B, typename E, typename A>
 Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
@@ -14,11 +15,11 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::resetState(
-    State& state, const BoundVector& boundParams, const FreeVector& freeParams,
+    State& state, const BoundVector& boundParams,
     const BoundSymMatrix& cov, const Surface& surface,
     const NavigationDirection navDir, const double stepSize) const {
   // Update the stepping state
-  update(state, freeParams, cov);
+  update(state, boundParameters2freeParameters(state.geoContext, boundParams, surface), cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
