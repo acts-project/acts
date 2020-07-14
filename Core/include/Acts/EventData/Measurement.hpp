@@ -26,6 +26,7 @@ namespace Acts {
 // forward declarations
 class Surface;
 
+namespace detail{
 /// @brief Deduction of the measuring geometry object based on the used indices
 template <typename T>
 struct ReferenceObject {};
@@ -37,6 +38,7 @@ template <>
 struct ReferenceObject<FreeParametersIndices> {
   using type = Volume;
 };
+}
 
 /// @brief base class for Measurements
 ///
@@ -84,12 +86,12 @@ class Measurement {
   /// matrix type for projecting full parameter vector onto local parameters
   using Projection = typename ParamSet::Projection;
   /// Object type that corresponds to the measurement
-  using RefObject = typename ReferenceObject<parameter_indices_t>::type;
+  using RefObject = typename detail::ReferenceObject<parameter_indices_t>::type;
 
   /// Delete the default constructor
   Measurement() = delete;
 
-  /// @brief standard constructor for surface/volume bound measurements
+  /// @brief standard constructor for surface/volume measurements
   ///
   /// Concrete class for all possible measurements.
   ///

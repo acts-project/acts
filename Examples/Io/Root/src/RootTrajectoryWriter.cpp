@@ -27,7 +27,7 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 using Measurement =
     Acts::Measurement<FW::SimSourceLink, Acts::BoundParametersIndices,
-                      Acts::ParDef::eLOC_0, Acts::ParDef::eLOC_1>;
+                      Acts::eLOC_0, Acts::eLOC_1>;
 
 FW::RootTrajectoryWriter::RootTrajectoryWriter(
     const FW::RootTrajectoryWriter::Config& cfg, Acts::Logging::Level lvl)

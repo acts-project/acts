@@ -45,9 +45,9 @@ using CovMat_t = BoundParameters::CovarianceMatrix;
 struct TestTrackState {
   SourceLink sourceLink;
   std::optional<
-      Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1, eQOP>>
+      Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1, eQOP>>
       meas3d;
-  std::optional<Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1>>
+  std::optional<Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>>
       meas2d;
   std::optional<BoundParameters> predicted;
   std::optional<BoundParameters> filtered;
@@ -82,7 +82,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector3D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1, eQOP> meas{
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1, eQOP> meas{
         plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
@@ -109,7 +109,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector2D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1> meas{
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1> meas{
         plane, {}, mCov, mPar[0], mPar[1]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCov.setRandom();
   Vector2D mPar;
   mPar.setRandom();
-  Measurement<SourceLink, BoundParametersIndices, eLOC_0, eLOC_1> m2{
+  Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1> m2{
       pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
