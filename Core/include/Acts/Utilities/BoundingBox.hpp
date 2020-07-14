@@ -316,8 +316,7 @@ class AxisAlignedBoundingBox {
            (m_width.isApprox(other.m_width)) &&
            (m_iwidth.isApprox(other.m_iwidth)) &&
            (m_left_child == other.m_left_child) &&
-           (m_right_child == other.m_right_child) &&
-           (m_skip == other.m_skip);
+           (m_right_child == other.m_right_child) && (m_skip == other.m_skip);
   }
 
   /// Inequality operator

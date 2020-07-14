@@ -49,9 +49,9 @@ class SimSourceLink {
       throw std::runtime_error("Cannot create dim 0 measurement");
     } else if (m_dim == 1) {
       return Acts::Measurement<SimSourceLink, Acts::BoundParametersIndices,
-                               Acts::eLOC_0>{
-          m_surface->getSharedPtr(), *this, m_cov.topLeftCorner<1, 1>(),
-          m_values[0]};
+                               Acts::eLOC_0>{m_surface->getSharedPtr(), *this,
+                                             m_cov.topLeftCorner<1, 1>(),
+                                             m_values[0]};
     } else if (m_dim == 2) {
       return Acts::Measurement<SimSourceLink, Acts::BoundParametersIndices,
                                Acts::eLOC_0, Acts::eLOC_1>{

@@ -26,7 +26,7 @@ namespace Acts {
 // forward declarations
 class Surface;
 
-namespace detail{
+namespace detail {
 /// @brief Deduction of the measuring geometry object based on the used indices
 template <typename T>
 struct ReferenceObject {};
@@ -38,7 +38,7 @@ template <>
 struct ReferenceObject<FreeParametersIndices> {
   using type = Volume;
 };
-}
+}  // namespace detail
 
 /// @brief base class for Measurements
 ///
