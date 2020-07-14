@@ -89,6 +89,13 @@ struct PropagatorState {
       GeometryContext geoContext = GeometryContext();
     };
 
+  /// State resetter
+  void resetState(
+      State& /*unused*/, const BoundVector& /*unused*/,
+      const FreeVector& /*unused*/, const BoundSymMatrix& /*unused*/,
+      const Surface& /*unused*/, const NavigationDirection /*unused*/,
+      const double /*unused*/) const {}
+      
     /// Global particle position accessor
     Vector3D position(const State& state) const { return state.pos; }
 
