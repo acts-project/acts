@@ -5,12 +5,13 @@ or *A Common Tracking Software* if you do not like recursive acronyms
 [![10.5281/zenodo.3606011](https://badgen.net/badge/DOI/10.5281%2Fzenodo.3606011/blue)](https://doi.org/10.5281/zenodo.3606011)
 [![Chat on Mattermost](https://badgen.net/badge/chat/on%20mattermost/cyan)](https://mattermost.web.cern.ch/acts/)
 [![coverage](https://badgen.net/codecov/c/github/acts-project/acts/master)](https://codecov.io/gh/acts-project/acts/branch/master)
+[![Latest release](https://badgen.net/github/release/acts-project/acts)](https://github.com/acts-project/acts/releases)
+[![Status](https://badgen.net/github/status/acts-project/acts)](https://github.com/acts-project/acts/actions)
 
 Acts is an experiment-independent toolkit for (charged) particle track
 reconstruction in (high energy) physics experiments implemented in modern C++.
 
-More information can be found on the [Acts website](https://cern.ch/acts) and
-in the [Acts documentation](https://acts.readthedocs.io/).
+More information can be found in the [Acts documentation](https://acts.readthedocs.io/).
 
 ## Quick start
 
@@ -64,7 +65,7 @@ http://mozilla.org/MPL/2.0/ .
 
 The Acts project contains copies of the following external packages:
 
--   [dfelibs](https:://gitlab.cern.ch/msmk/dfelibs) by Moritz Kiehn
+-   [dfelibs](https://gitlab.cern.ch/msmk/dfelibs) by Moritz Kiehn
     licensed under the MIT license.
 -   [JSON for Modern C++](https://github.com/nlohmann/json) by Niels Lohmann
     licensed under the MIT License.
