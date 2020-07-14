@@ -33,35 +33,34 @@ class SingleCurvilinearTrackParameters
   /// Construct charged curvilinear parameters from global position, momentum.
   ///
   /// @param[in] cov Optional covariance matrix in the curvilinear frame
-  /// @param[in] position The global track three-position vector
-  /// @param[in] momentum The global track three-momentum vector
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
   /// @param[in] charge The particle charge
   /// @param[in] time The time coordinate
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<Covariance> cov,
-                                   const Vector3D& position,
-                                   const Vector3D& momentum, Scalar charge,
-                                   Scalar time)
-      : Base(Surface::makeShared<PlaneSurface>(position, momentum),
-             detail::transformFreeToCurvilinearParameters(
-                 time, momentum, charge / momentum.norm()),
+                                   const Vector3D& pos, const Vector3D& mom,
+                                   Scalar charge, Scalar time)
+      : Base(Surface::makeShared<PlaneSurface>(pos, mom),
+             detail::transformFreeToCurvilinearParameters(time, mom,
+                                                          charge / mom.norm()),
              std::move(cov)) {}
 
   /// Construct neutral curvilinear parameters from global position, momentum.
   ///
   /// @param[in] cov Optional covariance matrix in the curvilinear frame
-  /// @param[in] position The global track three-position vector
-  /// @param[in] momentum The global track three-momentum vector
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
   /// @param[in] time The time coordinate
   template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleCurvilinearTrackParameters(std::optional<Covariance> cov,
-                                   const Vector3D& position,
-                                   const Vector3D& momentum, Scalar time)
-      : Base(Surface::makeShared<PlaneSurface>(position, momentum),
-             detail::transformFreeToCurvilinearParameters(time, momentum,
-                                                          1 / momentum.norm()),
+                                   const Vector3D& pos, const Vector3D& mom,
+                                   Scalar time)
+      : Base(Surface::makeShared<PlaneSurface>(pos, mom),
+             detail::transformFreeToCurvilinearParameters(time, mom,
+                                                          1 / mom.norm()),
              std::move(cov)) {}
 
   // this class does not have a custom default constructor and thus should not
