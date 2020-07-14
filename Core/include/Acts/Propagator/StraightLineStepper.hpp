@@ -136,7 +136,7 @@ class StraightLineStepper {
   /// Constructor
   StraightLineStepper() = default;
 
-  void resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const navDir = forward) const;
+  void resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const Surface& surface, const NavigationDirection navDir = forward, const double stepSize = std::numeric_limits<double>::max()) const;
   
   /// Get the field for the stepping, this gives back a zero field
   ///

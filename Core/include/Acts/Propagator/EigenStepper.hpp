@@ -172,21 +172,7 @@ class EigenStepper {
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField);
 
-  void resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const navDir = forward) const {
-	            // Update the stepping state
-	  update(state, freeParams, cov);
-	  state.navDir = navDir;
-	  state.stepSize = ConstrainedStep(std::numeric_limits<double>::max());
-	  state.pathAccumulated = 0.;
-	  
-      // Reinitialize the stepping jacobian
-	  trackState.referenceSurface().initJacobianToGlobal(
-		  state.geoContext, state.jacToGlobal,
-		  position(state), direction(state), boundParams);
-	  state.jacobian = BoundMatrix::Identity();
-      state.jacTransport = FreeMatrix::Identity();
-      state.derivative = FreeVector::Zero();    
-  }
+  void resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const Surface& surface, const NavigationDirection navDir = forward, const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.

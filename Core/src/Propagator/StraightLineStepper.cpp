@@ -67,16 +67,16 @@ void StraightLineStepper::covarianceTransport(State& state,
 }
 
 
-void StraightLineStepper::resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const navDir) const
+void StraightLineStepper::resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const Surface& surface, const NavigationDirection navDir, const double stepSize) const
 {
    // Update the stepping state
   update(state, freeParams, cov);
   state.navDir = navDir;
-  state.stepSize = ConstrainedStep(std::numeric_limits<double>::max());
+  state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
   
   // Reinitialize the stepping jacobian
-  trackState.referenceSurface().initJacobianToGlobal(
+  surface.initJacobianToGlobal(
 	  state.geoContext, state.jacToGlobal,
 	  position(state), direction(state), boundParams);
   state.jacobian = BoundMatrix::Identity();

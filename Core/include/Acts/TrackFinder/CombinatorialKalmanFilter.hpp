@@ -452,39 +452,34 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void reset(propagator_state_t& state, stepper_t& stepper,
                result_type& result) const {
+	
       // Remember the propagation state has been reset
       result.reset = true;
 
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
+      	const auto resetNavigationState = [&](auto& navState){
+	 // Set the navigation state
+	  navState.startSurface = &currentState.referenceSurface();
+	  if (navState.startSurface->associatedLayer() != nullptr) {
+		navState.startLayer =
+			navState.startSurface->associatedLayer();
+	}
+	  navState.startVolume =
+		  navState.startLayer->trackingVolume();
+	  navState.targetSurface = targetSurface;
+	  navState.currentSurface = navState.startSurface;
+	  navState.currentVolume = navState.startVolume;
+    };
+    
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
-      state.navigation.startSurface = &currentState.referenceSurface();
-      if (state.navigation.startSurface->associatedLayer() != nullptr) {
-        state.navigation.startLayer =
-            state.navigation.startSurface->associatedLayer();
-      }
-      state.navigation.startVolume =
-          state.navigation.startLayer->trackingVolume();
-      state.navigation.targetSurface = targetSurface;
-      state.navigation.currentSurface = state.navigation.startSurface;
-      state.navigation.currentVolume = state.navigation.startVolume;
-
+      resetNavigationState(state.navigation);
+      
       // Update the stepping state
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeFiltered(
+      stepper.resetState(state.stepping, currentState.filtered(), MultiTrajectoryHelpers::freeFiltered(
                          state.options.geoContext, currentState),
-                     currentState.filteredCovariance());
-      // Reinitialize the stepping jacobian
-      currentState.referenceSurface().initJacobianToGlobal(
-          state.options.geoContext, state.stepping.jacToGlobal,
-          state.stepping.pos, state.stepping.dir, currentState.filtered());
-      state.stepping.jacobian = BoundMatrix::Identity();
-      state.stepping.jacTransport = FreeMatrix::Identity();
-      state.stepping.derivative = FreeVector::Zero();
-      // Reset step size and accumulated path
-      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
-      state.stepping.pathAccumulated = currentState.pathLength();
+                     currentState.filteredCovariance(), currentState.referenceSurface(), state.stepping.navDir, state.options.maxStepSize);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -1025,8 +1020,6 @@ class CombinatorialKalmanFilter {
       state.stepping.navDir = backward;
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
-      // Not sure if the following line helps anything
-      state.options.direction = backward;
 
       return Result<void>::success();
     }
