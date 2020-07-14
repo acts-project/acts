@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -391,8 +391,8 @@ class AtlasStepper {
         // special treatment for surface types
         // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
-          double lCf = cos(Vp[1]);
-          double lSf = sin(Vp[1]);
+          double lCf = cos(boundParams[1]);
+          double lSf = sin(boundParams[1]);
           double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
           double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
           double d0 = lCf * Ax[0] + lSf * Ay[0];
@@ -401,9 +401,9 @@ class AtlasStepper {
           pVector[8] = d0;
           pVector[9] = d1;
           pVector[10] = d2;
-          pVector[16] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
-          pVector[17] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
-          pVector[18] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+          pVector[16] = boundParams[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[17] = boundParams[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[18] = boundParams[0] * (lCf * Ay[2] - lSf * Ax[2]);
         }
         // the line needs components that relate direction change
         // with global frame change
@@ -441,12 +441,12 @@ class AtlasStepper {
           Bz3 = (Bz3 - B[2] * B3) * Bn;
 
           //  /dPhi      |     /dThe       |
-          pVector[24] = Bx2 * Vp[0];
-          pVector[32] = Bx3 * Vp[0];  // dX/
-          pVector[25] = By2 * Vp[0];
-          pVector[33] = By3 * Vp[0];  // dY/
-          pVector[26] = Bz2 * Vp[0];
-          pVector[34] = Bz3 * Vp[0];  // dZ/
+          pVector[24] = Bx2 * boundParams[0];
+          pVector[32] = Bx3 * boundParams[0];  // dX/
+          pVector[25] = By2 * boundParams[0];
+          pVector[33] = By3 * boundParams[0];  // dY/
+          pVector[26] = Bz2 * boundParams[0];
+          pVector[34] = Bz3 * boundParams[0];  // dZ/
         }
   }
       

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,6 +36,7 @@ namespace concept {
   template <typename T>
   using bfield_t = typename T::BField;
 
+  METHOD_TRAIT(reset_state_t, resetState);
   METHOD_TRAIT(get_field_t, getField);
   METHOD_TRAIT(position_t, position);
   METHOD_TRAIT(direction_t, direction);
@@ -90,6 +91,8 @@ namespace concept {
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool bfield_exists = exists<bfield_t, S>;
         static_assert(bfield_exists, "BField type not found");
+        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const FreeVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
+        static_assert(get_field_exists, "getField method not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
         static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3D, position_t, const state&>;
