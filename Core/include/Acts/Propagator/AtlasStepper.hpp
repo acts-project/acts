@@ -321,89 +321,93 @@ class AtlasStepper {
 	  state.pathAccumulated = 0.;
 
 	  // Reinitialize the stepping jacobian
-	  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal,
-								   position(state), direction(state), boundParams);
       // copy the covariance matrix
         const auto transform = surface.referenceFrame(
             state.geoContext, position(state), momentum(state) * direction(state));
 
-        pVector[8] = transform(0, eLOC_0);
-        pVector[16] = transform(0, eLOC_1);
-        pVector[24] = 0.;
-        pVector[32] = 0.;
-        pVector[40] = 0.;
-        pVector[48] = 0.;  // dX /
+      double Sf, Cf, Ce, Se;
+      Sf = sin(boundParams[eBoundPhi]);
+      Cf = cos(boundParams[eBoundPhi]);
+      Se = sin(boundParams[eBoundTheta]);
+      Ce = cos(boundParams[eBoundTheta]);
+      
+        state.pVector[8] = transform(0, eLOC_0);
+        state.pVector[16] = transform(0, eLOC_1);
+        state.pVector[24] = 0.;
+        state.pVector[32] = 0.;
+        state.pVector[40] = 0.;
+        state.pVector[48] = 0.;  // dX /
 
-        pVector[9] = transform(1, eLOC_0);
-        pVector[17] = transform(1, eLOC_1);
-        pVector[25] = 0.;
-        pVector[33] = 0.;
-        pVector[41] = 0.;
-        pVector[49] = 0.;  // dY /
+        state.pVector[9] = transform(1, eLOC_0);
+        state.pVector[17] = transform(1, eLOC_1);
+        state.pVector[25] = 0.;
+        state.pVector[33] = 0.;
+        state.pVector[41] = 0.;
+        state.pVector[49] = 0.;  // dY /
 
-        pVector[10] = transform(2, eLOC_0);
-        pVector[18] = transform(2, eLOC_1);
-        pVector[26] = 0.;
-        pVector[34] = 0.;
-        pVector[42] = 0.;
-        pVector[50] = 0.;  // dZ /
+        state.pVector[10] = transform(2, eLOC_0);
+        state.pVector[18] = transform(2, eLOC_1);
+        state.pVector[26] = 0.;
+        state.pVector[34] = 0.;
+        state.pVector[42] = 0.;
+        state.pVector[50] = 0.;  // dZ /
 
-        pVector[11] = 0.;
-        pVector[19] = 0.;
-        pVector[27] = 0.;
-        pVector[35] = 0.;
-        pVector[43] = 0.;
-        pVector[51] = 1.;  // dT/
+        state.pVector[11] = 0.;
+        state.pVector[19] = 0.;
+        state.pVector[27] = 0.;
+        state.pVector[35] = 0.;
+        state.pVector[43] = 0.;
+        state.pVector[51] = 1.;  // dT/
 
-        pVector[12] = 0.;
-        pVector[20] = 0.;
-        pVector[28] = -Sf * Se;  // - sin(phi) * cos(theta)
-        pVector[36] = Cf * Ce;   // cos(phi) * cos(theta)
-        pVector[44] = 0.;
-        pVector[52] = 0.;  // dAx/
+        state.pVector[12] = 0.;
+        state.pVector[20] = 0.;
+        state.pVector[28] = -Sf * Se;  // - sin(phi) * cos(theta)
+        state.pVector[36] = Cf * Ce;   // cos(phi) * cos(theta)
+        state.pVector[44] = 0.;
+        state.pVector[52] = 0.;  // dAx/
 
-        pVector[13] = 0.;
-        pVector[21] = 0.;
-        pVector[29] = Cf * Se;  // cos(phi) * sin(theta)
-        pVector[37] = Sf * Ce;  // sin(phi) * cos(theta)
-        pVector[45] = 0.;
-        pVector[53] = 0.;  // dAy/
+        state.pVector[13] = 0.;
+        state.pVector[21] = 0.;
+        state.pVector[29] = Cf * Se;  // cos(phi) * sin(theta)
+        state.pVector[37] = Sf * Ce;  // sin(phi) * cos(theta)
+        state.pVector[45] = 0.;
+        state.pVector[53] = 0.;  // dAy/
 
-        pVector[14] = 0.;
-        pVector[22] = 0.;
-        pVector[30] = 0.;
-        pVector[38] = -Se;  // - sin(theta)
-        pVector[46] = 0.;
-        pVector[54] = 0.;  // dAz/
+        state.pVector[14] = 0.;
+        state.pVector[22] = 0.;
+        state.pVector[30] = 0.;
+        state.pVector[38] = -Se;  // - sin(theta)
+        state.pVector[46] = 0.;
+        state.pVector[54] = 0.;  // dAz/
 
-        pVector[15] = 0.;
-        pVector[23] = 0.;
-        pVector[31] = 0.;
-        pVector[39] = 0.;
-        pVector[47] = 1.;
-        pVector[55] = 0.;  // dCM/
+        state.pVector[15] = 0.;
+        state.pVector[23] = 0.;
+        state.pVector[31] = 0.;
+        state.pVector[39] = 0.;
+        state.pVector[47] = 1.;
+        state.pVector[55] = 0.;  // dCM/
 
-        pVector[56] = 0.;
-        pVector[57] = 0.;
-        pVector[58] = 0.;
-        pVector[59] = 0.;
+        state.pVector[56] = 0.;
+        state.pVector[57] = 0.;
+        state.pVector[58] = 0.;
+        state.pVector[59] = 0.;
 
         // special treatment for surface types
         // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
-          double lCf = cos(boundParams[1]);
-          double lSf = sin(boundParams[1]);
+          double lCf = cos(boundParams[eBoundLoc1]);
+          double lSf = sin(boundParams[eBoundLoc1]);
           double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
           double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
           double d0 = lCf * Ax[0] + lSf * Ay[0];
           double d1 = lCf * Ax[1] + lSf * Ay[1];
           double d2 = lCf * Ax[2] + lSf * Ay[2];
-          pVector[8] = d0;
-          pVector[9] = d1;
-          pVector[10] = d2;
-          pVector[16] = boundParams[0] * (lCf * Ay[0] - lSf * Ax[0]);
-          pVector[17] = boundParams[0] * (lCf * Ay[1] - lSf * Ax[1]);
-          pVector[18] = boundParams[0] * (lCf * Ay[2] - lSf * Ax[2]);
+          state.pVector[8] = d0;
+          state.pVector[9] = d1;
+          state.pVector[10] = d2;
+          state.pVector[16] = boundParams[eBoundLoc0] * (lCf * Ay[0] - lSf * Ax[0]);
+          state.pVector[17] = boundParams[eBoundLoc0] * (lCf * Ay[1] - lSf * Ax[1]);
+          state.pVector[18] = boundParams[eBoundLoc0] * (lCf * Ay[2] - lSf * Ax[2]);
         }
         // the line needs components that relate direction change
         // with global frame change
@@ -418,17 +422,17 @@ class AtlasStepper {
           double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
 
           // projection of direction onto normal vector of reference frame
-          double PC = pVector[4] * C[0] + pVector[5] * C[1] + pVector[6] * C[2];
+          double PC = state.pVector[4] * C[0] + state.pVector[5] * C[1] + state.pVector[6] * C[2];
           double Bn = 1. / PC;
 
-          double Bx2 = -A[2] * pVector[29];
-          double Bx3 = A[1] * pVector[38] - A[2] * pVector[37];
+          double Bx2 = -A[2] * state.pVector[29];
+          double Bx3 = A[1] * state.pVector[38] - A[2] * state.pVector[37];
 
-          double By2 = A[2] * pVector[28];
-          double By3 = A[2] * pVector[36] - A[0] * pVector[38];
+          double By2 = A[2] * state.pVector[28];
+          double By3 = A[2] * state.pVector[36] - A[0] * state.pVector[38];
 
-          double Bz2 = A[0] * pVector[29] - A[1] * pVector[28];
-          double Bz3 = A[0] * pVector[37] - A[1] * pVector[36];
+          double Bz2 = A[0] * state.pVector[29] - A[1] * state.pVector[28];
+          double Bz3 = A[0] * state.pVector[37] - A[1] * state.pVector[36];
 
           double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
           double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
@@ -441,12 +445,12 @@ class AtlasStepper {
           Bz3 = (Bz3 - B[2] * B3) * Bn;
 
           //  /dPhi      |     /dThe       |
-          pVector[24] = Bx2 * boundParams[0];
-          pVector[32] = Bx3 * boundParams[0];  // dX/
-          pVector[25] = By2 * boundParams[0];
-          pVector[33] = By3 * boundParams[0];  // dY/
-          pVector[26] = Bz2 * boundParams[0];
-          pVector[34] = Bz3 * boundParams[0];  // dZ/
+          state.pVector[24] = Bx2 * boundParams[eBoundLoc0];
+          state.pVector[32] = Bx3 * boundParams[eBoundLoc0];  // dX/
+          state.pVector[25] = By2 * boundParams[eBoundLoc0];
+          state.pVector[33] = By3 * boundParams[eBoundLoc0];  // dY/
+          state.pVector[26] = Bz2 * boundParams[eBoundLoc0];
+          state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
         }
   }
       
