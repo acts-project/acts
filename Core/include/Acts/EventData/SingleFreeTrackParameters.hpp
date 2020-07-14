@@ -75,21 +75,18 @@ class SingleFreeTrackParameters {
   /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> Scalar get()
-                const {
+  template <FreeParametersIndices kIndex>
+  Scalar get() const {
     return m_oParameters.template getParameter<kIndex>();
   }
 
   /// @brief Access track parameter uncertainty
   ///
-  /// @tparam par Identifier of the parameter uncertainty index which will
-  /// be retrieved
+  /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> Scalar
-                uncertainty() const {
+  template <FreeParametersIndices kIndex>
+  Scalar uncertainty() const {
     return m_oParameters.template getUncertainty<kIndex>();
   }
 
@@ -161,16 +158,15 @@ class SingleFreeTrackParameters {
 
   /// @brief Update of the parameterisation
   ///
-  /// @tparam par The parameter index
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
+  /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
-  template <FreeParametersIndices par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
-                const GeometryContext& /*gctx*/, ParValue_t newValue) {
-    m_oParameters.setParameter<par>(newValue);
+  template <FreeParametersIndices kIndex>
+  void set(const GeometryContext& /*gctx*/, Scalar newValue) {
+    m_oParameters.setParameter<kIndex>(newValue);
   }
 
   /// @brief Print information to output stream
