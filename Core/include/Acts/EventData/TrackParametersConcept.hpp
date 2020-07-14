@@ -20,9 +20,11 @@ using namespace Acts::concept;
 
 // nested types that must be available
 template <typename T>
-using TypeParametersVector = typename T::ParVector_t;
+using TypeScalar = typename T::Scalar;
 template <typename T>
-using TypeCovarianceMatrix = typename T::CovMatrix_t;
+using TypeParametersVector = typename T::ParametersVector;
+template <typename T>
+using TypeCovarianceMatrix = typename T::CovarianceMatrix;
 
 template <typename T>
 using ReturnTypeReferenceSurface =
@@ -43,6 +45,7 @@ using ReturnTypeCharge = decltype(std::declval<T>().charge());
 template <typename T>
 struct BoundTrackParametersConceptImpl {
   // check for required nested types
+  constexpr static bool hasTypeScalar = exists<TypeScalar, const T>;
   constexpr static bool hasTypeParametersVector =
       exists<TypeParametersVector, const T>;
   constexpr static bool hasTypeCovarianceMatrix =
@@ -66,6 +69,7 @@ struct BoundTrackParametersConceptImpl {
       identical_to<double, ReturnTypeCharge, const T>;
 
   // provide meaningful error messages in case of non-compliance
+  static_assert(hasTypeScalar, "Scalar type is missing");
   static_assert(hasTypeParametersVector, "Parameters vector type is missing");
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
   static_assert(hasMethodReferenceSurface,
@@ -78,7 +82,7 @@ struct BoundTrackParametersConceptImpl {
   static_assert(hasMethodCharge, "Missing/ invvalid 'charge' method");
 
   constexpr static bool value =
-      require<hasTypeParametersVector, hasTypeCovarianceMatrix,
+      require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
               hasMethodReferenceSurface, hasMethodParameters,
               hasMethodCovariance, hasMethodPosition, hasMethodTime,
               hasMethodMomentum, hasMethodCharge>;
@@ -87,6 +91,9 @@ struct BoundTrackParametersConceptImpl {
 template <typename T>
 struct FreeTrackParametersConceptImpl {
   // check for required nested types
+  constexpr static bool hasTypeScalar = exists<TypeScalar, const T>;
+  constexpr static bool hasTypeParametersVector =
+      exists<TypeParametersVector, const T>;
   constexpr static bool hasTypeCovarianceMatrix =
       exists<TypeCovarianceMatrix, const T>;
 
@@ -106,6 +113,8 @@ struct FreeTrackParametersConceptImpl {
       identical_to<double, ReturnTypeCharge, const T>;
 
   // provide meaningful error messages in case of non-compliance
+  static_assert(hasTypeScalar, "Scalar type is missing");
+  static_assert(hasTypeParametersVector, "Parameters vector type is missing");
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
   static_assert(hasMethodParameters, "Missing/ invvalid 'parameters' method");
   static_assert(hasMethodCovariance, "Missing/ invvalid 'covariance' method");
@@ -115,9 +124,9 @@ struct FreeTrackParametersConceptImpl {
   static_assert(hasMethodCharge, "Missing/ invvalid 'charge' method");
 
   constexpr static bool value =
-      require<hasTypeCovarianceMatrix, hasMethodParameters, hasMethodCovariance,
-              hasMethodPosition, hasMethodTime, hasMethodMomentum,
-              hasMethodCharge>;
+      require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
+              hasMethodParameters, hasMethodCovariance, hasMethodPosition,
+              hasMethodTime, hasMethodMomentum, hasMethodCharge>;
 };
 
 template <typename parameters_t>
