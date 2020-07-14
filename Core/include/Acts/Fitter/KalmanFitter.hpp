@@ -385,28 +385,27 @@ class KalmanFitter {
       state.navigation = typename propagator_t::NavigatorState();
       result.fittedStates.applyBackwards(result.trackTip, [&](auto st) {
         if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          const auto resetNavigationState = [&](auto& navState) {
+            // Set the navigation state
+            navState.startSurface = &st.referenceSurface();
+            if (navState.startSurface->associatedLayer() != nullptr) {
+              navState.startLayer = navState.startSurface->associatedLayer();
+            }
+            navState.startVolume = navState.startLayer->trackingVolume();
+            navState.targetSurface = targetSurface;
+            navState.currentSurface = navState.startSurface;
+            navState.currentVolume = navState.startVolume;
+          };
 
-      	const auto resetNavigationState = [&](auto& navState){
-	 // Set the navigation state
-	  navState.startSurface = &st.referenceSurface();
-	  if (navState.startSurface->associatedLayer() != nullptr) {
-		navState.startLayer =
-			navState.startSurface->associatedLayer();
-	}
-	  navState.startVolume =
-		  navState.startLayer->trackingVolume();
-	  navState.targetSurface = targetSurface;
-	  navState.currentSurface = navState.startSurface;
-	  navState.currentVolume = navState.startVolume;
-    };
-    
           // Set the navigation state
           resetNavigationState(state.navigation);
-          
+
           // Update the stepping state
-		  stepper.resetState(state.stepping, st.filtered(), MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, st),
-                         st.filteredCovariance(), st.referenceSurface(), backward, state.options.maxStepSize);
+          stepper.resetState(state.stepping, st.filtered(),
+                             MultiTrajectoryHelpers::freeFiltered(
+                                 state.options.geoContext, st),
+                             st.filteredCovariance(), st.referenceSurface(),
+                             backward, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
           st.smoothed() = st.filtered();

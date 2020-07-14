@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -452,34 +452,34 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void reset(propagator_state_t& state, stepper_t& stepper,
                result_type& result) const {
-	
       // Remember the propagation state has been reset
       result.reset = true;
 
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
-      	const auto resetNavigationState = [&](auto& navState){
-	 // Set the navigation state
-	  navState.startSurface = &currentState.referenceSurface();
-	  if (navState.startSurface->associatedLayer() != nullptr) {
-		navState.startLayer =
-			navState.startSurface->associatedLayer();
-	}
-	  navState.startVolume =
-		  navState.startLayer->trackingVolume();
-	  navState.targetSurface = targetSurface;
-	  navState.currentSurface = navState.startSurface;
-	  navState.currentVolume = navState.startVolume;
-    };
-    
+      const auto resetNavigationState = [&](auto& navState) {
+        // Set the navigation state
+        navState.startSurface = &currentState.referenceSurface();
+        if (navState.startSurface->associatedLayer() != nullptr) {
+          navState.startLayer = navState.startSurface->associatedLayer();
+        }
+        navState.startVolume = navState.startLayer->trackingVolume();
+        navState.targetSurface = targetSurface;
+        navState.currentSurface = navState.startSurface;
+        navState.currentVolume = navState.startVolume;
+      };
+
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
       resetNavigationState(state.navigation);
-      
+
       // Update the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(), MultiTrajectoryHelpers::freeFiltered(
-                         state.options.geoContext, currentState),
-                     currentState.filteredCovariance(), currentState.referenceSurface(), state.stepping.navDir, state.options.maxStepSize);
+      stepper.resetState(state.stepping, currentState.filtered(),
+                         MultiTrajectoryHelpers::freeFiltered(
+                             state.options.geoContext, currentState),
+                         currentState.filteredCovariance(),
+                         currentState.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here

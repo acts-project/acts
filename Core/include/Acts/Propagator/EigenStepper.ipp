@@ -13,22 +13,24 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
 
 template <typename B, typename E, typename A>
-  void Acts::EigenStepper<B, E, A>::resetState(State& state, const BoundVector& boundParams, const FreeVector& freeParams, const BoundSymMatrix& cov, const Surface& surface, const NavigationDirection navDir, const double stepSize) const {
-	            // Update the stepping state
-	  update(state, freeParams, cov);
-	  state.navDir = navDir;
-	  state.stepSize = ConstrainedStep(stepSize);
-	  state.pathAccumulated = 0.;
-	  
-      // Reinitialize the stepping jacobian
-	  surface.initJacobianToGlobal(
-		  state.geoContext, state.jacToGlobal,
-		  position(state), direction(state), boundParams);
-	  state.jacobian = BoundMatrix::Identity();
-      state.jacTransport = FreeMatrix::Identity();
-      state.derivative = FreeVector::Zero();    
-  }
-  
+void Acts::EigenStepper<B, E, A>::resetState(
+    State& state, const BoundVector& boundParams, const FreeVector& freeParams,
+    const BoundSymMatrix& cov, const Surface& surface,
+    const NavigationDirection navDir, const double stepSize) const {
+  // Update the stepping state
+  update(state, freeParams, cov);
+  state.navDir = navDir;
+  state.stepSize = ConstrainedStep(stepSize);
+  state.pathAccumulated = 0.;
+
+  // Reinitialize the stepping jacobian
+  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal,
+                               position(state), direction(state), boundParams);
+  state.jacobian = BoundMatrix::Identity();
+  state.jacTransport = FreeMatrix::Identity();
+  state.derivative = FreeVector::Zero();
+}
+
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface) const
