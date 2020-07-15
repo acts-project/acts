@@ -152,28 +152,59 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   // located at the coordinate origin.
   const vertex_array_type fr_vmin = m_vmin - fr.origin();
   const vertex_array_type fr_vmax = m_vmax - fr.origin();
+  
+  auto calc = [&](const auto& normal) {
+    // for AABBs, take the component from the min vertex, if the normal
+    // component is negative, else take the component from the max vertex.
+    return (normal.array() < 0).template cast<value_type>() * fr_vmin +
+          (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+  };
 
   // For each plane, find the p-vertex, which is the vertex that is at the
   // furthest distance from the plane *along* it's normal direction.
   // See Fig. 2 in [2].
+
   VertexType p_vtx;
-  // for loop, we could eliminate this, probably,
-  // but sides+1 is known at compile time, so the compiler
-  // will most likely unroll the loop
-  for (size_t i = 0; i < sides + 1; i++) {
-    const VertexType& normal = normals[i];
 
-    // for AABBs, take the component from the min vertex, if the normal
-    // component is negative, else take the component from the max vertex.
-    p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
-            (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+  // generic implementation with a for loop, in case number of sides is over 4
+  if constexpr (fr.sides > 4) {
+    for (size_t i = 0; i < fr.sides + 1; i++) {
+      const VertexType& normal = normals[i];
 
-    // Check if the p-vertex is at positive or negative direction along the
-    // If the p vertex is along negative normal direction *once*, the box is
-    // outside the frustum, and we can terminate early.
-    if (p_vtx.dot(normal) < 0) {
-      // p vertex is outside on this plane, box must be outside
-      return false;
+      // for AABBs, take the component from the min vertex, if the normal
+      // component is negative, else take the component from the max vertex.
+      p_vtx = calc(normal);
+
+      // Check if the p-vertex is at positive or negative direction along the
+      // If the p vertex is along negative normal direction *once*, the box is
+      // outside the frustum, and we can terminate early.
+      if (p_vtx.dot(normal) < 0) {
+        // p vertex is outside on this plane, box must be outside
+        return false;
+      }
+    }
+  }
+  else {
+    // manually unrolled for loop for number of sides: [3, 4]
+    // gives about 20% reduced runtime in micro benchmarks
+
+    p_vtx = calc(normals[0]);
+    if (p_vtx.dot(normals[0]) < 0) return false;
+
+    p_vtx = calc(normals[1]);
+    if (p_vtx.dot(normals[1]) < 0) return false;
+
+    p_vtx = calc(normals[2]);
+    if (p_vtx.dot(normals[2]) < 0) return false;
+
+    if constexpr (sides > 2) { 
+      p_vtx = calc(normals[3]);
+      if (p_vtx.dot(normals[3]) < 0) return false;
+
+      if constexpr (sides > 3) {
+        p_vtx = calc(normals[4]);
+        if (p_vtx.dot(normals[4]) < 0) return false;
+      }
     }
   }
 
