@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -223,6 +225,15 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
  private:
   std::shared_ptr<const Surface> m_pSurface;
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleBoundTrackParameters& tp) {
+    detail::printBoundParameters(
+        os, tp.referenceSurface(), tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
 
 }  // namespace Acts
