@@ -68,9 +68,8 @@ GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 
 // A few initialisations and definitionas
 using SourceLink = ExtendedMinimalSourceLink;
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
