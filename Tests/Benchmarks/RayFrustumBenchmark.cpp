@@ -320,6 +320,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   Box box{nullptr, {0, 0, 0}, Box::Size{{1, 2, 3}}};
 
+  std::cout << "\n==== RAY ====\n" << std::endl;
+
   std::cout << "Make sure ray implementations are identical" << std::endl;
   for (const auto& ray : rays) {
     std::vector<bool> results{
@@ -377,6 +379,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
       [&](const auto& ray) { return naiveIntersect5(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
+  std::cout << "\n==== FRUSTUM ====\n" << std::endl;
+
   std::cout << "Make sure frustum implementations are identical" << std::endl;
   for (const auto& fr : frustums) {
     std::vector<bool> results{
@@ -406,44 +410,43 @@ int main(int /*argc*/, char** /*argv[]*/) {
   size_t iters_per_run = 1000;
 
   std::vector<std::pair<std::string, Frustum3>> testFrusts = {
-    {"towards", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI/4.}},
-    {"away", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI/4.}},
-    {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, M_PI/4.}},
-    {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, M_PI/4.}},
-    {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, M_PI/4.}},
-    {"down", Frustum3{{0, 0, -10}, {-1, 0, 0}, M_PI/4.}},
+      {"towards", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI / 4.}},
+      {"away", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI / 4.}},
+      {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, M_PI / 4.}},
+      {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, M_PI / 4.}},
+      {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, M_PI / 4.}},
+      {"down", Frustum3{{0, 0, -10}, {-1, 0, 0}, M_PI / 4.}},
   };
 
   for (const auto& [label, fr] : testFrusts) {
+    std::cout << "------------------------" << std::endl;
+    std::cout << label << std::endl;
+    std::cout << "------------------------" << std::endl;
 
-  std::cout << label << std::endl;
-  std::cout << "------------------------" << std::endl;
+    std::cout << "Benchmarking frust nominal: " << std::flush;
+    auto fr_bench_result = Acts::Test::microBenchmark(
+        [&]() { return box.intersect(fr); }, iters_per_run);
+    std::cout << fr_bench_result << std::endl;
 
-  std::cout << "Benchmarking frust nominal: " << std::flush;
-  auto fr_bench_result = Acts::Test::microBenchmark(
-      [&]() { return box.intersect(fr); }, iters_per_run);
-  std::cout << fr_bench_result << std::endl;
+    std::cout << "Benchmarking frust opt 1: " << std::flush;
+    fr_bench_result = Acts::Test::microBenchmark(
+        [&]() { return frustOpt1(box, fr); }, iters_per_run);
+    std::cout << fr_bench_result << std::endl;
 
-  std::cout << "Benchmarking frust opt 1: " << std::flush;
-  fr_bench_result = Acts::Test::microBenchmark(
-      [&]() { return frustOpt1(box, fr); }, iters_per_run);
-  std::cout << fr_bench_result << std::endl;
+    std::cout << "Benchmarking frust opt 2: " << std::flush;
+    fr_bench_result = Acts::Test::microBenchmark(
+        [&]() { return frustOpt2(box, fr); }, iters_per_run);
+    std::cout << fr_bench_result << std::endl;
 
-  std::cout << "Benchmarking frust opt 2: " << std::flush;
-  fr_bench_result = Acts::Test::microBenchmark(
-      [&]() { return frustOpt2(box, fr); }, iters_per_run);
-  std::cout << fr_bench_result << std::endl;
+    std::cout << "Benchmarking frust opt 3: " << std::flush;
+    fr_bench_result = Acts::Test::microBenchmark(
+        [&]() { return frustOpt3(box, fr); }, iters_per_run);
+    std::cout << fr_bench_result << std::endl;
 
-  std::cout << "Benchmarking frust opt 3: " << std::flush;
-  fr_bench_result = Acts::Test::microBenchmark(
-      [&]() { return frustOpt3(box, fr); }, iters_per_run);
-  std::cout << fr_bench_result << std::endl;
-
-  std::cout << "Benchmarking frust opt 4: " << std::flush;
-  fr_bench_result = Acts::Test::microBenchmark(
-      [&]() { return frustOpt4(box, fr); }, iters_per_run);
-  std::cout << fr_bench_result << std::endl;
-
+    std::cout << "Benchmarking frust opt 4: " << std::flush;
+    fr_bench_result = Acts::Test::microBenchmark(
+        [&]() { return frustOpt4(box, fr); }, iters_per_run);
+    std::cout << fr_bench_result << std::endl;
   }
   return 0;
 }
