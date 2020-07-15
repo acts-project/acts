@@ -264,31 +264,31 @@ bool frustOpt4(const Box& box, const frustum_t& fr) {
   VertexType p_vtx;
   bool result = true;
 
+  p_vtx = calc(normals[0]);
+  result = result && (p_vtx.dot(normals[0]) >= 0);
+
+  p_vtx = calc(normals[1]);
+  result = result && (p_vtx.dot(normals[1]) >= 0);
+
+  p_vtx = calc(normals[2]);
+  result = result && (p_vtx.dot(normals[2]) >= 0);
+
+  if constexpr (fr.sides > 2) {
+    p_vtx = calc(normals[3]);
+    result = result && (p_vtx.dot(normals[3]) >= 0);
+  }
+
+  if constexpr (fr.sides > 3) {
+    p_vtx = calc(normals[4]);
+    result = result && (p_vtx.dot(normals[4]) >= 0);
+  }
+
   if constexpr (fr.sides > 4) {
-    for (size_t i = 0; i < fr.sides + 1; i++) {
+    for (size_t i = 5; i <= fr.sides; i++) {
       const VertexType& normal = normals[i];
 
       p_vtx = calc(normal);
       result = result && (p_vtx.dot(normal) >= 0);
-    }
-  } else {
-    p_vtx = calc(normals[0]);
-    result = result && (p_vtx.dot(normals[0]) >= 0);
-
-    p_vtx = calc(normals[1]);
-    result = result && (p_vtx.dot(normals[1]) >= 0);
-
-    p_vtx = calc(normals[2]);
-    result = result && (p_vtx.dot(normals[2]) >= 0);
-
-    if constexpr (fr.sides > 2) {
-      p_vtx = calc(normals[3]);
-      result = result && (p_vtx.dot(normals[3]) >= 0);
-
-      if constexpr (fr.sides > 3) {
-        p_vtx = calc(normals[4]);
-        result = result && (p_vtx.dot(normals[4]) >= 0);
-      }
     }
   }
 
@@ -396,37 +396,54 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
       box.toStream(std::cerr);
       std::cerr << std::endl;
-      std::cerr << "Ray: [" << fr.origin().transpose() << "], ["
+      std::cerr << "Frustum: [" << fr.origin().transpose() << "], ["
                 << fr.dir().transpose() << "]" << std::endl;
       return -1;
     }
   }
   std::cout << "Seems ok" << std::endl;
 
+  size_t iters_per_run = 1000;
+
+  std::vector<std::pair<std::string, Frustum3>> testFrusts = {
+    {"towards", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI/4.}},
+    {"away", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI/4.}},
+    {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, M_PI/4.}},
+    {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, M_PI/4.}},
+    {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, M_PI/4.}},
+    {"down", Frustum3{{0, 0, -10}, {-1, 0, 0}, M_PI/4.}},
+  };
+
+  for (const auto& [label, fr] : testFrusts) {
+
+  std::cout << label << std::endl;
+  std::cout << "------------------------" << std::endl;
+
   std::cout << "Benchmarking frust nominal: " << std::flush;
   auto fr_bench_result = Acts::Test::microBenchmark(
-      [&](const auto& fr) { return box.intersect(fr); }, frustums);
+      [&]() { return box.intersect(fr); }, iters_per_run);
   std::cout << fr_bench_result << std::endl;
 
   std::cout << "Benchmarking frust opt 1: " << std::flush;
   fr_bench_result = Acts::Test::microBenchmark(
-      [&](const auto& fr) { return frustOpt1(box, fr); }, frustums);
+      [&]() { return frustOpt1(box, fr); }, iters_per_run);
   std::cout << fr_bench_result << std::endl;
 
   std::cout << "Benchmarking frust opt 2: " << std::flush;
   fr_bench_result = Acts::Test::microBenchmark(
-      [&](const auto& fr) { return frustOpt2(box, fr); }, frustums);
+      [&]() { return frustOpt2(box, fr); }, iters_per_run);
   std::cout << fr_bench_result << std::endl;
 
   std::cout << "Benchmarking frust opt 3: " << std::flush;
   fr_bench_result = Acts::Test::microBenchmark(
-      [&](const auto& fr) { return frustOpt3(box, fr); }, frustums);
+      [&]() { return frustOpt3(box, fr); }, iters_per_run);
   std::cout << fr_bench_result << std::endl;
 
   std::cout << "Benchmarking frust opt 4: " << std::flush;
   fr_bench_result = Acts::Test::microBenchmark(
-      [&](const auto& fr) { return frustOpt4(box, fr); }, frustums);
+      [&]() { return frustOpt4(box, fr); }, iters_per_run);
   std::cout << fr_bench_result << std::endl;
 
+  }
   return 0;
 }
