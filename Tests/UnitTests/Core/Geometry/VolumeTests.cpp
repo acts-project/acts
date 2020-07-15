@@ -65,11 +65,6 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   BOOST_TEST(volumeShift.transform().rotation() ==
              volume.transform().rotation());
 
-  // Test the (in)equality operator
-  Volume copy(volume);
-  BOOST_TEST(volume == copy);
-  BOOST_TEST(volume != volumeShift);
-
   // Inside/Outside check
   BOOST_TEST(volume.inside(translation));
   BOOST_TEST(!volume.inside({10_mm, 2_mm, 3_mm}));

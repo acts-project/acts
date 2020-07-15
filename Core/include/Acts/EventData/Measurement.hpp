@@ -274,7 +274,7 @@ class Measurement {
   virtual bool operator==(const Measurement<source_link_t, parameter_indices_t,
                                             params...>& rhs) const {
     return ((m_oParameters == rhs.m_oParameters) &&
-            (*m_pReferenceObject == *rhs.m_pReferenceObject) &&
+            (m_pReferenceObject == rhs.m_pReferenceObject) &&
             (m_sourceLink == rhs.m_sourceLink));
   }
 

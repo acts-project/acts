@@ -45,7 +45,7 @@ using CovMat_t = BoundParameters::CovarianceMatrix;
 struct TestTrackState {
   SourceLink sourceLink;
   std::optional<Measurement<SourceLink, BoundParametersIndices, eBoundLoc0,
-                            eBoundLoc1, eQOP>>
+                            eBoundLoc1, eBoundQOverP>>
       meas3d;
   std::optional<
       Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>>
@@ -84,7 +84,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     Vector3D mPar;
     mPar.setRandom();
     Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1,
-                eQOP>
+                eBoundQOverP>
         meas{plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);

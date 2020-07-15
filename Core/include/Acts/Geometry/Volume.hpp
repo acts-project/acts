@@ -59,12 +59,6 @@ class Volume : public virtual GeometryObject {
   /// @param vol is the source volume to be copied
   Volume& operator=(const Volume& vol);
 
-  /// Equality operator
-  virtual bool operator==(const Volume& other) const;
-
-  /// Inequality operator
-  virtual bool operator!=(const Volume& other) const;
-
   /// Return methods for geometry transform
   const Transform3D& transform() const;
 
