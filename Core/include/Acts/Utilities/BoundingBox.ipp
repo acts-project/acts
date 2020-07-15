@@ -152,12 +152,12 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
   // located at the coordinate origin.
   const vertex_array_type fr_vmin = m_vmin - fr.origin();
   const vertex_array_type fr_vmax = m_vmax - fr.origin();
-  
+
   auto calc = [&](const auto& normal) {
     // for AABBs, take the component from the min vertex, if the normal
     // component is negative, else take the component from the max vertex.
     return (normal.array() < 0).template cast<value_type>() * fr_vmin +
-          (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+           (normal.array() >= 0).template cast<value_type>() * fr_vmax;
   };
 
   // For each plane, find the p-vertex, which is the vertex that is at the
@@ -183,27 +183,31 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
         return false;
       }
     }
-  }
-  else {
+  } else {
     // manually unrolled for loop for number of sides: [3, 4]
     // gives about 20% reduced runtime in micro benchmarks
 
     p_vtx = calc(normals[0]);
-    if (p_vtx.dot(normals[0]) < 0) return false;
+    if (p_vtx.dot(normals[0]) < 0)
+      return false;
 
     p_vtx = calc(normals[1]);
-    if (p_vtx.dot(normals[1]) < 0) return false;
+    if (p_vtx.dot(normals[1]) < 0)
+      return false;
 
     p_vtx = calc(normals[2]);
-    if (p_vtx.dot(normals[2]) < 0) return false;
+    if (p_vtx.dot(normals[2]) < 0)
+      return false;
 
-    if constexpr (sides > 2) { 
+    if constexpr (sides > 2) {
       p_vtx = calc(normals[3]);
-      if (p_vtx.dot(normals[3]) < 0) return false;
+      if (p_vtx.dot(normals[3]) < 0)
+        return false;
 
       if constexpr (sides > 3) {
         p_vtx = calc(normals[4]);
-        if (p_vtx.dot(normals[4]) < 0) return false;
+        if (p_vtx.dot(normals[4]) < 0)
+          return false;
       }
     }
   }

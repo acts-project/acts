@@ -351,39 +351,33 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << "Seems ok" << std::endl;
 
   std::cout << "Benchmarking rays nominal: " << std::flush;
-  auto bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return box.intersect(ray);
-  }, rays);
+  auto bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return box.intersect(ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Benchmarking rays naive 1: " << std::flush;
-  bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return naiveIntersect1(box, ray);
-  }, rays);
+  bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return naiveIntersect1(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Benchmarking rays naive 2: " << std::flush;
-  bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return naiveIntersect2(box, ray);
-  }, rays);
+  bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return naiveIntersect2(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Benchmarking rays naive 3: " << std::flush;
-  bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return naiveIntersect3(box, ray);
-  }, rays);
+  bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return naiveIntersect3(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Benchmarking rays naive 4: " << std::flush;
-  bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return naiveIntersect4(box, ray);
-  }, rays);
+  bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return naiveIntersect4(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Benchmarking rays naive 5: " << std::flush;
-  bench_result = Acts::Test::microBenchmark([&] (const auto& ray) {
-    return naiveIntersect5(box, ray);
-  }, rays);
+  bench_result = Acts::Test::microBenchmark(
+      [&](const auto& ray) { return naiveIntersect5(box, ray); }, rays);
   std::cout << bench_result << std::endl;
 
   std::cout << "Make sure frustum implementations are identical" << std::endl;
