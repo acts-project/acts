@@ -282,7 +282,8 @@ class Measurement {
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParameterVector residual(const ActsVectorD<ParamSet::kSizeMax>& boundParameters) const {
+  ParameterVector residual(const ActsVectorD<detail::ParametersSize<
+      parameter_indices_t>::size>& boundParameters) const {
     return m_oParameters.residual(boundParameters);
   }
 
