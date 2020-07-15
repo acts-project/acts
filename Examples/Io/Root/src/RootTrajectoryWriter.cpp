@@ -424,14 +424,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasPredicted()) {
         predicted = true;
         m_nPredicted++;
-        Acts::BoundParameters parameter(
-            gctx, state.predictedCovariance(), state.predicted(),
-            surface.getSharedPtr());
+        auto parameters = state.predicted();
         auto covariance = state.predictedCovariance();
         // local hit residual info
         auto H = meas.projector();
         auto resCov = cov + H * covariance * H.transpose();
-        auto residual = meas.residual(parameter);
+        auto residual = meas.residual(state.predicted());
         m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
         m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
         m_err_x_hit.push_back(
@@ -447,25 +445,25 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_dim_hit.push_back(state.calibratedSize());
 
         // predicted parameter
-        m_eLOC0_prt.push_back(parameter.parameters()[Acts::eBoundLoc0]);
-        m_eLOC1_prt.push_back(parameter.parameters()[Acts::eBoundLoc1]);
-        m_ePHI_prt.push_back(parameter.parameters()[Acts::eBoundPhi]);
-        m_eTHETA_prt.push_back(parameter.parameters()[Acts::eBoundTheta]);
-        m_eQOP_prt.push_back(parameter.parameters()[Acts::eBoundQOverP]);
-        m_eT_prt.push_back(parameter.parameters()[Acts::eBoundTime]);
+        m_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0]);
+        m_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1]);
+        m_ePHI_prt.push_back(parameters[Acts::eBoundPhi]);
+        m_eTHETA_prt.push_back(parameters[Acts::eBoundTheta]);
+        m_eQOP_prt.push_back(parameters[Acts::eBoundQOverP]);
+        m_eT_prt.push_back(parameters[Acts::eBoundTime]);
 
         // predicted residual
-        m_res_eLOC0_prt.push_back(parameter.parameters()[Acts::eBoundLoc0] -
+        m_res_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0] -
                                   truthLOC0);
-        m_res_eLOC1_prt.push_back(parameter.parameters()[Acts::eBoundLoc1] -
+        m_res_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1] -
                                   truthLOC1);
-        m_res_ePHI_prt.push_back(parameter.parameters()[Acts::eBoundPhi] -
+        m_res_ePHI_prt.push_back(parameters[Acts::eBoundPhi] -
                                  truthPHI);
         m_res_eTHETA_prt.push_back(
-            parameter.parameters()[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_prt.push_back(parameter.parameters()[Acts::eBoundQOverP] -
+            parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_prt.push_back(parameters[Acts::eBoundQOverP] -
                                  truthQOP);
-        m_res_eT_prt.push_back(parameter.parameters()[Acts::eBoundTime] -
+        m_res_eT_prt.push_back(parameters[Acts::eBoundTime] -
                                truthTIME);
 
         // predicted parameter error
@@ -484,22 +482,22 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
         // predicted parameter pull
         m_pull_eLOC0_prt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc0] - truthLOC0) /
+            (parameters[Acts::eBoundLoc0] - truthLOC0) /
             sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_pull_eLOC1_prt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc1] - truthLOC1) /
+            (parameters[Acts::eBoundLoc1] - truthLOC1) /
             sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
         m_pull_ePHI_prt.push_back(
-            (parameter.parameters()[Acts::eBoundPhi] - truthPHI) /
+            (parameters[Acts::eBoundPhi] - truthPHI) /
             sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
         m_pull_eTHETA_prt.push_back(
-            (parameter.parameters()[Acts::eBoundTheta] - truthTHETA) /
+            (parameters[Acts::eBoundTheta] - truthTHETA) /
             sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
         m_pull_eQOP_prt.push_back(
-            (parameter.parameters()[Acts::eBoundQOverP] - truthQOP) /
+            (parameters[Acts::eBoundQOverP] - truthQOP) /
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
         m_pull_eT_prt.push_back(
-            (parameter.parameters()[Acts::eBoundTime] - truthTIME) /
+            (parameters[Acts::eBoundTime] - truthTIME) /
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further predicted parameter info
@@ -559,30 +557,28 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasFiltered()) {
         filtered = true;
         m_nFiltered++;
-        Acts::BoundParameters parameter(
-            gctx, state.filteredCovariance(), state.filtered(),
-            state.referenceSurface().getSharedPtr());
+        auto parameters = state.filtered();
         auto covariance = state.filteredCovariance();
         // filtered parameter
-        m_eLOC0_flt.push_back(parameter.parameters()[Acts::eBoundLoc0]);
-        m_eLOC1_flt.push_back(parameter.parameters()[Acts::eBoundLoc1]);
-        m_ePHI_flt.push_back(parameter.parameters()[Acts::eBoundPhi]);
-        m_eTHETA_flt.push_back(parameter.parameters()[Acts::eBoundTheta]);
-        m_eQOP_flt.push_back(parameter.parameters()[Acts::eBoundQOverP]);
-        m_eT_flt.push_back(parameter.parameters()[Acts::eBoundTime]);
+        m_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0]);
+        m_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1]);
+        m_ePHI_flt.push_back(parameters[Acts::eBoundPhi]);
+        m_eTHETA_flt.push_back(parameters[Acts::eBoundTheta]);
+        m_eQOP_flt.push_back(parameters[Acts::eBoundQOverP]);
+        m_eT_flt.push_back(parameters[Acts::eBoundTime]);
 
         // filtered residual
-        m_res_eLOC0_flt.push_back(parameter.parameters()[Acts::eBoundLoc0] -
+        m_res_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0] -
                                   truthLOC0);
-        m_res_eLOC1_flt.push_back(parameter.parameters()[Acts::eBoundLoc1] -
+        m_res_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1] -
                                   truthLOC1);
-        m_res_ePHI_flt.push_back(parameter.parameters()[Acts::eBoundPhi] -
+        m_res_ePHI_flt.push_back(parameters[Acts::eBoundPhi] -
                                  truthPHI);
         m_res_eTHETA_flt.push_back(
-            parameter.parameters()[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_flt.push_back(parameter.parameters()[Acts::eBoundQOverP] -
+            parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_flt.push_back(parameters[Acts::eBoundQOverP] -
                                  truthQOP);
-        m_res_eT_flt.push_back(parameter.parameters()[Acts::eBoundTime] -
+        m_res_eT_flt.push_back(parameters[Acts::eBoundTime] -
                                truthTIME);
 
         // filtered parameter error
@@ -601,22 +597,22 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
         // filtered parameter pull
         m_pull_eLOC0_flt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc0] - truthLOC0) /
+            (parameters[Acts::eBoundLoc0] - truthLOC0) /
             sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_pull_eLOC1_flt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc1] - truthLOC1) /
+            (parameters[Acts::eBoundLoc1] - truthLOC1) /
             sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
         m_pull_ePHI_flt.push_back(
-            (parameter.parameters()[Acts::eBoundPhi] - truthPHI) /
+            (parameters[Acts::eBoundPhi] - truthPHI) /
             sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
         m_pull_eTHETA_flt.push_back(
-            (parameter.parameters()[Acts::eBoundTheta] - truthTHETA) /
+            (parameters[Acts::eBoundTheta] - truthTHETA) /
             sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
         m_pull_eQOP_flt.push_back(
-            (parameter.parameters()[Acts::eBoundQOverP] - truthQOP) /
+            (parameters[Acts::eBoundQOverP] - truthQOP) /
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
         m_pull_eT_flt.push_back(
-            (parameter.parameters()[Acts::eBoundTime] - truthTIME) /
+            (parameters[Acts::eBoundTime] - truthTIME) /
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // more filtered parameter info
@@ -670,31 +666,29 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (state.hasSmoothed()) {
         smoothed = true;
         m_nSmoothed++;
-        Acts::BoundParameters parameter(
-            gctx, state.smoothedCovariance(), state.smoothed(),
-            state.referenceSurface().getSharedPtr());
+        auto parameters = state.smoothed();
         auto covariance = state.smoothedCovariance();
 
         // smoothed parameter
-        m_eLOC0_smt.push_back(parameter.parameters()[Acts::eBoundLoc0]);
-        m_eLOC1_smt.push_back(parameter.parameters()[Acts::eBoundLoc1]);
-        m_ePHI_smt.push_back(parameter.parameters()[Acts::eBoundPhi]);
-        m_eTHETA_smt.push_back(parameter.parameters()[Acts::eBoundTheta]);
-        m_eQOP_smt.push_back(parameter.parameters()[Acts::eBoundQOverP]);
-        m_eT_smt.push_back(parameter.parameters()[Acts::eBoundTime]);
+        m_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0]);
+        m_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1]);
+        m_ePHI_smt.push_back(parameters[Acts::eBoundPhi]);
+        m_eTHETA_smt.push_back(parameters[Acts::eBoundTheta]);
+        m_eQOP_smt.push_back(parameters[Acts::eBoundQOverP]);
+        m_eT_smt.push_back(parameters[Acts::eBoundTime]);
 
         // smoothed residual
-        m_res_eLOC0_smt.push_back(parameter.parameters()[Acts::eBoundLoc0] -
+        m_res_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0] -
                                   truthLOC0);
-        m_res_eLOC1_smt.push_back(parameter.parameters()[Acts::eBoundLoc1] -
+        m_res_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1] -
                                   truthLOC1);
-        m_res_ePHI_smt.push_back(parameter.parameters()[Acts::eBoundPhi] -
+        m_res_ePHI_smt.push_back(parameters[Acts::eBoundPhi] -
                                  truthPHI);
         m_res_eTHETA_smt.push_back(
-            parameter.parameters()[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_smt.push_back(parameter.parameters()[Acts::eBoundQOverP] -
+            parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_smt.push_back(parameters[Acts::eBoundQOverP] -
                                  truthQOP);
-        m_res_eT_smt.push_back(parameter.parameters()[Acts::eBoundTime] -
+        m_res_eT_smt.push_back(parameters[Acts::eBoundTime] -
                                truthTIME);
 
         // smoothed parameter error
@@ -713,22 +707,22 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
         // smoothed parameter pull
         m_pull_eLOC0_smt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc0] - truthLOC0) /
+            (parameters[Acts::eBoundLoc0] - truthLOC0) /
             sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
         m_pull_eLOC1_smt.push_back(
-            (parameter.parameters()[Acts::eBoundLoc1] - truthLOC1) /
+            (parameters[Acts::eBoundLoc1] - truthLOC1) /
             sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
         m_pull_ePHI_smt.push_back(
-            (parameter.parameters()[Acts::eBoundPhi] - truthPHI) /
+            (parameters[Acts::eBoundPhi] - truthPHI) /
             sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
         m_pull_eTHETA_smt.push_back(
-            (parameter.parameters()[Acts::eBoundTheta] - truthTHETA) /
+            (parameters[Acts::eBoundTheta] - truthTHETA) /
             sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
         m_pull_eQOP_smt.push_back(
-            (parameter.parameters()[Acts::eBoundQOverP] - truthQOP) /
+            (parameters[Acts::eBoundQOverP] - truthQOP) /
             sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
         m_pull_eT_smt.push_back(
-            (parameter.parameters()[Acts::eBoundTime] - truthTIME) /
+            (parameters[Acts::eBoundTime] - truthTIME) /
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further smoothed parameter info
