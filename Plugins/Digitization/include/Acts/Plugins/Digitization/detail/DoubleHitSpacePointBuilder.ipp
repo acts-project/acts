@@ -325,7 +325,7 @@ template <typename Cluster>
 Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
-  auto& clusterSurface = cluster.referenceSurface();
+  auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
   Acts::Vector3D pos, mom;
@@ -398,7 +398,7 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
 
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
-  const auto* sur = &cluster.referenceSurface();
+  const auto* sur = &cluster.referenceObject();
   sur->localToGlobal(gctx, topBottomLocal.first, mom, topGlobal);
   sur->localToGlobal(gctx, topBottomLocal.second, mom, bottomGlobal);
 

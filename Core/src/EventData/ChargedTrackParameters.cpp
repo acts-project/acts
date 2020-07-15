@@ -7,11 +7,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 
 namespace Acts {
 
+// explicitly instantiate templates
 template class SingleBoundTrackParameters<ChargedPolicy>;
 template class SingleCurvilinearTrackParameters<ChargedPolicy>;
 template class SingleFreeTrackParameters<ChargedPolicy>;
+
+// ensure concrete classes satisfy the concepts
+static_assert(Concepts::BoundTrackParametersConcept<BoundParameters>);
+static_assert(Concepts::BoundTrackParametersConcept<CurvilinearParameters>);
+static_assert(Concepts::FreeTrackParametersConcept<FreeTrackParameters>);
 
 }  // namespace Acts

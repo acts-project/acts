@@ -135,6 +135,7 @@ void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
                            const Acts::GeometryContext& gctx,
                            const ActsFatras::Particle& truthParticle,
                            const Acts::BoundParameters& fittedParamters) const {
+  using ParametersVector = Acts::BoundParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -148,7 +149,7 @@ void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
   auto pSurface = &fittedParamters.referenceSurface();
 
   // get the truth position and momentum
-  ParVector_t truthParameter;
+  ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
   Acts::Vector2D local(0., 0.);

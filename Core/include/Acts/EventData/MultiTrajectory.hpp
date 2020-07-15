@@ -448,9 +448,12 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
+  void setCalibrated(const Acts::Measurement<SourceLink, BoundParametersIndices,
+                                             params...>& meas) {
     IndexData& dataref = data();
-    constexpr size_t measdim = Acts::Measurement<SourceLink, params...>::size();
+    constexpr size_t measdim =
+        Acts::Measurement<SourceLink, BoundParametersIndices,
+                          params...>::size();
 
     dataref.measdim = measdim;
 
@@ -469,10 +472,10 @@ class TrackStateProxy {
     std::shared_ptr<const Surface>& refSrf =
         m_traj->m_referenceSurfaces[dataref.irefsurface];
     // either unset, or the same, otherwise this is inconsistent assignment
-    assert(!refSrf || refSrf.get() == &meas.referenceSurface());
+    assert(!refSrf || refSrf.get() == &meas.referenceObject());
     if (!refSrf) {
       // ref surface is not set, set it now
-      refSrf = meas.referenceSurface().getSharedPtr();
+      refSrf = meas.referenceObject().getSharedPtr();
     }
 
     assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
@@ -487,7 +490,9 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
-  void resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas) {
+  void resetCalibrated(
+      const Acts::Measurement<SourceLink, BoundParametersIndices, params...>&
+          meas) {
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
