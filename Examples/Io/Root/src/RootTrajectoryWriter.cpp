@@ -355,21 +355,23 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         return true;
       }
 
-      // get the Surface
-      const Acts::Surface* surfacePtr =
-          dynamic_cast<const Acts::Surface*>(&state.referenceObject());
-      if (surfacePtr == nullptr) {
-        return true;
-      }
-      auto surface = surfacePtr->getSharedPtr();
+      //~ // get the Surface
+      //~ const Acts::Surface* surfacePtr =
+          //~ dynamic_cast<const Acts::Surface*>(&state.referenceObject());
+      //~ if (surfacePtr == nullptr) {
+        //~ return true;
+      //~ }
+      //~ auto surface = surfacePtr->getSharedPtr();
 
+      // get the measurement and surface
+      auto meas = std::get<Measurement>(*state.uncalibrated());
+      auto surface = meas.referenceObject().getSharedPtr();
+      
       // get the geometry ID
-      auto geoID = state.referenceObject().geoID();
+      auto geoID = surface.geoID();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
-
-      auto meas = std::get<Measurement>(*state.uncalibrated());
 
       // get local position
       Acts::Vector2D local(meas.parameters()[Acts::ParDef::eLOC_0],
