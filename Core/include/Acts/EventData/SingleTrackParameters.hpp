@@ -42,7 +42,10 @@ class SingleTrackParameters {
 
  public:
   // public typedef's
+<<<<<<< HEAD
   using Scalar = BoundParametersScalar;
+=======
+>>>>>>> Style fixes
   /// vector type for stored track parameters
   using ParametersVector = BoundVector;
   /// type of covariance matrix
