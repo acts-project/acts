@@ -44,8 +44,12 @@ using CovMat_t = BoundParameters::CovarianceMatrix;
 
 struct TestTrackState {
   SourceLink sourceLink;
-  std::optional<Measurement<SourceLink, eLOC_0, eLOC_1, eQOP>> meas3d;
-  std::optional<Measurement<SourceLink, eLOC_0, eLOC_1>> meas2d;
+  std::optional<Measurement<SourceLink, BoundParametersIndices, eBoundLoc0,
+                            eBoundLoc1, eBoundQOverP>>
+      meas3d;
+  std::optional<
+      Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>>
+      meas2d;
   std::optional<BoundParameters> predicted;
   std::optional<BoundParameters> filtered;
   std::optional<BoundParameters> smoothed;
@@ -79,8 +83,9 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector3D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, eLOC_0, eLOC_1, eQOP> meas{
-        plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1,
+                eBoundQOverP>
+        meas{plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
@@ -91,7 +96,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas3d = {meas.referenceSurface().getSharedPtr(),
+    pc.meas3d = {meas.referenceObject().getSharedPtr(),
                  sourceLink,
                  meas.covariance(),
                  meas.parameters()[0],
@@ -106,8 +111,8 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector2D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, eLOC_0, eLOC_1> meas{
-        plane, {}, mCov, mPar[0], mPar[1]};
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>
+        meas{plane, {}, mCov, mPar[0], mPar[1]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
@@ -118,7 +123,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink,
+    pc.meas2d = {meas.referenceObject().getSharedPtr(), sourceLink,
                  meas.covariance(), meas.parameters()[0], meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
@@ -516,8 +521,8 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCov.setRandom();
   Vector2D mPar;
   mPar.setRandom();
-  Measurement<SourceLink, eLOC_0, eLOC_1> m2{
-      pc.meas3d->referenceSurface().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
+  Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1> m2{
+      pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
 

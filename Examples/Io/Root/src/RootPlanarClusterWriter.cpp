@@ -117,7 +117,7 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
     Acts::Vector3D pos(0, 0, 0);
     Acts::Vector3D mom(1, 1, 1);
     // the cluster surface
-    const auto& clusterSurface = cluster.referenceSurface();
+    const auto& clusterSurface = cluster.referenceObject();
     // transform local into global position information
     clusterSurface.localToGlobal(ctx.geoContext, local, mom, pos);
     // identification

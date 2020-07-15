@@ -17,6 +17,7 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -25,12 +26,26 @@ namespace Acts {
 // forward declarations
 class Surface;
 
+namespace detail {
+/// @brief Deduction of the measuring geometry object based on the used indices
+template <typename T>
+struct ReferenceObject {};
+template <>
+struct ReferenceObject<BoundParametersIndices> {
+  using type = Surface;
+};
+template <>
+struct ReferenceObject<FreeParametersIndices> {
+  using type = Volume;
+};
+}  // namespace detail
+
 /// @brief base class for Measurements
 ///
 /// This class describes the measurement of track parameters at a certain
-/// Surface in the TrackingGeometry.
+/// Surface/Volume in the TrackingGeometry.
 ///
-/// The measurement is in local parameters and will not provide localToGlobal
+/// If the measurement is in local parameters and will not provide localToGlobal
 /// information. It is thus free from any Context.
 ///
 /// @tparam source_link_t the templated class that allows to link back to
@@ -48,8 +63,10 @@ class Surface;
 /// initialization\endlink
 ///
 /// @tparam Identifier identification object for this measurement
+/// @tparam parameter_indices_t Enum of parameter identifier
 /// @tparam params     parameter pack containing the measured parameters
-template <typename source_link_t, ParID_t... params>
+template <typename source_link_t, typename parameter_indices_t,
+          parameter_indices_t... params>
 class Measurement {
   // check type conditions
   static_assert(SourceLinkConcept<source_link_t>,
@@ -59,48 +76,50 @@ class Measurement {
   // private typedefs
 
   /// type of the underlying ParameterSet object
-  using ParSet_t = ParameterSet<BoundParametersIndices, params...>;
+  using ParamSet = ParameterSet<parameter_indices_t, params...>;
 
  public:
   /// type of the vector containing the parameter values
-  using ParameterVector = typename ParSet_t::ParameterVector;
+  using ParameterVector = typename ParamSet::ParameterVector;
   /// type of the covariance matrix of the measurement
-  using CovarianceMatrix = typename ParSet_t::CovarianceMatrix;
+  using CovarianceMatrix = typename ParamSet::CovarianceMatrix;
   /// matrix type for projecting full parameter vector onto local parameters
-  using Projection = typename ParSet_t::Projection;
+  using Projection = typename ParamSet::Projection;
+  /// Object type that corresponds to the measurement
+  using RefObject = typename detail::ReferenceObject<parameter_indices_t>::type;
 
   /// Delete the default constructor
   Measurement() = delete;
 
-  /// @brief standard constructor
+  /// @brief standard constructor for surface/volume measurements
   ///
   /// Concrete class for all possible measurements.
   ///
-  /// @note Only a reference to the given surface is stored. The user must
-  /// ensure that the lifetime of the @c Surface object surpasses the lifetime
-  /// of this Measurement object.
-  /// The given parameter values are interpreted as values to the
-  /// parameters as defined in the class template argument @c params.
+  /// @note Only a reference to the given surface/volume is stored. The user
+  /// must ensure that the lifetime of the @c Surface / @c Volume object
+  /// surpasses the lifetime of this Measurement object. The given parameter
+  /// values are interpreted as values to the parameters as defined in the class
+  /// template argument @c params.
   ///
   /// @attention The current design will fail if the in-memory location of
-  /// the @c Surface object is changed (e.g. if it is stored in a
+  /// the @c Surface / @c Volume object is changed (e.g. if it is stored in a
   /// container and this gets relocated).
   ///
-  /// @param surface surface at which the measurement took place
+  /// @param referenceObject surface/volume origin of the measurement
   /// @param source object for this measurement
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
   /// measurement
   template <typename... Tail>
-  Measurement(std::shared_ptr<const Surface> surface,
+  Measurement(std::shared_ptr<const RefObject> referenceObject,
               const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
       : m_oParameters(std::move(cov), head, values...),
-        m_pSurface(std::move(surface)),
+        m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
-    assert(m_pSurface);
+    assert(m_pReferenceObject);
   }
 
   /// @brief virtual destructor
@@ -109,37 +128,42 @@ class Measurement {
   /// @brief copy constructor
   ///
   /// @tparam source_link_t The identifier type
+  /// @tparam parameter_indices_t Enum of parameter identifier
   /// @tparam params...The local parameter pack
   ///
   /// @param copy is the source for the copy
-  Measurement(const Measurement<source_link_t, params...>& copy)
+  Measurement(
+      const Measurement<source_link_t, parameter_indices_t, params...>& copy)
       : m_oParameters(copy.m_oParameters),
-        m_pSurface(copy.m_pSurface),
+        m_pReferenceObject(copy.m_pReferenceObject),
         m_sourceLink(copy.m_sourceLink) {}
 
   /// @brief move constructor
   ///
   /// @tparam source_link_t The identifier type
+  /// @tparam parameter_indices_t Enum of parameter identifier
   /// @tparam params...The local parameter pack
   ///
   /// @param other is the source for the move
-  Measurement(Measurement<source_link_t, params...>&& other)
+  Measurement(
+      Measurement<source_link_t, parameter_indices_t, params...>&& other)
       : m_oParameters(std::move(other.m_oParameters)),
-        m_pSurface(std::move(other.m_pSurface)),
+        m_pReferenceObject(std::move(other.m_pReferenceObject)),
         m_sourceLink(std::move(other.m_sourceLink)) {}
 
   /// @brief copy assignment operator
   ///
   /// @tparam source_link_t The identifier type
+  /// @tparam parameter_indices_t Enum of parameter identifier
   /// @tparam params...The local parameter pack
   ///
   /// @param rhs is the source for the assignment
-  Measurement<source_link_t, params...>& operator=(
-      const Measurement<source_link_t, params...>& rhs) {
+  Measurement<source_link_t, parameter_indices_t, params...>& operator=(
+      const Measurement<source_link_t, parameter_indices_t, params...>& rhs) {
     // check for self-assignment
     if (&rhs != this) {
       m_oParameters = rhs.m_oParameters;
-      m_pSurface = rhs.m_pSurface;
+      m_pReferenceObject = rhs.m_pReferenceObject;
       m_sourceLink = rhs.m_sourceLink;
     }
     return *this;
@@ -148,13 +172,14 @@ class Measurement {
   /// @brief move assignment operator
   ///
   /// @tparam source_link_t The identifier type
+  /// @tparam parameter_indices_t Enum of parameter identifier
   /// @tparam params...The local parameter pack
   ///
   /// @param rhs is the source for the move assignment
-  Measurement<source_link_t, params...>& operator=(
-      Measurement<source_link_t, params...>&& rhs) {
+  Measurement<source_link_t, parameter_indices_t, params...>& operator=(
+      Measurement<source_link_t, parameter_indices_t, params...>&& rhs) {
     m_oParameters = std::move(rhs.m_oParameters);
-    m_pSurface = std::move(rhs.m_pSurface);
+    m_pReferenceObject = std::move(rhs.m_pReferenceObject);
     m_sourceLink = std::move(rhs.m_sourceLink);
     return *this;
   }
@@ -168,7 +193,7 @@ class Measurement {
   ///         error is generated.
   ///
   /// @return value of the stored parameter
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t get() const {
     return m_oParameters.template getParameter<parameter>();
   }
@@ -196,7 +221,7 @@ class Measurement {
   ///         error is generated.
   ///
   /// @return uncertainty \f$\sigma \ge 0\f$ for given parameter
-  template <ParID_t parameter>
+  template <parameter_indices_t parameter>
   ParValue_t uncertainty() const {
     return m_oParameters.template getUncertainty<parameter>();
   }
@@ -204,15 +229,15 @@ class Measurement {
   /// @brief number of measured parameters
   ///
   /// @return number of measured parameters
-  static constexpr unsigned int size() { return ParSet_t::size(); }
+  static constexpr unsigned int size() { return ParamSet::size(); }
 
-  /// @brief access associated surface
+  /// @brief access associated object
   ///
-  /// @pre The @c Surface object used to construct this @c Measurement object
-  /// must still be valid at the same memory location.
+  /// @pre The @c ReferenceObject object used to construct this @c Measurement
+  /// object must still be valid at the same memory location.
   ///
-  /// @return reference to surface at which the measurement took place
-  const Acts::Surface& referenceSurface() const { return *m_pSurface; }
+  /// @return reference to surface/volume associated which the measurement
+  const RefObject& referenceObject() const { return *m_pReferenceObject; }
 
   /// @brief link access to the source of the measurement.
   ///
@@ -229,9 +254,9 @@ class Measurement {
   /// range (e.g.
   ///       residuals in \f$\phi\f$ are corrected).
   ///
-  /// @todo Implement check that TrackParameters are defined at the same Surface
-  /// as the Measurement is.
-  /// @todo Implement validity check for residuals of local parameters.
+  /// @todo Implement check that TrackParameters are defined at the same
+  /// Surface/Volume as the Measurement is.
+  /// @todo Implement validity check for residuals of parameters.
   ///
   /// @param trackPars reference TrackParameters object
   ///
@@ -244,12 +269,12 @@ class Measurement {
 
   /// @brief equality operator
   ///
-  /// @return @c true if parameter sets and associated surfaces compare equal,
-  /// otherwise @c false
-  virtual bool operator==(
-      const Measurement<source_link_t, params...>& rhs) const {
+  /// @return @c true if parameter sets and associated surfaces/volumes compare
+  /// equal, otherwise @c false
+  virtual bool operator==(const Measurement<source_link_t, parameter_indices_t,
+                                            params...>& rhs) const {
     return ((m_oParameters == rhs.m_oParameters) &&
-            (*m_pSurface == *rhs.m_pSurface) &&
+            (m_pReferenceObject == rhs.m_pReferenceObject) &&
             (m_sourceLink == rhs.m_sourceLink));
   }
 
@@ -258,15 +283,17 @@ class Measurement {
   /// @return @c true if both objects are not equal, otherwise @c false
   ///
   /// @sa Measurement::operator==
-  bool operator!=(const Measurement<source_link_t, params...>& rhs) const {
+  bool operator!=(const Measurement<source_link_t, parameter_indices_t,
+                                    params...>& rhs) const {
     return !(*this == rhs);
   }
 
   /// @projection operator
-  static Projection projector() { return ParSet_t::projector(); }
+  static Projection projector() { return ParamSet::projector(); }
 
   friend std::ostream& operator<<(
-      std::ostream& out, const Measurement<source_link_t, params...>& m) {
+      std::ostream& out,
+      const Measurement<source_link_t, parameter_indices_t, params...>& m) {
     m.print(out);
     return out;
   }
@@ -285,10 +312,9 @@ class Measurement {
   }
 
  private:
-  ParSet_t m_oParameters;  ///< measured parameter set
-  std::shared_ptr<const Surface>
-      m_pSurface;  ///< surface at which the measurement took place
-
+  ParamSet m_oParameters;  ///< measured parameter set
+  std::shared_ptr<const RefObject> m_pReferenceObject =
+      nullptr;                 ///< object which corresponds to the measurement
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
@@ -298,20 +324,34 @@ class Measurement {
  */
 template <typename source_link_t>
 struct fittable_measurement_helper {
-  template <Acts::ParID_t... pars>
+  template <BoundParametersIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, pars...>;
+    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
   };
 
   using type =
-      typename detail::type_generator_t<meas_factory, eBoundParametersSize>;
+      typename detail::type_generator_t<BoundParametersIndices, meas_factory>;
+};
+
+template <typename source_link_t>
+struct fittable_volume_measurement_helper {
+  template <FreeParametersIndices... pars>
+  struct meas_factory {
+    using type = Measurement<source_link_t, FreeParametersIndices, pars...>;
+  };
+
+  using type =
+      typename detail::type_generator_t<FreeParametersIndices, meas_factory>;
 };
 
 /**
- * @brief FittableMeasurement variant type
+ * @brief Measurement variant types
  */
 template <typename source_link_t>
 using FittableMeasurement =
     typename fittable_measurement_helper<source_link_t>::type;
 
+template <typename source_link_t>
+using FittableVolumeMeasurement =
+    typename fittable_volume_measurement_helper<source_link_t>::type;
 }  // namespace Acts
