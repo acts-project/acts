@@ -190,43 +190,40 @@ bool frustOpt2(const Box& box, const frustum_t& fr) {
   VertexType p_vtx;
 
   p_vtx = calc(normals[0]);
-  if (p_vtx.dot(normals[0]) < 0)
+  if (p_vtx.dot(normals[0]) < 0) {
     return false;
+  }
 
   p_vtx = calc(normals[1]);
-  if (p_vtx.dot(normals[1]) < 0)
+  if (p_vtx.dot(normals[1]) < 0) {
     return false;
+  }
 
   p_vtx = calc(normals[2]);
-  if (p_vtx.dot(normals[2]) < 0)
+  if (p_vtx.dot(normals[2]) < 0) {
     return false;
+  }
 
   if constexpr (fr.sides > 2) {
     p_vtx = calc(normals[3]);
-    if (p_vtx.dot(normals[3]) < 0)
+    if (p_vtx.dot(normals[3]) < 0) {
       return false;
+    }
   }
 
   if constexpr (fr.sides > 3) {
     p_vtx = calc(normals[4]);
-    if (p_vtx.dot(normals[4]) < 0)
+    if (p_vtx.dot(normals[4]) < 0) {
       return false;
+    }
   }
 
   if constexpr (fr.sides > 4) {
     for (size_t i = 5; i <= fr.sides; i++) {
       const VertexType& normal = normals[i];
 
-      // for AABBs, take the component from the min vertex, if the normal
-      // component is negative, else take the component from the max vertex.
-      p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
-              (normal.array() >= 0).template cast<value_type>() * fr_vmax;
-
-      // Check if the p-vertex is at positive or negative direction along the
-      // If the p vertex is along negative normal direction *once*, the box is
-      // outside the frustum, and we can terminate early.
+      p_vtx = calc(normal);
       if (p_vtx.dot(normal) < 0) {
-        // p vertex is outside on this plane, box must be outside
         return false;
       }
     }
