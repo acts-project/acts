@@ -274,16 +274,15 @@ class Measurement {
   /// range (e.g.
   ///       residuals in \f$\phi\f$ are corrected).
   ///
-  /// @todo Implement check that TrackParameters are defined at the same Surface
-  /// as the Measurement is.
   /// @todo Implement validity check for residuals of local parameters.
   ///
   /// @param boundParameters reference bound parameters
+  /// @note The parameter ranges and the reference object of @p boundParameters are not tested
   ///
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParameterVector residual(const BoundVector& boundParameters) const {
+  ParameterVector residual(const ActsVectorD<ParamSet::kSizeMax>& boundParameters) const {
     return m_oParameters.residual(boundParameters);
   }
 

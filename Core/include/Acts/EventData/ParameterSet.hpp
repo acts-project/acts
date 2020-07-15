@@ -492,7 +492,8 @@ class ParameterSet {
    * vector of parameter values of this ParameterSet object and \f$\vec{v}^0\f$ is the full parameter value vector.
    *
    * @param boundParameters Vector of bound parameters
-   * @note Constraint and cyclic parameter value ranges of @p boundParameters are not tested
+   * @note Constraint and cyclic parameter value ranges of @p boundParameters are not tested.
+   * @note It is not tested whether @p boundParameters is at the same reference object
    * 
    * @return vector containing the residual parameter values of this
    * ParameterSet object
