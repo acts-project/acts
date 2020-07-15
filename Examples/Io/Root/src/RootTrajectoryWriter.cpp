@@ -20,6 +20,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -501,14 +502,16 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further predicted parameter info
-        m_x_prt.push_back(parameter.position().x());
-        m_y_prt.push_back(parameter.position().y());
-        m_z_prt.push_back(parameter.position().z());
-        m_px_prt.push_back(parameter.momentum().x());
-        m_py_prt.push_back(parameter.momentum().y());
-        m_pz_prt.push_back(parameter.momentum().z());
-        m_pT_prt.push_back(parameter.pT());
-        m_eta_prt.push_back(eta(parameter.position()));
+        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        m_x_prt.push_back(freePosition.x());
+        m_y_prt.push_back(freePosition.y());
+        m_z_prt.push_back(freePosition.z());
+        m_px_prt.push_back(freeMomentum.x());
+        m_py_prt.push_back(freeMomentum.y());
+        m_pz_prt.push_back(freeMomentum.z());
+        m_pT_prt.push_back(perp(freeMomentum)));
+        m_eta_prt.push_back(eta(freePosition));
       } else {
         // push default values if no predicted parameter
         m_res_x_hit.push_back(-99.);
@@ -616,14 +619,16 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // more filtered parameter info
-        m_x_flt.push_back(parameter.position().x());
-        m_y_flt.push_back(parameter.position().y());
-        m_z_flt.push_back(parameter.position().z());
-        m_px_flt.push_back(parameter.momentum().x());
-        m_py_flt.push_back(parameter.momentum().y());
-        m_pz_flt.push_back(parameter.momentum().z());
-        m_pT_flt.push_back(parameter.pT());
-        m_eta_flt.push_back(eta(parameter.position()));
+        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        m_x_flt.push_back(freePosition.x());
+        m_y_flt.push_back(freePosition.y());
+        m_z_flt.push_back(freePosition.z());
+        m_px_flt.push_back(freeMomentum.x());
+        m_py_flt.push_back(freeMomentum.y());
+        m_pz_flt.push_back(freeMomentum.z());
+        m_pT_flt.push_back(perp(freeMomentum));
+        m_eta_flt.push_back(eta(freePosition));
         m_chi2.push_back(state.chi2());
       } else {
         // push default values if no filtered parameter
@@ -726,14 +731,16 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further smoothed parameter info
-        m_x_smt.push_back(parameter.position().x());
-        m_y_smt.push_back(parameter.position().y());
-        m_z_smt.push_back(parameter.position().z());
-        m_px_smt.push_back(parameter.momentum().x());
-        m_py_smt.push_back(parameter.momentum().y());
-        m_pz_smt.push_back(parameter.momentum().z());
-        m_pT_smt.push_back(parameter.pT());
-        m_eta_smt.push_back(eta(parameter.position()));
+        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        m_x_smt.push_back(freePosition.x());
+        m_y_smt.push_back(freePosition.y());
+        m_z_smt.push_back(freePosition.z());
+        m_px_smt.push_back(freeMomentum.x());
+        m_py_smt.push_back(freeMomentum.y());
+        m_pz_smt.push_back(freeMomentum.z());
+        m_pT_smt.push_back(perp(freeMomentum));
+        m_eta_smt.push_back(eta(freePosition));
       } else {
         // push default values if no smoothed parameter
         m_eLOC0_smt.push_back(-99.);
