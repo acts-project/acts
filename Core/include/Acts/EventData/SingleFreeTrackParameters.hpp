@@ -165,17 +165,6 @@ class SingleFreeTrackParameters {
     m_oParameters.setParameter<kIndex>(newValue);
   }
 
-  /// Print information to the output stream.
-  ///
-  /// @param os The output stream
-  /// @return The modified output stream
-  std::ostream& print(std::ostream& os) const {
-    detail::printFreeParameters(
-        os, parameters(),
-        covariance().has_value() ? &covariance().value() : nullptr);
-    return os;
-  }
-
  private:
   FullFreeParameterSet
       m_oParameters;             ///< FreeParameterSet object holding the
@@ -186,7 +175,9 @@ class SingleFreeTrackParameters {
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleFreeTrackParameters& tp) {
-    tp.print(os);
+    detail::printFreeParameters(
+        os, tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;
   }
 };
