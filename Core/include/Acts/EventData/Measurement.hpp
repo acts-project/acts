@@ -266,7 +266,7 @@ class Measurement {
   ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
-  
+
   /// @brief calculate residual with respect to given track parameters
   ///
   /// @note It is checked that the residual for non-local parameters are in
@@ -277,13 +277,15 @@ class Measurement {
   /// @todo Implement validity check for residuals of local parameters.
   ///
   /// @param boundParameters reference bound parameters
-  /// @note The parameter ranges and the reference object of @p boundParameters are not tested
+  /// @note The parameter ranges and the reference object of @p boundParameters
+  /// are not tested
   ///
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParameterVector residual(const ActsVectorD<detail::ParametersSize<
-      parameter_indices_t>::size>& boundParameters) const {
+  ParameterVector residual(
+      const ActsVectorD<detail::ParametersSize<parameter_indices_t>::size>&
+          boundParameters) const {
     return m_oParameters.residual(boundParameters);
   }
 

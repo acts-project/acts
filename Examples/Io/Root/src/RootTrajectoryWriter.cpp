@@ -19,8 +19,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -334,13 +334,10 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       m_eTHETA_fit = parameter[Acts::eBoundTheta];
       m_eQOP_fit = parameter[Acts::eBoundQOverP];
       m_eT_fit = parameter[Acts::eBoundTime];
-      m_err_eLOC0_fit =
-          sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      m_err_eLOC1_fit =
-          sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
+      m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
+      m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
       m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-      m_err_eTHETA_fit =
-          sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
+      m_err_eTHETA_fit = sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
       m_err_eQOP_fit = sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
       m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
     }
@@ -355,7 +352,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
         return true;
       }
-      
+
       auto meas = std::get<Measurement>(*state.uncalibrated());
       auto& surface = meas.referenceObject();
 
@@ -389,8 +386,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       const auto& truthHit = state.uncalibrated().truthHit();
       // get local truth position
       Acts::Vector2D truthlocal;
-      surface.globalToLocal(
-          gctx, truthHit.position(), truthHit.unitDirection(), truthlocal);
+      surface.globalToLocal(gctx, truthHit.position(), truthHit.unitDirection(),
+                            truthlocal);
 
       // push the truth hit info
       m_t_x.push_back(truthHit.position().x());
@@ -433,10 +430,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         auto residual = meas.residual(parameters);
         m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
         m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
-        m_err_x_hit.push_back(
-            sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_y_hit.push_back(
-            sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+        m_err_x_hit.push_back(sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+        m_err_y_hit.push_back(sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
         m_pull_x_hit.push_back(
             residual(Acts::eBoundLoc0) /
             sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
@@ -454,18 +449,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_eT_prt.push_back(parameters[Acts::eBoundTime]);
 
         // predicted residual
-        m_res_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0] -
-                                  truthLOC0);
-        m_res_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1] -
-                                  truthLOC1);
-        m_res_ePHI_prt.push_back(parameters[Acts::eBoundPhi] -
-                                 truthPHI);
-        m_res_eTHETA_prt.push_back(
-            parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_prt.push_back(parameters[Acts::eBoundQOverP] -
-                                 truthQOP);
-        m_res_eT_prt.push_back(parameters[Acts::eBoundTime] -
-                               truthTIME);
+        m_res_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
+        m_res_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
+        m_res_ePHI_prt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
+        m_res_eTHETA_prt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_prt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
+        m_res_eT_prt.push_back(parameters[Acts::eBoundTime] - truthTIME);
 
         // predicted parameter error
         m_err_eLOC0_prt.push_back(
@@ -502,8 +491,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further predicted parameter info
-        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition =
+            Acts::detail::coordinate_transformation::parameters2globalPosition(
+                gctx, parameters, surface);
+        const Acts::Vector3D freeMomentum =
+            Acts::detail::coordinate_transformation::parameters2globalMomentum(
+                parameters);
         m_x_prt.push_back(freePosition.x());
         m_y_prt.push_back(freePosition.y());
         m_z_prt.push_back(freePosition.z());
@@ -571,18 +564,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_eT_flt.push_back(parameters[Acts::eBoundTime]);
 
         // filtered residual
-        m_res_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0] -
-                                  truthLOC0);
-        m_res_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1] -
-                                  truthLOC1);
-        m_res_ePHI_flt.push_back(parameters[Acts::eBoundPhi] -
-                                 truthPHI);
-        m_res_eTHETA_flt.push_back(
-            parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_flt.push_back(parameters[Acts::eBoundQOverP] -
-                                 truthQOP);
-        m_res_eT_flt.push_back(parameters[Acts::eBoundTime] -
-                               truthTIME);
+        m_res_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
+        m_res_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
+        m_res_ePHI_flt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
+        m_res_eTHETA_flt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_flt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
+        m_res_eT_flt.push_back(parameters[Acts::eBoundTime] - truthTIME);
 
         // filtered parameter error
         m_err_eLOC0_flt.push_back(
@@ -619,8 +606,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // more filtered parameter info
-        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition =
+            Acts::detail::coordinate_transformation::parameters2globalPosition(
+                gctx, parameters, surface);
+        const Acts::Vector3D freeMomentum =
+            Acts::detail::coordinate_transformation::parameters2globalMomentum(
+                parameters);
         m_x_flt.push_back(freePosition.x());
         m_y_flt.push_back(freePosition.y());
         m_z_flt.push_back(freePosition.z());
@@ -683,18 +674,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         m_eT_smt.push_back(parameters[Acts::eBoundTime]);
 
         // smoothed residual
-        m_res_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0] -
-                                  truthLOC0);
-        m_res_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1] -
-                                  truthLOC1);
-        m_res_ePHI_smt.push_back(parameters[Acts::eBoundPhi] -
-                                 truthPHI);
-        m_res_eTHETA_smt.push_back(
-            parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_smt.push_back(parameters[Acts::eBoundQOverP] -
-                                 truthQOP);
-        m_res_eT_smt.push_back(parameters[Acts::eBoundTime] -
-                               truthTIME);
+        m_res_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
+        m_res_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
+        m_res_ePHI_smt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
+        m_res_eTHETA_smt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
+        m_res_eQOP_smt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
+        m_res_eT_smt.push_back(parameters[Acts::eBoundTime] - truthTIME);
 
         // smoothed parameter error
         m_err_eLOC0_smt.push_back(
@@ -731,8 +716,12 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further smoothed parameter info
-        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition =
+            Acts::detail::coordinate_transformation::parameters2globalPosition(
+                gctx, parameters, surface);
+        const Acts::Vector3D freeMomentum =
+            Acts::detail::coordinate_transformation::parameters2globalMomentum(
+                parameters);
         m_x_smt.push_back(freePosition.x());
         m_y_smt.push_back(freePosition.y());
         m_z_smt.push_back(freePosition.z());
