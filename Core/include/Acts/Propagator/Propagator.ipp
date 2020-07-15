@@ -90,11 +90,12 @@ template <typename return_parameters_t, typename parameters_t,
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        return_parameters_t,
-        typename propagator_options_t::action_list_type>> {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t> or Concepts::FreeTrackParametersConcept<parameters_t>,
+        return_parameters_t, typename propagator_options_t::action_list_type>> {
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t> or
+                    Concepts::FreeTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
-  static_assert(Concepts::BoundTrackParametersConcept<return_parameters_t> or Concepts::FreeTrackParametersConcept<return_parameters_t>,
+  static_assert(Concepts::BoundTrackParametersConcept<return_parameters_t> or
+                    Concepts::FreeTrackParametersConcept<return_parameters_t>,
                 "Return parameters do not fulfill parameter concept.");
 
   // Type of track parameters produced by the propagation
