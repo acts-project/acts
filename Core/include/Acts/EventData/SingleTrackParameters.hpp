@@ -104,8 +104,6 @@ class SingleTrackParameters {
   /// @note The ownership of the covariance matrix is @b not transferred with
   /// this call.
   ///
-  /// @return raw pointer to covariance matrix (can be a nullptr)
-  ///
   /// @sa ParameterSet::getCovariance
   const std::optional<CovarianceMatrix>& covariance() const {
     return getParameterSet().getCovariance();

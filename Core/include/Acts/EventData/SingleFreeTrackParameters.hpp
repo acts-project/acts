@@ -82,7 +82,7 @@ class SingleFreeTrackParameters {
 
   /// @brief Access track parameter uncertainty
   ///
-  /// @tparam kIndex Identifier of the parameter index which will be retrieved
+  /// @tparam kIndex Identifier of the uncertainty index which will be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
   template <FreeParametersIndices kIndex>
@@ -94,8 +94,6 @@ class SingleFreeTrackParameters {
   ///
   /// @note The ownership of the covariance matrix is @b not transferred
   /// with this call.
-  ///
-  /// @return Raw pointer to covariance matrix (can be a nullptr)
   ///
   /// @sa ParameterSet::getCovariance
   const std::optional<CovarianceMatrix>& covariance() const {
@@ -160,7 +158,7 @@ class SingleFreeTrackParameters {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
-  /// @tparam kIndex Identifier of the parameter index which will be retrieved
+  /// @tparam kIndex Identifier of the parameter index which will be set
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
