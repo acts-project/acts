@@ -42,12 +42,11 @@ class SingleTrackParameters {
 
  public:
   // public typedef's
-
+  using Scalar = BoundParametersScalar;
   /// vector type for stored track parameters
-  using ParVector_t = BoundVector;
-
+  using ParametersVector = BoundVector;
   /// type of covariance matrix
-  using CovMatrix_t = BoundSymMatrix;
+  using CovarianceMatrix = BoundSymMatrix;
 
   /// @brief default destructor
   virtual ~SingleTrackParameters() = default;
@@ -81,12 +80,12 @@ class SingleTrackParameters {
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  double charge() const { return m_oChargePolicy.getCharge(); }
+  Scalar charge() const { return m_oChargePolicy.getCharge(); }
 
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return get<ParDef::eT>(); }
+  Scalar time() const { return get<eBoundTime>(); }
 
   /// @brief access to the internally stored ParameterSet
   ///
@@ -105,10 +104,8 @@ class SingleTrackParameters {
   /// @note The ownership of the covariance matrix is @b not transferred with
   /// this call.
   ///
-  /// @return raw pointer to covariance matrix (can be a nullptr)
-  ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const {
+  const std::optional<CovarianceMatrix>& covariance() const {
     return getParameterSet().getCovariance();
   }
 
@@ -117,7 +114,9 @@ class SingleTrackParameters {
   /// @return Eigen vector of dimension Acts::eBoundParametersSize with values
   /// of the track parameters
   ///         (in the order as defined by the ParID_t enumeration)
-  ParVector_t parameters() const { return getParameterSet().getParameters(); }
+  ParametersVector parameters() const {
+    return getParameterSet().getParameters();
+  }
 
   /// @brief access track parameter
   ///
@@ -126,8 +125,8 @@ class SingleTrackParameters {
   /// @return value of the requested track parameter
   ///
   /// @sa ParameterSet::get
-  template <ParID_t par>
-  ParValue_t get() const {
+  template <BoundParametersIndices par>
+  Scalar get() const {
     return getParameterSet().template getParameter<par>();
   }
 
@@ -136,16 +135,16 @@ class SingleTrackParameters {
   /// @tparam par identifier of track parameter which is to be retrieved
   ///
   /// @return value of the requested track parameter uncertainty
-  template <ParID_t par>
-  ParValue_t uncertainty() const {
+  template <BoundParametersIndices par>
+  Scalar uncertainty() const {
     return getParameterSet().template getUncertainty<par>();
   }
 
   /// @brief convenience method to retrieve transverse momentum
-  double pT() const { return VectorHelpers::perp(momentum()); }
+  Scalar pT() const { return VectorHelpers::perp(momentum()); }
 
   /// @brief convenience method to retrieve pseudorapidity
-  double eta() const { return VectorHelpers::eta(momentum()); }
+  Scalar eta() const { return VectorHelpers::eta(momentum()); }
 
   FullParameterSet& getParameterSet() { return m_oParameters; }
 
@@ -171,9 +170,9 @@ class SingleTrackParameters {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleTrackParameters(std::optional<CovMatrix_t> cov,
-                        const ParVector_t& parValues, const Vector3D& position,
-                        const Vector3D& momentum)
+  SingleTrackParameters(std::optional<CovarianceMatrix> cov,
+                        const ParametersVector& parValues,
+                        const Vector3D& position, const Vector3D& momentum)
       : m_oChargePolicy(
             detail::coordinate_transformation::parameters2charge(parValues)),
         m_oParameters(std::move(cov), parValues),
@@ -188,9 +187,9 @@ class SingleTrackParameters {
   /// @param momentum 3D vector with global momentum
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleTrackParameters(std::optional<CovMatrix_t> cov,
-                        const ParVector_t& parValues, const Vector3D& position,
-                        const Vector3D& momentum)
+  SingleTrackParameters(std::optional<CovarianceMatrix> cov,
+                        const ParametersVector& parValues,
+                        const Vector3D& position, const Vector3D& momentum)
       : m_oChargePolicy(),
         m_oParameters(std::move(cov), parValues),
         m_vPosition(position),

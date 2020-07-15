@@ -47,14 +47,13 @@ namespace Test {
 
 // A few initialisations and definitionas
 using SourceLink = MinimalSourceLink;
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
-
 using DebugOutput = DebugOutputActor;
 
 std::normal_distribution<double> gauss(0., 1.);
