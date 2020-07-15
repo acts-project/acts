@@ -119,7 +119,7 @@ struct CKFSourceLinkSelector {
       std::visit(
           [&](const auto& calibrated) {
             // The measurement surface should be the same as parameter surface
-            assert(&calibrated.referenceSurface() == surface);
+            assert(&calibrated.referenceObject() == surface);
 
             // Take the projector (measurement mapping function)
             const auto& H = calibrated.projector();
