@@ -410,8 +410,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
   size_t iters_per_run = 1000;
 
   std::vector<std::pair<std::string, Frustum3>> testFrusts = {
-      {"towards", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI / 4.}},
-      {"away", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI / 4.}},
+      {"away", Frustum3{{0, 0, -10}, {0, 0, -1}, M_PI / 4.}},
+      {"towards", Frustum3{{0, 0, -10}, {0, 0, 1}, M_PI / 4.}},
       {"left", Frustum3{{0, 0, -10}, {0, 1, 0}, M_PI / 4.}},
       {"right", Frustum3{{0, 0, -10}, {0, -1, 0}, M_PI / 4.}},
       {"up", Frustum3{{0, 0, -10}, {1, 0, 0}, M_PI / 4.}},
