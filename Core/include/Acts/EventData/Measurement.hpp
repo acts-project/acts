@@ -266,6 +266,26 @@ class Measurement {
   ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
   }
+  
+  /// @brief calculate residual with respect to given track parameters
+  ///
+  /// @note It is checked that the residual for non-local parameters are in
+  /// valid
+  /// range (e.g.
+  ///       residuals in \f$\phi\f$ are corrected).
+  ///
+  /// @todo Implement check that TrackParameters are defined at the same Surface
+  /// as the Measurement is.
+  /// @todo Implement validity check for residuals of local parameters.
+  ///
+  /// @param boundParameters reference bound parameters
+  ///
+  /// @return vector with the residual parameter values (in valid range)
+  ///
+  /// @sa ParameterSet::residual
+  ParameterVector residual(const BoundVector& boundParameters) const {
+    return m_oParameters.residual(boundParameters);
+  }
 
   /// @brief equality operator
   ///

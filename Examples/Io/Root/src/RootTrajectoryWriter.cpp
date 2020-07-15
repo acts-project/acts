@@ -357,7 +357,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       }
       
       auto meas = std::get<Measurement>(*state.uncalibrated());
-      auto surface = meas.referenceObject();
+      auto& surface = meas.referenceObject();
 
       // get the geometry ID
       auto geoID = surface.geoID();
@@ -430,7 +430,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         // local hit residual info
         auto H = meas.projector();
         auto resCov = cov + H * covariance * H.transpose();
-        auto residual = meas.residual(state.predicted());
+        auto residual = meas.residual(parameters);
         m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
         m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
         m_err_x_hit.push_back(
@@ -502,15 +502,15 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further predicted parameter info
-        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
         m_x_prt.push_back(freePosition.x());
         m_y_prt.push_back(freePosition.y());
         m_z_prt.push_back(freePosition.z());
         m_px_prt.push_back(freeMomentum.x());
         m_py_prt.push_back(freeMomentum.y());
         m_pz_prt.push_back(freeMomentum.z());
-        m_pT_prt.push_back(perp(freeMomentum)));
+        m_pT_prt.push_back(perp(freeMomentum));
         m_eta_prt.push_back(eta(freePosition));
       } else {
         // push default values if no predicted parameter
@@ -619,8 +619,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // more filtered parameter info
-        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
         m_x_flt.push_back(freePosition.x());
         m_y_flt.push_back(freePosition.y());
         m_z_flt.push_back(freePosition.z());
@@ -731,8 +731,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
             sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
         // further smoothed parameter info
-        const Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
-        const Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
+        const Acts::Vector3D freePosition = Acts::detail::coordinate_transformation::parameters2globalPosition(gctx, parameters, surface); 
+        const Acts::Vector3D freeMomentum = Acts::detail::coordinate_transformation::parameters2globalMomentum(parameters);
         m_x_smt.push_back(freePosition.x());
         m_y_smt.push_back(freePosition.y());
         m_z_smt.push_back(freePosition.z());

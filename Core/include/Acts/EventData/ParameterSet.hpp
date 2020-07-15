@@ -474,6 +474,38 @@ class ParameterSet {
   }
 
   /**
+   * @brief calculate residual difference to full parameter vector
+   *
+   * Calculate the residual differences of the stored parameter values with
+   * respect to the corresponding parameter values in the full parameter vector. Hereby, the residual vector is defined as
+   *
+   * \f[
+   * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
+   * \right)
+   *  = \left( \begin{array}{c} v_{i_1} \\ \vdots \\ v_{i_m} \end{array} \right)
+   * -  \mathrm{Proj} \left( \begin{array}{c} v^0_{1} \\ \vdots \\ v^0_{N}
+   * \end{array} \right)
+   *  = \vec{v} - \mathrm{Proj} \left( \vec{v}^0 \right)
+   * \f]
+   *
+   * where \f$\mathrm{Proj}\f$ is the projection matrix, \f$\vec{v}\f$ is the
+   * vector of parameter values of this ParameterSet object and \f$\vec{v}^0\f$ is the full parameter value vector.
+   *
+   * @param boundParameters Vector of bound parameters
+   * @note Constraint and cyclic parameter value ranges of @p boundParameters are not tested
+   * 
+   * @return vector containing the residual parameter values of this
+   * ParameterSet object
+   *         with respect to the given full parameter vector
+   *
+   * @sa ParameterSet::projector
+   */
+  ParameterVector residual(const ActsVectorD<kSizeMax>& boundParameters) const {
+    return detail::residual_calculator<parameter_indices_t, params...>::result(
+        m_vValues, projector() * boundParameters);
+  }
+  
+  /**
    * @brief calculate residual difference to other parameter vector
    *
    * Calculate the residual differences of the stored parameter values with
