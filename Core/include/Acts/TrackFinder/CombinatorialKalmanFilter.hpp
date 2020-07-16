@@ -454,24 +454,19 @@ class CombinatorialKalmanFilter {
                result_type& result) const {
       // Remember the propagation state has been reset
       result.reset = true;
-
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
-      const auto resetNavigationState = [&](auto& navState) {
-        // Set the navigation state
-        navState.startSurface = &currentState.referenceSurface();
-        if (navState.startSurface->associatedLayer() != nullptr) {
-          navState.startLayer = navState.startSurface->associatedLayer();
-        }
-        navState.startVolume = navState.startLayer->trackingVolume();
-        navState.targetSurface = targetSurface;
-        navState.currentSurface = navState.startSurface;
-        navState.currentVolume = navState.startVolume;
-      };
 
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
-      resetNavigationState(state.navigation);
+	state.navigation.startSurface = &currentState.referenceSurface();
+	if (state.navigation.startSurface->associatedLayer() != nullptr) {
+	  state.navigation.startLayer = state.navigation.startSurface->associatedLayer();
+	}
+	state.navigation.startVolume = state.navigation.startLayer->trackingVolume();
+	state.navigation.targetSurface = targetSurface;
+	state.navigation.currentSurface = state.navigation.startSurface;
+	state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
