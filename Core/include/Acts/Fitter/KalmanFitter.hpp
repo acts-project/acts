@@ -386,14 +386,16 @@ class KalmanFitter {
       result.fittedStates.applyBackwards(result.trackTip, [&](auto st) {
         if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           // Set the navigation state
-            state.navigation.startSurface = &st.referenceSurface();
-            if (state.navigation.startSurface->associatedLayer() != nullptr) {
-              state.navigation.startLayer = state.navigation.startSurface->associatedLayer();
-            }
-            state.navigation.startVolume = state.navigation.startLayer->trackingVolume();
-            state.navigation.targetSurface = targetSurface;
-            state.navigation.currentSurface = state.navigation.startSurface;
-            state.navigation.currentVolume = state.navigation.startVolume;
+          state.navigation.startSurface = &st.referenceSurface();
+          if (state.navigation.startSurface->associatedLayer() != nullptr) {
+            state.navigation.startLayer =
+                state.navigation.startSurface->associatedLayer();
+          }
+          state.navigation.startVolume =
+              state.navigation.startLayer->trackingVolume();
+          state.navigation.targetSurface = targetSurface;
+          state.navigation.currentSurface = state.navigation.startSurface;
+          state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
           stepper.resetState(state.stepping, st.filtered(),

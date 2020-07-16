@@ -459,14 +459,16 @@ class CombinatorialKalmanFilter {
 
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
-	state.navigation.startSurface = &currentState.referenceSurface();
-	if (state.navigation.startSurface->associatedLayer() != nullptr) {
-	  state.navigation.startLayer = state.navigation.startSurface->associatedLayer();
-	}
-	state.navigation.startVolume = state.navigation.startLayer->trackingVolume();
-	state.navigation.targetSurface = targetSurface;
-	state.navigation.currentSurface = state.navigation.startSurface;
-	state.navigation.currentVolume = state.navigation.startVolume;
+      state.navigation.startSurface = &currentState.referenceSurface();
+      if (state.navigation.startSurface->associatedLayer() != nullptr) {
+        state.navigation.startLayer =
+            state.navigation.startSurface->associatedLayer();
+      }
+      state.navigation.startVolume =
+          state.navigation.startLayer->trackingVolume();
+      state.navigation.targetSurface = targetSurface;
+      state.navigation.currentSurface = state.navigation.startSurface;
+      state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
