@@ -1,6 +1,6 @@
 # Small test data files
 
-**WARNING** All test files must be below 64kb in size.
+**WARNING** All test files must be below 128kb in size.
 
 This folder contains small test files, e.g. input data or comparison
 references, for various parts of the test suite. These files should be
