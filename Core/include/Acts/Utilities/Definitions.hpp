@@ -50,6 +50,17 @@ enum MaterialUpdateStage : int {
   postUpdate = 1
 };
 
+/// Boolean operations are defined as:
+/// https://en.wikipedia.org/wiki/Boolean_operations_on_polygons
+enum BooleanOperation : int {
+  eIntersection = 0,
+  eAnd = 0,
+  eNot = 1,
+  eUnion = 2,
+  eOr = 2,
+  eXor = 3
+};
+
 /// @enum NoiseUpdateMode to tell how to deal with noise term in covariance
 /// transport
 /// - removeNoise: subtract noise term

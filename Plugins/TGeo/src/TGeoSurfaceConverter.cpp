@@ -21,6 +21,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlanarBooleanBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -60,17 +61,17 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     }
 
     // The sign of the axes
-    int xs = islower(axes.at(0)) ? -1 : 1;
-    int ys = islower(axes.at(1)) ? -1 : 1;
+    int s0 = islower(axes.at(0)) ? -1 : 1;
+    int s1 = islower(axes.at(1)) ? -1 : 1;
 
     // Create translation and rotation
     Vector3D t(scalor * translation[0], scalor * translation[1],
                scalor * translation[2]);
     bool flipxy = not boost::istarts_with(axes, "X");
-    Vector3D ax = flipxy ? xs * Vector3D(rotation[1], rotation[4], rotation[7])
-                         : xs * Vector3D(rotation[0], rotation[3], rotation[6]);
-    Vector3D ay = flipxy ? ys * Vector3D(rotation[0], rotation[3], rotation[6])
-                         : ys * Vector3D(rotation[1], rotation[4], rotation[7]);
+    Vector3D ax = flipxy ? s0 * Vector3D(rotation[1], rotation[4], rotation[7])
+                         : s0 * Vector3D(rotation[0], rotation[3], rotation[6]);
+    Vector3D ay = flipxy ? s1 * Vector3D(rotation[0], rotation[3], rotation[6])
+                         : s1 * Vector3D(rotation[1], rotation[4], rotation[7]);
     Vector3D az = ax.cross(ay);
 
     double minR = tube->GetRmin() * scalor;
@@ -120,13 +121,6 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   // Special test for composite shape of silicon
   auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
   if (compShape != nullptr) {
-    if (not boost::istarts_with(axes, "XY")) {
-      throw std::invalid_argument(
-          "TGeoShape -> DiscSurface (Annulus): can only be converted with "
-          "'(x/X)(y/Y)(*)' "
-          "axes");
-    }
-
     // Create translation and rotation
     Vector3D t(scalor * translation[0], scalor * translation[1],
                scalor * translation[2]);
@@ -141,6 +135,12 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     if (interNode != nullptr) {
       auto baseTube = dynamic_cast<TGeoTubeSeg*>(interNode->GetLeftShape());
       if (baseTube != nullptr) {
+        if (not boost::istarts_with(axes, "XY")) {
+          throw std::invalid_argument(
+              "TGeoShape -> Acts::Surface: composite from TGeoTubeSeg can "
+              "only be converted with '(x/X)(y/Y)(*)' axes");
+        }
+
         double rMin = baseTube->GetRmin() * scalor;
         double rMax = baseTube->GetRmax() * scalor;
         auto maskShape = dynamic_cast<TGeoArb8*>(interNode->GetRightShape());
@@ -222,14 +222,14 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       }
 
       // The sign of the axes
-      int xs = islower(axes.at(0)) ? -1 : 1;
-      int ys = islower(axes.at(1)) ? -1 : 1;
+      int s0 = islower(axes.at(0)) ? -1 : 1;
+      int s1 = islower(axes.at(1)) ? -1 : 1;
 
       // Create translation and rotation
       Vector3D t(scalor * translation[0], scalor * translation[1],
                  scalor * translation[2]);
-      Vector3D ax = xs * Vector3D(rotation[0], rotation[3], rotation[6]);
-      Vector3D ay = ys * Vector3D(rotation[1], rotation[4], rotation[7]);
+      Vector3D ax = s0 * Vector3D(rotation[0], rotation[3], rotation[6]);
+      Vector3D ay = s1 * Vector3D(rotation[1], rotation[4], rotation[7]);
       Vector3D az = ax.cross(ay);
 
       transform = std::make_shared<const Transform3D>(
@@ -268,6 +268,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const Double_t* translation,
                                             const std::string& axes,
                                             double scalor) noexcept(false) {
+  // The bounds will be assigned
+  std::shared_ptr<const PlanarBounds> bounds = nullptr;
+  // The thickness will be filled
+  double thickness = 0.;
+
   // Create translation and rotation
   Vector3D t(scalor * translation[0], scalor * translation[1],
              scalor * translation[2]);
@@ -275,169 +280,258 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   Vector3D ay(rotation[1], rotation[4], rotation[7]);
   Vector3D az(rotation[2], rotation[5], rotation[8]);
 
-  std::shared_ptr<const PlanarBounds> bounds = nullptr;
-
-  // Check if it's a box - always true, hence last ressort
-  const TGeoBBox* box = dynamic_cast<const TGeoBBox*>(&tgShape);
-
-  // Check if it's a trapezoid2
-  const TGeoTrd1* trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
-  if (trapezoid1 and not boost::istarts_with(axes, "XZ")) {
-    throw std::invalid_argument(
-        "TGeoTrd1 -> PlaneSurface: can only be converted with '(x/X)(z/Z)(*)' "
-        "axes");
-  }
-
-  // Check if it's a trapezoid2
-  const TGeoTrd2* trapezoid2 = dynamic_cast<const TGeoTrd2*>(&tgShape);
-  if (trapezoid2) {
-    if (not boost::istarts_with(axes, "X") and
-        std::abs(trapezoid2->GetDx1() - trapezoid2->GetDx2()) > s_epsilon) {
-      throw std::invalid_argument(
-          "TGeoTrd2 -> PlaneSurface: dx1 must be be equal to dx2 if not taken "
-          "as trapezoidal side.");
-    } else if (not boost::istarts_with(axes, "Y") and
-               std::abs(trapezoid2->GetDy1() - trapezoid2->GetDy2()) >
-                   s_epsilon) {
-      throw std::invalid_argument(
-          "TGeoTrd2 -> PlaneSurface: dy1 must be be equal to dy2 if not taken "
-          "as trapezoidal side.");
-    }
-    // Not allowed
-    if (boost::istarts_with(axes, "XY") or boost::istarts_with(axes, "YX")) {
-      throw std::invalid_argument(
-          "TGeoTrd2 -> PlaneSurface: only works with (x/X)(z/Z) and "
-          "(y/Y)(z/Z).");
-    }
-  }
-
-  // Check if it's a Arb8
-  const TGeoArb8* polygon8c = dynamic_cast<const TGeoArb8*>(&tgShape);
-  TGeoArb8* polygon8 = nullptr;
-  if (polygon8c) {
-    // Needed otherwise you can access GetVertices
-    polygon8 = const_cast<TGeoArb8*>(polygon8c);
-  }
-
-  if (polygon8c and
-      not(boost::istarts_with(axes, "XY") or boost::istarts_with(axes, "YX"))) {
-    throw std::invalid_argument(
-        "TGeoArb8 -> PlaneSurface: dz must be normal component of Surface.");
-  }
-
-  // The thickness will be filled
-  double thickness = 0.;
-
   // The sign of the axes
-  int xs = islower(axes.at(0)) ? -1 : 1;
-  int ys = islower(axes.at(1)) ? -1 : 1;
+  int s0 = islower(axes.at(0)) ? -1 : 1;
+  int s1 = islower(axes.at(1)) ? -1 : 1;
 
   // Set up the columns : only cyclic iterations are allowed
-  Vector3D cx = xs * ax;
-  Vector3D cy = ys * ay;
-  if (boost::istarts_with(axes, "XY")) {
-    if (trapezoid2) {
-      double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
-      bounds = std::make_shared<const TrapezoidBounds>(
-          scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDy1());
-      thickness = scalor * trapezoid2->GetDz();
-    } else if (polygon8) {
-      Double_t* tgverts = polygon8->GetVertices();
-      std::vector<Vector2D> pVertices;
-      for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2],
-                                     scalor * ys * tgverts[ivtx * 2 + 1]));
+  Vector3D cx = s0 * ax;
+  Vector3D cy = s1 * ay;
+
+  // Special test for composite shape of silicon
+  auto compShape = dynamic_cast<const TGeoCompositeShape*>(&tgShape);
+  if (compShape != nullptr) {
+    auto unionNode = dynamic_cast<TGeoUnion*>(compShape->GetBoolNode());
+    if (unionNode != nullptr) {
+      auto leftShape = unionNode->GetLeftShape();
+      auto leftMatrix = unionNode->GetLeftMatrix();
+      auto rightShape = unionNode->GetRightShape();
+      auto rightMatrix = unionNode->GetRightMatrix();
+      const Double_t* leftTranslation = leftMatrix->GetTranslation();
+      const Double_t* leftRotation = leftMatrix->GetRotationMatrix();
+
+      const Double_t* rightTranslation = rightMatrix->GetTranslation();
+      const Double_t* rightRotation = leftMatrix->GetRotationMatrix();
+
+      auto leftComponents = planeComponents(*leftShape, leftRotation,
+                                            leftTranslation, axes, scalor);
+
+      auto rightComponents = planeComponents(*rightShape, rightRotation,
+                                             rightTranslation, axes, scalor);
+
+      auto leftBounds = std::get<0>(leftComponents);
+      auto rightBounds = std::get<0>(rightComponents);
+
+      if (leftBounds != nullptr and rightBounds != nullptr) {
+        auto leftTransform = std::get<1>(leftComponents);
+        auto rightTransform = std::get<1>(rightComponents);
+
+        auto leftShift3D =
+            leftTransform->matrix().block<3, 1>(0, 3).transpose();
+        auto rightShift3D =
+            rightTransform->matrix().block<3, 1>(0, 3).transpose();
+
+        auto leftThickness = std::get<2>(leftComponents);
+        auto rightThickness = std::get<2>(rightComponents);
+
+        if (std::abs(leftThickness - rightThickness) > s_epsilon) {
+          throw std::invalid_argument(
+              "TGeoUnion -> PlaneSurface: left and right component don't have "
+              "same thickness.");
+        }
+
+        if (not leftTransform->rotation().isApprox(
+                rightTransform->rotation())) {
+          throw std::invalid_argument(
+              "TGeoUnion -> PlaneSurface: left and right component don't have "
+              "same rotation.");
+        }
+
+        auto extractShift = [&](const Vector3D& shift3D) -> Vector2D {
+          double shx =
+              boost::istarts_with(axes, "X")
+                  ? shift3D.x()
+                  : boost::istarts_with(axes, "Y") ? shift3D.y() : shift3D.z();
+          std::string sax = axes.substr(1, 2);
+          double shy =
+              boost::istarts_with(sax, "X")
+                  ? shift3D.x()
+                  : boost::istarts_with(sax, "Y") ? shift3D.y() : shift3D.z();
+          return Vector2D(shx, shy);
+        };
+
+        bounds = std::make_shared<PlanarBooleanBounds>(
+            leftBounds, extractShift(leftShift3D), rightBounds,
+            extractShift(rightShift3D), eUnion);
+
+        thickness = leftThickness;
+
+        // set cx / cy according to axes - checks done in pre-conversion
+        if (boost::istarts_with(axes, "XZ")) {
+          cx = s0 * ax;
+          cy = s1 * az;
+        } else if (boost::istarts_with(axes, "YX")) {
+          cx = s0 * ay;
+          cy = s1 * ax;
+        } else if (boost::istarts_with(axes, "YZ")) {
+          cx = s0 * ay;
+          cy = s1 * az;
+        } else if (boost::istarts_with(axes, "ZX")) {
+          cx = s0 * az;
+          cy = s1 * ax;
+        } else {
+          cx = s0 * az;
+          cy = s1 * ay;
+        }
       }
-      bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
-      thickness = scalor * polygon8->GetDz();
-    } else if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
-                                                       scalor * box->GetDY());
-      thickness = scalor * box->GetDZ();
     }
-  } else if (boost::istarts_with(axes, "YZ")) {
-    cx = xs * ay;
-    cy = ys * az;
-    if (trapezoid1) {
-      throw std::invalid_argument(
-          "TGeoTrd1 can only be converted with '(x/X)(z/Z)(y/Y)' axes");
-    } else if (trapezoid2) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
-      bounds = std::make_shared<const TrapezoidBounds>(
-          scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
-      thickness = scalor * trapezoid2->GetDx1();
-    } else if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
-                                                       scalor * box->GetDZ());
-      thickness = scalor * box->GetDX();
-    }
-  } else if (boost::istarts_with(axes, "ZX")) {
-    cx = xs * az;
-    cy = ys * ax;
-    if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
-                                                       scalor * box->GetDX());
-      thickness = scalor * box->GetDY();
-    }
-  } else if (boost::istarts_with(axes, "XZ")) {
-    cx = xs * ax;
-    cy = ys * az;
-    if (trapezoid1) {
-      double dx1 = (ys < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
-      bounds = std::make_shared<const TrapezoidBounds>(
-          scalor * dx1, scalor * dx2, scalor * trapezoid1->GetDz());
-      thickness = scalor * trapezoid1->GetDy();
-    } else if (trapezoid2) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDx2() : trapezoid2->GetDx1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDx1() : trapezoid2->GetDx2();
-      bounds = std::make_shared<const TrapezoidBounds>(
-          scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
-      thickness = scalor * trapezoid2->GetDy1();
-    } else if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
-                                                       scalor * box->GetDZ());
-      thickness = scalor * box->GetDY();
-    }
-  } else if (boost::istarts_with(axes, "YX")) {
-    cx = xs * ay;
-    cy = ys * ax;
-    if (trapezoid2) {
-      double dx1 = (ys < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
-      double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
-      bounds = std::make_shared<const TrapezoidBounds>(
-          scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDx1());
-      thickness = scalor * trapezoid2->GetDz();
-    } else if (polygon8) {
-      const Double_t* tgverts = polygon8->GetVertices();
-      std::vector<Vector2D> pVertices;
-      for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
-        pVertices.push_back(Vector2D(scalor * xs * tgverts[ivtx * 2 + 1],
-                                     scalor * ys * tgverts[ivtx * 2]));
-      }
-      bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
-      thickness = scalor * polygon8->GetDz();
-    } else if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
-                                                       scalor * box->GetDX());
-      thickness = scalor * box->GetDZ();
-    }
-  } else if (boost::istarts_with(axes, "ZY")) {
-    cx = xs * az;
-    cy = ys * ay;
-    if (box) {
-      bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
-                                                       scalor * box->GetDY());
-      thickness = scalor * box->GetDX();
-    }
-  } else {
-    throw std::invalid_argument(
-        "TGeoConverter: axes definition must be permutation of "
-        "'(x/X)(y/Y)(z/Z)'");
   }
 
+  if (bounds == nullptr) {
+    // Check if it's a box - alwas true, hence last ressort
+    const TGeoBBox* box = dynamic_cast<const TGeoBBox*>(&tgShape);
+
+    // Check if it's a trapezoid2
+    const TGeoTrd1* trapezoid1 = dynamic_cast<const TGeoTrd1*>(&tgShape);
+    if (trapezoid1 and not boost::istarts_with(axes, "XZ")) {
+      throw std::invalid_argument(
+          "TGeoTrd1 -> PlaneSurface: can only be converted with "
+          "'(x/X)(z/Z)(*)' "
+          "axes");
+    }
+
+    // Check if it's a trapezoid2
+    const TGeoTrd2* trapezoid2 = dynamic_cast<const TGeoTrd2*>(&tgShape);
+    if (trapezoid2) {
+      if (not boost::istarts_with(axes, "X") and
+          std::abs(trapezoid2->GetDx1() - trapezoid2->GetDx2()) > s_epsilon) {
+        throw std::invalid_argument(
+            "TGeoTrd2 -> PlaneSurface: dx1 must be be equal to dx2 if not "
+            "taken "
+            "as trapezoidal side.");
+      } else if (not boost::istarts_with(axes, "Y") and
+                 std::abs(trapezoid2->GetDy1() - trapezoid2->GetDy2()) >
+                     s_epsilon) {
+        throw std::invalid_argument(
+            "TGeoTrd2 -> PlaneSurface: dy1 must be be equal to dy2 if not "
+            "taken "
+            "as trapezoidal side.");
+      }
+      // Not allowed
+      if (boost::istarts_with(axes, "XY") or boost::istarts_with(axes, "YX")) {
+        throw std::invalid_argument(
+            "TGeoTrd2 -> PlaneSurface: only works with (x/X)(z/Z) and "
+            "(y/Y)(z/Z).");
+      }
+    }
+
+    // Check if it's a Arb8
+    const TGeoArb8* polygon8c = dynamic_cast<const TGeoArb8*>(&tgShape);
+    TGeoArb8* polygon8 = nullptr;
+    if (polygon8c) {
+      // Needed otherwise you can access GetVertices
+      polygon8 = const_cast<TGeoArb8*>(polygon8c);
+    }
+
+    if (polygon8c and not(boost::istarts_with(axes, "XY") or
+                          boost::istarts_with(axes, "YX"))) {
+      throw std::invalid_argument(
+          "TGeoArb8 -> PlaneSurface: dz must be normal component of Surface.");
+    }
+
+    if (boost::istarts_with(axes, "XY")) {
+      if (trapezoid2) {
+        double dx1 = (s1 < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
+        double dx2 = (s1 < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
+        bounds = std::make_shared<const TrapezoidBounds>(
+            scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDy1());
+        thickness = scalor * trapezoid2->GetDz();
+      } else if (polygon8) {
+        Double_t* tgverts = polygon8->GetVertices();
+        std::vector<Vector2D> pVertices;
+        for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
+          pVertices.push_back(Vector2D(scalor * s0 * tgverts[ivtx * 2],
+                                       scalor * s1 * tgverts[ivtx * 2 + 1]));
+        }
+        bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
+        thickness = scalor * polygon8->GetDz();
+      } else if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
+                                                         scalor * box->GetDY());
+        thickness = scalor * box->GetDZ();
+      }
+    } else if (boost::istarts_with(axes, "YZ")) {
+      cx = s0 * ay;
+      cy = s1 * az;
+      if (trapezoid1) {
+        throw std::invalid_argument(
+            "TGeoTrd1 can only be converted with '(x/X)(z/Z)(y/Y)' axes");
+      } else if (trapezoid2) {
+        double dx1 = (s1 < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
+        double dx2 = (s1 < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
+        bounds = std::make_shared<const TrapezoidBounds>(
+            scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
+        thickness = scalor * trapezoid2->GetDx1();
+      } else if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
+                                                         scalor * box->GetDZ());
+        thickness = scalor * box->GetDX();
+      }
+    } else if (boost::istarts_with(axes, "ZX")) {
+      cx = s0 * az;
+      cy = s1 * ax;
+      if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
+                                                         scalor * box->GetDX());
+        thickness = scalor * box->GetDY();
+      }
+    } else if (boost::istarts_with(axes, "XZ")) {
+      cx = s0 * ax;
+      cy = s1 * az;
+      if (trapezoid1) {
+        double dx1 = (s1 < 0) ? trapezoid1->GetDx2() : trapezoid1->GetDx1();
+        double dx2 = (s1 < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
+        bounds = std::make_shared<const TrapezoidBounds>(
+            scalor * dx1, scalor * dx2, scalor * trapezoid1->GetDz());
+        thickness = scalor * trapezoid1->GetDy();
+      } else if (trapezoid2) {
+        double dx1 = (s1 < 0) ? trapezoid2->GetDx2() : trapezoid2->GetDx1();
+        double dx2 = (s1 < 0) ? trapezoid2->GetDx1() : trapezoid2->GetDx2();
+        bounds = std::make_shared<const TrapezoidBounds>(
+            scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
+        thickness = scalor * trapezoid2->GetDy1();
+      } else if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
+                                                         scalor * box->GetDZ());
+        thickness = scalor * box->GetDY();
+      }
+    } else if (boost::istarts_with(axes, "YX")) {
+      cx = s0 * ay;
+      cy = s1 * ax;
+      if (trapezoid2) {
+        double dx1 = (s1 < 0) ? trapezoid2->GetDy2() : trapezoid2->GetDy1();
+        double dx2 = (s1 < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
+        bounds = std::make_shared<const TrapezoidBounds>(
+            scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDx1());
+        thickness = scalor * trapezoid2->GetDz();
+      } else if (polygon8) {
+        const Double_t* tgverts = polygon8->GetVertices();
+        std::vector<Vector2D> pVertices;
+        for (unsigned int ivtx = 0; ivtx < 4; ++ivtx) {
+          pVertices.push_back(Vector2D(scalor * s0 * tgverts[ivtx * 2 + 1],
+                                       scalor * s1 * tgverts[ivtx * 2]));
+        }
+        bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
+        thickness = scalor * polygon8->GetDz();
+      } else if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
+                                                         scalor * box->GetDX());
+        thickness = scalor * box->GetDZ();
+      }
+    } else if (boost::istarts_with(axes, "ZY")) {
+      cx = s0 * az;
+      cy = s1 * ay;
+      if (box) {
+        bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
+                                                         scalor * box->GetDY());
+        thickness = scalor * box->GetDX();
+      }
+    } else {
+      throw std::invalid_argument(
+          "TGeoConverter: axes definition must be permutation of "
+          "'(x/X)(y/Y)(z/Z)'");
+    }
+  }
   // Create the normal vector & the transfrom
   auto cz = cx.cross(cy);
   auto transform = std::make_shared<const Transform3D>(

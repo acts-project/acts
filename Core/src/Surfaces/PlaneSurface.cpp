@@ -15,6 +15,7 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/PlanarBooleanBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -110,47 +111,71 @@ const Acts::SurfaceBounds& Acts::PlaneSurface::bounds() const {
 
 Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
+  // If you have bounds you can create a polyhedron representation
+  if (m_bounds == nullptr) {
+    throw std::domain_error(
+        "Polyhedron repr of boundless surface not possible.");
+  }
+
+  auto baseTransform = transform(gctx);
+  if (m_bounds->type() == SurfaceBounds::ePlanarBoolean) {
+    auto booleanBounds =
+        dynamic_cast<const PlanarBooleanBounds*>(m_bounds.get());
+    if (booleanBounds->bOperation() == eUnion) {
+      auto phedron =
+          createPolyhedron(booleanBounds->leftBounds(), baseTransform, lseg,
+                           booleanBounds->leftShift());
+      phedron.merge(createPolyhedron(booleanBounds->rightBounds(),
+                                     baseTransform, lseg,
+                                     booleanBounds->rightShift()));
+      return phedron;
+    }
+  }
+
+  return createPolyhedron(*m_bounds, baseTransform, lseg);
+}
+
+Acts::Polyhedron Acts::PlaneSurface::createPolyhedron(
+    const PlanarBounds& pBounds, const Transform3D& bTransform, size_t lseg,
+    const Vector2D& shift) const {
   // Prepare vertices and faces
   std::vector<Vector3D> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
+
   bool exactPolyhedron = true;
 
-  // If you have bounds you can create a polyhedron representation
-  if (m_bounds) {
-    auto vertices2D = m_bounds->vertices(lseg);
-    vertices.reserve(vertices2D.size() + 1);
-    for (const auto& v2D : vertices2D) {
-      vertices.push_back(transform(gctx) * Vector3D(v2D.x(), v2D.y(), 0.));
-    }
-    bool isEllipse = bounds().type() == SurfaceBounds::eEllipse;
-    bool innerExists = false, coversFull = false;
-    if (isEllipse) {
-      exactPolyhedron = false;
-      auto vStore = bounds().values();
-      innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon and
-                    vStore[EllipseBounds::eInnerRy] > s_epsilon;
-      coversFull =
-          std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
-    }
-    // All of those can be described as convex
-    // @todo same as for Discs: coversFull is not the right criterium
-    // for triangulation
-    if (not isEllipse or not innerExists or not coversFull) {
-      auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
-    } else {
-      // Two concentric rings, we use the pure concentric method momentarily,
-      // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
-      auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
-      faces = facesMesh.first;
-      triangularMesh = facesMesh.second;
-    }
-  } else {
-    throw std::domain_error(
-        "Polyhedron repr of boundless surface not possible.");
+  auto vertices2D = pBounds.vertices(lseg);
+  vertices.reserve(vertices2D.size() + 1);
+  for (const auto& v2D : vertices2D) {
+    vertices.push_back(bTransform *
+                       Vector3D(v2D.x() + shift.x(), v2D.y() + shift.y(), 0.));
   }
+  bool isEllipse = pBounds.type() == SurfaceBounds::eEllipse;
+  bool innerExists = false, coversFull = false;
+  if (isEllipse) {
+    exactPolyhedron = false;
+    auto vStore = pBounds.values();
+    innerExists = vStore[EllipseBounds::eInnerRx] > s_epsilon and
+                  vStore[EllipseBounds::eInnerRy] > s_epsilon;
+    coversFull =
+        std::abs(vStore[EllipseBounds::eHalfPhiSector] - M_PI) < s_epsilon;
+  }
+  // All of those can be described as convex
+  // @todo same as for Discs: coversFull is not the right criterium
+  // for triangulation
+  if (not isEllipse or not innerExists or not coversFull) {
+    auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices);
+    faces = facesMesh.first;
+    triangularMesh = facesMesh.second;
+  } else {
+    // Two concentric rings, we use the pure concentric method momentarily,
+    // but that creates too  many unneccesarry faces, when only two
+    // are needed to descibe the mesh, @todo investigate merging flag
+    auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
+    faces = facesMesh.first;
+    triangularMesh = facesMesh.second;
+  }
+
   return Polyhedron(vertices, faces, triangularMesh, exactPolyhedron);
 }

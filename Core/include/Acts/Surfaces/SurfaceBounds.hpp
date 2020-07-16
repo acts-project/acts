@@ -41,8 +41,9 @@ class SurfaceBounds {
     eDiscTrapezoid = 10,
     eConvexPolygon = 11,
     eAnnulus = 12,
-    eBoundless = 13,
-    eOther = 14
+    ePlanarBoolean = 13,
+    eBoundless = 14,
+    eOther = 15
   };
 
   virtual ~SurfaceBounds() = default;

@@ -211,6 +211,19 @@ class PlaneSurface : public Surface {
   std::shared_ptr<const PlanarBounds> m_bounds;
 
  private:
+  /// Private helper function to create a polyhedron from a shape
+  ///
+  /// @param pBoundsThe planar bounds for the polyhedron
+  /// @param bTransform The position of the bounds in space
+  /// @param lseg Number of segments along curved lines, it represents
+  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// are given
+  /// @param shift The local shift if present (for unions, etc.)
+  ///
+  /// @return A polyhedron
+  Polyhedron createPolyhedron(const PlanarBounds& pBounds,
+                              const Transform3D& bTransform, size_t lseg,
+                              const Vector2D& shift = Vector2D(0., 0.)) const;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

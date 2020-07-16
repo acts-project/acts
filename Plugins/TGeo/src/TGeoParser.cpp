@@ -39,7 +39,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     }
   } else if (state.node != nullptr) {
     // The node name for checking
-    std::string nodeName = state.node->GetName();
+    std::string nodeName = state.node->GetVolume()->GetName();
     // Get the matrix of the current node for positioning
     const TGeoMatrix* nmatrix = state.node->GetMatrix();
     TGeoHMatrix transform = TGeoCombiTrans(gmatrix) * TGeoCombiTrans(*nmatrix);
@@ -62,11 +62,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
 
       bool accept = true;
       if (not options.parseRanges.empty()) {
+        // It uses the bounding box of TGeoBBox
         auto shape =
             dynamic_cast<TGeoBBox*>(state.node->GetVolume()->GetShape());
-        // It uses the bounding box of TGeoBBox
-        // @TODO this should be replace by a proper TGeo to Acts::VolumeBounds
-        // and vertices converision which would make a more appropriate parsomg
         double dx = options.unit * shape->GetDX();
         double dy = options.unit * shape->GetDY();
         double dz = options.unit * shape->GetDZ();
