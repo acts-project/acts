@@ -80,7 +80,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 			FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
 			if (start.covariance()) {
 			  mParSet->setCovariance(std::get<BoundSymMatrix>(
-				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(4))));
+				  calculateCovariance(derivatives, *start.covariance(), deviations, start.parameters().template segment<3>(eFreeDir0))));
 			} 
 	  }
 	}
