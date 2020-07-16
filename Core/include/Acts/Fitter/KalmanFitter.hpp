@@ -666,8 +666,8 @@ class KalmanFitter {
           // Fill the smoothed parameter for the existing track state
           result.fittedStates.applyBackwards(
               result.trackTip, [&](auto trackState) {
-                auto fSurface = &trackState.referenceObject();
-                if (fSurface == surface) {
+                auto fReferenceObject = &trackState.referenceObject();
+                if (fReferenceObject == surface) {
                   result.passedAgainObject.push_back(surface);
                   trackState.smoothed() = trackStateProxy.filtered();
                   trackState.smoothedCovariance() =

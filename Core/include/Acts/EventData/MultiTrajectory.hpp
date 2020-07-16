@@ -475,7 +475,7 @@ class TrackStateProxy {
     assert(!refObj || refObj.get() == &meas.referenceSurface());
     if (!refObj) {
       // ref object is not set, set it now
-      refObj = meas.referenceSurface().getSharedPtr();
+      refObj = meas.referenceObject().getSharedPtr();
     }
 
     assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
