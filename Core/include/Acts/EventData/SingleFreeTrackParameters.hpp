@@ -146,7 +146,8 @@ class SingleFreeTrackParameters {
     }
 
     return (m_oChargePolicy == casted->m_oChargePolicy &&
-            m_oParameters == casted->m_oParameters);
+            m_oParameters == casted->m_oParameters && 
+            m_pVolume == casted->m_pVolume);
   }
 
   /// @brief inequality operator
@@ -176,6 +177,15 @@ class SingleFreeTrackParameters {
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
   std::shared_ptr<const Volume> m_pVolume;
+  
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleFreeTrackParameters& tp) {
+    detail::printFreeParameters(
+        os, tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
 
 }  // namespace Acts
