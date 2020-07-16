@@ -8,28 +8,28 @@
 
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <iostream>
-#include <fstream>
 #include <random>
 #include <vector>
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 using namespace Acts;
 
 int main(int /*argc*/, char** /*argv[]*/) {
-
   std::mt19937 rng(42);
   std::uniform_real_distribution<double> xDist(-2, 20);
   std::uniform_real_distribution<double> yDist(-2, 20);
-  
+
   std::ofstream os{"annulus.csv"};
-  os << "x,y,inside_abs,inside_tol0,inside_tol1,inside_tol01,inside_cov" << std::endl;
+  os << "x,y,inside_abs,inside_tol0,inside_tol1,inside_tol01,inside_cov"
+     << std::endl;
 
   // === PROBLEM DATA ===
 
@@ -49,9 +49,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return Vector2D(r, phi);
   };
 
-  auto random_point = [&] () -> Vector2D {
-    return {xDist(rng), yDist(rng)};
-  };
+  auto random_point = [&]() -> Vector2D { return {xDist(rng), yDist(rng)}; };
 
   // for covariance based check, set up one;
   ActsMatrixD<2, 2> cov;
@@ -64,7 +62,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   BoundaryCheck bcCov{cov, 1};
 
   // visualization to make sense of things
-  for (size_t i=0;i<10000;i++) {
+  for (size_t i = 0; i < 10000; i++) {
     const Vector2D loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
     bool isInsideAbs = aBounds.inside(locPC, bcAbs);
@@ -74,9 +72,10 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     bool isInsideCov = aBounds.inside(locPC, bcCov);
 
-    os << loc.x() << "," << loc.y() << "," << isInsideAbs << "," << isInsideTol0 << "," << isInsideTol1 << "," << isInsideTol01 << "," << isInsideCov << std::endl;
+    os << loc.x() << "," << loc.y() << "," << isInsideAbs << "," << isInsideTol0
+       << "," << isInsideTol1 << "," << isInsideTol01 << "," << isInsideCov
+       << std::endl;
   }
-
 
   // // This point is inside the area
   // const Vector2D center(7, 6);
@@ -88,25 +87,24 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // const Vector2D far_away(-1000., -1000.);
 
   std::vector<std::tuple<Vector2D, bool, std::string>> testPoints{{
-    {{7.0, 6.0}, true, "center"},
-    {{3.0, 1.0}, false, "radial far out low"},
-    {{5.0, 4.0}, false, "radial close out low"},
-    {{6.0, 5.0}, true, "radial close in low"},
-    {{8.5, 7.5}, true, "radial close in high"},
-    {{10.0, 9.0}, false, "radial close out high"},
-    {{15.0, 15.0}, false, "radial far out high"},
-    {{0.0, 11.0}, false, "angular far out left"},
-    {{4.0, 9.0}, false, "angular close out left"},
-    {{5.0, 8.5}, true, "angular close in left"},
-    {{9.0, 5.0}, true, "angular close in right"},
-    {{9.5, 4.5}, false, "angular close out right"},
-    {{11.0, 0.0}, false, "angular far out right"},
-    {{2.0, 4.0}, false, "quad low left"},
-    {{5.0, 14.0}, false, "quad high left"},
-    {{13.0, 6.0}, false, "quad high right"},
-    {{7.0, 1.0}, false, "quad low right"},
+      {{7.0, 6.0}, true, "center"},
+      {{3.0, 1.0}, false, "radial far out low"},
+      {{5.0, 4.0}, false, "radial close out low"},
+      {{6.0, 5.0}, true, "radial close in low"},
+      {{8.5, 7.5}, true, "radial close in high"},
+      {{10.0, 9.0}, false, "radial close out high"},
+      {{15.0, 15.0}, false, "radial far out high"},
+      {{0.0, 11.0}, false, "angular far out left"},
+      {{4.0, 9.0}, false, "angular close out left"},
+      {{5.0, 8.5}, true, "angular close in left"},
+      {{9.0, 5.0}, true, "angular close in right"},
+      {{9.5, 4.5}, false, "angular close out right"},
+      {{11.0, 0.0}, false, "angular far out right"},
+      {{2.0, 4.0}, false, "quad low left"},
+      {{5.0, 14.0}, false, "quad high left"},
+      {{13.0, 6.0}, false, "quad high right"},
+      {{7.0, 1.0}, false, "quad low right"},
   }};
-
 
   // === BENCHMARKS ===
 
@@ -161,15 +159,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
         num_outside_points = NTESTS_SLOW;
     };
 
-    for(const auto& [loc, inside, label] : testPoints) {
+    for (const auto& [loc, inside, label] : testPoints) {
       const auto locPC = toStripFrame(loc);
-      run_bench([&] { return aBounds.inside(locPC, check); }, inside ? num_inside_points : num_outside_points,
-              label);
+      run_bench([&] { return aBounds.inside(locPC, check); },
+                inside ? num_inside_points : num_outside_points, label);
     }
 
     // Pre-rolled random points
     std::vector<Vector2D> points(num_outside_points);
-    std::generate(points.begin(), points.end(), [&] { return toStripFrame(random_point()); });
+    std::generate(points.begin(), points.end(),
+                  [&] { return toStripFrame(random_point()); });
     run_bench_with_inputs(
         [&](const auto& point) { return aBounds.inside(point, check); }, points,
         "Random");
@@ -181,7 +180,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
   run_all_benches(bcTol1, "Tolerance 1", Mode::FastOutside);
   run_all_benches(bcTol01, "Tolerance 01", Mode::FastOutside);
   run_all_benches(bcCov, "Covariance", Mode::SlowOutside);
-
 
   return 0;
 }
