@@ -2,6 +2,7 @@
 # dependencies in the component list.
 # independent plugins
 add_component_if(Cuda CudaPlugin ACTS_BUILD_CUDA_PLUGIN)
+add_component_if(Sycl SyclPlugin ACTS_BUILD_SYCL_PLUGIN)
 add_component_if(Digitization DigitizationPlugin ACTS_BUILD_DIGITIZATION_PLUGIN)
 add_component_if(Identification IdentificationPlugin ACTS_BUILD_IDENTIFICATION_PLUGIN)
 add_component_if(Json JsonPlugin ACTS_BUILD_JSON_PLUGIN)

@@ -1,4 +1,5 @@
 add_subdirectory_if(Digitization ACTS_BUILD_DIGITIZATION_PLUGIN)
 add_subdirectory_if(Json ACTS_BUILD_JSON_PLUGIN)
 add_subdirectory_if(Cuda ACTS_BUILD_CUDA_PLUGIN)
+add_subdirectory_if(Sycl ACTS_BUILD_SYCL_PLUGIN)
 add_subdirectory_if(TGeo ACTS_BUILD_TGEO_PLUGIN)
