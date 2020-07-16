@@ -77,15 +77,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
        << std::endl;
   }
 
-  // // This point is inside the area
-  // const Vector2D center(7, 6);
-  // // This point is still inside the area, but close to an edge
-  // const Vector2D edge_inside(8, 4);
-  // // This point is just a bit outside, should be considered "in" by tolerance
-  // const Vector2D edge_outside(3, 11);
-  // // This point should always be considered outside the area
-  // const Vector2D far_away(-1000., -1000.);
-
   std::vector<std::tuple<Vector2D, bool, std::string>> testPoints{{
       {{7.0, 6.0}, true, "center"},
       {{3.0, 1.0}, false, "radial far out low"},
