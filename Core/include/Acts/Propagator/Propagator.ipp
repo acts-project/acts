@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/ParameterConcept.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
@@ -91,8 +91,8 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         CurvilinearParameters,
         typename propagator_options_t::action_list_type>> {
-  static_assert(ParameterConcept<parameters_t>,
-                "Parameters do not fulfill parameter concept.");
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+                "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced by the propagation
   using ReturnParameterType = CurvilinearParameters;
@@ -159,8 +159,8 @@ auto Acts::Propagator<S, N>::propagate(
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         BoundParameters, typename propagator_options_t::action_list_type>> {
-  static_assert(ParameterConcept<parameters_t>,
-                "Parameters do not fulfill parameter concept.");
+  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+                "Parameters do not fulfill bound parameters concept.");
 
   // Type of track parameters produced at the end of the propagation
   using return_parameter_type = BoundParameters;
