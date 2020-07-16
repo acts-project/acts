@@ -114,9 +114,6 @@ int main(int /*argc*/, char** /*argv[]*/) {
   // Some checks are much slower, so we tune down benchmark iterations
   constexpr int NTESTS_SLOW = NTESTS / 10;
 
-  // Conversely, no-op tests are so fast that we need to tune up iterations
-  constexpr int NTESTS_NOOP = NTESTS * 10;
-
   // We use this to switch between iteration counts
   enum class Mode { FastOutside, SlowOutside };
 
