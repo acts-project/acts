@@ -15,6 +15,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -25,7 +26,6 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "VertexingDataHelper.cpp"
 
 namespace bdata = boost::unit_test::data;
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
 
-  //BOOST_CHECK(findResult.ok());
+  // BOOST_CHECK(findResult.ok());
 
   if (!findResult.ok()) {
     std::cout << findResult.error().message() << std::endl;
@@ -606,18 +606,18 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   auto verticesInfo = std::get<1>(csvData);
   const int expNRecoVertices = verticesInfo.size();
 
-  //BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
+  // BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   // for (int i = 0; i < expNRecoVertices; i++) {
   //   auto recoVtx = allVertices[i];
   //   auto expVtx = verticesInfo[i];
   //   CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
   //   CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
   //   BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
-  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp,
+  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+  //   0.003); CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility,
+  //   expVtx.trk1Comp,
   //                   0.003);
   // }
-    
 }
 
 }  // namespace Test
