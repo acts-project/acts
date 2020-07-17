@@ -1,13 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -26,8 +28,9 @@ namespace Acts {
 template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
  public:
-  using ParVector_t = typename SingleTrackParameters<ChargePolicy>::ParVector_t;
-  using CovMatrix_t = typename SingleTrackParameters<ChargePolicy>::CovMatrix_t;
+  using Scalar = BoundParametersScalar;
+  using ParametersVector = BoundVector;
+  using CovarianceMatrix = BoundSymMatrix;
 
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only
@@ -44,8 +47,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovMatrix_t> cov,
-                             const ParVector_t& parValues,
+                             std::optional<CovarianceMatrix> cov,
+                             const ParametersVector& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov), parValues,
@@ -76,9 +79,9 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovMatrix_t> cov,
+                             std::optional<CovarianceMatrix> cov,
                              const Vector3D& position, const Vector3D& momentum,
-                             double dCharge, double dTime,
+                             Scalar dCharge, Scalar dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
@@ -105,8 +108,8 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovMatrix_t> cov,
-                             const ParVector_t& parValues,
+                             std::optional<CovarianceMatrix> cov,
+                             const ParametersVector& parValues,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov), parValues,
@@ -137,9 +140,9 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovMatrix_t> cov,
+                             std::optional<CovarianceMatrix> cov,
                              const Vector3D& position, const Vector3D& momentum,
-                             double dTime,
+                             Scalar dTime,
                              std::shared_ptr<const Surface> surface)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
@@ -196,7 +199,7 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
   /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   template <ParID_t par>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void set(const GeometryContext& gctx, Scalar newValue) {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
   }
@@ -222,6 +225,15 @@ class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
 
  private:
   std::shared_ptr<const Surface> m_pSurface;
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleBoundTrackParameters& tp) {
+    detail::printBoundParameters(
+        os, tp.referenceSurface(), tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
 
 }  // namespace Acts

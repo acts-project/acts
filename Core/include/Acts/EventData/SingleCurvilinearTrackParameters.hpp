@@ -1,14 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <memory>
+
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
@@ -26,8 +29,9 @@ template <typename ChargePolicy>
 class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy> {
  public:
-  /// type of covariance matrix
-  using CovMatrix_t = typename SingleTrackParameters<ChargePolicy>::CovMatrix_t;
+  using Scalar = BoundParametersScalar;
+  using ParametersVector = BoundVector;
+  using CovarianceMatrix = BoundSymMatrix;
 
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
@@ -39,10 +43,10 @@ class SingleCurvilinearTrackParameters
   /// @param[in] dCharge The charge of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
+  SingleCurvilinearTrackParameters(std::optional<CovarianceMatrix> cov,
                                    const Vector3D& position,
-                                   const Vector3D& momentum, double dCharge,
-                                   double dTime)
+                                   const Vector3D& momentum, Scalar dCharge,
+                                   Scalar dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
@@ -59,9 +63,9 @@ class SingleCurvilinearTrackParameters
   /// @param[in] momentum The global momentum of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(std::optional<CovMatrix_t> cov,
+  SingleCurvilinearTrackParameters(std::optional<CovarianceMatrix> cov,
                                    const Vector3D& position,
-                                   const Vector3D& momentum, double dTime)
+                                   const Vector3D& momentum, Scalar dTime)
       : SingleTrackParameters<ChargePolicy>(
             std::move(cov),
             detail::coordinate_transformation::global2curvilinear(
@@ -125,7 +129,7 @@ class SingleCurvilinearTrackParameters
       ParID_t par,
       std::enable_if_t<std::is_same_v<BoundParameterType<par>, local_parameter>,
                        int> = 0>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void set(const GeometryContext& gctx, Scalar newValue) {
     // set the parameter & update the new global position
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
@@ -150,7 +154,7 @@ class SingleCurvilinearTrackParameters
             std::enable_if_t<
                 not std::is_same_v<BoundParameterType<par>, local_parameter>,
                 int> = 0>
-  void set(const GeometryContext& gctx, ParValue_t newValue) {
+  void set(const GeometryContext& gctx, Scalar newValue) {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
     // recreate the surface
@@ -176,5 +180,14 @@ class SingleCurvilinearTrackParameters
 
  private:
   std::shared_ptr<PlaneSurface> m_upSurface;
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleCurvilinearTrackParameters& tp) {
+    detail::printBoundParameters(
+        os, tp.referenceSurface(), tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
 }  // namespace Acts
