@@ -158,8 +158,8 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::calibratedCovariance() const
 
 }  // namespace detail_lt
 
-template <typename SL>
-inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
+template <typename SL, size_t MSM>
+inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
                                                  size_t iprevious) {
   using PropMask = TrackStatePropMask;
 
@@ -218,9 +218,9 @@ inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
   return index;
 }
 
-template <typename SL>
+template <typename SL, size_t MSM>
 template <typename F>
-void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
+void MultiTrajectory<SL, MSM>::visitBackwards(size_t iendpoint, F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 
@@ -245,9 +245,9 @@ void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
   }
 }
 
-template <typename SL>
+template <typename SL, size_t MSM>
 template <typename F>
-void MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
+void MultiTrajectory<SL, MSM>::applyBackwards(size_t iendpoint, F&& callable) {
   static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 

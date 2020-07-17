@@ -602,11 +602,11 @@ constexpr bool VisitorConcept = concept ::require<
 /// can be easily identified. Some functionality is provided to simplify
 /// iterating over specific sub-components.
 /// @tparam source_link_t Type to link back to an original measurement
-template <typename source_link_t>
+template <typename source_link_t, size_t measurement_size_max_t = eBoundParametersSize>
 class MultiTrajectory {
  public:
   enum {
-    MeasurementSizeMax = eBoundParametersSize,
+    MeasurementSizeMax = measurement_size_max_t,
   };
   using SourceLink = source_link_t;
   using ConstTrackStateProxy =
