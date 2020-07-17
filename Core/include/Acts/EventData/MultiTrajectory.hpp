@@ -187,7 +187,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
   void copyFrom(
-      const TrackStateProxy<source_link_t, N, M, ReadOnlyOther>& other,
+      const TrackStateProxy<source_link_t, M, ReadOnlyOther>& other,
       TrackStatePropMask mask = TrackStatePropMask::All) {
     using PM = TrackStatePropMask;
     auto dest = getMask();

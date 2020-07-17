@@ -115,8 +115,7 @@ class GainMatrixUpdater {
 
           filtered = predicted + K * (calibrated - H * predicted);
           filtered_covariance =
-              (ActsSymMatrixD<
-                   MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
+              (BoundSymMatrix::Identity() -
                K * H) *
               predicted_covariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
