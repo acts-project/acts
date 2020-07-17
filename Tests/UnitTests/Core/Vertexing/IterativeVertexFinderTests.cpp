@@ -522,7 +522,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 /// @brief Unit test for IterativeVertexFinder with Athena reference data
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
-
   // Set up constant B-Field
   ConstantBField bField(0.0, 0.0, 2_T);
 
