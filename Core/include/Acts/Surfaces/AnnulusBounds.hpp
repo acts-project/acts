@@ -47,7 +47,7 @@ class AnnulusBounds : public DiscBounds {
   /// @brief Default constructor from parameters
   /// @param minR inner radius, in module system
   /// @param maxR outer radius, in module system
-  /// @param minPhiRel right angular edge, in strip system, rel to avgOhi
+  /// @param minPhiRel right angular edge, in strip system, rel to avgPhi
   /// @param maxPhiRel left angular edge, in strip system, rel to avgPhi
   /// @param moduleOrigin The origin offset between the two systems.
   /// @param avgPhi (Optional) internal rotation of this bounds object's local
