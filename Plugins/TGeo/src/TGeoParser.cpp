@@ -40,6 +40,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
   } else if (state.node != nullptr) {
     // The node name for checking
     std::string nodeName = state.node->GetName();
+    std::string nodeVolName = state.node->GetVolume()->GetName();
     // Get the matrix of the current node for positioning
     const TGeoMatrix* nmatrix = state.node->GetMatrix();
     TGeoHMatrix transform = TGeoCombiTrans(gmatrix) * TGeoCombiTrans(*nmatrix);
@@ -47,7 +48,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     transform.SetName((nodeName + suffix).c_str());
     // Check if you had found the target node
     if (state.onBranch and
-        TGeoPrimitivesHelper::match(options.targetNames, nodeName.c_str())) {
+        TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str())) {
       // Get the placement and orientation in respect to its mother
       const Double_t* rotation = transform.GetRotationMatrix();
       const Double_t* translation = transform.GetTranslation();
