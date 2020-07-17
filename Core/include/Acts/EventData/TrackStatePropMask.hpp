@@ -26,9 +26,9 @@ enum struct TrackStatePropMask : uint16_t {
   Smoothed = 1 << 2,
   Jacobian = 1 << 3,
   
-  PredictedFree = 1 << 4,
-  FilteredFree = 1 << 5,
-  SmoothedFree = 1 << 6,
+  FreePredicted = 1 << 4,
+  FreeFiltered = 1 << 5,
+  FreeSmoothed = 1 << 6,
 
   Uncalibrated = 1 << 7,
   Calibrated = 1 << 8,

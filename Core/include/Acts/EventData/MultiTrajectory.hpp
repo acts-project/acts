@@ -118,9 +118,9 @@ struct IndexData {
   IndexType ipredicted = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
-  IndexType ipredictedfree = kInvalid;
-  IndexType ifilteredfree = kInvalid;
-  IndexType ismoothedfree = kInvalid;
+  IndexType ifreepredicted = kInvalid;
+  IndexType ifreefiltered = kInvalid;
+  IndexType ifreesmoothed = kInvalid;
   IndexType ijacobian = kInvalid;
   IndexType iprojector = kInvalid;
 
@@ -222,17 +222,17 @@ class TrackStateProxy {
       smoothedCovariance() = other.smoothedCovariance();
     }
     
-    if (ACTS_CHECK_BIT(src, PM::PredictedFree)) {
+    if (ACTS_CHECK_BIT(src, PM::FreePredicted)) {
       predicted() = other.predicted();
       predictedCovariance() = other.predictedCovariance();
     }
 
-    if (ACTS_CHECK_BIT(src, PM::FilteredFree)) {
+    if (ACTS_CHECK_BIT(src, PM::FreeFiltered)) {
       filtered() = other.filtered();
       filteredCovariance() = other.filteredCovariance();
     }
 
-    if (ACTS_CHECK_BIT(src, PM::SmoothedFree)) {
+    if (ACTS_CHECK_BIT(src, PM::FreeSmoothed)) {
       smoothed() = other.smoothed();
       smoothedCovariance() = other.smoothedCovariance();
     }
@@ -337,6 +337,42 @@ class TrackStateProxy {
   /// @return Whether it is set
   bool hasJacobian() const { return data().ijacobian != IndexData::kInvalid; }
 
+  /// Predicted track parameters vector
+  /// @return The predicted parameters
+  FreeParameters freePredicted() const;
+
+  /// Predicted track parameters covariance matrix.
+  /// @return The predicted track parameter covariance
+  FreeCovariance freePredictedCovariance() const;
+
+  /// Check whether the predicted parameters+covariance is set
+  /// @return Whether it is set or not
+  bool hasFreePredicted() const { return data().ifreepredicted != IndexData::kInvalid; }
+
+  /// Filtered track parameters vector
+  /// @return The filtered parameters
+  FreeParameters freeFiltered() const;
+
+  /// Filtered track parameters covariance matrix
+  /// @return The filtered parameters covariance
+  FreeCovariance freeFilteredCovariance() const;
+
+  /// Return whether filtered parameters+covariance is set
+  /// @return Whether it is set
+  bool hasFreeFiltered() const { return data().ifreefiltered != IndexData::kInvalid; }
+
+  /// Smoothed track parameters vector
+  /// @return The smoothed parameters
+  FreeParameters freeSmoothed() const;
+
+  /// Smoothed track parameters covariance matrix
+  /// @return the parameter covariance matrix
+  FreeCovariance freeSmoothedCovariance() const;
+
+  /// Return whether smoothed parameters+covariance is set
+  /// @return Whether it is set
+  bool hasFreeSmoothed() const { return data().ifreesmoothed != IndexData::kInvalid; }
+  
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
   /// @note This function returns the overallocated projector. This means it

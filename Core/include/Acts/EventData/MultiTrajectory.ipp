@@ -198,22 +198,22 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
     p.ijacobian = m_jac.size() - 1;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::PredictedFree)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::FreePredicted)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ipredictedfree = m_params.size() - 1;
+    p.ifreepredicted = m_params.size() - 1;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::FilteredFree)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::FreeFiltered)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ifilteredfree = m_params.size() - 1;
+    p.ifreefiltered = m_params.size() - 1;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::SmoothedFree)) {
+  if (ACTS_CHECK_BIT(mask, PropMask::FreeSmoothed)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ismoothedfree = m_params.size() - 1;
+    p.ifreesmoothed = m_params.size() - 1;
   }
   
   if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
