@@ -19,7 +19,8 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  using Jacobian = Acts::ActsMatrixD<Acts::eBoundParametersSize, 4>;
+  using Jacobian = Acts::ActsMatrix<Acts::BoundParametersScalar,
+                                    Acts::eBoundParametersSize, 4>;
 
   BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
