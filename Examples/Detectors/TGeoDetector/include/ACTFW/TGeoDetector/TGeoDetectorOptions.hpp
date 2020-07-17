@@ -55,19 +55,19 @@ void addTGeoGeometryOptions(options_t& opt) {
       "Indicator if ring layout is present.")(
       "geo-tgeo-ringtolerance", po::value<read_range>()->default_value({}),
       "Tolerance for ring layout detection in [mm].")(
-      "geo-tgeo-nlayernames", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-nvolume-name", po::value<read_strings>()->default_value({}),
       "Name identifier for negative layer objects, odered along the series.")(
-      "geo-tgeo-clayernames", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-cvolume-name", po::value<read_strings>()->default_value({}),
       "Name identifier for central layer objects, odered along the series.")(
-      "geo-tgeo-playernames", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-pvolume-name", po::value<read_strings>()->default_value({}),
       "Name identifier for positive layer objects, odered along the series.")(
-      "geo-tgeo-nmodulenames", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-nmodule-name", po::value<read_strings>()->default_value({}),
       "Name identifier for negative sensitive objects, odered along the "
-      "series.")("geo-tgeo-cmodulenames",
+      "series.")("geo-tgeo-cmodule-name",
                  po::value<read_strings>()->default_value({}),
                  "Name identifier for central sensitive objects, odered "
                  "along the series.")(
-      "geo-tgeo-pmodulenames", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-pmodule-name", po::value<read_strings>()->default_value({}),
       "Name identifier for positive sensitive objects, odered along the "
       "series.")("geo-tgeo-nlayer-r-range",
                  po::value<std::vector<Interval>>()->default_value({}),
@@ -117,15 +117,15 @@ void addTGeoGeometryOptions(options_t& opt) {
       "geo-tgeo-sfbin-phi-tolerance",
       po::value<std::vector<Interval>>()->default_value({}),
       "Tolerance interval in phi [rad] for automated surface binning.")(
-      "geo-tgeo-nmoduleaxes", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-nmodule-axes", po::value<read_strings>()->default_value({}),
       "Axes definition for negative sensitive objects, odered "
       "along the series.")(
       "geo-tgeo-player-z-split", po::value<read_range>()->default_value({}),
       "Z-tolerances (if > 0.) that triggers splitting "
       " of collected surfaces into different positive layers.")(
-      "geo-tgeo-cmoduleaxes", po::value<read_strings>()->default_value({}),
+      "geo-tgeo-cmodule-axes", po::value<read_strings>()->default_value({}),
       "Axes definition for central sensitive objects, odered along the "
-      "series.")("geo-tgeo-pmoduleaxes",
+      "series.")("geo-tgeo-pmodule-axes",
                  po::value<read_strings>()->default_value({}),
                  "Axes definition for positive sensitive objects, odered "
                  "along the series.");
@@ -165,33 +165,33 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
       vm["geo-tgeo-ringtolerance"].template as<read_range>();
 
   // The layer names to parse for in the TGeo
-  read_strings nlayernames =
-      vm["geo-tgeo-nlayernames"].template as<read_strings>();
-  read_strings clayernames =
-      vm["geo-tgeo-clayernames"].template as<read_strings>();
-  read_strings playernames =
-      vm["geo-tgeo-playernames"].template as<read_strings>();
+  read_strings nvolumename =
+      vm["geo-tgeo-nvolume-name"].template as<read_strings>();
+  read_strings cvolumename =
+      vm["geo-tgeo-cvolume-name"].template as<read_strings>();
+  read_strings pvolumename =
+      vm["geo-tgeo-pvolume-name"].template as<read_strings>();
 
-  std::array<read_strings, 3> layernames = {nlayernames, clayernames,
-                                            playernames};
+  std::array<read_strings, 3> volumename = {nvolumename, cvolumename,
+                                            pvolumename};
 
   read_strings nsensitivenames =
-      vm["geo-tgeo-nmodulenames"].template as<read_strings>();
+      vm["geo-tgeo-nmodule-name"].template as<read_strings>();
   read_strings csensitivenames =
-      vm["geo-tgeo-cmodulenames"].template as<read_strings>();
+      vm["geo-tgeo-cmodule-name"].template as<read_strings>();
   read_strings psensitivenames =
-      vm["geo-tgeo-pmodulenames"].template as<read_strings>();
+      vm["geo-tgeo-pmodule-name"].template as<read_strings>();
 
   // The sensitive names to parse for in the TGeo
   std::array<read_strings, 3> sensitivenames = {
       nsensitivenames, csensitivenames, psensitivenames};
 
   read_strings nsensitiveaxes =
-      vm["geo-tgeo-nmoduleaxes"].template as<read_strings>();
+      vm["geo-tgeo-nmodule-axes"].template as<read_strings>();
   read_strings csensitiveaxes =
-      vm["geo-tgeo-cmoduleaxes"].template as<read_strings>();
+      vm["geo-tgeo-cmodule-axes"].template as<read_strings>();
   read_strings psensitiveaxes =
-      vm["geo-tgeo-pmoduleaxes"].template as<read_strings>();
+      vm["geo-tgeo-pmodule-axes"].template as<read_strings>();
 
   std::array<read_strings, 3> sensitiveaxes = {nsensitiveaxes, csensitiveaxes,
                                                psensitiveaxes};
@@ -301,7 +301,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
       for (unsigned int in = 0; in < nl; ++in, ++ti[ncp]) {
         // Create the layer config object and fill it
         Acts::TGeoLayerBuilder::LayerConfig lConfig;
-        lConfig.layerName = layernames[ncp][ti[ncp]];
+        lConfig.volumeName = volumename[ncp][ti[ncp]];
         lConfig.sensorNames = splitAtOr(sensitivenames[ncp][ti[ncp]]);
         lConfig.localAxes = sensitiveaxes[ncp][ti[ncp]];
         // Fill the parsing restrictions in r

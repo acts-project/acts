@@ -51,8 +51,8 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
     using SplitConfig = std::pair<BinningValue, double>;
 
-    /// Identify the layer by name
-    std::string layerName = "";
+    /// Identify the serach volume by name
+    std::string volumeName = "";
     /// Identify the sensor(s) by name
     std::vector<std::string> sensorNames = {};
     /// The local axis definition of TGeo object to Acts::Surface
@@ -70,7 +70,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
     // Default constructor
     LayerConfig()
-        : layerName(""),
+        : volumeName(""),
           sensorNames({}),
           localAxes("XZY"),
           envelope(std::pair<double, double>(1_mm, 1_mm)) {}
