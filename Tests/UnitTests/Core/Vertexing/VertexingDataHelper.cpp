@@ -47,9 +47,6 @@ readTracksAndVertexCSV(std::string file) {
   // Open source file
   std::ifstream mesh(file);
 
-  // Here we will store the result
-  std::vector<std::vector<std::string>> point_coordinates;
-
   // We want to read all lines of the file
   std::string line{};
   bool isBeamSpot = false;
