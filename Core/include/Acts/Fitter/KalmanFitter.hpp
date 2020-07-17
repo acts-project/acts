@@ -393,36 +393,35 @@ class KalmanFitter {
         if (st.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
           const Surface* startSurface =
               dynamic_cast<const Surface*>(&st.referenceObject());
-          if(startSurface != nullptr)
-		  {
-			  // Set the navigation state
-			  state.navigation.startSurface = startSurface;
-			  if (state.navigation.startSurface->associatedLayer() != nullptr) {
-				state.navigation.startLayer =
-					state.navigation.startSurface->associatedLayer();
-			  }
-			  state.navigation.startVolume =
-				  state.navigation.startLayer->trackingVolume();
-			  state.navigation.targetSurface = targetSurface;
-			  state.navigation.currentSurface = state.navigation.startSurface;
-			  state.navigation.currentVolume = state.navigation.startVolume;
+          if (startSurface != nullptr) {
+            // Set the navigation state
+            state.navigation.startSurface = startSurface;
+            if (state.navigation.startSurface->associatedLayer() != nullptr) {
+              state.navigation.startLayer =
+                  state.navigation.startSurface->associatedLayer();
+            }
+            state.navigation.startVolume =
+                state.navigation.startLayer->trackingVolume();
+            state.navigation.targetSurface = targetSurface;
+            state.navigation.currentSurface = state.navigation.startSurface;
+            state.navigation.currentVolume = state.navigation.startVolume;
 
-			  // Update the stepping state
-			  stepper.resetState(state.stepping, st.filtered(),
-								 st.filteredCovariance(), *startSurface,
-								 backward, state.options.maxStepSize);
+            // Update the stepping state
+            stepper.resetState(state.stepping, st.filtered(),
+                               st.filteredCovariance(), *startSurface, backward,
+                               state.options.maxStepSize);
 
-			  // For the last measurement state, smoothed is filtered
-			  st.smoothed() = st.filtered();
-			  st.smoothedCovariance() = st.filteredCovariance();
-			  result.passedAgainObject.push_back(startSurface);
+            // For the last measurement state, smoothed is filtered
+            st.smoothed() = st.filtered();
+            st.smoothedCovariance() = st.filteredCovariance();
+            result.passedAgainObject.push_back(startSurface);
 
-			  // Update material effects for last measurement state in backward
-			  // direction
-			  materialInteractor(state.navigation.currentSurface, state, stepper);
+            // Update material effects for last measurement state in backward
+            // direction
+            materialInteractor(state.navigation.currentSurface, state, stepper);
 
-			return false;  // abort execution
-		}
+            return false;  // abort execution
+          }
         }
         return true;  // continue execution
       });

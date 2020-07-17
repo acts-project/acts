@@ -358,9 +358,9 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       // get the measurement and surface
       auto meas = std::get<Measurement>(*state.uncalibrated());
       auto surface = meas.referenceObject().getSharedPtr();
-      if(surface == nullptr)
-		return true;
-		
+      if (surface == nullptr)
+        return true;
+
       // get the geometry ID
       auto geoID = surface->geoID();
       m_volumeID.push_back(geoID.volume());
@@ -391,8 +391,8 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       const auto& truthHit = state.uncalibrated().truthHit();
       // get local truth position
       Acts::Vector2D truthlocal;
-      surface->globalToLocal(
-          gctx, truthHit.position(), truthHit.unitDirection(), truthlocal);
+      surface->globalToLocal(gctx, truthHit.position(),
+                             truthHit.unitDirection(), truthlocal);
 
       // push the truth hit info
       m_t_x.push_back(truthHit.position().x());

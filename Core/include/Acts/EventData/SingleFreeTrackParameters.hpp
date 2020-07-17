@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -146,7 +146,7 @@ class SingleFreeTrackParameters {
     }
 
     return (m_oChargePolicy == casted->m_oChargePolicy &&
-            m_oParameters == casted->m_oParameters && 
+            m_oParameters == casted->m_oParameters &&
             m_pVolume == casted->m_pVolume);
   }
 
@@ -177,7 +177,7 @@ class SingleFreeTrackParameters {
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
   std::shared_ptr<const Volume> m_pVolume;
-  
+
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleFreeTrackParameters& tp) {
