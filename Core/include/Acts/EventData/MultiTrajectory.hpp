@@ -140,8 +140,10 @@ template <typename source_link_t, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
   using SourceLink = source_link_t;
-  using Parameters = typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
-  using Covariance = typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
+  using Parameters =
+      typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
+  using Covariance =
+      typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
 
@@ -150,8 +152,8 @@ class TrackStateProxy {
   // @TODO: Does not copy flags, because this fails: can't have col major row
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector =
-      Eigen::Matrix<typename Covariance::Scalar, M, eBoundParametersSize, ProjectorFlags>;
+  using Projector = Eigen::Matrix<typename Covariance::Scalar, M,
+                                  eBoundParametersSize, ProjectorFlags>;
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundParametersSize>;
@@ -186,9 +188,8 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if<!RO>>
-  void copyFrom(
-      const TrackStateProxy<source_link_t, M, ReadOnlyOther>& other,
-      TrackStatePropMask mask = TrackStatePropMask::All) {
+  void copyFrom(const TrackStateProxy<source_link_t, M, ReadOnlyOther>& other,
+                TrackStatePropMask mask = TrackStatePropMask::All) {
     using PM = TrackStatePropMask;
     auto dest = getMask();
     auto src = other.getMask() &
@@ -608,12 +609,12 @@ class MultiTrajectory {
   };
   using SourceLink = source_link_t;
   using ConstTrackStateProxy =
-      detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax,
-                                 true>;
-  using TrackStateProxy = detail_lt::TrackStateProxy<SourceLink,
-                                                     MeasurementSizeMax, false>;
+      detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, true>;
+  using TrackStateProxy =
+      detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
 
-  using ProjectorBitset = std::bitset<eBoundParametersSize * MeasurementSizeMax>;
+  using ProjectorBitset =
+      std::bitset<eBoundParametersSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -673,10 +674,9 @@ class MultiTrajectory {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
-  friend class detail_lt::TrackStateProxy<SourceLink,
-                                          MeasurementSizeMax, true>;
-  friend class detail_lt::TrackStateProxy<SourceLink,
-                                          MeasurementSizeMax, false>;
+  friend class detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, true>;
+  friend class detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax,
+                                          false>;
 };
 
 }  // namespace Acts

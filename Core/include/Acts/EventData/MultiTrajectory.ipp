@@ -50,8 +50,7 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const
-    -> Parameters {
+inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const -> Parameters {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
     idx = data().ismoothed;
@@ -65,8 +64,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const
-    -> Covariance {
+inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const -> Covariance {
   IndexData::IndexType idx;
   if (hasSmoothed()) {
     idx = data().ismoothed;
@@ -79,8 +77,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predicted() const
-    -> Parameters {
+inline auto TrackStateProxy<SL, M, ReadOnly>::predicted() const -> Parameters {
   assert(data().ipredicted != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ipredicted).data());
 }
@@ -93,8 +90,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCovariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::filtered() const
-    -> Parameters {
+inline auto TrackStateProxy<SL, M, ReadOnly>::filtered() const -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ifiltered).data());
 }
@@ -107,8 +103,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::filteredCovariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::smoothed() const
-    -> Parameters {
+inline auto TrackStateProxy<SL, M, ReadOnly>::smoothed() const -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
   return Parameters(m_traj->m_params.col(data().ismoothed).data());
 }
@@ -121,15 +116,13 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::smoothedCovariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const
-    -> Covariance {
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const -> Covariance {
   assert(data().ijacobian != IndexData::kInvalid);
   return Covariance(m_traj->m_jac.col(data().ijacobian).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::projector() const
-    -> Projector {
+inline auto TrackStateProxy<SL, M, ReadOnly>::projector() const -> Projector {
   assert(data().iprojector != IndexData::kInvalid);
   return bitsetToMatrix<Projector>(m_traj->m_projectors[data().iprojector]);
 }
