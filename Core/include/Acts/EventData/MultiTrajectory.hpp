@@ -356,10 +356,8 @@ class TrackStateProxy {
     IndexData& dataref = data();
     assert(dataref.iprojector != IndexData::kInvalid);
 
-    constexpr int max_measdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
-
-    static_assert(rows <= max_measdim, "Given projector has too many rows");
-    static_assert(cols <= max_measdim, "Given projector has too many columns");
+    static_assert(rows <= M, "Given projector has too many rows");
+    static_assert(cols <= N, "Given projector has too many columns");
 
     // set up full size projector with only zeros
     typename TrackStateProxy::Projector fullProjector =
@@ -367,7 +365,7 @@ class TrackStateProxy {
 
     // assign (potentially) smaller actual projector to matrix, preserving
     // zeroes outside of smaller matrix block.
-    fullProjector.template topLeftCorner<rows, max_measdim>() = projector;
+    fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
     m_traj->m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
