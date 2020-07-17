@@ -38,7 +38,7 @@ enum TrackStateFlag {
 using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
-template <typename source_link_t>
+template <typename source_link_t, size_t measurement_size_max_t>
 class MultiTrajectory;
 class Surface;
 
@@ -146,6 +146,7 @@ class TrackStateProxy {
       typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
+  static constexpr size_t N = eFreeParametersSize; // TODO
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -555,7 +556,7 @@ class TrackStateProxy {
 
  private:
   // Private since it can only be created by the trajectory.
-  TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
+  TrackStateProxy(ConstIf<MultiTrajectory<SourceLink, M>, ReadOnly>& trajectory,
                   size_t istate);
 
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
@@ -563,7 +564,7 @@ class TrackStateProxy {
     return m_traj->m_referenceSurfaces[data().irefsurface];
   }
 
-  typename MultiTrajectory<SourceLink>::ProjectorBitset projectorBitset()
+  typename MultiTrajectory<SourceLink, M>::ProjectorBitset projectorBitset()
       const {
     assert(data().iprojector != IndexData::kInvalid);
     return m_traj->m_projectors[data().iprojector];
@@ -571,15 +572,15 @@ class TrackStateProxy {
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setProjectorBitset(
-      typename MultiTrajectory<SourceLink>::ProjectorBitset proj) {
+      typename MultiTrajectory<SourceLink, M>::ProjectorBitset proj) {
     assert(data().iprojector != IndexData::kInvalid);
     m_traj->m_projectors[data().iprojector] = proj;
   }
 
-  ConstIf<MultiTrajectory<SourceLink>, ReadOnly>* m_traj;
+  ConstIf<MultiTrajectory<SourceLink, M>, ReadOnly>* m_traj;
   size_t m_istate;
 
-  friend class Acts::MultiTrajectory<SourceLink>;
+  friend class Acts::MultiTrajectory<SourceLink, M>;
 };
 
 // implement track state visitor concept

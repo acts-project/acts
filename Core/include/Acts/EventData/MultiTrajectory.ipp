@@ -19,7 +19,7 @@ namespace Acts {
 namespace detail_lt {
 template <typename SL, size_t M, bool ReadOnly>
 inline TrackStateProxy<SL, M, ReadOnly>::TrackStateProxy(
-    ConstIf<MultiTrajectory<SL>, ReadOnly>& trajectory, size_t istate)
+    ConstIf<MultiTrajectory<SL, M>, ReadOnly>& trajectory, size_t istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
 template <typename SL, size_t M, bool ReadOnly>
