@@ -185,8 +185,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
     // calculate delta (billoirFrameOrigin-position), might be changed by the
     // beam-const
-    Vector4D Vdel = billoirVertex.Tvec -
-                    billoirVertex.BCUvec;  // Vdel = Tvec-sum{BiMat*Ci^-1*UiVec}
+    // Vdel = Tvec-sum{BiMat*Ci^-1*UiVec}
+    Vector4D Vdel = billoirVertex.Tvec - billoirVertex.BCUvec;
     SymMatrix4D VwgtMat =
         billoirVertex.Amat -
         billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}

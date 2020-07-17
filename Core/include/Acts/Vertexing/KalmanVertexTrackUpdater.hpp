@@ -39,7 +39,7 @@ namespace detail {
 /// @param vtxWeight Vertex weight matrix
 /// @param vtxCov Vertex covariance matrix
 /// @param newTrkParams New track parameter
-inline BoundMatrix createFullTrackCovariance(const ActsSymMatrixD<3>& sMat,
+inline BoundMatrix createFullTrackCovariance(const SymMatrix3D& sMat,
                                              const ActsMatrixD<4, 3>& newTrkCov,
                                              const SymMatrix4D& vtxWeight,
                                              const SymMatrix4D& vtxCov,

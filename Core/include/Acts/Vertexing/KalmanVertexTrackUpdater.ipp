@@ -115,7 +115,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const ActsSymMatrixD<3>& sMat, const ActsMatrixD<4, 3>& newTrkCov,
+    const SymMatrix3D& sMat, const ActsMatrixD<4, 3>& newTrkCov,
     const SymMatrix4D& vtxWeight, const SymMatrix4D& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
