@@ -522,6 +522,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 /// @brief Unit test for IterativeVertexFinder with Athena reference data
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
+
   // Set up constant B-Field
   ConstantBField bField(0.0, 0.0, 2_T);
 
@@ -575,7 +576,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   VertexFinder::State state(magFieldContext);
 
   auto csvData = readTracksAndVertexCSV(DATAPATH);
-  auto tracks = std::get<2>(csvData);
+  auto tracks = std::get<TracksData>(csvData);
 
   std::vector<const BoundParameters*> tracksPtr;
   for (const auto& trk : tracks) {
@@ -585,7 +586,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  vertexingOptions.vertexConstraint = std::get<0>(csvData);
+  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -601,7 +602,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  // auto verticesInfo = std::get<1>(csvData);
+  // auto verticesInfo = std::get<VerticesData>(csvData);
   // const int expNRecoVertices = verticesInfo.size();
 
   // BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);

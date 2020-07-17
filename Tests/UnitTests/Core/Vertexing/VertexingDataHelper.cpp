@@ -23,6 +23,8 @@ using Covariance = BoundSymMatrix;
 // Create a test context
 GeometryContext geoCtx = GeometryContext();
 
+enum VertexCsvData {BeamSpotData , VerticesData, TracksData};
+
 /// @brief Helper struct to store reference vertex related information
 struct VertexInfo {
   // The position

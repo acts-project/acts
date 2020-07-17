@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(DATAPATH);
-  auto tracks = std::get<2>(csvData);
+  auto tracks = std::get<TracksData>(csvData);
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  vertexingOptions.vertexConstraint = std::get<0>(csvData);
+  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  auto verticesInfo = std::get<1>(csvData);
+  auto verticesInfo = std::get<VerticesData>(csvData);
   const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   Finder finder(finderConfig, extractParameters);
 
   auto csvData = readTracksAndVertexCSV(DATAPATH);
-  auto tracks = std::get<2>(csvData);
+  auto tracks = std::get<TracksData>(csvData);
 
   std::vector<InputTrack> userTracks;
   int idCount = 0;
@@ -281,8 +281,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 
   Vertex<InputTrack> constraintVtx;
-  constraintVtx.setPosition(std::get<0>(csvData).position());
-  constraintVtx.setCovariance(std::get<0>(csvData).covariance());
+  constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
+  constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
   vertexingOptions.vertexConstraint = constraintVtx;
 
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     }
   }
 
-  auto verticesInfo = std::get<1>(csvData);
+  auto verticesInfo = std::get<VerticesData>(csvData);
   const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder::State state;
 
   auto csvData = readTracksAndVertexCSV(DATAPATH);
-  auto tracks = std::get<2>(csvData);
+  auto tracks = std::get<TracksData>(csvData);
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  vertexingOptions.vertexConstraint = std::get<0>(csvData);
+  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  auto verticesInfo = std::get<1>(csvData);
+  auto verticesInfo = std::get<VerticesData>(csvData);
   const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
