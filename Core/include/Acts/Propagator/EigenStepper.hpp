@@ -231,13 +231,25 @@ class EigenStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] surface Reference surface
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size
+  void resetState(
+      State& state, const BoundVector& boundParams, const Covariance& cov,
+      const Surface& surface, const NavigationDirection navDir = forward,
+      const double stepSize = std::numeric_limits<double>::max()) const;
+      
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
   /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
+      State& state, const FreeVector& freeParams, const Covariance& cov,
+      const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still

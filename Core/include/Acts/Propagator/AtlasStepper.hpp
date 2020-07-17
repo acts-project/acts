@@ -330,12 +330,12 @@ class AtlasStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface Reference surface
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
+      State& state, const BoundVector& boundParams, const Covariance& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
@@ -482,6 +482,21 @@ class AtlasStepper {
     }
   }
 
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
+  /// @param [in] freeParams Parameters in free parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size
+  [[noreturn]] void resetState(
+      State& /*unused*/, const FreeVector& /*unused*/, const Covariance& /*unused*/,
+      const NavigationDirection /*unused*/,
+      const double /*unused*/) const {
+		      throw std::runtime_error(
+          "AtlasStepper::resetState with FreeTrackParameters is not implemented");  
+		 }
+      
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
   /// and updates the cell if necessary, then it takes the field

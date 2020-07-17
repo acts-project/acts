@@ -102,7 +102,8 @@ using geo_context_t = decltype(std::declval<T>().geoContext);
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool bfield_exists = exists<bfield_t, S>;
         static_assert(bfield_exists, "BField type not found");
-        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
+        constexpr static bool reset_state_exists = require<has_method<const S, void, reset_state_t, state&, const BoundVector&, const covariance_t<S>&, const Surface&, const NavigationDirection, const double>,
+                                                           has_method<const S, void, reset_state_t, state&, const FreeVector&, const covariance_t<S>&, const NavigationDirection, const double>>;
         static_assert(reset_state_exists, "resetState method not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
         static_assert(get_field_exists, "getField method not found");
