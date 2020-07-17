@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,17 +19,21 @@
 /// a jacobian.
 /// The enum is used as a strong type wrapper around the bits to prevent
 /// autoconversion from integer
-enum struct TrackStatePropMask : uint8_t {
+enum struct TrackStatePropMask : uint16_t {
   None = 0,
   Predicted = 1 << 0,
   Filtered = 1 << 1,
   Smoothed = 1 << 2,
   Jacobian = 1 << 3,
+  
+  PredictedFree = 1 << 4,
+  FilteredFree = 1 << 5,
+  SmoothedFree = 1 << 6,
 
-  Uncalibrated = 1 << 4,
-  Calibrated = 1 << 5,
+  Uncalibrated = 1 << 7,
+  Calibrated = 1 << 8,
 
-  All = std::numeric_limits<uint8_t>::max(),  // should be all ones
+  All = std::numeric_limits<uint16_t>::max(),  // should be all ones
 };
 
 constexpr TrackStatePropMask operator|(TrackStatePropMask lhs,

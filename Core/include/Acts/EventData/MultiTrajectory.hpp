@@ -118,6 +118,9 @@ struct IndexData {
   IndexType ipredicted = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
+  IndexType ipredictedfree = kInvalid;
+  IndexType ifilteredfree = kInvalid;
+  IndexType ismoothedfree = kInvalid;
   IndexType ijacobian = kInvalid;
   IndexType iprojector = kInvalid;
 
@@ -144,6 +147,8 @@ class TrackStateProxy {
       typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
   using Covariance =
       typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
+  using FreeParameters = typename Types<eFreeParametersSize, ReadOnly>::CoefficientsMap;
+  using FreeCovariance = typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
   static constexpr size_t N = eFreeParametersSize; // TODO
@@ -213,6 +218,21 @@ class TrackStateProxy {
     }
 
     if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
+      smoothed() = other.smoothed();
+      smoothedCovariance() = other.smoothedCovariance();
+    }
+    
+    if (ACTS_CHECK_BIT(src, PM::PredictedFree)) {
+      predicted() = other.predicted();
+      predictedCovariance() = other.predictedCovariance();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::FilteredFree)) {
+      filtered() = other.filtered();
+      filteredCovariance() = other.filteredCovariance();
+    }
+
+    if (ACTS_CHECK_BIT(src, PM::SmoothedFree)) {
       smoothed() = other.smoothed();
       smoothedCovariance() = other.smoothedCovariance();
     }
@@ -664,6 +684,8 @@ class MultiTrajectory {
   std::vector<detail_lt::IndexData> m_index;
   typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_params;
   typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_cov;
+  typename detail_lt::Types<eFreeParametersSize>::StorageCoefficients m_freeParams;
+  typename detail_lt::Types<eFreeParametersSize>::StorageCovariance m_freeCov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
   typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_jac;

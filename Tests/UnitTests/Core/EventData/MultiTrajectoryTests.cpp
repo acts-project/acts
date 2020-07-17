@@ -599,11 +599,10 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.uncalibrated());
 
   // full projector, should be exactly equal
-  ActsMatrixD<MultiTrajectory<SourceLink>::MeasurementSizeMax,
-              eBoundParametersSize>
-      fullProj;
+  ActsMatrixD<MultiTrajectory<SourceLink>::MeasurementSizeMax, eFreeParametersSize> fullProj;
   fullProj.setZero();
-  fullProj.topLeftCorner(pc.meas3d->size(), eBoundParametersSize) =
+  fullProj.topLeftCorner(pc.meas3d->size(),
+                         eBoundParametersSize) =
       pc.meas3d->projector();
   BOOST_CHECK_EQUAL(ts.projector(), fullProj);
 
