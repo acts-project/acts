@@ -10,6 +10,9 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 #include <chrono>
+#include <fstream>
+#include <iterator>
+#include <regex>
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -26,12 +29,6 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
-#include <fstream>
-#include <iterator>
-#include <regex>
-
-#include "AMVFTestData.ipp"
-
 namespace Acts {
 namespace Test {
 
@@ -44,6 +41,8 @@ using Linearizer = HelicalTrackLinearizer<Propagator>;
 // Create a test context
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
+
+const auto DATAPATH = Acts::Test::getDataPath("vertexing_AMVF_data.csv");
 
 /// @brief Helper struct to store reference vertex related information
 struct VertexInfo
@@ -85,10 +84,9 @@ readTracksAndVertexCSV(std::string file){
   Vertex<BoundParameters> beamspotConstraint;
 
   while (mesh && getline(mesh, line)) {
-      // Tokenize the line and store result in vector. Use range constructor of std::vector
+      // Tokenize line and store result in vector
       std::vector<std::string> row{ std::sregex_token_iterator(line.begin(),line.end(),comma,-1), std::sregex_token_iterator() };
   
-      std::cout << "row[0]: " << row[0] << std::endl;
       if(row[0] == std::string("beamspot")){
         isBeamSpot = true;
         continue;
@@ -108,7 +106,7 @@ readTracksAndVertexCSV(std::string file){
       if(isBeamSpot){
         Vector3D beamspotPos;
         ActsSymMatrixD<3> beamspotCov;
-        beamspotPos << std::stod(row[0]), std::stod(row[1]), std::stod(row[2]);
+        beamspotPos << std::stod(row[0])* (1_mm), std::stod(row[1])* (1_mm), std::stod(row[2])* (1_mm);
         beamspotCov << std::stod(row[3]), 0, 0, 
                        0, std::stod(row[4]), 0,
                        0, 0, std::stod(row[5]);
@@ -145,7 +143,7 @@ readTracksAndVertexCSV(std::string file){
 
       if(isVertex){
         Vector3D pos;
-        pos << std::stod(row[0]), std::stod(row[1]), std::stod(row[2]);
+        pos << std::stod(row[0]) * (1_mm), std::stod(row[1])* (1_mm), std::stod(row[2])* (1_mm);
         ActsSymMatrixD<3> cov;
         cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]), 
                        std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
@@ -219,10 +217,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder finder(finderConfig);
   Finder::State state;
 
-  auto path = Acts::Test::getDataPath("vertexing_AMVF_data.csv");
-  readTracksAndVertexCSV(path);
-
-  auto tracks = getAthenaTracks();
+  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto tracks = std::get<2>(csvData);
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -246,16 +242,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  Vector3D constraintPos{0._mm, 0._mm, 0_mm};
-  ActsSymMatrixD<3> constraintCov;
-  constraintCov << 0.000196000008145347238, 0, 0, 0, 0.000196000008145347238, 0,
-      0, 0, 2809;
-
-  Vertex<BoundParameters> constraintVtx;
-  constraintVtx.setPosition(constraintPos);
-  constraintVtx.setCovariance(constraintCov);
-
-  vertexingOptions.vertexConstraint = constraintVtx;
+  vertexingOptions.vertexConstraint = std::get<0>(csvData);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -291,75 +278,19 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  const int expNRecoVertices = 15;
-
-  // First vertex
-  const Vector3D expVtx1Pos(-0.0067_mm, 0.0060_mm, -6.0709_mm);
-  ActsSymMatrixD<3> expVtx1Cov;
-  expVtx1Cov << 0.000, 1.e-05, -8.e-05, 1.e-05, 0.000, -8.e-05, -8.e-05,
-      -8.e-05, 0.002;
-  std::vector<double> expVtx1TrkWeights{0.9796, 0.0334, 0.9884, 0.9697};
-  std::vector<double> expVtx1TrkComp{1.2542, 15.7317, 0.1144, 2.067};
-  std::vector<double> expVtx1TrkChi2{0, 0, 0, 0};
-
-  // Last vertex
-  const Vector3D expVtx15Pos(0.00264_mm, -0.0072_mm, -39.8197_mm);
-  ActsSymMatrixD<3> expVtx15Cov;
-  expVtx15Cov << 0.000, 1.e-06, 0.000, 1.e-06, 0.000, -6.e-05, 0.000, -6.e-05,
-      0.014;
-  std::vector<double> expVtx15TrkWeights{0.0048, 0.0005, 0.0236, 0.8481,
-                                         0.8924};
-  std::vector<double> expVtx15TrkComp{19.6561, 24.1389, 16.4425, 5.5604,
-                                      4.7683};
-  std::vector<double> expVtx15TrkChi2{0, 0, 0, 0};
-
-  // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
-
-  // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
+  auto verticesInfo = std::get<1>(csvData);
+  const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
-  int count = 0;
-  for (const auto& vtx : allVertices) {
-    // Check vertex z positions
-    CHECK_CLOSE_ABS(vtx.position()[2], expAllVtxZPos[count], 0.003_mm);
-    // Check number of tracks
-    BOOST_CHECK_EQUAL(vtx.tracks().size(), expAllNTracks[count]);
-
-    // Check vertex 1 thoroughly
-    if (count == 0) {
-      CHECK_CLOSE_ABS(vtx.position(), expVtx1Pos, 0.001_mm);
-      CHECK_CLOSE_ABS(vtx.covariance(), expVtx1Cov, 0.001_mm);
-      int trkCount = 0;
-      for (const auto& trk : vtx.tracks()) {
-        CHECK_CLOSE_ABS(trk.trackWeight, expVtx1TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx1TrkComp[trkCount],
-                        0.15);
-        // CHECK_CLOSE_ABS(trk.chi2Track, expVtx1TrkChi2[trkCount], 0.001);
-        trkCount++;
-      }
-    }
-
-    // Check vertex 15 thoroughly
-    if (count == 14) {
-      CHECK_CLOSE_ABS(vtx.position(), expVtx15Pos, 0.001_mm);
-      CHECK_CLOSE_ABS(vtx.covariance(), expVtx15Cov, 0.001_mm);
-      int trkCount = 0;
-      for (const auto& trk : vtx.tracks()) {
-        CHECK_CLOSE_ABS(trk.trackWeight, expVtx15TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx15TrkComp[trkCount],
-                        0.15);
-        // CHECK_CLOSE_ABS(trk.chi2Track, expVtx15TrkChi2[trkCount], 0.001);
-        trkCount++;
-      }
-    }
-    count++;
+  for(int i = 0; i < expNRecoVertices; i++){
+    auto recoVtx = allVertices[i];
+    auto expVtx = verticesInfo[i];
+    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
+    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
+    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
+    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp, 0.003);
   }
 }
 
@@ -437,7 +368,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Finder finder(finderConfig, extractParameters);
 
-  auto tracks = getAthenaTracks();
+  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto tracks = std::get<2>(csvData);
 
   std::vector<InputTrack> userTracks;
   int idCount = 0;
@@ -467,14 +399,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
 
-  Vector3D constraintPos{0._mm, 0._mm, 0_mm};
-  ActsSymMatrixD<3> constraintCov;
-  constraintCov << 0.000196000008145347238, 0, 0, 0, 0.000196000008145347238, 0,
-      0, 0, 2809;
-
   Vertex<InputTrack> constraintVtx;
-  constraintVtx.setPosition(constraintPos);
-  constraintVtx.setCovariance(constraintCov);
+  constraintVtx.setPosition(std::get<0>(csvData).position());
+  constraintVtx.setCovariance(std::get<0>(csvData).covariance());
 
   vertexingOptions.vertexConstraint = constraintVtx;
 
@@ -508,88 +435,26 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     }
   }
 
-  // Test expected outcomes from athena implementation
-  // Number of reconstructed vertices
-  const int expNRecoVertices = 15;
-
-  // First vertex
-  const Vector3D expVtx1Pos(-0.0067_mm, 0.0060_mm, -6.0709_mm);
-  ActsSymMatrixD<3> expVtx1Cov;
-  expVtx1Cov << 0.000, 1.e-05, -8.e-05, 1.e-05, 0.000, -8.e-05, -8.e-05,
-      -8.e-05, 0.002;
-  std::vector<double> expVtx1TrkWeights{0.9796, 0.0334, 0.9884, 0.9697};
-  std::vector<double> expVtx1TrkComp{1.2542, 15.7317, 0.1144, 2.067};
-  std::vector<double> expVtx1TrkChi2{0, 0, 0, 0};
-
-  // Last vertex
-  const Vector3D expVtx15Pos(0.00264_mm, -0.0072_mm, -39.8197_mm);
-  ActsSymMatrixD<3> expVtx15Cov;
-  expVtx15Cov << 0.000, 1.e-06, 0.000, 1.e-06, 0.000, -6.e-05, 0.000, -6.e-05,
-      0.014;
-  std::vector<double> expVtx15TrkWeights{0.0048, 0.0005, 0.0236, 0.8481,
-                                         0.8924};
-  std::vector<double> expVtx15TrkComp{19.6561, 24.1389, 16.4425, 5.5604,
-                                      4.7683};
-  std::vector<double> expVtx15TrkChi2{0, 0, 0, 0};
-
-  // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
-
-  // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
-
-  const std::vector<int> expTracksIDs{29, 51, 89, 132};
+  auto verticesInfo = std::get<1>(csvData);
+  const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
 
-  int count = 0;
-  for (const auto& vtx : allVertices) {
-    // Check vertex z positions
-    CHECK_CLOSE_ABS(vtx.position()[2], expAllVtxZPos[count], 0.003_mm);
-    // Check number of tracks
-    BOOST_CHECK_EQUAL(vtx.tracks().size(), expAllNTracks[count]);
-
-    // Check vertex 1 thoroughly
-    if (count == 0) {
-      CHECK_CLOSE_ABS(vtx.position(), expVtx1Pos, 0.001_mm);
-      CHECK_CLOSE_ABS(vtx.covariance(), expVtx1Cov, 0.001_mm);
-      int trkCount = 0;
-      for (const auto& trk : vtx.tracks()) {
-        CHECK_CLOSE_ABS(trk.trackWeight, expVtx1TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx1TrkComp[trkCount],
-                        0.15);
-        BOOST_CHECK_EQUAL(trk.originalParams->id(), expTracksIDs[trkCount]);
-        // CHECK_CLOSE_ABS(trk.chi2Track, expVtx1TrkChi2[trkCount], 0.001);
-        trkCount++;
-      }
-    }
-
-    // Check vertex 15 thoroughly
-    if (count == 14) {
-      CHECK_CLOSE_ABS(vtx.position(), expVtx15Pos, 0.001_mm);
-      CHECK_CLOSE_ABS(vtx.covariance(), expVtx15Cov, 0.001_mm);
-      int trkCount = 0;
-      for (const auto& trk : vtx.tracks()) {
-        CHECK_CLOSE_ABS(trk.trackWeight, expVtx15TrkWeights[trkCount], 0.01);
-        CHECK_CLOSE_ABS(trk.vertexCompatibility, expVtx15TrkComp[trkCount],
-                        0.15);
-        // CHECK_CLOSE_ABS(trk.chi2Track, expVtx15TrkChi2[trkCount], 0.001);
-        trkCount++;
-      }
-    }
-
-    count++;
+  for(int i = 0; i < expNRecoVertices; i++){
+    auto recoVtx = allVertices[i];
+    auto expVtx = verticesInfo[i];
+    CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
+    CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+    BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
+    CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight, 0.003);
+    CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility, expVtx.trk1Comp, 0.003);
   }
 }
 
 /// @brief AMVF test with grid seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   // Set debug mode
-  bool debugMode = true;
+  bool debugMode = false;
   if (debugMode) {
     std::cout << "Starting AMVF test with grid seed finder..." << std::endl;
   }
@@ -628,9 +493,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   Fitter fitter(fitterCfg);
 
-  // using SeedFinder = TrackDensityVertexFinder<Fitter, TrackDensity>;
-  using SeedFinder = GridDensityVertexFinder<2000, 35>;
-  SeedFinder::Config seedFinderCfg;
+  using SeedFinder = GridDensityVertexFinder<4000, 55>;
+  SeedFinder::Config seedFinderCfg(250);
   seedFinderCfg.cacheGridStateForTrackRemoval = true;
 
   SeedFinder seedFinder(seedFinderCfg);
@@ -645,7 +509,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder finder(finderConfig);
   Finder::State state;
 
-  auto tracks = getAthenaTracks();
+  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto tracks = std::get<2>(csvData);
 
   if (debugMode) {
     std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
@@ -669,16 +534,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   VertexingOptions<BoundParameters> vertexingOptions(geoContext,
                                                      magFieldContext);
 
-  Vector3D constraintPos{0._mm, 0._mm, 0_mm};
-  ActsSymMatrixD<3> constraintCov;
-  constraintCov << 0.000196000008145347238, 0, 0, 0, 0.000196000008145347238, 0,
-      0, 0, 2809;
-
-  Vertex<BoundParameters> constraintVtx;
-  constraintVtx.setPosition(constraintPos);
-  constraintVtx.setCovariance(constraintCov);
-
-  vertexingOptions.vertexConstraint = constraintVtx;
+  vertexingOptions.vertexConstraint = std::get<0>(csvData);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -713,37 +569,28 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  const int expNRecoVertices = 15;
-
-  // Vertex z positions of all found vertices
-  const std::vector<double> expAllVtxZPos{
-      -6.070_mm,   -12.0605_mm, -15.1093_mm, -27.6569_mm, -22.1054_mm,
-      -45.7010_mm, -5.0622_mm,  -26.5496_mm, -28.9597_mm, -37.7430_mm,
-      5.4828_mm,   -47.8939_mm, 2.5777_mm,   -0.2656_mm,  -39.8197_mm};
-
-  std::vector<bool> vtxFound(expAllVtxZPos.size(), false);
-
-  // Number of tracks of all vertices
-  const std::vector<int> expAllNTracks{4, 2, 3, 14, 5, 9, 8, 17,
-                                       7, 2, 2, 4,  2, 7, 5};
+  auto verticesInfo = std::get<1>(csvData);
+  const int expNRecoVertices = verticesInfo.size();
 
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
+  std::vector<bool> vtxFound(expNRecoVertices, false);
 
   for (auto vtx : allVertices) {
     double vtxZ = vtx.position()[2];
     double diffZ = 1e5;
     int foundVtxIdx = -1;
-    for (unsigned int i = 0; i < expAllVtxZPos.size(); i++) {
+    for (int i = 0; i < expNRecoVertices; i++) {
+
       if (not vtxFound[i]) {
-        if (std::abs(vtxZ - expAllVtxZPos[i]) < diffZ) {
-          diffZ = std::abs(vtxZ - expAllVtxZPos[i]);
+        if (std::abs(vtxZ - verticesInfo[i].position[2]) < diffZ) {
+          diffZ = std::abs(vtxZ - verticesInfo[i].position[2]);
           foundVtxIdx = i;
         }
       }
     }
     if (diffZ < 0.5_mm) {
       vtxFound[foundVtxIdx] = true;
-      CHECK_CLOSE_ABS(vtx.tracks().size(), expAllNTracks[foundVtxIdx], 1);
+      CHECK_CLOSE_ABS(vtx.tracks().size(), verticesInfo[foundVtxIdx].nTracks, 1);
     }
   }
   for (bool found : vtxFound) {
