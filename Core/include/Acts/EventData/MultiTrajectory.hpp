@@ -357,7 +357,7 @@ class TrackStateProxy {
     assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= N, "Given projector has too many columns");
+    static_assert(cols <= eBoundParametersSize, "Given projector has too many columns");
 
     // set up full size projector with only zeros
     typename TrackStateProxy::Projector fullProjector =
