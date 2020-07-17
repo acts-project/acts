@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface(), ndir, stepSize);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(*stateCopy.covariance), cov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface(), ndir);
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(*stateCopy.covariance), cov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                      cp.referenceSurface());
   // Test all components
   BOOST_CHECK(stateCopy.covTransport);
-  BOOST_CHECK_EQUAL(*stateCopy.covariance, cov);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(*stateCopy.covariance), cov);
   BOOST_CHECK_EQUAL(stepper.position(stateCopy),
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),

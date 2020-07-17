@@ -16,7 +16,7 @@ Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::resetState(State& state,
                                              const BoundVector& boundParams,
-                                             const BoundSymMatrix& cov,
+                                             const Covariance& cov,
                                              const Surface& surface,
                                              const NavigationDirection navDir,
                                              const double stepSize) const {

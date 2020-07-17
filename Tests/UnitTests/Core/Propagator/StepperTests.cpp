@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundSymMatrix cov2 = 8.5 * BoundSymMatrix::Identity();
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
@@ -354,12 +354,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(esStateCopy.dir,
                     freeParams.template segment<3>(eFreeDir0).normalized());
@@ -377,12 +377,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface(), ndir);
   // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(esStateCopy.dir,
                     freeParams.template segment<3>(eFreeDir0).normalized());
@@ -401,12 +401,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
                 cp2.referenceSurface());
   // Test all components
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(esStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(esStateCopy.dir,
                     freeParams.template segment<3>(eFreeDir0).normalized());

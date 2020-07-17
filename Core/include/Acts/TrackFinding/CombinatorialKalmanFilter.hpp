@@ -470,7 +470,7 @@ class CombinatorialKalmanFilter {
 
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
-                         currentState.filteredCovariance(),
+                         BoundSymMatrix(currentState.filteredCovariance()),
                          currentState.referenceSurface(), state.stepping.navDir,
                          state.options.maxStepSize);
 

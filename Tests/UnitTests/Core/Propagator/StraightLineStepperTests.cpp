@@ -277,12 +277,12 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface(), ndir, stepSize2);
   // Test all components
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(slsStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(slsStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(slsStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(slsStateCopy.pos,
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(slsStateCopy.dir,
@@ -302,12 +302,12 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface(), ndir);
   // Test all components
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(slsStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(slsStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(slsStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(slsStateCopy.pos,
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(slsStateCopy.dir,
@@ -328,12 +328,12 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.resetState(slsStateCopy, cp2.parameters(), *cp2.covariance(),
                  cp2.referenceSurface());
   // Test all components
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_NE(slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(*slsStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
   BOOST_CHECK_EQUAL(slsStateCopy.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(slsStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(slsStateCopy.covTransport);
-  BOOST_CHECK_EQUAL(slsStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(slsStateCopy.cov), cov2);
   BOOST_CHECK_EQUAL(slsStateCopy.pos,
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(slsStateCopy.dir,

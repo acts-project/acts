@@ -419,7 +419,7 @@ class KalmanFitter {
 
           // Update the stepping state
           stepper.resetState(state.stepping, st.filtered(),
-                             st.filteredCovariance(), st.referenceSurface(),
+                             BoundSymMatrix(st.filteredCovariance()), st.referenceSurface(),
                              backward, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
