@@ -522,7 +522,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 /// @brief Unit test for IterativeVertexFinder with Athena reference data
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
-  bool debug = false;
 
   // Set up constant B-Field
   ConstantBField bField(0.0, 0.0, 2_T);
@@ -599,12 +598,12 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   }
 
   // Retrieve vertices found by vertex finder
-  std::vector<Vertex<BoundParameters>> allVertices = *findResult;
+  // std::vector<Vertex<BoundParameters>> allVertices = *findResult;
 
   // Test expected outcomes from athena implementation
   // Number of reconstructed vertices
-  auto verticesInfo = std::get<1>(csvData);
-  const int expNRecoVertices = verticesInfo.size();
+  // auto verticesInfo = std::get<1>(csvData);
+  // const int expNRecoVertices = verticesInfo.size();
 
   // BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   // for (int i = 0; i < expNRecoVertices; i++) {
