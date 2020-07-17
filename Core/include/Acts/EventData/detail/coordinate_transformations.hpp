@@ -132,15 +132,15 @@ struct coordinate_transformation {
   ///
   /// @param [in] gtcx Geometry context
   /// @param [in] parameters Bound parameter vector
-  /// @param [in] object Geometrical object related to @p parameters
+  /// @param [in] surface Surface related to @p parameters
   ///
   /// @return FreeVector representation of @p parameters
   static FreeVector boundParameters2freeParameters(
       const GeometryContext& gtcx, const BoundVector& parameters,
-      const GeometryObject& object) {
+      const Surface& surface) {
     FreeVector result;
     result.template segment<3>(eFreePos0) = parameters2globalPosition(
-        gtcx, parameters, dynamic_cast<const Surface&>(object));
+        gtcx, parameters, surface);
     result[eFreeTime] = parameters[eBoundTime];
     result.template segment<3>(eFreeDir0) = makeDirectionUnitFromPhiTheta(
         parameters[eBoundPhi], parameters[eBoundTheta]);

@@ -355,20 +355,14 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
         return true;
       }
 
-      //~ // get the Surface
-      //~ const Acts::Surface* surfacePtr =
-          //~ dynamic_cast<const Acts::Surface*>(&state.referenceObject());
-      //~ if (surfacePtr == nullptr) {
-        //~ return true;
-      //~ }
-      //~ auto surface = surfacePtr->getSharedPtr();
-
       // get the measurement and surface
       auto meas = std::get<Measurement>(*state.uncalibrated());
       auto surface = meas.referenceObject().getSharedPtr();
-      
+      if(surface == nullptr)
+		return true;
+		
       // get the geometry ID
-      auto geoID = surface.geoID();
+      auto geoID = surface->geoID();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());
@@ -379,7 +373,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       // get global position
       Acts::Vector3D global(0, 0, 0);
       Acts::Vector3D mom(1, 1, 1);
-      meas.referenceSurface().localToGlobal(ctx.geoContext, local, mom, global);
+      surface->localToGlobal(ctx.geoContext, local, mom, global);
 
       // get measurement covariance
       auto cov = meas.covariance();
@@ -397,7 +391,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
       const auto& truthHit = state.uncalibrated().truthHit();
       // get local truth position
       Acts::Vector2D truthlocal;
-      meas.referenceSurface().globalToLocal(
+      surface->globalToLocal(
           gctx, truthHit.position(), truthHit.unitDirection(), truthlocal);
 
       // push the truth hit info

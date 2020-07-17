@@ -146,8 +146,6 @@ class TrackStateProxy {
       typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
-  static constexpr size_t numberOfTrackParameters = N;
-  static constexpr size_t numberOfMeasurementParameters = M;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
