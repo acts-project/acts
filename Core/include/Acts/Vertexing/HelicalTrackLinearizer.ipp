@@ -34,14 +34,22 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   BoundVector paramsAtPCA = endParams->parameters();
-  SpacePointVector positionAtPCA = SpacePointVector::Zero();
-  VectorHelpers::position(positionAtPCA) = endParams->position();
+  SpacePointVector positionAtPCA = Vector4D::Zero();
+  {
+    auto pos = endParams->position();
+    positionAtPCA[ePos0] = pos[ePos0];
+    positionAtPCA[ePos1] = pos[ePos1];
+    positionAtPCA[ePos2] = pos[ePos2];
+  }
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
   if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
     paramsAtPCA = params.parameters();
-    VectorHelpers::position(positionAtPCA) = params.position();
+    auto pos = endParams->position();
+    positionAtPCA[ePos0] = pos[ePos0];
+    positionAtPCA[ePos1] = pos[ePos1];
+    positionAtPCA[ePos2] = pos[ePos2];
     parCovarianceAtPCA = *(params.covariance());
   }
 

@@ -101,8 +101,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(
-          VectorHelpers::position(vtx.fullPosition()));
+      Surface::makeShared<PerigeeSurface>(vtx.position());
 
   BoundParameters refittedPerigee = BoundParameters(
       gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
