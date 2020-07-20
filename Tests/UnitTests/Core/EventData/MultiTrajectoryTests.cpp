@@ -603,8 +603,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
               eBoundParametersSize>
       fullProj;
   fullProj.setZero();
-  fullProj.topLeftCorner(pc.meas3d->size(),
-                         eBoundParametersSize) =
+  fullProj.topLeftCorner(pc.meas3d->size(), eBoundParametersSize) =
       pc.meas3d->projector();
   BOOST_CHECK_EQUAL(ts.projector(), fullProj);
 
