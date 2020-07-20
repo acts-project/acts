@@ -37,6 +37,7 @@ enum struct TrackStatePropMask : uint16_t {
   Uncalibrated = 1 << 10,
   Calibrated = 1 << 11,
 
+  BoundAll = Predicted + Filtered + Smoothed + JacobianBoundToBound + Uncalibrated + Calibrated,
   All = std::numeric_limits<uint16_t>::max(),  // should be all ones
 };
 

@@ -573,11 +573,11 @@ class CombinatorialKalmanFilter {
           // -> filtered parameter for outlier
           auto stateMask =
               (isPredictedShared ? ~TrackStatePropMask::Predicted
-                                 : TrackStatePropMask::All) &
+                                 : TrackStatePropMask::BoundAll) &
               (isSourcelinkShared ? ~TrackStatePropMask::Uncalibrated
-                                  : TrackStatePropMask::All) &
+                                  : TrackStatePropMask::BoundAll) &
               (isOutlier ? ~TrackStatePropMask::Filtered
-                         : TrackStatePropMask::All);
+                         : TrackStatePropMask::BoundAll);
 
           // Add measurement/outlier track state to the multitrajectory
           auto addStateRes = addSourcelinkState(

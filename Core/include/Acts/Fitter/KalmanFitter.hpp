@@ -449,7 +449,7 @@ class KalmanFitter {
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
         result.trackTip = result.fittedStates.addTrackState(
-            TrackStatePropMask::All, result.trackTip);
+            TrackStatePropMask::BoundAll, result.trackTip);
 
         // now get track state proxy back
         auto trackStateProxy =
@@ -623,7 +623,7 @@ class KalmanFitter {
 
         // Create a detached track state proxy
         auto tempTrackTip =
-            result.fittedStates.addTrackState(TrackStatePropMask::All);
+            result.fittedStates.addTrackState(TrackStatePropMask::BoundAll);
 
         // Get the detached track state proxy back
         auto trackStateProxy = result.fittedStates.getTrackState(tempTrackTip);

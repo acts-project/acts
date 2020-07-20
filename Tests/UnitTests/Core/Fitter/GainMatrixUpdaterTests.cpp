@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
 
   MultiTrajectory<SourceLink> traj;
-  traj.addTrackState(TrackStatePropMask::All);
+  traj.addTrackState(TrackStatePropMask::BoundAll);
   auto ts = traj.getTrackState(0);
 
   ts.uncalibrated() = SourceLink{&meas};

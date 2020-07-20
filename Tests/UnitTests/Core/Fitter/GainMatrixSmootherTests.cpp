@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   size_t ts_idx;
 
-  ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  ts_idx = traj.addTrackState(TrackStatePropMask::BoundAll);
   auto ts = traj.getTrackState(ts_idx);
   ts.setReferenceSurface(plane1);
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.pathLength() = 1.;
   ts.jacobianBoundToBound().setIdentity();
 
-  ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
+  ts_idx = traj.addTrackState(TrackStatePropMask::BoundAll, ts_idx);
   ts = traj.getTrackState(ts_idx);
   ts.setReferenceSurface(plane2);
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.pathLength() = 2.;
   ts.jacobianBoundToBound().setIdentity();
 
-  ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
+  ts_idx = traj.addTrackState(TrackStatePropMask::BoundAll, ts_idx);
   ts = traj.getTrackState(ts_idx);
   ts.setReferenceSurface(plane3);
 
