@@ -149,14 +149,9 @@ class SingleFreeTrackParameters {
   /// @return Boolean value whether the objects can be casted into each
   /// other and the content of the member variables is the same
   bool operator==(const SingleFreeTrackParameters& rhs) const {
-    auto casted = dynamic_cast<decltype(this)>(&rhs);
-    if (!casted) {
-      return false;
-    }
-
-    return (m_oChargePolicy == casted->m_oChargePolicy &&
-            m_oParameters == casted->m_oParameters &&
-            m_pVolume == casted->m_pVolume);
+    return (m_oChargePolicy == rhs.m_oChargePolicy &&
+            m_oParameters == rhs.m_oParameters &&
+            m_pVolume == rhs.m_pVolume);
   }
 
   /// @brief inequality operator
