@@ -160,7 +160,7 @@ class TrackStateProxy {
   using FreeCovariance = typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
-  static constexpr size_t N = eFreeParametersSize; // TODO
+  //~ static constexpr size_t N = eFreeParametersSize; // TODO
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -172,6 +172,9 @@ class TrackStateProxy {
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundParametersSize>;
+  using EffectiveFreeProjector =
+      Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
+                    ProjectorFlags, M, eFreeParametersSize>;
 
   /// Index within the trajectory.
   /// @return the index
@@ -440,7 +443,7 @@ class TrackStateProxy {
   /// is of dimension NxM, where N is the actual dimension of the
   /// measurement and M the dimension of free parameters.
   /// @return The effective projector
-  EffectiveProjector effectiveFreeProjector() const {
+  EffectiveFreeProjector effectiveFreeProjector() const {
     return projector().topLeftCorner(data().measdim, eFreeParametersSize);
   }
   
