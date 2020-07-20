@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -40,7 +39,7 @@ using Linearizer = HelicalTrackLinearizer<Propagator>;
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
-const auto DATAPATH = Acts::Test::getDataPath("vertexing_AMVF_data.csv");
+const std::string toolString = "AMVF";
 
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
@@ -97,7 +96,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder finder(finderConfig);
   Finder::State state;
 
-  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
   if (debugMode) {
@@ -249,7 +248,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
   Finder finder(finderConfig, extractParameters);
 
-  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
   std::vector<InputTrack> userTracks;
@@ -391,7 +390,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder finder(finderConfig);
   Finder::State state;
 
-  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
   if (debugMode) {

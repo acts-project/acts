@@ -42,7 +42,8 @@ using Linearizer = HelicalTrackLinearizer<Propagator>;
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
-const auto DATAPATH = Acts::Test::getDataPath("vertexing_IVF_data.csv");
+const std::string toolString = "IVF";
+
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -574,7 +575,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   VertexFinder finder(cfg);
   VertexFinder::State state(magFieldContext);
 
-  auto csvData = readTracksAndVertexCSV(DATAPATH);
+  auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
   std::vector<const BoundParameters*> tracksPtr;
