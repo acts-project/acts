@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
 
-  auto cnv = [](auto a) -> std::bitset<8> {
+  auto cnv = [](auto a) -> std::bitset<16> {
     return static_cast<std::underlying_type<PM>::type>(a);
   };
 
