@@ -1,10 +1,12 @@
 
+#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 #include <CL/sycl.hpp>
 #include <iostream>
 
-int main() {
+namespace Acts::Sycl {
+  void outputPlatforms() {
   for (const cl::sycl::platform& platform :
-       cl::sycl::platform::get_platforms()) {
+    cl::sycl::platform::get_platforms()) {
     // Print some information about the platform.
     std::cout << "============ Platform ============" << std::endl;
     std::cout << " Name   : "
@@ -31,5 +33,6 @@ int main() {
                 << std::endl;
     }
   }
-  return 0;
 }
+
+} // namespace Acts::Sycl

@@ -22,6 +22,7 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 # plugins related options
 option(ACTS_BUILD_CUDA_PLUGIN "Build CUDA plugin" OFF)
+option(ACTS_BUILD_SYCL_PLUGIN "Build SYCL plugin" OFF)
 option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
@@ -112,6 +113,7 @@ find_package(Filesystem REQUIRED)
 # version variables for external dependencies that are required more than once
 set(_dd4hep_version 1.10)
 set(_root_version 6.10)
+set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libstdc++")
 # plugin dependencies
 if(ACTS_BUILD_CUDA_PLUGIN)
   enable_language(CUDA)

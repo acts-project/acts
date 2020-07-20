@@ -14,6 +14,7 @@
 #else
 
 #include <any>
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 namespace Acts {
 

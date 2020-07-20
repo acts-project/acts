@@ -25,12 +25,15 @@ target_include_directories(
   
 target_link_libraries(
   ActsSyclPlugin
-  PUBLIC ActsCore ${SYCL})
+  PUBLIC ActsCore)
+
+acts_setup_sycl_target(ActsSyclPlugin)
 
 install(
   TARGETS ActsSyclPlugin
   EXPORT ActsSyclPluginTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-# install(
-#   DIRECTORY include/Acts
-#   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  
+install(
+  DIRECTORY include/Acts
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
