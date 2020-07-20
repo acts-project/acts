@@ -176,30 +176,30 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::freeSmoothedCovariance() const
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToBound() const
-    -> BoundSymMatrix {
+    -> JacobianBoundToBound {
   assert(data().ijacobianboundtobound != IndexData::kInvalid);
-  return BoundSymMatrix(m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
+  return JacobianBoundToBound(m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToFree() const
-    -> BoundToFreeMatrix {
+    -> JacobianBoundToFree {
   assert(data().ijacobianboundtofree != IndexData::kInvalid);
-  return BoundToFreeMatrix(m_traj->m_jacBoundToFree.col(data().ijacobianboundtofree).data());
+  return JacobianBoundToFree(m_traj->m_jacBoundToFree.col(data().ijacobianboundtofree).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToBound() const
-    -> FreeToBoundMatrix {
+    -> JacobianFreeToBound {
   assert(data().ijacobianfreetobound != IndexData::kInvalid);
-  return FreeToBoundMatrix(m_traj->m_jacFreeToBound.col(data().ijacobianfreetobound).data());
+  return JacobianFreeToBound(m_traj->m_jacFreeToBound.col(data().ijacobianfreetobound).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToFree() const
-    -> FreeSymMatrix {
+    -> JacobianFreeToFree {
   assert(data().ijacobianfreetofree != IndexData::kInvalid);
-  return FreeSymMatrix(m_traj->m_jacFreeToFree.col(data().ijacobianfreetofree).data());
+  return JacobianFreeToFree(m_traj->m_jacFreeToFree.col(data().ijacobianfreetofree).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>

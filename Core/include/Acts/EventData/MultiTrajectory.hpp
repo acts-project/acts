@@ -99,6 +99,12 @@ struct Types {
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+  using QuadraticJacobian = Eigen::Matrix<Scalar, Size, Size, Flags>;
+  using JacobianBoundToFree = Eigen::Matrix<Scalar, eFreeParametersSize, eBoundParametersSize, Flags>;
+  using JacobianFreeToBound = Eigen::Matrix<Scalar, eBoundParametersSize, eFreeParametersSize, Flags>;
+  using QuadraticJacobianMap = Eigen::Map<ConstIf<QuadraticJacobian, ReadOnlyMaps>>;
+  using JacobianBoundToFreeMap = Eigen::Map<ConstIf<JacobianBoundToFree, ReadOnlyMaps>>;
+  using JacobianFreeToBoundMap = Eigen::Map<ConstIf<JacobianFreeToBound, ReadOnlyMaps>>;
   // storage of multiple items in flat arrays
   using StorageCoefficients =
       GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
@@ -158,9 +164,12 @@ class TrackStateProxy {
       typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
   using FreeParameters = typename Types<eFreeParametersSize, ReadOnly>::CoefficientsMap;
   using FreeCovariance = typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
+  using JacobianBoundToBound = typename Types<eBoundParametersSize, ReadOnly>::QuadraticJacobianMap;
+  using JacobianBoundToFree = typename Types<eBoundParametersSize, ReadOnly>::JacobianBoundToFreeMap;
+  using JacobianFreeToBound = typename Types<eFreeParametersSize, ReadOnly>::JacobianFreeToBoundMap;
+  using JacobianFreeToFree = typename Types<eFreeParametersSize, ReadOnly>::QuadraticJacobianMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
-  //~ static constexpr size_t N = eFreeParametersSize; // TODO
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -391,26 +400,26 @@ class TrackStateProxy {
   
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
-  BoundSymMatrix jacobianBoundToBound() const;
+  JacobianBoundToBound jacobianBoundToBound() const;
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
   bool hasJacobianBoundToBound() const { return data().ijacobianboundtobound != IndexData::kInvalid; }
   
   /// @copydoc jacobianBoundToBound()
-  BoundToFreeMatrix jacobianBoundToFree() const;
+  JacobianBoundToFree jacobianBoundToFree() const;
 
   /// @copydoc hasJacobianBoundToBound()
   bool hasJacobianBoundToFree() const { return data().ijacobianboundtofree != IndexData::kInvalid; }
   
   /// @copydoc jacobianBoundToBound()
-  FreeToBoundMatrix jacobianFreeToBound() const;
+  JacobianFreeToBound jacobianFreeToBound() const;
 
   /// @copydoc hasJacobianBoundToBound()
   bool hasJacobianFreeToBound() const { return data().ijacobianfreetobound != IndexData::kInvalid; }
   
   /// @copydoc jacobianBoundToBound()
-  FreeSymMatrix jacobianFreeToFree() const;
+  JacobianFreeToFree jacobianFreeToFree() const;
 
   /// @copydoc hasJacobianBoundToBound()
   bool hasJacobianFreeToFree() const { return data().ijacobianfreetofree != IndexData::kInvalid; }
@@ -781,10 +790,10 @@ class MultiTrajectory {
   typename detail_lt::Types<eFreeParametersSize>::StorageCovariance m_freeCov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacBoundBound;
-  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacBoundFree;
-  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacFreeBound;
-  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacFreeFree;
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacBoundToBound;
+  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacBoundToFree;
+  typename detail_lt::Types<eFreeParametersSize>::StorageNonQuadraticJacobian m_jacFreeToBound;
+  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticJacobian m_jacFreeToFree;
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
