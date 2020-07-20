@@ -44,8 +44,17 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasFreeSmoothed()) {
     mask |= PM::FreeSmoothed;
   }
-  if (hasJacobian()) {
-    mask |= PM::Jacobian;
+  if (hasJacobianBoundToBound()) {
+    mask |= PM::JacobianBoundToBound;
+  }
+  if (hasJacobianBoundToFree()) {
+    mask |= PM::JacobianBoundToFree;
+  }
+  if (hasJacobianFreeToBound()) {
+    mask |= PM::JacobianFreeToBound;
+  }
+  if (hasJacobianFreeToFree()) {
+    mask |= PM::JacobianFreeToFree;
   }
   if (hasUncalibrated()) {
     mask |= PM::Uncalibrated;
@@ -166,10 +175,31 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::freeSmoothedCovariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToBound() const
     -> BoundSymMatrix {
   assert(data().ijacobianboundtobound != IndexData::kInvalid);
   return BoundSymMatrix(m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToFree() const
+    -> BoundToFreeMatrix {
+  assert(data().ijacobianboundtofree != IndexData::kInvalid);
+  return BoundToFreeMatrix(m_traj->m_jacBoundToFree.col(data().ijacobianboundtofree).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToBound() const
+    -> FreeToBoundMatrix {
+  assert(data().ijacobianfreetobound != IndexData::kInvalid);
+  return FreeToBoundMatrix(m_traj->m_jacFreeToBound.col(data().ijacobianfreetobound).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToFree() const
+    -> FreeSymMatrix {
+  assert(data().ijacobianfreetofree != IndexData::kInvalid);
+  return FreeSymMatrix(m_traj->m_jacFreeToFree.col(data().ijacobianfreetofree).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -244,11 +274,6 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
     p.ismoothed = m_params.size() - 1;
   }
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
-    m_jac.addCol();
-    p.ijacobian = m_jac.size() - 1;
-  }
-
   if (ACTS_CHECK_BIT(mask, PropMask::FreePredicted)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
@@ -265,6 +290,26 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
     m_freeParams.addCol();
     m_freeCov.addCol();
     p.ifreesmoothed = m_freeParams.size() - 1;
+  }
+  
+  if (ACTS_CHECK_BIT(mask, PropMask::JacobianBoundToBound)) {
+    m_jacBoundToBound.addCol();
+    p.ijacobianboundtobound = m_jacBoundToBound.size() - 1;
+  }
+  
+  if (ACTS_CHECK_BIT(mask, PropMask::JacobianBoundToFree)) {
+    m_jacBoundToFree.addCol();
+    p.ijacobianboundtofree = m_jacBoundToFree.size() - 1;
+  }
+  
+  if (ACTS_CHECK_BIT(mask, PropMask::JacobianFreeToBound)) {
+    m_jacFreeToBound.addCol();
+    p.ijacobianfreetobound = m_jacFreeToBound.size() - 1;
+  }
+  
+  if (ACTS_CHECK_BIT(mask, PropMask::JacobianFreeToFree)) {
+    m_jacFreeToFree.addCol();
+    p.ijacobianfreetofree = m_jacFreeToFree.size() - 1;
   }
   
   if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {

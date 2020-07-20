@@ -246,12 +246,24 @@ class TrackStateProxy {
       smoothedCovariance() = other.smoothedCovariance();
     }
 
+    if (ACTS_CHECK_BIT(src, PM::JacobianBoundToBound)) {
+      jacobianBoundToBound() = other.jacobianBoundToBound();
+    }
+    
+    if (ACTS_CHECK_BIT(src, PM::JacobianBoundToFree)) {
+      jacobianBoundToFree() = other.jacobianBoundToFree();
+    }
+    
+    if (ACTS_CHECK_BIT(src, PM::JacobianFreeToBound)) {
+      jacobianFreeToBound() = other.jacobianFreeToBound();
+    }
+    
+    if (ACTS_CHECK_BIT(src, PM::JacobianFreeToFree)) {
+      jacobianFreeToFree() = other.jacobianFreeToFree();
+    }
+    
     if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
       uncalibrated() = other.uncalibrated();
-    }
-
-    if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
-      jacobian() = other.jacobian();
     }
 
     if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
@@ -376,11 +388,29 @@ class TrackStateProxy {
   
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
-  BoundSymMatrix jacobian() const;
+  BoundSymMatrix jacobianBoundToBound() const;
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
-  bool hasJacobian() const { return data().ijacobianboundtobound != IndexData::kInvalid; }
+  bool hasJacobianBoundToBound() const { return data().ijacobianboundtobound != IndexData::kInvalid; }
+  
+  /// @copydoc jacobianBoundToBound()
+  BoundToFreeMatrix jacobianBoundToFree() const;
+
+  /// @copydoc hasJacobianBoundToBound()
+  bool hasJacobianBoundToFree() const { return data().ijacobianboundtofree != IndexData::kInvalid; }
+  
+  /// @copydoc jacobianBoundToBound()
+  FreeToBoundMatrix jacobianFreeToBound() const;
+
+  /// @copydoc hasJacobianBoundToBound()
+  bool hasJacobianFreeToBound() const { return data().ijacobianfreetobound != IndexData::kInvalid; }
+  
+  /// @copydoc jacobianBoundToBound()
+  FreeSymMatrix jacobianFreeToFree() const;
+
+  /// @copydoc hasJacobianBoundToBound()
+  bool hasJacobianFreeToFree() const { return data().ijacobianfreetofree != IndexData::kInvalid; }
   
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement

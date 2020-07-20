@@ -183,8 +183,8 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t jac;
   jac.setRandom();
   pc.jacobian = jac;
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Jacobian)) {
-    ts.jacobian() = jac;
+  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::JacobianBoundToBound)) {
+    ts.jacobianBoundToBound() = jac;
   }
 
   std::random_device rd;
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
     BOOST_CHECK(!p.hasCalibrated());
     BOOST_CHECK(!p.hasFiltered());
     BOOST_CHECK(!p.hasSmoothed());
-    BOOST_CHECK(!p.hasJacobian());
+    BOOST_CHECK(!p.hasJacobianBoundToBound());
     BOOST_CHECK(!p.hasProjector());
   };
 
@@ -290,10 +290,10 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Uncalibrated));
   BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Calibrated));
 
-  auto bs4 = PM::Predicted | PM::Jacobian | PM::Uncalibrated;
+  auto bs4 = PM::Predicted | PM::JacobianBoundToBound | PM::Uncalibrated;
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Uncalibrated));
-  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Jacobian));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::JacobianBoundToBound));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
@@ -306,8 +306,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 9> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
-                           PM::Jacobian,   PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 12> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
+                           PM::JacobianBoundToBound, PM::JacobianBoundToFree, PM::JacobianFreeToBound, PM::JacobianFreeToFree,   PM::Uncalibrated, PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
-  BOOST_CHECK(ts.hasJacobian());
+  BOOST_CHECK(ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::None));
   BOOST_CHECK(!ts.hasPredicted());
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::Predicted));
   BOOST_CHECK(ts.hasPredicted());
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::Filtered));
   BOOST_CHECK(!ts.hasPredicted());
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::Smoothed));
   BOOST_CHECK(!ts.hasPredicted());
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::Uncalibrated));
   BOOST_CHECK(!ts.hasPredicted());
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
   ts = t.getTrackState(t.addTrackState(PM::Calibrated));
   BOOST_CHECK(!ts.hasPredicted());
@@ -407,16 +407,16 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
-  ts = t.getTrackState(t.addTrackState(PM::Jacobian));
+  ts = t.getTrackState(t.addTrackState(PM::JacobianBoundToBound));
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(ts.hasJacobian());
+  BOOST_CHECK(ts.hasJacobianBoundToBound());
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
@@ -489,8 +489,8 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
   CovMat_t jac;
   jac.setRandom();
-  ts.jacobian() = jac;
-  BOOST_CHECK_EQUAL(cts.jacobian(), jac);
+  ts.jacobianBoundToBound() = jac;
+  BOOST_CHECK_EQUAL(cts.jacobianBoundToBound(), jac);
 
   ts.chi2() = 98;
   BOOST_CHECK_EQUAL(cts.chi2(), 98u);
@@ -570,8 +570,8 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
 
   BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
 
-  BOOST_CHECK(ts.hasJacobian());
-  BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);
+  BOOST_CHECK(ts.hasJacobianBoundToBound());
+  BOOST_CHECK_EQUAL(ts.jacobianBoundToBound(), pc.jacobian);
 
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), pc.meas3d->projector());
@@ -618,19 +618,19 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
   // filtered
   size_t i = t.addTrackState(
       TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-      TrackStatePropMask::Uncalibrated | TrackStatePropMask::Jacobian);
+      TrackStatePropMask::Uncalibrated | TrackStatePropMask::JacobianBoundToBound);
   auto tso = t.getTrackState(i);
   fillTrackState(tso, TrackStatePropMask::Predicted);
   fillTrackState(tso, TrackStatePropMask::Filtered);
   fillTrackState(tso, TrackStatePropMask::Uncalibrated);
-  fillTrackState(tso, TrackStatePropMask::Jacobian);
+  fillTrackState(tso, TrackStatePropMask::JacobianBoundToBound);
 
   BOOST_CHECK(tso.hasPredicted());
   BOOST_CHECK(tso.hasFiltered());
   BOOST_CHECK(!tso.hasSmoothed());
   BOOST_CHECK(tso.hasUncalibrated());
   BOOST_CHECK(!tso.hasCalibrated());
-  BOOST_CHECK(tso.hasJacobian());
+  BOOST_CHECK(tso.hasJacobianBoundToBound());
 
   // remove some parts
 }
@@ -639,8 +639,8 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   using PM = TrackStatePropMask;
   MultiTrajectory<SourceLink> mj;
 
-  std::array<PM, 9> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 12> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
+                           PM::JacobianBoundToBound,  PM::JacobianBoundToFree, PM::JacobianFreeToBound, PM::JacobianFreeToFree, PM::Uncalibrated, PM::Calibrated};
 
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
                            [](auto a, auto b) { return a | b; });
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+                           PM::JacobianBoundToBound,  PM::Uncalibrated, PM::Calibrated};
 
   // orthogonal ones
 
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
-  BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
+  BOOST_CHECK_NE(ts1.jacobianBoundToBound(), ts2.jacobianBoundToBound());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
   BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
@@ -761,14 +761,14 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
-  BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
+  BOOST_CHECK_EQUAL(ts1.jacobianBoundToBound(), ts2.jacobianBoundToBound());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());
   BOOST_CHECK_EQUAL(&ts1.referenceSurface(), &ts2.referenceSurface());
 
   // full copy proven to work. now let's do partial copy
-  ts2 = mkts(PM::Predicted | PM::Jacobian | PM::Calibrated);
-  ts2.copyFrom(ots2, PM::Predicted | PM::Jacobian |
+  ts2 = mkts(PM::Predicted | PM::JacobianBoundToBound | PM::Calibrated);
+  ts2.copyFrom(ots2, PM::Predicted | PM::JacobianBoundToBound |
                          PM::Calibrated);  // copy into empty ts, only copy some
   ts1.copyFrom(ots1);                      // reset to original
   // is different again
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
-  BOOST_CHECK_NE(ts1.jacobian(), ts2.jacobian());
+  BOOST_CHECK_NE(ts1.jacobianBoundToBound(), ts2.jacobianBoundToBound());
   BOOST_CHECK_NE(ts1.chi2(), ts2.chi2());
   BOOST_CHECK_NE(ts1.pathLength(), ts2.pathLength());
   BOOST_CHECK_NE(&ts1.referenceSurface(), &ts2.referenceSurface());
@@ -798,7 +798,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
-  BOOST_CHECK_EQUAL(ts1.jacobian(), ts2.jacobian());
+  BOOST_CHECK_EQUAL(ts1.jacobianBoundToBound(), ts2.jacobianBoundToBound());
   BOOST_CHECK_EQUAL(ts1.chi2(), ts2.chi2());              // always copied
   BOOST_CHECK_EQUAL(ts1.pathLength(), ts2.pathLength());  // always copied
   BOOST_CHECK_EQUAL(&ts1.referenceSurface(),

@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.filtered() = parValues;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 1.;
-  ts.jacobian().setIdentity();
+  ts.jacobianBoundToBound().setIdentity();
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.filtered() = parValues;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 2.;
-  ts.jacobian().setIdentity();
+  ts.jacobianBoundToBound().setIdentity();
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.filtered() = parValues;
   ts.filteredCovariance() = covTrk;
   ts.pathLength() = 3.;
-  ts.jacobian().setIdentity();
+  ts.jacobianBoundToBound().setIdentity();
 
   // "smooth" these three track states
 

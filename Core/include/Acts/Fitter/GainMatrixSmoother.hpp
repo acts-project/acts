@@ -76,7 +76,7 @@ class GainMatrixSmoother {
         // covariances.
         assert(ts.hasFiltered());
         assert(ts.hasPredicted());
-        assert(ts.hasJacobian());
+        assert(ts.hasJacobianBoundToBound());
 
         // previous trackstate should have smoothed and predicted
         assert(prev_ts.hasSmoothed());
@@ -84,7 +84,7 @@ class GainMatrixSmoother {
 
         ACTS_VERBOSE("Calculate smoothing matrix:");
         ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-        ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+        ACTS_VERBOSE("Jacobian:\n" << ts.jacobianBoundToBound());
         ACTS_VERBOSE("Prev. predicted covariance\n"
                      << prev_ts.predictedCovariance() << "\n, inverse: \n"
                      << prev_ts.predictedCovariance().inverse());
@@ -92,7 +92,7 @@ class GainMatrixSmoother {
         // Gain smoothing matrix
         // NB: The jacobian stored in a state is the jacobian from previous
         // state to this state in forward propagation
-        G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
+        G = ts.filteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
             prev_ts.predictedCovariance().inverse();
 
         if (G.hasNaN()) {

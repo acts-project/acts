@@ -461,7 +461,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = boundParams.parameters();
         trackStateProxy.predictedCovariance() = *boundParams.covariance();
-        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.jacobianBoundToBound() = jacobian;
         trackStateProxy.pathLength() = pathLength;
 
         // We have predicted parameters, so calibrate the uncalibrated input
@@ -553,7 +553,7 @@ class KalmanFitter {
             // Fill the track state
             trackStateProxy.predicted() = boundParams.parameters();
             trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.jacobianBoundToBound() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           } else {
             ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
@@ -566,7 +566,7 @@ class KalmanFitter {
             trackStateProxy.predicted() = curvilinearParams.parameters();
             trackStateProxy.predictedCovariance() =
                 *curvilinearParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
+            trackStateProxy.jacobianBoundToBound() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           }
 
@@ -634,7 +634,7 @@ class KalmanFitter {
         // Fill the track state
         trackStateProxy.predicted() = boundParams.parameters();
         trackStateProxy.predictedCovariance() = *boundParams.covariance();
-        trackStateProxy.jacobian() = jacobian;
+        trackStateProxy.jacobianBoundToBound() = jacobian;
         trackStateProxy.pathLength() = pathLength;
 
         // We have predicted parameters, so calibrate the uncalibrated input
