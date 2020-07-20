@@ -215,7 +215,7 @@ class StraightLineStepper {
       State& state, const FreeVector& freeParams, const Covariance& cov,
       const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
-      
+
   /// Get the field for the stepping, this gives back a zero field
   ///
   /// @param [in,out] state is the propagation state associated with the track

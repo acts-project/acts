@@ -123,8 +123,7 @@ void StraightLineStepper::resetState(State& state,
   state.derivative = FreeVector::Zero();
 }
 
-void StraightLineStepper::resetState(State& state,
-                                     const FreeVector& freeParams,
+void StraightLineStepper::resetState(State& state, const FreeVector& freeParams,
                                      const Covariance& cov,
                                      const NavigationDirection navDir,
                                      const double stepSize) const {

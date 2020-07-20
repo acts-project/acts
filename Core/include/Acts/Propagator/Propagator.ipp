@@ -91,19 +91,20 @@ auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
         return_parameters_t, typename propagator_options_t::action_list_type>> {
-  if constexpr(parameters_t::is_local_representation) {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-  }else{
-  static_assert(Concepts::FreeTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");}
-  if constexpr(return_parameters_t::is_local_representation) {
-  static_assert(Concepts::BoundTrackParametersConcept<return_parameters_t>,
-                "Return parameters do not fulfill parameter concept.");
-  }else{
-  static_assert(Concepts::FreeTrackParametersConcept<return_parameters_t>,
-                "Return parameters do not fulfill parameter concept.");
-}
+  if constexpr (parameters_t::is_local_representation) {
+    static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+                  "Parameters do not fulfill bound parameters concept.");
+  } else {
+    static_assert(Concepts::FreeTrackParametersConcept<parameters_t>,
+                  "Parameters do not fulfill bound parameters concept.");
+  }
+  if constexpr (return_parameters_t::is_local_representation) {
+    static_assert(Concepts::BoundTrackParametersConcept<return_parameters_t>,
+                  "Return parameters do not fulfill parameter concept.");
+  } else {
+    static_assert(Concepts::FreeTrackParametersConcept<return_parameters_t>,
+                  "Return parameters do not fulfill parameter concept.");
+  }
   // Type of track parameters produced by the propagation
   using ReturnParameterType = return_parameters_t;
 
@@ -180,13 +181,13 @@ auto Acts::Propagator<S, N>::propagate(
     -> Result<action_list_t_result_t<
         BoundTrackParameters,
         typename propagator_options_t::action_list_type>> {
-			if constexpr(parameters_t::is_local_representation) {
-  static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-			}else{
-  static_assert(Concepts::FreeTrackParametersConcept<parameters_t>,
-                "Parameters do not fulfill bound parameters concept.");
-}
+  if constexpr (parameters_t::is_local_representation) {
+    static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
+                  "Parameters do not fulfill bound parameters concept.");
+  } else {
+    static_assert(Concepts::FreeTrackParametersConcept<parameters_t>,
+                  "Parameters do not fulfill bound parameters concept.");
+  }
   // Type of track parameters produced at the end of the propagation
   using ReturnParameterType = BoundTrackParameters;
 

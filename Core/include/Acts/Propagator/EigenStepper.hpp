@@ -239,7 +239,7 @@ class EigenStepper {
       State& state, const BoundVector& boundParams, const Covariance& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
-      
+
   /// @brief Resets the state
   ///
   /// @param [in, out] state State of the stepper

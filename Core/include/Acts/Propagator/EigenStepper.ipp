@@ -39,10 +39,10 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::resetState(State& state,
-                                     const FreeVector& freeParams,
-                                     const Covariance& cov,
-                                     const NavigationDirection navDir,
-                                     const double stepSize) const {
+                                             const FreeVector& freeParams,
+                                             const Covariance& cov,
+                                             const NavigationDirection navDir,
+                                             const double stepSize) const {
   // Update the stepping state
   update(state, freeParams, cov);
   state.navDir = navDir;

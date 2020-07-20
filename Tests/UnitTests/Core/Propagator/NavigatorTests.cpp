@@ -93,7 +93,7 @@ struct PropagatorState {
                     const Covariance& /*unused*/, const Surface& /*unused*/,
                     const NavigationDirection /*unused*/,
                     const double /*unused*/) const {}
-                    
+
     /// State resetter
     void resetState(State& /*unused*/, const FreeVector& /*unused*/,
                     const Covariance& /*unused*/,
