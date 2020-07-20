@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
 
   ActsMatrixD<maxmeasdim, eBoundParametersSize> projFull;
   projFull.setZero();
-  projFull.topLeftCorner(m2.size(), maxparamdim) = m2.projector();
+  projFull.topLeftCorner(m2.size(), eBoundParametersSize) = m2.projector();
   BOOST_CHECK_EQUAL(ts.projector(), projFull);
 }
 
