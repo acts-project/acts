@@ -44,7 +44,6 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "IVF";
 
-
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
 // Vertex z position distribution

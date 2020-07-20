@@ -44,10 +44,11 @@ struct VertexInfo {
 
 std::tuple<Vertex<BoundParameters>, std::vector<VertexInfo>,
            std::vector<BoundParameters>>
-readTracksAndVertexCSV(std::string toolString, std::string fileBase = "vertexing_event_mu20") {
-
+readTracksAndVertexCSV(std::string toolString,
+                       std::string fileBase = "vertexing_event_mu20") {
   const auto tracksDataPath = Acts::Test::getDataPath(fileBase + "_tracks.csv");
-  const auto verticesDataPath = Acts::Test::getDataPath(fileBase + "_vertices_" + toolString +  ".csv");
+  const auto verticesDataPath =
+      Acts::Test::getDataPath(fileBase + "_vertices_" + toolString + ".csv");
 
   const std::regex comma(",");
 
@@ -99,13 +100,22 @@ readTracksAndVertexCSV(std::string toolString, std::string fileBase = "vertexing
           std::stod(row[3]), std::stod(row[4]) * 1. / (1_MeV),
           std::stod(row[5]);
       Covariance covMat;
-      covMat << 
-       std::stod(row[6]),  std::stod(row[7]),  std::stod(row[8]),  std::stod(row[9]), std::stod(row[10]) * 1. / (1_MeV), std::stod(row[11]),
-       std::stod(row[7]), std::stod(row[12]), std::stod(row[13]), std::stod(row[14]), std::stod(row[15]) * 1. / (1_MeV), std::stod(row[16]),
-       std::stod(row[8]), std::stod(row[13]), std::stod(row[17]), std::stod(row[18]), std::stod(row[19]) * 1. / (1_MeV), std::stod(row[20]),
-       std::stod(row[9]), std::stod(row[14]), std::stod(row[18]), std::stod(row[21]), std::stod(row[22]) * 1. / (1_MeV), std::stod(row[23]),
-       std::stod(row[10]) * 1. / (1_MeV), std::stod(row[15]) * 1. / (1_MeV), std::stod(row[19]) * 1. / (1_MeV), std::stod(row[22]) * 1. / (1_MeV), std::stod(row[24]) * 1. / (1_MeV * 1_MeV), std::stod(row[25])* 1. / (1_MeV),
-       std::stod(row[11]), std::stod(row[16]), std::stod(row[20]), std::stod(row[23]), std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
+      covMat << std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
+          std::stod(row[9]), std::stod(row[10]) * 1. / (1_MeV),
+          std::stod(row[11]), std::stod(row[7]), std::stod(row[12]),
+          std::stod(row[13]), std::stod(row[14]),
+          std::stod(row[15]) * 1. / (1_MeV), std::stod(row[16]),
+          std::stod(row[8]), std::stod(row[13]), std::stod(row[17]),
+          std::stod(row[18]), std::stod(row[19]) * 1. / (1_MeV),
+          std::stod(row[20]), std::stod(row[9]), std::stod(row[14]),
+          std::stod(row[18]), std::stod(row[21]),
+          std::stod(row[22]) * 1. / (1_MeV), std::stod(row[23]),
+          std::stod(row[10]) * 1. / (1_MeV), std::stod(row[15]) * 1. / (1_MeV),
+          std::stod(row[19]) * 1. / (1_MeV), std::stod(row[22]) * 1. / (1_MeV),
+          std::stod(row[24]) * 1. / (1_MeV * 1_MeV),
+          std::stod(row[25]) * 1. / (1_MeV), std::stod(row[11]),
+          std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
+          std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
       auto boundParams =
           BoundParameters(geoCtx, std::move(covMat), params, perigeeSurface);
@@ -123,22 +133,21 @@ readTracksAndVertexCSV(std::string toolString, std::string fileBase = "vertexing
       continue;
     }
 
-      Vector3D pos;
-      pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
-          std::stod(row[2]) * (1_mm);
-      ActsSymMatrixD<3> cov;
-      cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]),
-          std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
-          std::stod(row[9]), std::stod(row[10]), std::stod(row[11]);
-      VertexInfo vertexInfo;
-      vertexInfo.position = pos;
-      vertexInfo.covariance = cov;
-      vertexInfo.nTracks = std::stoi(row[12]);
-      vertexInfo.trk1Weight = std::stod(row[13]);
-      vertexInfo.trk1Comp = std::stod(row[14]);
-      vertexInfo.trk1Chi2 = std::stod(row[15]);
-      vertices.push_back(vertexInfo);
-
+    Vector3D pos;
+    pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
+        std::stod(row[2]) * (1_mm);
+    ActsSymMatrixD<3> cov;
+    cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]),
+        std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
+        std::stod(row[9]), std::stod(row[10]), std::stod(row[11]);
+    VertexInfo vertexInfo;
+    vertexInfo.position = pos;
+    vertexInfo.covariance = cov;
+    vertexInfo.nTracks = std::stoi(row[12]);
+    vertexInfo.trk1Weight = std::stod(row[13]);
+    vertexInfo.trk1Comp = std::stod(row[14]);
+    vertexInfo.trk1Chi2 = std::stod(row[15]);
+    vertices.push_back(vertexInfo);
   }
 
   return std::make_tuple(beamspotConstraint, vertices, tracks);
