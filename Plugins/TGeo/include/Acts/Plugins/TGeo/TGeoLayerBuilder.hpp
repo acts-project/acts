@@ -51,7 +51,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
     using SplitConfig = std::pair<BinningValue, double>;
 
-    /// Identify the serach volume by name
+    /// Identify the search volume by name
     std::string volumeName = "";
     /// Identify the sensor(s) by name
     std::vector<std::string> sensorNames = {};
@@ -99,9 +99,6 @@ class TGeoLayerBuilder : public ILayerBuilder {
     bool autoSurfaceBinning = false;
     /// The surface binning matcher
     Acts::SurfaceBinningMatcher surfaceBinMatcher;
-    /// Special debug output, is very verbose and hence needs
-    /// an additional switch to log level
-    bool nodeSearchDebug = false;
   };
 
   /// Constructor

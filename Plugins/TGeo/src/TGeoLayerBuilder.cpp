@@ -150,15 +150,16 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       }
     }
 
-    // Step down from the top volume each time to collect the logical tree
-    TGeoVolume* tvolume = gGeoManager->GetTopVolume();
-    TGeoVolume* dvolume =
+    // Either pick the configured volume or take the top level volume
+    TGeoVolume* tVolume =
         gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
-    if (dvolume != nullptr) {
-      tvolume = dvolume;
-      ACTS_DEBUG("- setting search volume to " << dvolume->GetName());
+    if (tVolume == nullptr) {
+      tVolume = gGeoManager->GetTopVolume();
+    } else {
+      ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
     }
-    if (tvolume != nullptr) {
+
+    if (tVolume != nullptr) {
       TGeoParser::Options tgpOptions;
       tgpOptions.volumeNames = {layerCfg.volumeName};
       tgpOptions.targetNames = layerCfg.sensorNames;
@@ -166,7 +167,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       tgpOptions.unit = m_cfg.unit;
 
       TGeoParser::State tgpState;
-      tgpState.volume = tvolume;
+      tgpState.volume = tVolume;
 
       TGeoParser::select(tgpState, tgpOptions);
 
