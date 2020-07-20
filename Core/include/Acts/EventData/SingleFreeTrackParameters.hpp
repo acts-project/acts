@@ -46,9 +46,13 @@ class SingleFreeTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
-                            const ParametersVector& parValues)
+                            const ParametersVector& parValues,
+                            std::shared_ptr<const Volume> volume)
       : m_oParameters(std::move(cov), parValues),
-        m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])) {}
+        m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])),
+        m_pVolume(std::move(volume)) 
+        {
+			assert(m_pVolume);}
 
   /// Construct track parameters for neutral particles.
   ///
@@ -58,8 +62,8 @@ class SingleFreeTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
-                            const ParametersVector& parValues)
-      : m_oParameters(std::move(cov), parValues), m_oChargePolicy() {}
+                            const ParametersVector& parValues, std::shared_ptr<const Volume> volume)
+      : m_oParameters(std::move(cov), parValues), m_oChargePolicy(), m_pVolume(std::move(volume)) { assert(m_pVolume);}
 
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
