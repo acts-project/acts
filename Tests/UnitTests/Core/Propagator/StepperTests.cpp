@@ -43,6 +43,8 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
+static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
+
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
@@ -148,11 +150,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
-  BOOST_CHECK_EQUAL(esState.pos, pos);
-  BOOST_CHECK_EQUAL(esState.dir, mom.normalized());
-  BOOST_CHECK_EQUAL(esState.p, mom.norm());
+  CHECK_CLOSE_OR_SMALL(esState.pos, pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(esState.dir, mom.normalized(), eps, eps);
+  CHECK_CLOSE_REL(esState.p, mom.norm(), eps);
   BOOST_CHECK_EQUAL(esState.q, charge);
-  BOOST_CHECK_EQUAL(esState.t, time);
+  CHECK_CLOSE_OR_SMALL(esState.t, time, eps, eps);
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
@@ -399,24 +401,20 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Update in context of a surface
-  BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
-                           -1. * charge, 2. * time, targetSurface);
-  Vector3D dir = bpTarget.momentum().normalized();
-  freeParams[eFreePos0] = bpTarget.position()[eX];
-  freeParams[eFreePos1] = bpTarget.position()[eY];
-  freeParams[eFreePos2] = bpTarget.position()[eZ];
-  freeParams[eFreeTime] = bpTarget.time();
-  freeParams[eFreeDir0] = dir[eMom0];
-  freeParams[eFreeDir1] = dir[eMom1];
-  freeParams[eFreeDir2] = dir[eMom2];
-  freeParams[eFreeQOverP] = bpTarget.charge() / bpTarget.momentum().norm();
+  freeParams = detail::transformBoundToFreeParameters(
+      bp.referenceSurface(), tgContext, bp.parameters());
+  freeParams.segment<3>(eFreePos0) *= 2;
+  freeParams[eFreeTime] *= 2;
+  freeParams.segment<3>(eFreeDir0) *= 2;
+  freeParams[eFreeQOverP] *= -0.5;
 
-  es.update(esState, freeParams, *bpTarget.covariance());
-  BOOST_CHECK_EQUAL(esState.pos, 2. * pos);
-  CHECK_CLOSE_ABS(esState.dir, mom.normalized(), 1e-6);
-  BOOST_CHECK_EQUAL(esState.p, 2. * mom.norm());
+  es.update(esState, freeParams, 2 * (*bp.covariance()));
+  CHECK_CLOSE_OR_SMALL(esState.pos, 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(esState.dir, mom.normalized(), eps, eps);
+  CHECK_CLOSE_REL(esState.p, 2 * mom.norm(), eps);
+  // update does not change the particle hypothesis
   BOOST_CHECK_EQUAL(esState.q, 1. * charge);
-  BOOST_CHECK_EQUAL(esState.t, 2. * time);
+  CHECK_CLOSE_OR_SMALL(esState.t, 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
 
   // Transport the covariance in the context of a surface
