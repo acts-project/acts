@@ -11,9 +11,9 @@
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Geometry/Volume.hpp"
 
 namespace Acts {
 namespace Test {
@@ -21,7 +21,7 @@ namespace Test {
 /// @brief Unit test for free parameters
 ///
 BOOST_AUTO_TEST_CASE(free_initialization) {
-	std::shared_ptr<const Volume> volume(new Volume());
+  std::shared_ptr<const Volume> volume(new Volume());
   Vector3D pos(0., 1., 2.);
   double t = 3.;
   Vector3D dir(4., 5., 6.);
@@ -65,7 +65,8 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
 
   // Test move assignment
   covCpy = *cov;
-  FreeTrackParameters fpMoveAssignment = FreeTrackParameters(covCpy, params, volume);
+  FreeTrackParameters fpMoveAssignment =
+      FreeTrackParameters(covCpy, params, volume);
   BOOST_TEST(fpMoveAssignment == fp);
 
   /// Repeat constructing and assignment with neutral parameters
