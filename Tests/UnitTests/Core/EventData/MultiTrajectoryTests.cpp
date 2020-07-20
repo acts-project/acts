@@ -306,8 +306,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 9> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed, PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 9> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
+                           PM::Jacobian,   PM::Uncalibrated, PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   using PM = TrackStatePropMask;
   MultiTrajectory<SourceLink> mj;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
+  std::array<PM, 9> values{PM::Predicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
                            PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
 
   PM all = std::accumulate(values.begin(), values.end(), PM::None,

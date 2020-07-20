@@ -29,12 +29,20 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasPredicted()) {
     mask |= PM::Predicted;
   }
-
   if (hasFiltered()) {
     mask |= PM::Filtered;
   }
   if (hasSmoothed()) {
     mask |= PM::Smoothed;
+  }
+  if (hasFreePredicted()) {
+    mask |= PM::FreePredicted;
+  }
+  if (hasFreeFiltered()) {
+    mask |= PM::FreeFiltered;
+  }
+  if (hasFreeSmoothed()) {
+    mask |= PM::FreeSmoothed;
   }
   if (hasJacobian()) {
     mask |= PM::Jacobian;
@@ -113,6 +121,48 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
   return Covariance(m_traj->m_cov.col(data().ismoothed).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freePredicted() const
+    -> FreeParameters {
+  assert(data().ifreepredicted != IndexData::kInvalid);
+  return FreeParameters(m_traj->m_freeParams.col(data().ifreepredicted).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freePredictedCovariance() const
+    -> FreeCovariance {
+  assert(data().ifreepredicted != IndexData::kInvalid);
+  return FreeCovariance(m_traj->m_freeCov.col(data().ifreepredicted).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freeFiltered() const
+    -> FreeParameters {
+  assert(data().ifreefiltered != IndexData::kInvalid);
+  return FreeParameters(m_traj->m_freeParams.col(data().ifreefiltered).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freeFilteredCovariance() const
+    -> FreeCovariance {
+  assert(data().ifreefiltered != IndexData::kInvalid);
+  return FreeCovariance(m_traj->m_freeCov.col(data().ifreefiltered).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freeSmoothed() const
+    -> FreeParameters {
+  assert(data().ifreesmoothed != IndexData::kInvalid);
+  return FreeParameters(m_traj->m_freeParams.col(data().ifreesmoothed).data());
+}
+
+template <typename SL, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<SL, M, ReadOnly>::freeSmoothedCovariance() const
+    -> FreeCovariance {
+  assert(data().ifreesmoothed != IndexData::kInvalid);
+  return FreeCovariance(m_traj->m_freeCov.col(data().ifreesmoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -201,19 +251,19 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
   if (ACTS_CHECK_BIT(mask, PropMask::FreePredicted)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ifreepredicted = m_params.size() - 1;
+    p.ifreepredicted = m_freeParams.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::FreeFiltered)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ifreefiltered = m_params.size() - 1;
+    p.ifreefiltered = m_freeParams.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::FreeSmoothed)) {
     m_freeParams.addCol();
     m_freeCov.addCol();
-    p.ifreesmoothed = m_params.size() - 1;
+    p.ifreesmoothed = m_freeParams.size() - 1;
   }
   
   if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {

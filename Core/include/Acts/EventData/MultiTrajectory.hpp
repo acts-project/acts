@@ -158,8 +158,8 @@ class TrackStateProxy {
   // @TODO: Does not copy flags, because this fails: can't have col major row
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector = Eigen::Matrix<typename Covariance::Scalar, M,
-                                  eBoundParametersSize, ProjectorFlags>;
+  using Projector =
+      Eigen::Matrix<typename Covariance::Scalar, M, eFreeParametersSize, ProjectorFlags>;
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundParametersSize>;
@@ -376,9 +376,8 @@ class TrackStateProxy {
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
   /// @note This function returns the overallocated projector. This means it
-  /// is of dimension MxM, where M is the maximum number of measurement
-  /// dimensions. The NxM submatrix, where N is the actual dimension of the
-  /// measurement, is located in the top left corner, everything else is zero.
+  /// is of dimension MxP, where M is the maximum number of measurement
+  /// dimensions and P the maximum number of parameters dimensions. The NxQ submatrix, where N is the actual dimension of the measurement and Q the actual dimension of the parameters, is located in the top left corner, everything else is zero.
   /// @return The overallocated projector
   Projector projector() const;
 
@@ -387,15 +386,25 @@ class TrackStateProxy {
   bool hasProjector() const { return data().iprojector != IndexData::kInvalid; }
 
   /// Returns the projector (measurement mapping function) for this track
-  /// state. It is derived from the uncalibrated measurement
+  /// state. It is derived from the calibrated measurement
   /// @note This function returns the effective projector. This means it
   /// is of dimension NxM, where N is the actual dimension of the
-  /// measurement.
+  /// measurement and M the dimension of bound parameters.
   /// @return The effective projector
   EffectiveProjector effectiveProjector() const {
-    return projector().topLeftCorner(data().measdim, M);
+    return projector().topLeftCorner(data().measdim, eBoundParametersSize);
   }
 
+  /// Returns the projector (measurement mapping function) for this track
+  /// state. It is derived from the calibrated measurement
+  /// @note This function returns the effective projector. This means it
+  /// is of dimension NxM, where N is the actual dimension of the
+  /// measurement and M the dimension of free parameters.
+  /// @return The effective projector
+  EffectiveProjector effectiveFreeProjector() const {
+    return projector().topLeftCorner(data().measdim, eFreeParametersSize);
+  }
+  
   /// Set the projector on this track state
   /// This will convert the projector to a more compact bitset representation
   /// and store it.
@@ -414,8 +423,7 @@ class TrackStateProxy {
     assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= eBoundParametersSize,
-                  "Given projector has too many columns");
+    static_assert(cols <= eFreeParametersSize, "Given projector has too many columns");
 
     // set up full size projector with only zeros
     typename TrackStateProxy::Projector fullProjector =
@@ -510,7 +518,7 @@ class TrackStateProxy {
     constexpr size_t measdim =
         Acts::Measurement<SourceLink, BoundParametersIndices,
                           params...>::size();
-
+	static_assert(measdim <= M, "Measurement has too many dimensions");
     dataref.measdim = measdim;
 
     assert(hasCalibrated());
@@ -550,6 +558,13 @@ class TrackStateProxy {
       const Acts::Measurement<SourceLink, BoundParametersIndices, params...>&
           meas) {
     IndexData& dataref = data();
+    // Set the dimension of the measurement
+    constexpr size_t measdim =
+        Acts::Measurement<SourceLink, BoundParametersIndices,
+                          params...>::size();
+	static_assert(measdim <= M, "Measurement has too many dimensions");
+    dataref.measdim = measdim;
+
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
     traj.m_meas.addCol();
@@ -672,7 +687,7 @@ class MultiTrajectory {
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
 
   using ProjectorBitset =
-      std::bitset<eBoundParametersSize * MeasurementSizeMax>;
+      std::bitset<eFreeParametersSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
