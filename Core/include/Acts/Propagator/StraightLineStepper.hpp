@@ -21,6 +21,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 namespace Acts {
 
