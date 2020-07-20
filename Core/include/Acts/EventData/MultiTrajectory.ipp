@@ -166,9 +166,10 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::freeSmoothedCovariance() const
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const -> Covariance {
-  assert(data().ijacobian != IndexData::kInvalid);
-  return Covariance(m_traj->m_jac.col(data().ijacobian).data());
+inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const
+    -> BoundSymMatrix {
+  assert(data().ijacobianboundtobound != IndexData::kInvalid);
+  return BoundSymMatrix(m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>

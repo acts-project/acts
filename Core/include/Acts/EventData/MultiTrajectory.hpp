@@ -106,6 +106,12 @@ struct Types {
   using StorageCovariance =
       GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
                       SizeIncrement>;
+  using StorageQuadraticJacobian =
+      GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
+                      SizeIncrement>;
+  using StorageNonQuadraticJacobian =
+      GrowableColumns<Eigen::Array<Scalar, eBoundParametersSize * eFreeParametersSize, Eigen::Dynamic, Flags>,
+                      SizeIncrement>;
 };
 
 struct IndexData {
@@ -121,7 +127,10 @@ struct IndexData {
   IndexType ifreepredicted = kInvalid;
   IndexType ifreefiltered = kInvalid;
   IndexType ifreesmoothed = kInvalid;
-  IndexType ijacobian = kInvalid;
+  IndexType ijacobianboundtobound = kInvalid;
+  IndexType ijacobianboundtofree = kInvalid;
+  IndexType ijacobianfreetobound = kInvalid;
+  IndexType ijacobianfreetofree = kInvalid;
   IndexType iprojector = kInvalid;
 
   double chi2;
@@ -329,14 +338,6 @@ class TrackStateProxy {
   /// @return Whether it is set
   bool hasSmoothed() const { return data().ismoothed != IndexData::kInvalid; }
 
-  /// Returns the jacobian from the previous trackstate to this one
-  /// @return The jacobian matrix
-  Covariance jacobian() const;
-
-  /// Returns whether a jacobian is set for this trackstate
-  /// @return Whether it is set
-  bool hasJacobian() const { return data().ijacobian != IndexData::kInvalid; }
-
   /// Predicted track parameters vector
   /// @return The predicted parameters
   FreeParameters freePredicted() const;
@@ -372,6 +373,14 @@ class TrackStateProxy {
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
   bool hasFreeSmoothed() const { return data().ifreesmoothed != IndexData::kInvalid; }
+  
+  /// Returns the jacobian from the previous trackstate to this one
+  /// @return The jacobian matrix
+  BoundSymMatrix jacobian() const;
+
+  /// Returns whether a jacobian is set for this trackstate
+  /// @return Whether it is set
+  bool hasJacobian() const { return data().ijacobianboundtobound != IndexData::kInvalid; }
   
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
@@ -739,7 +748,10 @@ class MultiTrajectory {
   typename detail_lt::Types<eFreeParametersSize>::StorageCovariance m_freeCov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_jac;
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacBoundBound;
+  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacBoundFree;
+  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacFreeBound;
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacFreeFree;
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
