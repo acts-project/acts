@@ -146,17 +146,21 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), 13., 1e-6);
   CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), 14., 1e-6);
   CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), 15., 1e-6);
-  
+
   // Test further getters
   BOOST_TEST(&fp.referenceVolume() == volume.get());
   BOOST_TEST(&nfp.referenceVolume() == volume.get());
-    
+
   FullFreeParameterSet parameterSet(fp.covariance(), fp.parameters());
-  BOOST_TEST(fp.getParameterSet().getParameters() == parameterSet.getParameters());
-  BOOST_TEST(*fp.getParameterSet().getCovariance() == *parameterSet.getCovariance());
+  BOOST_TEST(fp.getParameterSet().getParameters() ==
+             parameterSet.getParameters());
+  BOOST_TEST(*fp.getParameterSet().getCovariance() ==
+             *parameterSet.getCovariance());
   FullFreeParameterSet nParameterSet(nfp.covariance(), nfp.parameters());
-  BOOST_TEST(nfp.getParameterSet().getParameters() == nParameterSet.getParameters());
-  BOOST_TEST(*nfp.getParameterSet().getCovariance() == *nParameterSet.getCovariance());
+  BOOST_TEST(nfp.getParameterSet().getParameters() ==
+             nParameterSet.getParameters());
+  BOOST_TEST(*nfp.getParameterSet().getCovariance() ==
+             *nParameterSet.getCovariance());
 }
 }  // namespace Test
 }  // namespace Acts

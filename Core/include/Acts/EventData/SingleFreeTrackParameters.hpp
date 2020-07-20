@@ -150,8 +150,7 @@ class SingleFreeTrackParameters {
   /// other and the content of the member variables is the same
   bool operator==(const SingleFreeTrackParameters& rhs) const {
     return (m_oChargePolicy == rhs.m_oChargePolicy &&
-            m_oParameters == rhs.m_oParameters &&
-            m_pVolume == rhs.m_pVolume);
+            m_oParameters == rhs.m_oParameters && m_pVolume == rhs.m_pVolume);
   }
 
   /// @brief inequality operator
