@@ -26,7 +26,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
-#include "VertexingDataHelper.cpp"
+#include "VertexingDataHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;

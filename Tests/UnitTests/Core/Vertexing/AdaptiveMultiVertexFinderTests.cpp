@@ -24,7 +24,7 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "VertexingDataHelper.cpp"
+#include "VertexingDataHelper.hpp"
 
 namespace Acts {
 namespace Test {

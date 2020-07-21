@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#pragma once 
 
 #include <fstream>
 #include <iterator>
@@ -44,8 +45,9 @@ struct VertexInfo {
 
 std::tuple<Vertex<BoundParameters>, std::vector<VertexInfo>,
            std::vector<BoundParameters>>
-readTracksAndVertexCSV(std::string toolString,
+inline readTracksAndVertexCSV(std::string toolString,
                        std::string fileBase = "vertexing_event_mu20") {
+  const auto beamspotDataPath = Acts::Test::getDataPath(fileBase + "_beamspot.csv");
   const auto tracksDataPath = Acts::Test::getDataPath(fileBase + "_tracks.csv");
   const auto verticesDataPath =
       Acts::Test::getDataPath(fileBase + "_vertices_" + toolString + ".csv");
@@ -53,36 +55,26 @@ readTracksAndVertexCSV(std::string toolString,
   const std::regex comma(",");
 
   // Open source files
+  std::ifstream beamspotData(beamspotDataPath);
   std::ifstream tracksData(tracksDataPath);
   std::ifstream verticesData(verticesDataPath);
 
-  // We want to read all lines of the file
+  // String to store the read lines
   std::string line{};
-  bool isBeamSpot = false;
-  bool isTrack = false;
 
   std::shared_ptr<PerigeeSurface> perigeeSurface;
   std::vector<BoundParameters> tracks;
   std::vector<VertexInfo> vertices;
   Vertex<BoundParameters> beamspotConstraint;
 
-  while (tracksData && getline(tracksData, line)) {
+  // Read in beamspot data
+  std::getline(beamspotData, line); // skip header
+  while (beamspotData && std::getline(beamspotData, line)) {
     // Tokenize line and store result in vector
     std::vector<std::string> row{
         std::sregex_token_iterator(line.begin(), line.end(), comma, -1),
         std::sregex_token_iterator()};
 
-    if (row[0] == std::string("beamspot")) {
-      isBeamSpot = true;
-      continue;
-    }
-    if (row[0] == "tracks") {
-      isTrack = true;
-      isBeamSpot = false;
-      continue;
-    }
-
-    if (isBeamSpot) {
       Vector3D beamspotPos;
       ActsSymMatrixD<3> beamspotCov;
       beamspotPos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
@@ -92,9 +84,16 @@ readTracksAndVertexCSV(std::string toolString,
       beamspotConstraint.setPosition(beamspotPos);
       beamspotConstraint.setCovariance(beamspotCov);
       perigeeSurface = Surface::makeShared<PerigeeSurface>(beamspotPos);
-    }
+  }
 
-    if (isTrack) {
+  // Read in track data
+  std::getline(tracksData, line); // skip header
+  while (tracksData && std::getline(tracksData, line)) {
+    // Tokenize line and store result in vector
+    std::vector<std::string> row{
+        std::sregex_token_iterator(line.begin(), line.end(), comma, -1),
+        std::sregex_token_iterator()};
+
       BoundVector params;
       params << std::stod(row[0]), std::stod(row[1]), std::stod(row[2]),
           std::stod(row[3]), std::stod(row[4]) * 1. / (1_MeV),
@@ -120,18 +119,16 @@ readTracksAndVertexCSV(std::string toolString,
       auto boundParams =
           BoundParameters(geoCtx, std::move(covMat), params, perigeeSurface);
       tracks.push_back(boundParams);
-    }
+
   }
 
-  while (verticesData && getline(verticesData, line)) {
+  // Read in reference vertex data
+  std::getline(verticesData, line); // skip header
+  while (verticesData && std::getline(verticesData, line)) {
     // Tokenize line and store result in vector
     std::vector<std::string> row{
         std::sregex_token_iterator(line.begin(), line.end(), comma, -1),
         std::sregex_token_iterator()};
-
-    if (row[0] == "vertices") {
-      continue;
-    }
 
     Vector3D pos;
     pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
