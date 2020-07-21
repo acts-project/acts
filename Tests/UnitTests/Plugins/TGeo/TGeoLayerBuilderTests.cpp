@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   using TglConfig = TGeoLayerBuilder::LayerConfig;
 
   TglConfig b0Config;
-  b0Config.layerName = "*";
+  b0Config.volumeName = "*";
   b0Config.sensorNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                           "PixelActiveo6"};
   b0Config.localAxes = "XYZ";
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   b0Config.envelope = {0_mm, 0_mm};
 
   TglConfig eAllConfig;
-  eAllConfig.layerName = "*";
+  eAllConfig.volumeName = "*";
   eAllConfig.sensorNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
                             "PixelActiveo6"};
   eAllConfig.localAxes = "XYZ";
