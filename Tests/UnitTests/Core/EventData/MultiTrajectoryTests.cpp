@@ -501,6 +501,7 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   constexpr size_t maxmeasdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
+  constexpr size_t maxparamdim = MultiTrajectory<SourceLink>::ParametersSize;
 
   MultiTrajectory<SourceLink> t;
   size_t index = t.addTrackState();
@@ -542,9 +543,9 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCovFull.topLeftCorner(2, 2) = mCov;
   BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
-  ActsSymMatrixD<maxmeasdim> projFull;
+  ActsMatrixD<maxmeasdim, maxparamdim> projFull;
   projFull.setZero();
-  projFull.topLeftCorner(m2.size(), maxmeasdim) = m2.projector();
+  projFull.topLeftCorner(m2.size(), maxparamdim) = m2.projector();
   BOOST_CHECK_EQUAL(ts.projector(), projFull);
 }
 
@@ -599,10 +600,12 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.uncalibrated());
 
   // full projector, should be exactly equal
-  CovMat_t fullProj;
+  ActsMatrixD<MultiTrajectory<SourceLink>::MeasurementSizeMax,
+              MultiTrajectory<SourceLink>::ParametersSize>
+      fullProj;
   fullProj.setZero();
   fullProj.topLeftCorner(pc.meas3d->size(),
-                         MultiTrajectory<SourceLink>::MeasurementSizeMax) =
+                         MultiTrajectory<SourceLink>::ParametersSize) =
       pc.meas3d->projector();
   BOOST_CHECK_EQUAL(ts.projector(), fullProj);
 

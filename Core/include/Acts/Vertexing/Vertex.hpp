@@ -33,14 +33,14 @@ class Vertex {
   /// @brief Construct for vertex at given 4d-position, sets covariance to zero
   ///
   /// @param position Vertex position
-  Vertex(const SpacePointVector& position);
+  Vertex(const Vector4D& position);
 
   /// @brief Vertex constructor
   ///
   /// @param position Vertex position
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector3D& position, const ActsSymMatrixD<3>& covariance,
+  Vertex(const Vector3D& position, const SymMatrix3D& covariance,
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @brief Vertex constructor
@@ -48,8 +48,7 @@ class Vertex {
   /// @param position Full vertex position
   /// @param covariance 4x4 covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const SpacePointVector& position,
-         const SpacePointSymMatrix& covariance,
+  Vertex(const Vector4D& position, const SymMatrix4D& covariance,
          const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
@@ -59,13 +58,13 @@ class Vertex {
   ParValue_t time() const;
 
   /// @return Returns 4-position
-  const SpacePointVector& fullPosition() const;
+  const Vector4D& fullPosition() const;
 
   /// @return Returns position covariance
-  ActsSymMatrixD<3> covariance() const;
+  SymMatrix3D covariance() const;
 
   /// @return Returns 4x4 covariance
-  const SpacePointSymMatrix& fullCovariance() const;
+  const SymMatrix4D& fullCovariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
@@ -82,7 +81,7 @@ class Vertex {
   /// @brief Set position and time
   ///
   /// @param fullPosition Vertex position and time
-  void setFullPosition(const SpacePointVector& fullPosition);
+  void setFullPosition(const Vector4D& fullPosition);
 
   /// @brief Sets time
   ///
@@ -97,7 +96,7 @@ class Vertex {
   /// @brief Sets 4x4 covariance
   ///
   /// @param covariance The 4x4 covariance matrix
-  void setFullCovariance(const SpacePointSymMatrix& covariance);
+  void setFullCovariance(const SymMatrix4D& covariance);
 
   /// @param tracks Vector of tracks at vertex
   void setTracksAtVertex(
@@ -111,8 +110,8 @@ class Vertex {
   void setFitQuality(std::pair<double, double> fitQuality);
 
  private:
-  SpacePointVector m_position = SpacePointVector::Zero();
-  SpacePointSymMatrix m_covariance = SpacePointSymMatrix::Zero();
+  Vector4D m_position = Vector4D::Zero();
+  SymMatrix4D m_covariance = SymMatrix4D::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = 0.;  // chi2 of the fit
   double m_numberDoF = 0.;   // number of degrees of freedom

@@ -61,13 +61,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
   // Some abitrary values
-  SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
+  SymMatrix4D myCovMat = SymMatrix4D::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
   myCovMat(3, 3) = 30.;
   myConstraint.setFullCovariance(std::move(myCovMat));
-  myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
+  myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
 
   const std::vector<const BoundParameters*> emptyVector;
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Vector3D origin(0., 0., 0.);
   BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
-  SpacePointSymMatrix zeroMat = SpacePointSymMatrix::Zero();
+  SymMatrix4D zeroMat = SymMatrix4D::Zero();
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
   fittedVertex =
@@ -150,13 +150,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
-    SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
+    SymMatrix4D myCovMat = SymMatrix4D::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
-    myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
+    myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
     VertexingOptions<BoundParameters> vfOptions(geoContext, magFieldContext);
 
     VertexingOptions<BoundParameters> vfOptionsConstr(
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
     // Some abitrary values
-    SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
+    SymMatrix4D myCovMat = SymMatrix4D::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
-    myConstraint.setFullPosition(SpacePointVector(0, 0, 0, 0));
+    myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
 
     VertexingOptions<InputTrack> vfOptions(geoContext, magFieldContext);
 
