@@ -572,7 +572,7 @@ class CombinatorialKalmanFilter {
           // already stored
           // -> filtered parameter for outlier
           auto stateMask =
-              (isPredictedShared ? ~TrackStatePropMask::Predicted
+              (isPredictedShared ? ~TrackStatePropMask::BoundPredicted
                                  : TrackStatePropMask::BoundAll) &
               (isSourcelinkShared ? ~TrackStatePropMask::Uncalibrated
                                   : TrackStatePropMask::BoundAll) &
@@ -745,14 +745,14 @@ class CombinatorialKalmanFilter {
       auto [boundParams, jacobian, pathLength] = boundState;
 
       // Fill the parametric part of the track state proxy
-      if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Predicted)) and
+      if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::BoundPredicted)) and
           neighborTip != SIZE_MAX) {
         // The predicted parameter is already stored, just set the index
         auto neighborState = result.fittedStates.getTrackState(neighborTip);
-        trackStateProxy.data().ipredicted = neighborState.data().ipredicted;
+        trackStateProxy.data().iboundpredicted = neighborState.data().iboundpredicted;
       } else {
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.boundPredicted() = boundParams.parameters();
+        trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
       }
       trackStateProxy.jacobianBoundToBound() = jacobian;
       trackStateProxy.pathLength() = pathLength;
@@ -773,7 +773,7 @@ class CombinatorialKalmanFilter {
             trackStateProxy.setCalibrated(calibrated);
           },
           m_calibrator(trackStateProxy.uncalibrated(),
-                       trackStateProxy.predicted()));
+                       trackStateProxy.boundPredicted()));
 
       // Get and set the type flags
       auto& typeFlags = trackStateProxy.typeFlags();
@@ -793,7 +793,7 @@ class CombinatorialKalmanFilter {
         // No Kalman update for outlier
         // Set the filtered parameter index to be the same with predicted
         // parameter
-        trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+        trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
       } else {
         // Kalman update
         auto updateRes = m_updater(geoContext, trackStateProxy);
@@ -838,8 +838,8 @@ class CombinatorialKalmanFilter {
 
       auto [boundParams, jacobian, pathLength] = boundState;
       // Fill the track state
-      trackStateProxy.predicted() = boundParams.parameters();
-      trackStateProxy.predictedCovariance() = *boundParams.covariance();
+      trackStateProxy.boundPredicted() = boundParams.parameters();
+      trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
       trackStateProxy.jacobianBoundToBound() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -847,7 +847,7 @@ class CombinatorialKalmanFilter {
           boundParams.referenceSurface().getSharedPtr());
       // Set the filtered parameter index to be the same with predicted
       // parameter
-      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+      trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
 
       return currentTip;
     }
@@ -883,8 +883,8 @@ class CombinatorialKalmanFilter {
 
       auto [curvilinearParams, jacobian, pathLength] = curvilinearState;
       // Fill the track state
-      trackStateProxy.predicted() = curvilinearParams.parameters();
-      trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
+      trackStateProxy.boundPredicted() = curvilinearParams.parameters();
+      trackStateProxy.boundPredictedCovariance() = *curvilinearParams.covariance();
       trackStateProxy.jacobianBoundToBound() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
@@ -892,7 +892,7 @@ class CombinatorialKalmanFilter {
           curvilinearParams.position(), curvilinearParams.momentum()));
       // Set the filtered parameter index to be the same with predicted
       // parameter
-      trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+      trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
 
       return currentTip;
     }

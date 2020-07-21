@@ -127,7 +127,7 @@ struct IndexData {
 
   IndexType irefsurface = kInvalid;
   IndexType iprevious = kInvalid;
-  IndexType ipredicted = kInvalid;
+  IndexType iboundpredicted = kInvalid;
   IndexType ifiltered = kInvalid;
   IndexType ismoothed = kInvalid;
   IndexType ifreepredicted = kInvalid;
@@ -228,9 +228,9 @@ class TrackStateProxy {
     }
 
     // we're sure now this has correct allocations, so just copy
-    if (ACTS_CHECK_BIT(src, PM::Predicted)) {
-      predicted() = other.predicted();
-      predictedCovariance() = other.predictedCovariance();
+    if (ACTS_CHECK_BIT(src, PM::BoundPredicted)) {
+      boundPredicted() = other.boundPredicted();
+      boundPredictedCovariance() = other.boundPredictedCovariance();
     }
 
     if (ACTS_CHECK_BIT(src, PM::Filtered)) {
@@ -244,18 +244,18 @@ class TrackStateProxy {
     }
     
     if (ACTS_CHECK_BIT(src, PM::FreePredicted)) {
-      predicted() = other.predicted();
-      predictedCovariance() = other.predictedCovariance();
+      freePredicted() = other.freePredicted();
+      freePredictedCovariance() = other.freePredictedCovariance();
     }
 
     if (ACTS_CHECK_BIT(src, PM::FreeFiltered)) {
-      filtered() = other.filtered();
-      filteredCovariance() = other.filteredCovariance();
+      freeFiltered() = other.freeFiltered();
+      freeFilteredCovariance() = other.freeFilteredCovariance();
     }
 
     if (ACTS_CHECK_BIT(src, PM::FreeSmoothed)) {
-      smoothed() = other.smoothed();
-      smoothedCovariance() = other.smoothedCovariance();
+      freeSmoothed() = other.freeSmoothed();
+      freeSmoothedCovariance() = other.freeSmoothedCovariance();
     }
 
     if (ACTS_CHECK_BIT(src, PM::JacobianBoundToBound)) {
@@ -328,15 +328,15 @@ class TrackStateProxy {
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
-  Parameters predicted() const;
+  Parameters boundPredicted() const;
 
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
-  Covariance predictedCovariance() const;
+  Covariance boundPredictedCovariance() const;
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasPredicted() const { return data().ipredicted != IndexData::kInvalid; }
+  bool hasBoundPredicted() const { return data().iboundpredicted != IndexData::kInvalid; }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
@@ -784,8 +784,8 @@ class MultiTrajectory {
  private:
   /// index to map track states to the corresponding
   std::vector<detail_lt::IndexData> m_index;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_params;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_cov;
+  typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_boundParams;
+  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_boundCov;
   typename detail_lt::Types<eFreeParametersSize>::StorageCoefficients m_freeParams;
   typename detail_lt::Types<eFreeParametersSize>::StorageCovariance m_freeCov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;

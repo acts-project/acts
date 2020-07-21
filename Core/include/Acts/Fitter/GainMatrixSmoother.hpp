@@ -86,14 +86,14 @@ class GainMatrixSmoother {
         ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
         ACTS_VERBOSE("Jacobian:\n" << ts.jacobianBoundToBound());
         ACTS_VERBOSE("Prev. predicted covariance\n"
-                     << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                     << prev_ts.predictedCovariance().inverse());
+                     << prev_ts.boundPredictedCovariance() << "\n, inverse: \n"
+                     << prev_ts.boundPredictedCovariance().inverse());
 
         // Gain smoothing matrix
         // NB: The jacobian stored in a state is the jacobian from previous
         // state to this state in forward propagation
         G = ts.filteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
-            prev_ts.predictedCovariance().inverse();
+            prev_ts.boundPredictedCovariance().inverse();
 
         if (G.hasNaN()) {
           error = KalmanFitterError::SmoothFailed;  // set to error
@@ -107,11 +107,11 @@ class GainMatrixSmoother {
         ACTS_VERBOSE(
             "Prev. smoothed parameters: " << prev_ts.smoothed().transpose());
         ACTS_VERBOSE(
-            "Prev. predicted parameters: " << prev_ts.predicted().transpose());
+            "Prev. predicted parameters: " << prev_ts.boundPredicted().transpose());
 
         // Calculate the smoothed parameters
         ts.smoothed() =
-            ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
+            ts.filtered() + G * (prev_ts.smoothed() - prev_ts.boundPredicted());
 
         ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
 
@@ -122,7 +122,7 @@ class GainMatrixSmoother {
         // And the smoothed covariance
         ts.smoothedCovariance() =
             ts.filteredCovariance() -
-            G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
+            G * (prev_ts.boundPredictedCovariance() - prev_ts.smoothedCovariance()) *
                 G.transpose();
 
         // Check if the covariance matrix is semi-positive definite.

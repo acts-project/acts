@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
 
-  ts.predicted() = parValues;
-  ts.predictedCovariance() = covTrk;
+  ts.boundPredicted() = parValues;
+  ts.boundPredictedCovariance() = covTrk;
 
   parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
 
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.setReferenceSurface(plane2);
 
   parValues << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.predicted() = parValues;
-  ts.predictedCovariance() = covTrk;
+  ts.boundPredicted() = parValues;
+  ts.boundPredictedCovariance() = covTrk;
 
   parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filtered() = parValues;
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.setReferenceSurface(plane3);
 
   parValues << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.predicted() = parValues;
-  ts.predictedCovariance() = covTrk;
+  ts.boundPredicted() = parValues;
+  ts.boundPredictedCovariance() = covTrk;
 
   parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.filtered() = parValues;

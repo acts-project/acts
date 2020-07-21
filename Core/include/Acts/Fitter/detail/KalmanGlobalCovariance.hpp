@@ -79,7 +79,7 @@ globalTrackParametersCovariance(
     if (nProcessed > 0) {
       // Calculate the gain matrix
       GainMatrix G = ts.filteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
-                     prev_ts.predictedCovariance().inverse();
+                     prev_ts.boundPredictedCovariance().inverse();
       // Loop over the beforehand smoothed states
       for (size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {
         const size_t iCol = iRow + eBoundParametersSize * iProcessed;

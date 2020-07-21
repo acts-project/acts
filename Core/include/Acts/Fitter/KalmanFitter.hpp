@@ -459,8 +459,8 @@ class KalmanFitter {
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.boundPredicted() = boundParams.parameters();
+        trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
         trackStateProxy.jacobianBoundToBound() = jacobian;
         trackStateProxy.pathLength() = pathLength;
 
@@ -471,7 +471,7 @@ class KalmanFitter {
               trackStateProxy.setCalibrated(calibrated);
             },
             m_calibrator(trackStateProxy.uncalibrated(),
-                         trackStateProxy.predicted()));
+                         trackStateProxy.boundPredicted()));
 
         // Get and set the type flags
         auto& typeFlags = trackStateProxy.typeFlags();
@@ -551,8 +551,8 @@ class KalmanFitter {
                 stepper.boundState(state.stepping, *surface);
 
             // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = *boundParams.covariance();
+            trackStateProxy.boundPredicted() = boundParams.parameters();
+            trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
             trackStateProxy.jacobianBoundToBound() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           } else {
@@ -563,8 +563,8 @@ class KalmanFitter {
                 stepper.curvilinearState(state.stepping);
 
             // Fill the track state
-            trackStateProxy.predicted() = curvilinearParams.parameters();
-            trackStateProxy.predictedCovariance() =
+            trackStateProxy.boundPredicted() = curvilinearParams.parameters();
+            trackStateProxy.boundPredictedCovariance() =
                 *curvilinearParams.covariance();
             trackStateProxy.jacobianBoundToBound() = jacobian;
             trackStateProxy.pathLength() = pathLength;
@@ -572,7 +572,7 @@ class KalmanFitter {
 
           // Set the filtered parameter index to be the same with predicted
           // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+          trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
 
           // We count the processed state
           ++result.processedStates;
@@ -632,8 +632,8 @@ class KalmanFitter {
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
+        trackStateProxy.boundPredicted() = boundParams.parameters();
+        trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
         trackStateProxy.jacobianBoundToBound() = jacobian;
         trackStateProxy.pathLength() = pathLength;
 
@@ -644,7 +644,7 @@ class KalmanFitter {
               trackStateProxy.setCalibrated(calibrated);
             },
             m_calibrator(trackStateProxy.uncalibrated(),
-                         trackStateProxy.predicted()));
+                         trackStateProxy.boundPredicted()));
 
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy, backward);

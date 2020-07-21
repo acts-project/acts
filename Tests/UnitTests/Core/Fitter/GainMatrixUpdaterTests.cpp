@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // "calibrate"
   std::visit([&](const auto& m) { ts.setCalibrated(m); }, meas);
 
-  ts.predicted() = parValues;
-  ts.predictedCovariance() = covTrk;
+  ts.boundPredicted() = parValues;
+  ts.boundPredictedCovariance() = covTrk;
   ts.pathLength() = 0.;
 
   // Gain matrix update and filtered state

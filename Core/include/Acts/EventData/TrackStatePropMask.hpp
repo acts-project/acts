@@ -21,7 +21,7 @@
 /// autoconversion from integer
 enum struct TrackStatePropMask : uint16_t {
   None = 0,
-  Predicted = 1 << 0,
+  BoundPredicted = 1 << 0,
   Filtered = 1 << 1,
   Smoothed = 1 << 2,
   
@@ -37,7 +37,7 @@ enum struct TrackStatePropMask : uint16_t {
   Uncalibrated = 1 << 10,
   Calibrated = 1 << 11,
 
-  BoundAll = Predicted + Filtered + Smoothed + JacobianBoundToBound + Uncalibrated + Calibrated,
+  BoundAll = BoundPredicted + Filtered + Smoothed + JacobianBoundToBound + Uncalibrated + Calibrated,
   All = std::numeric_limits<uint16_t>::max(),  // should be all ones
 };
 

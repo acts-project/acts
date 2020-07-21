@@ -237,11 +237,11 @@ struct EventDataView {
 
       // Last, if necessary and present, draw the track parameters
       // (a) predicted track parameters
-      if (predictedConfig.visible and state.hasPredicted()) {
+      if (predictedConfig.visible and state.hasBoundPredicted()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.predictedCovariance(),
-                            state.predicted(),
+            BoundParameters(gctx, state.boundPredictedCovariance(),
+                            state.boundPredicted(),
                             state.referenceSurface().getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));

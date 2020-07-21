@@ -420,13 +420,13 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
       // get the predicted parameter
       bool predicted = false;
-      if (state.hasPredicted()) {
+      if (state.hasBoundPredicted()) {
         predicted = true;
         m_nPredicted++;
         Acts::BoundParameters parameter(
-            gctx, state.predictedCovariance(), state.predicted(),
+            gctx, state.boundPredictedCovariance(), state.boundPredicted(),
             state.referenceSurface().getSharedPtr());
-        auto covariance = state.predictedCovariance();
+        auto covariance = state.boundPredictedCovariance();
         // local hit residual info
         auto H = meas.projector();
         auto resCov = cov + H * covariance * H.transpose();

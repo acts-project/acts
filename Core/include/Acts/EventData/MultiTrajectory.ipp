@@ -26,8 +26,8 @@ template <typename SL, size_t M, bool ReadOnly>
 TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
   PM mask = PM::None;
-  if (hasPredicted()) {
-    mask |= PM::Predicted;
+  if (hasBoundPredicted()) {
+    mask |= PM::BoundPredicted;
   }
   if (hasFiltered()) {
     mask |= PM::Filtered;
@@ -77,7 +77,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const -> Parameters {
     idx = data().ipredicted;
   }
 
-  return Parameters(m_traj->m_params.data.col(idx).data());
+  return Parameters(m_traj->m_boundParams.data.col(idx).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -90,46 +90,47 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const -> Covariance {
   } else {
     idx = data().ipredicted;
   }
-  return Covariance(m_traj->m_cov.data.col(idx).data());
+  return Covariance(m_traj->m_boundCov.data.col(idx).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predicted() const -> Parameters {
-  assert(data().ipredicted != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ipredicted).data());
+inline auto TrackStateProxy<SL, M, ReadOnly>::boundPredicted() const
+    -> Parameters {
+  assert(data().iboundpredicted != IndexData::kInvalid);
+  return Parameters(m_traj->m_boundParams.col(data().iboundpredicted).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCovariance() const
+inline auto TrackStateProxy<SL, M, ReadOnly>::boundPredictedCovariance() const
     -> Covariance {
-  assert(data().ipredicted != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ipredicted).data());
+  assert(data().iboundpredicted != IndexData::kInvalid);
+  return Covariance(m_traj->m_boundCov.col(data().iboundpredicted).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::filtered() const -> Parameters {
   assert(data().ifiltered != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ifiltered).data());
+  return Parameters(m_traj->m_boundParams.col(data().ifiltered).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::filteredCovariance() const
     -> Covariance {
   assert(data().ifiltered != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ifiltered).data());
+  return Covariance(m_traj->m_boundCov.col(data().ifiltered).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::smoothed() const -> Parameters {
   assert(data().ismoothed != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ismoothed).data());
+  return Parameters(m_traj->m_boundParams.col(data().ismoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::smoothedCovariance() const
     -> Covariance {
   assert(data().ismoothed != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ismoothed).data());
+  return Covariance(m_traj->m_boundCov.col(data().ismoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -256,22 +257,22 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
   m_referenceSurfaces.emplace_back(nullptr);
   p.irefsurface = m_referenceSurfaces.size() - 1;
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ipredicted = m_params.size() - 1;
+  if (ACTS_CHECK_BIT(mask, PropMask::BoundPredicted)) {
+    m_boundParams.addCol();
+    m_boundCov.addCol();
+    p.iboundpredicted = m_boundParams.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ifiltered = m_params.size() - 1;
+    m_boundParams.addCol();
+    m_boundCov.addCol();
+    p.ifiltered = m_boundParams.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ismoothed = m_params.size() - 1;
+    m_boundParams.addCol();
+    m_boundCov.addCol();
+    p.ismoothed = m_boundParams.size() - 1;
   }
 
   if (ACTS_CHECK_BIT(mask, PropMask::FreePredicted)) {
