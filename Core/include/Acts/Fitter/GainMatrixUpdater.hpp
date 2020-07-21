@@ -64,7 +64,7 @@ class GainMatrixUpdater {
     // we should have predicted state set
     assert(trackState.hasBoundPredicted());
     // filtering should not have happened yet, but is allocated, therefore set
-    assert(trackState.hasFiltered());
+    assert(trackState.hasBoundFiltered());
 
     // read-only handles. Types are eigen maps to backing storage
     const auto predicted = trackState.boundPredicted();
@@ -75,8 +75,8 @@ class GainMatrixUpdater {
 
     // read-write handles. Types are eigen maps into backing storage.
     // This writes directly into the trajectory storage
-    auto filtered = trackState.filtered();
-    auto filtered_covariance = trackState.filteredCovariance();
+    auto filtered = trackState.boundFiltered();
+    auto filtered_covariance = trackState.boundFilteredCovariance();
 
     std::optional<std::error_code> error{std::nullopt};  // assume ok
     visit_measurement(

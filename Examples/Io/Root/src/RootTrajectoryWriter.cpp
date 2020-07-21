@@ -555,13 +555,13 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
       // get the filtered parameter
       bool filtered = false;
-      if (state.hasFiltered()) {
+      if (state.hasBoundFiltered()) {
         filtered = true;
         m_nFiltered++;
         Acts::BoundParameters parameter(
-            gctx, state.filteredCovariance(), state.filtered(),
+            gctx, state.boundFilteredCovariance(), state.boundFiltered(),
             state.referenceSurface().getSharedPtr());
-        auto covariance = state.filteredCovariance();
+        auto covariance = state.boundFilteredCovariance();
         // filtered parameter
         m_eLOC0_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);
         m_eLOC1_flt.push_back(parameter.parameters()[Acts::ParDef::eLOC_1]);
@@ -666,13 +666,13 @@ FW::ProcessCode FW::RootTrajectoryWriter::writeT(
 
       // get the smoothed parameter
       bool smoothed = false;
-      if (state.hasSmoothed()) {
+      if (state.hasBoundSmoothed()) {
         smoothed = true;
         m_nSmoothed++;
         Acts::BoundParameters parameter(
-            gctx, state.smoothedCovariance(), state.smoothed(),
+            gctx, state.boundSmoothedCovariance(), state.boundSmoothed(),
             state.referenceSurface().getSharedPtr());
-        auto covariance = state.smoothedCovariance();
+        auto covariance = state.boundSmoothedCovariance();
 
         // smoothed parameter
         m_eLOC0_smt.push_back(parameter.parameters()[Acts::ParDef::eLOC_0]);

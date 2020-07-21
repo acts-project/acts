@@ -47,7 +47,7 @@ globalTrackParametersCovariance(
   size_t nSmoothedStates = 0;
   // Visit all the states
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
-    if (ts.hasSmoothed()) {
+    if (ts.hasBoundSmoothed()) {
       if (lastSmoothedIndex == SIZE_MAX) {
         lastSmoothedIndex = ts.index();
       }
@@ -72,13 +72,13 @@ globalTrackParametersCovariance(
                         eBoundParametersSize * (nProcessed + 1);
     // Fill the covariance of this state
     fullGlobalTrackParamsCov.block<eBoundParametersSize, eBoundParametersSize>(
-        iRow, iRow) = ts.smoothedCovariance();
+        iRow, iRow) = ts.boundSmoothedCovariance();
     // Fill the correlation between this state (indexed by i-1) and
     // beforehand smoothed states (indexed by j): C^n_{i-1, j}= G_{i-1} *
     // C^n_{i, j} for i <= j
     if (nProcessed > 0) {
       // Calculate the gain matrix
-      GainMatrix G = ts.filteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
+      GainMatrix G = ts.boundFilteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
                      prev_ts.boundPredictedCovariance().inverse();
       // Loop over the beforehand smoothed states
       for (size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {

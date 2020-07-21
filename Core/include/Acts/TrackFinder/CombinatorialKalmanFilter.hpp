@@ -474,8 +474,8 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(),
-                         currentState.filteredCovariance(),
+      stepper.resetState(state.stepping, currentState.boundFiltered(),
+                         currentState.boundFilteredCovariance(),
                          currentState.referenceSurface(), state.stepping.navDir,
                          state.options.maxStepSize);
 
@@ -576,7 +576,7 @@ class CombinatorialKalmanFilter {
                                  : TrackStatePropMask::BoundAll) &
               (isSourcelinkShared ? ~TrackStatePropMask::Uncalibrated
                                   : TrackStatePropMask::BoundAll) &
-              (isOutlier ? ~TrackStatePropMask::Filtered
+              (isOutlier ? ~TrackStatePropMask::BoundFiltered
                          : TrackStatePropMask::BoundAll);
 
           // Add measurement/outlier track state to the multitrajectory
@@ -615,9 +615,9 @@ class CombinatorialKalmanFilter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, ts),
-                         ts.filteredCovariance());
+                         ts.boundFilteredCovariance());
           ACTS_VERBOSE("Stepping state is updated with filtered parameter: \n"
-                       << ts.filtered().transpose()
+                       << ts.boundFiltered().transpose()
                        << " of track state with tip = "
                        << result.activeTips.back().first);
         }
@@ -657,7 +657,7 @@ class CombinatorialKalmanFilter {
           // measurement and filtered parameter
           auto stateMask =
               ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered);
+                TrackStatePropMask::Calibrated | TrackStatePropMask::BoundFiltered);
 
           // Increment of number of processed states
           tipState.nStates++;
@@ -793,7 +793,7 @@ class CombinatorialKalmanFilter {
         // No Kalman update for outlier
         // Set the filtered parameter index to be the same with predicted
         // parameter
-        trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
+        trackStateProxy.data().iboundfiltered = trackStateProxy.data().iboundpredicted;
       } else {
         // Kalman update
         auto updateRes = m_updater(geoContext, trackStateProxy);
@@ -847,7 +847,7 @@ class CombinatorialKalmanFilter {
           boundParams.referenceSurface().getSharedPtr());
       // Set the filtered parameter index to be the same with predicted
       // parameter
-      trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
+      trackStateProxy.data().iboundfiltered = trackStateProxy.data().iboundpredicted;
 
       return currentTip;
     }
@@ -892,7 +892,7 @@ class CombinatorialKalmanFilter {
           curvilinearParams.position(), curvilinearParams.momentum()));
       // Set the filtered parameter index to be the same with predicted
       // parameter
-      trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
+      trackStateProxy.data().iboundfiltered = trackStateProxy.data().iboundpredicted;
 
       return currentTip;
     }
@@ -977,7 +977,7 @@ class CombinatorialKalmanFilter {
         } else if (measurementIndices.empty()) {
           // No smoothed parameter if the last measurment state has not been
           // found yet
-          st.data().ismoothed = detail_lt::IndexData::kInvalid;
+          st.data().iboundsmoothed = detail_lt::IndexData::kInvalid;
         }
         // Start count when the last measurement state is found
         if (not measurementIndices.empty()) {
@@ -1011,7 +1011,7 @@ class CombinatorialKalmanFilter {
       stepper.update(state.stepping,
                      MultiTrajectoryHelpers::freeSmoothed(
                          state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
+                     firstMeasurement.boundSmoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);

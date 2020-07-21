@@ -120,7 +120,7 @@ template <typename track_state_proxy_t>
 FreeVector freeFiltered(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
   return detail::coordinate_transformation::boundParameters2freeParameters(
-      gctx, trackStateProxy.filtered(), trackStateProxy.referenceSurface());
+      gctx, trackStateProxy.boundFiltered(), trackStateProxy.referenceSurface());
 }
 
 /// @brief Transforms the smoothed parameters from a @c TrackStateProxy to free
@@ -135,7 +135,7 @@ template <typename track_state_proxy_t>
 FreeVector freeSmoothed(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
   return detail::coordinate_transformation::boundParameters2freeParameters(
-      gctx, trackStateProxy.smoothed(), trackStateProxy.referenceSurface());
+      gctx, trackStateProxy.boundSmoothed(), trackStateProxy.referenceSurface());
 }
 }  // namespace MultiTrajectoryHelpers
 

@@ -355,7 +355,7 @@ class KalmanFitter {
                 if (surface_it == result.passedAgainSurfaces.end()) {
                   // If backward filtering missed this surface, then there is
                   // no smoothed parameter
-                  trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
+                  trackState.data().iboundsmoothed = detail_lt::IndexData::kInvalid;
                 }
               });
         }
@@ -401,13 +401,13 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.resetState(state.stepping, st.filtered(),
-                             st.filteredCovariance(), st.referenceSurface(),
+          stepper.resetState(state.stepping, st.boundFiltered(),
+                             st.boundFilteredCovariance(), st.referenceSurface(),
                              backward, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
-          st.smoothed() = st.filtered();
-          st.smoothedCovariance() = st.filteredCovariance();
+          st.boundSmoothed() = st.boundFiltered();
+          st.boundSmoothedCovariance() = st.boundFilteredCovariance();
           result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
           // Update material effects for last measurement state in backward
@@ -490,14 +490,14 @@ class KalmanFitter {
             // Update the stepping state with filtered parameters
             ACTS_VERBOSE(
                 "Filtering step successful, updated parameters are : \n"
-                << trackStateProxy.filtered().transpose());
+                << trackStateProxy.boundFiltered().transpose());
             // update stepping state using filtered parameters after kalman
             // update We need to (re-)construct a BoundParameters instance
             // here, which is a bit awkward.
             stepper.update(state.stepping,
                            MultiTrajectoryHelpers::freeFiltered(
                                state.options.geoContext, trackStateProxy),
-                           trackStateProxy.filteredCovariance());
+                           trackStateProxy.boundFilteredCovariance());
             // We count the state with measurement
             ++result.measurementStates;
           } else {
@@ -523,7 +523,7 @@ class KalmanFitter {
           // uncalibrated/calibrated measurement and filtered parameter
           result.trackTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
+                TrackStatePropMask::Calibrated | TrackStatePropMask::BoundFiltered),
               result.trackTip);
 
           // now get track state proxy back
@@ -572,7 +572,7 @@ class KalmanFitter {
 
           // Set the filtered parameter index to be the same with predicted
           // parameter
-          trackStateProxy.data().ifiltered = trackStateProxy.data().iboundpredicted;
+          trackStateProxy.data().iboundfiltered = trackStateProxy.data().iboundpredicted;
 
           // We count the processed state
           ++result.processedStates;
@@ -656,7 +656,7 @@ class KalmanFitter {
           ACTS_VERBOSE(
               "Backward Filtering step successful, updated parameters are : "
               "\n"
-              << trackStateProxy.filtered().transpose());
+              << trackStateProxy.boundFiltered().transpose());
 
           // Fill the smoothed parameter for the existing track state
           result.fittedStates.applyBackwards(
@@ -664,9 +664,9 @@ class KalmanFitter {
                 auto fSurface = &trackState.referenceSurface();
                 if (fSurface == surface) {
                   result.passedAgainSurfaces.push_back(surface);
-                  trackState.smoothed() = trackStateProxy.filtered();
-                  trackState.smoothedCovariance() =
-                      trackStateProxy.filteredCovariance();
+                  trackState.boundSmoothed() = trackStateProxy.boundFiltered();
+                  trackState.boundSmoothedCovariance() =
+                      trackStateProxy.boundFilteredCovariance();
                   return false;
                 }
                 return true;
@@ -678,7 +678,7 @@ class KalmanFitter {
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
-                         trackStateProxy.filteredCovariance());
+                         trackStateProxy.boundFilteredCovariance());
 
           // Update state and stepper with post material effects
           materialInteractor(surface, state, stepper, postUpdate);
@@ -791,7 +791,7 @@ class KalmanFitter {
         } else if (measurementIndices.empty()) {
           // No smoothed parameters if the last measurement state has not been
           // found yet
-          st.data().ismoothed = detail_lt::IndexData::kInvalid;
+          st.data().iboundsmoothed = detail_lt::IndexData::kInvalid;
         }
         // Start count when the last measurement state is found
         if (not measurementIndices.empty()) {
@@ -828,7 +828,7 @@ class KalmanFitter {
       stepper.update(state.stepping,
                      MultiTrajectoryHelpers::freeSmoothed(
                          state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
+                     firstMeasurement.boundSmoothedCovariance());
       // Reverse the propagation direction
       state.stepping.stepSize =
           ConstrainedStep(-1. * state.options.maxStepSize);

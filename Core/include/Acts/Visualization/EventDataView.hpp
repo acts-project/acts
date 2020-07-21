@@ -247,19 +247,19 @@ struct EventDataView {
             predictedConfig, predictedConfig, ViewConfig(false));
       }
       // (b) filtered track parameters
-      if (filteredConfig.visible and state.hasFiltered()) {
+      if (filteredConfig.visible and state.hasBoundFiltered()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.filteredCovariance(), state.filtered(),
+            BoundParameters(gctx, state.boundFilteredCovariance(), state.boundFiltered(),
                             state.referenceSurface().getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
       }
       // (c) smoothed track parameters
-      if (smoothedConfig.visible and state.hasSmoothed()) {
+      if (smoothedConfig.visible and state.hasBoundSmoothed()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.smoothedCovariance(), state.smoothed(),
+            BoundParameters(gctx, state.boundSmoothedCovariance(), state.boundSmoothed(),
                             state.referenceSurface().getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));

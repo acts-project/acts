@@ -159,9 +159,9 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
   BoundParameters filt(gctx, filtCov, filtPar, plane);
   pc.filtered = filt;
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
-    ts.filtered() = filt.parameters();
-    ts.filteredCovariance() = *filt.covariance();
+  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::BoundFiltered)) {
+    ts.boundFiltered() = filt.parameters();
+    ts.boundFilteredCovariance() = *filt.covariance();
   }
 
   // smoothed
@@ -174,9 +174,9 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
   BoundParameters smot(gctx, smotCov, smotPar, plane);
   pc.smoothed = smot;
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
-    ts.smoothed() = smot.parameters();
-    ts.smoothedCovariance() = *smot.covariance();
+  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::BoundSmoothed)) {
+    ts.boundSmoothed() = smot.parameters();
+    ts.boundSmoothedCovariance() = *smot.covariance();
   }
 
   // make jacobian
@@ -216,8 +216,8 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
     act.push_back(p.index());
     BOOST_CHECK(!p.hasUncalibrated());
     BOOST_CHECK(!p.hasCalibrated());
-    BOOST_CHECK(!p.hasFiltered());
-    BOOST_CHECK(!p.hasSmoothed());
+    BOOST_CHECK(!p.hasBoundFiltered());
+    BOOST_CHECK(!p.hasBoundSmoothed());
     BOOST_CHECK(!p.hasJacobianBoundToBound());
     BOOST_CHECK(!p.hasProjector());
   };
@@ -295,8 +295,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Uncalibrated));
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::JacobianBoundToBound));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::BoundFiltered));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::BoundSmoothed));
 
   auto cnv = [](auto a) -> std::bitset<16> {
     return static_cast<std::underlying_type<PM>::type>(a);
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 12> values{PM::BoundPredicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
+  std::array<PM, 12> values{PM::BoundPredicted, PM::BoundFiltered,     PM::BoundSmoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
                            PM::JacobianBoundToBound, PM::JacobianBoundToFree, PM::JacobianFreeToBound, PM::JacobianFreeToFree,   PM::Uncalibrated, PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
     }
   }
 
-  BOOST_CHECK(cnv(PM::BoundPredicted ^ PM::Filtered).count() == 2);
+  BOOST_CHECK(cnv(PM::BoundPredicted ^ PM::BoundFiltered).count() == 2);
   BOOST_CHECK(cnv(PM::BoundPredicted ^ PM::BoundPredicted).none());
   BOOST_CHECK(~(PM::BoundPredicted | PM::Calibrated) ==
               (PM::All ^ PM::BoundPredicted ^ PM::Calibrated));
@@ -329,17 +329,17 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
   PM base = PM::None;
   BOOST_CHECK(cnv(base) == 0);
 
-  base &= PM::Filtered;
+  base &= PM::BoundFiltered;
   BOOST_CHECK(cnv(base) == 0);
 
-  base |= PM::Filtered;
-  BOOST_CHECK(base == PM::Filtered);
+  base |= PM::BoundFiltered;
+  BOOST_CHECK(base == PM::BoundFiltered);
 
   base |= PM::Calibrated;
-  BOOST_CHECK(base == (PM::Filtered | PM::Calibrated));
+  BOOST_CHECK(base == (PM::BoundFiltered | PM::Calibrated));
 
   base ^= PM::All;
-  BOOST_CHECK(base == ~(PM::Filtered | PM::Calibrated));
+  BOOST_CHECK(base == ~(PM::BoundFiltered | PM::Calibrated));
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
@@ -348,8 +348,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));
   BOOST_CHECK(ts.hasBoundPredicted());
-  BOOST_CHECK(ts.hasFiltered());
-  BOOST_CHECK(ts.hasSmoothed());
+  BOOST_CHECK(ts.hasBoundFiltered());
+  BOOST_CHECK(ts.hasBoundSmoothed());
   BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
@@ -357,8 +357,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   ts = t.getTrackState(t.addTrackState(PM::None));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
@@ -366,26 +366,26 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   ts = t.getTrackState(t.addTrackState(PM::BoundPredicted));
   BOOST_CHECK(ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
-  ts = t.getTrackState(t.addTrackState(PM::Filtered));
+  ts = t.getTrackState(t.addTrackState(PM::BoundFiltered));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobianBoundToBound());
 
-  ts = t.getTrackState(t.addTrackState(PM::Smoothed));
+  ts = t.getTrackState(t.addTrackState(PM::BoundSmoothed));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
@@ -393,8 +393,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   ts = t.getTrackState(t.addTrackState(PM::Uncalibrated));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
@@ -402,8 +402,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   ts = t.getTrackState(t.addTrackState(PM::Calibrated));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
@@ -411,8 +411,8 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 
   ts = t.getTrackState(t.addTrackState(PM::JacobianBoundToBound));
   BOOST_CHECK(!ts.hasBoundPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
+  BOOST_CHECK(!ts.hasBoundFiltered());
+  BOOST_CHECK(!ts.hasBoundSmoothed());
   BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
@@ -448,18 +448,18 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   BOOST_CHECK_EQUAL(cts.boundPredictedCovariance(), cov);
 
   v.setRandom();
-  ts.filtered() = v;
-  BOOST_CHECK_EQUAL(cts.filtered(), v);
+  ts.boundFiltered() = v;
+  BOOST_CHECK_EQUAL(cts.boundFiltered(), v);
   cov.setRandom();
-  ts.filteredCovariance() = cov;
-  BOOST_CHECK_EQUAL(cts.filteredCovariance(), cov);
+  ts.boundFilteredCovariance() = cov;
+  BOOST_CHECK_EQUAL(cts.boundFilteredCovariance(), cov);
 
   v.setRandom();
-  ts.smoothed() = v;
-  BOOST_CHECK_EQUAL(cts.smoothed(), v);
+  ts.boundSmoothed() = v;
+  BOOST_CHECK_EQUAL(cts.boundSmoothed(), v);
   cov.setRandom();
-  ts.smoothedCovariance() = cov;
-  BOOST_CHECK_EQUAL(cts.smoothedCovariance(), cov);
+  ts.boundSmoothedCovariance() = cov;
+  BOOST_CHECK_EQUAL(cts.boundSmoothedCovariance(), cov);
 
   // make copy of fm
   auto fm2 = std::make_unique<FittableMeasurement<SourceLink>>(*fm);
@@ -560,13 +560,13 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.predicted->parameters(), ts.boundPredicted());
   BOOST_CHECK_EQUAL(*pc.predicted->covariance(), ts.boundPredictedCovariance());
 
-  BOOST_CHECK(ts.hasFiltered());
-  BOOST_CHECK_EQUAL(pc.filtered->parameters(), ts.filtered());
-  BOOST_CHECK_EQUAL(*pc.filtered->covariance(), ts.filteredCovariance());
+  BOOST_CHECK(ts.hasBoundFiltered());
+  BOOST_CHECK_EQUAL(pc.filtered->parameters(), ts.boundFiltered());
+  BOOST_CHECK_EQUAL(*pc.filtered->covariance(), ts.boundFilteredCovariance());
 
-  BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.smoothed());
-  BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.smoothedCovariance());
+  BOOST_CHECK(ts.hasBoundSmoothed());
+  BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.boundSmoothed());
+  BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.boundSmoothedCovariance());
 
   BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
 
@@ -617,17 +617,17 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
   // this should allocate for all the components in the trackstate, plus
   // filtered
   size_t i = t.addTrackState(
-      TrackStatePropMask::BoundPredicted | TrackStatePropMask::Filtered |
+      TrackStatePropMask::BoundPredicted | TrackStatePropMask::BoundFiltered |
       TrackStatePropMask::Uncalibrated | TrackStatePropMask::JacobianBoundToBound);
   auto tso = t.getTrackState(i);
   fillTrackState(tso, TrackStatePropMask::BoundPredicted);
-  fillTrackState(tso, TrackStatePropMask::Filtered);
+  fillTrackState(tso, TrackStatePropMask::BoundFiltered);
   fillTrackState(tso, TrackStatePropMask::Uncalibrated);
   fillTrackState(tso, TrackStatePropMask::JacobianBoundToBound);
 
   BOOST_CHECK(tso.hasBoundPredicted());
-  BOOST_CHECK(tso.hasFiltered());
-  BOOST_CHECK(!tso.hasSmoothed());
+  BOOST_CHECK(tso.hasBoundFiltered());
+  BOOST_CHECK(!tso.hasBoundSmoothed());
   BOOST_CHECK(tso.hasUncalibrated());
   BOOST_CHECK(!tso.hasCalibrated());
   BOOST_CHECK(tso.hasJacobianBoundToBound());
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   using PM = TrackStatePropMask;
   MultiTrajectory<SourceLink> mj;
 
-  std::array<PM, 12> values{PM::BoundPredicted, PM::Filtered,     PM::Smoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
+  std::array<PM, 12> values{PM::BoundPredicted, PM::BoundFiltered,     PM::BoundSmoothed, PM::FreePredicted, PM::FreeFiltered,     PM::FreeSmoothed,
                            PM::JacobianBoundToBound,  PM::JacobianBoundToFree, PM::JacobianFreeToBound, PM::JacobianFreeToFree, PM::Uncalibrated, PM::Calibrated};
 
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
@@ -648,12 +648,12 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   auto ts = mj.getTrackState(mj.addTrackState(PM::All));
   BOOST_CHECK(ts.getMask() == all);
 
-  ts = mj.getTrackState(mj.addTrackState(PM::Filtered | PM::Calibrated));
-  BOOST_CHECK(ts.getMask() == (PM::Filtered | PM::Calibrated));
+  ts = mj.getTrackState(mj.addTrackState(PM::BoundFiltered | PM::Calibrated));
+  BOOST_CHECK(ts.getMask() == (PM::BoundFiltered | PM::Calibrated));
 
   ts = mj.getTrackState(
-      mj.addTrackState(PM::Filtered | PM::Smoothed | PM::BoundPredicted));
-  BOOST_CHECK(ts.getMask() == (PM::Filtered | PM::Smoothed | PM::BoundPredicted));
+      mj.addTrackState(PM::BoundFiltered | PM::BoundSmoothed | PM::BoundPredicted));
+  BOOST_CHECK(ts.getMask() == (PM::BoundFiltered | PM::BoundSmoothed | PM::BoundPredicted));
 
   for (PM mask : values) {
     ts = mj.getTrackState(mj.addTrackState(mask));
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   MultiTrajectory<SourceLink> mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
-  std::array<PM, 6> values{PM::BoundPredicted, PM::Filtered,     PM::Smoothed,
+  std::array<PM, 6> values{PM::BoundPredicted, PM::BoundFiltered,     PM::BoundSmoothed,
                            PM::JacobianBoundToBound,  PM::Uncalibrated, PM::Calibrated};
 
   // orthogonal ones
@@ -686,9 +686,9 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
     }
   }
 
-  auto ts1 = mkts(PM::Filtered | PM::BoundPredicted);  // this has both
-  ts1.filtered().setRandom();
-  ts1.filteredCovariance().setRandom();
+  auto ts1 = mkts(PM::BoundFiltered | PM::BoundPredicted);  // this has both
+  ts1.boundFiltered().setRandom();
+  ts1.boundFilteredCovariance().setRandom();
   ts1.boundPredicted().setRandom();
   ts1.boundPredictedCovariance().setRandom();
 
@@ -726,10 +726,10 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
 
   BOOST_CHECK_NE(ts1.boundPredicted(), ts2.boundPredicted());
   BOOST_CHECK_NE(ts1.boundPredictedCovariance(), ts2.boundPredictedCovariance());
-  BOOST_CHECK_NE(ts1.filtered(), ts2.filtered());
-  BOOST_CHECK_NE(ts1.filteredCovariance(), ts2.filteredCovariance());
-  BOOST_CHECK_NE(ts1.smoothed(), ts2.smoothed());
-  BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
+  BOOST_CHECK_NE(ts1.boundFiltered(), ts2.boundFiltered());
+  BOOST_CHECK_NE(ts1.boundFilteredCovariance(), ts2.boundFilteredCovariance());
+  BOOST_CHECK_NE(ts1.boundSmoothed(), ts2.boundSmoothed());
+  BOOST_CHECK_NE(ts1.boundSmoothedCovariance(), ts2.boundSmoothedCovariance());
 
   BOOST_CHECK_NE(ts1.uncalibrated(), ts2.uncalibrated());
 
@@ -748,10 +748,10 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
 
   BOOST_CHECK_EQUAL(ts1.boundPredicted(), ts2.boundPredicted());
   BOOST_CHECK_EQUAL(ts1.boundPredictedCovariance(), ts2.boundPredictedCovariance());
-  BOOST_CHECK_EQUAL(ts1.filtered(), ts2.filtered());
-  BOOST_CHECK_EQUAL(ts1.filteredCovariance(), ts2.filteredCovariance());
-  BOOST_CHECK_EQUAL(ts1.smoothed(), ts2.smoothed());
-  BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
+  BOOST_CHECK_EQUAL(ts1.boundFiltered(), ts2.boundFiltered());
+  BOOST_CHECK_EQUAL(ts1.boundFilteredCovariance(), ts2.boundFilteredCovariance());
+  BOOST_CHECK_EQUAL(ts1.boundSmoothed(), ts2.boundSmoothed());
+  BOOST_CHECK_EQUAL(ts1.boundSmoothedCovariance(), ts2.boundSmoothedCovariance());
 
   BOOST_CHECK_EQUAL(ts1.uncalibrated(), ts2.uncalibrated());
 

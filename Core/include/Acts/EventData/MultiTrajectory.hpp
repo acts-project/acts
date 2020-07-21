@@ -128,8 +128,8 @@ struct IndexData {
   IndexType irefsurface = kInvalid;
   IndexType iprevious = kInvalid;
   IndexType iboundpredicted = kInvalid;
-  IndexType ifiltered = kInvalid;
-  IndexType ismoothed = kInvalid;
+  IndexType iboundfiltered = kInvalid;
+  IndexType iboundsmoothed = kInvalid;
   IndexType ifreepredicted = kInvalid;
   IndexType ifreefiltered = kInvalid;
   IndexType ifreesmoothed = kInvalid;
@@ -233,14 +233,14 @@ class TrackStateProxy {
       boundPredictedCovariance() = other.boundPredictedCovariance();
     }
 
-    if (ACTS_CHECK_BIT(src, PM::Filtered)) {
-      filtered() = other.filtered();
-      filteredCovariance() = other.filteredCovariance();
+    if (ACTS_CHECK_BIT(src, PM::BoundFiltered)) {
+      boundFiltered() = other.boundFiltered();
+      boundFilteredCovariance() = other.boundFilteredCovariance();
     }
 
-    if (ACTS_CHECK_BIT(src, PM::Smoothed)) {
-      smoothed() = other.smoothed();
-      smoothedCovariance() = other.smoothedCovariance();
+    if (ACTS_CHECK_BIT(src, PM::BoundSmoothed)) {
+      boundSmoothed() = other.boundSmoothed();
+      boundSmoothedCovariance() = other.boundSmoothedCovariance();
     }
     
     if (ACTS_CHECK_BIT(src, PM::FreePredicted)) {
@@ -340,27 +340,27 @@ class TrackStateProxy {
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
-  Parameters filtered() const;
+  Parameters boundFiltered() const;
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
-  Covariance filteredCovariance() const;
+  Covariance boundFilteredCovariance() const;
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasFiltered() const { return data().ifiltered != IndexData::kInvalid; }
+  bool hasBoundFiltered() const { return data().iboundfiltered != IndexData::kInvalid; }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
-  Parameters smoothed() const;
+  Parameters boundSmoothed() const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
-  Covariance smoothedCovariance() const;
+  Covariance boundSmoothedCovariance() const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasSmoothed() const { return data().ismoothed != IndexData::kInvalid; }
+  bool hasBoundSmoothed() const { return data().iboundsmoothed != IndexData::kInvalid; }
 
   /// Predicted track parameters vector
   /// @return The predicted parameters

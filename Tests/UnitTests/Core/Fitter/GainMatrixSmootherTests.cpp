@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   parValues << 0.301, 0.503, 0.5 * M_PI, 0., 1 / 100., 0.;
 
-  ts.filtered() = parValues;
-  ts.filteredCovariance() = covTrk;
+  ts.boundFiltered() = parValues;
+  ts.boundFilteredCovariance() = covTrk;
   ts.pathLength() = 1.;
   ts.jacobianBoundToBound().setIdentity();
 
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.boundPredictedCovariance() = covTrk;
 
   parValues << 0.27, 0.53, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.filtered() = parValues;
-  ts.filteredCovariance() = covTrk;
+  ts.boundFiltered() = parValues;
+  ts.boundFilteredCovariance() = covTrk;
   ts.pathLength() = 2.;
   ts.jacobianBoundToBound().setIdentity();
 
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.boundPredictedCovariance() = covTrk;
 
   parValues << 0.33, 0.43, 0.5 * M_PI, 0., 1 / 100., 0.;
-  ts.filtered() = parValues;
-  ts.filteredCovariance() = covTrk;
+  ts.boundFiltered() = parValues;
+  ts.boundFilteredCovariance() = covTrk;
   ts.pathLength() = 3.;
   ts.jacobianBoundToBound().setIdentity();
 
@@ -118,36 +118,36 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   // for regressions in the result.
 
   auto ts1 = traj.getTrackState(0);
-  BOOST_CHECK(ts1.hasSmoothed());
-  BOOST_CHECK_NE(ts1.filtered(), ts1.smoothed());
+  BOOST_CHECK(ts1.hasBoundSmoothed());
+  BOOST_CHECK_NE(ts1.boundFiltered(), ts1.boundSmoothed());
 
   double tol = 1e-6;
 
   BoundVector expPars;
   expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts1.smoothed(), expPars, tol);
+  CHECK_CLOSE_ABS(ts1.boundSmoothed(), expPars, tol);
   Covariance expCov;
   expCov.setIdentity();
   expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
       1.0000000;
-  CHECK_CLOSE_ABS(ts1.smoothedCovariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts1.boundSmoothedCovariance(), expCov, tol);
 
   auto ts2 = traj.getTrackState(1);
-  BOOST_CHECK(ts2.hasSmoothed());
-  BOOST_CHECK_NE(ts2.filtered(), ts2.smoothed());
+  BOOST_CHECK(ts2.hasBoundSmoothed());
+  BOOST_CHECK_NE(ts2.boundFiltered(), ts2.boundSmoothed());
 
   expPars << 0.2500000, 0.4700000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts2.smoothed(), expPars, tol);
-  CHECK_CLOSE_ABS(ts2.smoothedCovariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts2.boundSmoothed(), expPars, tol);
+  CHECK_CLOSE_ABS(ts2.boundSmoothedCovariance(), expCov, tol);
 
   auto ts3 = traj.getTrackState(2);
-  BOOST_CHECK(ts3.hasSmoothed());
+  BOOST_CHECK(ts3.hasBoundSmoothed());
   // last one, smoothed == filtered
-  BOOST_CHECK_EQUAL(ts3.filtered(), ts3.smoothed());
+  BOOST_CHECK_EQUAL(ts3.boundFiltered(), ts3.boundSmoothed());
 
   expPars << 0.3300000, 0.4300000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts3.smoothed(), expPars, tol);
-  CHECK_CLOSE_ABS(ts3.smoothedCovariance(), expCov, tol);
+  CHECK_CLOSE_ABS(ts3.boundSmoothed(), expPars, tol);
+  CHECK_CLOSE_ABS(ts3.boundSmoothedCovariance(), expCov, tol);
 }
 
 }  // namespace Test

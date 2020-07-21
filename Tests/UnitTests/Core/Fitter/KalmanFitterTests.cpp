@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   auto mj = fittedWithBwdFiltering.fittedStates;
   size_t nSmoothed = 0;
   mj.visitBackwards(trackTip, [&](const auto& state) {
-    if (state.hasSmoothed())
+    if (state.hasBoundSmoothed())
       nSmoothed++;
   });
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
