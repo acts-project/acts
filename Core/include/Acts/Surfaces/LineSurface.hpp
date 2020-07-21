@@ -238,7 +238,7 @@ class LineSurface : public Surface {
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  Intersection intersectionEstimate(
+  SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction,
       const BoundaryCheck& bcheck = false) const final;
