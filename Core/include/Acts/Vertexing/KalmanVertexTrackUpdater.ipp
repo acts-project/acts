@@ -86,14 +86,13 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
   // Not yet 4d ready. This can be removed together will all head<> statements,
   // once time is consistently introduced to vertexing
-  ActsMatrixD<eSpacePointSize, 3> newFullTrkCov(
-      ActsMatrixD<eSpacePointSize, 3>::Zero());
+  ActsMatrixD<4, 3> newFullTrkCov(ActsMatrixD<4, 3>::Zero());
   newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
-  SpacePointSymMatrix vtxFullWeight(SpacePointSymMatrix::Zero());
+  SymMatrix4D vtxFullWeight(SymMatrix4D::Zero());
   vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
 
-  SpacePointSymMatrix vtxFullCov(SpacePointSymMatrix::Zero());
+  SymMatrix4D vtxFullCov(SymMatrix4D::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
   const Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
@@ -101,8 +100,7 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
   // Create new refitted parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(
-          VectorHelpers::position(vtx.fullPosition()));
+      Surface::makeShared<PerigeeSurface>(vtx.position());
 
   BoundParameters refittedPerigee = BoundParameters(
       gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
@@ -117,9 +115,8 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const ActsSymMatrixD<3>& sMat,
-    const ActsMatrixD<eSpacePointSize, 3>& newTrkCov,
-    const SpacePointSymMatrix& vtxWeight, const SpacePointSymMatrix& vtxCov,
+    const SymMatrix3D& sMat, const ActsMatrixD<4, 3>& newTrkCov,
+    const SymMatrix4D& vtxWeight, const SymMatrix4D& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
   ActsSymMatrixD<3> momCov =

@@ -129,15 +129,16 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  SpacePointVector vecSPZero = SpacePointVector::Zero();
-  SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
+  Vector4D vecSPZero = Vector4D::Zero();
+  ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4> matBound2SPZero =
+      ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4>::Zero();
   ActsMatrixD<eBoundParametersSize, 3> matBound2MomZero =
       ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
-            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
+            .linearizeTrack(parameters, Vector4D::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 
@@ -221,15 +222,16 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
 
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-  SpacePointVector vecSPZero = SpacePointVector::Zero();
-  SpacePointToBoundMatrix matBound2SPZero = SpacePointToBoundMatrix::Zero();
+  Vector4D vecSPZero = Vector4D::Zero();
+  ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4> matBound2SPZero =
+      ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4>::Zero();
   ActsMatrixD<eBoundParametersSize, 3> matBound2MomZero =
       ActsMatrixD<eBoundParametersSize, 3>::Zero();
 
   for (const BoundParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
-            .linearizeTrack(parameters, SpacePointVector::Zero(), geoContext,
+            .linearizeTrack(parameters, Vector4D::Zero(), geoContext,
                             magFieldContext, state)
             .value();
 
