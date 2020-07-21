@@ -21,7 +21,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
   // Volume is present
   if (state.volume != nullptr) {
     std::string volumeName = state.volume->GetName();
-    // If we have a match
+    // If you are on branch, you stay on branch
     state.onBranch =
         state.onBranch or
         TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str());
