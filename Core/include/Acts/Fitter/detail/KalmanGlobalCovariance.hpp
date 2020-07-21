@@ -78,7 +78,8 @@ globalTrackParametersCovariance(
     // C^n_{i, j} for i <= j
     if (nProcessed > 0) {
       // Calculate the gain matrix
-      GainMatrix G = ts.boundFilteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
+      GainMatrix G = ts.boundFilteredCovariance() *
+                     prev_ts.jacobianBoundToBound().transpose() *
                      prev_ts.boundPredictedCovariance().inverse();
       // Loop over the beforehand smoothed states
       for (size_t iProcessed = 1; iProcessed <= nProcessed; iProcessed++) {

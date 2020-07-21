@@ -355,7 +355,8 @@ class KalmanFitter {
                 if (surface_it == result.passedAgainSurfaces.end()) {
                   // If backward filtering missed this surface, then there is
                   // no smoothed parameter
-                  trackState.data().iboundsmoothed = detail_lt::IndexData::kInvalid;
+                  trackState.data().iboundsmoothed =
+                      detail_lt::IndexData::kInvalid;
                 }
               });
         }
@@ -401,9 +402,9 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.resetState(state.stepping, st.boundFiltered(),
-                             st.boundFilteredCovariance(), st.referenceSurface(),
-                             backward, state.options.maxStepSize);
+          stepper.resetState(
+              state.stepping, st.boundFiltered(), st.boundFilteredCovariance(),
+              st.referenceSurface(), backward, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
           st.boundSmoothed() = st.boundFiltered();
@@ -523,7 +524,8 @@ class KalmanFitter {
           // uncalibrated/calibrated measurement and filtered parameter
           result.trackTip = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::BoundFiltered),
+                TrackStatePropMask::Calibrated |
+                TrackStatePropMask::BoundFiltered),
               result.trackTip);
 
           // now get track state proxy back
@@ -552,7 +554,8 @@ class KalmanFitter {
 
             // Fill the track state
             trackStateProxy.boundPredicted() = boundParams.parameters();
-            trackStateProxy.boundPredictedCovariance() = *boundParams.covariance();
+            trackStateProxy.boundPredictedCovariance() =
+                *boundParams.covariance();
             trackStateProxy.jacobianBoundToBound() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           } else {
@@ -572,7 +575,8 @@ class KalmanFitter {
 
           // Set the filtered parameter index to be the same with predicted
           // parameter
-          trackStateProxy.data().iboundfiltered = trackStateProxy.data().iboundpredicted;
+          trackStateProxy.data().iboundfiltered =
+              trackStateProxy.data().iboundpredicted;
 
           // We count the processed state
           ++result.processedStates;

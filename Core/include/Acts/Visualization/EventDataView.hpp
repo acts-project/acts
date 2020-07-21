@@ -250,7 +250,8 @@ struct EventDataView {
       if (filteredConfig.visible and state.hasBoundFiltered()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.boundFilteredCovariance(), state.boundFiltered(),
+            BoundParameters(gctx, state.boundFilteredCovariance(),
+                            state.boundFiltered(),
                             state.referenceSurface().getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
@@ -259,7 +260,8 @@ struct EventDataView {
       if (smoothedConfig.visible and state.hasBoundSmoothed()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.boundSmoothedCovariance(), state.boundSmoothed(),
+            BoundParameters(gctx, state.boundSmoothedCovariance(),
+                            state.boundSmoothed(),
                             state.referenceSurface().getSharedPtr()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));

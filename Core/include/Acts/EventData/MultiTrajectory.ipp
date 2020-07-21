@@ -99,7 +99,8 @@ template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundPredicted() const
     -> BoundParameters {
   assert(data().iboundpredicted != IndexData::kInvalid);
-  return BoundParameters(m_traj->m_boundParams.col(data().iboundpredicted).data());
+  return BoundParameters(
+      m_traj->m_boundParams.col(data().iboundpredicted).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -113,7 +114,8 @@ template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundFiltered() const
     -> BoundParameters {
   assert(data().iboundfiltered != IndexData::kInvalid);
-  return BoundParameters(m_traj->m_boundParams.col(data().iboundfiltered).data());
+  return BoundParameters(
+      m_traj->m_boundParams.col(data().iboundfiltered).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -127,7 +129,8 @@ template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundSmoothed() const
     -> BoundParameters {
   assert(data().iboundsmoothed != IndexData::kInvalid);
-  return BoundParameters(m_traj->m_boundParams.col(data().iboundsmoothed).data());
+  return BoundParameters(
+      m_traj->m_boundParams.col(data().iboundsmoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -183,28 +186,32 @@ template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToBound() const
     -> JacobianBoundToBound {
   assert(data().ijacobianboundtobound != IndexData::kInvalid);
-  return JacobianBoundToBound(m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
+  return JacobianBoundToBound(
+      m_traj->m_jacBoundToBound.col(data().ijacobianboundtobound).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianBoundToFree() const
     -> JacobianBoundToFree {
   assert(data().ijacobianboundtofree != IndexData::kInvalid);
-  return JacobianBoundToFree(m_traj->m_jacBoundToFree.col(data().ijacobianboundtofree).data());
+  return JacobianBoundToFree(
+      m_traj->m_jacBoundToFree.col(data().ijacobianboundtofree).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToBound() const
     -> JacobianFreeToBound {
   assert(data().ijacobianfreetobound != IndexData::kInvalid);
-  return JacobianFreeToBound(m_traj->m_jacFreeToBound.col(data().ijacobianfreetobound).data());
+  return JacobianFreeToBound(
+      m_traj->m_jacFreeToBound.col(data().ijacobianfreetobound).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::jacobianFreeToFree() const
     -> JacobianFreeToFree {
   assert(data().ijacobianfreetofree != IndexData::kInvalid);
-  return JacobianFreeToFree(m_traj->m_jacFreeToFree.col(data().ijacobianfreetofree).data());
+  return JacobianFreeToFree(
+      m_traj->m_jacFreeToFree.col(data().ijacobianfreetofree).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
@@ -246,7 +253,7 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::calibratedCovariance() const
 
 template <typename SL, size_t MSM>
 inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
-                                                 size_t iprevious) {
+                                                      size_t iprevious) {
   using PropMask = TrackStatePropMask;
 
   m_index.emplace_back();
@@ -296,27 +303,27 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
     m_freeCov.addCol();
     p.ifreesmoothed = m_freeParams.size() - 1;
   }
-  
+
   if (ACTS_CHECK_BIT(mask, PropMask::JacobianBoundToBound)) {
     m_jacBoundToBound.addCol();
     p.ijacobianboundtobound = m_jacBoundToBound.size() - 1;
   }
-  
+
   if (ACTS_CHECK_BIT(mask, PropMask::JacobianBoundToFree)) {
     m_jacBoundToFree.addCol();
     p.ijacobianboundtofree = m_jacBoundToFree.size() - 1;
   }
-  
+
   if (ACTS_CHECK_BIT(mask, PropMask::JacobianFreeToBound)) {
     m_jacFreeToBound.addCol();
     p.ijacobianfreetobound = m_jacFreeToBound.size() - 1;
   }
-  
+
   if (ACTS_CHECK_BIT(mask, PropMask::JacobianFreeToFree)) {
     m_jacFreeToFree.addCol();
     p.ijacobianfreetofree = m_jacFreeToFree.size() - 1;
   }
-  
+
   if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
     m_sourceLinks.emplace_back();
     p.iuncalibrated = m_sourceLinks.size() - 1;
@@ -339,7 +346,8 @@ inline size_t MultiTrajectory<SL, MSM>::addTrackState(TrackStatePropMask mask,
 
 template <typename SL, size_t MSM>
 template <typename F>
-void MultiTrajectory<SL, MSM>::visitBackwards(size_t iendpoint, F&& callable) const {
+void MultiTrajectory<SL, MSM>::visitBackwards(size_t iendpoint,
+                                              F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 

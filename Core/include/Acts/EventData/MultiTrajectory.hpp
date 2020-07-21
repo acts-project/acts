@@ -100,11 +100,16 @@ struct Types {
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
   using QuadraticJacobian = Eigen::Matrix<Scalar, Size, Size, Flags>;
-  using JacobianBoundToFree = Eigen::Matrix<Scalar, eFreeParametersSize, eBoundParametersSize, Flags>;
-  using JacobianFreeToBound = Eigen::Matrix<Scalar, eBoundParametersSize, eFreeParametersSize, Flags>;
-  using QuadraticJacobianMap = Eigen::Map<ConstIf<QuadraticJacobian, ReadOnlyMaps>>;
-  using JacobianBoundToFreeMap = Eigen::Map<ConstIf<JacobianBoundToFree, ReadOnlyMaps>>;
-  using JacobianFreeToBoundMap = Eigen::Map<ConstIf<JacobianFreeToBound, ReadOnlyMaps>>;
+  using JacobianBoundToFree =
+      Eigen::Matrix<Scalar, eFreeParametersSize, eBoundParametersSize, Flags>;
+  using JacobianFreeToBound =
+      Eigen::Matrix<Scalar, eBoundParametersSize, eFreeParametersSize, Flags>;
+  using QuadraticJacobianMap =
+      Eigen::Map<ConstIf<QuadraticJacobian, ReadOnlyMaps>>;
+  using JacobianBoundToFreeMap =
+      Eigen::Map<ConstIf<JacobianBoundToFree, ReadOnlyMaps>>;
+  using JacobianFreeToBoundMap =
+      Eigen::Map<ConstIf<JacobianFreeToBound, ReadOnlyMaps>>;
   // storage of multiple items in flat arrays
   using StorageCoefficients =
       GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
@@ -112,9 +117,10 @@ struct Types {
   using StorageQuadraticMatrix =
       GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
                       SizeIncrement>;
-  using StorageNonQuadraticMatrix =
-      GrowableColumns<Eigen::Array<Scalar, eBoundParametersSize * eFreeParametersSize, Eigen::Dynamic, Flags>,
-                      SizeIncrement>;
+  using StorageNonQuadraticMatrix = GrowableColumns<
+      Eigen::Array<Scalar, eBoundParametersSize * eFreeParametersSize,
+                   Eigen::Dynamic, Flags>,
+      SizeIncrement>;
 };
 
 struct IndexData {
@@ -155,14 +161,22 @@ template <typename source_link_t, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
   using SourceLink = source_link_t;
-  using BoundParameters = typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
-  using BoundCovariance = typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
-  using FreeParameters = typename Types<eFreeParametersSize, ReadOnly>::CoefficientsMap;
-  using FreeCovariance = typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
-  using JacobianBoundToBound = typename Types<eBoundParametersSize, ReadOnly>::QuadraticJacobianMap;
-  using JacobianBoundToFree = typename Types<eBoundParametersSize, ReadOnly>::JacobianBoundToFreeMap;
-  using JacobianFreeToBound = typename Types<eFreeParametersSize, ReadOnly>::JacobianFreeToBoundMap;
-  using JacobianFreeToFree = typename Types<eFreeParametersSize, ReadOnly>::QuadraticJacobianMap;
+  using BoundParameters =
+      typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
+  using BoundCovariance =
+      typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
+  using FreeParameters =
+      typename Types<eFreeParametersSize, ReadOnly>::CoefficientsMap;
+  using FreeCovariance =
+      typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
+  using JacobianBoundToBound =
+      typename Types<eBoundParametersSize, ReadOnly>::QuadraticJacobianMap;
+  using JacobianBoundToFree =
+      typename Types<eBoundParametersSize, ReadOnly>::JacobianBoundToFreeMap;
+  using JacobianFreeToBound =
+      typename Types<eFreeParametersSize, ReadOnly>::JacobianFreeToBoundMap;
+  using JacobianFreeToFree =
+      typename Types<eFreeParametersSize, ReadOnly>::QuadraticJacobianMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
 
@@ -171,8 +185,8 @@ class TrackStateProxy {
   // @TODO: Does not copy flags, because this fails: can't have col major row
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector =
-      Eigen::Matrix<typename BoundCovariance::Scalar, M, eFreeParametersSize, ProjectorFlags>;
+  using Projector = Eigen::Matrix<typename BoundCovariance::Scalar, M,
+                                  eFreeParametersSize, ProjectorFlags>;
   using EffectiveBoundProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundParametersSize>;
@@ -237,7 +251,7 @@ class TrackStateProxy {
       boundSmoothed() = other.boundSmoothed();
       boundSmoothedCovariance() = other.boundSmoothedCovariance();
     }
-    
+
     if (ACTS_CHECK_BIT(src, PM::FreePredicted)) {
       freePredicted() = other.freePredicted();
       freePredictedCovariance() = other.freePredictedCovariance();
@@ -256,19 +270,19 @@ class TrackStateProxy {
     if (ACTS_CHECK_BIT(src, PM::JacobianBoundToBound)) {
       jacobianBoundToBound() = other.jacobianBoundToBound();
     }
-    
+
     if (ACTS_CHECK_BIT(src, PM::JacobianBoundToFree)) {
       jacobianBoundToFree() = other.jacobianBoundToFree();
     }
-    
+
     if (ACTS_CHECK_BIT(src, PM::JacobianFreeToBound)) {
       jacobianFreeToBound() = other.jacobianFreeToBound();
     }
-    
+
     if (ACTS_CHECK_BIT(src, PM::JacobianFreeToFree)) {
       jacobianFreeToFree() = other.jacobianFreeToFree();
     }
-    
+
     if (ACTS_CHECK_BIT(src, PM::Uncalibrated)) {
       uncalibrated() = other.uncalibrated();
     }
@@ -331,7 +345,9 @@ class TrackStateProxy {
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasBoundPredicted() const { return data().iboundpredicted != IndexData::kInvalid; }
+  bool hasBoundPredicted() const {
+    return data().iboundpredicted != IndexData::kInvalid;
+  }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
@@ -343,7 +359,9 @@ class TrackStateProxy {
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasBoundFiltered() const { return data().iboundfiltered != IndexData::kInvalid; }
+  bool hasBoundFiltered() const {
+    return data().iboundfiltered != IndexData::kInvalid;
+  }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
@@ -355,7 +373,9 @@ class TrackStateProxy {
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasBoundSmoothed() const { return data().iboundsmoothed != IndexData::kInvalid; }
+  bool hasBoundSmoothed() const {
+    return data().iboundsmoothed != IndexData::kInvalid;
+  }
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
@@ -367,7 +387,9 @@ class TrackStateProxy {
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
-  bool hasFreePredicted() const { return data().ifreepredicted != IndexData::kInvalid; }
+  bool hasFreePredicted() const {
+    return data().ifreepredicted != IndexData::kInvalid;
+  }
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
@@ -379,7 +401,9 @@ class TrackStateProxy {
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
-  bool hasFreeFiltered() const { return data().ifreefiltered != IndexData::kInvalid; }
+  bool hasFreeFiltered() const {
+    return data().ifreefiltered != IndexData::kInvalid;
+  }
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
@@ -391,39 +415,52 @@ class TrackStateProxy {
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
-  bool hasFreeSmoothed() const { return data().ifreesmoothed != IndexData::kInvalid; }
-  
+  bool hasFreeSmoothed() const {
+    return data().ifreesmoothed != IndexData::kInvalid;
+  }
+
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
   JacobianBoundToBound jacobianBoundToBound() const;
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
-  bool hasJacobianBoundToBound() const { return data().ijacobianboundtobound != IndexData::kInvalid; }
-  
+  bool hasJacobianBoundToBound() const {
+    return data().ijacobianboundtobound != IndexData::kInvalid;
+  }
+
   /// @copydoc jacobianBoundToBound()
   JacobianBoundToFree jacobianBoundToFree() const;
 
   /// @copydoc hasJacobianBoundToBound()
-  bool hasJacobianBoundToFree() const { return data().ijacobianboundtofree != IndexData::kInvalid; }
-  
+  bool hasJacobianBoundToFree() const {
+    return data().ijacobianboundtofree != IndexData::kInvalid;
+  }
+
   /// @copydoc jacobianBoundToBound()
   JacobianFreeToBound jacobianFreeToBound() const;
 
   /// @copydoc hasJacobianBoundToBound()
-  bool hasJacobianFreeToBound() const { return data().ijacobianfreetobound != IndexData::kInvalid; }
-  
+  bool hasJacobianFreeToBound() const {
+    return data().ijacobianfreetobound != IndexData::kInvalid;
+  }
+
   /// @copydoc jacobianBoundToBound()
   JacobianFreeToFree jacobianFreeToFree() const;
 
   /// @copydoc hasJacobianBoundToBound()
-  bool hasJacobianFreeToFree() const { return data().ijacobianfreetofree != IndexData::kInvalid; }
-  
+  bool hasJacobianFreeToFree() const {
+    return data().ijacobianfreetofree != IndexData::kInvalid;
+  }
+
   /// Returns the projector (measurement mapping function) for this track
   /// state. It is derived from the uncalibrated measurement
   /// @note This function returns the overallocated projector. This means it
   /// is of dimension MxP, where M is the maximum number of measurement
-  /// dimensions and P the maximum number of parameters dimensions. The NxQ submatrix, where N is the actual dimension of the measurement and Q the actual dimension of the parameters, is located in the top left corner, everything else is zero.
+  /// dimensions and P the maximum number of parameters dimensions. The NxQ
+  /// submatrix, where N is the actual dimension of the measurement and Q the
+  /// actual dimension of the parameters, is located in the top left corner,
+  /// everything else is zero.
   /// @return The overallocated projector
   Projector projector() const;
 
@@ -450,7 +487,7 @@ class TrackStateProxy {
   EffectiveFreeProjector effectiveFreeProjector() const {
     return projector().topLeftCorner(data().measdim, eFreeParametersSize);
   }
-  
+
   /// Set the projector on this track state
   /// This will convert the projector to a more compact bitset representation
   /// and store it.
@@ -469,7 +506,8 @@ class TrackStateProxy {
     assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= eFreeParametersSize, "Given projector has too many columns");
+    static_assert(cols <= eFreeParametersSize,
+                  "Given projector has too many columns");
 
     // set up full size projector with only zeros
     typename TrackStateProxy::Projector fullProjector =
@@ -564,7 +602,7 @@ class TrackStateProxy {
     constexpr size_t measdim =
         Acts::Measurement<SourceLink, BoundParametersIndices,
                           params...>::size();
-	static_assert(measdim <= M, "Measurement has too many dimensions");
+    static_assert(measdim <= M, "Measurement has too many dimensions");
     dataref.measdim = measdim;
 
     assert(hasCalibrated());
@@ -608,7 +646,7 @@ class TrackStateProxy {
     constexpr size_t measdim =
         Acts::Measurement<SourceLink, BoundParametersIndices,
                           params...>::size();
-	static_assert(measdim <= M, "Measurement has too many dimensions");
+    static_assert(measdim <= M, "Measurement has too many dimensions");
     dataref.measdim = measdim;
 
     auto& traj = *m_traj;
@@ -720,7 +758,8 @@ constexpr bool VisitorConcept = concept ::require<
 /// can be easily identified. Some functionality is provided to simplify
 /// iterating over specific sub-components.
 /// @tparam source_link_t Type to link back to an original measurement
-template <typename source_link_t, size_t measurement_size_max_t = eBoundParametersSize>
+template <typename source_link_t,
+          size_t measurement_size_max_t = eBoundParametersSize>
 class MultiTrajectory {
  public:
   enum {
@@ -779,21 +818,30 @@ class MultiTrajectory {
  private:
   /// index to map track states to the corresponding
   std::vector<detail_lt::IndexData> m_index;
-  
-  typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_boundParams;
-  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix m_boundCov;
-  
-  typename detail_lt::Types<eFreeParametersSize>::StorageCoefficients m_freeParams;
-  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix m_freeCov;
-  
+
+  typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients
+      m_boundParams;
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix
+      m_boundCov;
+
+  typename detail_lt::Types<eFreeParametersSize>::StorageCoefficients
+      m_freeParams;
+  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix
+      m_freeCov;
+
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
-  typename detail_lt::Types<MeasurementSizeMax>::StorageQuadraticMatrix m_measCov;
-  
-  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix m_jacBoundToBound;
-  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticMatrix m_jacBoundToFree;
-  typename detail_lt::Types<eFreeParametersSize>::StorageNonQuadraticMatrix m_jacFreeToBound;
-  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix m_jacFreeToFree;
-  
+  typename detail_lt::Types<MeasurementSizeMax>::StorageQuadraticMatrix
+      m_measCov;
+
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix
+      m_jacBoundToBound;
+  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticMatrix
+      m_jacBoundToFree;
+  typename detail_lt::Types<eFreeParametersSize>::StorageNonQuadraticMatrix
+      m_jacFreeToBound;
+  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix
+      m_jacFreeToFree;
+
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 

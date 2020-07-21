@@ -92,7 +92,8 @@ class GainMatrixSmoother {
         // Gain smoothing matrix
         // NB: The jacobian stored in a state is the jacobian from previous
         // state to this state in forward propagation
-        G = ts.boundFilteredCovariance() * prev_ts.jacobianBoundToBound().transpose() *
+        G = ts.boundFilteredCovariance() *
+            prev_ts.jacobianBoundToBound().transpose() *
             prev_ts.boundPredictedCovariance().inverse();
 
         if (G.hasNaN()) {
@@ -104,26 +105,29 @@ class GainMatrixSmoother {
 
         ACTS_VERBOSE("Calculate smoothed parameters:");
         ACTS_VERBOSE("Filtered parameters: " << ts.boundFiltered().transpose());
-        ACTS_VERBOSE(
-            "Prev. smoothed parameters: " << prev_ts.boundSmoothed().transpose());
-        ACTS_VERBOSE(
-            "Prev. predicted parameters: " << prev_ts.boundPredicted().transpose());
+        ACTS_VERBOSE("Prev. smoothed parameters: "
+                     << prev_ts.boundSmoothed().transpose());
+        ACTS_VERBOSE("Prev. predicted parameters: "
+                     << prev_ts.boundPredicted().transpose());
 
         // Calculate the smoothed parameters
         ts.boundSmoothed() =
-            ts.boundFiltered() + G * (prev_ts.boundSmoothed() - prev_ts.boundPredicted());
+            ts.boundFiltered() +
+            G * (prev_ts.boundSmoothed() - prev_ts.boundPredicted());
 
-        ACTS_VERBOSE("Smoothed parameters are: " << ts.boundSmoothed().transpose());
+        ACTS_VERBOSE(
+            "Smoothed parameters are: " << ts.boundSmoothed().transpose());
 
         ACTS_VERBOSE("Calculate smoothed covariance:");
         ACTS_VERBOSE("Prev. smoothed covariance:\n"
                      << prev_ts.boundSmoothedCovariance());
 
         // And the smoothed covariance
-        ts.boundSmoothedCovariance() =
-            ts.boundFilteredCovariance() -
-            G * (prev_ts.boundPredictedCovariance() - prev_ts.boundSmoothedCovariance()) *
-                G.transpose();
+        ts.boundSmoothedCovariance() = ts.boundFilteredCovariance() -
+                                       G *
+                                           (prev_ts.boundPredictedCovariance() -
+                                            prev_ts.boundSmoothedCovariance()) *
+                                           G.transpose();
 
         // Check if the covariance matrix is semi-positive definite.
         // If not, make one (could do more) attempt to replace it with the
@@ -137,7 +141,8 @@ class GainMatrixSmoother {
         }
         // Reset smoothed covariance
         ts.boundSmoothedCovariance() = smoothedCov;
-        ACTS_VERBOSE("Smoothed covariance is: \n" << ts.boundSmoothedCovariance());
+        ACTS_VERBOSE("Smoothed covariance is: \n"
+                     << ts.boundSmoothedCovariance());
 
         prev_ts = ts;
         return true;  // continue execution
