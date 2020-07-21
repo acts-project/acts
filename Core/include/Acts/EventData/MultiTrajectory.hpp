@@ -109,13 +109,10 @@ struct Types {
   using StorageCoefficients =
       GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
                       SizeIncrement>;
-  using StorageCovariance =
+  using StorageQuadraticMatrix =
       GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
                       SizeIncrement>;
-  using StorageQuadraticJacobian =
-      GrowableColumns<Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
-                      SizeIncrement>;
-  using StorageNonQuadraticJacobian =
+  using StorageNonQuadraticMatrix =
       GrowableColumns<Eigen::Array<Scalar, eBoundParametersSize * eFreeParametersSize, Eigen::Dynamic, Flags>,
                       SizeIncrement>;
 };
@@ -158,10 +155,8 @@ template <typename source_link_t, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
   using SourceLink = source_link_t;
-  using Parameters =
-      typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
+  using BoundParameters = typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
+  using BoundCovariance = typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
   using FreeParameters = typename Types<eFreeParametersSize, ReadOnly>::CoefficientsMap;
   using FreeCovariance = typename Types<eFreeParametersSize, ReadOnly>::CovarianceMap;
   using JacobianBoundToBound = typename Types<eBoundParametersSize, ReadOnly>::QuadraticJacobianMap;
@@ -177,8 +172,8 @@ class TrackStateProxy {
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
-      Eigen::Matrix<typename Covariance::Scalar, M, eFreeParametersSize, ProjectorFlags>;
-  using EffectiveProjector =
+      Eigen::Matrix<typename BoundCovariance::Scalar, M, eFreeParametersSize, ProjectorFlags>;
+  using EffectiveBoundProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundParametersSize>;
   using EffectiveFreeProjector =
@@ -317,22 +312,22 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  BoundParameters parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  BoundCovariance covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
-  Parameters boundPredicted() const;
+  BoundParameters boundPredicted() const;
 
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
-  Covariance boundPredictedCovariance() const;
+  BoundCovariance boundPredictedCovariance() const;
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
@@ -340,11 +335,11 @@ class TrackStateProxy {
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
-  Parameters boundFiltered() const;
+  BoundParameters boundFiltered() const;
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
-  Covariance boundFilteredCovariance() const;
+  BoundCovariance boundFilteredCovariance() const;
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
@@ -352,11 +347,11 @@ class TrackStateProxy {
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
-  Parameters boundSmoothed() const;
+  BoundParameters boundSmoothed() const;
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
-  Covariance boundSmoothedCovariance() const;
+  BoundCovariance boundSmoothedCovariance() const;
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
@@ -442,7 +437,7 @@ class TrackStateProxy {
   /// is of dimension NxM, where N is the actual dimension of the
   /// measurement and M the dimension of bound parameters.
   /// @return The effective projector
-  EffectiveProjector effectiveProjector() const {
+  EffectiveBoundProjector effectiveBoundProjector() const {
     return projector().topLeftCorner(data().measdim, eBoundParametersSize);
   }
 
@@ -784,16 +779,21 @@ class MultiTrajectory {
  private:
   /// index to map track states to the corresponding
   std::vector<detail_lt::IndexData> m_index;
+  
   typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_boundParams;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_boundCov;
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix m_boundCov;
+  
   typename detail_lt::Types<eFreeParametersSize>::StorageCoefficients m_freeParams;
-  typename detail_lt::Types<eFreeParametersSize>::StorageCovariance m_freeCov;
+  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix m_freeCov;
+  
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
-  typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticJacobian m_jacBoundToBound;
-  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticJacobian m_jacBoundToFree;
-  typename detail_lt::Types<eFreeParametersSize>::StorageNonQuadraticJacobian m_jacFreeToBound;
-  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticJacobian m_jacFreeToFree;
+  typename detail_lt::Types<MeasurementSizeMax>::StorageQuadraticMatrix m_measCov;
+  
+  typename detail_lt::Types<eBoundParametersSize>::StorageQuadraticMatrix m_jacBoundToBound;
+  typename detail_lt::Types<eBoundParametersSize>::StorageNonQuadraticMatrix m_jacBoundToFree;
+  typename detail_lt::Types<eFreeParametersSize>::StorageNonQuadraticMatrix m_jacFreeToBound;
+  typename detail_lt::Types<eFreeParametersSize>::StorageQuadraticMatrix m_jacFreeToFree;
+  
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 

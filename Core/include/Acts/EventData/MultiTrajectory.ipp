@@ -67,7 +67,8 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const -> Parameters {
+inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const
+    -> BoundParameters {
   IndexData::IndexType idx;
   if (hasBoundSmoothed()) {
     idx = data().iboundsmoothed;
@@ -77,11 +78,12 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const -> Parameters {
     idx = data().ipredicted;
   }
 
-  return Parameters(m_traj->m_boundParams.data.col(idx).data());
+  return BoundParameters(m_traj->m_boundParams.data.col(idx).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const -> Covariance {
+inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const
+    -> BoundCovariance {
   IndexData::IndexType idx;
   if (hasBoundSmoothed()) {
     idx = data().iboundsmoothed;
@@ -90,49 +92,49 @@ inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const -> Covariance {
   } else {
     idx = data().ipredicted;
   }
-  return Covariance(m_traj->m_boundCov.data.col(idx).data());
+  return BoundCovariance(m_traj->m_boundCov.data.col(idx).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundPredicted() const
-    -> Parameters {
+    -> BoundParameters {
   assert(data().iboundpredicted != IndexData::kInvalid);
-  return Parameters(m_traj->m_boundParams.col(data().iboundpredicted).data());
+  return BoundParameters(m_traj->m_boundParams.col(data().iboundpredicted).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundPredictedCovariance() const
-    -> Covariance {
+    -> BoundCovariance {
   assert(data().iboundpredicted != IndexData::kInvalid);
-  return Covariance(m_traj->m_boundCov.col(data().iboundpredicted).data());
+  return BoundCovariance(m_traj->m_boundCov.col(data().iboundpredicted).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundFiltered() const
-    -> Parameters {
+    -> BoundParameters {
   assert(data().iboundfiltered != IndexData::kInvalid);
-  return Parameters(m_traj->m_boundParams.col(data().iboundfiltered).data());
+  return BoundParameters(m_traj->m_boundParams.col(data().iboundfiltered).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundFilteredCovariance() const
-    -> Covariance {
+    -> BoundCovariance {
   assert(data().iboundfiltered != IndexData::kInvalid);
-  return Covariance(m_traj->m_boundCov.col(data().iboundfiltered).data());
+  return BoundCovariance(m_traj->m_boundCov.col(data().iboundfiltered).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundSmoothed() const
-    -> Parameters {
+    -> BoundParameters {
   assert(data().iboundsmoothed != IndexData::kInvalid);
-  return Parameters(m_traj->m_boundParams.col(data().iboundsmoothed).data());
+  return BoundParameters(m_traj->m_boundParams.col(data().iboundsmoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<SL, M, ReadOnly>::boundSmoothedCovariance() const
-    -> Covariance {
+    -> BoundCovariance {
   assert(data().iboundsmoothed != IndexData::kInvalid);
-  return Covariance(m_traj->m_boundCov.col(data().iboundsmoothed).data());
+  return BoundCovariance(m_traj->m_boundCov.col(data().iboundsmoothed).data());
 }
 
 template <typename SL, size_t M, bool ReadOnly>

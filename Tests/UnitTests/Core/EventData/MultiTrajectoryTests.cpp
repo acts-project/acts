@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), pc.meas3d->parameters());
   BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(),
                     pc.meas3d->covariance());
-  BOOST_CHECK_EQUAL(ts.effectiveProjector(), pc.meas3d->projector());
+  BOOST_CHECK_EQUAL(ts.effectiveBoundProjector(), pc.meas3d->projector());
 
   // create new measurement
   SymMatrix2D mCov;
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   BOOST_CHECK_EQUAL(ts.calibratedSize(), 2u);
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), mPar);
   BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), mCov);
-  BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
+  BOOST_CHECK_EQUAL(ts.effectiveBoundProjector(), m2.projector());
 
   // check if overallocated part is zeroed correctly
   ActsVectorD<maxmeasdim> mParFull;
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(ts.jacobianBoundToBound(), pc.jacobian);
 
   BOOST_CHECK(ts.hasProjector());
-  BOOST_CHECK_EQUAL(ts.effectiveProjector(), pc.meas3d->projector());
+  BOOST_CHECK_EQUAL(ts.effectiveBoundProjector(), pc.meas3d->projector());
   // measurement properties
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK_EQUAL(pc.meas3d->parameters(), ts.effectiveCalibrated());
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
 
   // projector with dynamic rows
   // should be exactly equal
-  BOOST_CHECK_EQUAL(ts.effectiveProjector(), pc.meas3d->projector());
+  BOOST_CHECK_EQUAL(ts.effectiveBoundProjector(), pc.meas3d->projector());
 }
 
 BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
