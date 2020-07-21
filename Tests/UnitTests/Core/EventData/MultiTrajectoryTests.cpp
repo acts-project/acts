@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCovFull.topLeftCorner(2, 2) = mCov;
   BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
-  ActsMatrixD<maxmeasdim, eBoundParametersSize> projFull;
+  ActsMatrixD<maxmeasdim, eFreeParametersSize> projFull;
   projFull.setZero();
   projFull.topLeftCorner(m2.size(), eBoundParametersSize) = m2.projector();
   BOOST_CHECK_EQUAL(ts.projector(), projFull);
