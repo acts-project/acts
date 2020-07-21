@@ -100,7 +100,7 @@ class HelicalTrackLinearizer {
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundParameters& params,
-                                         const SpacePointVector& linPoint,
+                                         const Vector4D& linPoint,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
                                          State& state) const;

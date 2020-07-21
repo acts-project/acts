@@ -7,34 +7,30 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(const Vector3D& position)
-
-{
-  m_position.setZero();
-  VectorHelpers::position(m_position) = position;
+Acts::Vertex<input_track_t>::Vertex(const Vector3D& position) {
+  m_position[ePos0] = position[ePos0];
+  m_position[ePos1] = position[ePos1];
+  m_position[ePos2] = position[ePos2];
 }
 
 template <typename input_track_t>
-Acts::Vertex<input_track_t>::Vertex(const SpacePointVector& position)
-
-{
-  m_position = position;
-}
+Acts::Vertex<input_track_t>::Vertex(const Vector4D& position)
+    : m_position(position) {}
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector3D& position, const ActsSymMatrixD<3>& covariance,
+    const Vector3D& position, const SymMatrix3D& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_tracksAtVertex(tracks) {
-  m_position.setZero();
-  VectorHelpers::position(m_position) = position;
-  m_covariance.setZero();
-  m_covariance.block<3, 3>(0, 0) = covariance;
+  m_position[ePos0] = position[ePos0];
+  m_position[ePos1] = position[ePos1];
+  m_position[ePos2] = position[ePos2];
+  m_covariance.block<3, 3>(ePos0, ePos0) = covariance;
 }
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const SpacePointVector& position, const SpacePointSymMatrix& covariance,
+    const Vector4D& position, const SymMatrix4D& covariance,
     const std::vector<TrackAtVertex<input_track_t>>& tracks)
     : m_position(position),
       m_covariance(covariance),
@@ -47,23 +43,21 @@ Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
 
 template <typename input_track_t>
 Acts::ParValue_t Acts::Vertex<input_track_t>::time() const {
-  return VectorHelpers::time(m_position);
+  return m_position[eTime];
 }
 
 template <typename input_track_t>
-const Acts::SpacePointVector& Acts::Vertex<input_track_t>::fullPosition()
-    const {
+const Acts::Vector4D& Acts::Vertex<input_track_t>::fullPosition() const {
   return m_position;
 }
 
 template <typename input_track_t>
-Acts::ActsSymMatrixD<3> Acts::Vertex<input_track_t>::covariance() const {
-  return m_covariance.block<3, 3>(0, 0);
+Acts::SymMatrix3D Acts::Vertex<input_track_t>::covariance() const {
+  return m_covariance.block<3, 3>(ePos0, ePos0);
 }
 
 template <typename input_track_t>
-const Acts::SpacePointSymMatrix& Acts::Vertex<input_track_t>::fullCovariance()
-    const {
+const Acts::SymMatrix4D& Acts::Vertex<input_track_t>::fullCovariance() const {
   return m_covariance;
 }
 
@@ -81,32 +75,32 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
                                               ParValue_t time) {
-  m_position.setZero();
-  VectorHelpers::position(m_position) = position;
-  VectorHelpers::time(m_position) = time;
+  m_position[ePos0] = position[ePos0];
+  m_position[ePos1] = position[ePos1];
+  m_position[ePos2] = position[ePos2];
+  m_position[eTime] = time;
 }
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setFullPosition(
-    const SpacePointVector& fullPosition) {
+    const Vector4D& fullPosition) {
   m_position = fullPosition;
 }
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setTime(ParValue_t time) {
-  VectorHelpers::time(m_position) = time;
+  m_position[eTime] = time;
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setCovariance(
-    const ActsSymMatrixD<3>& covariance) {
+void Acts::Vertex<input_track_t>::setCovariance(const SymMatrix3D& covariance) {
   m_covariance.setZero();
-  m_covariance.block<3, 3>(0, 0) = covariance;
+  m_covariance.block<3, 3>(ePos0, ePos0) = covariance;
 }
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setFullCovariance(
-    const SpacePointSymMatrix& covariance) {
+    const SymMatrix4D& covariance) {
   m_covariance = covariance;
 }
 

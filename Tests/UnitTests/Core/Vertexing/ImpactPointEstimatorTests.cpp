@@ -381,12 +381,12 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   double y = vXYDist(gen);
   double z = vZDist(gen);
 
-  SpacePointVector vertexPosition(x, y, z, 0.);
+  Vector4D vertexPosition(x, y, z, 0.);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
   // Some abitrary values
-  SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
+  SymMatrix4D myCovMat = SymMatrix4D::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;

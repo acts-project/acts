@@ -78,6 +78,9 @@ enum BoundParametersIndices : unsigned int {
   eT = eBoundTime,
 };
 
+/// Underlying fundamental scalar type for bound track parameters.
+using BoundParametersScalar = double;
+
 /// Components of a free track parameters vector.
 ///
 /// To be used to access components by named indices instead of just numbers.
@@ -104,37 +107,8 @@ enum FreeParametersIndices : unsigned int {
   eFreeParametersSize,
 };
 
-/// Components of a space point vector.
-///
-/// To be used to access components by named indices instead of just numbers.
-/// This must be a regular `enum` and not a scoped `enum class` to allow
-/// implicit conversion to an integer. The enum value are thus visible directly
-/// in `namespace Acts` and are prefixed to avoid naming collisions.
-///
-/// Within the same context either the position-like or the momentum-like
-/// indices must be used exclusively.
-enum SpacePointIndices : unsigned int {
-  // For position four-vectors
-  // The spatial position components must be stored as one continous block.
-  eSpacePos0 = 0u,
-  eSpacePos1 = eSpacePos0 + 1u,
-  eSpacePos2 = eSpacePos0 + 2u,
-  eSpaceTime = 3u,
-  // Last uninitialized value contains the total number of components
-  eSpacePointSize,
-  // Aliases for  momentum four-vectors to allow clearer code
-  eSpaceMom0 = eSpacePos0,
-  eSpaceMom1 = eSpacePos1,
-  eSpaceMom2 = eSpacePos2,
-  eSpaceEnergy = eSpaceTime,
-};
-
-/// Underlying fundamental scalar type for bound track parameters.
-using BoundParametersScalar = double;
 /// Underlying fundamental scalar type for free track parameters.
 using FreeParametersScalar = double;
-/// Underlying fundamental scalar type for space points.
-using SpacePointScalar = double;
 
 }  // namespace Acts
 #endif
@@ -161,16 +135,6 @@ static_assert(6 <= FreeParametersIndices::eFreeParametersSize,
 static_assert(std::is_floating_point_v<FreeParametersScalar>,
               "'FreeParametersScalar' must be a floating point type");
 
-// Ensure space point definition is valid.
-static_assert(std::is_enum_v<SpacePointIndices>,
-              "'SpacePointIndices' is not an enum type");
-static_assert(std::is_convertible_v<SpacePointIndices, size_t>,
-              "'SpacePointIndices' is not convertible to size_t");
-static_assert(3 <= SpacePointIndices::eSpacePointSize,
-              "Space points must have at least three components");
-static_assert(std::is_floating_point_v<SpacePointScalar>,
-              "'SpacePointScalar' must be a floating point type");
-
 // Ensure bound track parameter components/ indices are consistently defined.
 static_assert(eLOC_0 != eLOC_1, "Local parameters must be differents");
 static_assert(eLOC_R == eLOC_0 or eLOC_R == eLOC_1,
@@ -195,14 +159,6 @@ static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
 static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
 static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
-
-// Ensure space point components/ indices are consistently defined.
-static_assert(eSpacePos1 == eSpacePos0 + 1u, "Position must be continous");
-static_assert(eSpacePos2 == eSpacePos0 + 2u, "Position must be continous");
-static_assert(eSpacePos0 == eSpaceMom0, "Inconsisten position and momentum");
-static_assert(eSpacePos1 == eSpaceMom1, "Inconsisten position and momentum");
-static_assert(eSpacePos2 == eSpaceMom2, "Inconsisten position and momentum");
-static_assert(eSpaceTime == eSpaceEnergy, "Inconsistent time and energy");
 
 namespace detail {
 template <BoundParametersIndices>
@@ -283,11 +239,6 @@ struct ParametersSize<FreeParametersIndices> {
   static constexpr unsigned int size =
       static_cast<unsigned int>(FreeParametersIndices::eFreeParametersSize);
 };
-template <>
-struct ParametersSize<SpacePointIndices> {
-  static constexpr unsigned int size =
-      static_cast<unsigned int>(SpacePointIndices::eSpacePointSize);
-};
 }  // namespace detail
 
 /// Single bound track parameter type for value constrains.
@@ -345,14 +296,6 @@ using FreeMatrix =
     ActsMatrix<FreeParametersScalar, eFreeParametersSize, eFreeParametersSize>;
 using FreeSymMatrix = ActsSymMatrix<FreeParametersScalar, eFreeParametersSize>;
 
-// Matrix and vector types related to space points.
-
-using SpacePointVector = ActsVector<SpacePointScalar, eSpacePointSize>;
-using SpacePointRowVector = ActsRowVector<SpacePointScalar, eSpacePointSize>;
-using SpacePointSymMatrix =
-    ActsMatrix<SpacePointScalar, eSpacePointSize, eSpacePointSize>;
-using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
-
 // Mapping to bound track parameters.
 //
 // Assumes that matrices represent maps from another space into the space of
@@ -361,8 +304,6 @@ using SpacePointSymMatrix = ActsSymMatrix<SpacePointScalar, eSpacePointSize>;
 
 using FreeToBoundMatrix = ActsMatrix<BoundParametersScalar,
                                      eBoundParametersSize, eFreeParametersSize>;
-using SpacePointToBoundMatrix =
-    ActsMatrix<BoundParametersScalar, eBoundParametersSize, eSpacePointSize>;
 
 // Mapping to free track parameters.
 //
@@ -372,18 +313,6 @@ using SpacePointToBoundMatrix =
 
 using BoundToFreeMatrix =
     ActsMatrix<FreeParametersScalar, eFreeParametersSize, eBoundParametersSize>;
-using SpacePointToFreeMatrix =
-    ActsMatrix<FreeParametersScalar, eFreeParametersSize, eSpacePointSize>;
-
-// Mapping to space points.
-//
-// Assumes that matrices represent maps from another space into the space point
-// space. Thus, the space point scalar type is sufficient to retain accuracy.
-
-using BoundToSpacePointMatrix =
-    ActsMatrix<SpacePointScalar, eSpacePointSize, eBoundParametersSize>;
-using FreeToSpacePointMatrix =
-    ActsMatrix<SpacePointScalar, eSpacePointSize, eFreeParametersSize>;
 
 // For backward compatibility. New code must use the more explicit
 // `BoundParameters{Indices,Scalar,Traits}...` types.

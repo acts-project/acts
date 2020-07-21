@@ -167,7 +167,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
                               const Vertex<InputTrack_t>& seedVertex) const
     -> void {
   if (m_cfg.useBeamSpotConstraint) {
-    if (currentConstraint.fullCovariance() == SpacePointSymMatrix::Zero()) {
+    if (currentConstraint.fullCovariance() == SymMatrix4D::Zero()) {
       ACTS_WARNING(
           "No constraint provided, but useBeamSpotConstraint set to true.");
     }
@@ -177,7 +177,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SpacePointSymMatrix::Identity() *
+    currentConstraint.setFullCovariance(SymMatrix4D::Identity() *
                                         m_cfg.looseConstrValue);
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
@@ -195,7 +195,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   // it probably should be used.
   Vertex<InputTrack_t> newVtx = vtx;
   if (not m_cfg.useVertexCovForIPEstimation) {
-    newVtx.setFullCovariance(SpacePointSymMatrix::Zero());
+    newVtx.setFullCovariance(SymMatrix4D::Zero());
   }
 
   auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
@@ -278,7 +278,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
     }
     if (nearTrackFound) {
-      vtx.setFullPosition(SpacePointVector(0., 0., newZ, 0.));
+      vtx.setFullPosition(Vector4D(0., 0., newZ, 0.));
 
       // Update vertex info for current vertex
       fitterState.vtxInfoMap[&vtx] =
@@ -496,8 +496,8 @@ template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>& vtx,
     const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
-  const SpacePointVector& candidatePos = vtx.fullPosition();
-  const SpacePointSymMatrix& candidateCov = vtx.fullCovariance();
+  const Vector4D& candidatePos = vtx.fullPosition();
+  const SymMatrix4D& candidateCov = vtx.fullCovariance();
   const double candidateZPos = candidatePos[eZ];
   const double candidateZCov = candidateCov(eZ, eZ);
 
@@ -505,12 +505,12 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     if (&vtx == otherVtx) {
       continue;
     }
-    const SpacePointVector& otherPos = otherVtx->fullPosition();
-    const SpacePointSymMatrix& otherCov = otherVtx->fullCovariance();
+    const Vector4D& otherPos = otherVtx->fullPosition();
+    const SymMatrix4D& otherCov = otherVtx->fullCovariance();
     const double otherZPos = otherPos[eZ];
     const double otherZCov = otherCov(eZ, eZ);
 
-    const SpacePointVector deltaPos = otherPos - candidatePos;
+    const Vector4D deltaPos = otherPos - candidatePos;
     const double deltaZPos = otherZPos - candidateZPos;
     const double sumCovZ = otherZCov + candidateZCov;
 
@@ -524,7 +524,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       }
     } else {
       // Use full 3d information for significance
-      SpacePointSymMatrix sumCov = candidateCov + otherCov;
+      SymMatrix4D sumCov = candidateCov + otherCov;
       significance =
           std::sqrt(deltaPos.dot((sumCov.inverse().eval()) * deltaPos));
     }
