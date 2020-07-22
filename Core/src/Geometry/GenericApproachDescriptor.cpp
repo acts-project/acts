@@ -27,9 +27,8 @@ Acts::GenericApproachDescriptor::approachSurface(
   sIntersections.reserve(m_surfaceCache.size());
   for (auto& sf : m_surfaceCache) {
     // intersect
-    auto intersection =
-        sf->intersectionEstimate(gctx, position, direction, bcheck);
-    sIntersections.push_back(ObjectIntersection<Surface>(intersection, sf));
+    auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
+    sIntersections.push_back(sfIntersection);
   }
   // Sort them & return the closest
   std::sort(sIntersections.begin(), sIntersections.end());

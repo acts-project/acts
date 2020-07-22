@@ -167,27 +167,25 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(testContext, offSurface,
                                                   momentum, true));
   //
-  /// intersectionEstimate
+  /// intersection test
   Vector3D direction{-1., 0, 0};
-  auto intersect = cylinderSurfaceObject->intersectionEstimate(
+  auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
   Intersection expectedIntersect{Vector3D{1, 1, 2}, 99.,
                                  Intersection::Status::reachable};
-  // check the result
-  BOOST_CHECK(bool(intersect));
-  CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
-  CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
-
-  /// intersect
-  auto surfaceIntersect = cylinderSurfaceObject->intersect(
-      testContext, offSurface, direction, false);
-  BOOST_CHECK(bool(surfaceIntersect));
+  BOOST_CHECK(bool(sfIntersection));
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position,
+                  expectedIntersect.position, 1e-9);
+  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength,
+                  expectedIntersect.pathLength, 1e-9);
   // there is a second solution & and it should be valid
-  BOOST_CHECK(surfaceIntersect.alternative);
+  BOOST_CHECK(sfIntersection.alternative);
   // And it's path should be further away then the primary solution
-  double pn = surfaceIntersect.intersection.pathLength;
-  double pa = surfaceIntersect.alternative.pathLength;
+  double pn = sfIntersection.intersection.pathLength;
+  double pa = sfIntersection.alternative.pathLength;
   BOOST_CHECK(pn * pn < pa * pa);
+  BOOST_CHECK_EQUAL(sfIntersection.object, cylinderSurfaceObject.get());
+
   //
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,

@@ -87,7 +87,7 @@ inline const SurfaceBounds& LineSurface::bounds() const {
   return s_noBounds;
 }
 
-inline Intersection LineSurface::intersectionEstimate(
+inline SurfaceIntersection LineSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // following nominclature found in header file and doxygen documentation
@@ -125,10 +125,11 @@ inline Intersection LineSurface::intersectionEstimate(
         status = Intersection::Status::missed;
       }
     }
-    return Intersection(result, u, status);
+    return {Intersection(result, u, status), this};
   }
   // return a false intersection
-  return Intersection(position, std::numeric_limits<double>::max(), status);
+  return {Intersection(position, std::numeric_limits<double>::max(), status),
+          this};
 }
 
 inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
