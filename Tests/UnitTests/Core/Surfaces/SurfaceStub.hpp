@@ -72,20 +72,19 @@ class SurfaceStub : public Surface {
     return 0.0;
   }
 
-  /// Straight line intersection schema from parameters
-  Intersection intersectionEstimate(
-      const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
-      const Vector3D& /*gdir*/, const BoundaryCheck& /*bcheck*/) const final {
-    const Intersection is{Vector3D{1, 1, 1}, 20.,
-                          Intersection::Status::reachable};
-    return is;
-  }
-
   /// Inherited from GeometryObject base
   const Vector3D binningPosition(const GeometryContext& /*txt*/,
                                  BinningValue /*bValue*/) const final {
     const Vector3D v{0.0, 0.0, 0.0};
     return v;
+  }
+
+  /// Surface intersction
+  SurfaceIntersection intersect(const GeometryContext& /*gctx*/,
+                                const Vector3D& /*position*/,
+                                const Vector3D& /*direction*/,
+                                const BoundaryCheck& /*bcheck*/) const final {
+    return SurfaceIntersection();
   }
 
   /// Return properly formatted class name

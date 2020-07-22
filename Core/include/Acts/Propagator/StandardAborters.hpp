@@ -138,8 +138,6 @@ struct SurfaceReached {
     }
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
-    // @todo - do not apply the isOnSurface check here, but handle by the
-    // intersectionEstimate
     if ((state.navigation.currentSurface &&
          state.navigation.currentSurface == &targetSurface)) {
       targetDebugLog(state, "x", [&] {

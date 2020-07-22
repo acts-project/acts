@@ -150,7 +150,7 @@ class PlaneSurface : public Surface {
   double pathCorrection(const GeometryContext& gctx, const Vector3D& position,
                         const Vector3D& direction) const final;
 
-  /// @brief Straight line intersection schema
+  /// @brief Straight line intersection
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The start position of the intersection attempt
@@ -175,8 +175,8 @@ class PlaneSurface : public Surface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return the Intersection object
-  Intersection intersectionEstimate(
+  /// @return the SurfaceIntersection object
+  SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction,
       const BoundaryCheck& bcheck = false) const final;

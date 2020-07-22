@@ -279,8 +279,8 @@ class DiscSurface : public Surface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return is the surface intersection object
-  Intersection intersectionEstimate(
+  /// @return The SurfaceIntersection object
+  SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction,
       const BoundaryCheck& bcheck = false) const final;
