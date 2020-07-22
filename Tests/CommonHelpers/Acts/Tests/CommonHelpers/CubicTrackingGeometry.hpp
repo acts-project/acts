@@ -6,6 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include <functional>
 #include <vector>
 
