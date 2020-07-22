@@ -174,19 +174,24 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
                                                     momentum.normalized()),
                   std::sqrt(3), 0.01);
   //
-  /// intersectionEstimate
+  /// intersection test
   Vector3D globalPosition{1.2, 0.0, -10.};
   Vector3D direction{0., 0., 1.};  // must be normalised
   Vector3D expected{1.2, 0.0, 0.0};
+
   // intersect is a struct of (Vector3D) position, pathLength, distance and
-  // (bool) valid
-  auto intersect = discSurfaceObject->intersectionEstimate(
-      tgContext, globalPosition, direction, false);
+  // (bool) valid, it's contained in a Surface intersection
+  auto sfIntersection =
+      discSurfaceObject->intersect(tgContext, globalPosition, direction, false);
   Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10.,
                                  Intersection::Status::reachable};
-  BOOST_CHECK(bool(intersect));
-  CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
-  CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
+  BOOST_CHECK(bool(sfIntersection));
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position,
+                  expectedIntersect.position, 1e-9);
+  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength,
+                  expectedIntersect.pathLength, 1e-9);
+  BOOST_CHECK_EQUAL(sfIntersection.object, discSurfaceObject.get());
+
   //
   /// Test name
   boost::test_tools::output_test_stream nameOuput;
