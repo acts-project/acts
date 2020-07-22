@@ -39,13 +39,17 @@ CurvilinearParameters make_params() {
   return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
 }
 
-using ParVec_t = BoundParameters::ParVector_t;
-using CovMat_t = BoundParameters::CovMatrix_t;
+using ParVec_t = BoundParameters::ParametersVector;
+using CovMat_t = BoundParameters::CovarianceMatrix;
 
 struct TestTrackState {
   SourceLink sourceLink;
-  std::optional<Measurement<SourceLink, eLOC_0, eLOC_1, eQOP>> meas3d;
-  std::optional<Measurement<SourceLink, eLOC_0, eLOC_1>> meas2d;
+  std::optional<Measurement<SourceLink, BoundParametersIndices, eBoundLoc0,
+                            eBoundLoc1, eBoundQOverP>>
+      meas3d;
+  std::optional<
+      Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>>
+      meas2d;
   std::optional<BoundParameters> predicted;
   std::optional<BoundParameters> filtered;
   std::optional<BoundParameters> smoothed;
@@ -79,8 +83,9 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector3D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, eLOC_0, eLOC_1, eQOP> meas{
-        plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1,
+                eBoundQOverP>
+        meas{plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
@@ -91,7 +96,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas3d = {meas.referenceSurface().getSharedPtr(),
+    pc.meas3d = {meas.referenceObject().getSharedPtr(),
                  sourceLink,
                  meas.covariance(),
                  meas.parameters()[0],
@@ -106,8 +111,8 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector2D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, eLOC_0, eLOC_1> meas{
-        plane, {}, mCov, mPar[0], mPar[1]};
+    Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1>
+        meas{plane, {}, mCov, mPar[0], mPar[1]};
 
     fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
@@ -118,7 +123,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
     }
 
     // "calibrate", keep original source link (stack address)
-    pc.meas2d = {meas.referenceSurface().getSharedPtr(), sourceLink,
+    pc.meas2d = {meas.referenceObject().getSharedPtr(), sourceLink,
                  meas.covariance(), meas.parameters()[0], meas.parameters()[1]};
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
       ts.setCalibrated(*pc.meas2d);
@@ -496,6 +501,7 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   constexpr size_t maxmeasdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
+  constexpr size_t maxparamdim = MultiTrajectory<SourceLink>::ParametersSize;
 
   MultiTrajectory<SourceLink> t;
   size_t index = t.addTrackState();
@@ -516,8 +522,8 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCov.setRandom();
   Vector2D mPar;
   mPar.setRandom();
-  Measurement<SourceLink, eLOC_0, eLOC_1> m2{
-      pc.meas3d->referenceSurface().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
+  Measurement<SourceLink, BoundParametersIndices, eBoundLoc0, eBoundLoc1> m2{
+      pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
 
@@ -537,9 +543,9 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCovFull.topLeftCorner(2, 2) = mCov;
   BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
-  ActsSymMatrixD<maxmeasdim> projFull;
+  ActsMatrixD<maxmeasdim, maxparamdim> projFull;
   projFull.setZero();
-  projFull.topLeftCorner(m2.size(), maxmeasdim) = m2.projector();
+  projFull.topLeftCorner(m2.size(), maxparamdim) = m2.projector();
   BOOST_CHECK_EQUAL(ts.projector(), projFull);
 }
 
@@ -594,10 +600,12 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.uncalibrated());
 
   // full projector, should be exactly equal
-  CovMat_t fullProj;
+  ActsMatrixD<MultiTrajectory<SourceLink>::MeasurementSizeMax,
+              MultiTrajectory<SourceLink>::ParametersSize>
+      fullProj;
   fullProj.setZero();
   fullProj.topLeftCorner(pc.meas3d->size(),
-                         MultiTrajectory<SourceLink>::MeasurementSizeMax) =
+                         MultiTrajectory<SourceLink>::ParametersSize) =
       pc.meas3d->projector();
   BOOST_CHECK_EQUAL(ts.projector(), fullProj);
 

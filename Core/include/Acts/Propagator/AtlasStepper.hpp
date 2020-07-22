@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +15,7 @@
 #include <functional>
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -303,6 +304,163 @@ class AtlasStepper {
 
   AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
 
+  /// @brief Resets the state
+  ///
+  /// @param [in, out] state State of the stepper
+  /// @param [in] boundParams Parameters in bound parametrisation
+  /// @param [in] freeParams Parameters in free parametrisation
+  /// @param [in] cov Covariance matrix
+  /// @param [in] navDir Navigation direction
+  /// @param [in] stepSize Step size
+  void resetState(
+      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
+      const Surface& surface, const NavigationDirection navDir = forward,
+      const double stepSize = std::numeric_limits<double>::max()) const {
+    using transformation = detail::coordinate_transformation;
+    // Update the stepping state
+    update(state,
+           transformation::boundParameters2freeParameters(state.geoContext,
+                                                          boundParams, surface),
+           cov);
+    state.navDir = navDir;
+    state.stepSize = ConstrainedStep(stepSize);
+    state.pathAccumulated = 0.;
+
+    // Reinitialize the stepping jacobian
+    // copy the covariance matrix
+    const auto transform = surface.referenceFrame(
+        state.geoContext, position(state), momentum(state) * direction(state));
+
+    double Sf, Cf, Ce, Se;
+    Sf = sin(boundParams[eBoundPhi]);
+    Cf = cos(boundParams[eBoundPhi]);
+    Se = sin(boundParams[eBoundTheta]);
+    Ce = cos(boundParams[eBoundTheta]);
+
+    state.pVector[8] = transform(0, eLOC_0);
+    state.pVector[16] = transform(0, eLOC_1);
+    state.pVector[24] = 0.;
+    state.pVector[32] = 0.;
+    state.pVector[40] = 0.;
+    state.pVector[48] = 0.;  // dX /
+
+    state.pVector[9] = transform(1, eLOC_0);
+    state.pVector[17] = transform(1, eLOC_1);
+    state.pVector[25] = 0.;
+    state.pVector[33] = 0.;
+    state.pVector[41] = 0.;
+    state.pVector[49] = 0.;  // dY /
+
+    state.pVector[10] = transform(2, eLOC_0);
+    state.pVector[18] = transform(2, eLOC_1);
+    state.pVector[26] = 0.;
+    state.pVector[34] = 0.;
+    state.pVector[42] = 0.;
+    state.pVector[50] = 0.;  // dZ /
+
+    state.pVector[11] = 0.;
+    state.pVector[19] = 0.;
+    state.pVector[27] = 0.;
+    state.pVector[35] = 0.;
+    state.pVector[43] = 0.;
+    state.pVector[51] = 1.;  // dT/
+
+    state.pVector[12] = 0.;
+    state.pVector[20] = 0.;
+    state.pVector[28] = -Sf * Se;  // - sin(phi) * cos(theta)
+    state.pVector[36] = Cf * Ce;   // cos(phi) * cos(theta)
+    state.pVector[44] = 0.;
+    state.pVector[52] = 0.;  // dAx/
+
+    state.pVector[13] = 0.;
+    state.pVector[21] = 0.;
+    state.pVector[29] = Cf * Se;  // cos(phi) * sin(theta)
+    state.pVector[37] = Sf * Ce;  // sin(phi) * cos(theta)
+    state.pVector[45] = 0.;
+    state.pVector[53] = 0.;  // dAy/
+
+    state.pVector[14] = 0.;
+    state.pVector[22] = 0.;
+    state.pVector[30] = 0.;
+    state.pVector[38] = -Se;  // - sin(theta)
+    state.pVector[46] = 0.;
+    state.pVector[54] = 0.;  // dAz/
+
+    state.pVector[15] = 0.;
+    state.pVector[23] = 0.;
+    state.pVector[31] = 0.;
+    state.pVector[39] = 0.;
+    state.pVector[47] = 1.;
+    state.pVector[55] = 0.;  // dCM/
+
+    state.pVector[56] = 0.;
+    state.pVector[57] = 0.;
+    state.pVector[58] = 0.;
+    state.pVector[59] = 0.;
+
+    // special treatment for surface types
+    // the disc needs polar coordinate adaptations
+    if (surface.type() == Surface::Disc) {
+      double lCf = cos(boundParams[eBoundLoc1]);
+      double lSf = sin(boundParams[eBoundLoc1]);
+      double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+      double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+      double d0 = lCf * Ax[0] + lSf * Ay[0];
+      double d1 = lCf * Ax[1] + lSf * Ay[1];
+      double d2 = lCf * Ax[2] + lSf * Ay[2];
+      state.pVector[8] = d0;
+      state.pVector[9] = d1;
+      state.pVector[10] = d2;
+      state.pVector[16] = boundParams[eBoundLoc0] * (lCf * Ay[0] - lSf * Ax[0]);
+      state.pVector[17] = boundParams[eBoundLoc0] * (lCf * Ay[1] - lSf * Ax[1]);
+      state.pVector[18] = boundParams[eBoundLoc0] * (lCf * Ay[2] - lSf * Ax[2]);
+    }
+    // the line needs components that relate direction change
+    // with global frame change
+    if (surface.type() == Surface::Perigee ||
+        surface.type() == Surface::Straw) {
+      // sticking to the nomenclature of the original RkPropagator
+      // - axis pointing along the drift/transverse direction
+      double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+      // - axis along the straw
+      double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+      // - normal vector of the reference frame
+      double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
+
+      // projection of direction onto normal vector of reference frame
+      double PC = state.pVector[4] * C[0] + state.pVector[5] * C[1] +
+                  state.pVector[6] * C[2];
+      double Bn = 1. / PC;
+
+      double Bx2 = -A[2] * state.pVector[29];
+      double Bx3 = A[1] * state.pVector[38] - A[2] * state.pVector[37];
+
+      double By2 = A[2] * state.pVector[28];
+      double By3 = A[2] * state.pVector[36] - A[0] * state.pVector[38];
+
+      double Bz2 = A[0] * state.pVector[29] - A[1] * state.pVector[28];
+      double Bz3 = A[0] * state.pVector[37] - A[1] * state.pVector[36];
+
+      double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
+      double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
+
+      Bx2 = (Bx2 - B[0] * B2) * Bn;
+      Bx3 = (Bx3 - B[0] * B3) * Bn;
+      By2 = (By2 - B[1] * B2) * Bn;
+      By3 = (By3 - B[1] * B3) * Bn;
+      Bz2 = (Bz2 - B[2] * B2) * Bn;
+      Bz3 = (Bz3 - B[2] * B3) * Bn;
+
+      //  /dPhi      |     /dThe       |
+      state.pVector[24] = Bx2 * boundParams[eBoundLoc0];
+      state.pVector[32] = Bx3 * boundParams[eBoundLoc0];  // dX/
+      state.pVector[25] = By2 * boundParams[eBoundLoc0];
+      state.pVector[33] = By3 * boundParams[eBoundLoc0];  // dY/
+      state.pVector[26] = Bz2 * boundParams[eBoundLoc0];
+      state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
+    }
+  }
+
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
   /// and updates the cell if necessary, then it takes the field
@@ -468,19 +626,15 @@ class AtlasStepper {
   /// @param [in] pars The new track parameters at start
   void update(State& state, const FreeVector& parameters,
               const Covariance& covariance) const {
-    // state is ready - noting to do
-    if (state.state_ready) {
-      return;
-    }
-
+    Vector3D direction = parameters.template segment<3>(eFreeDir0).normalized();
     state.pVector[0] = parameters[eFreePos0];
     state.pVector[1] = parameters[eFreePos1];
     state.pVector[2] = parameters[eFreePos2];
     state.pVector[3] = parameters[eFreeTime];
-    state.pVector[4] = parameters[eFreeDir0];
-    state.pVector[5] = parameters[eFreeDir1];
-    state.pVector[6] = parameters[eFreeDir2];
-    state.pVector[7] = parameters[eFreeQOverP];
+    state.pVector[4] = direction.x();
+    state.pVector[5] = direction.y();
+    state.pVector[6] = direction.z();
+    state.pVector[7] = std::copysign(parameters[eFreeQOverP], state.pVector[7]);
 
     // @todo: remove magic numbers - is that the charge ?
     if (std::abs(state.pVector[7]) < .000000000000001) {
@@ -494,7 +648,7 @@ class AtlasStepper {
     state.covTransport = true;
     state.useJacobian = true;
 
-    // now declare the state as ready
+    // declare the state as ready
     state.state_ready = true;
   }
 

@@ -8,10 +8,20 @@
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 
+#include "Acts/EventData/TrackParametersConcept.hpp"
+
 namespace Acts {
 
+// explicitly instantiate templates
 template class SingleBoundTrackParameters<NeutralPolicy>;
 template class SingleCurvilinearTrackParameters<NeutralPolicy>;
 template class SingleFreeTrackParameters<NeutralPolicy>;
+
+// ensure concrete classes satisfy the concepts
+static_assert(
+    Concepts::BoundTrackParametersConcept<NeutralBoundTrackParameters>);
+static_assert(
+    Concepts::BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
+static_assert(Concepts::FreeTrackParametersConcept<NeutralFreeTrackParameters>);
 
 }  // namespace Acts

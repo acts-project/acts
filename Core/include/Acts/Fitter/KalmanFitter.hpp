@@ -379,7 +379,6 @@ class KalmanFitter {
       result.reset = true;
 
       // Reset propagator options
-      state.options.direction = backward;
       state.options.maxStepSize = -1.0 * state.options.maxStepSize;
       // Not sure if reset of pathLimit during propagation makes any sense
       state.options.pathLimit = -1.0 * state.options.pathLimit;
@@ -402,21 +401,9 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.update(state.stepping,
-                         MultiTrajectoryHelpers::freeFiltered(
-                             state.options.geoContext, st),
-                         st.filteredCovariance());
-          // Reverse stepping direction
-          state.stepping.navDir = backward;
-          state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
-          state.stepping.pathAccumulated = 0.;
-          // Reinitialize the stepping jacobian
-          st.referenceSurface().initJacobianToGlobal(
-              state.options.geoContext, state.stepping.jacToGlobal,
-              state.stepping.pos, state.stepping.dir, st.filtered());
-          state.stepping.jacobian = BoundMatrix::Identity();
-          state.stepping.jacTransport = FreeMatrix::Identity();
-          state.stepping.derivative = FreeVector::Zero();
+          stepper.resetState(state.stepping, st.filtered(),
+                             st.filteredCovariance(), st.referenceSurface(),
+                             backward, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
           st.smoothed() = st.filtered();
@@ -848,8 +835,6 @@ class KalmanFitter {
       state.stepping.navDir = backward;
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
-      // Not sure if the following line helps anything
-      state.options.direction = backward;
 
       return Result<void>::success();
     }
