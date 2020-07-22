@@ -11,6 +11,7 @@
 // This workround does not work on libc++. To detect libc++, we include
 // one STL header and then check if _LIBCPP_VERSION is defined.
 
+#include <any>
 #include <type_traits>
 
 // only if clang and libstdc++
@@ -26,6 +27,9 @@ struct is_constructible<std::reference_wrapper<const std::any>,
 template <>
 struct is_constructible<std::reference_wrapper<const std::any>,
                         std::reference_wrapper<const std::any>&>
+    : public true_type {};
+template <>
+struct is_copy_constructible<std::reference_wrapper<const std::any>>
     : public true_type {};
 }  // namespace std
 
