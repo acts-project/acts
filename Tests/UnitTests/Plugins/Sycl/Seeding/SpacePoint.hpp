@@ -17,14 +17,14 @@ struct SpacePoint {
   float z() const { return m_z; }
   float r() const { return m_r; }
   friend bool operator==(const SpacePoint &a, const SpacePoint &b);
+  float varianceR;
+  float varianceZ;
   private:
     float m_x;
     float m_y;
     float m_z;
     float m_r;
     int surface;
-    float varianceR;
-    float varianceZ;
 };
 
 bool operator==(const SpacePoint &a, const SpacePoint &b) {

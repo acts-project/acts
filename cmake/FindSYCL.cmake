@@ -59,7 +59,8 @@ if( SYCL_builtin_FOUND )
    # Figure out which SYCL target platforms are available.
    set( SYCL_FLAGS "-fsycl" )
    set( SYCL_builtin_TARGETS )
-   foreach( _target "nvptx64-*-*-sycldevice" "spir64-*-*-sycldevice" )
+   #foreach( _target "nvptx64-*-*-sycldevice" "spir64-*-*-sycldevice" )
+   foreach( _target "spir64-*-*-sycldevice" )
       set( CMAKE_REQUIRED_FLAGS "-fsycl -fsycl-targets=${_target}" )
       check_cxx_source_compiles( "
          #include <CL/sycl.hpp>

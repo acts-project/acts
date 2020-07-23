@@ -14,6 +14,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include "ATLASCuts.hpp"
@@ -24,9 +25,9 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-auto readFile(const std::string& filename) -> std::vector<std::unique_ptr<SpacePoint>> {
+auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
   std::string line;
-  std::vector<std::unique_ptr<SpacePoint>> readSP;
+  std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
   if (spFile.is_open()) {
@@ -56,7 +57,7 @@ auto readFile(const std::string& filename) -> std::vector<std::unique_ptr<SpaceP
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        readSP.emplace_back(std::make_unique<SpacePoint>(x, y, z, r, layer, varianceR, varianceZ));
+        readSP.emplace_back(new SpacePoint(x, y, z, r, layer, varianceR, varianceZ));
       }
     }
   }
@@ -64,8 +65,8 @@ auto readFile(const std::string& filename) -> std::vector<std::unique_ptr<SpaceP
 }
 
 template <typename external_spacepoint_t>
-auto instatiateSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoint_t> {
-    Acts::SeedfinderConfig<SpacePoint> config;
+auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoint_t> {
+  Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160.;
   config.deltaRMin = 5.;
@@ -85,7 +86,21 @@ auto instatiateSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spac
   return config;
 }
 
+template <typename external_spacepoint_t>
+auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_t> &config) -> Acts::SpacePointGridConfig {
+  Acts::SpacePointGridConfig gridConf{};
+  gridConf.bFieldInZ = config.bFieldInZ;
+  gridConf.minPt = config.minPt;
+  gridConf.rMax = config.rMax;
+  gridConf.zMax = config.zMax;
+  gridConf.zMin = config.zMin;
+  gridConf.deltaRMax = config.deltaRMax;
+  gridConf.cotThetaMax = config.cotThetaMax;
+  return gridConf;
+}
+
 auto main(int argc, char** argv) -> int {
+  bool allgroup(false);
   try {
     po::options_description optionsDescription("Allowed options");
     optionsDescription.add_options()
@@ -104,19 +119,90 @@ auto main(int argc, char** argv) -> int {
 
     if(vm.count("inputfile") != 0){
       std::string filename = vm["inputfile"].as<std::string>();
+      auto spVec = readFile(filename);
 
-      auto config = instatiateSeedfinderConfiguration<SpacePoint>();
+      auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+        Acts::BinFinder<SpacePoint>());
+      auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
+        Acts::BinFinder<SpacePoint>());
+      auto config = setupSeedfinderConfiguration<SpacePoint>();
       Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
       config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
         Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
-      auto SF(config);
+      Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config);
+      Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
+      auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/, float /*unused*/, float /*unused*/) -> Acts::Vector2D {
+        return {sp.varianceR, sp.varianceZ};
+      };
+      std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid = 
+        Acts::SpacePointGridCreator::createGrid<SpacePoint>(setupSpacePointGridConfig(config));
 
-      auto spVec = readFile(filename);
+      auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), covarianceTool,
+                                                bottomBinFinder, topBinFinder, std::move(grid), config);
       std::cout << "read " << spVec.size() << " SP from file " << filename << std::endl;
+
+      // ********* EXECUTE ON CPU ********** //
+
+      auto start_cpu = std::chrono::system_clock::now();
+
+      int group_count = 0;
+      auto groupIt = spGroup.begin();
+      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+
+      for (; !(groupIt == spGroup.end()); ++groupIt) {
+        seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
+            groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        group_count++;
+        if (!allgroup && group_count >= 500) {
+          break;
+        }
+      }
+
+      std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
+
+      auto end_cpu = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
+      double cpuTime = elapsec_cpu.count();
+
+      //----------- SYCL ----------//
+
+      auto start_sycl = std::chrono::system_clock::now();
+
+      group_count = 0;
+      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
+      groupIt = spGroup.begin();
+
+      for (; !(groupIt == spGroup.end()); ++groupIt) {
+        seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
+            groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        group_count++;
+        if (!allgroup && group_count >= 500){
+            break;
+        }
+      }
+      auto end_sycl = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
+      double syclTime = elapsec_sycl.count();
+
+      std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
+
+      std::cout << std::endl;
+      std::cout << "----------------------- Time Metric -----------------------" << std::endl;
+      std::cout << "Seedfinding_Time  " << std::setw(11)
+                << (std::to_string(cpuTime)) << "  " << std::setw(11);
+      std::cout << std::to_string(syclTime) << std::endl;
+      std::cout << "-----------------------------------------------------------"
+                << std::endl;
+      std::cout << std::endl;
+
+    for(const auto *S: spVec) {
+        delete[] S;
+      }
     }
 
     if(vm.count("platforms") != 0){
-      Acts::Sycl::outputPlatforms();
+      Acts::Sycl::testDevice();
+      // Acts::Sycl::outputPlatforms();
     }
   }
   catch (std::exception &e){
@@ -125,3 +211,5 @@ auto main(int argc, char** argv) -> int {
 
   return 0;
 }
+
+

@@ -27,7 +27,7 @@ target_link_libraries(
   ActsSyclPlugin
   PUBLIC ActsCore)
 
-acts_setup_sycl_target(ActsSyclPlugin)
+acts_setup_sycl_target(ActsSyclPlugin DEPENDENCY PUBLIC)
 
 install(
   TARGETS ActsSyclPlugin
