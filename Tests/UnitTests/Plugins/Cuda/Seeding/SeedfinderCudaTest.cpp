@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
   Acts::Seedfinder<SpacePoint> seedfinder_cpu(config);
-  Acts::Seedfinder<SpacePoint, Acts::Cuda> seedfinder_cuda(config);
+  Acts::Cuda::Seedfinder<SpacePoint> seedfinder_cuda(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {

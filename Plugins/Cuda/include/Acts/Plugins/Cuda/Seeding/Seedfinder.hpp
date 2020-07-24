@@ -8,26 +8,17 @@
 
 #pragma once
 
-#include "Acts/Plugins/Cuda/Cuda.hpp"
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+// Acts include(s).
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
-#include <array>
-#include <list>
-#include <map>
-#include <memory>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
-
 namespace Acts {
+namespace Cuda {
 
 template <typename external_spacepoint_t>
-class Seedfinder<external_spacepoint_t, Acts::Cuda> {
+class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
@@ -39,9 +30,9 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda> {
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
-  Seedfinder<external_spacepoint_t, Acts::Cuda>& operator=(
-      const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
+  Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
+  Seedfinder<external_spacepoint_t>& operator=(
+      const Seedfinder<external_spacepoint_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -60,6 +51,8 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda> {
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };
 
-}  // namespace Acts
+} // namespace Cuda
+} // namespace Acts
 
+// Include the template implementation.
 #include "Acts/Plugins/Cuda/Seeding/Seedfinder.ipp"
