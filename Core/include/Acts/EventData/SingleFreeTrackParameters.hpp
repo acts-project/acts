@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -46,12 +45,9 @@ class SingleFreeTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
-                            const ParametersVector& parValues,
-                            std::shared_ptr<const Volume> volume)
+                            const ParametersVector& parValues)
       : m_oParameters(std::move(cov), parValues),
-        m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])),
-        m_pVolume(std::move(volume)) {
-    assert(m_pVolume);
+        m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])) {
   }
 
   /// Construct track parameters for neutral particles.
@@ -62,12 +58,9 @@ class SingleFreeTrackParameters {
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
   SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
-                            const ParametersVector& parValues,
-                            std::shared_ptr<const Volume> volume)
+                            const ParametersVector& parValues)
       : m_oParameters(std::move(cov), parValues),
-        m_oChargePolicy(),
-        m_pVolume(std::move(volume)) {
-    assert(m_pVolume);
+        m_oChargePolicy() {
   }
 
   // this class does not have a custom default constructor and thus should not
@@ -139,9 +132,6 @@ class SingleFreeTrackParameters {
   /// covariance matrix
   const FullFreeParameterSet& getParameterSet() const { return m_oParameters; }
 
-  /// @brief access method to the reference volume
-  const Volume& referenceVolume() const { return *m_pVolume; }
-
   /// @brief Equality operator
   ///
   /// @param [in] rhs Object to compare `*this` to
@@ -150,7 +140,7 @@ class SingleFreeTrackParameters {
   /// other and the content of the member variables is the same
   bool operator==(const SingleFreeTrackParameters& rhs) const {
     return (m_oChargePolicy == rhs.m_oChargePolicy &&
-            m_oParameters == rhs.m_oParameters && m_pVolume == rhs.m_pVolume);
+            m_oParameters == rhs.m_oParameters);
   }
 
   /// @brief inequality operator
@@ -179,7 +169,6 @@ class SingleFreeTrackParameters {
                                  /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
-  std::shared_ptr<const Volume> m_pVolume;
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
