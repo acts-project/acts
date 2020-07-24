@@ -10,13 +10,14 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <algorithm>
 #include <limits>
 
 #include <Eigen/Geometry>
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace utf = boost::unit_test;
 

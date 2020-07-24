@@ -8,14 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <array>
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
+
+#include <array>
+#include <random>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;

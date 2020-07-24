@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <memory>
-#include <ostream>
-#include <type_traits>
-#include <utility>
-
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -20,6 +15,11 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 

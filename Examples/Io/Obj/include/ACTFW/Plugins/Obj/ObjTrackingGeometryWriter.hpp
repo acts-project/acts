@@ -8,14 +8,14 @@
 
 #pragma once
 
+#include "ACTFW/Framework/AlgorithmContext.hpp"
+#include "ACTFW/Framework/ProcessCode.hpp"
 #include <Acts/Utilities/Logger.hpp>
 #include <Acts/Visualization/ViewConfig.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <mutex>
-
-#include "ACTFW/Framework/AlgorithmContext.hpp"
-#include "ACTFW/Framework/ProcessCode.hpp"
 
 namespace Acts {
 class TrackingVolume;

@@ -12,6 +12,9 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <memory>
+#include <vector>
+
 namespace Acts {
 
 class Surface;

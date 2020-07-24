@@ -8,11 +8,6 @@
 
 #include "ACTFW/Io/Root/RootTrajectoryWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
-#include <ios>
-#include <stdexcept>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/EventData/Measurement.hpp"
@@ -20,6 +15,12 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <ios>
+#include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

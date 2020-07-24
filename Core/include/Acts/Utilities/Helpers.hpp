@@ -12,6 +12,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <bitset>
 #include <cassert>
 #include <cmath>
@@ -21,11 +26,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 

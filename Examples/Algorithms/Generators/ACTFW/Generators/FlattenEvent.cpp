@@ -8,11 +8,11 @@
 
 #include "ACTFW/Generators/FlattenEvent.hpp"
 
-#include <vector>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
+
+#include <vector>
 
 FW::FlattenEvent::FlattenEvent(const Config& cfg, Acts::Logging::Level lvl)
     : BareAlgorithm("FlattenEvent", lvl), m_cfg(cfg) {

@@ -8,11 +8,6 @@
 
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
 
-#include <boost/program_options.hpp>
-#include <iostream>
-#include <tuple>
-#include <utility>
-
 #include "ACTFW/Plugins/BField/BFieldUtils.hpp"
 #include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "ACTFW/Utilities/Options.hpp"
@@ -20,6 +15,12 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <iostream>
+#include <tuple>
+#include <utility>
+
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 

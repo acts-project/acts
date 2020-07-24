@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <limits>
-#include <string>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+
+#include <limits>
+#include <string>
 
 namespace FW {
 

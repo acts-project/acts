@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <utility>
-
-#include <boost/type_erasure/any_cast.hpp>
-
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -22,6 +14,14 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <utility>
+
+#include <boost/type_erasure/any_cast.hpp>
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"

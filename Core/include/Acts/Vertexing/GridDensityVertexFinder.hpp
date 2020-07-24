@@ -14,6 +14,7 @@
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
 #include "DummyVertexFitter.hpp"
 
 namespace Acts {

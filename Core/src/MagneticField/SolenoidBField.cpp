@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
+
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <boost/math/special_functions/ellint_1.hpp>

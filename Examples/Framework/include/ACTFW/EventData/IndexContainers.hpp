@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include <boost/container/flat_map.hpp>
 #include <cstddef>
 #include <utility>
+
+#include <boost/container/flat_map.hpp>
 
 namespace FW {
 

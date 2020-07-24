@@ -8,6 +8,8 @@
 
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
+#include "Acts/Utilities/Units.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -15,8 +17,6 @@
 #include <limits>
 #include <optional>
 #include <ostream>
-
-#include "Acts/Utilities/Units.hpp"
 
 #include "ParticleDataTable.hpp"
 

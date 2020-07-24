@@ -9,12 +9,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
-#include <iostream>
-
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
+
+#include <fstream>
+#include <iostream>
+
 #include "TrackingGeometryViewBase.hpp"
 #include "VisualizationTester.hpp"
 

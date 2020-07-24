@@ -12,16 +12,16 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <utility>
-#include <vector>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/IReader.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace FW {
 

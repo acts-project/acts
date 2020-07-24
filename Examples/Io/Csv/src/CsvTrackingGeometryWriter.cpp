@@ -8,18 +8,20 @@
 
 #include "ACTFW/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
+#include "ACTFW/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
 #include <Acts/Plugins/Digitization/DigitizationModule.hpp>
 #include <Acts/Plugins/Identification/IdentifiedDetectorElement.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Units.hpp>
-#include <dfe/dfe_io_dsv.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
-#include "ACTFW/Utilities/Paths.hpp"
+#include <dfe/dfe_io_dsv.hpp>
+
 #include "TrackMlData.hpp"
 
 using namespace FW;

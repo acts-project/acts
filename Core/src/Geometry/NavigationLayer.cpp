@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/NavigationLayer.hpp"
+
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::NavigationLayer::NavigationLayer(

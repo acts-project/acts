@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include <utility>
-#include <vector>
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <utility>
+#include <vector>
 
 namespace Acts {
 

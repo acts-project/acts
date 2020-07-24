@@ -11,10 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <algorithm>
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 

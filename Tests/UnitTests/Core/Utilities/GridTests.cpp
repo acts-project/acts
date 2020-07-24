@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <chrono>
-#include <random>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <chrono>
+#include <random>
 
 namespace Acts {
 

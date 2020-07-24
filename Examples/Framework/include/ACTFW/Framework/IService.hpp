@@ -13,9 +13,9 @@
 
 #pragma once
 
-#include <string>
-
 #include "ACTFW/Framework/AlgorithmContext.hpp"
+
+#include <string>
 
 namespace FW {
 

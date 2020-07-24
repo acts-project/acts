@@ -8,13 +8,14 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <functional>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 

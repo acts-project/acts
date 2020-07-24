@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-#include <string>
-
 #include "ACTFW/Utilities/Helpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <map>
+#include <memory>
+#include <string>
 
 namespace FW {
 

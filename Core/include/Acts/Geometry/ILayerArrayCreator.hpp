@@ -7,11 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <memory>
-#include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace Acts {
 

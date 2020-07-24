@@ -8,16 +8,17 @@
 
 #include "ACTFW/Generators/ParticleSelector.hpp"
 
-#include <algorithm>
-#include <boost/program_options.hpp>
-#include <stdexcept>
-#include <vector>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
+#include <boost/program_options.hpp>
 
 void FW::ParticleSelector::addOptions(FW::Options::Description& desc) {
   using boost::program_options::bool_switch;

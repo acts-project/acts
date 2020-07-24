@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ACTFW/Detector/IBaseDetector.hpp"
+#include "ACTFW/Geometry/MaterialWiper.hpp"
+#include "ACTFW/Io/Root/RootMaterialDecorator.hpp"
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Plugins/Json/JsonGeometryConverter.hpp>
 #include <Acts/Plugins/Json/JsonMaterialDecorator.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include <boost/program_options.hpp>
+
 #include <string>
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Geometry/MaterialWiper.hpp"
-#include "ACTFW/Io/Root/RootMaterialDecorator.hpp"
+#include <boost/program_options.hpp>
 
 namespace FW {
 namespace Geometry {

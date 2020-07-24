@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/LayerArrayCreator.hpp"
-#include <cmath>
+
 #include "Acts/Geometry/GeometryObjectSorter.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -26,6 +26,8 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <cmath>
 
 std::unique_ptr<const Acts::LayerArray> Acts::LayerArrayCreator::layerArray(
     const GeometryContext& gctx, const LayerVector& layersInput, double min,

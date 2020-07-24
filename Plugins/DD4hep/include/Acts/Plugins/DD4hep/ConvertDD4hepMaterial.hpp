@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include <DD4hep/DetElement.h>
-#include <DD4hep/DetFactoryHelper.h>
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <DD4hep/DetElement.h>
+#include <DD4hep/DetFactoryHelper.h>
 
 namespace Acts {
 

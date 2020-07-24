@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "ACTFW/Validation/DuplicationPlotTool.hpp"
@@ -17,6 +15,8 @@
 #include "ACTFW/Validation/FakeRatePlotTool.hpp"
 #include "ACTFW/Validation/TrackSummaryPlotTool.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <mutex>
 
 class TFile;
 class TTree;

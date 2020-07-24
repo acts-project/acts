@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <sstream>
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <sstream>
 
 namespace Acts {
 

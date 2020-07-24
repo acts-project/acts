@@ -8,16 +8,16 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
-
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <numeric>
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
     : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}

@@ -6,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <memory>
-#include "Acts/EventData/TrackParameters.hpp"
-
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+
+#include <memory>
+
+#include <boost/program_options.hpp>
 
 using namespace FW;
 

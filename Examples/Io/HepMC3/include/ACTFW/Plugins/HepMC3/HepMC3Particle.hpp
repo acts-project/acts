@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "ACTFW/EventData/SimParticle.hpp"
+#include "ACTFW/EventData/SimVertex.hpp"
+
 #include <HepMC3/FourVector.h>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 #include <HepPID/ParticleIDMethods.hh>
-
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/EventData/SimVertex.hpp"
 
 namespace FW {
 

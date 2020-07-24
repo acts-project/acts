@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <fstream>
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
@@ -33,6 +32,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <fstream>
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;

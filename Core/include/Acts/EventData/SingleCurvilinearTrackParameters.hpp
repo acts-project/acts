@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <memory>
-
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+
+#include <memory>
 
 namespace Acts {
 

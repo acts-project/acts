@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <Acts/Utilities/Logger.hpp>
-#include <boost/program_options.hpp>
-#include <string>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
+#include <Acts/Utilities/Logger.hpp>
+
+#include <string>
+
+#include <boost/program_options.hpp>
 
 namespace FW {
 namespace Options {

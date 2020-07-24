@@ -8,11 +8,12 @@
 
 #include "ACTFW/Plugins/BField/BFieldUtils.hpp"
 
-#include <fstream>
-
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <fstream>
+
 #include "TFile.h"
 #include "TROOT.h"
 #include "TTree.h"

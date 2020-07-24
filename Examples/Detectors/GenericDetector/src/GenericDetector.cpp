@@ -8,14 +8,14 @@
 
 #include "ACTFW/GenericDetector/GenericDetector.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "ACTFW/GenericDetector/BuildGenericDetector.hpp"
 #include "ACTFW/GenericDetector/GenericDetectorElement.hpp"
 #include "ACTFW/GenericDetector/GenericDetectorOptions.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <boost/program_options.hpp>
 
 void GenericDetector::addOptions(
     boost::program_options::options_description& opt) const {

@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <functional>
-#include <unordered_map>
-
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <functional>
+#include <unordered_map>
 
 namespace Acts {
 

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
@@ -25,11 +26,12 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <boost/algorithm/string.hpp>
+
 #include "DD4hep/Detector.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
-
-#include <boost/algorithm/string.hpp>
 
 Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
     const Acts::DD4hepLayerBuilder::Config& config,

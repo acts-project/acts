@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
@@ -19,6 +17,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
+
+#include <memory>
 
 namespace FWE {
 

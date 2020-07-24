@@ -8,13 +8,15 @@
 
 #include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
 
+#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ACTFW/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
-#include <dfe/dfe_io_dsv.hpp>
+
 #include <map>
 #include <stdexcept>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include <dfe/dfe_io_dsv.hpp>
+
 #include "TrackMlData.hpp"
 
 FW::CsvParticleWriter::CsvParticleWriter(

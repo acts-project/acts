@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <array>
 #include <cmath>
 #include <limits>
-
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 template <typename SpacePoint>

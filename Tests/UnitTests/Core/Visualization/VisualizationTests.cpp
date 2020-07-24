@@ -9,12 +9,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-#include <string>
-
 #include "Acts/Visualization/IVisualization.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
+
+#include <iostream>
+#include <string>
+
 #include "VisualizationTester.hpp"
 
 using boost::test_tools::output_test_stream;
