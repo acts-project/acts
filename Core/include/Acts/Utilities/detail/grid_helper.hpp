@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 
 #include <array>
+#include <set>
 #include <tuple>
 #include <utility>
 
