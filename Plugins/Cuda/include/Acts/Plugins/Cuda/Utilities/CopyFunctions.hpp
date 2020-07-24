@@ -13,9 +13,7 @@
 #include "Acts/Plugins/Cuda/Utilities/DeviceVector.hpp"
 #include "Acts/Plugins/Cuda/Utilities/HostMatrix.hpp"
 #include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
-
-// CUDA include(s).
-#include <cuda.h>
+#include "Acts/Plugins/Cuda/Utilities/StreamWrapper.hpp"
 
 namespace Acts {
 namespace Cuda {
@@ -26,7 +24,7 @@ namespace Cuda {
   /// Copy the contents of a matrix from the host to the/a device asynchronously
   template <typename T>
   void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host,
-                    cudaStream_t stream);
+                    const StreamWrapper& streamWrapper);
 
   /// Copy the contents of a matrix from the/a device to the host
   template <typename T>
@@ -34,7 +32,7 @@ namespace Cuda {
   /// Copy the contents of a matrix from the/a device to the host asynchronously
   template <typename T>
   void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device,
-                  cudaStream_t stream);
+                  const StreamWrapper& streamWrapper);
 
   /// Copy the contents of a vector from the host to the/a device
   template <typename T>
@@ -42,7 +40,7 @@ namespace Cuda {
   /// Copy the contents of a vector from the host to the/a device asynchronously
   template <typename T>
   void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host,
-                    cudaStream_t stream);
+                    const StreamWrapper& streamWrapper);
 
   /// Copy the contents of a vector from the/a device to the host
   template <typename T>
@@ -50,7 +48,7 @@ namespace Cuda {
   /// Copy the contents of a vector from the/a device to the host asynchronously
   template <typename T>
   void copyToHost(HostVector<T>& host, const DeviceVector<T>& device,
-                  cudaStream_t stream);
+                  const StreamWrapper& streamWrapper);
 
 } // namespace Cuda
 } // namespace Acts
