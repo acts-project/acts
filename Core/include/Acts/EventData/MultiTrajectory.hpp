@@ -771,8 +771,7 @@ class MultiTrajectory {
   using TrackStateProxy =
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
 
-  using ProjectorBitset =
-      std::bitset<eFreeParametersSize * MeasurementSizeMax>;
+  using ProjectorBitset = std::bitset<eFreeParametersSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;

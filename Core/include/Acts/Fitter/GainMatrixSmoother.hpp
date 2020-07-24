@@ -134,7 +134,8 @@ class GainMatrixSmoother {
         // nearest semi-positive def matrix,
         // but it could still be non semi-positive
         BoundSymMatrix smoothedCov = ts.boundSmoothedCovariance();
-        if (not detail::covariance_helper<BoundSymMatrix>::validate(smoothedCov)) {
+        if (not detail::covariance_helper<BoundSymMatrix>::validate(
+                smoothedCov)) {
           ACTS_DEBUG(
               "Smoothed covariance is not positive definite. Could result in "
               "negative covariance!");
