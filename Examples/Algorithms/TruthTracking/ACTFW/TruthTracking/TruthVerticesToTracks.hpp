@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
@@ -21,6 +18,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <map>
+#include <memory>
 
 using namespace Acts::UnitLiterals;
 

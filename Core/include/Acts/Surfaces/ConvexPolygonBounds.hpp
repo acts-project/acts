@@ -12,9 +12,10 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <boost/container/small_vector.hpp>
 #include <cmath>
 #include <exception>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 

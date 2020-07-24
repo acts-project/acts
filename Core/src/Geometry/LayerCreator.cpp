@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/LayerCreator.hpp"
-#include <cmath>
-#include <set>
+
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
@@ -19,6 +18,9 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <set>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

@@ -8,13 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <random>
-#include <set>
-
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -23,6 +16,13 @@
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <random>
+#include <set>
 
 namespace Acts {
 namespace Test {

@@ -9,12 +9,13 @@
 /// @file
 /// @brief An example tools that shows the sequencer functionality
 
-#include <cstdlib>
-#include <memory>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
+
+#include <cstdlib>
+#include <memory>
+
 #include "HelloLoggerAlgorithm.hpp"
 #include "HelloRandomAlgorithm.hpp"
 #include "HelloService.hpp"

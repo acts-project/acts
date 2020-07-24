@@ -17,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
+
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"

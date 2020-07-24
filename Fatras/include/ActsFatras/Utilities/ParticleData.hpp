@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/PdgParticle.hpp"
+
 #include <iosfwd>
 #include <string_view>
-
-#include "Acts/Utilities/PdgParticle.hpp"
 
 namespace ActsFatras {
 

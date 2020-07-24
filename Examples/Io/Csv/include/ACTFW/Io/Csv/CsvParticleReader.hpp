@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "ACTFW/Framework/IReader.hpp"
 #include <Acts/Utilities/Logger.hpp>
+
 #include <memory>
 #include <string>
-
-#include "ACTFW/Framework/IReader.hpp"
 
 namespace FW {
 

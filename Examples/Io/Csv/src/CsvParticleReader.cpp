@@ -8,17 +8,19 @@
 
 #include "ACTFW/Io/Csv/CsvParticleReader.hpp"
 
+#include "ACTFW/EventData/SimParticle.hpp"
+#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ACTFW/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
-#include <dfe/dfe_io_dsv.hpp>
+
 #include <fstream>
 #include <ios>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include <dfe/dfe_io_dsv.hpp>
+
 #include "TrackMlData.hpp"
 
 FW::CsvParticleReader::CsvParticleReader(

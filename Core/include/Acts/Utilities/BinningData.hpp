@@ -10,15 +10,16 @@
 // BinUtility.h, Acts project
 ///////////////////////////////////////////////////////////////////
 #pragma once
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+
 #include <cmath>
 #include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
 

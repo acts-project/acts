@@ -8,18 +8,18 @@
 
 #pragma once
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <bitset>
 #include <cstdint>
 #include <type_traits>
 #include <vector>
 
 #include <Eigen/Core>
-
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 

@@ -8,13 +8,15 @@
 
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
 
-#include <FTFP_BERT.hh>
-#include <G4RunManager.hh>
-#include <G4VUserDetectorConstruction.hh>
+#include "ACTFW/Framework/WhiteBoard.hpp"
+
 #include <iostream>
 #include <stdexcept>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include <FTFP_BERT.hh>
+#include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
+
 #include "EventAction.hpp"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"

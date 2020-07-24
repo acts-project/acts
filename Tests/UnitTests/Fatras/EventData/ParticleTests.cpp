@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <limits>
 
 using Acts::PdgParticle;
 using ActsFatras::Barcode;

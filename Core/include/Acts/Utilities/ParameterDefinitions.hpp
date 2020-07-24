@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <cmath>
-#include <type_traits>
-
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterTypes.hpp"
+
+#include <cmath>
+#include <type_traits>
 
 // The user can override the (track) parameter ordering and underlying scalar
 // type. If the variable is defined, it must point to a header file that

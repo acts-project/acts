@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <random>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
+
+#include <random>
 
 namespace FW {
 

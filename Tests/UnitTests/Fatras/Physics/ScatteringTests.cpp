@@ -9,9 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
@@ -19,6 +16,10 @@
 #include "ActsFatras/Physics/Scattering/GaussianMixture.hpp"
 #include "ActsFatras/Physics/Scattering/GeneralMixture.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
+
+#include <limits>
+#include <random>
+
 #include "Dataset.hpp"
 
 namespace {

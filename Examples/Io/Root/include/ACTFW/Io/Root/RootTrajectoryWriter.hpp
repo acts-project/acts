@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <mutex>
-#include <vector>
-
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <mutex>
+#include <vector>
 
 class TFile;
 class TTree;

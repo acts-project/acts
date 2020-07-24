@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <cmath>
 #include <limits>
 #include <utility>
-
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

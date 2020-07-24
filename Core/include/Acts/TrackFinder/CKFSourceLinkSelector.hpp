@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <limits>
-#include <map>
-
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -18,6 +15,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+
+#include <limits>
+#include <map>
 
 namespace Acts {
 

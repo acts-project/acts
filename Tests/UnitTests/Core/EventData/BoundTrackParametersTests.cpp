@@ -22,6 +22,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
 #include "ParametersTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;

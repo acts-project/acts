@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <random>
-
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/Physics/Scattering/detail/Scattering.hpp"
+
+#include <random>
 
 namespace ActsFatras {
 namespace detail {

@@ -12,6 +12,7 @@
 
 // Geometry module
 #include "Acts/Geometry/Layer.hpp"
+
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"

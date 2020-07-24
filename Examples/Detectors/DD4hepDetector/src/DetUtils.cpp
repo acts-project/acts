@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
+
 #include "DD4hep/CartesianGridXZ.h"
 
 namespace det {

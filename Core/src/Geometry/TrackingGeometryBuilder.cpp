@@ -10,14 +10,15 @@
 // TrackingGeometryBuilder.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include <functional>
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <functional>
 
 Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig,

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/Polyhedron.hpp"
+
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 

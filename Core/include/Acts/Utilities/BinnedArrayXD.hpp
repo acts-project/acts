@@ -11,11 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+
 #include <array>
 #include <iostream>
 #include <vector>
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
 
 class MsgStream;
 

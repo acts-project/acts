@@ -8,17 +8,18 @@
 
 #include "ACTFW/Io/Root/RootPropagationStepsWriter.hpp"
 
+#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ACTFW/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <ios>
 #include <stdexcept>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include <TFile.h>
+#include <TTree.h>
 
 FW::RootPropagationStepsWriter::RootPropagationStepsWriter(
     const FW::RootPropagationStepsWriter::Config& cfg,

@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTFW/DD4hepDetector/DD4hepDetectorHelper.hpp"
+
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
+
 #include "DD4hep/CartesianGridXY.h"
 
 using namespace FW::DD4hep;

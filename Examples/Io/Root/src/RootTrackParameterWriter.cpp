@@ -9,11 +9,13 @@
 #include "ACTFW/Io/Root/RootTrackParameterWriter.hpp"
 
 #include <Acts/Utilities/Helpers.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <ios>
 #include <iostream>
 #include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 FW::RootTrackParameterWriter::RootTrackParameterWriter(
     const FW::RootTrackParameterWriter::Config& cfg, Acts::Logging::Level level)

@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include <limits>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Utilities/OptionsFwd.hpp"
+
+#include <limits>
 
 namespace FW {
 

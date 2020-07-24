@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <algorithm>
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 

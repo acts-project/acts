@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Material/Material.hpp"
+
 #include <iosfwd>
 #include <vector>
-
-#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 

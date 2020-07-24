@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
-#include <fstream>
-#include <iterator>
-#include <regex>
-
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+
+#include <fstream>
+#include <iterator>
+#include <regex>
 
 namespace Acts {
 namespace Test {

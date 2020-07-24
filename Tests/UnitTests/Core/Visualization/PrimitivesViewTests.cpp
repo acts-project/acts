@@ -10,12 +10,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "PrimitivesViewBase.hpp"
-#include "VisualizationTester.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include "PrimitivesViewBase.hpp"
+#include "VisualizationTester.hpp"
 
 namespace Acts {
 

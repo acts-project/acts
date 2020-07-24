@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <memory>
-
 #include "ACTFW/Utilities/OptionsFwd.hpp"
+
+#include <memory>
 
 namespace FW {
 

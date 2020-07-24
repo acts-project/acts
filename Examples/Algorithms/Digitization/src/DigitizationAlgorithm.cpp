@@ -8,9 +8,6 @@
 
 #include "ACTFW/Digitization/DigitizationAlgorithm.hpp"
 
-#include <iostream>
-#include <stdexcept>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "ACTFW/EventData/SimHit.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
@@ -28,6 +25,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <iostream>
+#include <stdexcept>
 
 FW::DigitizationAlgorithm::DigitizationAlgorithm(
     FW::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)

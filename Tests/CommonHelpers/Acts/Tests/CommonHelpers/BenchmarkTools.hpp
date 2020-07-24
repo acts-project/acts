@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -18,8 +20,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 namespace Test {

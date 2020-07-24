@@ -14,12 +14,12 @@
 
 #pragma once
 
-#include <Acts/Utilities/Logger.hpp>
-#include <memory>
-#include <string>
-
 #include "ACTFW/Framework/IAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
+#include <Acts/Utilities/Logger.hpp>
+
+#include <memory>
+#include <string>
 
 namespace FW {
 

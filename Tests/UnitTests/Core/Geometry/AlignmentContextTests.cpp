@@ -8,9 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <array>
-#include <memory>
-
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -18,6 +15,9 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <array>
+#include <memory>
 
 using namespace Acts::UnitLiterals;
 

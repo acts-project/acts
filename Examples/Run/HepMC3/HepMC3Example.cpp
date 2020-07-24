@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <fstream>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Plugins/HepMC3/HepMC3Event.hpp"
 #include "ACTFW/Plugins/HepMC3/HepMC3Reader.hpp"
+
+#include <fstream>
+
 #include "HepMC3/ReaderAscii.h"
 #include "HepPID/ParticleName.hh"
 

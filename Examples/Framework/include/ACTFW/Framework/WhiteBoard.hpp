@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Acts/Utilities/Logger.hpp>
+
 #include <memory>
 #include <stdexcept>
 #include <string>

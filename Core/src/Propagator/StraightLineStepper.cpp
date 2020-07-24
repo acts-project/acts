@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
+
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 

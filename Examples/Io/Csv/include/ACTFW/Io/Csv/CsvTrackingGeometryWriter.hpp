@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "ACTFW/Framework/IWriter.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include <limits>
 
-#include "ACTFW/Framework/IWriter.hpp"
+#include <limits>
 
 namespace Acts {
 class TrackingVolume;

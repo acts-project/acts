@@ -7,11 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include <iostream>
-#include <limits>
+
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <iostream>
+#include <limits>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

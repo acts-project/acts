@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <variant>
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <type_traits>
+#include <variant>
 
 // clang-format off
 #include <boost/hana/append.hpp>

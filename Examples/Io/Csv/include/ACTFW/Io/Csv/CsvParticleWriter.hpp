@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "ACTFW/EventData/SimParticle.hpp"
+#include "ACTFW/Framework/WriterT.hpp"
+
 #include <limits>
 #include <string>
 #include <vector>
-
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Framework/WriterT.hpp"
 
 namespace FW {
 

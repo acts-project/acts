@@ -18,6 +18,8 @@
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 
+#include <memory>
+
 namespace FWE {
 
 class AdaptiveMultiVertexFinderAlgorithm : public FW::BareAlgorithm {

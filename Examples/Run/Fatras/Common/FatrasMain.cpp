@@ -8,9 +8,6 @@
 
 #include "FatrasMain.hpp"
 
-#include <boost/program_options.hpp>
-#include <memory>
-
 #include "ACTFW/Detector/IBaseDetector.hpp"
 #include "ACTFW/Fatras/FatrasOptions.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
@@ -24,6 +21,11 @@
 #include "ACTFW/Options/Pythia8Options.hpp"
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+
+#include <memory>
+
+#include <boost/program_options.hpp>
+
 #include "FatrasDigitizationBase.hpp"
 #include "FatrasEvgenBase.hpp"
 #include "FatrasSimulationBase.hpp"

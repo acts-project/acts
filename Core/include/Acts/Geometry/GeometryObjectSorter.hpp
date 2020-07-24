@@ -8,12 +8,15 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
+// clang-format off
+// Workaround for building on clang+libstdc++. Must always be first
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+// clang-format on
 
-#include <functional>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <functional>
 
 namespace Acts {
 

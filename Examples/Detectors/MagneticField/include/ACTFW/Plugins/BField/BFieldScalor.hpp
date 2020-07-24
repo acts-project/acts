@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <vector>
-
 #include "ACTFW/Framework/AlgorithmContext.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <vector>
 
 namespace FW {
 
