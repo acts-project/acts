@@ -8,7 +8,7 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Cuda.hpp"
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+#include "Acts/Plugins/Cuda/Seeding/Kernels.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Types.hpp"
 
 #include <algorithm>
@@ -117,6 +117,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   copyToDevice(spBmat_cuda, spBmat_cpu);
   DeviceMatrix<float> spTmat_cuda(nSpT, 6);
   copyToDevice(spTmat_cuda, spTmat_cpu);
+
   //------------------------------------
   //  Algorithm 1. Doublet Search (DS)
   //------------------------------------
@@ -134,22 +135,18 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   DeviceMatrix<int> tmpBcompIndex_cuda(nSpB, nSpM);
   DeviceMatrix<int> tmpTcompIndex_cuda(nSpT, nSpM);
 
-  dim3 DS_BlockSize = m_config.maxBlockSize;
-  dim3 DS_GridSize(nSpM, 1, 1);
-
-  details::searchDoublet(DS_GridSize, DS_BlockSize,
-                nSpM, spMmat_cuda.getPtr(),
-                nSpB, spBmat_cuda.getPtr(),
-                nSpT, spTmat_cuda.getPtr(),
-                m_config.deltaRMin, m_config.deltaRMax,
-                m_config.cotThetaMax, m_config.collisionRegionMin,
-                m_config.collisionRegionMax,
-                nSpMcomp_cuda.getPtr(),
-                nSpBcompPerSpMMax_cuda.getPtr(), nSpTcompPerSpMMax_cuda.getPtr(),
-                nSpBcompPerSpM_cuda.getPtr(), nSpTcompPerSpM_cuda.getPtr(),
-                McompIndex_cuda.getPtr(), BcompIndex_cuda.getPtr(),
-                tmpBcompIndex_cuda.getPtr(), TcompIndex_cuda.getPtr(),
-                tmpTcompIndex_cuda.getPtr());
+  details::searchDoublet(nSpM, m_config.maxBlockSize,
+                         nSpM, spMmat_cuda,
+                         nSpB, spBmat_cuda,
+                         nSpT, spTmat_cuda,
+                         m_config.deltaRMin, m_config.deltaRMax,
+                         m_config.cotThetaMax, m_config.collisionRegionMin,
+                         m_config.collisionRegionMax,
+                         nSpMcomp_cuda, nSpBcompPerSpMMax_cuda,
+                         nSpTcompPerSpMMax_cuda, nSpBcompPerSpM_cuda,
+                         nSpTcompPerSpM_cuda, McompIndex_cuda, BcompIndex_cuda,
+                         tmpBcompIndex_cuda, TcompIndex_cuda,
+                         tmpTcompIndex_cuda);
 
   const int nSpMcomp_cpu = nSpMcomp_cuda;
   const int nSpBcompPerSpMMax_cpu = nSpBcompPerSpMMax_cuda;
@@ -175,17 +172,15 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   DeviceMatrix<float> circTcompMatPerSpM_cuda(nSpTcompPerSpMMax_cpu,
                                               nSpMcomp_cpu * 6);
 
-  dim3 TC_GridSize(nSpMcomp_cpu, 1, 1);
-  dim3 TC_BlockSize = m_config.maxBlockSize;
-
-  details::transformCoordinate(
-      TC_GridSize, TC_BlockSize, nSpM, spMmat_cuda.getPtr(),
-      McompIndex_cuda.getPtr(), nSpB, spBmat_cuda.getPtr(),
-      nSpBcompPerSpMMax_cpu, BcompIndex_cuda.getPtr(), nSpT,
-      spTmat_cuda.getPtr(), nSpTcompPerSpMMax_cpu, TcompIndex_cuda.getPtr(),
-      spMcompMat_cuda.getPtr(), spBcompMatPerSpM_cuda.getPtr(),
-      circBcompMatPerSpM_cuda.getPtr(), spTcompMatPerSpM_cuda.getPtr(),
-      circTcompMatPerSpM_cuda.getPtr());
+  details::transformCoordinate(nSpMcomp_cpu, m_config.maxBlockSize,
+                               nSpM, spMmat_cuda, McompIndex_cuda,
+                               nSpB, spBmat_cuda, nSpBcompPerSpMMax_cpu,
+                               BcompIndex_cuda,
+                               nSpT, spTmat_cuda, nSpTcompPerSpMMax_cpu,
+                               TcompIndex_cuda,
+                               spMcompMat_cuda, spBcompMatPerSpM_cuda,
+                               circBcompMatPerSpM_cuda, spTcompMatPerSpM_cuda,
+                               circTcompMatPerSpM_cuda);
 
   //------------------------------------------------------
   //  Algorithm 3. Triplet Search (TS) & Seed filtering
@@ -213,12 +208,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       const int nSpBcompPerSpM = nSpBcompPerSpM_cpu.get(mIndex);
       const int nSpTcompPerSpM = nSpTcompPerSpM_cpu.get(mIndex);
 
-      dim3 TS_GridSize(nSpBcompPerSpM, 1, 1);
-      dim3 TS_BlockSize =
-          dim3(fmin(m_config.maxBlockSize, nSpTcompPerSpM), 1, 1);
-
       details::searchTriplet(
-          TS_GridSize, TS_BlockSize,
+          nSpBcompPerSpM, std::min(m_config.maxBlockSize, nSpTcompPerSpM),
           nSpTcompPerSpM_cuda.getPtr(mIndex), nSpMcomp_cpu,
           spMcompMat_cuda.getPtr(i_m, 0), nSpBcompPerSpMMax_cpu,
           BcompIndex_cuda.getPtr(0, i_m), circBcompMatPerSpM_cuda.getPtr(0, 6 * i_m),

@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-#include "Acts/Plugins/Cuda/Cuda.hpp"
+// CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Seeding/Kernels.hpp"
+#include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
+#include "../Utilities/StreamHandlers.cuh"
+
+// CUDA include(s).
 #include <cuda.h>
-#include <cuda_runtime.h>
-#include <iostream>
 
 namespace Acts {
 namespace Cuda {
@@ -84,163 +86,160 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
 				Triplet*     TripletsPerSpM
 				);
 
-  void searchDoublet(const dim3 grid, const dim3 block,
-		     const int nSpM, const float* spMmat,
-		     const int nSpB, const float* spBmat,
-		     const int nSpT, const float* spTmat,
-		     const float deltaRMin,
-		     const float deltaRMax,
-		     const float cotThetaMax,
-		     const float collisionRegionMin,
-		     const float collisionRegionMax,
-		     int*  nSpMcomp,
-		     int*  nSpBcompPerSpM_Max,
-		     int*  nSpTcompPerSpM_Max,
-		     int*  nSpBcompPerSpM,
-		     int*  nSpTcompPerSpM,
-		     int*  McompIndex,
-		     int*  BcompIndex,
-		     int*  tmpBcompIndex,
-		     int*  TcompIndex,
-		     int*  tmpTcompIndex){
+void searchDoublet( int grid, int block,
+		              int nSpM,
+						  const DeviceMatrix<float>& spMmat,
+		              int nSpB,
+						  const DeviceMatrix<float>& spBmat,
+		              int nSpT,
+						  const DeviceMatrix<float>& spTmat,
+		              float deltaRMin,
+		              float deltaRMax,
+		              float cotThetaMax,
+		              float collisionRegionMin,
+		              float collisionRegionMax,
+		              ResultScalar<int>& nSpMcomp,
+		              ResultScalar<int>& nSpBcompPerSpM_Max,
+		              ResultScalar<int>& nSpTcompPerSpM_Max,
+		              DeviceVector<int>& nSpBcompPerSpM,
+		              DeviceVector<int>& nSpTcompPerSpM,
+		              DeviceVector<int>& McompIndex,
+		              DeviceMatrix<int>& BcompIndex,
+		              DeviceMatrix<int>& tmpBcompIndex,
+		              DeviceMatrix<int>& TcompIndex,
+		              DeviceMatrix<int>& tmpTcompIndex ) {
 
-    // Don't execute anything on an empty grid.
-    if((grid.x == 0) || (grid.y == 0) || (grid.z == 0)) {
-      return;
-    }
-
-    int sharedMemSize = 2*sizeof(int);
-
-    cuSearchDoublet<<< grid, block, sharedMemSize >>>(
-				  nSpM, spMmat,
-				  nSpB, spBmat,
-				  nSpT, spTmat,
-				  deltaRMin,
-				  deltaRMax,
-				  cotThetaMax,
-				  collisionRegionMin,
-				  collisionRegionMax,
-				  nSpMcomp,
-				  nSpBcompPerSpM_Max,
-				  nSpTcompPerSpM_Max,
-				  nSpBcompPerSpM,
-				  nSpTcompPerSpM,
-				  McompIndex,
-				  BcompIndex,
-				  tmpBcompIndex,
-				  TcompIndex,
-				  tmpTcompIndex);
-    ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
+  // Don't execute anything on an empty grid.
+  if(grid == 0) {
+    return;
   }
 
-  void transformCoordinate( const dim3 grid, const dim3 block,
-			    const int    nSpM,
-			    const float* spMmat,
-			    const int*   McompIndex,
-			    const int    nSpB,
-			    const float* spBmat,
-			    const int    nSpBcompPerSpM_Max,
-			    const int*   BcompIndex,
-			    const int    nSpT,
-			    const float* spTmat,
-			    const int    nSpTcompPerSpM_Max,
-			    const int*   TcompIndex,
-			    float* spMcompMat,
-			    float* spBcompMatPerSpM,
-			    float* circBcompMatPerSpM,
-			    float* spTcompMatPerSpM,
-			    float* circTcompMatPerSpM
-			    ){
+  // Calculate the amount of shared memory needed by the dublet search.
+  int sharedMemSize = 2*sizeof(int);
 
-    // Don't execute anything on an empty grid.
-    if((grid.x == 0) || (grid.y == 0) || (grid.z == 0)) {
-      return;
-    }
+  // Launch the dublet search.
+  cuSearchDoublet<<< grid, block, sharedMemSize >>>(
+    nSpM, spMmat.getPtr(),
+	 nSpB, spBmat.getPtr(),
+	 nSpT, spTmat.getPtr(),
+	 deltaRMin, deltaRMax, cotThetaMax,
+	 collisionRegionMin, collisionRegionMax,
+	 nSpMcomp.getPtr(),
+	 nSpBcompPerSpM_Max.getPtr(),
+	 nSpTcompPerSpM_Max.getPtr(),
+	 nSpBcompPerSpM.getPtr(),
+	 nSpTcompPerSpM.getPtr(),
+	 McompIndex.getPtr(),
+	 BcompIndex.getPtr(),
+	 tmpBcompIndex.getPtr(),
+	 TcompIndex.getPtr(),
+	 tmpTcompIndex.getPtr() );
+  ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
+}
 
-    int sharedMemSize = sizeof(float)*6;
+void transformCoordinate( int grid, int block,
+			                 int nSpM,
+			                 const DeviceMatrix<float>& spMmat,
+			                 const DeviceVector<int>& McompIndex,
+			                 int nSpB,
+			                 const DeviceMatrix<float>& spBmat,
+			                 int nSpBcompPerSpM_Max,
+			                 const DeviceMatrix<int>& BcompIndex,
+			                 int nSpT,
+			                 const DeviceMatrix<float>& spTmat,
+			                 int nSpTcompPerSpM_Max,
+			                 const DeviceMatrix<int>& TcompIndex,
+			                 DeviceMatrix<float>& spMcompMat,
+			                 DeviceMatrix<float>& spBcompMatPerSpM,
+			                 DeviceMatrix<float>& circBcompMatPerSpM,
+			                 DeviceMatrix<float>& spTcompMatPerSpM,
+			                 DeviceMatrix<float>& circTcompMatPerSpM ) {
 
-    cuTransformCoordinate<<< grid, block, sharedMemSize >>>(
-				      nSpM,
-				      spMmat,
-				      McompIndex,
-				      nSpB,
-				      spBmat,
-				      nSpBcompPerSpM_Max,
-				      BcompIndex,
-				      nSpT,
-				      spTmat,
-				      nSpTcompPerSpM_Max,
-				      TcompIndex,
-				      spMcompMat,
-				      spBcompMatPerSpM,
-				      circBcompMatPerSpM,
-				      spTcompMatPerSpM,
-				      circTcompMatPerSpM);
-    ACTS_CUDA_ERROR_CHECK ( cudaGetLastError() );
+  // Don't execute anything on an empty grid.
+  if(grid == 0) {
+    return;
   }
 
-  void searchTriplet(const dim3 grid, const dim3 block,
-		     const int*   nSpTcompPerSpM,
-		     const int    nSpMcomp,
-		     const float* spMcompMat,
-		     const int    nSpBcompPerSpM_Max,
-		     const int*   BcompIndex,
-		     const float* circBcompMatPerSpM,
-		     const int    nSpTcompPerSpM_Max,
-		     const int*   TcompIndex,
-		     const float* spTcompMatPerSpM,
-		     const float* circTcompMatPerSpM,
-		     const float  maxScatteringAngle2,
-		     const float  sigmaScattering,
-		     const float  minHelixDiameter2,
-		     const float  pT2perRadius,
-		     const float  impactMax,
-		     const int    nTrplPerSpMLimit,
-		     const int    nTrplPerSpBLimit,
-		     const float  deltaInvHelixDiameter,
-		     const float  impactWeightFactor,
-		     const float  deltaRMin,
-		     const float  compatSeedWeight,
-		     const size_t compatSeedLimit,
-		     int*         nTrplPerSpM,
-		     Triplet*     TripletsPerSpM,
-		     cudaStream_t stream
-		     ){
+  // Calculate the amount of shared memory needed by the coordinate
+  // transformation.
+  int sharedMemSize = sizeof(float)*6;
 
-    // Don't execute anything on an empty grid.
-    if((grid.x == 0) || (grid.y == 0) || (grid.z == 0)) {
-      return;
-    }
+  // Launch the coordinate transformation.
+  cuTransformCoordinate<<< grid, block, sharedMemSize >>>(
+    nSpM, spMmat.getPtr(), McompIndex.getPtr(),
+	 nSpB, spBmat.getPtr(), nSpBcompPerSpM_Max,
+	 BcompIndex.getPtr(),
+	 nSpT, spTmat.getPtr(), nSpTcompPerSpM_Max,
+	 TcompIndex.getPtr(),
+	 spMcompMat.getPtr(), spBcompMatPerSpM.getPtr(),
+	 circBcompMatPerSpM.getPtr(), spTcompMatPerSpM.getPtr(),
+	 circTcompMatPerSpM.getPtr());
+  ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
+}
 
-    int sharedMemSize = sizeof(Triplet)*nTrplPerSpBLimit;
-    sharedMemSize += sizeof(float)*compatSeedLimit;
-    sharedMemSize += sizeof(int);
+void searchTriplet( int grid, int block,
+		              const int*   nSpTcompPerSpM,
+		              int          nSpMcomp,
+		              const float* spMcompMat,
+		              int          nSpBcompPerSpM_Max,
+		              const int*   BcompIndex,
+		              const float* circBcompMatPerSpM,
+		              int          nSpTcompPerSpM_Max,
+		              const int*   TcompIndex,
+		              const float* spTcompMatPerSpM,
+		              const float* circTcompMatPerSpM,
+		              float        maxScatteringAngle2,
+		              float        sigmaScattering,
+		              float        minHelixDiameter2,
+		              float        pT2perRadius,
+		              float        impactMax,
+		              int          nTrplPerSpMLimit,
+		              int          nTrplPerSpBLimit,
+		              float        deltaInvHelixDiameter,
+		              float        impactWeightFactor,
+		              float        deltaRMin,
+		              float        compatSeedWeight,
+		              int          compatSeedLimit,
+		              int*         nTrplPerSpM,
+		              Triplet*     TripletsPerSpM,
+		              const StreamWrapper& streamWrapper ) {
 
-    cuSearchTriplet<<< grid, block,
-      sharedMemSize, stream >>>(nSpTcompPerSpM,
-				 nSpMcomp,
-				 spMcompMat,
-				 nSpBcompPerSpM_Max,
-				 BcompIndex,
-				 circBcompMatPerSpM,
-				 nSpTcompPerSpM_Max,
-				 TcompIndex,
-				 spTcompMatPerSpM,
-				 circTcompMatPerSpM,
-				 maxScatteringAngle2,sigmaScattering,
-				 minHelixDiameter2, pT2perRadius,
-				 impactMax, nTrplPerSpMLimit,
-				 nTrplPerSpBLimit,
-				 deltaInvHelixDiameter,
-				 impactWeightFactor,
-				 deltaRMin,
-				 compatSeedWeight,
-				 compatSeedLimit,
-				 nTrplPerSpM,
-				 TripletsPerSpM
-				 );
-    ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
+  // Don't execute anything on an empty grid.
+  if(grid == 0) {
+    return;
   }
+
+  // Calculate the amount of shared memory needed by the triplet search.
+  int sharedMemSize = sizeof(Triplet)*nTrplPerSpBLimit;
+  sharedMemSize += sizeof(float)*compatSeedLimit;
+  sharedMemSize += sizeof(int);
+
+  // Launch the triplet search.
+  cuSearchTriplet<<< grid, block, sharedMemSize,
+                     getStreamFrom(streamWrapper) >>>(
+    nSpTcompPerSpM,
+	 nSpMcomp,
+	 spMcompMat,
+	 nSpBcompPerSpM_Max,
+	 BcompIndex,
+	 circBcompMatPerSpM,
+	 nSpTcompPerSpM_Max,
+	 TcompIndex,
+	 spTcompMatPerSpM,
+	 circTcompMatPerSpM,
+	 maxScatteringAngle2,sigmaScattering,
+	 minHelixDiameter2, pT2perRadius,
+	 impactMax, nTrplPerSpMLimit,
+	 nTrplPerSpBLimit,
+	 deltaInvHelixDiameter,
+	 impactWeightFactor,
+	 deltaRMin,
+	 compatSeedWeight,
+	 compatSeedLimit,
+	 nTrplPerSpM,
+	 TripletsPerSpM );
+  ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
+}
 
 __global__ void cuSearchDoublet(const int nSpM, const float* spMmat,
 				const int nSpB, const float* spBmat,

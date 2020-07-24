@@ -7,6 +7,7 @@ cmake_minimum_required( VERSION 3.10 )
 
 add_library(
   ActsCudaPlugin SHARED
+  include/Acts/Plugins/Cuda/Seeding/Kernels.hpp
   include/Acts/Plugins/Cuda/Seeding/Types.hpp
   include/Acts/Plugins/Cuda/Utilities/Arrays.hpp
   include/Acts/Plugins/Cuda/Utilities/CopyFunctions.hpp
