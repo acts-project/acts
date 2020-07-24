@@ -39,6 +39,7 @@ add_integrationtest(PropagationAtlasConstant PropagationAtlasConstant.cpp)
 # add_integrationtest(PropagationDenseConstant PropagationDenseConstant.cpp)
 add_integrationtest(PropagationEigenConstant PropagationEigenConstant.cpp)
 add_integrationtest(PropagationStraightLine PropagationStraightLine.cpp)
+add_integrationtest(PropagationCompareAtlasEigenConstant PropagationCompareAtlasEigenConstant.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)

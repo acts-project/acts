@@ -13,11 +13,12 @@
 #include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include <limits>
+#include <utility>
 
 /// Construct (initial) curvilinear parameters.
 inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
@@ -25,6 +26,7 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
                                                              double absMom,
                                                              double charge) {
   using namespace Acts;
+  using namespace Acts::UnitLiterals;
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
@@ -32,15 +34,11 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
   CurvilinearParameters params(std::nullopt, pos, mom, charge, time);
 
   // ensure initial parameters are valid
-  // the derived parameters are just converted w/o propagation so we should
-  // expect convergence within the floating point precision
-  constexpr auto eps =
-      16 * std::numeric_limits<BoundParametersScalar>::epsilon();
-  CHECK_CLOSE_ABS(params.position(), pos, eps);
-  CHECK_CLOSE_ABS(params.time(), time, eps);
-  CHECK_CLOSE_ABS(params.momentum(), mom, eps);
+  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
+  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
+  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
   // charge should be identical not just similar
-  BOOST_TEST(params.charge() == charge);
+  BOOST_CHECK_EQUAL(params.charge(), charge);
 
   return params;
 }
@@ -74,7 +72,7 @@ inline void checkParametersConsistency(
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
   CHECK_CLOSE_ABS(cmp.momentum(), ref.momentum(), epsMom);
   // charge should be identical not just similar
-  BOOST_TEST(cmp.charge() == ref.charge());
+  BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
 
 /// Propagate the initial parameters the given path length along its
@@ -110,11 +108,11 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
 
   // propagate parameters forward
   auto fwdResult = propagator.propagate(initial, fwdOptions);
-  BOOST_TEST(fwdResult.ok());
+  BOOST_CHECK(fwdResult.ok());
   // propagate propagated parameters back
   auto bwdResult =
       propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
-  BOOST_TEST(bwdResult.ok());
+  BOOST_CHECK(bwdResult.ok());
 
   // check that initial and propagated parameters match
   checkParametersConsistency(initial, *(bwdResult.value().endParameters),
@@ -132,4 +130,48 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
     std::cout << bwdOutput.debugString << std::endl;
     std::cout << bwdParams << std::endl;
   }
+}
+
+/// Build a cylinder along z with the given radius.
+std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(double radius) {
+  using namespace Acts;
+
+  auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
+  return Surface::makeShared<CylinderSurface>(
+      std::move(transform), radius, std::numeric_limits<double>::max());
+}
+
+/// Propagate the initial parameters to the target surface.
+template <typename propagator_t>
+inline std::pair<Acts::BoundParameters, double> transportToSurface(
+    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::CurvilinearParameters& initial,
+    const Acts::Surface& targetSurface, double pathLimit, bool debug = false) {
+  using namespace Acts::UnitLiterals;
+
+  using DebugOutput = Acts::DebugOutputActor;
+  using Actions = Acts::ActionList<DebugOutput>;
+  using Aborts = Acts::AbortList<>;
+
+  // setup propagation options
+  Acts::PropagatorOptions<Actions, Aborts> options(geoCtx, magCtx);
+  options.direction = Acts::forward;
+  options.pathLimit = pathLimit;
+  options.maxStepSize = 1_cm;
+  options.debug = debug;
+
+  auto result = propagator.propagate(initial, targetSurface, options);
+  BOOST_CHECK(result.ok());
+  BOOST_CHECK(result.value().endParameters);
+
+  if (debug) {
+    auto output = result.value().template get<DebugOutput::result_type>();
+    auto params = *(result.value().endParameters);
+    std::cout << ">>>>> Output for to-surface propagation " << std::endl;
+    std::cout << output.debugString << std::endl;
+    std::cout << params << std::endl;
+  }
+
+  return {*result.value().endParameters, result.value().pathLength};
 }
