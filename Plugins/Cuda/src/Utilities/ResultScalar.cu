@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
 // CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Utilities/ResultScalar.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
 
 // CUDA include(s).
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 namespace Acts {
 namespace Cuda {
@@ -51,3 +50,25 @@ ResultScalar<T>::operator typename ResultScalar<T>::Variable_t() const {
 
 } // namespace Cuda
 } // namespace Acts
+
+/// Helper macro for instantiating the template code for a given type
+#define INST_RSCALAR_FOR_TYPE( TYPE )                                          \
+  template class Acts::Cuda::ResultScalar< TYPE >
+
+// Instantiate the templated functions for all primitive types.
+INST_RSCALAR_FOR_TYPE( void* );
+INST_RSCALAR_FOR_TYPE( char );
+INST_RSCALAR_FOR_TYPE( unsigned char );
+INST_RSCALAR_FOR_TYPE( short );
+INST_RSCALAR_FOR_TYPE( unsigned short );
+INST_RSCALAR_FOR_TYPE( int );
+INST_RSCALAR_FOR_TYPE( unsigned int );
+INST_RSCALAR_FOR_TYPE( long );
+INST_RSCALAR_FOR_TYPE( unsigned long );
+INST_RSCALAR_FOR_TYPE( long long );
+INST_RSCALAR_FOR_TYPE( unsigned long long );
+INST_RSCALAR_FOR_TYPE( float );
+INST_RSCALAR_FOR_TYPE( double );
+
+// Clean up.
+#undef INST_RSCALAR_FOR_TYPE

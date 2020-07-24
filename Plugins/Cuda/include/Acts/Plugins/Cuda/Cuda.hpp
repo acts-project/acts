@@ -12,6 +12,6 @@
 #include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
 #include "Acts/Plugins/Cuda/Utilities/DeviceMatrix.hpp"
 #include "Acts/Plugins/Cuda/Utilities/DeviceVector.hpp"
-#include "Acts/Plugins/Cuda/Utilities/ResultScalar.cuh"
+#include "Acts/Plugins/Cuda/Utilities/ResultScalar.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
 #include "Acts/Plugins/Cuda/Utilities/CopyFunctions.cuh"

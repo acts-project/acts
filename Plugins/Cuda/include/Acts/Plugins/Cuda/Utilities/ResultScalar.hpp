@@ -45,6 +45,3 @@ private:
 
 } // namespace Cuda
 } // namespace Acts
-
-// Include the template implementation.
-#include "ResultScalar.ipp"
