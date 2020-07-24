@@ -12,6 +12,10 @@
 #include <cuda_runtime.h>
 #include <iostream>
 
+namespace Acts {
+namespace Cuda {
+namespace details {
+
 __global__ void cuSearchDoublet(const int nSpM, const float* spMmat,
 				const int nSpB, const float* spBmat,
 				const int nSpT, const float* spTmat,
@@ -79,8 +83,6 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
 				int*         nTrplPerSpM,
 				Triplet*     TripletsPerSpM
 				);
-
-namespace Acts{
 
   void searchDoublet(const dim3 grid, const dim3 block,
 		     const int nSpM, const float* spMmat,
@@ -239,8 +241,6 @@ namespace Acts{
 				 );
     ACTS_CUDA_ERROR_CHECK( cudaGetLastError() );
   }
-
-}
 
 __global__ void cuSearchDoublet(const int nSpM, const float* spMmat,
 				const int nSpB, const float* spBmat,
@@ -782,3 +782,7 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
     *nTrplPerSpM = nTrplPerSpMLimit;
   }
 }
+
+} // namespace details
+} // namespace Cuda
+} // namespace Acts

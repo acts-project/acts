@@ -9,7 +9,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+#include "Acts/Plugins/Cuda/Seeding/Types.hpp"
 #include "StreamHandlers.cuh"
 
 // CUDA include(s).
@@ -153,7 +153,7 @@ INST_HVECTOR_FOR_TYPE( float );
 INST_HVECTOR_FOR_TYPE( double );
 
 // Instantiate them for any necessary custom type(s) as well.
-INST_HVECTOR_FOR_TYPE( Triplet );
+INST_HVECTOR_FOR_TYPE( Acts::Cuda::details::Triplet );
 
 // Clean up.
 #undef INST_HVECTOR_FOR_TYPE

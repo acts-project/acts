@@ -9,6 +9,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+#include "Acts/Plugins/Cuda/Seeding/Types.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -136,7 +137,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   dim3 DS_BlockSize = m_config.maxBlockSize;
   dim3 DS_GridSize(nSpM, 1, 1);
 
-  searchDoublet(DS_GridSize, DS_BlockSize,
+  details::searchDoublet(DS_GridSize, DS_BlockSize,
                 nSpM, spMmat_cuda.getPtr(),
                 nSpB, spBmat_cuda.getPtr(),
                 nSpT, spTmat_cuda.getPtr(),
@@ -177,7 +178,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   dim3 TC_GridSize(nSpMcomp_cpu, 1, 1);
   dim3 TC_BlockSize = m_config.maxBlockSize;
 
-  transformCoordinate(
+  details::transformCoordinate(
       TC_GridSize, TC_BlockSize, nSpM, spMmat_cuda.getPtr(),
       McompIndex_cuda.getPtr(), nSpB, spBmat_cuda.getPtr(),
       nSpBcompPerSpMMax_cpu, BcompIndex_cuda.getPtr(), nSpT,
@@ -195,11 +196,11 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   DeviceVector<int> nTrplPerSpM_cuda(nSpMcomp_cpu);
   nTrplPerSpM_cuda.zeros();
-  DeviceMatrix<Triplet> TripletsPerSpM_cuda(nTrplPerSpMLimit,
+  DeviceMatrix<details::Triplet> TripletsPerSpM_cuda(nTrplPerSpMLimit,
                                             nSpMcomp_cpu);
   HostVector<int> nTrplPerSpM_cpu(nSpMcomp_cpu);
   nTrplPerSpM_cpu.zeros();
-  HostMatrix<Triplet> TripletsPerSpM_cpu(nTrplPerSpMLimit, nSpMcomp_cpu);
+  HostMatrix<details::Triplet> TripletsPerSpM_cpu(nTrplPerSpMLimit, nSpMcomp_cpu);
   cudaStream_t cuStream;
   cudaStreamCreate(&cuStream);
 
@@ -216,7 +217,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       dim3 TS_BlockSize =
           dim3(fmin(m_config.maxBlockSize, nSpTcompPerSpM), 1, 1);
 
-      searchTriplet(
+      details::searchTriplet(
           TS_GridSize, TS_BlockSize,
           nSpTcompPerSpM_cuda.getPtr(mIndex), nSpMcomp_cpu,
           spMcompMat_cuda.getPtr(i_m, 0), nSpBcompPerSpMMax_cpu,

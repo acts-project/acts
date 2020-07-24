@@ -9,7 +9,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
-#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+#include "Acts/Plugins/Cuda/Seeding/Types.hpp"
 
 // CUDA include(s).
 #include <cuda_runtime.h>
@@ -137,7 +137,7 @@ INST_ARRAY_FOR_TYPE( float );
 INST_ARRAY_FOR_TYPE( double );
 
 // Instantiate them for any necessary custom type(s) as well.
-INST_ARRAY_FOR_TYPE( Triplet );
+INST_ARRAY_FOR_TYPE( Acts::Cuda::details::Triplet );
 
 // Clean up.
 #undef INST_ARRAY_FOR_TYPE

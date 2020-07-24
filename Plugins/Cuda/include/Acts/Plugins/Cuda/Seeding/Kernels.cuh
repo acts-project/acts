@@ -8,20 +8,16 @@
 
 #pragma once
 
+// CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Seeding/Types.hpp"
+
 #include <cuda_runtime.h>
 #include <iostream>
 
-typedef struct{
-  int bIndex;
-  int tIndex;
-  float topRadius;  
-  float impactParameter;  
-  float invHelixDiameter;
-  float weight;
-} Triplet;
+namespace Acts {
+namespace Cuda {
+namespace details {
 
-namespace Acts{
-  
 void searchDoublet( const dim3 grid, const dim3 block,
 		    const int nSpM, const float* spMmat,
 		    const int nSpB, const float* spBmat,
@@ -42,7 +38,7 @@ void searchDoublet( const dim3 grid, const dim3 block,
 		    int*  TcompIndex,
 		    int*  tmpTcompIndex
 		    );
-  
+
 void transformCoordinate( const dim3 grid, const dim3 block,
 			  const int    nSpM,
 			  const float* spMmat,
@@ -55,12 +51,12 @@ void transformCoordinate( const dim3 grid, const dim3 block,
 			  const float* spTmat,
 			  const int    nSpTcompPerSpM_Max,
 			  const int*   TcompIndex,
-			  float* spMcompMat,			    
+			  float* spMcompMat,
 			  float* spBcompMatPerSpM,
 			  float* circBcompMatPerSpM,
 			  float* spTcompMatPerSpM,
 			  float* circTcompMatPerSpM);
-  
+
 void searchTriplet( const dim3 grid, const dim3 block,
 		    const int*   nSpTcompPerSpM,
 		    const int    nSpMcomp,
@@ -88,4 +84,7 @@ void searchTriplet( const dim3 grid, const dim3 block,
 		    Triplet*     TripletsPerSpM,
 		    cudaStream_t stream
 		    );
-}
+
+} // namespace details
+} // namespace Cuda
+} // namespace Acts
