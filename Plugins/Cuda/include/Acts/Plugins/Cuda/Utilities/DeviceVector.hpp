@@ -10,59 +10,54 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
-
-// CUDA include(s).
-#include <cuda_runtime.h>
+#include "Acts/Plugins/Cuda/Utilities/StreamWrapper.hpp"
 
 namespace Acts {
 namespace Cuda {
 
-/// Vector holding data in host-pinned memory
+/// Vector holding data in device memory
 template <typename T>
-class HostVector {
+class DeviceVector {
 
 public:
   /// The variable type being used
   typedef T Variable_t;
 
-  /// Create a vector in host memory
-  HostVector(size_t size);
+  /// Create a vector in the/a device's memory
+  DeviceVector(std::size_t size);
 
   /// Get the size of the vector
-  size_t size() const { return m_size; }
+  std::size_t size() const { return m_size; }
 
   /// Get a specific element of the vector (non-const)
-  Variable_t& get(size_t offset = 0);
+  Variable_t& get(std::size_t offset = 0);
   /// Get a specific element of the vector (const)
-  const Variable_t& get(size_t offset = 0) const;
+  const Variable_t& get(std::size_t offset = 0) const;
 
   /// Get a "pointer into the vector" (non-const)
-  Variable_t* getPtr(size_t offset = 0);
+  Variable_t* getPtr(std::size_t offset = 0);
   /// Get a "pointer into the vector" (const)
-  const Variable_t* getPtr(size_t offset = 0) const;
+  const Variable_t* getPtr(std::size_t offset = 0) const;
 
   /// Set a specific element of the vector
-  void set(size_t offset, Variable_t val);
+  void set(std::size_t offset, Variable_t val);
 
-  /// Copy memory from a/the device.
-  void copyFrom(const Variable_t* devPtr, size_t len, size_t offset);
-  /// Copy memory from a/the device asynchronously.
-  void copyFrom(const Variable_t* devPtr, size_t len, size_t offset,
-                cudaStream_t stream);
+  /// Copy memory from the host.
+  void copyFrom(const Variable_t* hostPtr, std::size_t len, std::size_t offset);
+  /// Copy memory from the host asynchronously.
+  void copyFrom(const Variable_t* hostPtr, std::size_t len, std::size_t offset,
+                const StreamWrapper& streamWrapper);
 
   /// Reset the vector to all zeros
   void zeros();
 
 private:
   /// The size of the vector
-  size_t m_size;
+  std::size_t m_size;
   /// Smart pointer managing the vector's memory
-  host_array< Variable_t > m_array;
+  device_array< Variable_t > m_array;
 
-}; // class HostVector
+}; // class DeviceVector
 
 } // namespace Cuda
 } // namespace Acts
-
-// Include the template implementation.
-#include "HostVector.ipp"

@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Plugins/Cuda/Utilities/HostMatrix.cuh"
-#include "Acts/Plugins/Cuda/Utilities/HostVector.cuh"
-#include "Acts/Plugins/Cuda/Utilities/DeviceMatrix.cuh"
-#include "Acts/Plugins/Cuda/Utilities/DeviceVector.cuh"
+#include "Acts/Plugins/Cuda/Utilities/HostMatrix.hpp"
+#include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
+#include "Acts/Plugins/Cuda/Utilities/DeviceMatrix.hpp"
+#include "Acts/Plugins/Cuda/Utilities/DeviceVector.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ResultScalar.cuh"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
 #include "Acts/Plugins/Cuda/Utilities/CopyFunctions.cuh"

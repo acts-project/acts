@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
 // CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Utilities/DeviceVector.hpp"
 #include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
+#include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
+#include "StreamHandlers.cuh"
 
 // CUDA include(s).
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 // System include(s).
 #include <cassert>
@@ -22,14 +23,14 @@ namespace Acts {
 namespace Cuda {
 
 template <typename T>
-DeviceVector<T>::DeviceVector(size_t size)
+DeviceVector<T>::DeviceVector(std::size_t size)
 : m_size(size), m_array(make_device_array<T>(size)) {
 
 }
 
 template <typename T>
 typename DeviceVector<T>::Variable_t&
-DeviceVector<T>::get(size_t offset) {
+DeviceVector<T>::get(std::size_t offset) {
 
   // Some security check(s).
   assert(offset < m_size);
@@ -40,7 +41,7 @@ DeviceVector<T>::get(size_t offset) {
 
 template <typename T>
 const typename DeviceVector<T>::Variable_t&
-DeviceVector<T>::get(size_t offset) const {
+DeviceVector<T>::get(std::size_t offset) const {
 
   // Some security check(s).
   assert(offset < m_size);
@@ -51,7 +52,7 @@ DeviceVector<T>::get(size_t offset) const {
 
 template <typename T>
 typename DeviceVector<T>::Variable_t*
-DeviceVector<T>::getPtr(size_t offset) {
+DeviceVector<T>::getPtr(std::size_t offset) {
 
   // If the vector is empty, return a null pointer.
   if(m_size == 0) {
@@ -67,7 +68,7 @@ DeviceVector<T>::getPtr(size_t offset) {
 
 template <typename T>
 const typename DeviceVector<T>::Variable_t*
-DeviceVector<T>::getPtr(size_t offset) const {
+DeviceVector<T>::getPtr(std::size_t offset) const {
 
   // If the vector is empty, return a null pointer.
   if(m_size == 0) {
@@ -82,7 +83,7 @@ DeviceVector<T>::getPtr(size_t offset) const {
 }
 
 template <typename T>
-void DeviceVector<T>::set(size_t offset, Variable_t val) {
+void DeviceVector<T>::set(std::size_t offset, Variable_t val) {
 
   // Some security check(s).
   assert(offset < m_size);
@@ -93,8 +94,8 @@ void DeviceVector<T>::set(size_t offset, Variable_t val) {
 }
 
 template <typename T>
-void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, size_t len,
-                               size_t offset) {
+void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+                               std::size_t offset) {
 
   // Some security check(s).
   assert(offset + len <= m_size);
@@ -107,8 +108,9 @@ void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, size_t len,
 }
 
 template <typename T>
-void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, size_t len,
-                               size_t offset, cudaStream_t stream) {
+void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+                               std::size_t offset,
+                               const StreamWrapper& streamWrapper) {
 
   // Some security check(s).
   assert(offset + len <= m_size);
@@ -116,7 +118,8 @@ void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, size_t len,
   // Do the copy.
   ACTS_CUDA_ERROR_CHECK(cudaMemcpyAsync(m_array.get() + offset, hostPtr,
                                         len * sizeof(Variable_t),
-                                        cudaMemcpyHostToDevice, stream));
+                                        cudaMemcpyHostToDevice,
+                                        getStreamFrom(streamWrapper)));
   return;
 }
 
@@ -130,3 +133,28 @@ void DeviceVector<T>::zeros() {
 
 } // namespace Cuda
 } // namespace Acts
+
+/// Helper macro for instantiating the template code for a given type
+#define INST_DVECTOR_FOR_TYPE( TYPE )                                          \
+  template class Acts::Cuda::DeviceVector< TYPE >
+
+// Instantiate the templated functions for all primitive types.
+INST_DVECTOR_FOR_TYPE( void* );
+INST_DVECTOR_FOR_TYPE( char );
+INST_DVECTOR_FOR_TYPE( unsigned char );
+INST_DVECTOR_FOR_TYPE( short );
+INST_DVECTOR_FOR_TYPE( unsigned short );
+INST_DVECTOR_FOR_TYPE( int );
+INST_DVECTOR_FOR_TYPE( unsigned int );
+INST_DVECTOR_FOR_TYPE( long );
+INST_DVECTOR_FOR_TYPE( unsigned long );
+INST_DVECTOR_FOR_TYPE( long long );
+INST_DVECTOR_FOR_TYPE( unsigned long long );
+INST_DVECTOR_FOR_TYPE( float );
+INST_DVECTOR_FOR_TYPE( double );
+
+// Instantiate them for any necessary custom type(s) as well.
+INST_DVECTOR_FOR_TYPE( Triplet );
+
+// Clean up.
+#undef INST_DVECTOR_FOR_TYPE

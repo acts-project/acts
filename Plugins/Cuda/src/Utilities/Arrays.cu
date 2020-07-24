@@ -98,7 +98,7 @@ make_host_array( std::size_t size ) {
 } // namespace Cuda
 } // namespace Acts
 
-/// Helper macro for instantiating the template code for a given primitive type
+/// Helper macro for instantiating the template code for a given type
 ///
 /// Note that nvcc (at least as of CUDA version 11.0.2) does not allow us to
 /// instantiate our custom unique pointer types through their typedef'd names.

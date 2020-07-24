@@ -10,9 +10,7 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
-
-// CUDA include(s).
-#include <cuda_runtime.h>
+#include "Acts/Plugins/Cuda/Utilities/StreamWrapper.hpp"
 
 namespace Acts {
 namespace Cuda {
@@ -25,42 +23,42 @@ public:
   typedef T Variable_t;
 
   /// Create a matrix in device memory
-  DeviceMatrix(size_t nRows, size_t nCols);
+  DeviceMatrix(std::size_t nRows, std::size_t nCols);
 
   /// Get the number of rows in the matrix
-  size_t nRows() const { return m_nRows; }
+  std::size_t nRows() const { return m_nRows; }
   /// Get the number of columns in the matrix
-  size_t nCols() const { return m_nCols; }
+  std::size_t nCols() const { return m_nCols; }
   /// Get the total size of the matrix
-  size_t size() const { return m_nRows * m_nCols; }
+  std::size_t size() const { return m_nRows * m_nCols; }
 
   /// Get a specific element of the matrix. (non-const)
-  Variable_t& get(size_t row = 0, size_t col = 0);
+  Variable_t& get(std::size_t row = 0, std::size_t col = 0);
   /// Get a specific element of the matrix. (const)
-  const Variable_t& get(size_t row = 0, size_t col = 0) const;
+  const Variable_t& get(std::size_t row = 0, std::size_t col = 0) const;
 
   /// Get a "pointer into the matrix" (non-const)
-  Variable_t* getPtr(size_t row = 0, size_t col = 0);
+  Variable_t* getPtr(std::size_t row = 0, std::size_t col = 0);
   /// Get a "pointer into the matrix" (const)
-  const Variable_t* getPtr(size_t row = 0, size_t col = 0) const;
+  const Variable_t* getPtr(std::size_t row = 0, std::size_t col = 0) const;
 
   /// Set a specific element of the matrix
-  void set(size_t row, size_t col, Variable_t val);
+  void set(std::size_t row, std::size_t col, Variable_t val);
 
   /// Copy memory from the host.
-  void copyFrom(const Variable_t* hostPtr, size_t len, size_t offset);
+  void copyFrom(const Variable_t* hostPtr, std::size_t len, std::size_t offset);
   /// Copy memory from the host asynchronously.
-  void copyFrom(const Variable_t* hostPtr, size_t len, size_t offset,
-                cudaStream_t stream);
+  void copyFrom(const Variable_t* hostPtr, std::size_t len, std::size_t offset,
+                const StreamWrapper& streamWrapper);
 
   /// Reset the matrix to all zeros
   void zeros();
 
 private:
   /// Rows in the matrix
-  size_t m_nRows;
+  std::size_t m_nRows;
   /// Culumns in the matrix
-  size_t m_nCols;
+  std::size_t m_nCols;
   /// Smart pointer managing the matrix's memory
   device_array<Variable_t> m_array;
 
@@ -68,6 +66,3 @@ private:
 
 } // namespace Cuda
 } // namespace Acts
-
-// Include the template implementation.
-#include "DeviceMatrix.ipp"
