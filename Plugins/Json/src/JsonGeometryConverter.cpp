@@ -883,8 +883,9 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
       min = bin[3][0];
       max = bin[3][1];
     }
+    return Acts::BinUtility(bins, min, max, bopt, bval);
   }
-  return Acts::BinUtility(bins, min, max, bopt, bval);
+  return Acts::BinUtility();
 }
 
 Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
