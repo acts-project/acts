@@ -9,7 +9,7 @@
 #pragma once
 
 // CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Utilities/Arrays.cuh"
+#include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
 
 namespace Acts {
 namespace Cuda {

@@ -74,6 +74,3 @@ host_array< T > make_host_array( std::size_t size );
 
 } // namespace Cuda
 } // namespace Acts
-
-// Include the template implementation.
-#include "Arrays.ipp"

@@ -9,14 +9,14 @@
 #pragma once
 
 // CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Utilities/Arrays.cuh"
+#include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
 
 // CUDA include(s).
-#include <cuda.h>
+#include <cuda_runtime.h>
 
 namespace Acts {
 namespace Cuda {
-  
+
 template <typename T>
 class DeviceMatrix {
 
@@ -55,7 +55,7 @@ public:
 
   /// Reset the matrix to all zeros
   void zeros();
-  
+
 private:
   /// Rows in the matrix
   size_t m_nRows;
