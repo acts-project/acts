@@ -18,8 +18,7 @@ namespace Cuda {
 /// Vector holding data in device memory
 template <typename T>
 class DeviceVector {
-
-public:
+ public:
   /// The variable type being used
   typedef T Variable_t;
 
@@ -51,13 +50,13 @@ public:
   /// Reset the vector to all zeros
   void zeros();
 
-private:
+ private:
   /// The size of the vector
   std::size_t m_size;
   /// Smart pointer managing the vector's memory
-  device_array< Variable_t > m_array;
+  device_array<Variable_t> m_array;
 
-}; // class DeviceVector
+};  // class DeviceVector
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

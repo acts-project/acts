@@ -18,40 +18,40 @@
 namespace Acts {
 namespace Cuda {
 
-  /// Copy the contents of a matrix from the host to the/a device
-  template <typename T>
-  void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host);
-  /// Copy the contents of a matrix from the host to the/a device asynchronously
-  template <typename T>
-  void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host,
-                    const StreamWrapper& streamWrapper);
-
-  /// Copy the contents of a matrix from the/a device to the host
-  template <typename T>
-  void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device);
-  /// Copy the contents of a matrix from the/a device to the host asynchronously
-  template <typename T>
-  void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device,
+/// Copy the contents of a matrix from the host to the/a device
+template <typename T>
+void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host);
+/// Copy the contents of a matrix from the host to the/a device asynchronously
+template <typename T>
+void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host,
                   const StreamWrapper& streamWrapper);
 
-  /// Copy the contents of a vector from the host to the/a device
-  template <typename T>
-  void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host);
-  /// Copy the contents of a vector from the host to the/a device asynchronously
-  template <typename T>
-  void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host,
-                    const StreamWrapper& streamWrapper);
+/// Copy the contents of a matrix from the/a device to the host
+template <typename T>
+void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device);
+/// Copy the contents of a matrix from the/a device to the host asynchronously
+template <typename T>
+void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device,
+                const StreamWrapper& streamWrapper);
 
-  /// Copy the contents of a vector from the/a device to the host
-  template <typename T>
-  void copyToHost(HostVector<T>& host, const DeviceVector<T>& device);
-  /// Copy the contents of a vector from the/a device to the host asynchronously
-  template <typename T>
-  void copyToHost(HostVector<T>& host, const DeviceVector<T>& device,
+/// Copy the contents of a vector from the host to the/a device
+template <typename T>
+void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host);
+/// Copy the contents of a vector from the host to the/a device asynchronously
+template <typename T>
+void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host,
                   const StreamWrapper& streamWrapper);
 
-} // namespace Cuda
-} // namespace Acts
+/// Copy the contents of a vector from the/a device to the host
+template <typename T>
+void copyToHost(HostVector<T>& host, const DeviceVector<T>& device);
+/// Copy the contents of a vector from the/a device to the host asynchronously
+template <typename T>
+void copyToHost(HostVector<T>& host, const DeviceVector<T>& device,
+                const StreamWrapper& streamWrapper);
+
+}  // namespace Cuda
+}  // namespace Acts
 
 // Include the template implementation.
 #include "CopyFunctions.ipp"

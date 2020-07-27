@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // Local include(s).
+#include "SeedfinderCudaTest.hpp"
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
-#include "SeedfinderCudaTest.hpp"
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"

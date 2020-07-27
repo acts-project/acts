@@ -19,44 +19,43 @@ namespace Cuda {
 /// interfaces.
 ///
 class StreamWrapper {
-
 /// Declare the @c Acts::Cuda::getStreamFrom function a frient of the class
 ///
 /// Note that it's not practical to put that function into the
 /// @c Acts::Cuda::details namespace, because then we would be forced to
 /// forward declare it in this header.
 #ifdef __CUDACC__
-  friend cudaStream_t getStreamFrom( const StreamWrapper& );
-#endif // __CUDACC__
+  friend cudaStream_t getStreamFrom(const StreamWrapper&);
+#endif  // __CUDACC__
 
-public:
+ public:
   /// Constructor with the stream to be wrapped
-  StreamWrapper( void* stream, bool ownsStream = true );
+  StreamWrapper(void* stream, bool ownsStream = true);
   /// Move constructor
-  StreamWrapper( StreamWrapper&& parent );
+  StreamWrapper(StreamWrapper&& parent);
   /// Disabled copy constructor
-  StreamWrapper( const StreamWrapper& ) = delete;
+  StreamWrapper(const StreamWrapper&) = delete;
   /// Destructor
   ~StreamWrapper();
 
   /// Move assignment operator
-  StreamWrapper& operator=( StreamWrapper&& rhs );
+  StreamWrapper& operator=(StreamWrapper&& rhs);
   /// Disabled copy assignment operator
-  StreamWrapper& operator=( const StreamWrapper& ) = delete;
+  StreamWrapper& operator=(const StreamWrapper&) = delete;
 
   /// Wait for all scheduled operations to finish in the stream
   void synchronize() const;
 
-private:
+ private:
   /// Type erased pointer, managed by this wrapper class
   void* m_stream;
   /// Flag showing whether the object owns the stream that it wraps
   bool m_ownsStream;
 
-}; // class StreamWrapper
+};  // class StreamWrapper
 
 /// Create a default CUDA stream
 StreamWrapper makeDefaultStream();
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

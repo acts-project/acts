@@ -20,8 +20,8 @@ struct Triplet {
   float impactParameter;
   float invHelixDiameter;
   float weight;
-}; // struct Triplet
+};  // struct Triplet
 
-} // namespace details
-} // namespace Cuda
-} // namespace Acts
+}  // namespace details
+}  // namespace Cuda
+}  // namespace Acts

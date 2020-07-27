@@ -21,8 +21,7 @@ namespace Cuda {
 ///
 template <typename T>
 class ResultScalar {
-
-public:
+ public:
   /// The variable type being used
   typedef T Variable_t;
 
@@ -37,11 +36,11 @@ public:
   /// Convenience operator for using the result value
   operator Variable_t() const;
 
-private:
+ private:
   /// Variable managing the memory on the device
   device_array<Variable_t> m_array;
 
-}; // class ResultScalar
+};  // class ResultScalar
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

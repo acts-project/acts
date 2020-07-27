@@ -16,7 +16,6 @@ namespace Cuda {
 
 template <typename T>
 void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host) {
-
   // Some security check(s).
   assert(host.nRows() == device.nRows());
   assert(host.nCols() == device.nCols());
@@ -29,7 +28,6 @@ void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host) {
 template <typename T>
 void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host,
                   const StreamWrapper& streamWrapper) {
-
   // Some security check(s).
   assert(host.nRows() == device.nRows());
   assert(host.nCols() == device.nCols());
@@ -41,7 +39,6 @@ void copyToDevice(DeviceMatrix<T>& device, const HostMatrix<T>& host,
 
 template <typename T>
 void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device) {
-
   // Some security check(s).
   assert(host.nRows() == device.nRows());
   assert(host.nCols() == device.nCols());
@@ -54,7 +51,6 @@ void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device) {
 template <typename T>
 void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device,
                 const StreamWrapper& streamWrapper) {
-
   // Some security check(s).
   assert(host.nRows() == device.nRows());
   assert(host.nCols() == device.nCols());
@@ -66,7 +62,6 @@ void copyToHost(HostMatrix<T>& host, const DeviceMatrix<T>& device,
 
 template <typename T>
 void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host) {
-
   // Some security check(s).
   assert(host.size() == device.size());
 
@@ -78,7 +73,6 @@ void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host) {
 template <typename T>
 void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host,
                   const StreamWrapper& streamWrapper) {
-
   // Some security check(s).
   assert(host.size() == device.size());
 
@@ -89,7 +83,6 @@ void copyToDevice(DeviceVector<T>& device, const HostVector<T>& host,
 
 template <typename T>
 void copyToHost(HostVector<T>& host, const DeviceVector<T>& device) {
-
   // Some security check(s).
   assert(host.size() == device.size());
 
@@ -101,7 +94,6 @@ void copyToHost(HostVector<T>& host, const DeviceVector<T>& device) {
 template <typename T>
 void copyToHost(HostVector<T>& host, const DeviceVector<T>& device,
                 const StreamWrapper& streamWrapper) {
-
   // Some security check(s).
   assert(host.size() == device.size());
 
@@ -110,5 +102,5 @@ void copyToHost(HostVector<T>& host, const DeviceVector<T>& device,
   return;
 }
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

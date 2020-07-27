@@ -18,8 +18,7 @@ namespace Cuda {
 /// Column-major style matrix definition
 template <typename T>
 class HostMatrix {
-
-public:
+ public:
   /// The variable type being used
   typedef T Variable_t;
 
@@ -55,15 +54,15 @@ public:
   /// Reset the matrix to all zeros
   void zeros();
 
-private:
+ private:
   /// Rows in the matrix
   std::size_t m_nRows;
   /// Culumns in the matrix
   std::size_t m_nCols;
   /// Smart pointer managing the matrix's memory
-  host_array< Variable_t > m_array;
+  host_array<Variable_t> m_array;
 
-}; // class HostMatrix
+};  // class HostMatrix
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

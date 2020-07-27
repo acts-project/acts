@@ -17,8 +17,7 @@ namespace Cuda {
 
 template <typename T>
 class DeviceMatrix {
-
-public:
+ public:
   /// The variable type being used
   typedef T Variable_t;
 
@@ -54,7 +53,7 @@ public:
   /// Reset the matrix to all zeros
   void zeros();
 
-private:
+ private:
   /// Rows in the matrix
   std::size_t m_nRows;
   /// Culumns in the matrix
@@ -62,7 +61,7 @@ private:
   /// Smart pointer managing the matrix's memory
   device_array<Variable_t> m_array;
 
-}; // class DeviceMatrix
+};  // class DeviceMatrix
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

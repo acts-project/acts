@@ -18,8 +18,7 @@ namespace Cuda {
 /// Vector holding data in host-pinned memory
 template <typename T>
 class HostVector {
-
-public:
+ public:
   /// The variable type being used
   typedef T Variable_t;
 
@@ -51,13 +50,13 @@ public:
   /// Reset the vector to all zeros
   void zeros();
 
-private:
+ private:
   /// The size of the vector
   std::size_t m_size;
   /// Smart pointer managing the vector's memory
-  host_array< Variable_t > m_array;
+  host_array<Variable_t> m_array;
 
-}; // class HostVector
+};  // class HostVector
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts
