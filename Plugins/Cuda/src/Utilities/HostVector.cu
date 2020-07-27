@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
-#include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
 #include "Acts/Plugins/Cuda/Seeding/Types.hpp"
+#include "Acts/Plugins/Cuda/Utilities/ErrorCheck.cuh"
+#include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
 #include "StreamHandlers.cuh"
 
 // CUDA include(s).
@@ -24,14 +24,10 @@ namespace Cuda {
 
 template <typename T>
 HostVector<T>::HostVector(std::size_t size)
-: m_size(size), m_array(make_host_array<T>(size)) {
-
-}
+    : m_size(size), m_array(make_host_array<T>(size)) {}
 
 template <typename T>
-typename HostVector<T>::Variable_t&
-HostVector<T>::get(std::size_t offset) {
-
+typename HostVector<T>::Variable_t& HostVector<T>::get(std::size_t offset) {
   // Some security check(s).
   assert(offset < m_size);
 
@@ -40,9 +36,8 @@ HostVector<T>::get(std::size_t offset) {
 }
 
 template <typename T>
-const typename HostVector<T>::Variable_t&
-HostVector<T>::get(std::size_t offset) const {
-
+const typename HostVector<T>::Variable_t& HostVector<T>::get(
+    std::size_t offset) const {
   // Some security check(s).
   assert(offset < m_size);
 
@@ -51,11 +46,9 @@ HostVector<T>::get(std::size_t offset) const {
 }
 
 template <typename T>
-typename HostVector<T>::Variable_t*
-HostVector<T>::getPtr(std::size_t offset) {
-
+typename HostVector<T>::Variable_t* HostVector<T>::getPtr(std::size_t offset) {
   // If the vector is empty, return a null pointer.
-  if(m_size == 0) {
+  if (m_size == 0) {
     return nullptr;
   }
 
@@ -67,11 +60,10 @@ HostVector<T>::getPtr(std::size_t offset) {
 }
 
 template <typename T>
-const typename HostVector<T>::Variable_t*
-HostVector<T>::getPtr(std::size_t offset) const {
-
+const typename HostVector<T>::Variable_t* HostVector<T>::getPtr(
+    std::size_t offset) const {
   // If the vector is empty, return a null pointer.
-  if(m_size == 0) {
+  if (m_size == 0) {
     return nullptr;
   }
 
@@ -84,7 +76,6 @@ HostVector<T>::getPtr(std::size_t offset) const {
 
 template <typename T>
 void HostVector<T>::set(std::size_t offset, Variable_t val) {
-
   // Some security check(s).
   assert(offset < m_size);
 
@@ -96,7 +87,6 @@ void HostVector<T>::set(std::size_t offset, Variable_t val) {
 template <typename T>
 void HostVector<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
                              std::size_t offset) {
-
   // Some security check(s).
   assert(offset + len <= m_size);
 
@@ -111,49 +101,45 @@ template <typename T>
 void HostVector<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
                              std::size_t offset,
                              const StreamWrapper& streamWrapper) {
-
   // Some security check(s).
   assert(offset + len <= m_size);
 
   // Do the copy.
-  ACTS_CUDA_ERROR_CHECK(cudaMemcpyAsync(m_array.get() + offset, devPtr,
-                                        len * sizeof(Variable_t),
-                                        cudaMemcpyDeviceToHost,
-                                        getStreamFrom(streamWrapper)));
+  ACTS_CUDA_ERROR_CHECK(
+      cudaMemcpyAsync(m_array.get() + offset, devPtr, len * sizeof(Variable_t),
+                      cudaMemcpyDeviceToHost, getStreamFrom(streamWrapper)));
   return;
 }
 
 template <typename T>
 void HostVector<T>::zeros() {
-
   memset(m_array.get(), 0, m_size * sizeof(Variable_t));
   return;
 }
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts
 
 /// Helper macro for instantiating the template code for a given type
-#define INST_HVECTOR_FOR_TYPE( TYPE )                                          \
-  template class Acts::Cuda::HostVector< TYPE >
+#define INST_HVECTOR_FOR_TYPE(TYPE) template class Acts::Cuda::HostVector<TYPE>
 
 // Instantiate the templated functions for all primitive types.
-INST_HVECTOR_FOR_TYPE( void* );
-INST_HVECTOR_FOR_TYPE( char );
-INST_HVECTOR_FOR_TYPE( unsigned char );
-INST_HVECTOR_FOR_TYPE( short );
-INST_HVECTOR_FOR_TYPE( unsigned short );
-INST_HVECTOR_FOR_TYPE( int );
-INST_HVECTOR_FOR_TYPE( unsigned int );
-INST_HVECTOR_FOR_TYPE( long );
-INST_HVECTOR_FOR_TYPE( unsigned long );
-INST_HVECTOR_FOR_TYPE( long long );
-INST_HVECTOR_FOR_TYPE( unsigned long long );
-INST_HVECTOR_FOR_TYPE( float );
-INST_HVECTOR_FOR_TYPE( double );
+INST_HVECTOR_FOR_TYPE(void*);
+INST_HVECTOR_FOR_TYPE(char);
+INST_HVECTOR_FOR_TYPE(unsigned char);
+INST_HVECTOR_FOR_TYPE(short);
+INST_HVECTOR_FOR_TYPE(unsigned short);
+INST_HVECTOR_FOR_TYPE(int);
+INST_HVECTOR_FOR_TYPE(unsigned int);
+INST_HVECTOR_FOR_TYPE(long);
+INST_HVECTOR_FOR_TYPE(unsigned long);
+INST_HVECTOR_FOR_TYPE(long long);
+INST_HVECTOR_FOR_TYPE(unsigned long long);
+INST_HVECTOR_FOR_TYPE(float);
+INST_HVECTOR_FOR_TYPE(double);
 
 // Instantiate them for any necessary custom type(s) as well.
-INST_HVECTOR_FOR_TYPE( Acts::Cuda::details::Triplet );
+INST_HVECTOR_FOR_TYPE(Acts::Cuda::details::Triplet);
 
 // Clean up.
 #undef INST_HVECTOR_FOR_TYPE

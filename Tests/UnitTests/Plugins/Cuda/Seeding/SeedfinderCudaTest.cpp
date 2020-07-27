@@ -32,9 +32,6 @@
 #include <sstream>
 #include <unistd.h>
 
-#include "ATLASCuts.hpp"
-#include "SpacePoint.hpp"
-
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
   int layer;

@@ -18,18 +18,17 @@ namespace Acts {
 namespace Cuda {
 namespace details {
 
-  void throwError( cudaError_t errorCode, const char* expression,
-                   const char* file, int line ) {
+void throwError(cudaError_t errorCode, const char* expression, const char* file,
+                int line) {
+  // Create a nice error message.
+  std::ostringstream errorMsg;
+  errorMsg << file << ":" << line << " Failed to execute: " << expression
+           << " (" << cudaGetErrorString(errorCode) << ")";
+  // Now print and then throw it.
+  std::cerr << errorMsg.str() << std::endl;
+  throw std::runtime_error(errorMsg.str());
+}
 
-    // Create a nice error message.
-    std::ostringstream errorMsg;
-    errorMsg << file << ":" << line << " Failed to execute: " << expression
-             << " (" << cudaGetErrorString( errorCode ) << ")";
-    // Now print and then throw it.
-    std::cerr << errorMsg.str() << std::endl;
-    throw std::runtime_error( errorMsg.str() );
-  }
-
-} // namespace details
-} // namespace Cuda
-} // namespace Acts
+}  // namespace details
+}  // namespace Cuda
+}  // namespace Acts

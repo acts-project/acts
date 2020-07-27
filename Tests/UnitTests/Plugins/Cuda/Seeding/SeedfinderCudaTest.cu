@@ -19,7 +19,6 @@
 #include <iostream>
 
 void setupCudaDevice(int deviceID, int& maxThreadsPerBlock) {
-
   // Force the test to use the selected device.
   ACTS_CUDA_ERROR_CHECK(cudaSetDevice(deviceID));
 

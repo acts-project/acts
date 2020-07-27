@@ -18,7 +18,7 @@ namespace Acts {
 namespace Cuda {
 
 /// Get the @c cudaStream_t value out of an @c Acts::Cuda::StreamWrapper object
-cudaStream_t getStreamFrom( const StreamWrapper& wrapper );
+cudaStream_t getStreamFrom(const StreamWrapper& wrapper);
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts

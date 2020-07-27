@@ -12,10 +12,9 @@
 namespace Acts {
 namespace Cuda {
 
-cudaStream_t getStreamFrom( const StreamWrapper& wrapper ) {
-
-  return static_cast< cudaStream_t >( wrapper.m_stream );
+cudaStream_t getStreamFrom(const StreamWrapper& wrapper) {
+  return static_cast<cudaStream_t>(wrapper.m_stream);
 }
 
-} // namespace Cuda
-} // namespace Acts
+}  // namespace Cuda
+}  // namespace Acts
