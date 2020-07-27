@@ -31,7 +31,7 @@ class StreamWrapper {
 
 public:
   /// Constructor with the stream to be wrapped
-  StreamWrapper( void* stream );
+  StreamWrapper( void* stream, bool ownsStream = true );
   /// Move constructor
   StreamWrapper( StreamWrapper&& parent );
   /// Disabled copy constructor
@@ -44,11 +44,19 @@ public:
   /// Disabled copy assignment operator
   StreamWrapper& operator=( const StreamWrapper& ) = delete;
 
+  /// Wait for all scheduled operations to finish in the stream
+  void synchronize() const;
+
 private:
   /// Type erased pointer, managed by this wrapper class
   void* m_stream;
+  /// Flag showing whether the object owns the stream that it wraps
+  bool m_ownsStream;
 
 }; // class StreamWrapper
+
+/// Create a default CUDA stream
+StreamWrapper makeDefaultStream();
 
 } // namespace Cuda
 } // namespace Acts

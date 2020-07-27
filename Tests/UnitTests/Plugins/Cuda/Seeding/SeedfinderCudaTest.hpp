@@ -8,5 +8,9 @@
 
 #pragma once
 
-// CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
+/// Set up the CUDA device with the requested ID for the test
+///
+/// @param deviceID The integer ID of the device to use for the test
+/// @param maxThreadsPerBlock The maximum number of threads supported by the
+///        device per block.
+void setupCudaDevice(int deviceID, int& maxThreadsPerBlock);

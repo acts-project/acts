@@ -7,10 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // CUDA plugin include(s).
-#include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Types.hpp"
+#include "Acts/Plugins/Cuda/Utilities/CopyFunctions.hpp"
+#include "Acts/Plugins/Cuda/Utilities/DeviceMatrix.hpp"
+#include "Acts/Plugins/Cuda/Utilities/DeviceVector.hpp"
+#include "Acts/Plugins/Cuda/Utilities/HostMatrix.hpp"
+#include "Acts/Plugins/Cuda/Utilities/HostVector.hpp"
 
+// Acts include(s).
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
+
+// System include(s).
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -22,7 +31,7 @@ namespace Cuda {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config)
-    : m_config(std::move(config)) {
+    : m_config(std::move(config)), m_stream(makeDefaultStream()) {
 
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -196,11 +205,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   HostVector<int> nTrplPerSpM_cpu(nSpMcomp_cpu);
   nTrplPerSpM_cpu.zeros();
   HostMatrix<details::Triplet> TripletsPerSpM_cpu(nTrplPerSpMLimit, nSpMcomp_cpu);
-  cudaStream_t cuStream;
-  cudaStreamCreate(&cuStream);
 
   for (int i_m = 0; i_m <= nSpMcomp_cpu; i_m++) {
-    cudaStreamSynchronize(cuStream);
+    m_stream.synchronize();
 
     // Search Triplet
     if (i_m < nSpMcomp_cpu) {
@@ -226,12 +233,12 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
           seedFilterConfig.compatSeedLimit,
           // output
           nTrplPerSpM_cuda.getPtr(i_m), TripletsPerSpM_cuda.getPtr(0, i_m),
-          cuStream);
-      nTrplPerSpM_cpu.copyFrom(nTrplPerSpM_cuda.getPtr(i_m), 1, i_m, cuStream);
+          m_stream);
+      nTrplPerSpM_cpu.copyFrom(nTrplPerSpM_cuda.getPtr(i_m), 1, i_m, m_stream);
 
       TripletsPerSpM_cpu.copyFrom(TripletsPerSpM_cuda.getPtr(0, i_m),
                                   nTrplPerSpMLimit, nTrplPerSpMLimit * i_m,
-                                  cuStream);
+                                  m_stream);
     }
 
     if (i_m > 0) {
@@ -273,6 +280,14 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     }
   }
   return outputVec;
+}
+
+template <typename external_spacepoint_t>
+void
+Seedfinder<external_spacepoint_t>::setStream( StreamWrapper&& stream ) {
+
+  m_stream = stream;
+  return;
 }
 
 } // namespace Cuda

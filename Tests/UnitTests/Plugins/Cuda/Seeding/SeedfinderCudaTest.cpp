@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <chrono>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <utility>
+// Local include(s).
+#include "ATLASCuts.hpp"
+#include "SpacePoint.hpp"
+#include "SeedfinderCudaTest.hpp"
 
-#include <boost/type_erasure/any_cast.hpp>
+// CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
 
+// Acts include(s).
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -24,12 +24,13 @@
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
-#include "ATLASCuts.hpp"
-#include "SpacePoint.hpp"
-
-#include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
-
-#include <cuda_profiler_api.h>
+// System include(s).
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <unistd.h>
 
 std::vector<const SpacePoint*> readFile(std::string filename) {
   std::string line;
@@ -152,9 +153,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  std::string devName;
-  ACTS_CUDA_ERROR_CHECK(cudaSetDevice(deviceID));
-
   std::ifstream f(file);
   if (!f.good()) {
     std::cerr << "input file \"" << file << "\" does not exist\n";
@@ -186,12 +184,8 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5, -.5};
   config.impactMax = 10.;
 
-  // cuda
-  cudaDeviceProp prop;
-  ACTS_CUDA_ERROR_CHECK(cudaGetDeviceProperties(&prop, deviceID));
-  printf("\n GPU Device %d: \"%s\" with compute capability %d.%d\n\n", deviceID,
-         prop.name, prop.major, prop.minor);
-  config.maxBlockSize = prop.maxThreadsPerBlock;
+  // Set up the CUDA device.
+  setupCudaDevice(deviceID, config.maxBlockSize);
   config.nTrplPerSpBLimit = nTrplPerSpBLimit;
   config.nAvgTrplPerSpBLimit = nAvgTrplPerSpBLimit;
 
@@ -268,8 +262,6 @@ int main(int argc, char** argv) {
   double cpuTime = elapsec_cpu.count();
 
   //----------- CUDA ----------//
-
-  cudaProfilerStart();
   auto start_cuda = std::chrono::system_clock::now();
 
   group_count = 0;
@@ -291,7 +283,6 @@ int main(int argc, char** argv) {
   std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
   double cudaTime = elapsec_cuda.count();
 
-  cudaProfilerStop();
   std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
 
   std::cout << std::endl;
