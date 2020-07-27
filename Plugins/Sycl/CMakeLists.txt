@@ -14,7 +14,7 @@ find_package(SYCL REQUIRED)
 
 add_library(
   ActsSyclPlugin SHARED
-  src/Seeding/SyclTest.cpp
+  src/Seeding/SeedfinderSycl.cpp
 )
 
 target_include_directories(

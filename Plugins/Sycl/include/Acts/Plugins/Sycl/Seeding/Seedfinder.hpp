@@ -28,7 +28,7 @@ struct LinCircle {
 
 // store SpacePoint data in float arrays, index them with enum values
 enum eSpacePoint {
-  eX, eY, eZ, eRadius, eVarianceR, eVarianceZ, eNumSPVals
+  eX, eY, eZ, eRadius, eVarianceR, eVarianceZ, eSP
 };
 
 // store SeedfinderConfig data in float array, index it with enum values
@@ -40,10 +40,35 @@ enum eConfigData {
   eCollisionRegionMax
 };
 
-void offloadDupletSearchBottom( std::vector<int>& pIsBottomSPCompat,
-                          const std::vector<float>& pBottomSPs,
-                          const std::vector<float>& pConfigData,
-                          const std::vector<float>& pMiddleSp);
+// maximize number of bottom and top spacepoints per middle sp (to be able to load data to global buffer)
+enum eMaxData {
+  eMaxBottomPerMiddleSP, eMaxTopPerMiddleSP
+};
+
+// store linear circle data in float arrays
+enum eLinCircle {
+  eZo, eCotTheta, eIDeltaR, eEr, eU, eV, eLIN
+};
+
+void offloadDupletSearchBottom( const std::vector<float>& configData,
+                                const std::vector<int>& maxData,
+                                std::vector<int>& indBPerMSpCompat,
+                                std::vector<int>& indTPerMSpCompat,
+                                std::vector<int>& numBotCompatPerMSP,
+                                std::vector<int>& numTopCompatPerMSP,
+                                const std::vector<float>& bottomSPs,
+                                const std::vector<float>& middleSPs,
+                                const std::vector<float>& topSPs);
+
+void offloadTransformCoordiantes( const std::vector<int>& indBPerMSpCompat,
+                                  const std::vector<int>& indTPerMSpCompat,
+                                  const std::vector<int>& numBotCompatPerMSP,
+                                  const std::vector<int>& numTopCompatPerMSP,
+                                  const std::vector<float>& bottomSPs,
+                                  const std::vector<float>& middleSPs,
+                                  const std::vector<float>& topSPs,
+                                  std::vector<float>& linCircleBot,
+                                  std::vector<float>& linCircleTop);
 
 void outputPlatforms();
 void testDevice();

@@ -1,5 +1,6 @@
 #include <cmath>
 #include <numeric>
+#include <iostream>
 #include <type_traits>
 #include <boost/range/adaptors.hpp>
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
@@ -32,46 +33,39 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  std::vector<float> vecBottomSPs;
-  std::vector<float> vecMiddleSPs;
-  std::vector<float> vecTopSPs;
+  std::vector<float> offloadBottomSPs;
+  std::vector<float> offloadMiddleSPs;
+  std::vector<float> offloadTopSPs;
 
   for(auto SP: bottomSPs) {
-    vecBottomSPs.insert(vecBottomSPs.end() , 
-    { SP->x(),
-      SP->y(),
-      SP->z(),
-      SP->radius(),
-      SP->varianceR(),
-      SP->varianceZ()});
+    offloadBottomSPs.insert(offloadBottomSPs.end(),
+                            {SP->x(), SP->y(), SP->z(), SP->radius(),
+                             SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: middleSPs) {
-    vecMiddleSPs.insert(vecMiddleSPs.end() , 
-    { SP->x(),
-      SP->y(),
-      SP->z(),
-      SP->radius(),
-      SP->varianceR(),
-      SP->varianceZ()});
+    offloadMiddleSPs.insert(offloadMiddleSPs.end(),
+                            {SP->x(), SP->y(), SP->z(), SP->radius(),
+                             SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: topSPs) {
-    vecTopSPs.insert(vecTopSPs.end() , 
-    { SP->x(),
-      SP->y(),
-      SP->z(),
-      SP->radius(),
-      SP->varianceR(),
-      SP->varianceZ()});
+    offloadTopSPs.insert(offloadTopSPs.end(),
+                         {SP->x(), SP->y(), SP->z(), SP->radius(),
+                          SP->varianceR(), SP->varianceZ()});
   }
 
-  int numBottomSPs = vecBottomSPs.size();
-  int numMiddleSPs = vecMiddleSPs.size();
-  int numTopSPs = vecTopSPs.size();
+  int numBottomSPs = offloadBottomSPs.size();
+  int numMiddleSPs = offloadMiddleSPs.size();
+  int numTopSPs = offloadTopSPs.size();
 
-  std::vector<int> isBottomSPCompat(numBottomSPs, false);
-  std::vector<int> isTopSPCompat(numTopSPs, false);
+  int maxBPermMSP = 1000;
+  int maxTPerMSP = 1000;
+
+  std::vector<int> indBPerMSpCompat(numMiddleSPs * maxBPermMSP, -1);
+  std::vector<int> indTPerMSpCompat(numMiddleSPs * maxTPerMSP, -1);
+  std::vector<int> numBotCompatPerMSP(numMiddleSPs, 0);
+  std::vector<int> numTopCompatPerMSP(numMiddleSPs, 0);
 
   // reserve space in advance for bottom and top SPs for performace
   std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
@@ -79,8 +73,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   compatBottomSP.reserve(numBottomSPs);
   compatTopSP.reserve(numTopSPs);
 
-  std::vector<float> offloadConfigData = 
-  {
+  std::vector<float> offloadConfigData = {
     m_config.deltaRMin,
     m_config.deltaRMax,
     m_config.cotThetaMax,
@@ -88,66 +81,38 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     m_config.collisionRegionMax
   };
 
+  std::vector<int> offloadMaxData = {
+    maxBPermMSP,
+    maxTPerMSP
+  };
+
+  offloadDupletSearchBottom(offloadConfigData,
+                            offloadMaxData,
+                            indBPerMSpCompat,
+                            indTPerMSpCompat,
+                            numBotCompatPerMSP,
+                            numTopCompatPerMSP,
+                            offloadBottomSPs,
+                            offloadMiddleSPs,
+                            offloadTopSPs
+  );
+
   int countMiddleSP = 0;
   for (auto spM : middleSPs) {
-    
     compatBottomSP.clear();
     compatTopSP.clear();
-    isBottomSPCompat.resize(numBottomSPs,false);
-    isTopSPCompat.resize(numTopSPs,false);
 
-    offloadDupletSearchBottom(isBottomSPCompat,
-                        vecBottomSPs,
-                        offloadConfigData,
-                        std::vector<float>(vecMiddleSPs.begin()+countMiddleSP*eNumSPVals,
-                                          vecMiddleSPs.begin()+(countMiddleSP+1)*eNumSPVals));
-    int cc = 0;
-    for(auto B: bottomSPs) {
-      if(isBottomSPCompat[cc]){
-        compatBottomSP.push_back(B);
-      }
-      ++cc;
-    }
-    
-    float rM          = vecMiddleSPs[countMiddleSP*eNumSPVals + eRadius];
-    float zM          = vecMiddleSPs[countMiddleSP*eNumSPVals + eZ];
-    float varianceRM  = vecMiddleSPs[countMiddleSP*eNumSPVals + eVarianceR];
-    float varianceZM  = vecMiddleSPs[countMiddleSP*eNumSPVals + eVarianceZ];
+    float rM =          offloadMiddleSPs[countMiddleSP * eSP + eRadius];
+    float zM =          offloadMiddleSPs[countMiddleSP * eSP + eZ];
+    float varianceRM =  offloadMiddleSPs[countMiddleSP * eSP + eVarianceR];
+    float varianceZM =  offloadMiddleSPs[countMiddleSP * eSP + eVarianceZ];
     ++countMiddleSP;
 
     if (compatBottomSP.empty()) {
       continue;
     }
 
-    for (auto topSP : topSPs) {
-      float rT = topSP->radius();
-      float deltaR = rT - rM;
-      // this condition is the opposite of the condition for bottom SP
-      if (deltaR < m_config.deltaRMin) {
-        continue;
-      }
-      if (deltaR > m_config.deltaRMax) {
-        break;
-      }
-
-      float cotTheta = (topSP->z() - zM) / deltaR;
-      if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-        continue;
-      }
-      float zOrigin = zM - rM * cotTheta;
-      if (zOrigin < m_config.collisionRegionMin ||
-          zOrigin > m_config.collisionRegionMax) {
-        continue;
-      }
-      compatTopSP.push_back(topSP);
-    }
-    if (compatTopSP.empty()) {
-      continue;
-    }
-    // contains parameters required to calculate circle with linear equation
-    // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
-    // ...for middle-top
     std::vector<LinCircle> linCircleTop;
     transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
     transformCoordinates(compatTopSP, *spM, false, linCircleTop);

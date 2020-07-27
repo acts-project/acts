@@ -202,7 +202,7 @@ auto main(int argc, char** argv) -> int {
 
     if(vm.count("platforms") != 0){
       Acts::Sycl::testDevice();
-      // Acts::Sycl::outputPlatforms();
+      Acts::Sycl::outputPlatforms();
     }
   }
   catch (std::exception &e){
