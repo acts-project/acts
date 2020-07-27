@@ -7,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <iomanip>
-#include <iostream>
-#include <memory>
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <iomanip>
+#include <iostream>
+#include <memory>
 
 namespace Acts {
 

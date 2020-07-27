@@ -8,14 +8,6 @@
 
 #include "ACTFW/Io/Performance/TrackFinderPerformanceWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
-#include <algorithm>
-#include <cstdint>
-#include <mutex>
-#include <unordered_map>
-#include <vector>
-
 #include "ACTFW/EventData/IndexContainers.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
@@ -24,6 +16,15 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+
+#include <algorithm>
+#include <cstdint>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+
+#include <TFile.h>
+#include <TTree.h>
 
 namespace {
 using SimParticleContainer = FW::SimParticleContainer;

@@ -20,6 +20,7 @@
 //
 //====================================================================
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+
 #include "DD4hep/DetFactoryHelper.h"
 
 using namespace dd4hep;

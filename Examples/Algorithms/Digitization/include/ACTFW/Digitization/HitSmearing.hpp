@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
+
+#include <string>
+#include <unordered_map>
 
 namespace Acts {
 class Surface;

@@ -11,12 +11,12 @@
 
 #pragma once
 
-#include <vector>
-
 #include "ACTFW/EventData/SimMultiTrajectory.hpp"
 #include "ACTFW/EventData/SimSourceLink.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+
+#include <vector>
 
 namespace FW {
 

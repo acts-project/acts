@@ -6,11 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
 #include <boost/test/unit_test.hpp>
-#include <cmath>
-#include <random>
-#include <vector>
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -37,6 +33,11 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <random>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 

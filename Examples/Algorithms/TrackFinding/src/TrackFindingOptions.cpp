@@ -8,10 +8,11 @@
 
 #include "ACTFW/TrackFinding/TrackFindingOptions.hpp"
 
-#include <boost/program_options.hpp>
+#include "Acts/Geometry/GeometryID.hpp"
+
 #include <string>
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include <boost/program_options.hpp>
 
 void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
   using boost::program_options::value;

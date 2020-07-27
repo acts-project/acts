@@ -8,11 +8,12 @@
 
 #include "SteppingAction.hpp"
 
-#include <G4Material.hh>
-#include <G4Step.hh>
+#include "Acts/Utilities/Units.hpp"
+
 #include <stdexcept>
 
-#include "Acts/Utilities/Units.hpp"
+#include <G4Material.hh>
+#include <G4Step.hh>
 
 using namespace ActsExamples;
 

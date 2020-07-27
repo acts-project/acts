@@ -10,11 +10,13 @@
 
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
-#include <TFile.h>
-#include <TH2F.h>
+
 #include <ios>
 #include <iostream>
 #include <stdexcept>
+
+#include <TFile.h>
+#include <TH2F.h>
 
 FW::RootMaterialWriter::RootMaterialWriter(
     const FW::RootMaterialWriter::Config& cfg)

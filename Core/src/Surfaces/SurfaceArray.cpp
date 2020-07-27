@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <utility>
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+
+#include <utility>
 
 // implementation for pure virtual destructor of ISurfaceGridLookup
 Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;

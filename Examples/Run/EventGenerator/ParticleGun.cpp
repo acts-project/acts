@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Utilities/Units.hpp>
-#include <cstdlib>
-#include <memory>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Generators/FlattenEvent.hpp"
@@ -19,6 +15,10 @@
 #include "ACTFW/Options/ParticleGunOptions.hpp"
 #include "ACTFW/Printers/PrintParticles.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include <Acts/Utilities/Units.hpp>
+
+#include <cstdlib>
+#include <memory>
 
 using namespace FW;
 

@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+
 #include <type_traits>
 #include <utility>
-
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 /// @cond

@@ -8,21 +8,6 @@
 
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/finder.hpp>
-#include <boost/algorithm/string/iter_find.hpp>
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -38,6 +23,22 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include <Acts/Surfaces/AnnulusBounds.hpp>
+#include <Acts/Surfaces/CylinderBounds.hpp>
+#include <Acts/Surfaces/RadialBounds.hpp>
+#include <Acts/Surfaces/SurfaceBounds.hpp>
+
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/finder.hpp>
+#include <boost/algorithm/string/iter_find.hpp>
 
 using json = nlohmann::json;
 
@@ -869,20 +870,23 @@ Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
 /// Create the BinUtility for this
 Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
     const json& bin) {
-  // finding the iterator position to determine the binning value
-  auto bit = std::find(Acts::binningValueNames.begin(),
-                       Acts::binningValueNames.end(), bin[0]);
-  size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
-  Acts::BinningValue bval = Acts::BinningValue(indx);
-  Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
-  unsigned int bins = bin[2];
-  float min = 0;
-  float max = 0;
-  if (bin[3].size() == 2) {
-    min = bin[3][0];
-    max = bin[3][1];
+  if (bin.size() >= 3) {
+    // finding the iterator position to determine the binning value
+    auto bit = std::find(Acts::binningValueNames.begin(),
+                         Acts::binningValueNames.end(), bin[0]);
+    size_t indx = std::distance(Acts::binningValueNames.begin(), bit);
+    Acts::BinningValue bval = Acts::BinningValue(indx);
+    Acts::BinningOption bopt = bin[1] == "open" ? Acts::open : Acts::closed;
+    unsigned int bins = bin[2];
+    float min = 0;
+    float max = 0;
+    if (bin.size() >= 4 && bin[3].size() == 2) {
+      min = bin[3][0];
+      max = bin[3][1];
+    }
+    return Acts::BinUtility(bins, min, max, bopt, bval);
   }
-  return Acts::BinUtility(bins, min, max, bopt, bval);
+  return Acts::BinUtility();
 }
 
 Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(

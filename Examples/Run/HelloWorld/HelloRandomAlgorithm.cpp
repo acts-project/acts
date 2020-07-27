@@ -8,10 +8,11 @@
 
 #include "HelloRandomAlgorithm.hpp"
 
-#include <random>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
+
+#include <random>
+
 #include "HelloData.hpp"
 
 FW::HelloRandomAlgorithm::HelloRandomAlgorithm(

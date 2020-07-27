@@ -8,15 +8,10 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
+// clang-format off
+// Workaround for building on clang+libstdc++. Must be the first include.
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
-#include <cmath>
-#include <functional>
-#include <memory>
-#include <type_traits>
-
-#include <boost/algorithm/string.hpp>
+// clang-format on
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -30,6 +25,13 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <type_traits>
+
+#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 

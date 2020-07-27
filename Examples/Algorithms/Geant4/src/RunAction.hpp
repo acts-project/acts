@@ -8,9 +8,10 @@
 
 #pragma once
 
+#include <memory>
+
 #include <G4UserRunAction.hh>
 #include <globals.hh>
-#include <memory>
 
 class G4Run;
 

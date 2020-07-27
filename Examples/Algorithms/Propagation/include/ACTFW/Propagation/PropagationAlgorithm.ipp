@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <Acts/Utilities/Helpers.hpp>
+
 #include <random>
 
 template <typename propagator_t>

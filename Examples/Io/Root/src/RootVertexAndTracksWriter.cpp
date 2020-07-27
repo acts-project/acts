@@ -9,10 +9,12 @@
 #include "ACTFW/Io/Root/RootVertexAndTracksWriter.hpp"
 
 #include <Acts/Utilities/Helpers.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <ios>
 #include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

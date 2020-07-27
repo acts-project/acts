@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <string>
-
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <string>
+
+#include <boost/program_options.hpp>
+
 #include "BFieldWritingBase.hpp"
 
 namespace po = boost::program_options;

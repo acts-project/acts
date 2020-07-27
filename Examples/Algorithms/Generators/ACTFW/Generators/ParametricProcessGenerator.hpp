@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <array>
-#include <cmath>
-#include <vector>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <array>
+#include <cmath>
+#include <vector>
 
 namespace FW {
 

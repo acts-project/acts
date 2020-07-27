@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <type_traits>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -18,6 +16,8 @@
 #include "Acts/Vertexing/AMVFInfo.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
+#include <type_traits>
 
 namespace Acts {
 /// @class AdaptiveMultiVertexFinder

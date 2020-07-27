@@ -9,14 +9,15 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
 #include <cmath>
 #include <complex>
 #include <iostream>
 #include <sstream>
 #include <tuple>
-
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
 namespace Test {

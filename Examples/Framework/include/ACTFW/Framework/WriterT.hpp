@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <Acts/Utilities/Logger.hpp>
-#include <memory>
-#include <string>
-
 #include "ACTFW/Framework/IWriter.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
+#include <Acts/Utilities/Logger.hpp>
+
+#include <memory>
+#include <string>
 
 namespace FW {
 

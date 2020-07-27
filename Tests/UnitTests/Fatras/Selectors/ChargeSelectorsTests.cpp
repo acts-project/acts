@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
+
 #include "Dataset.hpp"
 
 using namespace ActsFatras;

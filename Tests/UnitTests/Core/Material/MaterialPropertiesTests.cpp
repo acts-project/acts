@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <vector>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <limits>
+#include <vector>
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 

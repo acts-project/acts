@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <bitset>
 #include <cstdint>
 #include <type_traits>
 #include <vector>
 
 #include <Eigen/Core>
-
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 namespace detail_lt {

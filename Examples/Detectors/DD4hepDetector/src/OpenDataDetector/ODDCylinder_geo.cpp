@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+
 #include "DD4hep/DetFactoryHelper.h"
 
 using namespace std;

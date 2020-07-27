@@ -8,8 +8,6 @@
 
 #include "ACTFW/ContextualDetector/PayloadDetector.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/ContextualDetector/PayloadDecorator.hpp"
 #include "ACTFW/ContextualDetector/PayloadDetectorElement.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
@@ -20,6 +18,8 @@
 #include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <boost/program_options.hpp>
 
 void PayloadDetector::addOptions(
     boost::program_options::options_description& opt) const {

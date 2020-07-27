@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-
 #include "ACTFW/Framework/IReader.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace Acts {
 class Surface;

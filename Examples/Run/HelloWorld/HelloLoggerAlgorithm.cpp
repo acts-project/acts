@@ -8,9 +8,9 @@
 
 #include "HelloLoggerAlgorithm.hpp"
 
-#include <cstddef>
-
 #include "ACTFW/Framework/WhiteBoard.hpp"
+
+#include <cstddef>
 
 FW::HelloLoggerAlgorithm::HelloLoggerAlgorithm(Acts::Logging::Level level)
     : FW::BareAlgorithm("HelloLogger", level) {}

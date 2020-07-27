@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <stdexcept>
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
+
+#include <stdexcept>
 
 namespace Acts {
 

@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <climits>
-
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
+#include <climits>
 
 namespace Acts {
 

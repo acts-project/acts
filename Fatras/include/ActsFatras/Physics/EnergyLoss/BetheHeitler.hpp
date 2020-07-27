@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <array>
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <array>
+#include <random>
 
 namespace ActsFatras {
 

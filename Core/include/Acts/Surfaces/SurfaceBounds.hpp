@@ -7,10 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <ostream>
-
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <ostream>
 
 namespace Acts {
 

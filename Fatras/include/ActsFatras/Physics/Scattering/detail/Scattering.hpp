@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <array>
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <array>
+#include <random>
 
 namespace ActsFatras {
 namespace detail {

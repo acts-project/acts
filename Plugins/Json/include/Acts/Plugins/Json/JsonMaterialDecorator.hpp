@@ -8,16 +8,16 @@
 
 #pragma once
 
-#include <fstream>
-#include <map>
-#include <mutex>
-
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <fstream>
+#include <map>
+#include <mutex>
 
 // Convenience shorthand
 

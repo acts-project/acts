@@ -7,12 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include <ostream>
 
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+
+#include <fstream>
+#include <ostream>
+
+#include <nlohmann/json.hpp>
 
 namespace {
 

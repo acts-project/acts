@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include <nlohmann/json.hpp>
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+
 #include <stdexcept>
 #include <string>
 
-#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 

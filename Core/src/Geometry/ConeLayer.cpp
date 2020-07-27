@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/ConeLayer.hpp"
+
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 

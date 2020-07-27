@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace Acts {
 

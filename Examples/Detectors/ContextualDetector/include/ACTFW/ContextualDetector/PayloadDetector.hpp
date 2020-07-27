@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "ACTFW/Detector/IBaseDetector.hpp"
 #include "ACTFW/Utilities/OptionsFwd.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace FW {
 namespace Contextual {

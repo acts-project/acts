@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "ACTFW/Utilities/OptionsFwd.hpp"
+
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "ACTFW/Utilities/OptionsFwd.hpp"
 
 namespace Acts {
 class TrackingGeometry;

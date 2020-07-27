@@ -10,6 +10,7 @@
 
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
+
 #include "Dataset.hpp"
 
 namespace {

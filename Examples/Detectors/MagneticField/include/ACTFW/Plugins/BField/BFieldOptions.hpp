@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <memory>
-#include <tuple>
-#include <variant>
-
 #include "ACTFW/Utilities/OptionsFwd.hpp"
 #include "Acts/Utilities//Definitions.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/GridFwd.hpp"
+
+#include <memory>
+#include <tuple>
+#include <variant>
 
 // Forward declarations
 namespace Acts {

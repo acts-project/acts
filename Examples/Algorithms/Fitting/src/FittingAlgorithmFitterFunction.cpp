@@ -6,12 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <iostream>
-#include <map>
-#include <random>
-#include <stdexcept>
-
 #include "ACTFW/Fitting/FittingAlgorithm.hpp"
 #include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
@@ -26,6 +20,13 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <iostream>
+#include <map>
+#include <random>
+#include <stdexcept>
+
+#include <boost/program_options.hpp>
 
 namespace {
 template <typename Fitter>

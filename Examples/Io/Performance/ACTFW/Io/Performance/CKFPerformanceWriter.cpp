@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ACTFW/Io/Performance/CKFPerformanceWriter.hpp"
+
+#include "ACTFW/EventData/SimParticle.hpp"
+#include "ACTFW/Utilities/Paths.hpp"
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+
 #include <numeric>
 #include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
-
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 
 FW::CKFPerformanceWriter::CKFPerformanceWriter(
     FW::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)

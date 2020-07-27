@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 namespace Test {

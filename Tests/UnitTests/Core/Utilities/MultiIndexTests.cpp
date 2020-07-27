@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/MultiIndex.hpp"
+
 #include <cstdint>
 #include <type_traits>
 #include <unordered_set>
 
 #include <boost/mpl/list.hpp>
-
-#include "Acts/Utilities/MultiIndex.hpp"
 
 // 32bit split into a three level hierachy.
 using Index32 = Acts::MultiIndex<uint32_t, 16, 8, 8>;

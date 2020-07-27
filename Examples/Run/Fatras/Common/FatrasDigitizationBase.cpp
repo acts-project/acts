@@ -8,8 +8,6 @@
 
 #include "FatrasDigitizationBase.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/Digitization/DigitizationAlgorithm.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
@@ -18,6 +16,8 @@
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
+
+#include <boost/program_options.hpp>
 
 void FW::setupDigitization(
     FW::Options::Variables& vars, FW::Sequencer& sequencer,

@@ -8,11 +8,6 @@
 
 #include "ACTFW/Io/Root/RootPlanarClusterWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
-#include <ios>
-#include <stdexcept>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "ACTFW/EventData/SimIdentifier.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
@@ -23,6 +18,12 @@
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <ios>
+#include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 FW::RootPlanarClusterWriter::RootPlanarClusterWriter(
     const FW::RootPlanarClusterWriter::Config& cfg, Acts::Logging::Level lvl)

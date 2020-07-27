@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <list>
-#include <vector>
-
 #include "ACTFW/TGeoDetector/BuildTGeoDetector.hpp"
 #include "ACTFW/TGeoDetector/TGeoDetectorOptions.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -28,6 +25,10 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+
+#include <list>
+#include <vector>
+
 #include "TGeoManager.h"
 
 namespace FW {

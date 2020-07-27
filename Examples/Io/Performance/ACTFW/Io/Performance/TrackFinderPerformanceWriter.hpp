@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-
 #include "ACTFW/EventData/ProtoTrack.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
+
+#include <memory>
+#include <string>
 
 namespace FW {
 

@@ -11,10 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <array>
-#include <vector>
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <array>
+#include <vector>
 
 namespace Acts {
 

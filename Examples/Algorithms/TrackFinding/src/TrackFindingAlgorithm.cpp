@@ -8,11 +8,11 @@
 
 #include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
 
-#include <stdexcept>
-
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+
+#include <stdexcept>
 
 FW::TrackFindingAlgorithm::TrackFindingAlgorithm(Config cfg,
                                                  Acts::Logging::Level level)

@@ -11,9 +11,10 @@
 // that actually includes the version header.
 
 #include <boost/test/unit_test.hpp>
-#include <string_view>
 
 #include "Acts/ActsVersion.hpp"
+
+#include <string_view>
 
 BOOST_AUTO_TEST_CASE(Version) {
   // the only way to get a zero version would be zero for all components
