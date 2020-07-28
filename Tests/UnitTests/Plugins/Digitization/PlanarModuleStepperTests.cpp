@@ -84,7 +84,7 @@ BOOST_DATA_TEST_CASE(
   for (auto& dm : testModules) {
     // retrieve the digitiztion steps
     auto cSteps = pmStepper.cellSteps(tgContext, dm, entry, exit);
-    BOOST_TEST(cSteps.size() != 0);
+    BOOST_CHECK_NE(cSteps.size(), 0);
 
     // Test if the longitudinal distance between first and last step
     // is equal/close to the thickness of the module

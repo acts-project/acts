@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     TGeoParser::select(tgpState, tgpOptions);
 
     // This should select 176 PixelActive modules
-    BOOST_TEST(tgpState.selectedNodes.size() == 176u);
+    BOOST_CHECK_EQUAL(tgpState.selectedNodes.size(), 176u);
 
     /// Convert into surfaces using the TGeoSurfaceConverter & Draw them
     ObjVisualization objVis;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     TGeoParser::select(tgpState, tgpOptions);
 
     // This should select 14 PixelActive modules
-    BOOST_TEST(tgpState.selectedNodes.size() == 14u);
+    BOOST_CHECK_EQUAL(tgpState.selectedNodes.size(), 14u);
 
     /// Convert into surfaces using the TGeoSurfaceConverter & Draw them
     ObjVisualization objVis;

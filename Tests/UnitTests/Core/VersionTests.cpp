@@ -18,16 +18,16 @@
 
 BOOST_AUTO_TEST_CASE(Version) {
   // the only way to get a zero version would be zero for all components
-  BOOST_TEST(0u < Acts::Version);
+  BOOST_CHECK_LT(0u, Acts::Version);
   // these tests are not really useful as the version components can be any
   // value. they are there so we touch all variables and ensure that they are
   // accessible.
-  BOOST_TEST(0u <= Acts::VersionMajor);
-  BOOST_TEST(0u <= Acts::VersionMinor);
-  BOOST_TEST(0u <= Acts::VersionPatch);
+  BOOST_CHECK_LE(0u, Acts::VersionMajor);
+  BOOST_CHECK_LE(0u, Acts::VersionMinor);
+  BOOST_CHECK_LE(0u, Acts::VersionPatch);
 }
 
 BOOST_AUTO_TEST_CASE(CommitHash) {
-  BOOST_TEST(not std::string_view(Acts::CommitHash).empty());
-  BOOST_TEST(not std::string_view(Acts::CommitHashShort).empty());
+  BOOST_CHECK(not std::string_view(Acts::CommitHash).empty());
+  BOOST_CHECK(not std::string_view(Acts::CommitHashShort).empty());
 }

@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_CASE(construct_element_fraction) {
   float carbonFraction = float(carbonWeight) / 255u;
 
   ElementFraction a(carbonZ, carbonFraction);
-  BOOST_TEST(a.element(), carbonZ);
+  BOOST_CHECK_EQUAL(a.element(), carbonZ);
   CHECK_CLOSE_REL(a.fraction(), carbonFraction, eps);
 
   ElementFraction b(carbonZ, carbonWeight);
-  BOOST_TEST(b.element(), carbonZ);
+  BOOST_CHECK_EQUAL(b.element(), carbonZ);
   CHECK_CLOSE_REL(b.fraction(), carbonFraction, eps);
 }
 
@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(construct_with_fractions) {
   ElementFraction copper(29u, 0.175f);
 
   MaterialComposition compound({silicon, carbon, titanium, copper});
-  BOOST_TEST(!!compound);
-  BOOST_TEST(compound.size() == 4u);
+  BOOST_CHECK(!!compound);
+  BOOST_CHECK_EQUAL(compound.size(), 4u);
 
   float totalFraction = 0.0f;
   for (const auto& eFraction : compound) {
@@ -54,8 +54,8 @@ BOOST_AUTO_TEST_CASE(construct_with_fractions) {
   // input order should not matter
   MaterialComposition shuffled({carbon, silicon, titanium, copper});
   // check if the sorting worked
-  BOOST_TEST(compound.size() == shuffled.size());
-  BOOST_TEST(compound == shuffled);
+  BOOST_CHECK_EQUAL(compound.size(), shuffled.size());
+  BOOST_CHECK_EQUAL(compound, shuffled);
 }
 
 BOOST_AUTO_TEST_CASE(construct_with_weights) {
@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(construct_with_weights) {
   ElementFraction copper(29u, 31u);
 
   MaterialComposition compound({silicon, carbon, titanium, copper});
-  BOOST_TEST(!!compound);
-  BOOST_TEST(compound.size() == 4u);
+  BOOST_CHECK(!!compound);
+  BOOST_CHECK_EQUAL(compound.size(), 4u);
 
   float totalFraction = 0.0f;
   for (const auto& eFraction : compound) {
