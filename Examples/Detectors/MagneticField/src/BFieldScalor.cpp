@@ -8,9 +8,9 @@
 
 #include "ACTFW/Plugins/BField/BFieldScalor.hpp"
 
-#include <cmath>
-
 #include "ACTFW/Plugins/BField/ScalableBField.hpp"
+
+#include <cmath>
 
 FW::BField::BFieldScalor::BFieldScalor(
     const FW::BField::BFieldScalor::Config& cfg,

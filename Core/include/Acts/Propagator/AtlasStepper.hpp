@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <cmath>
-#include <functional>
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
@@ -22,6 +22,9 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <functional>
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {

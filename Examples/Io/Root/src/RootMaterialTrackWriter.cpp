@@ -12,11 +12,13 @@
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Utilities/Helpers.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <ios>
 #include <iostream>
 #include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
@@ -213,14 +215,14 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
         const Acts::Surface* surface = mint.surface;
         Acts::GeometryID layerID;
         if (surface) {
-          Acts::Intersection intersection = surface->intersectionEstimate(
+          auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
           layerID = surface->geoID();
           m_sur_id.push_back(layerID.value());
           m_sur_type.push_back(surface->type());
-          m_sur_x.push_back(intersection.position.x());
-          m_sur_y.push_back(intersection.position.y());
-          m_sur_z.push_back(intersection.position.z());
+          m_sur_x.push_back(sfIntersection.intersection.position.x());
+          m_sur_y.push_back(sfIntersection.intersection.position.y());
+          m_sur_z.push_back(sfIntersection.intersection.position.z());
 
           const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
           const Acts::RadialBounds* radialBounds =

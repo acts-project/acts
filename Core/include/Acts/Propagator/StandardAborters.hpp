@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include <limits>
-#include <sstream>
-#include <string>
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <limits>
+#include <sstream>
+#include <string>
 
 namespace Acts {
 
@@ -138,8 +139,6 @@ struct SurfaceReached {
     }
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
-    // @todo - do not apply the isOnSurface check here, but handle by the
-    // intersectionEstimate
     if ((state.navigation.currentSurface &&
          state.navigation.currentSurface == &targetSurface)) {
       targetDebugLog(state, "x", [&] {

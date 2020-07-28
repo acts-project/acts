@@ -9,9 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-#include <iostream>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -31,6 +28,10 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <iostream>
+
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;

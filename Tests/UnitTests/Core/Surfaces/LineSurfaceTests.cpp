@@ -10,14 +10,14 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 namespace utf = boost::unit_test;
 
@@ -93,15 +93,16 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   const Vector2D expectedResult{0, -2};
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
-  // intersectionEstimate
+  // intersection
   const Vector3D direction{0., 1., 2.};
   BoundaryCheck bcheck(false);
-  auto intersection = line.intersectionEstimate(tgContext, {0., 0., 0.},
-                                                direction.normalized(), bcheck);
-  BOOST_CHECK(bool(intersection));
+  auto sfIntersection =
+      line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
+  BOOST_CHECK(bool(sfIntersection));
   Vector3D expectedIntersection(0, 1., 2.);
-  CHECK_CLOSE_ABS(intersection.position, expectedIntersection,
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
                   1e-6);  // need more tests..
+  BOOST_CHECK_EQUAL(sfIntersection.object, &line);
   //
   // isOnSurface
   const Vector3D insidePosition{0., 2.5, 0.};

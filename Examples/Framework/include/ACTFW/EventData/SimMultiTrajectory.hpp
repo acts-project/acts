@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <unordered_map>
-#include <utility>
-
 #include "ACTFW/EventData/SimSourceLink.hpp"
 #include "ACTFW/Validation/ProtoTrackClassification.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+
+#include <unordered_map>
+#include <utility>
 
 namespace FW {
 using IndexedParams = std::unordered_map<size_t, Acts::BoundParameters>;

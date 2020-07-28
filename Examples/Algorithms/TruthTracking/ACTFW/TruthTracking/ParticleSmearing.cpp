@@ -8,14 +8,14 @@
 
 #include "ACTFW/TruthTracking/ParticleSmearing.hpp"
 
-#include <cmath>
-#include <vector>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+#include <cmath>
+#include <vector>
 
 FW::ParticleSmearing::ParticleSmearing(const Config& cfg,
                                        Acts::Logging::Level lvl)

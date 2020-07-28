@@ -10,13 +10,14 @@
 // TrackingGeometry.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include <functional>
+#include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <functional>
 
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,

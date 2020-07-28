@@ -8,14 +8,14 @@
 
 #include "ACTFW/Utilities/Paths.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
-
-#include "Acts/Utilities/Logger.hpp"
 
 std::string FW::ensureWritableDirectory(const std::string& dir) {
   using namespace std::filesystem;

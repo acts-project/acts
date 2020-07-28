@@ -9,6 +9,7 @@
 #pragma once
 
 #include <optional>
+#include <sstream>
 #include <system_error>
 #include <type_traits>
 #include <utility>

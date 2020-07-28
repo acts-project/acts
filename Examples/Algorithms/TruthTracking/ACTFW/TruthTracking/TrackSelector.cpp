@@ -8,14 +8,14 @@
 
 #include "ACTFW/TruthTracking/TrackSelector.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
 
 FW::TrackSelector::TrackSelector(const Config& cfg, Acts::Logging::Level level)
     : FW::BareAlgorithm("Selector", level), m_cfg(cfg) {

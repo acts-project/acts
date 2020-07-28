@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-#include <iomanip>
-#include <iterator>
-#include <sstream>
-#include <string>
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -20,6 +15,13 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <iomanip>
+#include <iterator>
+#include <sstream>
+#include <string>
+
+#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 

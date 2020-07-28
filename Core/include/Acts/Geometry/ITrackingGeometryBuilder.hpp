@@ -7,8 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <memory>
 #include "Acts/Geometry/GeometryContext.hpp"
+
+#include <memory>
 
 namespace Acts {
 class TrackingGeometry;

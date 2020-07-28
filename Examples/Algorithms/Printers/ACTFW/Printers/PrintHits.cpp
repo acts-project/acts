@@ -8,8 +8,6 @@
 
 #include "PrintHits.hpp"
 
-#include <vector>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "ACTFW/EventData/IndexContainers.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
@@ -17,6 +15,8 @@
 #include "ACTFW/Utilities/Range.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <vector>
 
 FW::PrintHits::PrintHits(const FW::PrintHits::Config& cfg,
                          Acts::Logging::Level level)

@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <vector>
-
 #include "Acts/Utilities/Definitions.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
+
+#include <vector>
 
 namespace FW {
 

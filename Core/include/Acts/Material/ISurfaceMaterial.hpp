@@ -7,11 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <memory>
-#include <vector>
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace Acts {
 

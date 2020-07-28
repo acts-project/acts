@@ -8,6 +8,8 @@
 
 #include "PrimaryGeneratorAction.hpp"
 
+#include <stdexcept>
+
 #include <G4Event.hh>
 #include <G4ParticleDefinition.hh>
 #include <G4ParticleGun.hh>
@@ -15,7 +17,6 @@
 #include <G4RandomDirection.hh>
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
-#include <stdexcept>
 
 using namespace ActsExamples;
 

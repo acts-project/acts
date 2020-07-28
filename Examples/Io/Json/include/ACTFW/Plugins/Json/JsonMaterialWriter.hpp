@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -21,6 +19,8 @@
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <mutex>
 
 namespace Acts {
 

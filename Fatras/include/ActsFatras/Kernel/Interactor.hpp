@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <cassert>
-
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <cassert>
 
 namespace ActsFatras {
 

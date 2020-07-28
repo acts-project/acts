@@ -14,6 +14,7 @@
 
 #include <string>
 #include <utility>
+
 #include "DD4hep/Detector.h"
 
 namespace Acts {

@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <Acts/EventData/TrackParameters.hpp>
-#include <mutex>
-
 #include "ACTFW/Framework/WriterT.hpp"
+#include <Acts/EventData/TrackParameters.hpp>
+
+#include <mutex>
 
 class TFile;
 class TTree;

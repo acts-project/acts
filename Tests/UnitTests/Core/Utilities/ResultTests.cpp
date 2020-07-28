@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Result.hpp"
+
 #include <iostream>
 #include <string>
 #include <system_error>
-
-#include "Acts/Utilities/Result.hpp"
 
 using namespace std::string_literals;
 

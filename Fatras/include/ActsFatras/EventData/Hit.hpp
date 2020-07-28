@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+
+#include <cstdint>
 
 namespace ActsFatras {
 

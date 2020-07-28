@@ -8,17 +8,17 @@
 
 /// @brief compute energy loss tables using the Acts implementation
 
-#include <cstddef>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
+
+#include <cstddef>
+#include <cstdlib>
+#include <iomanip>
+#include <iostream>
 
 using namespace Acts::UnitLiterals;
 

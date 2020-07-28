@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <iosfwd>
-
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <iosfwd>
 
 namespace Acts {
 

@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <stdexcept>
-#include <string>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+
+#include <stdexcept>
+#include <string>
 
 namespace FW {
 

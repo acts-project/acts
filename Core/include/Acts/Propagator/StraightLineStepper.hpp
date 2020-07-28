@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <cmath>
-#include <functional>
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -21,6 +21,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <cmath>
+#include <functional>
 
 namespace Acts {
 

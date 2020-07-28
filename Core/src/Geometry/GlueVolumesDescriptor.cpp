@@ -10,10 +10,11 @@
 // GlueVolumesDescriptor.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include <utility>
-
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
+
 #include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <utility>
 
 Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(
     const std::map<BoundarySurfaceFace,

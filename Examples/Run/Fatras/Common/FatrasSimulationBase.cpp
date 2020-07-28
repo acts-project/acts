@@ -8,8 +8,6 @@
 
 #include "FatrasSimulationBase.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Fatras/FatrasAlgorithm.hpp"
@@ -44,6 +42,8 @@
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
+
+#include <boost/program_options.hpp>
 
 namespace {
 

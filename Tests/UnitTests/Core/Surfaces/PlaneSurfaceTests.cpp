@@ -10,13 +10,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -134,15 +134,18 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   BOOST_CHECK(
       !planeSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
   //
-  /// intersectionEstimate
+  // Test intersection
   Vector3D direction{0., 0., 1.};
-  auto intersect = planeSurfaceObject->intersectionEstimate(
-      tgContext, offSurface, direction, true);
+  auto sfIntersection =
+      planeSurfaceObject->intersect(tgContext, offSurface, direction, true);
   Intersection expectedIntersect{Vector3D{0, 1, 2}, 4.,
                                  Intersection::Status::reachable};
-  BOOST_CHECK(bool(intersect));
-  BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);
-  BOOST_CHECK_EQUAL(intersect.pathLength, expectedIntersect.pathLength);
+  BOOST_CHECK(bool(sfIntersection));
+  BOOST_CHECK_EQUAL(sfIntersection.intersection.position,
+                    expectedIntersect.position);
+  BOOST_CHECK_EQUAL(sfIntersection.intersection.pathLength,
+                    expectedIntersect.pathLength);
+  BOOST_CHECK_EQUAL(sfIntersection.object, planeSurfaceObject.get());
   //
 
   /// Test pathCorrection

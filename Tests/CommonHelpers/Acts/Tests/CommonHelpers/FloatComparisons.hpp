@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <algorithm>
-#include <limits>
-
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <limits>
 
 // The following assertions can be seen as an extension of the BOOST_CHECK_XYZ
 // macros which also support approximate comparisons of containers of floating-

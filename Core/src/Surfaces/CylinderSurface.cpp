@@ -7,15 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
+
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <utility>
-
-#include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

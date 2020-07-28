@@ -8,12 +8,13 @@
 
 #include "ACTFW/Io/Root/RootSimHitWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
+#include "Acts/Utilities/Units.hpp"
+
 #include <ios>
 #include <stdexcept>
 
-#include "Acts/Utilities/Units.hpp"
+#include <TFile.h>
+#include <TTree.h>
 
 FW::RootSimHitWriter::RootSimHitWriter(const FW::RootSimHitWriter::Config& cfg,
                                        Acts::Logging::Level lvl)

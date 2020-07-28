@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <memory>
-#include <ostream>
-#include <type_traits>
-#include <utility>
-
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -20,6 +15,11 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 
@@ -265,6 +265,28 @@ class Measurement {
   /// @sa ParameterSet::residual
   ParameterVector residual(const BoundParameters& trackPars) const {
     return m_oParameters.residual(trackPars.getParameterSet());
+  }
+
+  /// @brief calculate residual with respect to given track parameters
+  ///
+  /// @note It is checked that the residual for non-local parameters are in
+  /// valid
+  /// range (e.g.
+  ///       residuals in \f$\phi\f$ are corrected).
+  ///
+  /// @todo Implement validity check for residuals of local parameters.
+  ///
+  /// @param boundParameters reference bound parameters
+  /// @note The parameter ranges and the reference object of @p boundParameters
+  /// are not tested
+  ///
+  /// @return vector with the residual parameter values (in valid range)
+  ///
+  /// @sa ParameterSet::residual
+  ParameterVector residual(
+      const ActsVectorD<detail::ParametersSize<parameter_indices_t>::size>&
+          boundParameters) const {
+    return m_oParameters.residual(boundParameters);
   }
 
   /// @brief equality operator

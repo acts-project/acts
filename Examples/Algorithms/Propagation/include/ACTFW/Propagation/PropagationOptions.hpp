@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <iostream>
+
 #include "PropagationAlgorithm.hpp"
 
 namespace po = boost::program_options;

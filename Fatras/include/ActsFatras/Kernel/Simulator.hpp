@@ -8,12 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
-#include <memory>
-#include <vector>
-
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -29,6 +23,12 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/Interactor.hpp"
 #include "ActsFatras/Kernel/detail/SimulatorError.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <memory>
+#include <vector>
 
 namespace ActsFatras {
 

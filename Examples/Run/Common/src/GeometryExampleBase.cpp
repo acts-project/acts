@@ -6,12 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "ACTFW/Detector/IBaseDetector.hpp"
 #include "ACTFW/Framework/AlgorithmContext.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
@@ -26,6 +20,12 @@
 #include "ACTFW/Plugins/Obj/ObjWriterOptions.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include <Acts/Geometry/GeometryContext.hpp>
+#include <Acts/Geometry/TrackingGeometry.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
   // setup and parse options

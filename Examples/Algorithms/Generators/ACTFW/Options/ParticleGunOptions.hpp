@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/Generators/EventGenerator.hpp"
+
+#include <boost/program_options.hpp>
 
 namespace FW {
 namespace Options {

@@ -8,18 +8,19 @@
 
 #pragma once
 
+#include "ACTFW/Framework/BareService.hpp"
+#include "ACTFW/Framework/ProcessCode.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
 #include <Acts/Utilities/BinningType.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include <DD4hep/DetElement.h>
-#include <DD4hep/Detector.h>
-#include <TGeoNode.h>
+
 #include <functional>
 #include <memory>
 
-#include "ACTFW/Framework/BareService.hpp"
-#include "ACTFW/Framework/ProcessCode.hpp"
+#include <DD4hep/DetElement.h>
+#include <DD4hep/Detector.h>
+#include <TGeoNode.h>
 
 namespace FW {
 namespace DD4hep {

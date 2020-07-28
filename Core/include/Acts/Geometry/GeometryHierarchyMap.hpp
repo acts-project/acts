@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryID.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <initializer_list>
@@ -15,8 +17,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-
-#include "Acts/Geometry/GeometryID.hpp"
 
 namespace Acts {
 

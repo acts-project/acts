@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <cmath>
-#include <iosfwd>
-#include <limits>
-
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
+
+#include <cmath>
+#include <iosfwd>
+#include <limits>
 
 namespace ActsFatras {
 

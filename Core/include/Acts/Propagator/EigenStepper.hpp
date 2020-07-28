@@ -8,9 +8,8 @@
 
 #pragma once
 
-#include <cmath>
-#include <functional>
-#include <limits>
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
@@ -22,6 +21,10 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <functional>
+#include <limits>
 
 namespace Acts {
 

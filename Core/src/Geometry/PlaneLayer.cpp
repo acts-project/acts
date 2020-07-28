@@ -11,12 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include <utility>
+#include "Acts/Geometry/PlaneLayer.hpp"
 
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
-#include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <utility>
 
 Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D> transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
