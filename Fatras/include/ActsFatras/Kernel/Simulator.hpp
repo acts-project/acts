@@ -51,7 +51,7 @@ struct ParticleSimulator {
 
   /// Construct the simulator with the underlying propagator.
   ParticleSimulator(propagator_t &&propagator_, Acts::Logging::Level lvl)
-      : propagator(propagator_),
+      : propagator(std::move(propagator_)),
         localLogger(Acts::getDefaultLogger("Simulator", lvl)) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.

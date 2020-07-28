@@ -132,11 +132,13 @@ void setupSimulationAlgorithms(
   Navigator navigator(trackingGeometry);
   // construct the charged simulator
   ChargedStepper chargedStepper(std::move(magneticField));
-  ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
+  ChargedPropagator chargedPropagator(std::move(chargedStepper),
+                                      std::move(navigator));
   ChargedSimulator chargedSimulator(std::move(chargedPropagator), logLevel);
   // construct the neutral simulator
   NeutralStepper neutralStepper;
-  NeutralPropagator neutralPropagator(std::move(neutralStepper), navigator);
+  NeutralPropagator neutralPropagator(std::move(neutralStepper),
+                                      std::move(navigator));
   NeutralSimulator neutralSimulator(std::move(neutralPropagator), logLevel);
   // construct the combined simulator
   Simulator simulator(std::move(chargedSimulator), std::move(neutralSimulator));
@@ -149,7 +151,7 @@ void setupSimulationAlgorithms(
   fatras.outputHits = "hits";
   fatras.randomNumbers = randomNumbers;
   sequencer.addAlgorithm(
-      std::make_shared<SimulationAlgorithm>(fatras, logLevel));
+      std::make_shared<SimulationAlgorithm>(std::move(fatras), logLevel));
 
   // Output directory
   const auto outputDir = FW::ensureWritableDirectory(
