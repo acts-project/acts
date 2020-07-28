@@ -282,6 +282,10 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      if (result.finished) {
+        return;
+      }
+
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       // This following is added due to the fact that the navigation
@@ -374,18 +378,16 @@ class CombinatorialKalmanFilter {
       }
 
       // Post-processing after forward filtering
-      if (result.forwardFiltered and not result.finished) {
+      if (result.forwardFiltered) {
         // Return error if forward filtering finds no tracks
         if (result.trackTips.empty()) {
           result.result =
               Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
         } else {
           if (not smoothing) {
-            // Manually set the targetReached to abort the propagation
             ACTS_VERBOSE("Finish forward Kalman filtering");
             // Remember that track finding is done
             result.finished = true;
-            state.navigation.targetReached = true;
           } else {
             // Iterate over the found tracks for smoothing and getting the
             // fitted parameter. This needs to be accomplished in different
@@ -1058,7 +1060,7 @@ class CombinatorialKalmanFilter {
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const result_t& result) const {
-      if (!result.result.ok()) {
+      if (!result.result.ok() or result.finished) {
         return true;
       }
       return false;
