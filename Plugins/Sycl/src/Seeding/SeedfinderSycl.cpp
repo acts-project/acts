@@ -9,17 +9,6 @@
 namespace Acts::Sycl {
   namespace sycl = cl::sycl;
 
-  struct nvidia_selector : public sycl::device_selector {
-    int operator()(const sycl::device& d) const override {
-      if(d.get_info<sycl::info::device::vendor>().find("NVIDIA") != std::string::npos) {
-        return 1;
-      }
-      else {
-        return -1;
-      }
-    }; 
-  };
-
   void outputPlatforms() {
     for (const sycl::platform& platform :
       sycl::platform::get_platforms()) {
@@ -126,7 +115,8 @@ namespace Acts::Sycl {
     
   }
 
-  void offloadDupletSearchBottom(const std::vector<float>& configData,
+  void offloadDupletSearchBottom(cl::sycl::queue q,
+                          const std::vector<float>& configData,
                           const std::vector<int>& maxData,
                           std::vector<int>& indBPerMSpCompat,
                           std::vector<int>& indTPerMSpCompat,
@@ -137,25 +127,11 @@ namespace Acts::Sycl {
                           const std::vector<float>& topSPs)
     {
 
-    // catch asynchronous exceptions
-    auto exception_handler = [] (sycl::exception_list exceptions) {
-    for (std::exception_ptr const& e : exceptions) {
-        try {
-          std::rethrow_exception(e);
-        } catch(sycl::exception const& e) {
-          std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
-        }
-      }
-    };
-
-    // create queue with costum device selector
-    sycl::queue q(nvidia_selector(), exception_handler);
-
     try {
-      // each vector stores data of space points flattened out, 
-      const int M = middleSPs.size() / eSP; 
-      const int B = bottomSPs.size() / eSP;
-      const int T = topSPs.size() / eSP;
+      // each vector stores data of space points flattened out
+      const int M = (middleSPs.size()) / int(eSP); 
+      const int B = (bottomSPs.size()) / int(eSP);
+      const int T = (topSPs.size()) / int(eSP);
 
       // reserve buffers
       sycl::buffer<float,1> configBuf (configData.data(),         sycl::range<1>(configData.size()));
@@ -174,9 +150,9 @@ namespace Acts::Sycl {
           configAcc(configBuf,cghandler);
         sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::constant_buffer>
           maxAcc(maxBuf, cghandler);
-        sycl::accessor<int, 1, sycl::access::mode::read_write, sycl::access::target::global_buffer>
+        sycl::accessor<int, 1, sycl::access::mode::discard_read_write, sycl::access::target::global_buffer>
           indBotAcc(indBotBuf, cghandler);
-        sycl::accessor<int, 1, sycl::access::mode::read_write, sycl::access::target::global_buffer>
+        sycl::accessor<int, 1, sycl::access::mode::atomic, sycl::access::target::global_buffer>
           numBotAcc(numBotBuf, cghandler);
         sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
           botSPAcc(botSPBuf, cghandler);
@@ -186,21 +162,22 @@ namespace Acts::Sycl {
         cghandler.parallel_for<class duplet_search_bottom>(
           M*B, [=](sycl::id<1> idx
         ) {
-          int mid = (idx / B);
-          int bot = (idx % B);
+          const int mid = (int(idx) / B);
+          const int bot = (int(idx) % B);
 
-          float deltaR = midSPAcc[mid * int(eSP) + int(eRadius)] - botSPAcc[bot * int(eSP) + int(eRadius)];
-          float cotTheta = (midSPAcc[mid * int(eSP) + int(eZ)] - botSPAcc[bot * int(eSP) + int(eZ)]) / deltaR;
-          float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
+          const float deltaR = midSPAcc[mid * int(eSP) + int(eRadius)] - botSPAcc[bot * int(eSP) + int(eRadius)];
+          const float cotTheta = (midSPAcc[mid * int(eSP) + int(eZ)] - botSPAcc[bot * int(eSP) + int(eZ)]) / deltaR;
+          const float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
 
-          if( (deltaR >= configAcc[eDeltaRMin]) &&
-              (deltaR <= configAcc[eDeltaRMax]) &&
-              (std::fabs(cotTheta <= configAcc[eCotThetaMax])) &&
-              (zOrigin >= configAcc[eCollisionRegionMin]) &&
-              (zOrigin <= configAcc[eCollisionRegionMax]) &&
-              numBotAcc[mid] < maxAcc[eMaxBottomPerMiddleSP]) {
-            indBotAcc[mid * maxAcc[eMaxBottomPerMiddleSP] + numBotAcc[mid]] = bot;
-            numBotAcc[mid] += 1;
+          if( !(deltaR < configAcc[eDeltaRMin]) &&
+              !(deltaR > configAcc[eDeltaRMax]) &&
+              !(sycl::abs(cotTheta) > configAcc[eCotThetaMax]) &&
+              !(zOrigin < configAcc[eCollisionRegionMin]) &&
+              !(zOrigin > configAcc[eCollisionRegionMax])) {
+            const int ind = numBotAcc[mid].fetch_add(1);
+            if(ind < maxAcc[eMaxBottomPerMiddleSP]){
+              indBotAcc[mid * maxAcc[eMaxBottomPerMiddleSP] + ind] = bot;
+            }
           }
         });
       });
@@ -211,9 +188,9 @@ namespace Acts::Sycl {
           configAcc(configBuf,cghandler);
         sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::constant_buffer>
           maxAcc(maxBuf, cghandler);
-        sycl::accessor<int, 1, sycl::access::mode::read_write, sycl::access::target::global_buffer>
+        sycl::accessor<int, 1, sycl::access::mode::discard_read_write, sycl::access::target::global_buffer>
           indTopAcc(indTopBuf, cghandler);
-        sycl::accessor<int, 1, sycl::access::mode::read_write, sycl::access::target::global_buffer>
+        sycl::accessor<int, 1, sycl::access::mode::atomic, sycl::access::target::global_buffer>
           numTopAcc(numTopBuf, cghandler);
         sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
           midSPAcc(midSPBuf, cghandler);
@@ -223,21 +200,22 @@ namespace Acts::Sycl {
         cghandler.parallel_for<class duplet_search_top>(
           M*T, [=](sycl::id<1> idx
         ) {
-          int mid = (idx / T);
-          int top = (idx % T);
+          const int mid = (idx / T);
+          const int top = (idx % T);
 
-          float deltaR = topSPAcc[top * int(eSP) + int(eRadius)] - midSPAcc[mid * int(eSP) + int(eRadius)];
-          float cotTheta = (topSPAcc[top * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eZ)]) / deltaR;
-          float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
+          const float deltaR = topSPAcc[top * int(eSP) + int(eRadius)] - midSPAcc[mid * int(eSP) + int(eRadius)];
+          const float cotTheta = (topSPAcc[top * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eZ)]) / deltaR;
+          const float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
 
-          if( (deltaR >= configAcc[eDeltaRMin]) &&
-              (deltaR <= configAcc[eDeltaRMax]) &&
-              (std::fabs(cotTheta <= configAcc[eCotThetaMax])) &&
-              (zOrigin >= configAcc[eCollisionRegionMin]) &&
-              (zOrigin <= configAcc[eCollisionRegionMax]) &&
-              numTopAcc[mid] < maxAcc[eMaxTopPerMiddleSP]) {
-            indTopAcc[mid * maxAcc[eMaxTopPerMiddleSP] + numTopAcc[mid]] = top;
-            numTopAcc[mid] += 1;
+          if( !(deltaR < configAcc[eDeltaRMin]) &&
+              !(deltaR > configAcc[eDeltaRMax]) &&
+              !(sycl::abs(cotTheta) > configAcc[eCotThetaMax]) &&
+              !(zOrigin < configAcc[eCollisionRegionMin]) &&
+              !(zOrigin > configAcc[eCollisionRegionMax])) {
+            const int ind = numTopAcc[mid].fetch_add(1);
+            if(ind < maxAcc[eMaxTopPerMiddleSP]){
+              indTopAcc[mid * maxAcc[eMaxTopPerMiddleSP] + ind] = top;
+            }
           }
         });
       });
@@ -247,33 +225,20 @@ namespace Acts::Sycl {
     }
   };
 
-  void offloadTransformCoordinates( const std::vector<int>& indBPerMSpCompat,
-                                    const std::vector<int>& indTPerMSpCompat,
-                                    const std::vector<int>& numBotCompatPerMSP,
-                                    const std::vector<int>& numTopCompatPerMSP,
-                                    const std::vector<float>& bottomSPs,
-                                    const std::vector<float>& middleSPs,
-                                    const std::vector<float>& topSPs,
-                                    std::vector<float>& linCircleBot,
-                                    std::vector<float>& linCircleTop) {
-
-    // Catch asynchronous exceptions
-    auto exception_handler = [] (sycl::exception_list exceptions) {
-    for (std::exception_ptr const& e : exceptions) {
-        try {
-          std::rethrow_exception(e);
-        } catch(sycl::exception const& e) {
-          std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
-        }
-      }
-    };
-
-    // create queue with costum device selector
-    sycl::queue q(nvidia_selector(), exception_handler);
+  void offloadTransformCoordinates( cl::sycl::queue q, const std::vector<int>& maxData,
+                                  const std::vector<int>& indBPerMSpCompat,
+                                  const std::vector<int>& indTPerMSpCompat,
+                                  const std::vector<int>& numBotCompatPerMSP,
+                                  const std::vector<int>& numTopCompatPerMSP,
+                                  const std::vector<float>& bottomSPs,
+                                  const std::vector<float>& middleSPs,
+                                  const std::vector<float>& topSPs,
+                                  std::vector<float>& linCircleBot,
+                                  std::vector<float>& linCircleTop) {
 
     try { 
-      const int M = middleSPs.size() / eSP; 
-
+      // reserve buffers
+      sycl::buffer<int,1>   maxBuf    (maxData.data(),            sycl::range<1>(maxData.size()));
       sycl::buffer<int,1>   indBotBuf (indBPerMSpCompat.data(),   sycl::range<1>(indBPerMSpCompat.size()));
       sycl::buffer<int,1>   indTopBuf (indTPerMSpCompat.data(),   sycl::range<1>(indTPerMSpCompat.size()));
       sycl::buffer<int,1>   numBotBuf (numBotCompatPerMSP.data(), sycl::range<1>(numBotCompatPerMSP.size()));
@@ -281,7 +246,59 @@ namespace Acts::Sycl {
       sycl::buffer<float,1> botSPBuf  (bottomSPs.data(),          sycl::range<1>(bottomSPs.size()));
       sycl::buffer<float,1> midSPBuf  (middleSPs.data(),          sycl::range<1>(middleSPs.size()));
       sycl::buffer<float,1> topSPBuf  (topSPs.data(),             sycl::range<1>(topSPs.size()));
+      sycl::buffer<float,1> linBotBuf (linCircleBot.data(),       sycl::range<1>(linCircleBot.size()));
       sycl::buffer<float,1> linTopBuf (linCircleTop.data(),       sycl::range<1>(linCircleTop.size()));
+
+      const int M = indBPerMSpCompat.size(); 
+      q.submit([&](sycl::handler &cghandler) {
+        // add accessors to buffers
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::constant_buffer>
+          maxAcc(maxBuf, cghandler);
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          indBotAcc(indBotBuf, cghandler);
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          numBotAcc(numBotBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          botSPAcc(botSPBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          midSPAcc(midSPBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::write, sycl::access::target::global_buffer>
+          linBotAcc(linBotBuf, cghandler);
+
+        cghandler.parallel_for<class transform_coord_bottom>(M, [=](sycl::id<1> idx) {
+          if(indBotAcc[idx] != -1){
+            int mid = (idx / maxAcc[eMaxBottomPerMiddleSP]);
+            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
+            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
+            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
+            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
+            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float cosPhiM =     xM / rM;
+            float sinPhiM =     yM / rM;
+
+            // retrieve bottom space point index
+            int bot = indBotAcc[idx];
+            float deltaX = botSPAcc[bot * int(eSP) + int(eX)] - xM;
+            float deltaY = botSPAcc[bot * int(eSP) + int(eY)] - yM;
+            float deltaZ = botSPAcc[bot * int(eSP) + int(eZ)] - zM;
+
+            float x = deltaX * cosPhiM + deltaY * sinPhiM;
+            float y = deltaY * cosPhiM - deltaX * sinPhiM;
+            float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+            float iDeltaR = std::sqrt(iDeltaR2);
+            float cot_theta = -(deltaZ * iDeltaR);
+
+            linBotAcc[idx * int(eLIN) + int(eCotTheta)] = cot_theta;
+            linBotAcc[idx * int(eLIN) + int(eZo)] = zM - rM * cot_theta;
+            linBotAcc[idx * int(eLIN) + int(eIDeltaR)] = iDeltaR;
+            linBotAcc[idx * int(eLIN) + int(eU)] = x * iDeltaR2;
+            linBotAcc[idx * int(eLIN) + int(eV)] = y * iDeltaR2;
+            linBotAcc[idx * int(eLIN) + int(eEr)] = ((varianceZM + botSPAcc[bot * int(eSP) + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * int(eSP) + int(eVarianceR)])) * iDeltaR2;
+          }
+        });
+      });
     }
     catch (sycl::exception const& e) {
       std::cout << "Caught synchronous SYCL exception:\n" << e.what() << std::endl;

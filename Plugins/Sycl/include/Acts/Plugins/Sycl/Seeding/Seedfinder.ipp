@@ -24,6 +24,20 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+
+  // catch asynchronous exceptions
+  auto exception_handler = [] (cl::sycl::exception_list exceptions) {
+  for (std::exception_ptr const& e : exceptions) {
+      try {
+        std::rethrow_exception(e);
+      } catch(cl::sycl::exception const& e) {
+        std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
+      }
+    }
+  };
+
+  // create queue with costum device selector
+  m_queue = cl::sycl::queue(nvidia_selector(), exception_handler);
 }
 
 template <typename external_spacepoint_t>
@@ -55,14 +69,14 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                           SP->varianceR(), SP->varianceZ()});
   }
 
-  int numBottomSPs = offloadBottomSPs.size();
-  int numMiddleSPs = offloadMiddleSPs.size();
-  int numTopSPs = offloadTopSPs.size();
+  const int numBottomSPs = (offloadBottomSPs.size()) / eSP;
+  const int numMiddleSPs = (offloadMiddleSPs.size()) / eSP;
+  const int numTopSPs = (offloadTopSPs.size()) / eSP;
 
-  int maxBPermMSP = 1000;
-  int maxTPerMSP = 1000;
+  const int maxBPerMSP = 1000;
+  const int maxTPerMSP = 1000;
 
-  std::vector<int> indBPerMSpCompat(numMiddleSPs * maxBPermMSP, -1);
+  std::vector<int> indBPerMSpCompat(numMiddleSPs * maxBPerMSP, -1);
   std::vector<int> indTPerMSpCompat(numMiddleSPs * maxTPerMSP, -1);
   std::vector<int> numBotCompatPerMSP(numMiddleSPs, 0);
   std::vector<int> numTopCompatPerMSP(numMiddleSPs, 0);
@@ -70,8 +84,6 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   // reserve space in advance for bottom and top SPs for performace
   std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
   std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
-  compatBottomSP.reserve(numBottomSPs);
-  compatTopSP.reserve(numTopSPs);
 
   std::vector<float> offloadConfigData = {
     m_config.deltaRMin,
@@ -82,11 +94,11 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   };
 
   std::vector<int> offloadMaxData = {
-    maxBPermMSP,
+    maxBPerMSP,
     maxTPerMSP
   };
 
-  offloadDupletSearchBottom(offloadConfigData,
+  offloadDupletSearchBottom(m_queue, offloadConfigData,
                             offloadMaxData,
                             indBPerMSpCompat,
                             indTPerMSpCompat,
@@ -96,6 +108,20 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                             offloadMiddleSPs,
                             offloadTopSPs
   );
+
+  std::vector<float> botLinCircle(indBPerMSpCompat.size() * eLIN);
+  std::vector<float> topLinCircle(indTPerMSpCompat.size() * eLIN);
+
+  offloadTransformCoordinates(m_queue, offloadMaxData,
+                              indBPerMSpCompat,
+                              indTPerMSpCompat,
+                              numBotCompatPerMSP,
+                              numTopCompatPerMSP,
+                              offloadBottomSPs,
+                              offloadMiddleSPs,
+                              offloadTopSPs,
+                              botLinCircle,
+                              topLinCircle);
 
   int countMiddleSP = 0;
   for (auto spM : middleSPs) {

@@ -50,7 +50,8 @@ enum eLinCircle {
   eZo, eCotTheta, eIDeltaR, eEr, eU, eV, eLIN
 };
 
-void offloadDupletSearchBottom( const std::vector<float>& configData,
+void offloadDupletSearchBottom( cl::sycl::queue q,
+                                const std::vector<float>& configData,
                                 const std::vector<int>& maxData,
                                 std::vector<int>& indBPerMSpCompat,
                                 std::vector<int>& indTPerMSpCompat,
@@ -60,7 +61,8 @@ void offloadDupletSearchBottom( const std::vector<float>& configData,
                                 const std::vector<float>& middleSPs,
                                 const std::vector<float>& topSPs);
 
-void offloadTransformCoordiantes( const std::vector<int>& indBPerMSpCompat,
+void offloadTransformCoordinates( cl::sycl::queue q, const std::vector<int>& maxData,
+                                  const std::vector<int>& indBPerMSpCompat,
                                   const std::vector<int>& indTPerMSpCompat,
                                   const std::vector<int>& numBotCompatPerMSP,
                                   const std::vector<int>& numTopCompatPerMSP,
@@ -72,6 +74,17 @@ void offloadTransformCoordiantes( const std::vector<int>& indBPerMSpCompat,
 
 void outputPlatforms();
 void testDevice();
+
+struct nvidia_selector : public cl::sycl::device_selector {
+  int operator()(const cl::sycl::device& d) const override {
+    if(d.get_info<cl::sycl::info::device::vendor>().find("NVIDIA") != std::string::npos) {
+      return 1;
+    }
+    else {
+      return -1;
+    }
+  }; 
+};
 
 template <typename external_spacepoint_t>
 class Seedfinder {
@@ -96,9 +109,10 @@ class Seedfinder {
     std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  cl::sycl::queue m_queue;
 };
 
-} // namespace Acts
+} // namespace Acts::Sycl
 
 // Include the template implementation.
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.ipp"
