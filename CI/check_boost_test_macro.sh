@@ -1,7 +1,7 @@
 #!/bin/bash
 
-test_string="BOOST_TEST"
-grep $test_string -n -r Tests --include "*.cpp" --include "*.hpp"
+test_string="BOOST_TEST("
+grep $test_string -n -r Tests --include "*.cpp" --include "*.hpp" --include "*.ipp"
 
 status=$?
 
