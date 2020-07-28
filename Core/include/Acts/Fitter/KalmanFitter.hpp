@@ -979,7 +979,7 @@ class KalmanFitter {
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
     if (!kalmanResult.result.ok()) {
@@ -1077,7 +1077,7 @@ class KalmanFitter {
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
     if (!kalmanResult.result.ok()) {

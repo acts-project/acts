@@ -382,7 +382,7 @@ class CombinatorialKalmanFilter {
         // Return error if forward filtering finds no tracks
         if (result.trackTips.empty()) {
           result.result =
-              Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
+              Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
         } else {
           if (not smoothing) {
             ACTS_VERBOSE("Finish forward Kalman filtering");
