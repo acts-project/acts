@@ -401,6 +401,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
                   fittedAgainParameters.parameters().template tail<1>(), 1e-5);
 
+  // Fit without target surface
+  kfOptions.referenceSurface = nullptr;
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto fittedWithoutTargetSurface = *fitRes;
+  // Check if there is no fitted parameters
+  BOOST_CHECK(fittedWithoutTargetSurface.fittedParameters == std::nullopt);
+
+  // Reset the target surface
+  kfOptions.referenceSurface = rSurface;
+
   // Change the order of the sourcelinks
   std::vector<SourceLink> shuffledMeasurements = {
       sourcelinks[3], sourcelinks[2], sourcelinks[1],
@@ -471,6 +482,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       nSmoothed++;
   });
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
+
+  // Reset to use smoothing formalism
+  kfOptions.backwardFiltering = false;
 
   // Extract outliers from result of propagation.
   // This vector owns the outliers
