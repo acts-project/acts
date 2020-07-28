@@ -40,7 +40,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::uniform_real_distribution<float> loc(-10, 10);
   std::uniform_real_distribution<float> ang(M_PI / 10., M_PI / 4.);
 
-  Box box{nullptr, {0, 0, 0}, Box::Size{{1, 2, 3}}};
+  Box testBox{nullptr, {0, 0, 0}, Box::Size{{1, 2, 3}}};
 
   std::cout << "\n==== RAY ====\n" << std::endl;
 
@@ -50,7 +50,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return box.intersect(ray);
   };
 
-  rayVariants["Variant 1"] = [](const Box& box, const Ray<float, 3>& ray) {
+  rayVariants["Incl. div., unroll"] = [](const Box& box,
+                                         const Ray<float, 3>& ray) {
     const VertexType& origin = ray.origin();
 
     const vertex_array_type& d = ray.dir();
@@ -83,7 +84,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return tmax > tmin && tmax > 0.0;
   };
 
-  rayVariants["Variant 2"] = [](const Box& box, const Ray<float, 3>& ray) {
+  rayVariants["Incl. div., loop"] = [](const Box& box,
+                                       const Ray<float, 3>& ray) {
     const VertexType& origin = ray.origin();
 
     const vertex_array_type& d = ray.dir();
@@ -102,29 +104,31 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return tmax > tmin && tmax > 0.0;
   };
 
-  rayVariants["Variant 3"] = [](const Box& box, const Ray<float, 3>& ray) {
-    const VertexType& origin = ray.origin();
-    const vertex_array_type& d = ray.dir();
+  rayVariants["Incl. div., min/max alt., unroll"] =
+      [](const Box& box, const Ray<float, 3>& ray) {
+        const VertexType& origin = ray.origin();
+        const vertex_array_type& d = ray.dir();
 
-    double tx1 = (box.min().x() - origin.x()) / d.x();
-    double tx2 = (box.max().x() - origin.x()) / d.x();
-    double tmin = std::min(tx1, tx2);
-    double tmax = std::max(tx1, tx2);
+        double tx1 = (box.min().x() - origin.x()) / d.x();
+        double tx2 = (box.max().x() - origin.x()) / d.x();
+        double tmin = std::min(tx1, tx2);
+        double tmax = std::max(tx1, tx2);
 
-    double ty1 = (box.min().y() - origin.y()) / d.y();
-    double ty2 = (box.max().y() - origin.y()) / d.y();
-    tmin = std::max(tmin, std::min(ty1, ty2));
-    tmax = std::min(tmax, std::max(ty1, ty2));
+        double ty1 = (box.min().y() - origin.y()) / d.y();
+        double ty2 = (box.max().y() - origin.y()) / d.y();
+        tmin = std::max(tmin, std::min(ty1, ty2));
+        tmax = std::min(tmax, std::max(ty1, ty2));
 
-    double tz1 = (box.min().z() - origin.z()) / d.z();
-    double tz2 = (box.max().z() - origin.z()) / d.z();
-    tmin = std::max(tmin, std::min(tz1, tz2));
-    tmax = std::min(tmax, std::max(tz1, tz2));
+        double tz1 = (box.min().z() - origin.z()) / d.z();
+        double tz2 = (box.max().z() - origin.z()) / d.z();
+        tmin = std::max(tmin, std::min(tz1, tz2));
+        tmax = std::min(tmax, std::max(tz1, tz2));
 
-    return tmax > tmin && tmax > 0.0;
-  };
+        return tmax > tmin && tmax > 0.0;
+      };
 
-  rayVariants["Variant 4"] = [](const Box& box, const Ray<float, 3>& ray) {
+  rayVariants["No div., min/max alt, unroll"] = [](const Box& box,
+                                                   const Ray<float, 3>& ray) {
     const VertexType& origin = ray.origin();
     const vertex_array_type& id = ray.idir();
 
@@ -146,7 +150,8 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return tmax > tmin && tmax > 0.0;
   };
 
-  rayVariants["Variant 5"] = [](const Box& box, const Ray<float, 3>& ray) {
+  rayVariants["No div., min/max orig, loop"] = [](const Box& box,
+                                                  const Ray<float, 3>& ray) {
     const VertexType& origin = ray.origin();
     const vertex_array_type& id = ray.idir();
     double tmin = -INFINITY, tmax = INFINITY;
@@ -176,7 +181,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
                    std::back_inserter(results),
                    [&](const auto& p) -> decltype(results)::value_type {
                      const auto& [name, func] = p;
-                     return {name, func(box, ray)};
+                     return {name, func(testBox, ray)};
                    });
 
     bool all = std::all_of(results.begin(), results.end(),
@@ -190,7 +195,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         std::cerr << " - " << name << ": " << result << std::endl;
       }
 
-      box.toStream(std::cerr);
+      testBox.toStream(std::cerr);
       std::cerr << std::endl;
       std::cerr << "Ray: [" << ray.origin().transpose() << "], ["
                 << ray.dir().transpose() << "]" << std::endl;
@@ -202,10 +207,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
   std::cout << "Run benchmarks: " << std::endl;
   for (const auto& p : rayVariants) {
     // can't capture structured binding, so pair access it is.
-    std::cout << "- Benchmarking variant: '" << p.first << "'"
-              << std::endl;
+    std::cout << "- Benchmarking variant: '" << p.first << "'" << std::endl;
     auto bench_result = Acts::Test::microBenchmark(
-        [&](const auto& ray) { return p.second(box, ray); }, rays);
+        [&](const auto& ray) { return p.second(testBox, ray); }, rays);
     std::cout << "  " << bench_result << std::endl;
   }
 
@@ -218,84 +222,67 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return box.intersect(frustum);
   };
 
-  frustumVariants["Variant 1"] = [](const Box& box, const Frustum3& fr) {
-    const auto& normals = fr.normals();
-    const vertex_array_type fr_vmin = box.min() - fr.origin();
-    const vertex_array_type fr_vmax = box.max() - fr.origin();
+  frustumVariants["Manual constexpr loop unroll, early ret."] =
+      [](const Box& box, const Frustum3& fr) {
+        constexpr size_t sides = 4;  // yes this is pointless, i just want to
+                                     // kind of match the other impl
 
-    VertexType p_vtx;
-    for (size_t i = 0; i < fr.sides + 1; i++) {
-      const VertexType& normal = normals[i];
+        const auto& normals = fr.normals();
+        const vertex_array_type fr_vmin = box.min() - fr.origin();
+        const vertex_array_type fr_vmax = box.max() - fr.origin();
 
-      p_vtx = (normal.array() < 0).template cast<value_type>() * fr_vmin +
-              (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+        auto calc = [&](const auto& normal) {
+          return (normal.array() < 0).template cast<value_type>() * fr_vmin +
+                 (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+        };
 
-      if (p_vtx.dot(normal) < 0) {
-        return false;
-      }
-    }
-    return true;
-  };
+        VertexType p_vtx;
 
-  frustumVariants["Variant 2"] = [](const Box& box, const Frustum3& fr) {
-    constexpr size_t sides = 4; // yes this is pointless, i just want to kind of match the other impl
-
-    const auto& normals = fr.normals();
-    const vertex_array_type fr_vmin = box.min() - fr.origin();
-    const vertex_array_type fr_vmax = box.max() - fr.origin();
-
-    auto calc = [&](const auto& normal) {
-      return (normal.array() < 0).template cast<value_type>() * fr_vmin +
-             (normal.array() >= 0).template cast<value_type>() * fr_vmax;
-    };
-
-    VertexType p_vtx;
-
-
-    p_vtx = calc(normals[0]);
-    if (p_vtx.dot(normals[0]) < 0) {
-      return false;
-    }
-
-    p_vtx = calc(normals[1]);
-    if (p_vtx.dot(normals[1]) < 0) {
-      return false;
-    }
-
-    p_vtx = calc(normals[2]);
-    if (p_vtx.dot(normals[2]) < 0) {
-      return false;
-    }
-
-    if constexpr (sides > 2) {
-      p_vtx = calc(normals[3]);
-      if (p_vtx.dot(normals[3]) < 0) {
-        return false;
-      }
-    }
-
-    if constexpr (sides > 3) {
-      p_vtx = calc(normals[4]);
-      if (p_vtx.dot(normals[4]) < 0) {
-        return false;
-      }
-    }
-
-    if constexpr (sides > 4) {
-      for (size_t i = 5; i <= fr.sides; i++) {
-        const VertexType& normal = normals[i];
-
-        p_vtx = calc(normal);
-        if (p_vtx.dot(normal) < 0) {
+        p_vtx = calc(normals[0]);
+        if (p_vtx.dot(normals[0]) < 0) {
           return false;
         }
-      }
-    }
 
-    return true;
-  };
+        p_vtx = calc(normals[1]);
+        if (p_vtx.dot(normals[1]) < 0) {
+          return false;
+        }
 
-  frustumVariants["Variant 3"] = [](const Box& box, const Frustum3& fr) {
+        p_vtx = calc(normals[2]);
+        if (p_vtx.dot(normals[2]) < 0) {
+          return false;
+        }
+
+        if constexpr (sides > 2) {
+          p_vtx = calc(normals[3]);
+          if (p_vtx.dot(normals[3]) < 0) {
+            return false;
+          }
+        }
+
+        if constexpr (sides > 3) {
+          p_vtx = calc(normals[4]);
+          if (p_vtx.dot(normals[4]) < 0) {
+            return false;
+          }
+        }
+
+        if constexpr (sides > 4) {
+          for (size_t i = 5; i <= fr.sides; i++) {
+            const VertexType& normal = normals[i];
+
+            p_vtx = calc(normal);
+            if (p_vtx.dot(normal) < 0) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      };
+
+  frustumVariants["Nominal, no early ret."] = [](const Box& box,
+                                                 const Frustum3& fr) {
     const auto& normals = fr.normals();
     const vertex_array_type fr_vmin = box.min() - fr.origin();
     const vertex_array_type fr_vmax = box.max() - fr.origin();
@@ -313,51 +300,53 @@ int main(int /*argc*/, char** /*argv[]*/) {
     return result;
   };
 
-  frustumVariants["Variant 4"] = [](const Box& box, const Frustum3& fr) {
-    constexpr size_t sides = 4; // yes this is pointless, i just want to kind of match the other impl
+  frustumVariants["Manual constexpr unroll, early ret."] =
+      [](const Box& box, const Frustum3& fr) {
+        constexpr size_t sides = 4;  // yes this is pointless, i just want to
+                                     // kind of match the other impl
 
-    const auto& normals = fr.normals();
-    const vertex_array_type fr_vmin = box.min() - fr.origin();
-    const vertex_array_type fr_vmax = box.max() - fr.origin();
+        const auto& normals = fr.normals();
+        const vertex_array_type fr_vmin = box.min() - fr.origin();
+        const vertex_array_type fr_vmax = box.max() - fr.origin();
 
-    auto calc = [&](const auto& normal) {
-      return (normal.array() < 0).template cast<value_type>() * fr_vmin +
-             (normal.array() >= 0).template cast<value_type>() * fr_vmax;
-    };
+        auto calc = [&](const auto& normal) {
+          return (normal.array() < 0).template cast<value_type>() * fr_vmin +
+                 (normal.array() >= 0).template cast<value_type>() * fr_vmax;
+        };
 
-    VertexType p_vtx;
-    bool result = true;
+        VertexType p_vtx;
+        bool result = true;
 
-    p_vtx = calc(normals[0]);
-    result = result && (p_vtx.dot(normals[0]) >= 0);
+        p_vtx = calc(normals[0]);
+        result = result && (p_vtx.dot(normals[0]) >= 0);
 
-    p_vtx = calc(normals[1]);
-    result = result && (p_vtx.dot(normals[1]) >= 0);
+        p_vtx = calc(normals[1]);
+        result = result && (p_vtx.dot(normals[1]) >= 0);
 
-    p_vtx = calc(normals[2]);
-    result = result && (p_vtx.dot(normals[2]) >= 0);
+        p_vtx = calc(normals[2]);
+        result = result && (p_vtx.dot(normals[2]) >= 0);
 
-    if constexpr (sides > 2) {
-      p_vtx = calc(normals[3]);
-      result = result && (p_vtx.dot(normals[3]) >= 0);
-    }
+        if constexpr (sides > 2) {
+          p_vtx = calc(normals[3]);
+          result = result && (p_vtx.dot(normals[3]) >= 0);
+        }
 
-    if constexpr (sides > 3) {
-      p_vtx = calc(normals[4]);
-      result = result && (p_vtx.dot(normals[4]) >= 0);
-    }
+        if constexpr (sides > 3) {
+          p_vtx = calc(normals[4]);
+          result = result && (p_vtx.dot(normals[4]) >= 0);
+        }
 
-    if constexpr (sides > 4) {
-      for (size_t i = 5; i <= fr.sides; i++) {
-        const VertexType& normal = normals[i];
+        if constexpr (sides > 4) {
+          for (size_t i = 5; i <= fr.sides; i++) {
+            const VertexType& normal = normals[i];
 
-        p_vtx = calc(normal);
-        result = result && (p_vtx.dot(normal) >= 0);
-      }
-    }
+            p_vtx = calc(normal);
+            result = result && (p_vtx.dot(normal) >= 0);
+          }
+        }
 
-    return result;
-  };
+        return result;
+      };
 
   std::vector<Frustum3> frustums{n, Frustum3{{0, 0, 0}, {1, 0, 0}, M_PI / 2.}};
   std::generate(frustums.begin(), frustums.end(), [&]() {
@@ -374,13 +363,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
                    std::back_inserter(results),
                    [&](const auto& p) -> decltype(results)::value_type {
                      const auto& [name, func] = p;
-                     return {name, func(box, fr)};
+                     return {name, func(testBox, fr)};
                    });
 
-    bool all =
-        std::all_of(results.begin(), results.end(), [](const auto& r) { return r.second; });
-    bool none =
-        std::none_of(results.begin(), results.end(), [](const auto& r) { return r.second; });
+    bool all = std::all_of(results.begin(), results.end(),
+                           [](const auto& r) { return r.second; });
+    bool none = std::none_of(results.begin(), results.end(),
+                             [](const auto& r) { return r.second; });
 
     if (!all && !none) {
       std::cerr << "Discrepancy: " << std::endl;
@@ -388,7 +377,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
         std::cerr << " - " << name << ": " << result << std::endl;
       }
 
-      box.toStream(std::cerr);
+      testBox.toStream(std::cerr);
       std::cerr << std::endl;
       std::cerr << "Frustum: [" << fr.origin().transpose() << "], ["
                 << fr.dir().transpose() << "]" << std::endl;
@@ -415,43 +404,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     for (const auto& p : frustumVariants) {
       // can't capture structured binding, so pair access it is.
-      std::cout << "- Benchmarking variant: '" << p.first << "'"
-                << std::endl;
+      std::cout << "- Benchmarking variant: '" << p.first << "'" << std::endl;
       auto bench_result = Acts::Test::microBenchmark(
-          [&]() { return p.second(box, fr_pair.second); }, iters_per_run);
+          [&]() { return p.second(testBox, fr_pair.second); }, iters_per_run);
       std::cout << "  " << bench_result << std::endl;
     }
 
     std::cout << std::endl;
-
-  //   std::cout << "------------------------" << std::endl;
-  //   std::cout << label << std::endl;
-  //   std::cout << "------------------------" << std::endl;
-
-  //   std::cout << "Benchmarking frust nominal: " << std::flush;
-  //   auto fr_bench_result = Acts::Test::microBenchmark(
-  //       [&]() { return box.intersect(fr); }, iters_per_run);
-  //   std::cout << fr_bench_result << std::endl;
-
-  //   std::cout << "Benchmarking frust opt 1: " << std::flush;
-  //   fr_bench_result = Acts::Test::microBenchmark(
-  //       [&]() { return frustOpt1(box, fr); }, iters_per_run);
-  //   std::cout << fr_bench_result << std::endl;
-
-  //   std::cout << "Benchmarking frust opt 2: " << std::flush;
-  //   fr_bench_result = Acts::Test::microBenchmark(
-  //       [&]() { return frustOpt2(box, fr); }, iters_per_run);
-  //   std::cout << fr_bench_result << std::endl;
-
-  //   std::cout << "Benchmarking frust opt 3: " << std::flush;
-  //   fr_bench_result = Acts::Test::microBenchmark(
-  //       [&]() { return frustOpt3(box, fr); }, iters_per_run);
-  //   std::cout << fr_bench_result << std::endl;
-
-  //   std::cout << "Benchmarking frust opt 4: " << std::flush;
-  //   fr_bench_result = Acts::Test::microBenchmark(
-  //       [&]() { return frustOpt4(box, fr); }, iters_per_run);
-  //   std::cout << fr_bench_result << std::endl;
   }
   return 0;
 }
