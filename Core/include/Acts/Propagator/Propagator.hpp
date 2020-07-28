@@ -396,20 +396,6 @@ class Propagator final {
 
   /// Getter for the logger
   const Logger& logger() const { return *m_logger; }
-
-  /// The private propagation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the
-  /// options.debug == true case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the nested propagator state object
-  ///
-  /// @param state the propagator state for the debug flag, prefix/length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const;
 };
 
 }  // namespace Acts
