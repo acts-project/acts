@@ -249,7 +249,9 @@ namespace Acts::Sycl {
       sycl::buffer<float,1> linBotBuf (linCircleBot.data(),       sycl::range<1>(linCircleBot.size()));
       sycl::buffer<float,1> linTopBuf (linCircleTop.data(),       sycl::range<1>(linCircleTop.size()));
 
-      const int M = indBPerMSpCompat.size(); 
+      const int LB = indBPerMSpCompat.size(); 
+      const int LT = indTPerMSpCompat.size(); 
+
       q.submit([&](sycl::handler &cghandler) {
         // add accessors to buffers
         sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::constant_buffer>
@@ -265,7 +267,7 @@ namespace Acts::Sycl {
         sycl::accessor<float, 1, sycl::access::mode::write, sycl::access::target::global_buffer>
           linBotAcc(linBotBuf, cghandler);
 
-        cghandler.parallel_for<class transform_coord_bottom>(M, [=](sycl::id<1> idx) {
+        cghandler.parallel_for<class transform_coord_bottom>(LB, [=](sycl::id<1> idx) {
           if(indBotAcc[idx] != -1){
             int mid = (idx / maxAcc[eMaxBottomPerMiddleSP]);
             float xM =          midSPAcc[mid * int(eSP) + int(eX)];
@@ -286,7 +288,7 @@ namespace Acts::Sycl {
             float x = deltaX * cosPhiM + deltaY * sinPhiM;
             float y = deltaY * cosPhiM - deltaX * sinPhiM;
             float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-            float iDeltaR = std::sqrt(iDeltaR2);
+            float iDeltaR = sycl::sqrt(iDeltaR2);
             float cot_theta = -(deltaZ * iDeltaR);
 
             linBotAcc[idx * int(eLIN) + int(eCotTheta)] = cot_theta;
@@ -299,9 +301,61 @@ namespace Acts::Sycl {
           }
         });
       });
+
+      q.submit([&](sycl::handler &cghandler) {
+        // add accessors to buffers
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::constant_buffer>
+          maxAcc(maxBuf, cghandler);
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          indTopAcc(indTopBuf, cghandler);
+        sycl::accessor<int, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          numTopAcc(numTopBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          topSPAcc(topSPBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::read, sycl::access::target::global_buffer>
+          midSPAcc(midSPBuf, cghandler);
+        sycl::accessor<float, 1, sycl::access::mode::write, sycl::access::target::global_buffer>
+          linTopAcc(linTopBuf, cghandler);
+
+        cghandler.parallel_for<class transform_coord_top>(LT, [=](sycl::id<1> idx) {
+          if(indTopAcc[idx] != -1){
+            int mid = (idx / maxAcc[eMaxTopPerMiddleSP]);
+            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
+            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
+            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
+            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
+            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float cosPhiM =     xM / rM;
+            float sinPhiM =     yM / rM;
+
+            // retrieve top space point index
+            int top = indTopAcc[idx];
+            float deltaX = topSPAcc[top * int(eSP) + int(eX)] - xM;
+            float deltaY = topSPAcc[top * int(eSP) + int(eY)] - yM;
+            float deltaZ = topSPAcc[top * int(eSP) + int(eZ)] - zM;
+
+            float x = deltaX * cosPhiM + deltaY * sinPhiM;
+            float y = deltaY * cosPhiM - deltaX * sinPhiM;
+            float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+            float iDeltaR = sycl::sqrt(iDeltaR2);
+            float cot_theta = deltaZ * iDeltaR;
+
+            linTopAcc[idx * int(eLIN) + int(eCotTheta)] = cot_theta;
+            linTopAcc[idx * int(eLIN) + int(eZo)] = zM - rM * cot_theta;
+            linTopAcc[idx * int(eLIN) + int(eIDeltaR)] = iDeltaR;
+            linTopAcc[idx * int(eLIN) + int(eU)] = x * iDeltaR2;
+            linTopAcc[idx * int(eLIN) + int(eV)] = y * iDeltaR2;
+            linTopAcc[idx * int(eLIN) + int(eEr)] = ((varianceZM + topSPAcc[top * int(eSP) + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * int(eSP) + int(eVarianceR)])) * iDeltaR2;
+          }
+        });
+      });
     }
     catch (sycl::exception const& e) {
       std::cout << "Caught synchronous SYCL exception:\n" << e.what() << std::endl;
     }
-  }
+  };
+
+  
 } // namespace Acts::Sycl
