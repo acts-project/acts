@@ -141,7 +141,7 @@ class Navigator {
   Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr,
             std::unique_ptr<const Logger> logger =
                 getDefaultLogger("Navigator", Logging::INFO))
-      : trackingGeometry(std::move(tGeometry)), m_logger{std::move(logger)} {}
+      : m_logger{std::move(logger)}, trackingGeometry(std::move(tGeometry)) {}
 
  private:
   std::unique_ptr<const Logger> m_logger{nullptr};
@@ -437,7 +437,8 @@ class Navigator {
     // - geometry and volume tree search for the lowest volume
     if (state.navigation.startSurface &&
         state.navigation.startSurface->associatedLayer()) {
-      ACTS_VERBOSE("Fast start initialization through association from Surface.");
+      ACTS_VERBOSE(
+          "Fast start initialization through association from Surface.");
       // assign the current layer and volume by association
       state.navigation.startLayer =
           state.navigation.startSurface->associatedLayer();
@@ -447,7 +448,8 @@ class Navigator {
       state.navigation.currentVolume = state.navigation.startVolume;
     } else {
       if (state.navigation.startVolume) {
-        ACTS_VERBOSE("Fast start initialization through association from Volume.");
+        ACTS_VERBOSE(
+            "Fast start initialization through association from Volume.");
         state.navigation.startLayer =
             state.navigation.startVolume->associatedLayer(
                 state.geoContext, stepper.position(state.stepping));
@@ -471,7 +473,6 @@ class Navigator {
         state.navigation.currentVolume = state.navigation.startVolume;
         if (state.navigation.startVolume) {
           ACTS_VERBOSE("Start volume resolved.");
-
         }
       }
     }
