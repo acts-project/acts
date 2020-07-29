@@ -72,7 +72,7 @@ class RiddersPropagator {
   /// @param [in] navigator Navigator that will be used
   // template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
   // RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
-  // : m_propagator(Propagator(stepper, navigator)) {}
+      // : m_propagator(Propagator(stepper, navigator)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
   ///

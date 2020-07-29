@@ -108,11 +108,11 @@ int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
 
               // Read the propagation config and create the algorithms
               auto pAlgConfig =
-                  FW::Options::readPropagationConfig(vm, std::move(propagator));
+                  FW::Options::readPropagationConfig(vm, propagator);
               pAlgConfig.randomNumberSvc = randomNumberSvc;
               sequencer.addAlgorithm(
                   std::make_shared<FW::PropagationAlgorithm<Propagator>>(
-                      std::move(pAlgConfig), logLevel));
+                      pAlgConfig, logLevel));
             },
             *var_stepper);
       },

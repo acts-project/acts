@@ -36,9 +36,9 @@ PropagationAlgorithm<propagator_t>::generateCovariance(
 
 template <typename propagator_t>
 PropagationAlgorithm<propagator_t>::PropagationAlgorithm(
-    PropagationAlgorithm<propagator_t>::Config cfg,
+    const PropagationAlgorithm<propagator_t>::Config& cfg,
     Acts::Logging::Level loglevel)
-    : BareAlgorithm("PropagationAlgorithm", loglevel), m_cfg(std::move(cfg)) {}
+    : BareAlgorithm("PropagationAlgorithm", loglevel), m_cfg(cfg) {}
 
 /// Templated execute test method for
 /// charged and netural particles

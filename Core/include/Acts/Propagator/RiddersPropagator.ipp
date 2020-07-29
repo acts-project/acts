@@ -17,7 +17,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       CurvilinearParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator->propagate(start, options);
+  auto nominalRet = m_propagator.propagate(start, options);
   if (not nominalRet.ok()) {
     return ThisResult::failure(nominalRet.error());
   }
@@ -67,7 +67,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       BoundParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator->propagate(start, target, options);
+  auto nominalRet = m_propagator.propagate(start, target, options);
   if (not nominalRet.ok()) {
     return ThisResult::failure(nominalRet.error());
   }

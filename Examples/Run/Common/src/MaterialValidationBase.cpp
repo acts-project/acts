@@ -71,12 +71,11 @@ FW::ProcessCode setupPropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      FW::Options::readPropagationConfig(vm, std::move(propagator));
+  auto pAlgConfig = FW::Options::readPropagationConfig(vm, propagator);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
   pAlgConfig.recordMaterialInteractions = true;
   auto propagationAlg = std::make_shared<FW::PropagationAlgorithm<Propagator>>(
-      std::move(pAlgConfig), logLevel);
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
@@ -110,11 +109,10 @@ FW::ProcessCode setupStraightLinePropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      FW::Options::readPropagationConfig(vm, std::move(propagator));
+  auto pAlgConfig = FW::Options::readPropagationConfig(vm, propagator);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
   auto propagationAlg = std::make_shared<FW::PropagationAlgorithm<Propagator>>(
-      std::move(pAlgConfig), logLevel);
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});

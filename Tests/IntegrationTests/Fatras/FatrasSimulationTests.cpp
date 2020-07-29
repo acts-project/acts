@@ -158,9 +158,8 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   // construct the propagators
   Navigator navigator(trackingGeometry);
   ChargedStepper chargedStepper(Acts::ConstantBField(0, 0, 1_T));
-  ChargedPropagator chargedPropagator(std::move(chargedStepper),
-                                      std::move(navigator));
-  NeutralPropagator neutralPropagator(NeutralStepper(), std::move(navigator));
+  ChargedPropagator chargedPropagator(std::move(chargedStepper), navigator);
+  NeutralPropagator neutralPropagator(NeutralStepper(), navigator);
 
   // construct the simulator
   ChargedSimulator simulatorCharged(std::move(chargedPropagator), logLevel);
