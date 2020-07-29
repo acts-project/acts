@@ -104,51 +104,51 @@ struct VolumeCollector {
           save = false;
           break;
         }
-        // Save if in the result if it does not already exist
-        if (save) {
-          result.collected.push_back(volume_hit);
-          // Screen output
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "Collect volume  "
-                    << state.navigation.currentVolume->geoID();
-            return dstream.str();
-          });
-        }
+      }
+      // Save if in the result if it does not already exist
+      if (save) {
+        result.collected.push_back(volume_hit);
+        // Screen output
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Collect volume  "
+                  << state.navigation.currentVolume->geoID();
+          return dstream.str();
+        });
       }
     }
+  }
 
-    /// Pure observer interface
-    /// - this does not apply to the volume collector
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/)
-        const {}
+  /// Pure observer interface
+  /// - this does not apply to the volume collector
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& /*state*/,
+                  const stepper_t& /*unused*/) const {}
 
-   private:
-    /// The private propagation debug logging
-    ///
-    /// It needs to be fed by a lambda function that returns a string,
-    /// that guarantees that the lambda is only called in the state.debug ==
-    /// true case in order not to spend time when not needed.
-    ///
-    /// @tparam propagator_state_t Type of the propagator state
-    ///
-    /// @param state the propagator state for the debug flag, prefix and
-    /// length
-    /// @param logAction is a callable function that returns a streamable object
-    template <typename propagator_state_t>
-    void debugLog(propagator_state_t & state,
-                  const std::function<std::string()>& logAction) const {
-      if (state.options.debug) {
-        std::stringstream dstream;
-        dstream << "   " << std::setw(state.options.debugPfxWidth);
-        dstream << "volume collector"
-                << " | ";
-        dstream << std::setw(state.options.debugMsgWidth) << logAction()
-                << '\n';
-        state.options.debugString += dstream.str();
-      }
+ private:
+  /// The private propagation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the state.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  ///
+  /// @param state the propagator state for the debug flag, prefix and
+  /// length
+  /// @param logAction is a callable function that returns a streamable object
+  template <typename propagator_state_t>
+  void debugLog(propagator_state_t& state,
+                const std::function<std::string()>& logAction) const {
+    if (state.options.debug) {
+      std::stringstream dstream;
+      dstream << "   " << std::setw(state.options.debugPfxWidth);
+      dstream << "volume collector"
+              << " | ";
+      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
+      state.options.debugString += dstream.str();
     }
-  };
+  }
+};
 
 }  // namespace Acts
