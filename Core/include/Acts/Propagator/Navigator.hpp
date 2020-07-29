@@ -141,7 +141,6 @@ class Navigator {
   Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
       : trackingGeometry(std::move(tGeometry)) {}
 
- public:
   /// Tracking Geometry for this Navigator
   std::shared_ptr<const TrackingGeometry> trackingGeometry;
 
