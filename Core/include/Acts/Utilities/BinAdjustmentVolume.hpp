@@ -91,11 +91,11 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
   }
   // The parameters from the cylinder bounds
-  double minX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
+  double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
   double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
-  double minY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
+  double minY = -cBounds.get(CuboidVolumeBounds::eHalfLengthY);
   double maxY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
-  double minZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
+  double minZ = -cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
   double maxZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();

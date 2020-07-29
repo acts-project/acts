@@ -116,7 +116,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
       min = cR * minPhi;
       max = cR * maxPhi;
     } else {
-      min = cHz;
+      min = -cHz;
       max = cHz;
     }
     // Create the updated BinningData
