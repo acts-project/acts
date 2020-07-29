@@ -101,8 +101,8 @@ struct VolumeCollector {
       for (auto const& res : result.collected) {
         save *= !(res.volume == volume_hit.volume);
       }
-        // Save if in the result if it does not already exist
-      if (save){ 
+      // Save if in the result if it does not already exist
+      if (save) {
         result.collected.push_back(volume_hit);
         // Screen output
         debugLog(state, [&] {
