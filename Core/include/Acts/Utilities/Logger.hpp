@@ -548,7 +548,7 @@ class LoggerWrapper {
     return m_logger->log(lvl);
   }
 
-  const Logger& operator()() { return *m_logger; }
+  const Logger& operator()() const { return *m_logger; }
 
  private:
   const Logger* m_logger;
