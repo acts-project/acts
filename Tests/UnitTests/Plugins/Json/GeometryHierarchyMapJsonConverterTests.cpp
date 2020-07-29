@@ -72,20 +72,20 @@ BOOST_AUTO_TEST_CASE(ToJson) {
   };
   json j = Converter("thing").toJson(c);
 
-  BOOST_TEST(j.is_object());
+  BOOST_CHECK(j.is_object());
   // check header
   auto header = j.find("acts-geometry-hierarchy-map");
-  BOOST_TEST(header != j.end());
-  BOOST_TEST(header->is_object());
-  BOOST_TEST(header->at("format-version").is_number_integer());
-  BOOST_TEST(header->at("format-version").get<int>() == 0);
-  BOOST_TEST(header->at("value-identifier").is_string());
-  BOOST_TEST(header->at("value-identifier").get<std::string>() == "thing");
+  BOOST_CHECK_NE(header, j.end());
+  BOOST_CHECK(header->is_object());
+  BOOST_CHECK(header->at("format-version").is_number_integer());
+  BOOST_CHECK_EQUAL(header->at("format-version").get<int>(), 0);
+  BOOST_CHECK(header->at("value-identifier").is_string());
+  BOOST_CHECK_EQUAL(header->at("value-identifier").get<std::string>(), "thing");
   // check entries
   auto entries = j.find("entries");
-  BOOST_TEST(entries != j.end());
-  BOOST_TEST(entries->is_array());
-  BOOST_TEST(entries->size() == 3u);
+  BOOST_CHECK_NE(entries, j.end());
+  BOOST_CHECK(entries->is_array());
+  BOOST_CHECK_EQUAL(entries->size(), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(FromJson) {
@@ -116,19 +116,19 @@ BOOST_AUTO_TEST_CASE(FromJson) {
   };
   Container c = Converter("thing").fromJson(j);
 
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 2);
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 2);
   {
     auto it = c.find(makeId(2, 3));
-    BOOST_TEST(it != c.end());
-    BOOST_TEST(it->x == 4.0);
-    BOOST_TEST(it->y == 4);
+    BOOST_CHECK_NE(it, c.end());
+    BOOST_CHECK_EQUAL(it->x, 4.0);
+    BOOST_CHECK_EQUAL(it->y, 4);
   }
   {
     auto it = c.find(makeId(5, 6, 7));
-    BOOST_TEST(it != c.end());
-    BOOST_TEST(it->x == 3.0);
-    BOOST_TEST(it->y == 3);
+    BOOST_CHECK_NE(it, c.end());
+    BOOST_CHECK_EQUAL(it->x, 3.0);
+    BOOST_CHECK_EQUAL(it->y, 3);
   }
 }
 
@@ -193,10 +193,10 @@ BOOST_AUTO_TEST_CASE(Roundtrip) {
   auto j = Converter("the-identifier").toJson(c0);
   auto c1 = Converter("the-identifier").fromJson(j);
 
-  BOOST_TEST(c0.size() == c1.size());
+  BOOST_CHECK_EQUAL(c0.size(), c1.size());
   for (auto i = std::min(c0.size(), c1.size()); 0 < i--;) {
-    BOOST_TEST(c0.idAt(i) == c1.idAt(i));
-    BOOST_TEST(c0.valueAt(i) == c1.valueAt(i));
+    BOOST_CHECK_EQUAL(c0.idAt(i), c1.idAt(i));
+    BOOST_CHECK_EQUAL(c0.valueAt(i), c1.valueAt(i));
   }
 }
 
@@ -204,19 +204,19 @@ BOOST_AUTO_TEST_CASE(FromFile) {
   // read json data from file
   auto path = Acts::Test::getDataPath("geometry-hierarchy-map.json");
   auto file = std::ifstream(path, std::ifstream::in | std::ifstream::binary);
-  BOOST_TEST(file.good());
+  BOOST_CHECK(file.good());
   json j;
   file >> j;
-  BOOST_TEST(file.good());
+  BOOST_CHECK(file.good());
   // convert json to container
   Container c = Converter("thing").fromJson(j);
   // check container content
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 4);
-  BOOST_TEST(c.find(makeId()) != c.end());
-  BOOST_TEST(c.find(makeId(1, 2)) != c.end());
-  BOOST_TEST(c.find(makeId(3)) != c.end());
-  BOOST_TEST(c.find(makeId(3, 4)) != c.end());
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 4);
+  BOOST_CHECK_NE(c.find(makeId()), c.end());
+  BOOST_CHECK_NE(c.find(makeId(1, 2)), c.end());
+  BOOST_CHECK_NE(c.find(makeId(3)), c.end());
+  BOOST_CHECK_NE(c.find(makeId(3, 4)), c.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
