@@ -23,7 +23,6 @@
 
 #include <iostream>
 #include <map>
-#include <memory>
 #include <random>
 #include <stdexcept>
 
@@ -32,15 +31,15 @@
 namespace {
 template <typename Fitter>
 struct FitterFunctionImpl {
-  std::shared_ptr<Fitter> fitter;
+  Fitter fitter;
 
-  FitterFunctionImpl(std::shared_ptr<Fitter> f) : fitter(std::move(f)) {}
+  FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
   FW::FittingAlgorithm::FitterResult operator()(
       const std::vector<FW::SimSourceLink>& sourceLinks,
       const FW::TrackParameters& initialParameters,
       const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
-    return fitter->fit(sourceLinks, initialParameters, options);
+    return fitter.fit(sourceLinks, initialParameters, options);
   };
 };
 }  // namespace
@@ -72,8 +71,8 @@ FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        auto fitter = std::make_shared<Fitter>(
-            std::move(propagator), Acts::getDefaultLogger("KalmanFitter", lvl));
+        Fitter fitter(std::move(propagator),
+                      Acts::getDefaultLogger("KalmanFitter", lvl));
 
         // build the fitter functions. owns the fitter object.
         return FitterFunctionImpl<Fitter>(std::move(fitter));

@@ -17,24 +17,22 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
-#include <memory>
 #include <random>
 #include <stdexcept>
 
 namespace {
 template <typename TrackFinder>
 struct TrackFinderFunctionImpl {
-  std::shared_ptr<TrackFinder> trackFinder;
+  TrackFinder trackFinder;
 
-  TrackFinderFunctionImpl(std::shared_ptr<TrackFinder> f)
-      : trackFinder(std::move(f)) {}
+  TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
 
   FW::TrackFindingAlgorithm::TrackFinderResult operator()(
       const FW::SimSourceLinkContainer& sourceLinks,
       const FW::TrackParameters& initialParameters,
       const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>&
           options) const {
-    return trackFinder->findTracks(sourceLinks, initialParameters, options);
+    return trackFinder.findTracks(sourceLinks, initialParameters, options);
   };
 };
 }  // namespace
@@ -71,7 +69,7 @@ FW::TrackFindingAlgorithm::makeTrackFinderFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        auto trackFinder = std::make_shared<CKF>(
+        CKF trackFinder(
             std::move(propagator),
             Acts::getDefaultLogger("CombinatorialKalmanFilter", lvl));
 
