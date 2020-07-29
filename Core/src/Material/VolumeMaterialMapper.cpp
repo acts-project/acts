@@ -196,6 +196,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       Acts::Material mat = homogeneousAccumulation.average();
       mState.volumeMaterial[recMaterial.first] =
           std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
+      return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 2) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
@@ -208,6 +209,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
           std::move(matMap), mState.materialBin[recMaterial.first]);
+      return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
@@ -220,6 +222,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
           std::move(matMap), mState.materialBin[recMaterial.first]);
+      return;
     } else {
       throw std::invalid_argument(
           "Incorrect bin dimension, only 0, 2 and 3 are accepted");
