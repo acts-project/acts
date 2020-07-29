@@ -39,7 +39,7 @@ class BinUtility {
     m_binningData.reserve(3);
   }
 
-  /// Constructor from BinningData directly
+  /// Constructor with only a Transform3D
   ///
   /// @param tForm is the (optional) transform
   BinUtility(const std::shared_ptr<const Transform3D>& tForm)
