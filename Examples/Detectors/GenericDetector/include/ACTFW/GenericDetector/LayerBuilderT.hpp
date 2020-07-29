@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "ACTFW/GenericDetector/GenericDetectorElement.hpp"
 #include "ACTFW/GenericDetector/ProtoLayerCreatorT.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
@@ -26,6 +24,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <iostream>
 
 namespace FW {
 namespace Generic {

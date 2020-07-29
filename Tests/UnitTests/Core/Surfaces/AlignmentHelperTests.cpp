@@ -7,11 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <cmath>
 
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <cmath>
 
 namespace Acts {
 namespace Test {

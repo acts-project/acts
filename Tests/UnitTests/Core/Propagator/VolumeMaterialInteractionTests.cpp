@@ -84,31 +84,31 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Build the VolumeMaterialInteraction & test assignments
   detail::VolumeMaterialInteraction volMatInt(volume, state, stepper);
-  BOOST_TEST(volMatInt.volume == volume);
-  BOOST_TEST(volMatInt.pos == state.stepping.pos);
-  BOOST_TEST(volMatInt.time == state.stepping.t);
-  BOOST_TEST(volMatInt.dir == state.stepping.dir);
-  BOOST_TEST(volMatInt.momentum == state.stepping.p);
-  BOOST_TEST(volMatInt.q == state.stepping.q);
+  BOOST_CHECK_EQUAL(volMatInt.volume, volume);
+  BOOST_CHECK_EQUAL(volMatInt.pos, state.stepping.pos);
+  BOOST_CHECK_EQUAL(volMatInt.time, state.stepping.t);
+  BOOST_CHECK_EQUAL(volMatInt.dir, state.stepping.dir);
+  BOOST_CHECK_EQUAL(volMatInt.momentum, state.stepping.p);
+  BOOST_CHECK_EQUAL(volMatInt.q, state.stepping.q);
   CHECK_CLOSE_ABS(volMatInt.qOverP, state.stepping.q / state.stepping.p, 1e-6);
-  BOOST_TEST(volMatInt.mass == state.options.mass);
-  BOOST_TEST(volMatInt.pdg == state.options.absPdgCode);
-  BOOST_TEST(volMatInt.performCovarianceTransport ==
-             state.stepping.covTransport);
-  BOOST_TEST(volMatInt.nav == state.stepping.navDir);
+  BOOST_CHECK_EQUAL(volMatInt.mass, state.options.mass);
+  BOOST_CHECK_EQUAL(volMatInt.pdg, state.options.absPdgCode);
+  BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,
+                    state.stepping.covTransport);
+  BOOST_CHECK_EQUAL(volMatInt.nav, state.stepping.navDir);
 
   // Evaluate the material
   bool result = volMatInt.evaluateMaterialProperties(state);
-  BOOST_TEST(result);
-  BOOST_TEST(volMatInt.slab.material() == mat);
-  BOOST_TEST(volMatInt.slab.thickness() == 1.);
-  BOOST_TEST(volMatInt.pathCorrection == 0.);
+  BOOST_CHECK(result);
+  BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
+  BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
+  BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
   result = volMatInt.evaluateMaterialProperties(state);
-  BOOST_TEST(!result);
-  BOOST_TEST(volMatInt.pathCorrection == 0.);
+  BOOST_CHECK(!result);
+  BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
 }  // namespace Test
 }  // namespace Acts

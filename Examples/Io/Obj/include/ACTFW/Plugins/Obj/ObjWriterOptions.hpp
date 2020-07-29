@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "ACTFW/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <iostream>
 
 namespace po = boost::program_options;
 

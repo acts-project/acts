@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
+
 #include "Acts/Material/Material.hpp"
 
 Acts::HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(

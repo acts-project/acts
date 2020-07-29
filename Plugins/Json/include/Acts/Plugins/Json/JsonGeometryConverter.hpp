@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -17,10 +15,12 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include <nlohmann/json.hpp>
+#include <Acts/Geometry/TrackingVolume.hpp>
+#include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 

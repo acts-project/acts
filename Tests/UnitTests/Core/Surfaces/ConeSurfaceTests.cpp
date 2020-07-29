@@ -10,12 +10,12 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;

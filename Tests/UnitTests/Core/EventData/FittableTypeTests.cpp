@@ -8,17 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/detail/fittable_type_generator.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <cmath>
 #include <memory>
 #include <random>
 #include <variant>
-
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-
-#include "Acts/EventData/detail/fittable_type_generator.hpp"
 
 #include <boost/hana/equal.hpp>
 #include <boost/hana/integral_constant.hpp>

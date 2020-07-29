@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <random>
-#include <vector>
-
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <limits>
+#include <random>
+#include <vector>
 
 namespace Acts {
 

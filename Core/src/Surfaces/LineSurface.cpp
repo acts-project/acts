@@ -8,12 +8,12 @@
 
 #include "Acts/Surfaces/LineSurface.hpp"
 
+#include "Acts/Utilities/ThrowAssert.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <utility>
-
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double radius, double halez)

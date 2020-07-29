@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "ACTFW/Framework/BareAlgorithm.hpp"
+
 #include <limits>
 #include <string>
-
-#include "ACTFW/Framework/BareAlgorithm.hpp"
 
 namespace FW {
 

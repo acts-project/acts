@@ -8,12 +8,12 @@
 
 #include "ACTFW/Fitting/FittingAlgorithm.hpp"
 
-#include <stdexcept>
-
 #include "ACTFW/EventData/ProtoTrack.hpp"
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+
+#include <stdexcept>
 
 FW::FittingAlgorithm::FittingAlgorithm(Config cfg, Acts::Logging::Level level)
     : FW::BareAlgorithm("FittingAlgorithm", level), m_cfg(std::move(cfg)) {

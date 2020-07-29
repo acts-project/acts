@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <ACTFW/Framework/WriterT.hpp>
-#include <mutex>
-
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include <ACTFW/Framework/WriterT.hpp>
+
+#include <mutex>
 
 class TFile;
 class TTree;

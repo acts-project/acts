@@ -8,9 +8,9 @@
 
 #include "Acts/EventData/detail/PrintParameters.hpp"
 
-#include <ostream>
-
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <ostream>
 
 void Acts::detail::printBoundParameters(std::ostream& os,
                                         const Acts::Surface& surface,

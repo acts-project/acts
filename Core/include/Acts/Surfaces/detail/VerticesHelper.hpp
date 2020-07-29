@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <utility>
 #include <vector>
-
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 namespace detail {

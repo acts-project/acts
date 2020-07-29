@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "ACTFW/Framework/ProcessCode.hpp"
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
@@ -21,10 +22,9 @@
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Definitions.hpp>
 #include <Acts/Utilities/Logger.hpp>
+
 #include <map>
 #include <mutex>
-
-#include "ACTFW/Framework/ProcessCode.hpp"
 
 namespace Acts {
 using SurfaceMaterialMap =

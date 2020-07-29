@@ -9,10 +9,11 @@
 /// @file Logger_tests.cpp
 
 #include <boost/test/unit_test.hpp>
-#include <fstream>
-#include <string>
 
 #include "Acts/Utilities/Logger.hpp"
+
+#include <fstream>
+#include <string>
 
 namespace Acts {
 namespace Test {
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(FATAL_test) {
   std::ifstream infile("fatal_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ERROR_test) {
   std::ifstream infile("error_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_CASE(WARNING_test) {
   std::ifstream infile("warning_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 
@@ -155,7 +156,7 @@ BOOST_AUTO_TEST_CASE(INFO_test) {
   std::ifstream infile("info_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 
@@ -188,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DEBUG_test) {
   std::ifstream infile("debug_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 
@@ -222,7 +223,7 @@ BOOST_AUTO_TEST_CASE(VERBOSE_test) {
   std::ifstream infile("verbose_log.txt", std::ios::in);
   size_t i = 0;
   for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
+    BOOST_CHECK_EQUAL(line, lines.at(i));
   }
 }
 }  // namespace Test

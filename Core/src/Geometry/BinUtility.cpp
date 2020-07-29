@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/BinUtility.hpp"
+
 #include <iostream>
 
 /**Overload of << operator for std::ostream for debug output*/

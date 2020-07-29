@@ -8,10 +8,6 @@
 
 #include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
-#include <iostream>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -31,6 +27,10 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include <Acts/Geometry/GeometryContext.hpp>
+#include <Acts/MagneticField/MagneticFieldContext.hpp>
+
+#include <iostream>
 
 FWE::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level level)

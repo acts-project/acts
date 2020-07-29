@@ -8,13 +8,14 @@
 
 #include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
 
-#include <Acts/Surfaces/PerigeeSurface.hpp>
-#include <TChain.h>
-#include <TFile.h>
-#include <iostream>
-
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
+#include <Acts/Surfaces/PerigeeSurface.hpp>
+
+#include <iostream>
+
+#include <TChain.h>
+#include <TFile.h>
 
 FW::RootVertexAndTracksReader::RootVertexAndTracksReader(
     FW::RootVertexAndTracksReader::Config cfg, Acts::Logging::Level lvl)

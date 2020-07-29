@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include <array>
-#include <type_traits>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/interpolation_impl.hpp"
+
+#include <array>
+#include <type_traits>
 
 namespace Acts {
 

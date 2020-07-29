@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <memory>
-#include <mutex>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <mutex>
 
 class G4RunManager;
 class G4VUserDetectorConstruction;

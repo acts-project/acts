@@ -11,13 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <array>
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

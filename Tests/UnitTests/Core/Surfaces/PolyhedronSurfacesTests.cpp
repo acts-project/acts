@@ -42,7 +42,6 @@
 // Straw Surface
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
 

@@ -12,8 +12,6 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-#include <cmath>
-#include <limits>
 
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -23,6 +21,9 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <cmath>
+#include <limits>
 
 namespace {
 
@@ -40,20 +41,24 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
   Vector3D sentinel = Vector3D::Random();
   Vector3D pos = sentinel;
   surface.localToGlobal(geoCtx, Vector2D(l0, l1), dir, pos);
-  BOOST_TEST(pos != sentinel, "Position was not changed");
-  BOOST_TEST(std::isfinite(pos[0]),
-             "Position " << pos.transpose() << " contains non-finite entries");
-  BOOST_TEST(std::isfinite(pos[1]),
-             "Position " << pos.transpose() << " contains non-finite entries");
-  BOOST_TEST(std::isfinite(pos[2]),
-             "Position " << pos.transpose() << " contains non-finite entries");
-  BOOST_TEST(surface.isOnSurface(geoCtx, pos, dir),
-             "Position " << pos.transpose() << " is not on the surface");
+  BOOST_CHECK_MESSAGE(pos != sentinel, "Position was not changed");
+  BOOST_CHECK_MESSAGE(
+      std::isfinite(pos[0]),
+      "Position " << pos.transpose() << " contains non-finite entries");
+  BOOST_CHECK_MESSAGE(
+      std::isfinite(pos[1]),
+      "Position " << pos.transpose() << " contains non-finite entries");
+  BOOST_CHECK_MESSAGE(
+      std::isfinite(pos[2]),
+      "Position " << pos.transpose() << " contains non-finite entries");
+  BOOST_CHECK_MESSAGE(
+      surface.isOnSurface(geoCtx, pos, dir),
+      "Position " << pos.transpose() << " is not on the surface");
 
   // convert global-to-local
   Vector2D loc = Vector2D::Zero();
   bool validTransform = surface.globalToLocal(geoCtx, pos, dir, loc);
-  BOOST_TEST(validTransform);
+  BOOST_CHECK(validTransform);
   CHECK_CLOSE_OR_SMALL(loc[ePos0], l0, eps, eps);
   CHECK_CLOSE_OR_SMALL(loc[ePos1], l1, eps, eps);
 }

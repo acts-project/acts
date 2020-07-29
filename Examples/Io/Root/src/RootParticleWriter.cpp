@@ -8,13 +8,14 @@
 
 #include "ACTFW/Io/Root/RootParticleWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Units.hpp"
+
 #include <ios>
 #include <stdexcept>
 
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include <TFile.h>
+#include <TTree.h>
 
 FW::RootParticleWriter::RootParticleWriter(
     const FW::RootParticleWriter::Config& cfg, Acts::Logging::Level lvl)

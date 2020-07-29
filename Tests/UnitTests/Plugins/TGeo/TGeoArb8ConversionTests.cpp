@@ -17,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
+
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -70,12 +71,12 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   for (const auto &axes : allowedAxes) {
     auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
-    BOOST_TEST(plane != nullptr);
-    BOOST_TEST(plane->type() == Surface::Plane);
+    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
 
     auto bounds =
         dynamic_cast<const ConvexPolygonBounds<4> *>(&(plane->bounds()));
-    BOOST_TEST(bounds != nullptr);
+    BOOST_CHECK_NE(bounds, nullptr);
 
     // Check if the surface is the (negative) identity
     auto transform = plane->transform(tgContext);

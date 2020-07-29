@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <memory>
-#include <mutex>
-#include <vector>
-
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <memory>
+#include <mutex>
+#include <vector>
 
 namespace Pythia8 {
 class Pythia;

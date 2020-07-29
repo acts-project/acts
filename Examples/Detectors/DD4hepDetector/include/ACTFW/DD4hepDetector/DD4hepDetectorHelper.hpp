@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+
 #include "DD4hep/Segmentations.h"
 
 /// In case several sensitive modules have the same segmentation it can and

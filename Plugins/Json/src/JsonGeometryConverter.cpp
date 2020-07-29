@@ -8,21 +8,6 @@
 
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/finder.hpp>
-#include <boost/algorithm/string/iter_find.hpp>
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
-#include <Acts/Surfaces/AnnulusBounds.hpp>
-#include <Acts/Surfaces/CylinderBounds.hpp>
-#include <Acts/Surfaces/RadialBounds.hpp>
-#include <Acts/Surfaces/SurfaceBounds.hpp>
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -38,6 +23,22 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include <Acts/Surfaces/AnnulusBounds.hpp>
+#include <Acts/Surfaces/CylinderBounds.hpp>
+#include <Acts/Surfaces/RadialBounds.hpp>
+#include <Acts/Surfaces/SurfaceBounds.hpp>
+
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/finder.hpp>
+#include <boost/algorithm/string/iter_find.hpp>
 
 using json = nlohmann::json;
 

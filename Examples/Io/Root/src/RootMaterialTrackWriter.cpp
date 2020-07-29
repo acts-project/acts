@@ -12,11 +12,13 @@
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Utilities/Helpers.hpp>
-#include <TFile.h>
-#include <TTree.h>
+
 #include <ios>
 #include <iostream>
 #include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

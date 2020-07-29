@@ -8,13 +8,13 @@
 
 #include "ACTFW/Options/Pythia8Options.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/Generators/MultiplicityGenerators.hpp"
 #include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
 #include "ACTFW/Generators/VertexGenerators.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <boost/program_options.hpp>
 
 void FW::Options::addPythia8Options(
     boost::program_options::options_description& opt) {

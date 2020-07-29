@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
+
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"

@@ -17,6 +17,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
+
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -63,12 +64,12 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Upper case ---------------------------------
   auto plane_XYZ = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                    *gGeoIdentity, "XY*", 1);
-  BOOST_TEST(plane_XYZ != nullptr);
-  BOOST_TEST(plane_XYZ->type() == Surface::Plane);
+  BOOST_CHECK_NE(plane_XYZ, nullptr);
+  BOOST_CHECK_EQUAL(plane_XYZ->type(), Surface::Plane);
 
   auto bounds_XYZ =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
-  BOOST_TEST(bounds_XYZ != nullptr);
+  BOOST_CHECK_NE(bounds_XYZ, nullptr);
   double maxX = bounds_XYZ->get(RectangleBounds::eMaxX);
   double minX = bounds_XYZ->get(RectangleBounds::eMinX);
   double maxY = bounds_XYZ->get(RectangleBounds::eMaxY);
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Check if the surface is the (negative) identity
   auto transform_XYZ = plane_XYZ->transform(tgContext);
   auto rotation_XYZ = transform_XYZ.rotation();
-  BOOST_TEST(transform_XYZ.isApprox(Transform3D::Identity()));
+  BOOST_CHECK(transform_XYZ.isApprox(Transform3D::Identity()));
 
   const Vector3D offset_XYZ{-5.5 * x, 0., 0.};
   GeometryView::drawSurface(objVis, *plane_XYZ, tgContext,
@@ -97,18 +98,18 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Lower case ---------------------------------
   auto plane_xyz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                    *gGeoIdentity, "xy*", 1);
-  BOOST_TEST(plane_xyz != nullptr);
-  BOOST_TEST(plane_xyz->type() == Surface::Plane);
+  BOOST_CHECK_NE(plane_xyz, nullptr);
+  BOOST_CHECK_EQUAL(plane_xyz->type(), Surface::Plane);
 
   auto bounds_xyz =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ->bounds()));
-  BOOST_TEST(bounds_xyz != nullptr);
-  BOOST_TEST(bounds_xyz == bounds_XYZ);
+  BOOST_CHECK_NE(bounds_xyz, nullptr);
+  BOOST_CHECK_EQUAL(bounds_xyz, bounds_XYZ);
   auto transform_xyz = plane_xyz->transform(tgContext);
   auto rotation_xyz = transform_xyz.rotation();
-  BOOST_TEST(rotation_xyz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
-  BOOST_TEST(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
-  BOOST_TEST(rotation_xyz.col(2).isApprox(rotation_XYZ.col(2)));
+  BOOST_CHECK(rotation_xyz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
+  BOOST_CHECK(rotation_xyz.col(1).isApprox(-1 * rotation_XYZ.col(1)));
+  BOOST_CHECK(rotation_xyz.col(2).isApprox(rotation_XYZ.col(2)));
 
   const Vector3D offset_xyz{-2 * x, 0., 0.};
   GeometryView::drawSurface(objVis, *plane_xyz, tgContext,
@@ -126,18 +127,18 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Mixed case ---------------------------------
   auto plane_xYz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                    *gGeoIdentity, "xY*", 1);
-  BOOST_TEST(plane_xYz != nullptr);
-  BOOST_TEST(plane_xYz->type() == Surface::Plane);
+  BOOST_CHECK_NE(plane_xYz, nullptr);
+  BOOST_CHECK_EQUAL(plane_xYz->type(), Surface::Plane);
 
   auto bounds_xYz =
       dynamic_cast<const RectangleBounds *>(&(plane_xYz->bounds()));
-  BOOST_TEST(bounds_xYz != nullptr);
-  BOOST_TEST(bounds_xYz == bounds_xYz);
+  BOOST_CHECK_NE(bounds_xYz, nullptr);
+  BOOST_CHECK_EQUAL(bounds_xYz, bounds_xYz);
   auto transform_xYz = plane_xYz->transform(tgContext);
   auto rotation_xYz = transform_xYz.rotation();
-  BOOST_TEST(rotation_xYz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
-  BOOST_TEST(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
-  BOOST_TEST(rotation_xYz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
+  BOOST_CHECK(rotation_xYz.col(0).isApprox(-1 * rotation_XYZ.col(0)));
+  BOOST_CHECK(rotation_xYz.col(1).isApprox(rotation_XYZ.col(1)));
+  BOOST_CHECK(rotation_xYz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_xYz{2 * x, 0., 0.};
   GeometryView::drawSurface(
@@ -156,8 +157,8 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Swap case --------------------------------- (x/y) here
   auto plane_YXz = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                    *gGeoIdentity, "YX*", 1);
-  BOOST_TEST(plane_YXz != nullptr);
-  BOOST_TEST(plane_YXz->type() == Surface::Plane);
+  BOOST_CHECK_NE(plane_YXz, nullptr);
+  BOOST_CHECK_EQUAL(plane_YXz->type(), Surface::Plane);
   auto bounds_YXz =
       dynamic_cast<const RectangleBounds *>(&(plane_YXz->bounds()));
   maxX = bounds_YXz->get(RectangleBounds::eMaxX);
@@ -169,9 +170,9 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
 
   auto transform_YXz = plane_YXz->transform(tgContext);
   auto rotation_YXz = transform_YXz.rotation();
-  BOOST_TEST(rotation_YXz.col(0).isApprox(rotation_XYZ.col(1)));
-  BOOST_TEST(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));
-  BOOST_TEST(rotation_YXz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
+  BOOST_CHECK(rotation_YXz.col(0).isApprox(rotation_XYZ.col(1)));
+  BOOST_CHECK(rotation_YXz.col(1).isApprox(rotation_XYZ.col(0)));
+  BOOST_CHECK(rotation_YXz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_YXz{5.5 * x, 0., 0.};
   GeometryView::drawSurface(objVis, *plane_YXz, tgContext,
@@ -189,7 +190,7 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   // Scaling test ---------------------------------
   auto plane_XYZ10 = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                      *gGeoIdentity, "xY*", 10);
-  BOOST_TEST(plane_XYZ10 != nullptr);
+  BOOST_CHECK_NE(plane_XYZ10, nullptr);
 
   auto bounds_XYZ10 =
       dynamic_cast<const RectangleBounds *>(&(plane_XYZ10->bounds()));

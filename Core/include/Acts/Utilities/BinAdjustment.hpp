@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <stdexcept>
-
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
+#include <stdexcept>
 
 namespace Acts {
 

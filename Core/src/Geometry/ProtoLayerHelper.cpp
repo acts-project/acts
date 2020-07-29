@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
+
 #include "Acts/Geometry/Extent.hpp"
 
 std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(

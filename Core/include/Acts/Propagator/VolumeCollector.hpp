@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <sstream>
 #include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <sstream>
 
 namespace Acts {
 

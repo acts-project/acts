@@ -27,12 +27,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/EventDataView.hpp"
 #include "Acts/Visualization/IVisualization.hpp"
-
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
 #include <cmath>
 #include <fstream>

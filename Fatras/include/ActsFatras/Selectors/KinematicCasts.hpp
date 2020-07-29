@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <cmath>
-
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <cmath>
 
 namespace ActsFatras {
 namespace Casts {

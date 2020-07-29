@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/EventData/TrackParameters.hpp>
-#include <boost/program_options.hpp>
-#include <memory>
-
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Generators/MultiplicityGenerators.hpp"
 #include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
@@ -22,6 +18,11 @@
 #include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "ACTFW/Vertexing/VertexFitAlgorithm.hpp"
+#include <Acts/EventData/TrackParameters.hpp>
+
+#include <memory>
+
+#include <boost/program_options.hpp>
 
 using namespace FW;
 

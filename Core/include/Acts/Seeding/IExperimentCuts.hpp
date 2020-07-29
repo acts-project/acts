@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <memory>
 #include "Acts/Seeding/InternalSeed.hpp"
+
+#include <memory>
 
 namespace Acts {
 /// @class IExperimentCuts can be used to increase or decrease seed weights

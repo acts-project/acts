@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Acts {
 

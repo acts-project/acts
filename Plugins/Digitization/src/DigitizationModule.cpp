@@ -10,9 +10,9 @@
 // DigitizationModule.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include <utility>
-
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
+
+#include <utility>
 
 Acts::DigitizationModule::DigitizationModule(
     std::shared_ptr<const Segmentation> moduleSegmentation,

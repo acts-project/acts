@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include <fstream>
-
 #include "ACTFW/EventData/DataContainers.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+
+#include <fstream>
 
 namespace FW {
 namespace Json {
