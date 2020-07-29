@@ -14,6 +14,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
     -> Result<result_t> {
   result_t result;
 
+  const auto& logger = state.options.logger;
+
   // Pre-stepping call to the navigator and action list
   ACTS_VERBOSE("Entering propagation.");
 

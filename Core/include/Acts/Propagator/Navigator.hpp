@@ -138,15 +138,8 @@ class Navigator {
   /// Constructor with shared tracking geometry
   ///
   /// @param tGeometry The tracking geometry for the navigator
-  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr,
-            std::unique_ptr<const Logger> logger =
-                getDefaultLogger("Navigator", Logging::INFO))
-      : m_logger{std::move(logger)}, trackingGeometry(std::move(tGeometry)) {}
-
- private:
-  std::unique_ptr<const Logger> m_logger{nullptr};
-
-  const Logger& logger() const { return *m_logger; }
+  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
+      : trackingGeometry(std::move(tGeometry)) {}
 
  public:
   /// Tracking Geometry for this Navigator
@@ -241,6 +234,8 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void status(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -365,6 +360,7 @@ class Navigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void target(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -415,6 +411,8 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     // Call the navigation helper prior to actual navigation
     ACTS_VERBOSE("Initialization.");
 
@@ -501,6 +499,8 @@ class Navigator {
   bool status(propagator_state_t& state, const stepper_t& stepper,
               navigation_surfaces_t& navSurfaces,
               const navigation_iter_t& navIter) const {
+    const auto& logger = state.options.logger;
+
     // No surfaces, status check will be done on layer
     if (navSurfaces.empty() or navIter == navSurfaces.end()) {
       return false;
@@ -540,6 +540,8 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool targetSurfaces(propagator_state_t& state,
                       const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -626,6 +628,8 @@ class Navigator {
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -787,6 +791,8 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool targetBoundaries(propagator_state_t& state,
                         const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -916,6 +922,8 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   void initializeTarget(propagator_state_t& state,
                         const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     if (state.navigation.targetVolume and
         state.stepping.pathAccumulated == 0.) {
       ACTS_VERBOSE("Re-initialzing cancelled as it is the first step.");
@@ -962,7 +970,7 @@ class Navigator {
         }
       }
     }
-  }  // namespace Acts
+  }
 
   /// @brief Resolve the surfaces of this layer
   ///
@@ -977,6 +985,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
                        const Layer* cLayer = nullptr) const {
+    const auto& logger = state.options.logger;
     // get the layer and layer surface
     auto layerSurface = cLayer ? state.navigation.startSurface
                                : state.navigation.navLayerIter->representation;
@@ -1041,6 +1050,7 @@ class Navigator {
   template <typename propagator_state_t, typename stepper_t>
   bool resolveLayers(propagator_state_t& state,
                      const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
     ACTS_VERBOSE("Searching for compatible layers.");
 
     // Check if we are in the start volume
@@ -1114,6 +1124,8 @@ class Navigator {
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
   bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+
     // Void behavior in case no tracking geometry is present
     if (!trackingGeometry) {
       return true;
@@ -1147,38 +1159,6 @@ class Navigator {
     }
     return false;
   }
-
-  /// The private navigation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the
-  /// state.options.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param[in,out] state the propagator state for the debug flag,
-  ///      prefix and length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
-    if (logger().doPrint(Logging::VERBOSE)) {
-      std::string vName = "No Volume";
-      if (state.navigation.currentVolume) {
-        vName = state.navigation.currentVolume->volumeName();
-      }
-
-      std::vector<std::string> lines;
-      std::string input = logAction();
-      boost::split(lines, input, boost::is_any_of("\n"));
-      for (const auto& line : lines) {
-        logger().log(Logging::VERBOSE)
-            << "" << std::setw(state.options.debugPfxWidth) << vName << " | "
-            << std::setw(state.options.debugMsgWidth) << line;
-      }
-    }
-  }
-};  // namespace Acts
+};
 
 }  // namespace Acts

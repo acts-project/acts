@@ -117,6 +117,8 @@ struct PropagatorOptions {
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
+    // Logger instance
+    eoptions.logger = logger;
     // And return the options
     return eoptions;
   }
@@ -176,6 +178,8 @@ struct PropagatorOptions {
 
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+
+  LoggerWrapper logger{getDummyLogger()};
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -231,12 +235,8 @@ class Propagator final {
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
-  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
-                      std::unique_ptr<const Logger> logger =
-                          getDefaultLogger("Propagator", Logging::INFO))
-      : m_stepper(std::move(stepper)),
-        m_navigator(std::move(navigator)),
-        m_logger{std::move(logger)} {}
+  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
+      : m_stepper(std::move(stepper)), m_navigator(std::move(navigator)) {}
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -390,12 +390,6 @@ class Propagator final {
 
   /// Implementation of navigator
   navigator_t m_navigator;
-
-  /// Logging instance
-  std::unique_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger
-  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts
