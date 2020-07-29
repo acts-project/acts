@@ -236,7 +236,7 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   using RecoStepper = EigenStepper<ConstantBField>;
   RecoStepper rStepper(bField);
   using RecoPropagator = Propagator<RecoStepper, Navigator>;
-  RecoPropagator rPropagator(rStepper, std::move(rNavigator));
+  RecoPropagator rPropagator(rStepper, rNavigator);
 
   // Set initial parameters for the particle track
   Covariance cov;
@@ -257,7 +257,7 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   using Smoother = GainMatrixSmoother;
   using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
-  KalmanFitter kFitter(std::move(rPropagator),
+  KalmanFitter kFitter(rPropagator,
                        getDefaultLogger("KalmanFilter", Logging::WARNING));
 
   KalmanFitterOptions<VoidOutlierFinder> kfOptions(

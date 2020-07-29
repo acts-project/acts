@@ -61,7 +61,7 @@ class RiddersPropagator {
   /// @brief Constructor using a propagator
   ///
   /// @param [in] propagator Underlying propagator that will be used
-  RiddersPropagator(propagator_t& propagator) : m_propagator(&propagator) {}
+  RiddersPropagator(propagator_t& propagator) : m_propagator(propagator) {}
 
   /// @brief Constructor building a propagator
   ///
@@ -70,9 +70,9 @@ class RiddersPropagator {
   ///
   /// @param [in] stepper Stepper that will be used
   /// @param [in] navigator Navigator that will be used
-  // template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
-  // RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      // : m_propagator(Propagator(stepper, navigator)) {}
+  template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
+  RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
+      : m_propagator(Propagator(stepper, navigator)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
   ///
@@ -160,7 +160,7 @@ class RiddersPropagator {
                         const std::vector<double>& deviations) const;
 
   /// Propagator
-  propagator_t* m_propagator;
+  propagator_t m_propagator;
 };
 }  // namespace Acts
 

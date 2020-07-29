@@ -207,7 +207,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       default:
         return {};
     }
-    const auto& r = m_propagator->propagate(tp, target, options).value();
+    const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 

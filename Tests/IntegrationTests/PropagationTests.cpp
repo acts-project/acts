@@ -73,14 +73,11 @@ StraightLineStepper sstepper;
 StraightPropagatorType spropagator(std::move(sstepper));
 
 StraightLineStepper rsstepper;
-Propagator<StraightLineStepper> rsprop{std::move(rsstepper)};
-RiddersStraightPropagatorType rspropagator(rsprop);
+RiddersStraightPropagatorType rspropagator(std::move(rsstepper));
 EigenStepperType restepper(bField);
-Propagator<EigenStepperType> reprop{std::move(restepper)};
-RiddersEigenPropagatorType repropagator(reprop);
+RiddersEigenPropagatorType repropagator(std::move(restepper));
 AtlasStepperType rastepper(bField);
-Propagator<AtlasStepperType> raprop{std::move(rastepper)};
-RiddersAtlasPropagatorType rapropagator(raprop);
+RiddersAtlasPropagatorType rapropagator(std::move(rastepper));
 
 DensePropagatorType setupDensePropagator() {
   CuboidVolumeBuilder::VolumeConfig vConf;
