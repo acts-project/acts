@@ -27,9 +27,13 @@ namespace Acts {
 /// @param rBounds the Radial bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
+BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (transform.matrix() != Transform3D::Identity().matrix()) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double minR = rBounds.get(RadialBounds::eMinR);
   double maxR = rBounds.get(RadialBounds::eMaxR);
@@ -49,6 +53,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbirary binning can not be adjusted.");
     } else if (bval != binR and bval != binPhi) {
+      std::cout << bval << std::endl;
       throw std::invalid_argument("Disc binning must be: phi, r");
     }
     float min, max = 0.;
@@ -73,10 +78,13 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
 /// @param cBounds the Cylinder bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderBounds& cBounds) {
+BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (transform.matrix() != Transform3D::Identity().matrix()) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double cR = cBounds.get(CylinderBounds::eR);
   double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
@@ -108,7 +116,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
       min = cR * minPhi;
       max = cR * maxPhi;
     } else {
-      min = -cHz;
+      min = cHz;
       max = cHz;
     }
     // Create the updated BinningData
@@ -130,13 +138,13 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     // Cast to Cylinder bounds and return
     auto cBounds = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
     // Return specific adjustment
-    return adjustBinUtility(bu, *cBounds);
+    return adjustBinUtility(bu, *cBounds, surface.transform(GeometryContext()));
 
   } else if (surface.type() == Surface::Disc) {
     // Cast to Cylinder bounds and return
     auto rBounds = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
     // Return specific adjustment
-    return adjustBinUtility(bu, *rBounds);
+    return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
   }
 
   throw std::invalid_argument(

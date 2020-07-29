@@ -26,9 +26,13 @@ namespace Acts {
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderVolumeBounds& cBounds) {
+                            const CylinderVolumeBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (transform.matrix() != Transform3D::Identity().matrix()) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double minR = cBounds.get(CylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CylinderVolumeBounds::eMaxR);
@@ -67,6 +71,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
   }
+
   return uBinUtil;
 }
 
@@ -77,15 +82,19 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CuboidVolumeBounds& cBounds) {
+                            const CuboidVolumeBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (transform.matrix() != Transform3D::Identity().matrix()) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
-  double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
+  double minX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
   double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
-  double minY = -cBounds.get(CuboidVolumeBounds::eHalfLengthY);
+  double minY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
   double maxY = cBounds.get(CuboidVolumeBounds::eHalfLengthY);
-  double minZ = -cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
+  double minZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
   double maxZ = cBounds.get(CuboidVolumeBounds::eHalfLengthZ);
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
@@ -135,11 +144,11 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
 
   if (cyBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cyBounds);
+    return adjustBinUtility(bu, *cyBounds, volume.transform());
 
   } else if (cuBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cuBounds);
+    return adjustBinUtility(bu, *cuBounds, volume.transform());
   }
 
   throw std::invalid_argument(
