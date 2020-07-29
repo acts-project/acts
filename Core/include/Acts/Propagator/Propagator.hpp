@@ -23,7 +23,6 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -157,7 +156,7 @@ struct PropagatorOptions {
   // - it also has some formatting options
   bool debug = false;            ///< switch debug on
   std::string debugString = "";  ///< the string to collect msgs
-  size_t debugPfxWidth = 14;     ///< the prefix width
+  size_t debugPfxWidth = 30;     ///< the prefix width
   size_t debugMsgWidth = 50;     ///< the mesage width
 
   // Configurations for Stepper
