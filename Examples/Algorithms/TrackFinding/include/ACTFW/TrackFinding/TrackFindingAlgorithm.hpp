@@ -10,8 +10,6 @@
 
 #include <functional>
 //#include <memory>
-#include <vector>
-
 #include "ACTFW/EventData/SimSourceLink.hpp"
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
@@ -19,6 +17,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinder/CombinatorialKalmanFilter.hpp"
+
+#include <vector>
 
 namespace FW {
 

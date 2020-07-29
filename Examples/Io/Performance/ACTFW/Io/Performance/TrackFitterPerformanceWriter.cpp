@@ -8,14 +8,15 @@
 
 #include "ACTFW/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
-#include <stdexcept>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 

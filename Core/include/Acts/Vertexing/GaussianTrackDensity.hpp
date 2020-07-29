@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameters.hpp"
+
 #include <map>
 #include <set>
-
-#include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
 

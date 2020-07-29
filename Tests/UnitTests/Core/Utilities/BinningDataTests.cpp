@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+
+#include <cmath>
 
 namespace Acts {
 namespace Test {

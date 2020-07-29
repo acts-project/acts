@@ -8,13 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <random>
-#include <set>
-
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -23,6 +16,13 @@
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/PlyVisualization.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <random>
+#include <set>
 
 namespace Acts {
 namespace Test {
@@ -73,45 +73,45 @@ BOOST_AUTO_TEST_CASE(intersect_points) {
   VertexType p;
 
   p = {0.5, 0.5, 0.5};
-  BOOST_TEST(bb.intersect(p));
+  BOOST_CHECK(bb.intersect(p));
   p = {0.25, 0.25, 0.25};
-  BOOST_TEST(bb.intersect(p));
+  BOOST_CHECK(bb.intersect(p));
   p = {0.75, 0.75, 0.75};
-  BOOST_TEST(bb.intersect(p));
+  BOOST_CHECK(bb.intersect(p));
 
   // lower bound is inclusive
   p = {0, 0, 0};
-  BOOST_TEST(bb.intersect(p));
+  BOOST_CHECK(bb.intersect(p));
   // upper bound is exclusive
   p = {1.0, 1.0, 1.0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
 
   // some outsides
   p = {2, 0, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {0, 2, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {0, 0, 2};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {2, 2, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {2, 0, 2};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {2, 2, 2};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
 
   p = {-1, 0, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {0, -1, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {0, 0, -1};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {-1, -1, 0};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {-1, 0, -1};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
   p = {-1, -1, -1};
-  BOOST_TEST(!bb.intersect(p));
+  BOOST_CHECK(!bb.intersect(p));
 }
 
 BOOST_AUTO_TEST_CASE(intersect_rays) {
@@ -124,115 +124,115 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     // ray in positive x direction
 
     Ray<float, 2> ray({-2, 0}, {1, 0});
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 2}, {1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{-2, -2}, {1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // upper bound is exclusive
     ray = {{-2, 1}, {1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is inclusive
     ray = {{-2, -1}, {1, 0}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     // ray faces away from box
     ray = {{2, 0}, {1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // ray in negative x direction
 
     ray = {{2, 0}, {-1, 0}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{2, 2}, {-1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{2, -2}, {-1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // upper bound is exclusive
     ray = {{2, 1}, {-1, 0}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is inclusive
     ray = {{2, -1}, {-1, 0}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     // ray in positive y direction
 
     ray = {{0, -2}, {0, 1}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{2, -2}, {0, 1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{-2, -2}, {0, 1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // upper bound is exclusive
     ray = {{1, -2}, {0, 1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is not inclusive,
     // due to Eigen's NaN handling.
     ray = {{-1, -2}, {0, 1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // other direction
     ray = {{0, -2}, {0, -1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // ray in positive y direction
 
     ray = {{0, 2}, {0, -1}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{2, 2}, {0, -1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{-2, 2}, {0, -1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // upper bound is exclusive
     ray = {{1, 2}, {0, -1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // lower bound is not inclusive,
     // due to Eigen's NaN handling.
     ray = {{-1, 2}, {0, -1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // other direction
     ray = {{0, 2}, {0, 1}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // some off axis rays
 
     ray = {{-2, 0}, {0.5, 0.25}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 0}, {0.5, 0.4}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 0}, {0.5, 0.6}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{-2, 0}, {0.5, 0.1}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 0}, {0.5, -0.4}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
 
     ray = {{-2, 0}, {0.5, -0.6}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     ray = {{-2, 0}, {0.1, 0.5}};
-    BOOST_TEST(!bb.intersect(ray));
+    BOOST_CHECK(!bb.intersect(ray));
 
     // starting point inside
     ray = {{
@@ -240,25 +240,25 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
                0,
            },
            {-1, 0}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
     ray = {{
                0,
                0,
            },
            {1, 0}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
     ray = {{
                0,
                0,
            },
            {0, -1}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
     ray = {{
                0,
                0,
            },
            {0, 1}};
-    BOOST_TEST(bb.intersect(ray));
+    BOOST_CHECK(bb.intersect(ray));
   }
 
   BOOST_TEST_CONTEXT("3D visualize") {
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     // lets make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<float, 3> ray3({0, 0, -2}, {0, 0, 1});
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     PlyVisualization<float> ply;
 
@@ -284,89 +284,89 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     // lets make sure it also works in 3d
     ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
     Ray<float, 3> ray3({0, 0, -2}, {0, 0, 1});
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     // facing away from box
     ray3 = {{0, 0, -2}, {0, 0, -1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {{0, 2, -2}, {0, 0, 1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {{0, -2, -2}, {0, 0, 1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     // right on slab
     ray3 = {{0, 1, -2}, {0, 0, 1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     // right on slab
     ray3 = {{0, -1, -2}, {0, 0, 1}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     // right on slab
     ray3 = {{-1, 0, -2}, {0, 0, 1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     // right on slab
     ray3 = {{1, 0, -2}, {0, 0, 1}};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {{-0.95, 0, -2}, {0, 0, 1}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     // some off-axis rays
     ObjectBBox::VertexType p(0, 0, -2);
 
     ray3 = {p, VertexType3(1, 1, 1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(-1, 1, 1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(-1, -1, 1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(1, -1, 1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(1.1, 0, -1) - p};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(-1.1, 0, -1) - p};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(0, 1.1, -1) - p};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(0, -1.1, -1) - p};
-    BOOST_TEST(!bb3.intersect(ray3));
+    BOOST_CHECK(!bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(0.9, 0, -1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(-0.9, 0, -1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(0, 0.9, -1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {p, VertexType3(0, -0.9, -1) - p};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {{0, 0, 0}, {1, 0, 0}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
     ray3 = {{0, 0, 0}, {0, 1, 0}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
     ray3 = {{0, 0, 0}, {0, 0, 1}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
 
     ray3 = {{0, 0, 0}, {-1, 0, 0}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
     ray3 = {{0, 0, 0}, {0, -1, 0}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
     ray3 = {{0, 0, 0}, {0, 0, -1}};
-    BOOST_TEST(bb3.intersect(ray3));
+    BOOST_CHECK(bb3.intersect(ray3));
   }
 }
 

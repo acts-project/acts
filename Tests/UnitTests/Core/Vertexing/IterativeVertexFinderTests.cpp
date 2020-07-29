@@ -26,6 +26,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+
 #include "VertexingDataHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -296,7 +297,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     }
 
     // check if found vertices have compatible z values
-    BOOST_TEST(allVerticesFound);
+    BOOST_CHECK(allVerticesFound);
   }
 }
 
@@ -514,7 +515,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     }
 
     // check if found vertices have compatible z values
-    BOOST_TEST(allVerticesFound);
+    BOOST_CHECK(allVerticesFound);
   }
 }
 

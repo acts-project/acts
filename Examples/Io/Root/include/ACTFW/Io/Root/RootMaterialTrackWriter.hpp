@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Logger.hpp>
-#include <mutex>
-
 #include "ACTFW/Framework/IService.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
+#include <Acts/Propagator/MaterialInteractor.hpp>
+#include <Acts/Utilities/Logger.hpp>
+
+#include <mutex>
 
 class TFile;
 class TTree;

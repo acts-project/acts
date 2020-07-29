@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -15,6 +14,8 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <boost/format.hpp>
 
 namespace Acts {
 
@@ -56,18 +57,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
 
   // Always true
   for (int ib = 0; ib < binValues; ++ib) {
-    BOOST_TEST(
+    BOOST_CHECK(
         sbm(tgContext, (BinningValue)ib, oneSurface.get(), oneSurface.get()));
   }
   // Not matching in R
-  BOOST_TEST(!sbm(tgContext, binR, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, binR, oneSurface.get(), otherSurface.get()));
   // Not matching in phi
-  BOOST_TEST(!sbm(tgContext, binPhi, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, binPhi, oneSurface.get(), otherSurface.get()));
 
   // Good enough matching in R
-  BOOST_TEST(sbm(tgContext, binR, oneSurface.get(), similarRSurface.get()));
+  BOOST_CHECK(sbm(tgContext, binR, oneSurface.get(), similarRSurface.get()));
   // Good enough matching in phi
-  BOOST_TEST(sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
+  BOOST_CHECK(
+      sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
 }
 
 }  // namespace Test

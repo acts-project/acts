@@ -8,13 +8,13 @@
 
 #include "ACTFW/Plugins/Json/JsonMaterialWriter.hpp"
 
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <stdexcept>
-
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 
 FW::Json::JsonMaterialWriter::JsonMaterialWriter(
     const Acts::JsonGeometryConverter::Config& cfg, const std::string& fileName)

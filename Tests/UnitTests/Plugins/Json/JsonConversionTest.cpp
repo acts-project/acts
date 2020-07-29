@@ -9,14 +9,14 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
+
 #include <fstream>
 #include <ios>
 #include <iostream>
 #include <stdexcept>
-
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
 
 using json = nlohmann::json;
 

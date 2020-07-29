@@ -8,8 +8,6 @@
 
 #include "ACTFW/Vertexing/VertexFitAlgorithm.hpp"
 
-#include <iostream>
-
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
@@ -25,6 +23,8 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
+#include <iostream>
 
 FWE::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
                                             Acts::Logging::Level level)

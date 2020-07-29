@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "ACTFW/EventData/SimParticle.hpp"
+#include "ACTFW/Framework/WriterT.hpp"
+
 #include <cstdint>
 #include <mutex>
 #include <string>
-
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Framework/WriterT.hpp"
 
 class TFile;
 class TTree;

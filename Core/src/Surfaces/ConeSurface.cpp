@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Surfaces/ConeSurface.hpp"
+
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <utility>
-
-#include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

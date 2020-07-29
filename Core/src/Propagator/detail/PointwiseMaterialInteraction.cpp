@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 

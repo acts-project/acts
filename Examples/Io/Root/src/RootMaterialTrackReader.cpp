@@ -8,11 +8,12 @@
 
 #include "ACTFW/Io/Root/RootMaterialTrackReader.hpp"
 
-#include <TChain.h>
-#include <TFile.h>
+#include "ACTFW/Framework/WhiteBoard.hpp"
+
 #include <iostream>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include <TChain.h>
+#include <TFile.h>
 
 FW::RootMaterialTrackReader::RootMaterialTrackReader(
     const FW::RootMaterialTrackReader::Config& cfg)

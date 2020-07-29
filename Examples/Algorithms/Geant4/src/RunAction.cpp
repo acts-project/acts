@@ -8,8 +8,9 @@
 
 #include "RunAction.hpp"
 
-#include <G4Run.hh>
 #include <stdexcept>
+
+#include <G4Run.hh>
 
 #include "EventAction.hpp"
 

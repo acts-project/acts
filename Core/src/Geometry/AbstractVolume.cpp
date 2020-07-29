@@ -7,11 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/AbstractVolume.hpp"
-#include <iostream>
-#include <utility>
+
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <iostream>
+#include <utility>
 
 Acts::AbstractVolume::AbstractVolume(
     std::shared_ptr<const Transform3D> htrans,

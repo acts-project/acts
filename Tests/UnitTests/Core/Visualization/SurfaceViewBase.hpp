@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
@@ -28,6 +25,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <fstream>
 #include <sstream>

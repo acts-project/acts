@@ -12,6 +12,9 @@
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <iomanip>
+#include <ostream>
+
 namespace Acts {
 
 /// Free track parameters not bound to a surface.

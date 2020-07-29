@@ -11,15 +11,15 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Seeding/LegacyInternalSeed.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
+
 #include <list>
 #include <map>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "Acts/Seeding/LegacyInternalSeed.hpp"
-#include "Acts/Seeding/SPForSeed.hpp"
 
 namespace Acts {
 namespace Legacy {

@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <G4UserSteppingAction.hh>
-#include <globals.hh>
-#include <vector>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
+
+#include <vector>
+
+#include <G4UserSteppingAction.hh>
+#include <globals.hh>
 
 namespace ActsExamples {
 

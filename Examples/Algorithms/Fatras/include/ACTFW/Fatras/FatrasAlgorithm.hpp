@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-
 #include "ACTFW/EventData/SimHit.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
+
+#include <memory>
+#include <string>
 
 namespace FW {
 

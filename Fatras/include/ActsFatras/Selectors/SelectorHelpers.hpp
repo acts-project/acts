@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <functional>
-#include <limits>
-
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Selectors/detail/combine_selectors.hpp"
+
+#include <functional>
+#include <limits>
 
 namespace ActsFatras {
 

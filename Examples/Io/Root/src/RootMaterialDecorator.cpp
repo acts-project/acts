@@ -13,6 +13,13 @@
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
 #include <Acts/Utilities/BinningType.hpp>
+
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
 #include <TFile.h>
 #include <TH2F.h>
 #include <TIterator.h>
@@ -21,11 +28,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
-#include <cstdio>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
 
 FW::RootMaterialDecorator::RootMaterialDecorator(
     const FW::RootMaterialDecorator::Config& cfg)

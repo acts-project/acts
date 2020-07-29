@@ -8,6 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -15,11 +21,6 @@
 #include <ostream>
 #include <tuple>
 #include <vector>
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Ray.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
 
 namespace Acts {
 

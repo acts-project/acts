@@ -8,8 +8,6 @@
 
 #include "ACTFW/ContextualDetector/AlignedDetector.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/ContextualDetector/AlignedDetectorElement.hpp"
 #include "ACTFW/ContextualDetector/AlignmentDecorator.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
@@ -21,6 +19,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <boost/program_options.hpp>
 
 void AlignedDetector::addOptions(
     boost::program_options::options_description& opt) const {

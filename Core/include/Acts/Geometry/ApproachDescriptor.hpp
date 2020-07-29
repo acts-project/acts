@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <vector>
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <vector>
 
 namespace Acts {
 

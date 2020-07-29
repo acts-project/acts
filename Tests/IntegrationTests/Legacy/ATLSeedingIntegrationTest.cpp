@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-
 #include "Acts/Seeding/AtlasSeedfinder.hpp"
+
+#include <algorithm>
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)

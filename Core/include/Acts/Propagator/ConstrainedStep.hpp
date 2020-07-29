@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <algorithm>
 #include <array>
 #include <iomanip>
 #include <limits>
 #include <sstream>
-
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

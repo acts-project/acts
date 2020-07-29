@@ -8,15 +8,15 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
-#include <functional>
-#include <utility>
-
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
+#include <functional>
+#include <utility>
 
 Acts::TrackingVolume::TrackingVolume()
     : Volume(),

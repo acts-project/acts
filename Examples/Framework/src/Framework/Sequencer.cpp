@@ -8,18 +8,19 @@
 
 #include "ACTFW/Framework/Sequencer.hpp"
 
-#include <TROOT.h>
-#include <algorithm>
-#include <chrono>
-#include <dfe/dfe_io_dsv.hpp>
-#include <dfe/dfe_namedtuple.hpp>
-#include <exception>
-#include <numeric>
-#include <tbb/tbb.h>
-
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <exception>
+#include <numeric>
+
+#include <TROOT.h>
+#include <dfe/dfe_io_dsv.hpp>
+#include <dfe/dfe_namedtuple.hpp>
+#include <tbb/tbb.h>
 
 FW::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),

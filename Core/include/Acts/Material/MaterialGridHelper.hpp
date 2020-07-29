@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <stdexcept>
-
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <stdexcept>
 
 namespace Acts {
 

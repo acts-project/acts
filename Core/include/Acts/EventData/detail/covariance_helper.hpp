@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <type_traits>
-
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <type_traits>
 
 namespace Acts {
 namespace detail {

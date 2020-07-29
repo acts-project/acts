@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <limits>
-
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <limits>
 
 namespace tt = boost::test_tools;
 

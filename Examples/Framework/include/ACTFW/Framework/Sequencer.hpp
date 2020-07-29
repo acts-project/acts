@@ -8,18 +8,18 @@
 
 #pragma once
 
-#include <Acts/Utilities/Logger.hpp>
-#include <cstddef>
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "ACTFW/Framework/IAlgorithm.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "ACTFW/Framework/IReader.hpp"
 #include "ACTFW/Framework/IService.hpp"
 #include "ACTFW/Framework/IWriter.hpp"
+#include <Acts/Utilities/Logger.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace FW {
 

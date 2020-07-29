@@ -11,6 +11,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/Selectors/LimitSelectors.hpp"
+
 #include "Dataset.hpp"
 
 namespace {
@@ -33,18 +34,18 @@ BOOST_AUTO_TEST_CASE(PathLimitX0) {
   ActsFatras::PathLimitX0 select;
   auto particle = makeParticleCloseToLimit();
   // particle is still within limits for thin block
-  BOOST_TEST(not select(particle, Acts::Test::makePercentSlab()));
+  BOOST_CHECK(not select(particle, Acts::Test::makePercentSlab()));
   // particle would pass limits for thick block
-  BOOST_TEST(select(particle, Acts::Test::makeUnitSlab()));
+  BOOST_CHECK(select(particle, Acts::Test::makeUnitSlab()));
 }
 
 BOOST_AUTO_TEST_CASE(PathLimitL0) {
   ActsFatras::PathLimitL0 select;
   auto particle = makeParticleCloseToLimit();
   // particle is still within limits for thin block
-  BOOST_TEST(not select(particle, Acts::Test::makePercentSlab()));
+  BOOST_CHECK(not select(particle, Acts::Test::makePercentSlab()));
   // particle would pass limits for thick block
-  BOOST_TEST(select(particle, Acts::Test::makeUnitSlab()));
+  BOOST_CHECK(select(particle, Acts::Test::makeUnitSlab()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

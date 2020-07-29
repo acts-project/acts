@@ -8,15 +8,15 @@
 
 #include "ACTFW/TruthTracking/TruthTrackFinder.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
 #include "ACTFW/EventData/IndexContainers.hpp"
 #include "ACTFW/EventData/ProtoTrack.hpp"
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/Utilities/Range.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
 
 using namespace FW;
 

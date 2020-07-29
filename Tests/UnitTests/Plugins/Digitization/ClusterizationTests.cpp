@@ -9,16 +9,16 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Plugins/Digitization/Clusterization.hpp"
+#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "Acts/Plugins/Digitization/Clusterization.hpp"
-#include "Acts/Plugins/Digitization/DigitizationCell.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

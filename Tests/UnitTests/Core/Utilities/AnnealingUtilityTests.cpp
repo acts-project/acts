@@ -10,9 +10,9 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <iostream>
-
 #include "Acts/Utilities/AnnealingUtility.hpp"
+
+#include <iostream>
 
 namespace Acts {
 namespace Test {

@@ -8,13 +8,13 @@
 
 #include "ACTFW/DD4hepDetector/DD4hepDetector.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+
+#include <boost/program_options.hpp>
 
 void DD4hepDetector::addOptions(
     boost::program_options::options_description& opt) const {

@@ -8,14 +8,14 @@
 
 #include "ACTFW/EmptyDetector/EmptyDetector.hpp"
 
-#include <boost/program_options.hpp>
-
 #include "ACTFW/EmptyDetector/EmptyDetectorOptions.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <boost/program_options.hpp>
 
 void EmptyDetector::addOptions(
     boost::program_options::options_description& opt) const {

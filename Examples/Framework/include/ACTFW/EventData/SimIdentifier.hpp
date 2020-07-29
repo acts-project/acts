@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/MeasurementHelpers.hpp"
+
 #include <cstddef>
 #include <vector>
-
-#include "Acts/EventData/MeasurementHelpers.hpp"
 
 namespace FW {
 

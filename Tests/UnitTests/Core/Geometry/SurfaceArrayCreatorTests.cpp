@@ -6,12 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <fstream>
-#include <random>
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
@@ -22,6 +18,11 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
+
+#include <fstream>
+#include <random>
+
+#include <boost/format.hpp>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

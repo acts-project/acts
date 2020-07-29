@@ -25,6 +25,7 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;

@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include <sstream>
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <sstream>
 
 namespace Acts {
 

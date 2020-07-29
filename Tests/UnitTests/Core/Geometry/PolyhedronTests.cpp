@@ -11,14 +11,14 @@
 #include <boost/test/unit_test.hpp>
 
 // Helper
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-
-#include <fstream>
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Visualization/GeometryView.hpp"
 #include "Acts/Visualization/ObjVisualization.hpp"
+
+#include <fstream>
 
 namespace Acts {
 

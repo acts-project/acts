@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include <type_traits>
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
+
+#include <type_traits>
 
 namespace Acts {
 

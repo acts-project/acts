@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   TrapezoidVolumeBounds tvb(5, 10, 8, 4);
 
   auto tvbOrientedSurfaces = tvb.orientedSurfaces(nullptr);
-  BOOST_TEST(tvbOrientedSurfaces.size(), 6);
+  BOOST_CHECK_EQUAL(tvbOrientedSurfaces.size(), 6);
 
   auto geoCtx = GeometryContext();
 
