@@ -40,6 +40,16 @@ class BinUtility {
 
   /// Constructor from BinningData directly
   ///
+  /// @param tForm is the (optional) transform
+  BinUtility(const std::shared_ptr<const Transform3D>& tForm)
+      : m_binningData(),
+        m_transform(tForm),
+        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
+    m_binningData.reserve(3);
+  }
+
+  /// Constructor from BinningData directly
+  ///
   /// @param bData is the provided binning data
   /// @param tForm is the (optional) transform
   BinUtility(const BinningData& bData,
