@@ -298,14 +298,15 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
       tgb.trackingGeometry(tgContext);
 
   // Test that the right volume is selected
-  BOOST_TEST(detector->lowestTrackingVolume(tgContext, {1. * units::_m, 0., 0.})
-                 ->volumeName() == vCfg.name);
-  BOOST_TEST(
-      detector->lowestTrackingVolume(tgContext, {1.1 * units::_m, 0., 0.})
-          ->volumeName() == cvCfg1.name);
-  BOOST_TEST(
-      detector->lowestTrackingVolume(tgContext, {0.9 * units::_m, 0., 0.})
-          ->volumeName() == cvCfg2.name);
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1. * units::_m,
+0., 0.})
+                 ->volumeName(), vCfg.name);
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1.1 * units::_m,
+0., 0.})
+          ->volumeName(), cvCfg1.name);
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {0.9 * units::_m,
+0., 0.})
+          ->volumeName(), cvCfg2.name);
 
   // Set propagator and navigator
   PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext,
@@ -332,21 +333,21 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
   // Check the identified volumes
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     if (i > 0) {
-      BOOST_TEST(stepResult.position[i].x() > 0.);
+      BOOST_CHECK_GT(stepResult.position[i].x(), 0.);
     }
     if (stepResult.position[i].x() >= 0.85 * units::_m &&
         stepResult.position[i].x() < 0.95 * units::_m) {
-      BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
-      BOOST_TEST(stepResult.volume[i]->volumeMaterial() == nullptr);
+      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg2.name);
+      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeMaterial(), nullptr);
     } else {
       if (stepResult.position[i].x() >= 1.05 * units::_m &&
           stepResult.position[i].x() < 1.15 * units::_m) {
-        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
-        BOOST_TEST(stepResult.volume[i]->volumeMaterial() != nullptr);
+        BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg1.name);
+        BOOST_CHECK_NE(stepResult.volume[i]->volumeMaterial(), nullptr);
       } else {
         if (stepResult.position[i].x() < 2. * units::_m) {
-          BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
-          BOOST_TEST(stepResult.volume[i]->volumeMaterial() == nullptr);
+          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg.name);
+          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeMaterial(), nullptr);
         }
       }
     }
@@ -455,22 +456,22 @@ propOpts(tgContext, mfContext);
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Check the movement in the right direction
     if (i > 0) {
-      BOOST_TEST(stepResult.position[i].x() > 0.);
+      BOOST_CHECK_GT(stepResult.position[i].x(), 0.);
     }
     // Check the identified volumes
     if (stepResult.position[i].x() >= 0.95 * units::_m &&
         stepResult.position[i].x() < 1.05 * units::_m) {
-      BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg4.name);
+      BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg4.name);
     } else {
       if (stepResult.position[i].x() >= 1.85 * units::_m &&
           stepResult.position[i].x() < 1.95 * units::_m) {
-        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg3.name);
+        BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), cvCfg3.name);
       } else {
         if (stepResult.position[i].x() < 2. * units::_m) {
-          BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg1.name);
+          BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg1.name);
         } else {
           if (stepResult.position[i].x() < 3. * units::_m) {
-            BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg2.name);
+            BOOST_CHECK_EQUAL(stepResult.volume[i]->volumeName(), vCfg2.name);
           }
         }
       }

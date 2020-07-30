@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
 
   auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
-  BOOST_TEST(ccvbOrientedSurfaces.size(), 8);
+  BOOST_CHECK_EQUAL(ccvbOrientedSurfaces.size(), 8);
 
   auto geoCtx = GeometryContext();
   Vector3D xaxis(1., 0., 0.);
