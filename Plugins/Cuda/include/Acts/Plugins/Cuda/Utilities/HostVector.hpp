@@ -15,12 +15,20 @@
 namespace Acts {
 namespace Cuda {
 
-/// Vector holding data in host-pinned memory
+/// Helper type for holding a vector as a variable array in pinned host memory
 template <typename T>
 class HostVector {
  public:
   /// The variable type being used
-  typedef T Variable_t;
+  using Variable_t = T;
+  /// Non-constant reference to an element of the vector
+  using element_reference = Variable_t&;
+  /// Constant reference to an element of the vector
+  using element_const_reference = const Variable_t&;
+  /// Non-constant pointer to (some part of) the vector
+  using pointer = Variable_t*;
+  /// Constant pointer to (some part of) the vector
+  using const_pointer = const Variable_t*;
 
   /// Create a vector in host memory
   HostVector(std::size_t size);
@@ -29,22 +37,22 @@ class HostVector {
   std::size_t size() const { return m_size; }
 
   /// Get a specific element of the vector (non-const)
-  Variable_t& get(std::size_t offset = 0);
+  element_reference get(std::size_t offset = 0);
   /// Get a specific element of the vector (const)
-  const Variable_t& get(std::size_t offset = 0) const;
+  element_const_reference get(std::size_t offset = 0) const;
 
   /// Get a "pointer into the vector" (non-const)
-  Variable_t* getPtr(std::size_t offset = 0);
+  pointer getPtr(std::size_t offset = 0);
   /// Get a "pointer into the vector" (const)
-  const Variable_t* getPtr(std::size_t offset = 0) const;
+  const_pointer getPtr(std::size_t offset = 0) const;
 
   /// Set a specific element of the vector
   void set(std::size_t offset, Variable_t val);
 
   /// Copy memory from a/the device.
-  void copyFrom(const Variable_t* devPtr, std::size_t len, std::size_t offset);
+  void copyFrom(const_pointer devPtr, std::size_t len, std::size_t offset);
   /// Copy memory from a/the device asynchronously.
-  void copyFrom(const Variable_t* devPtr, std::size_t len, std::size_t offset,
+  void copyFrom(const_pointer devPtr, std::size_t len, std::size_t offset,
                 const StreamWrapper& streamWrapper);
 
   /// Reset the vector to all zeros

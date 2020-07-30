@@ -27,7 +27,8 @@ DeviceVector<T>::DeviceVector(std::size_t size)
     : m_size(size), m_array(make_device_array<T>(size)) {}
 
 template <typename T>
-typename DeviceVector<T>::Variable_t& DeviceVector<T>::get(std::size_t offset) {
+typename DeviceVector<T>::element_reference DeviceVector<T>::get(
+    std::size_t offset) {
   // Some security check(s).
   assert(offset < m_size);
 
@@ -36,7 +37,7 @@ typename DeviceVector<T>::Variable_t& DeviceVector<T>::get(std::size_t offset) {
 }
 
 template <typename T>
-const typename DeviceVector<T>::Variable_t& DeviceVector<T>::get(
+typename DeviceVector<T>::element_const_reference DeviceVector<T>::get(
     std::size_t offset) const {
   // Some security check(s).
   assert(offset < m_size);
@@ -46,8 +47,7 @@ const typename DeviceVector<T>::Variable_t& DeviceVector<T>::get(
 }
 
 template <typename T>
-typename DeviceVector<T>::Variable_t* DeviceVector<T>::getPtr(
-    std::size_t offset) {
+typename DeviceVector<T>::pointer DeviceVector<T>::getPtr(std::size_t offset) {
   // If the vector is empty, return a null pointer.
   if (m_size == 0) {
     return nullptr;
@@ -61,7 +61,7 @@ typename DeviceVector<T>::Variable_t* DeviceVector<T>::getPtr(
 }
 
 template <typename T>
-const typename DeviceVector<T>::Variable_t* DeviceVector<T>::getPtr(
+typename DeviceVector<T>::const_pointer DeviceVector<T>::getPtr(
     std::size_t offset) const {
   // If the vector is empty, return a null pointer.
   if (m_size == 0) {
@@ -86,7 +86,7 @@ void DeviceVector<T>::set(std::size_t offset, Variable_t val) {
 }
 
 template <typename T>
-void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+void DeviceVector<T>::copyFrom(const_pointer hostPtr, std::size_t len,
                                std::size_t offset) {
   // Some security check(s).
   assert(offset + len <= m_size);
@@ -99,7 +99,7 @@ void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
 }
 
 template <typename T>
-void DeviceVector<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+void DeviceVector<T>::copyFrom(const_pointer hostPtr, std::size_t len,
                                std::size_t offset,
                                const StreamWrapper& streamWrapper) {
   // Some security check(s).

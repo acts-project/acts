@@ -27,7 +27,8 @@ HostVector<T>::HostVector(std::size_t size)
     : m_size(size), m_array(make_host_array<T>(size)) {}
 
 template <typename T>
-typename HostVector<T>::Variable_t& HostVector<T>::get(std::size_t offset) {
+typename HostVector<T>::element_reference HostVector<T>::get(
+    std::size_t offset) {
   // Some security check(s).
   assert(offset < m_size);
 
@@ -36,7 +37,7 @@ typename HostVector<T>::Variable_t& HostVector<T>::get(std::size_t offset) {
 }
 
 template <typename T>
-const typename HostVector<T>::Variable_t& HostVector<T>::get(
+typename HostVector<T>::element_const_reference HostVector<T>::get(
     std::size_t offset) const {
   // Some security check(s).
   assert(offset < m_size);
@@ -46,7 +47,7 @@ const typename HostVector<T>::Variable_t& HostVector<T>::get(
 }
 
 template <typename T>
-typename HostVector<T>::Variable_t* HostVector<T>::getPtr(std::size_t offset) {
+typename HostVector<T>::pointer HostVector<T>::getPtr(std::size_t offset) {
   // If the vector is empty, return a null pointer.
   if (m_size == 0) {
     return nullptr;
@@ -60,7 +61,7 @@ typename HostVector<T>::Variable_t* HostVector<T>::getPtr(std::size_t offset) {
 }
 
 template <typename T>
-const typename HostVector<T>::Variable_t* HostVector<T>::getPtr(
+typename HostVector<T>::const_pointer HostVector<T>::getPtr(
     std::size_t offset) const {
   // If the vector is empty, return a null pointer.
   if (m_size == 0) {
@@ -85,7 +86,7 @@ void HostVector<T>::set(std::size_t offset, Variable_t val) {
 }
 
 template <typename T>
-void HostVector<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
+void HostVector<T>::copyFrom(const_pointer devPtr, std::size_t len,
                              std::size_t offset) {
   // Some security check(s).
   assert(offset + len <= m_size);
@@ -98,7 +99,7 @@ void HostVector<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
 }
 
 template <typename T>
-void HostVector<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
+void HostVector<T>::copyFrom(const_pointer devPtr, std::size_t len,
                              std::size_t offset,
                              const StreamWrapper& streamWrapper) {
   // Some security check(s).

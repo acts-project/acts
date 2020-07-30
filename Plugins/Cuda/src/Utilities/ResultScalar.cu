@@ -20,7 +20,7 @@ template <typename T>
 ResultScalar<T>::ResultScalar() : m_array(make_device_array<T>(1)) {}
 
 template <typename T>
-typename ResultScalar<T>::Variable_t* ResultScalar<T>::getPtr() const {
+typename ResultScalar<T>::pointer ResultScalar<T>::getPtr() const {
   return m_array.get();
 }
 

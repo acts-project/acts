@@ -23,13 +23,15 @@ template <typename T>
 class ResultScalar {
  public:
   /// The variable type being used
-  typedef T Variable_t;
+  using Variable_t = T;
+  /// Non-constant pointer to the scalar in device memory
+  using pointer = Variable_t*;
 
   /// Default constructor
   ResultScalar();
 
   /// Get the "device pointer" that the kernel can write to
-  Variable_t* getPtr() const;
+  pointer getPtr() const;
 
   /// Get the value set by the device
   Variable_t get() const;

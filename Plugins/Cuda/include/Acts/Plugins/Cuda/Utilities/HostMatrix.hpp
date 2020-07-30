@@ -15,12 +15,20 @@
 namespace Acts {
 namespace Cuda {
 
-/// Column-major style matrix definition
+/// Helper type for holding a matrix as a variable array in pinned host memory
 template <typename T>
 class HostMatrix {
  public:
   /// The variable type being used
-  typedef T Variable_t;
+  using Variable_t = T;
+  /// Non-constant reference to an element of the matrix
+  using element_reference = Variable_t&;
+  /// Constant reference to an element of the matrix
+  using element_const_reference = const Variable_t&;
+  /// Non-constant pointer to (some part of) the matrix
+  using pointer = Variable_t*;
+  /// Constant pointer to (some part of) the matrix
+  using const_pointer = const Variable_t*;
 
   /// Create a matrix in host memory.
   HostMatrix(std::size_t nRows, std::size_t nCols);
@@ -33,22 +41,22 @@ class HostMatrix {
   std::size_t size() const { return m_nRows * m_nCols; }
 
   /// Get a specific element of the matrix. (non-const)
-  Variable_t& get(std::size_t row = 0, std::size_t col = 0);
+  element_reference get(std::size_t row = 0, std::size_t col = 0);
   /// Get a specific element of the matrix. (const)
-  const Variable_t& get(std::size_t row = 0, std::size_t col = 0) const;
+  element_const_reference get(std::size_t row = 0, std::size_t col = 0) const;
 
   /// Get a "pointer into the matrix" (non-const)
-  Variable_t* getPtr(std::size_t row = 0, std::size_t col = 0);
+  pointer getPtr(std::size_t row = 0, std::size_t col = 0);
   /// Get a "pointer into the matrix" (const)
-  const Variable_t* getPtr(std::size_t row = 0, std::size_t col = 0) const;
+  const_pointer getPtr(std::size_t row = 0, std::size_t col = 0) const;
 
   /// Set a specific element of the matrix
   void set(std::size_t row, std::size_t col, Variable_t val);
 
   /// Copy memory from a/the device.
-  void copyFrom(const Variable_t* devPtr, std::size_t len, std::size_t offset);
+  void copyFrom(const_pointer devPtr, std::size_t len, std::size_t offset);
   /// Copy memory from a/the device asynchronously.
-  void copyFrom(const Variable_t* devPtr, std::size_t len, std::size_t offset,
+  void copyFrom(const_pointer devPtr, std::size_t len, std::size_t offset,
                 const StreamWrapper& streamWrapper);
 
   /// Reset the matrix to all zeros

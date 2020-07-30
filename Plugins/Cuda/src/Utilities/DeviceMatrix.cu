@@ -29,8 +29,8 @@ DeviceMatrix<T>::DeviceMatrix(std::size_t nRows, std::size_t nCols)
       m_array(make_device_array<T>(nRows * nCols)) {}
 
 template <typename T>
-typename DeviceMatrix<T>::Variable_t& DeviceMatrix<T>::get(std::size_t row,
-                                                           std::size_t col) {
+typename DeviceMatrix<T>::element_reference DeviceMatrix<T>::get(
+    std::size_t row, std::size_t col) {
   // Some security check(s).
   assert(row < m_nRows);
   assert(col < m_nCols);
@@ -40,7 +40,7 @@ typename DeviceMatrix<T>::Variable_t& DeviceMatrix<T>::get(std::size_t row,
 }
 
 template <typename T>
-const typename DeviceMatrix<T>::Variable_t& DeviceMatrix<T>::get(
+typename DeviceMatrix<T>::element_const_reference DeviceMatrix<T>::get(
     std::size_t row, std::size_t col) const {
   // Some security check(s).
   assert(row < m_nRows);
@@ -51,8 +51,8 @@ const typename DeviceMatrix<T>::Variable_t& DeviceMatrix<T>::get(
 }
 
 template <typename T>
-typename DeviceMatrix<T>::Variable_t* DeviceMatrix<T>::getPtr(std::size_t row,
-                                                              std::size_t col) {
+typename DeviceMatrix<T>::pointer DeviceMatrix<T>::getPtr(std::size_t row,
+                                                          std::size_t col) {
   // If the matrix is empty, just return a null pointer.
   if ((m_nRows == 0) || (m_nCols == 0)) {
     return nullptr;
@@ -67,7 +67,7 @@ typename DeviceMatrix<T>::Variable_t* DeviceMatrix<T>::getPtr(std::size_t row,
 }
 
 template <typename T>
-const typename DeviceMatrix<T>::Variable_t* DeviceMatrix<T>::getPtr(
+typename DeviceMatrix<T>::const_pointer DeviceMatrix<T>::getPtr(
     std::size_t row, std::size_t col) const {
   // If the matrix is empty, just return a null pointer.
   if ((m_nRows == 0) || (m_nCols == 0)) {
@@ -94,7 +94,7 @@ void DeviceMatrix<T>::set(std::size_t row, std::size_t col, Variable_t val) {
 }
 
 template <typename T>
-void DeviceMatrix<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+void DeviceMatrix<T>::copyFrom(const_pointer hostPtr, std::size_t len,
                                std::size_t offset) {
   // Some security check(s).
   assert(offset + len <= m_nRows * m_nCols);
@@ -107,7 +107,7 @@ void DeviceMatrix<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
 }
 
 template <typename T>
-void DeviceMatrix<T>::copyFrom(const Variable_t* hostPtr, std::size_t len,
+void DeviceMatrix<T>::copyFrom(const_pointer hostPtr, std::size_t len,
                                std::size_t offset,
                                const StreamWrapper& streamWrapper) {
   // Some security check(s).

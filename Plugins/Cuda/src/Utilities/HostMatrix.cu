@@ -29,8 +29,8 @@ HostMatrix<T>::HostMatrix(std::size_t nRows, std::size_t nCols)
       m_array(make_host_array<T>(nRows * nCols)) {}
 
 template <typename T>
-typename HostMatrix<T>::Variable_t& HostMatrix<T>::get(std::size_t row,
-                                                       std::size_t col) {
+typename HostMatrix<T>::element_reference HostMatrix<T>::get(std::size_t row,
+                                                             std::size_t col) {
   // Some security check(s).
   assert(row < m_nRows);
   assert(col < m_nCols);
@@ -40,7 +40,7 @@ typename HostMatrix<T>::Variable_t& HostMatrix<T>::get(std::size_t row,
 }
 
 template <typename T>
-const typename HostMatrix<T>::Variable_t& HostMatrix<T>::get(
+typename HostMatrix<T>::element_const_reference HostMatrix<T>::get(
     std::size_t row, std::size_t col) const {
   // Some security check(s).
   assert(row < m_nRows);
@@ -51,8 +51,8 @@ const typename HostMatrix<T>::Variable_t& HostMatrix<T>::get(
 }
 
 template <typename T>
-typename HostMatrix<T>::Variable_t* HostMatrix<T>::getPtr(std::size_t row,
-                                                          std::size_t col) {
+typename HostMatrix<T>::pointer HostMatrix<T>::getPtr(std::size_t row,
+                                                      std::size_t col) {
   // If the matrix is empty, just return a null pointer.
   if ((m_nRows == 0) || (m_nCols == 0)) {
     return nullptr;
@@ -67,7 +67,7 @@ typename HostMatrix<T>::Variable_t* HostMatrix<T>::getPtr(std::size_t row,
 }
 
 template <typename T>
-const typename HostMatrix<T>::Variable_t* HostMatrix<T>::getPtr(
+typename HostMatrix<T>::const_pointer HostMatrix<T>::getPtr(
     std::size_t row, std::size_t col) const {
   // If the matrix is empty, just return a null pointer.
   if ((m_nRows == 0) || (m_nCols == 0)) {
@@ -94,7 +94,7 @@ void HostMatrix<T>::set(std::size_t row, std::size_t col, Variable_t val) {
 }
 
 template <typename T>
-void HostMatrix<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
+void HostMatrix<T>::copyFrom(const_pointer devPtr, std::size_t len,
                              std::size_t offset) {
   // Some security check(s).
   assert(offset + len <= m_nRows * m_nCols);
@@ -107,7 +107,7 @@ void HostMatrix<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
 }
 
 template <typename T>
-void HostMatrix<T>::copyFrom(const Variable_t* devPtr, std::size_t len,
+void HostMatrix<T>::copyFrom(const_pointer devPtr, std::size_t len,
                              std::size_t offset,
                              const StreamWrapper& streamWrapper) {
   // Some security check(s).
