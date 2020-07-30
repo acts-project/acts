@@ -41,7 +41,7 @@ class BinUtility {
 
   /// Constructor with only a Transform3D
   ///
-  /// @param tForm is the (optional) transform
+  /// @param tForm is the local to global transform
   BinUtility(const std::shared_ptr<const Transform3D>& tForm)
       : m_binningData(),
         m_transform(tForm),

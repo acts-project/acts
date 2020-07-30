@@ -31,7 +31,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
                             const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
-  if (transform.matrix() != Transform3D::Identity().matrix()) {
+  if (!transform.isApprox(Transform3D::Identity())) {
     uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
   }
   // The parameters from the cylinder bounds
@@ -87,7 +87,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
                             const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
-  if (transform.matrix() != Transform3D::Identity().matrix()) {
+  if (!transform.isApprox(Transform3D::Identity())) {
     uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
   }
   // The parameters from the cylinder bounds
