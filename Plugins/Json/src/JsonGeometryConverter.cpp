@@ -322,11 +322,12 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   Acts::ISurfaceMaterial* sMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
-  if (material.contains(m_cfg.transfokeys) and
-      not material[m_cfg.transfokeys].empty()) {
-    auto value = material[m_cfg.transfokeys];
-    bUtility = Acts::BinUtility(
-        std::make_shared<const Transform3D>(jsonToTransform(value)));
+  for (auto& [key, value] : material.items()) {
+    if (key == m_cfg.transfokeys and not value.empty()) {
+      bUtility = Acts::BinUtility(
+          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      break;
+    }
   }
   // Convert the material
   Acts::MaterialPropertiesMatrix mpMatrix;
@@ -361,11 +362,12 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
-  if (material.contains(m_cfg.transfokeys) and
-      not material[m_cfg.transfokeys].empty()) {
-    auto value = material[m_cfg.transfokeys];
-    bUtility = Acts::BinUtility(
-        std::make_shared<const Transform3D>(jsonToTransform(value)));
+  for (auto& [key, value] : material.items()) {
+    if (key == m_cfg.transfokeys and not value.empty()) {
+      bUtility = Acts::BinUtility(
+          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      break;
+    }
   }
   // Convert the material
   std::vector<std::vector<float>> mmat;
