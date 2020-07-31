@@ -85,14 +85,14 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   ObjVisualization objVis;
 
   auto centralLayers = tglb.centralLayers(tgContext);
-  BOOST_TEST(centralLayers.size() = 1u);
-  BOOST_TEST(tglb.detectorElements().size() == 14u);
+  BOOST_CHECK_EQUAL(centralLayers.size(), 1u);
+  BOOST_CHECK_EQUAL(tglb.detectorElements().size(), 14u);
 
   auto positiveLayers = tglb.positiveLayers(tgContext);
   // Check that it's split into two layers
   size_t ipl = 0;
-  BOOST_TEST(positiveLayers.size() = 2u);
-  BOOST_TEST(tglb.detectorElements().size() == 14u + 16u);
+  BOOST_CHECK_EQUAL(positiveLayers.size(), 2u);
+  BOOST_CHECK_EQUAL(tglb.detectorElements().size(), 14u + 16u);
   for (const auto& pLayer : positiveLayers) {
     auto sArray = pLayer->surfaceArray();
     if (sArray) {

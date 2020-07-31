@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   GenericCuboidVolumeBounds cubo(vertices);
 
   auto gcvbOrientedSurfaces = cubo.orientedSurfaces(nullptr);
-  BOOST_TEST(gcvbOrientedSurfaces.size(), 6);
+  BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();

@@ -21,11 +21,11 @@ BOOST_AUTO_TEST_CASE(vacuum) {
   AccumulatedVolumeMaterial avm;
 
   // averaging over nothing is vacuum
-  BOOST_TEST(avm.average() == Material());
+  BOOST_CHECK_EQUAL(avm.average(), Material());
 
   // averaging over vacuum is still vacuum
   avm.accumulate(MaterialProperties(1));
-  BOOST_TEST(avm.average() == Material());
+  BOOST_CHECK_EQUAL(avm.average(), Material());
 }
 
 BOOST_AUTO_TEST_CASE(single_material) {

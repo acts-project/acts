@@ -65,11 +65,11 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
   for (const auto &axes : allowedAxes) {
     auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
-    BOOST_TEST(plane != nullptr);
-    BOOST_TEST(plane->type() == Surface::Plane);
+    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
-    BOOST_TEST(bounds != nullptr);
+    BOOST_CHECK_NE(bounds, nullptr);
     double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
     double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
     double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
