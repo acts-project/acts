@@ -322,6 +322,12 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   Acts::ISurfaceMaterial* sMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
+  if (material.contains(m_cfg.transfokeys) and
+      not material[m_cfg.transfokeys].empty()) {
+    auto value = material[m_cfg.transfokeys];
+    bUtility = Acts::BinUtility(
+        std::make_shared<const Transform3D>(jsonToTransform(value)));
+  }
   // Convert the material
   Acts::MaterialPropertiesMatrix mpMatrix;
   // Structured binding
@@ -355,6 +361,12 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
+  if (material.contains(m_cfg.transfokeys) and
+      not material[m_cfg.transfokeys].empty()) {
+    auto value = material[m_cfg.transfokeys];
+    bUtility = Acts::BinUtility(
+        std::make_shared<const Transform3D>(jsonToTransform(value)));
+  }
   // Convert the material
   std::vector<std::vector<float>> mmat;
   // Structured binding
@@ -689,6 +701,16 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       }
       smj[binkeys[ibin]] = binj;
     }
+    if (bUtility->transform() != nullptr) {
+      std::vector<double> transfo;
+      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          transfo.push_back(transfo_matrix(j, i));
+        }
+      }
+      smj[m_cfg.transfokeys] = transfo;
+    }
   }
   return smj;
 }
@@ -805,6 +827,16 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       }
       smj[binkeys[ibin]] = binj;
     }
+    if (bUtility->transform() != nullptr) {
+      std::vector<double> transfo;
+      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          transfo.push_back(transfo_matrix(j, i));
+        }
+      }
+      smj[m_cfg.transfokeys] = transfo;
+    }
   }
   return smj;
 }
@@ -888,6 +920,23 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
     return Acts::BinUtility(bins, min, max, bopt, bval);
   }
   return Acts::BinUtility();
+}
+
+/// Create the local to global transform
+Acts::Transform3D Acts::JsonGeometryConverter::jsonToTransform(
+    const json& transfo) {
+  Transform3D transform;
+  int i = 0;
+  int j = 0;
+  for (auto& element : transfo) {
+    transform(j, i) = element;
+    j++;
+    if (j == 4) {
+      i++;
+      j = 0;
+    }
+  }
+  return transform;
 }
 
 Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
