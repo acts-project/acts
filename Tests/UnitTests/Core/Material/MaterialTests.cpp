@@ -8,12 +8,13 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-#include <limits>
 
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <limits>
 
 namespace bdata = boost::unit_test::data;
 
@@ -29,13 +30,13 @@ BOOST_AUTO_TEST_SUITE(Material)
 BOOST_AUTO_TEST_CASE(ConstructVacuum) {
   // default constructor builds invalid material a.k.a. vacuum
   Acts::Material vacuum;
-  BOOST_TEST(!vacuum);
+  BOOST_CHECK(!vacuum);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructSomething) {
   // anything with non-zero Ar is a valid material
   Acts::Material notVacuum(1, 2, 3, 4, 5);
-  BOOST_TEST(!!notVacuum);
+  BOOST_CHECK(!!notVacuum);
 }
 
 BOOST_AUTO_TEST_CASE(Units) {
@@ -73,8 +74,8 @@ BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
   // encode material again
   Acts::ActsVectorF<5> numbers1 = fromNumbers.classificationNumbers();
 
-  BOOST_TEST(material == fromNumbers);
-  BOOST_TEST(numbers0 == numbers1);
+  BOOST_CHECK_EQUAL(material, fromNumbers);
+  BOOST_CHECK_EQUAL(numbers0, numbers1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

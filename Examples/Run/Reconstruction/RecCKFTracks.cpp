@@ -6,9 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <Acts/Utilities/Units.hpp>
-#include <memory>
-
 #include "ACTFW/Digitization/HitSmearing.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
@@ -26,6 +23,9 @@
 #include "ACTFW/TruthTracking/TruthSeedSelector.hpp"
 #include "ACTFW/Utilities/Options.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include <Acts/Utilities/Units.hpp>
+
+#include <memory>
 
 using namespace Acts::UnitLiterals;
 using namespace FW;

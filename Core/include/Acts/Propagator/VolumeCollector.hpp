@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <sstream>
 #include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <sstream>
 
 namespace Acts {
 
@@ -96,15 +97,25 @@ struct VolumeCollector {
       volume_hit.volume = state.navigation.currentVolume;
       volume_hit.position = stepper.position(state.stepping);
       volume_hit.direction = stepper.direction(state.stepping);
-      // Save if in the result
-      result.collected.push_back(volume_hit);
-      // Screen output
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Collect volume  "
-                << state.navigation.currentVolume->geoID();
-        return dstream.str();
-      });
+      bool save = true;
+      // Check if the Volume ws already encountered
+      for (auto const& res : result.collected) {
+        if (res.volume == volume_hit.volume) {
+          save = false;
+          break;
+        }
+      }
+      // Save if in the result if it does not already exist
+      if (save) {
+        result.collected.push_back(volume_hit);
+        // Screen output
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Collect volume  "
+                  << state.navigation.currentVolume->geoID();
+          return dstream.str();
+        });
+      }
     }
   }
 

@@ -26,4 +26,4 @@ add_benchmark(EigenStepper EigenStepperBenchmark.cpp)
 add_benchmark(SolenoidField SolenoidFieldBenchmark.cpp)
 add_benchmark(SurfaceIntersection SurfaceIntersectionBenchmark.cpp)
 add_benchmark(RayFrustumBenchmark RayFrustumBenchmark.cpp)
-
+add_benchmark(AnnulusBoundsBenchmark AnnulusBoundsBenchmark.cpp)

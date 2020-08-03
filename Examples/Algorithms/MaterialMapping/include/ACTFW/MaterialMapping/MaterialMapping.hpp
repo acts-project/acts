@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <climits>
-#include <memory>
-#include <mutex>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/MaterialMapping/IMaterialWriter.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <climits>
+#include <memory>
+#include <mutex>
 
 namespace Acts {
 

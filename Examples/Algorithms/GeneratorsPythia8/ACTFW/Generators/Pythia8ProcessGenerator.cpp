@@ -8,10 +8,11 @@
 
 #include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
 
-#include <Pythia8/Pythia.h>
 #include <algorithm>
 #include <iterator>
 #include <random>
+
+#include <Pythia8/Pythia.h>
 
 namespace {
 struct FrameworkRndmEngine : public Pythia8::RndmEngine {

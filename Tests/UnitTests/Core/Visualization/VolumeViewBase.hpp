@@ -8,15 +8,14 @@
 
 #pragma once
 
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
-
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Visualization/GeometryView.hpp"
+#include "Acts/Visualization/IVisualization.hpp"
 
 #include <fstream>
 #include <sstream>

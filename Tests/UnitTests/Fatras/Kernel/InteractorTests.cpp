@@ -8,15 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <random>
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/Kernel/Interactor.hpp"
+
+#include <limits>
+#include <random>
 
 using namespace ActsFatras;
 
@@ -130,24 +130,25 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
 
   // call interactor: surface selection -> one hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 0u);
-  BOOST_TEST(f.result.hits.size() == 1u);
-  BOOST_TEST(f.result.hits[0].index() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
+  BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
 
   // call interactor again: one more hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 0u);
-  BOOST_TEST(f.result.hits.size() == 2u);
-  BOOST_TEST(f.result.hits[0].index() == 0u);
-  BOOST_TEST(f.result.hits[1].index() == 1u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
+  BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.particleId() ==
-             f.interactor.particle.particleId());
-  BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
-  BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
-  BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
-  BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
+                    f.interactor.particle.particleId());
+  BOOST_CHECK_EQUAL(f.result.particle.process(),
+                    f.interactor.particle.process());
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
   // particle energy has not changed since there were no interactions
   CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
                   eps);
@@ -158,24 +159,25 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
 
   // call interactor: surface selection -> one hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 1u);
-  BOOST_TEST(f.result.hits.size() == 1u);
-  BOOST_TEST(f.result.hits[0].index() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 1u);
+  BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
 
   // call interactor again: one more hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 2u);
-  BOOST_TEST(f.result.hits.size() == 2u);
-  BOOST_TEST(f.result.hits[0].index() == 0u);
-  BOOST_TEST(f.result.hits[1].index() == 1u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 2u);
+  BOOST_CHECK_EQUAL(f.result.hits[0].index(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits[1].index(), 1u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.particleId() ==
-             f.interactor.particle.particleId());
-  BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
-  BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
-  BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
-  BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
+                    f.interactor.particle.particleId());
+  BOOST_CHECK_EQUAL(f.result.particle.process(),
+                    f.interactor.particle.process());
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
   // particle energy has changed due to interactions
   CHECK_CLOSE_REL((f.result.particle.energy() + 1),
                   f.interactor.particle.energy(), eps);
@@ -186,21 +188,22 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
 
   // call interactor: no surface sel. -> no hit, no material -> no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 0u);
-  BOOST_TEST(f.result.hits.size() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
 
   // call interactor again: no hit, still no secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 0u);
-  BOOST_TEST(f.result.hits.size() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 0u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.particleId() ==
-             f.interactor.particle.particleId());
-  BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
-  BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
-  BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
-  BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
+                    f.interactor.particle.particleId());
+  BOOST_CHECK_EQUAL(f.result.particle.process(),
+                    f.interactor.particle.process());
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
   // particle energy has not changed since there were no interactions
   CHECK_CLOSE_REL(f.result.particle.energy(), f.interactor.particle.energy(),
                   eps);
@@ -211,21 +214,22 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
 
   // call interactor: no surface sel. -> no hit, material -> one secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 1u);
-  BOOST_TEST(f.result.hits.size() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 1u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
 
   // call interactor again: still no hit, one more secondary
   f.interactor(f.state, f.stepper, f.result);
-  BOOST_TEST(f.result.generatedParticles.size() == 2u);
-  BOOST_TEST(f.result.hits.size() == 0u);
+  BOOST_CHECK_EQUAL(f.result.generatedParticles.size(), 2u);
+  BOOST_CHECK_EQUAL(f.result.hits.size(), 0u);
 
   // particle identity should be the same as the initial input
-  BOOST_TEST(f.result.particle.particleId() ==
-             f.interactor.particle.particleId());
-  BOOST_TEST(f.result.particle.process() == f.interactor.particle.process());
-  BOOST_TEST(f.result.particle.pdg() == f.interactor.particle.pdg());
-  BOOST_TEST(f.result.particle.charge() == f.interactor.particle.charge());
-  BOOST_TEST(f.result.particle.mass() == f.interactor.particle.mass());
+  BOOST_CHECK_EQUAL(f.result.particle.particleId(),
+                    f.interactor.particle.particleId());
+  BOOST_CHECK_EQUAL(f.result.particle.process(),
+                    f.interactor.particle.process());
+  BOOST_CHECK_EQUAL(f.result.particle.pdg(), f.interactor.particle.pdg());
+  BOOST_CHECK_EQUAL(f.result.particle.charge(), f.interactor.particle.charge());
+  BOOST_CHECK_EQUAL(f.result.particle.mass(), f.interactor.particle.mass());
   // particle energy has changed due to interactions
   CHECK_CLOSE_REL((f.result.particle.energy() + 1),
                   f.interactor.particle.energy(), eps);

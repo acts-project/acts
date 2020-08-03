@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <mutex>
-#include <vector>
-
 #include "ACTFW/ContextualDetector/AlignedDetectorElement.hpp"
 #include "ACTFW/Framework/AlgorithmContext.hpp"
 #include "ACTFW/Framework/IContextDecorator.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <mutex>
+#include <vector>
 
 namespace FW {
 

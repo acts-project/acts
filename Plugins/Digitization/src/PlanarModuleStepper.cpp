@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
+
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -39,15 +40,15 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   // run them - and check for the fast exit
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
-    Acts::Intersection sIntersection =
-        sSurface->intersectionEstimate(gctx, startPoint, trackDirection, true);
+    auto sIntersection =
+        sSurface->intersect(gctx, startPoint, trackDirection, true);
     if (bool(sIntersection)) {
       // now record
-      stepIntersections.push_back(sIntersection);
+      stepIntersections.push_back(sIntersection.intersection);
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << sIntersection.position.x() << ", "
-                   << sIntersection.position.y() << ", "
-                   << sIntersection.position.z());
+                   << sIntersection.intersection.position.x() << ", "
+                   << sIntersection.intersection.position.y() << ", "
+                   << sIntersection.intersection.position.z());
     }
   }
   // Last one is also valid - now sort
@@ -86,15 +87,15 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     // count as an attempt
     ++attempts;
     // try it out by intersecting, but do not force the direction
-    Acts::Intersection bIntersection = bSurface->intersectionEstimate(
-        gctx, intersection3D, trackDirection, true);
+    auto bIntersection =
+        bSurface->intersect(gctx, intersection3D, trackDirection, true);
     if (bool(bIntersection)) {
       // now record
-      boundaryIntersections.push_back(bIntersection);
+      boundaryIntersections.push_back(bIntersection.intersection);
       ACTS_VERBOSE("Boundary Surface intersected with = "
-                   << bIntersection.position.x() << ", "
-                   << bIntersection.position.y() << ", "
-                   << bIntersection.position.z());
+                   << bIntersection.intersection.position.x() << ", "
+                   << bIntersection.intersection.position.y() << ", "
+                   << bIntersection.intersection.position.z());
     }
     // fast break in case of readout/counter surface hit
     // the first two attempts are the module faces, if they are hit,

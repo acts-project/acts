@@ -8,10 +8,10 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include "Acts/Utilities/PdgParticle.hpp"
+
 #include <cassert>
 #include <cmath>
-
-#include "Acts/Utilities/PdgParticle.hpp"
 
 using namespace Acts::UnitLiterals;
 

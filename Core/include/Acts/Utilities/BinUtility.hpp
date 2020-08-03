@@ -11,13 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <array>
 #include <iostream>
 #include <memory>
 #include <vector>
-#include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -35,6 +36,16 @@ class BinUtility {
  public:
   /// Constructor for equidistant
   BinUtility() : m_binningData(), m_transform(nullptr), m_itransform(nullptr) {
+    m_binningData.reserve(3);
+  }
+
+  /// Constructor with only a Transform3D
+  ///
+  /// @param tForm is the local to global transform
+  BinUtility(const std::shared_ptr<const Transform3D>& tForm)
+      : m_binningData(),
+        m_transform(tForm),
+        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
     m_binningData.reserve(3);
   }
 

@@ -13,6 +13,7 @@
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Visualization/GeometryView.hpp>
 #include <Acts/Visualization/ObjVisualization.hpp>
+
 #include <iostream>
 
 FW::Obj::ObjTrackingGeometryWriter::ObjTrackingGeometryWriter(

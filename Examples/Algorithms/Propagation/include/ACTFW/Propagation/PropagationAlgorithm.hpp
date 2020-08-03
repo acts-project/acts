@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <cmath>
-#include <limits>
-#include <memory>
-#include <optional>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "ACTFW/Framework/ProcessCode.hpp"
 #include "ACTFW/Framework/RandomNumbers.hpp"
@@ -32,6 +27,11 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <optional>
 
 using namespace Acts::UnitLiterals;
 

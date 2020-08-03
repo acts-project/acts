@@ -10,11 +10,11 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
+#include <limits>
 
 using Acts::detail::RealQuadraticEquation;
 

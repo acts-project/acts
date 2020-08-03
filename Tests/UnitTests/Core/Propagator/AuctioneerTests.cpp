@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <vector>
-
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+
+#include <vector>
 
 namespace Acts {
 namespace Test {

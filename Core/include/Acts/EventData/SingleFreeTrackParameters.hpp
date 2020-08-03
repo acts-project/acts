@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <iomanip>
 #include <ostream>
-
-#include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -167,51 +168,21 @@ class SingleFreeTrackParameters {
     m_oParameters.setParameter<kIndex>(newValue);
   }
 
-  /// @brief Print information to output stream
-  ///
-  /// @param [in, out] sl The output stream
-  ///
-  /// @return The modified output stream object @p sl
-  std::ostream& print(std::ostream& sl) const {
-    // Set stream output format
-    auto old_precision = sl.precision(7);
-    auto old_flags = sl.setf(std::ios::fixed);
-
-    // Fill stream with content
-    sl << " * FreeTrackParameters: ";
-    sl << parameters().transpose() << std::endl;
-    sl << " * charge: " << charge() << std::endl;
-    if (covariance().has_value()) {
-      sl << " * covariance matrix:\n" << *covariance() << std::endl;
-    } else {
-      sl << " * no covariance matrix stored" << std::endl;
-    }
-
-    // Reset stream format
-    sl.precision(old_precision);
-    sl.setf(old_flags);
-
-    return sl;
-  }
-
-  /// @brief Output stream operator
-  ///
-  /// Prints information about this object to the output stream
-  /// @param [in, out] out The output stream
-  /// @param [in] sfp The object that will be printed
-  ///
-  /// @return Modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleFreeTrackParameters& sfp) {
-    sfp.print(out);
-    return out;
-  }
-
  private:
   FullFreeParameterSet
       m_oParameters;             ///< FreeParameterSet object holding the
                                  /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleFreeTrackParameters& tp) {
+    detail::printFreeParameters(
+        os, tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
+
 }  // namespace Acts

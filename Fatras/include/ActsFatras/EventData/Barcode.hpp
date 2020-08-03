@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "Acts/Utilities/MultiIndex.hpp"
+
+#include <cstdint>
 
 namespace ActsFatras {
 

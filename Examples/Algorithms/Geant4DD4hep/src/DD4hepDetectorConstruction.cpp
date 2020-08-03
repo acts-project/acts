@@ -8,11 +8,12 @@
 
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 
+#include <stdexcept>
+
 #include <DD4hep/Detector.h>
 #include <DD4hep/Plugins.h>
 #include <DDG4/Geant4Converter.h>
 #include <DDG4/Geant4GeometryInfo.h>
-#include <stdexcept>
 
 using namespace ActsExamples;
 

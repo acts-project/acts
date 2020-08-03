@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include <algorithm>
-#include <boost/container/flat_map.hpp>
-#include <boost/container/flat_set.hpp>
-#include <cstddef>
-#include <utility>
-
 #include "ACTFW/Utilities/GroupBy.hpp"
 #include "ACTFW/Utilities/Range.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
+
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
 
 namespace FW {
 namespace detail {

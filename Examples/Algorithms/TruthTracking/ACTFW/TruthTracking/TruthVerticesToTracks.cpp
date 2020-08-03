@@ -8,10 +8,6 @@
 
 #include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
 
-#include <iostream>
-#include <optional>
-#include <stdexcept>
-
 #include "ACTFW/EventData/SimParticle.hpp"
 #include "ACTFW/EventData/SimVertex.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
@@ -20,6 +16,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <iostream>
+#include <optional>
+#include <stdexcept>
 
 FW::TruthVerticesToTracksAlgorithm::TruthVerticesToTracksAlgorithm(
     const FW::TruthVerticesToTracksAlgorithm::Config& cfg,

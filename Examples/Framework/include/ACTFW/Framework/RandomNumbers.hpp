@@ -16,10 +16,10 @@
 
 #pragma once
 
+#include "ACTFW/Framework/AlgorithmContext.hpp"
+
 #include <cstdint>
 #include <random>
-
-#include "ACTFW/Framework/AlgorithmContext.hpp"
 
 namespace FW {
 

@@ -1,12 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -454,9 +457,9 @@ class CombinatorialKalmanFilter {
                result_type& result) const {
       // Remember the propagation state has been reset
       result.reset = true;
-
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
+
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
       state.navigation.startSurface = &currentState.referenceSurface();
@@ -471,20 +474,10 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeFiltered(
-                         state.options.geoContext, currentState),
-                     currentState.filteredCovariance());
-      // Reinitialize the stepping jacobian
-      currentState.referenceSurface().initJacobianToGlobal(
-          state.options.geoContext, state.stepping.jacToGlobal,
-          state.stepping.pos, state.stepping.dir, currentState.filtered());
-      state.stepping.jacobian = BoundMatrix::Identity();
-      state.stepping.jacTransport = FreeMatrix::Identity();
-      state.stepping.derivative = FreeVector::Zero();
-      // Reset step size and accumulated path
-      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
-      state.stepping.pathAccumulated = currentState.pathLength();
+      stepper.resetState(state.stepping, currentState.filtered(),
+                         currentState.filteredCovariance(),
+                         currentState.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -1025,8 +1018,6 @@ class CombinatorialKalmanFilter {
       state.stepping.navDir = backward;
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
-      // Not sure if the following line helps anything
-      state.options.direction = backward;
 
       return Result<void>::success();
     }

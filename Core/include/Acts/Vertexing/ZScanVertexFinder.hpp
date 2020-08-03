@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -20,6 +18,8 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFitterConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
+#include <unordered_map>
 
 namespace Acts {
 

@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <fstream>
-
 #include "ACTFW/Framework/WriterT.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
+
+#include <fstream>
 
 namespace FW {
 

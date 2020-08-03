@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <memory>
-#include <variant>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -19,6 +17,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <memory>
+#include <variant>
 
 namespace Acts {
 
@@ -115,10 +116,7 @@ class GainMatrixUpdater {
 
           filtered = predicted + K * (calibrated - H * predicted);
           filtered_covariance =
-              (ActsSymMatrixD<
-                   MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
-               K * H) *
-              predicted_covariance;
+              (BoundSymMatrix::Identity() - K * H) * predicted_covariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
           ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 

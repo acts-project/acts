@@ -8,10 +8,10 @@
 
 #include "Acts/Material/Material.hpp"
 
+#include "Acts/Utilities/Units.hpp"
+
 #include <cmath>
 #include <ostream>
-
-#include "Acts/Utilities/Units.hpp"
 
 namespace {
 enum MaterialClassificationNumberIndices {

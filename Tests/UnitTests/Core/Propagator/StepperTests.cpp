@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <fstream>
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -32,6 +32,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <fstream>
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -141,36 +143,36 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
                                               stepSize, tolerance);
 
   // Test the result & compare with the input/test for reasonable members
-  BOOST_TEST(esState.jacToGlobal == BoundToFreeMatrix::Zero());
-  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
-  BOOST_TEST(esState.derivative == FreeVector::Zero());
-  BOOST_TEST(!esState.covTransport);
-  BOOST_TEST(esState.cov == Covariance::Zero());
-  BOOST_TEST(esState.pos == pos);
-  BOOST_TEST(esState.dir == mom.normalized());
-  BOOST_TEST(esState.p == mom.norm());
-  BOOST_TEST(esState.q == charge);
-  BOOST_TEST(esState.t == time);
-  BOOST_TEST(esState.navDir == ndir);
-  BOOST_TEST(esState.pathAccumulated == 0.);
-  BOOST_TEST(esState.stepSize == ndir * stepSize);
-  BOOST_TEST(esState.previousStepSize == 0.);
-  BOOST_TEST(esState.tolerance == tolerance);
+  BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
+  BOOST_CHECK(!esState.covTransport);
+  BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
+  BOOST_CHECK_EQUAL(esState.pos, pos);
+  BOOST_CHECK_EQUAL(esState.dir, mom.normalized());
+  BOOST_CHECK_EQUAL(esState.p, mom.norm());
+  BOOST_CHECK_EQUAL(esState.q, charge);
+  BOOST_CHECK_EQUAL(esState.t, time);
+  BOOST_CHECK_EQUAL(esState.navDir, ndir);
+  BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
+  BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
+  BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
-  BOOST_TEST(esState.q == 0.);
+  BOOST_CHECK_EQUAL(esState.q, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
-  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
-  BOOST_TEST(esState.covTransport);
-  BOOST_TEST(esState.cov == cov);
+  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK(esState.covTransport);
+  BOOST_CHECK_EQUAL(esState.cov, cov);
 }
 
 /// These tests are aiming to test the functions of the EigenStepper
@@ -196,24 +198,24 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
-  BOOST_TEST(es.position(esState) == esState.pos);
-  BOOST_TEST(es.direction(esState) == esState.dir);
-  BOOST_TEST(es.momentum(esState) == esState.p);
-  BOOST_TEST(es.charge(esState) == esState.q);
-  BOOST_TEST(es.time(esState) == esState.t);
-  //~ BOOST_TEST(es.overstepLimit(esState) == tolerance);
-  BOOST_TEST(es.getField(esState, pos) == bField.getField(pos));
+  BOOST_CHECK_EQUAL(es.position(esState), esState.pos);
+  BOOST_CHECK_EQUAL(es.direction(esState), esState.dir);
+  BOOST_CHECK_EQUAL(es.momentum(esState), esState.p);
+  BOOST_CHECK_EQUAL(es.charge(esState), esState.q);
+  BOOST_CHECK_EQUAL(es.time(esState), esState.t);
+  //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
+  BOOST_CHECK_EQUAL(es.getField(esState, pos), bField.getField(pos));
 
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
   es.setStepSize(esState, 1337.);
-  BOOST_TEST(esState.previousStepSize == ndir * stepSize);
-  BOOST_TEST(esState.stepSize == 1337.);
+  BOOST_CHECK_EQUAL(esState.previousStepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize, 1337.);
 
   es.releaseStepSize(esState);
-  BOOST_TEST(esState.stepSize == -123.);
-  BOOST_TEST(es.outputStepSize(esState) == originalStepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize, -123.);
+  BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
   auto curvState = es.curvilinearState(esState);
@@ -222,8 +224,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
-  BOOST_TEST(curvPars.covariance().has_value());
-  BOOST_TEST(*curvPars.covariance() != cov);
+  BOOST_CHECK(curvPars.covariance().has_value());
+  BOOST_CHECK_NE(*curvPars.covariance(), cov);
   CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
@@ -233,19 +235,19 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   Vector3D newMom(3., 9., 27.);
   double newTime(321.);
   es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
-  BOOST_TEST(esState.pos == newPos);
-  BOOST_TEST(esState.dir == newMom.normalized());
-  BOOST_TEST(esState.p == newMom.norm());
-  BOOST_TEST(esState.q == charge);
-  BOOST_TEST(esState.t == newTime);
+  BOOST_CHECK_EQUAL(esState.pos, newPos);
+  BOOST_CHECK_EQUAL(esState.dir, newMom.normalized());
+  BOOST_CHECK_EQUAL(esState.p, newMom.norm());
+  BOOST_CHECK_EQUAL(esState.q, charge);
+  BOOST_CHECK_EQUAL(esState.t, newTime);
 
   // The covariance transport
   esState.cov = cov;
   es.covarianceTransport(esState);
-  BOOST_TEST(esState.cov != cov);
-  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
-  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
-  BOOST_TEST(esState.derivative == FreeVector::Zero());
+  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
@@ -253,25 +255,109 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   ps.stepping.covTransport = false;
   double h = es.step(ps).value();
-  BOOST_TEST(ps.stepping.stepSize == h);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
-  BOOST_TEST(ps.stepping.pos.norm() != newPos.norm());
-  BOOST_TEST(ps.stepping.dir != newMom.normalized());
-  BOOST_TEST(ps.stepping.q == charge);
-  BOOST_TEST(ps.stepping.t < newTime);
-  BOOST_TEST(ps.stepping.derivative == FreeVector::Zero());
-  BOOST_TEST(ps.stepping.jacTransport == FreeMatrix::Identity());
+  BOOST_CHECK_NE(ps.stepping.pos.norm(), newPos.norm());
+  BOOST_CHECK_NE(ps.stepping.dir, newMom.normalized());
+  BOOST_CHECK_EQUAL(ps.stepping.q, charge);
+  BOOST_CHECK_LT(ps.stepping.t, newTime);
+  BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
+  BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
   double h2 = es.step(ps).value();
-  BOOST_TEST(h2 == h);
+  BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
-  BOOST_TEST(ps.stepping.pos.norm() != newPos.norm());
-  BOOST_TEST(ps.stepping.dir != newMom.normalized());
-  BOOST_TEST(ps.stepping.q == charge);
-  BOOST_TEST(ps.stepping.t < newTime);
-  BOOST_TEST(ps.stepping.derivative != FreeVector::Zero());
-  BOOST_TEST(ps.stepping.jacTransport != FreeMatrix::Identity());
+  BOOST_CHECK_NE(ps.stepping.pos.norm(), newPos.norm());
+  BOOST_CHECK_NE(ps.stepping.dir, newMom.normalized());
+  BOOST_CHECK_EQUAL(ps.stepping.q, charge);
+  BOOST_CHECK_LT(ps.stepping.t, newTime);
+  BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
+  BOOST_CHECK_NE(ps.stepping.jacTransport, FreeMatrix::Identity());
+
+  /// Test the state reset
+  // Construct the parameters
+  Vector3D pos2(1.5, -2.5, 3.5);
+  Vector3D mom2(4.5, -5.5, 6.5);
+  double time2 = 7.5;
+  double charge2 = 1.;
+  BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
+  CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
+  FreeVector freeParams =
+      detail::coordinate_transformation::boundParameters2freeParameters(
+          tgContext, cp2.parameters(), cp2.referenceSurface());
+  ndir = forward;
+  double stepSize2 = -2. * stepSize;
+
+  // Reset all possible parameters
+  EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+                cp2.referenceSurface(), ndir, stepSize2);
+  // Test all components
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
+  BOOST_CHECK(esStateCopy.covTransport);
+  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(esStateCopy.dir,
+                    freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
+  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
+  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize, ndir * stepSize2);
+  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
+
+  // Reset all possible parameters except the step size
+  esStateCopy = ps.stepping;
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+                cp2.referenceSurface(), ndir);
+  // Test all components
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
+  BOOST_CHECK(esStateCopy.covTransport);
+  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(esStateCopy.dir,
+                    freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
+  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
+  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize,
+                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
+
+  // Reset the least amount of parameters
+  esStateCopy = ps.stepping;
+  es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
+                cp2.referenceSurface());
+  // Test all components
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
+  BOOST_CHECK_EQUAL(esStateCopy.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
+  BOOST_CHECK(esStateCopy.covTransport);
+  BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
+  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(esStateCopy.dir,
+                    freeParams.template segment<3>(eFreeDir0).normalized());
+  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
+  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(esStateCopy.navDir, forward);
+  BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
+  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
@@ -283,7 +369,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto targetSurface = Surface::makeShared<PlaneSurface>(
       pos + ndir * 2. * mom.normalized(), mom.normalized());
   es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
-  BOOST_TEST(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
 
   // Test the step size modification in the context of a surface
   es.updateStepSize(
@@ -291,14 +377,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       targetSurface->intersect(esState.geoContext, esState.pos,
                                esState.navDir * esState.dir, false),
       false);
-  BOOST_TEST(esState.stepSize == 2.);
+  BOOST_CHECK_EQUAL(esState.stepSize, 2.);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, esState.pos,
                                esState.navDir * esState.dir, false),
       true);
-  BOOST_TEST(esState.stepSize == 2.);
+  BOOST_CHECK_EQUAL(esState.stepSize, 2.);
 
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane);
@@ -307,8 +393,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
-  BOOST_TEST(boundPars.covariance().has_value());
-  BOOST_TEST(*boundPars.covariance() != cov);
+  BOOST_CHECK(boundPars.covariance().has_value());
+  BOOST_CHECK_NE(*boundPars.covariance(), cov);
   CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
@@ -317,7 +403,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
                            -1. * charge, 2. * time, targetSurface);
   Vector3D dir = bpTarget.momentum().normalized();
-  FreeVector freeParams;
   freeParams[eFreePos0] = bpTarget.position()[eX];
   freeParams[eFreePos1] = bpTarget.position()[eY];
   freeParams[eFreePos2] = bpTarget.position()[eZ];
@@ -328,19 +413,19 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams[eFreeQOverP] = bpTarget.charge() / bpTarget.momentum().norm();
 
   es.update(esState, freeParams, *bpTarget.covariance());
-  BOOST_TEST(esState.pos == 2. * pos);
+  BOOST_CHECK_EQUAL(esState.pos, 2. * pos);
   CHECK_CLOSE_ABS(esState.dir, mom.normalized(), 1e-6);
-  BOOST_TEST(esState.p == 2. * mom.norm());
-  BOOST_TEST(esState.q == 1. * charge);
-  BOOST_TEST(esState.t == 2. * time);
+  BOOST_CHECK_EQUAL(esState.p, 2. * mom.norm());
+  BOOST_CHECK_EQUAL(esState.q, 1. * charge);
+  BOOST_CHECK_EQUAL(esState.t, 2. * time);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
 
   // Transport the covariance in the context of a surface
   es.covarianceTransport(esState, *plane);
-  BOOST_TEST(esState.cov != cov);
-  BOOST_TEST(esState.jacToGlobal != BoundToFreeMatrix::Zero());
-  BOOST_TEST(esState.jacTransport == FreeMatrix::Identity());
-  BOOST_TEST(esState.derivative == FreeVector::Zero());
+  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
@@ -358,15 +443,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
   auto res = nes.step(nps);
-  BOOST_TEST(!res.ok());
-  BOOST_TEST(res.error() == EigenStepperError::StepSizeStalled);
+  BOOST_CHECK(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeStalled);
 
   // Test that the number of trials exceeds
   nps.options.stepSizeCutOff = 0.;
   nps.options.maxRungeKuttaStepTrials = 0.;
   res = nes.step(nps);
-  BOOST_TEST(!res.ok());
-  BOOST_TEST(res.error() == EigenStepperError::StepSizeAdjustmentFailed);
+  BOOST_CHECK(!res.ok());
+  BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeAdjustmentFailed);
 }
 
 /// @brief This function tests the EigenStepper with the DefaultExtension and
@@ -481,11 +566,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
-  BOOST_TEST(stepResult.position.size() == stepResultDef.position.size());
+  BOOST_CHECK_EQUAL(stepResult.position.size(), stepResultDef.position.size());
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     CHECK_CLOSE_ABS(stepResult.position[i], stepResultDef.position[i], 1_um);
   }
-  BOOST_TEST(stepResult.momentum.size() == stepResultDef.momentum.size());
+  BOOST_CHECK_EQUAL(stepResult.momentum.size(), stepResultDef.momentum.size());
   for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
     CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDef.momentum[i], 1_keV);
   }
@@ -605,11 +690,13 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Check that the right extension was chosen
   // If chosen correctly, the number of elements should be identical
-  BOOST_TEST(stepResult.position.size() == stepResultDense.position.size());
+  BOOST_CHECK_EQUAL(stepResult.position.size(),
+                    stepResultDense.position.size());
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     CHECK_CLOSE_ABS(stepResult.position[i], stepResultDense.position[i], 1_um);
   }
-  BOOST_TEST(stepResult.momentum.size() == stepResultDense.momentum.size());
+  BOOST_CHECK_EQUAL(stepResult.momentum.size(),
+                    stepResultDense.momentum.size());
   for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
     CHECK_CLOSE_ABS(stepResult.momentum[i], stepResultDense.momentum[i], 1_keV);
   }
@@ -813,18 +900,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);
   CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1_um);
 
-  BOOST_TEST(endParams.first.x() == endParamsControl.first.x(),
-             tt::tolerance(1e-5));
-  BOOST_TEST(endParams.first.y() == endParamsControl.first.y(),
-             tt::tolerance(1e-5));
-  BOOST_TEST(endParams.first.z() == endParamsControl.first.z(),
-             tt::tolerance(1e-5));
-  BOOST_TEST(endParams.second.x() == endParamsControl.second.x(),
-             tt::tolerance(1e-5));
-  BOOST_TEST(endParams.second.y() == endParamsControl.second.y(),
-             tt::tolerance(1e-5));
-  BOOST_TEST(endParams.second.z() == endParamsControl.second.z(),
-             tt::tolerance(1e-5));
+  CHECK_CLOSE_ABS(endParams.first.x(), endParamsControl.first.x(), 1e-5);
+  CHECK_CLOSE_ABS(endParams.first.y(), endParamsControl.first.y(), 1e-5);
+  CHECK_CLOSE_ABS(endParams.first.z(), endParamsControl.first.z(), 1e-5);
+  CHECK_CLOSE_ABS(endParams.second.x(), endParamsControl.second.x(), 1e-5);
+  CHECK_CLOSE_ABS(endParams.second.y(), endParamsControl.second.y(), 1e-5);
+  CHECK_CLOSE_ABS(endParams.second.z(), endParamsControl.second.z(), 1e-5);
 
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
@@ -1013,7 +1094,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
          stepResult.position[i].x() <= 2.4_m) ||
         (stepResult.position[i].x() > 2.6_m &&
          stepResult.position[i].x() <= 2.8_m)) {
-      BOOST_TEST(stepResult.momentum[i].x() <= lastMomentum);
+      BOOST_CHECK_LE(stepResult.momentum[i].x(), lastMomentum);
       lastMomentum = stepResult.momentum[i].x();
     } else
     // Test the absence of momentum loss
@@ -1025,7 +1106,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
            stepResult.position[i].x() <= 2.6_m) ||
           (stepResult.position[i].x() > 2.8_m &&
            stepResult.position[i].x() <= 3._m)) {
-        BOOST_TEST(stepResult.momentum[i].x() == lastMomentum);
+        BOOST_CHECK_EQUAL(stepResult.momentum[i].x(), lastMomentum);
       }
     }
   }

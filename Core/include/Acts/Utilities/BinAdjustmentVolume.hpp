@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <stdexcept>
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
+
+#include <stdexcept>
 
 namespace Acts {
 
@@ -26,9 +27,13 @@ namespace Acts {
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderVolumeBounds& cBounds) {
+                            const CylinderVolumeBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (!transform.isApprox(Transform3D::Identity())) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double minR = cBounds.get(CylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CylinderVolumeBounds::eMaxR);
@@ -67,6 +72,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     BinningData uBinData(bd.option, bval, bd.bins(), min, max);
     uBinUtil += BinUtility(uBinData);
   }
+
   return uBinUtil;
 }
 
@@ -77,9 +83,13 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CuboidVolumeBounds& cBounds) {
+                            const CuboidVolumeBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (!transform.isApprox(Transform3D::Identity())) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
   double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);
@@ -135,11 +145,11 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
 
   if (cyBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cyBounds);
+    return adjustBinUtility(bu, *cyBounds, volume.transform());
 
   } else if (cuBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cuBounds);
+    return adjustBinUtility(bu, *cuBounds, volume.transform());
   }
 
   throw std::invalid_argument(

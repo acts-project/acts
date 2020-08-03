@@ -8,6 +8,13 @@
 
 #include "Acts/Surfaces/DiscSurface.hpp"
 
+#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -15,13 +22,6 @@
 #include <numeric>
 #include <utility>
 #include <vector>
-
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <chrono>
-#include <iostream>
-#include <memory>
-
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <chrono>
+#include <iostream>
+#include <memory>
 
 using vec2 = Acts::Vector2D;
 template <int N>

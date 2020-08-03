@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/SeedFilter.hpp"
+
 #include <cmath>
 #include <numeric>
 #include <type_traits>
-
-#include "Acts/Seeding/SeedFilter.hpp"
 
 namespace Acts {
 
@@ -57,7 +57,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (deltaR > m_config.deltaRMax) {
         continue;
       }
-      // if r-distance is too small, break because bins are NOT r-sorted
+      // if r-distance is too small, continue because bins are NOT r-sorted
       if (deltaR < m_config.deltaRMin) {
         continue;
       }
@@ -89,7 +89,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (deltaR > m_config.deltaRMax) {
-        break;
+        continue;
       }
 
       float cotTheta = (topSP->z() - zM) / deltaR;

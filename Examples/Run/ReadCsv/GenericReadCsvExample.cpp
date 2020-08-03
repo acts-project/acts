@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <memory>
-
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Framework/WhiteBoard.hpp"
 #include "ACTFW/GenericDetector/GenericDetector.hpp"
@@ -19,6 +17,8 @@
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Printers/PrintHits.hpp"
 #include "ACTFW/Utilities/Options.hpp"
+
+#include <memory>
 
 int main(int argc, char* argv[]) {
   GenericDetector detector;

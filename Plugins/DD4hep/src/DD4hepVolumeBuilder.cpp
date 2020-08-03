@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
+
 #include "DD4hep/Detector.h"
 
 Acts::DD4hepVolumeBuilder::DD4hepVolumeBuilder(

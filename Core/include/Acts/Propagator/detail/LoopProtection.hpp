@@ -70,11 +70,21 @@ struct LoopProtection {
   void debugLog(propagator_state_t& state,
                 const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
-      std::vector<std::string> lines;
       std::string input = logAction();
-      boost::split(lines, input, boost::is_any_of("\n"));
-      for (const auto& line : lines) {
+      std::string::size_type start = 0u;
+      while (start != std::string::npos) {
+        std::string line;
         std::stringstream dstream;
+        // select the current line
+        const auto pos = input.find_first_of('\n', start);
+        if (pos != std::string::npos) {
+          // exclude newline and ensure we start the next search after it
+          line = input.substr(start, pos - start - 1u);
+          start = pos + 1u;
+        } else {
+          line = input.substr(start);
+          start = std::string::npos;
+        }
         dstream << '\n';
         dstream << " ∞ " << std::setw(state.options.debugPfxWidth)
                 << " loop protection "

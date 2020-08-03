@@ -10,13 +10,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-#include <iostream>
-#include <limits>
-
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <iostream>
+#include <limits>
 
 namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();

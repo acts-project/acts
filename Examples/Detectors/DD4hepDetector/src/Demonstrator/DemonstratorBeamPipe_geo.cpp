@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+
 #include "DD4hep/DetFactoryHelper.h"
 
 using namespace std;

@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-#include <iterator>
-#include <stdexcept>
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+
+#include <iterator>
+#include <stdexcept>
 
 namespace {
 
@@ -34,10 +35,10 @@ using Container = Acts::GeometryHierarchyMap<Thing>;
 #define CHECK_ENTRY(container, query, compare)          \
   do {                                                  \
     auto ret = container.find(query);                   \
-    BOOST_TEST(ret != container.end());                 \
+    BOOST_CHECK_NE(ret, container.end());               \
     if (ret != container.end()) {                       \
       auto idx = std::distance(container.begin(), ret); \
-      BOOST_TEST(container.idAt(idx) == compare);       \
+      BOOST_CHECK_EQUAL(container.idAt(idx), compare);  \
     }                                                   \
   } while (false)
 
@@ -48,9 +49,9 @@ BOOST_AUTO_TEST_SUITE(GeometryHierarchyMap)
 
 BOOST_AUTO_TEST_CASE(ConstructDefault) {
   Container c;
-  BOOST_TEST(c.begin() == c.end());
-  BOOST_TEST(c.empty());
-  BOOST_TEST(c.size() == 0u);
+  BOOST_CHECK_EQUAL(c.begin(), c.end());
+  BOOST_CHECK(c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
@@ -78,9 +79,9 @@ BOOST_AUTO_TEST_CASE(ConstructInitializerList) {
       {makeId(2), {2.0}},
       {makeId(), {23.0}},
   };
-  BOOST_TEST(std::next(c.begin(), 4) == c.end());
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 4u);
+  BOOST_CHECK_EQUAL(std::next(c.begin(), 4), c.end());
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 4u);
   // only test that all elements are there; failure test are below
   CHECK_ENTRY(c, makeId(0, 1, 2), makeId(0, 1, 2));
   CHECK_ENTRY(c, makeId(2), makeId(2));
@@ -95,15 +96,15 @@ BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
       {makeId(4, 5, 7), {4.0}},
   });
 
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 4u);
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 4u);
   // this tests just that the index-based access works
   // NOTE order is undefined and should not be tested
   for (auto i = c.size(); 0 < i--;) {
     // just check that the id is valid
-    BOOST_TEST(c.idAt(i) != GeometryID());
+    BOOST_CHECK_NE(c.idAt(i), GeometryID());
     // check that something is actually stored by comparing with the default
-    BOOST_TEST(c.valueAt(i).value != Thing().value);
+    BOOST_CHECK_NE(c.valueAt(i).value, Thing().value);
   }
   // test that invalid inputs actually fail
   BOOST_CHECK_THROW(c.idAt(c.size()), std::out_of_range);
@@ -124,9 +125,9 @@ BOOST_AUTO_TEST_CASE(Find) {
   };
 
   // basic checks
-  BOOST_TEST(std::next(c.begin(), 4u) == c.end());
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 4u);
+  BOOST_CHECK_EQUAL(std::next(c.begin(), 4u), c.end());
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 4u);
 
   // find existing sensitive
   CHECK_ENTRY(c, makeId(2, 4, 6), makeId(2, 4, 6));
@@ -147,13 +148,13 @@ BOOST_AUTO_TEST_CASE(Find) {
   CHECK_ENTRY(c, makeId(12, 16, 20), makeId(12, 16));
 
   // find non-existing sensitive, which has no higher hierarchy set
-  BOOST_TEST(c.find(makeId(3, 5, 7)) == c.end());
+  BOOST_CHECK_EQUAL(c.find(makeId(3, 5, 7)), c.end());
   // find non-existing layer, which has no higher hierarchy set
-  BOOST_TEST(c.find(makeId(3, 5)) == c.end());
+  BOOST_CHECK_EQUAL(c.find(makeId(3, 5)), c.end());
   // find non-existing volume
-  BOOST_TEST(c.find(makeId(3)) == c.end());
+  BOOST_CHECK_EQUAL(c.find(makeId(3)), c.end());
   // find non-existing volume, which has only lower hierarchy elements
-  BOOST_TEST(c.find(makeId(12)) == c.end());
+  BOOST_CHECK_EQUAL(c.find(makeId(12)), c.end());
 }
 
 BOOST_AUTO_TEST_CASE(FindWithGlobalDefault) {
@@ -167,9 +168,9 @@ BOOST_AUTO_TEST_CASE(FindWithGlobalDefault) {
   };
 
   // basic checks
-  BOOST_TEST(std::next(c.begin(), 3u) == c.end());
-  BOOST_TEST(not c.empty());
-  BOOST_TEST(c.size() == 3u);
+  BOOST_CHECK_EQUAL(std::next(c.begin(), 3u), c.end());
+  BOOST_CHECK(not c.empty());
+  BOOST_CHECK_EQUAL(c.size(), 3u);
 
   // find existing entries
   CHECK_ENTRY(c, makeId(), makeId());

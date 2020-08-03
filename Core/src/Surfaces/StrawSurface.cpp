@@ -7,14 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include <iomanip>
-#include <iostream>
-#include <utility>
+
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include <iomanip>
+#include <iostream>
+#include <utility>
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  double radius, double halez)

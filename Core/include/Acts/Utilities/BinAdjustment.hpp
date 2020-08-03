@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <stdexcept>
-
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
+#include <stdexcept>
 
 namespace Acts {
 
@@ -27,9 +27,13 @@ namespace Acts {
 /// @param rBounds the Radial bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
+BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (!transform.isApprox(Transform3D::Identity())) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double minR = rBounds.get(RadialBounds::eMinR);
   double maxR = rBounds.get(RadialBounds::eMaxR);
@@ -73,10 +77,13 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds) {
 /// @param cBounds the Cylinder bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu,
-                            const CylinderBounds& cBounds) {
+BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
+                            const Transform3D& transform) {
   // Default constructor
   BinUtility uBinUtil;
+  if (!transform.isApprox(Transform3D::Identity())) {
+    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
+  }
   // The parameters from the cylinder bounds
   double cR = cBounds.get(CylinderBounds::eR);
   double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
@@ -130,13 +137,13 @@ BinUtility adjustBinUtility(const BinUtility& bu, const Surface& surface) {
     // Cast to Cylinder bounds and return
     auto cBounds = dynamic_cast<const CylinderBounds*>(&(surface.bounds()));
     // Return specific adjustment
-    return adjustBinUtility(bu, *cBounds);
+    return adjustBinUtility(bu, *cBounds, surface.transform(GeometryContext()));
 
   } else if (surface.type() == Surface::Disc) {
     // Cast to Cylinder bounds and return
     auto rBounds = dynamic_cast<const RadialBounds*>(&(surface.bounds()));
     // Return specific adjustment
-    return adjustBinUtility(bu, *rBounds);
+    return adjustBinUtility(bu, *rBounds, surface.transform(GeometryContext()));
   }
 
   throw std::invalid_argument(

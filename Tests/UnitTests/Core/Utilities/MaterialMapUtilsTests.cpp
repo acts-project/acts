@@ -7,11 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/included/unit_test.hpp>
-
-#include <limits>
-#include <random>
-#include <vector>
+#include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
@@ -26,6 +22,10 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <limits>
+#include <random>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 

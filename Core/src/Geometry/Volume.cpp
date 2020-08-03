@@ -12,11 +12,11 @@
 
 #include "Acts/Geometry/Volume.hpp"
 
-#include <iostream>
-#include <utility>
-
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <iostream>
+#include <utility>
 
 using namespace Acts::UnitLiterals;
 

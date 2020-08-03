@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <vector>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <limits>
+#include <vector>
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 
@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_CASE(construct_simple) {
   CHECK_CLOSE_REL(fromMaterial.thickness(), 6., eps);
   CHECK_CLOSE_REL(fromMaterial.thicknessInX0(), 6., eps);
   CHECK_CLOSE_REL(fromMaterial.thicknessInL0(), 3., eps);
-  BOOST_TEST(fromArgs.material() == fromMaterial.material());
-  BOOST_TEST(fromArgs == fromMaterial);
+  BOOST_CHECK_EQUAL(fromArgs.material(), fromMaterial.material());
+  BOOST_CHECK_EQUAL(fromArgs, fromMaterial);
 }
 
 static const Acts::MaterialProperties a(1., 2., 3., 4., 5., 1.);
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(scale_thickness) {
   Acts::MaterialProperties halfScaled = mat;
   halfScaled.scaleThickness(0.5);
 
-  BOOST_TEST(mat != halfMat);
-  BOOST_TEST(halfMat == halfScaled);
+  BOOST_CHECK_NE(mat, halfMat);
+  BOOST_CHECK_EQUAL(halfMat, halfScaled);
   CHECK_CLOSE_REL(mat.thicknessInX0(), 2 * halfMat.thicknessInX0(), eps);
   CHECK_CLOSE_REL(mat.thicknessInL0(), 2 * halfMat.thicknessInL0(), eps);
   CHECK_CLOSE_REL(mat.thickness() * mat.material().massDensity(),

@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <climits>
-
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+
+#include <climits>
 
 namespace Acts {
 namespace Test {

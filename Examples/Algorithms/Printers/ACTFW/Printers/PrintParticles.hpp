@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <string>
-
 #include "ACTFW/Framework/BareAlgorithm.hpp"
+
+#include <string>
 
 namespace FW {
 

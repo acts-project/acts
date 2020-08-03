@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <optional>
 #include <string_view>
 #include <variant>
-
-#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 

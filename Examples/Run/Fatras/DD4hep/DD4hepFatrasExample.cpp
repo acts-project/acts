@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTFW/DD4hepDetector/DD4hepDetector.hpp"
+
 #include "FatrasMain.hpp"
 
 int main(int argc, char* argv[]) {

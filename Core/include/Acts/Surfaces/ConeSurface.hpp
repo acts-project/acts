@@ -157,21 +157,6 @@ class ConeSurface : public Surface {
   bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
                      const Vector3D& momentum, Vector2D& lposition) const final;
 
-  /// @brief Straight line intersection schema - provides closest intersection
-  /// and (signed) path length
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The start position for the intersection
-  /// @param direciton The start direction for the intersection (expected
-  /// normalized)
-  /// @param bcheck The boundary check to be used in this directive
-  ///
-  /// @return is the Intersection object
-  Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const BoundaryCheck& bcheck = false) const final;
-
   /// Straight line intersection schema from position/direction
   ///
   /// @param gctx The current geometry context object, e.g. alignment

@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Surfaces/Surface.hpp>
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -17,10 +15,12 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
-#include <nlohmann/json.hpp>
+#include <Acts/Geometry/TrackingVolume.hpp>
+#include <Acts/Surfaces/Surface.hpp>
 
 #include <map>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
 
@@ -116,6 +116,8 @@ class JsonGeometryConverter {
     std::string bin1key = "bin1";
     /// The bin2 key
     std::string bin2key = "bin2";
+    /// The local to global tranfo key
+    std::string transfokeys = "tranformation";
     /// The type key -> proto, else
     std::string typekey = "type";
     /// The data key
@@ -216,6 +218,9 @@ class JsonGeometryConverter {
 
   /// Create the BinUtility for from Json
   BinUtility jsonToBinUtility(const nlohmann::json& bin);
+
+  /// Create the local to global transform for from Json
+  Transform3D jsonToTransform(const nlohmann::json& transfo);
 
   /// Create Json from a detector represenation
   nlohmann::json detectorRepToJson(const DetectorRep& detRep);

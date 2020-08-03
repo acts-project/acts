@@ -8,11 +8,11 @@
 
 #include "ACTFW/Generators/EventGenerator.hpp"
 
+#include "ACTFW/Framework/WhiteBoard.hpp"
+
 #include <algorithm>
 #include <cstdint>
 #include <stdexcept>
-
-#include "ACTFW/Framework/WhiteBoard.hpp"
 
 FW::EventGenerator::EventGenerator(const Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EventGenerator", lvl)) {

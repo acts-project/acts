@@ -7,10 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <memory>
+
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+
+#include <memory>
 
 namespace Acts {
 
@@ -177,5 +180,14 @@ class SingleCurvilinearTrackParameters
 
  private:
   std::shared_ptr<PlaneSurface> m_upSurface;
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleCurvilinearTrackParameters& tp) {
+    detail::printBoundParameters(
+        os, tp.referenceSurface(), tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
 }  // namespace Acts

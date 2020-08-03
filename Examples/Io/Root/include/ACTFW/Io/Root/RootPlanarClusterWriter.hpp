@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "ACTFW/EventData/GeometryContainers.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+
+#include <mutex>
 
 class TFile;
 class TTree;

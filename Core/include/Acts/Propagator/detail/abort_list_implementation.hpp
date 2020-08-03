@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <algorithm>
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
+
+#include <algorithm>
 
 namespace Acts {
 

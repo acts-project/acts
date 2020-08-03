@@ -8,14 +8,14 @@
 
 #pragma once
 
+#include "Acts/Seeding/IExperimentCuts.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/Seed.hpp"
+
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <vector>
-
-#include "Acts/Seeding/IExperimentCuts.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
 
 namespace Acts {
 struct SeedFilterConfig {

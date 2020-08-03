@@ -20,12 +20,12 @@ namespace Test {
 
 /// @brief Unit test checking the match probability
 BOOST_AUTO_TEST_CASE(TGeoPrimitivesHelper_match) {
-  BOOST_TEST(TGeoPrimitivesHelper::match("Pixel*Barrel", "PixelLBarrel"));
-  BOOST_TEST(!TGeoPrimitivesHelper::match("Pixel*Barrel", "Strips"));
+  BOOST_CHECK(TGeoPrimitivesHelper::match("Pixel*Barrel", "PixelLBarrel"));
+  BOOST_CHECK(!TGeoPrimitivesHelper::match("Pixel*Barrel", "Strips"));
 
   std::vector<std::string> candidates = {"Pixel", "Barrel*", "*P*pe"};
-  BOOST_TEST(TGeoPrimitivesHelper::match(candidates, "BarrelStrips"));
-  BOOST_TEST(TGeoPrimitivesHelper::match(candidates, "BeamPipe"));
+  BOOST_CHECK(TGeoPrimitivesHelper::match(candidates, "BarrelStrips"));
+  BOOST_CHECK(TGeoPrimitivesHelper::match(candidates, "BeamPipe"));
 }
 
 }  // namespace Test

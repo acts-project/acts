@@ -10,6 +10,7 @@
 
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
+
 #include "Dataset.hpp"
 
 namespace {
@@ -57,50 +58,50 @@ BOOST_AUTO_TEST_SUITE(FatrasSelectorHelpers)
 BOOST_AUTO_TEST_CASE(Min) {
   // require a minimum eta value of 0.5
   ActsFatras::Min<ActsFatras::Casts::Eta> minEta{0.5};
-  BOOST_TEST(not minEta(backward));
-  BOOST_TEST(not minEta(central));
-  BOOST_TEST(minEta(forward));
+  BOOST_CHECK(not minEta(backward));
+  BOOST_CHECK(not minEta(central));
+  BOOST_CHECK(minEta(forward));
 
   // require a mininum absolute eta value of 0.5
   ActsFatras::Min<ActsFatras::Casts::AbsEta> minAbsEta{0.5};
-  BOOST_TEST(minAbsEta(backward));
-  BOOST_TEST(not minAbsEta(central));
-  BOOST_TEST(minAbsEta(forward));
+  BOOST_CHECK(minAbsEta(backward));
+  BOOST_CHECK(not minAbsEta(central));
+  BOOST_CHECK(minAbsEta(forward));
 }
 
 BOOST_AUTO_TEST_CASE(Max) {
   // require a maximum eta value of 0.5
   ActsFatras::Max<ActsFatras::Casts::Eta> maxEta{0.5};
-  BOOST_TEST(maxEta(backward));
-  BOOST_TEST(maxEta(central));
-  BOOST_TEST(not maxEta(forward));
+  BOOST_CHECK(maxEta(backward));
+  BOOST_CHECK(maxEta(central));
+  BOOST_CHECK(not maxEta(forward));
 
   // require a maximum absolute eta value of 0.5
   ActsFatras::Max<ActsFatras::Casts::AbsEta> maxAbsEta{0.5};
-  BOOST_TEST(not maxAbsEta(backward));
-  BOOST_TEST(maxAbsEta(central));
-  BOOST_TEST(not maxAbsEta(forward));
+  BOOST_CHECK(not maxAbsEta(backward));
+  BOOST_CHECK(maxAbsEta(central));
+  BOOST_CHECK(not maxAbsEta(forward));
 }
 
 BOOST_AUTO_TEST_CASE(Range) {
   ActsFatras::Range<ActsFatras::Casts::Eta> rangeEta{-6.0, -0.5};
-  BOOST_TEST(rangeEta(backward));
-  BOOST_TEST(not rangeEta(central));
-  BOOST_TEST(not rangeEta(forward));
+  BOOST_CHECK(rangeEta(backward));
+  BOOST_CHECK(not rangeEta(central));
+  BOOST_CHECK(not rangeEta(forward));
 
   ActsFatras::Range<ActsFatras::Casts::AbsEta> rangeAbsEta{0.5, 6.0};
-  BOOST_TEST(rangeAbsEta(backward));
-  BOOST_TEST(not rangeAbsEta(central));
-  BOOST_TEST(rangeAbsEta(forward));
+  BOOST_CHECK(rangeAbsEta(backward));
+  BOOST_CHECK(not rangeAbsEta(central));
+  BOOST_CHECK(rangeAbsEta(forward));
 }
 
 BOOST_AUTO_TEST_CASE(And1) {
   CombineFixture f;
   ActsFatras::CombineAnd<FeatureSelector> select;
   select.get<FeatureSelector>() = f.selectObjectFeature;
-  BOOST_TEST(select(f.obj));
-  BOOST_TEST(not select(f.objWrongFeature));
-  BOOST_TEST(select(f.objWrongName));
+  BOOST_CHECK(select(f.obj));
+  BOOST_CHECK(not select(f.objWrongFeature));
+  BOOST_CHECK(select(f.objWrongName));
 }
 
 BOOST_AUTO_TEST_CASE(And2) {
@@ -108,18 +109,18 @@ BOOST_AUTO_TEST_CASE(And2) {
   ActsFatras::CombineAnd<FeatureSelector, NameSelector> select;
   select.get<FeatureSelector>() = f.selectObjectFeature;
   select.get<NameSelector>() = f.selectObjectName;
-  BOOST_TEST(select(f.obj));
-  BOOST_TEST(not select(f.objWrongFeature));
-  BOOST_TEST(not select(f.objWrongName));
+  BOOST_CHECK(select(f.obj));
+  BOOST_CHECK(not select(f.objWrongFeature));
+  BOOST_CHECK(not select(f.objWrongName));
 }
 
 BOOST_AUTO_TEST_CASE(Or1) {
   CombineFixture f;
   ActsFatras::CombineOr<FeatureSelector> select;
   select.get<FeatureSelector>() = f.selectObjectFeature;
-  BOOST_TEST(select(f.obj));
-  BOOST_TEST(not select(f.objWrongFeature));
-  BOOST_TEST(select(f.objWrongName));
+  BOOST_CHECK(select(f.obj));
+  BOOST_CHECK(not select(f.objWrongFeature));
+  BOOST_CHECK(select(f.objWrongName));
 }
 
 BOOST_AUTO_TEST_CASE(Or2) {
@@ -127,9 +128,9 @@ BOOST_AUTO_TEST_CASE(Or2) {
   ActsFatras::CombineOr<FeatureSelector, NameSelector> select;
   select.get<FeatureSelector>() = f.selectObjectFeature;
   select.get<NameSelector>() = f.selectObjectName;
-  BOOST_TEST(select(f.obj));
-  BOOST_TEST(select(f.objWrongFeature));
-  BOOST_TEST(select(f.objWrongName));
+  BOOST_CHECK(select(f.obj));
+  BOOST_CHECK(select(f.objWrongFeature));
+  BOOST_CHECK(select(f.objWrongName));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

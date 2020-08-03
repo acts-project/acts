@@ -6,11 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <boost/progress.hpp>
-#include <random>
-#include <string>
-
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Plugins/BField/BFieldOptions.hpp"
@@ -20,6 +15,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <random>
+#include <string>
+
+#include <boost/program_options.hpp>
+#include <boost/progress.hpp>
 
 /// The main executable
 ///

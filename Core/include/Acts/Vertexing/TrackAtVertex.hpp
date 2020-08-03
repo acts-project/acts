@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
+
+#include <functional>
 
 namespace Acts {
 

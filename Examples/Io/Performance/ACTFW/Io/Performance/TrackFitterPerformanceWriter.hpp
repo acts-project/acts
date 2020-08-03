@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "ACTFW/EventData/Track.hpp"
 #include "ACTFW/Framework/WriterT.hpp"
 #include "ACTFW/Validation/EffPlotTool.hpp"
 #include "ACTFW/Validation/ResPlotTool.hpp"
 #include "ACTFW/Validation/TrackSummaryPlotTool.hpp"
+
+#include <mutex>
 
 class TFile;
 class TTree;

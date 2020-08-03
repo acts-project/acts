@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-#include <iomanip>
-#include <iterator>
-#include <sstream>
-#include <string>
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -21,6 +16,13 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <iomanip>
+#include <iterator>
+#include <sstream>
+#include <string>
+
+#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -242,7 +244,7 @@ class Navigator {
     debugLog(state, [&] { return std::string("Entering navigator::status."); });
 
     // (a) Pre-stepping call from propgator
-    if (not state.navigation.startVolume) {
+    if (not state.navigation.startVolume or not state.navigation.startSurface) {
       // Initialize and return
       initialize(state, stepper);
       return;
@@ -454,7 +456,8 @@ class Navigator {
     if (state.navigation.startSurface &&
         state.navigation.startSurface->associatedLayer()) {
       debugLog(state, [&] {
-        return std::string("Fast start initialization through association.");
+        return std::string(
+            "Fast start initialization through association from Surface.");
       });
       // assign the current layer and volume by association
       state.navigation.startLayer =
@@ -464,29 +467,42 @@ class Navigator {
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
     } else {
-      debugLog(state, [&] {
-        return std::string("Slow start initialization through search.");
-      });
-      // current volume and layer search through global search
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Starting from position "
-                << toString(stepper.position(state.stepping));
-        dstream << " and direction "
-                << toString(stepper.direction(state.stepping));
-        return dstream.str();
-      });
-      state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
-          state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer =
-          state.navigation.startVolume
-              ? state.navigation.startVolume->associatedLayer(
-                    state.geoContext, stepper.position(state.stepping))
-              : nullptr;
-      // Set the start volume as current volume
-      state.navigation.currentVolume = state.navigation.startVolume;
       if (state.navigation.startVolume) {
-        debugLog(state, [&] { return std::string("Start volume resolved."); });
+        debugLog(state, [&] {
+          return std::string(
+              "Fast start initialization through association from Volume.");
+        });
+        state.navigation.startLayer =
+            state.navigation.startVolume->associatedLayer(
+                state.geoContext, stepper.position(state.stepping));
+        // Set the start volume as current volume
+        state.navigation.currentVolume = state.navigation.startVolume;
+      } else {
+        debugLog(state, [&] {
+          return std::string("Slow start initialization through search.");
+        });
+        // current volume and layer search through global search
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Starting from position "
+                  << toString(stepper.position(state.stepping));
+          dstream << " and direction "
+                  << toString(stepper.direction(state.stepping));
+          return dstream.str();
+        });
+        state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
+            state.geoContext, stepper.position(state.stepping));
+        state.navigation.startLayer =
+            state.navigation.startVolume
+                ? state.navigation.startVolume->associatedLayer(
+                      state.geoContext, stepper.position(state.stepping))
+                : nullptr;
+        // Set the start volume as current volume
+        state.navigation.currentVolume = state.navigation.startVolume;
+        if (state.navigation.startVolume) {
+          debugLog(state,
+                   [&] { return std::string("Start volume resolved."); });
+        }
       }
     }
     return;

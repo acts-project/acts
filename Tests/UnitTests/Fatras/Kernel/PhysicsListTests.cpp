@@ -8,13 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
+
+#include <random>
 
 using namespace Acts::UnitLiterals;
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
   std::vector<ActsFatras::Particle> outgoing;
 
   // w/o processes the list should never abort
-  BOOST_TEST(
+  BOOST_CHECK(
       not emptyList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(SingleSterile) {
 
   // set some process parameters
   sterileList.get<SterileProcess>().some_parameter = 2;
-  BOOST_TEST(sterileList.get<SterileProcess>().some_parameter == 2);
+  BOOST_CHECK_EQUAL(sterileList.get<SterileProcess>().some_parameter, 2);
 
   // sterile process should never abort
-  BOOST_TEST(
+  BOOST_CHECK(
       not sterileList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(SingleFatal) {
   std::vector<ActsFatras::Particle> outgoing;
 
   // fatal process must always abort
-  BOOST_TEST(fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
   // unless we disable it
   fatalList.disable<FatalProcess>();
-  BOOST_TEST(
+  BOOST_CHECK(
       not fatalList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 
@@ -94,10 +94,11 @@ BOOST_AUTO_TEST_CASE(SterileFatal) {
   std::vector<ActsFatras::Particle> outgoing;
 
   // the contained fatal process must always abort
-  BOOST_TEST(physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
+  BOOST_CHECK(
+      physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
   // with the fatal process disabled, it should go through again
   physicsList.disable<FatalProcess>();
-  BOOST_TEST(
+  BOOST_CHECK(
       not physicsList(fix.generator, fix.slab, fix.inputParticle, outgoing));
 }
 

@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include <type_traits>
-
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <type_traits>
 
 namespace Acts {
 
@@ -148,19 +148,6 @@ class SingleTrackParameters {
 
   FullParameterSet& getParameterSet() { return m_oParameters; }
 
-  /// @brief output stream operator
-  ///
-  /// Prints information about this object to the output stream using the
-  /// virtual
-  /// TrackParameters::print method.
-  ///
-  /// @return modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleTrackParameters& stp) {
-    stp.print(out);
-    return out;
-  }
-
  protected:
   /// @brief standard constructor for track parameters of charged particles
   ///
@@ -257,35 +244,6 @@ class SingleTrackParameters {
                                const local_parameter& /*unused*/) {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
         gctx, getParameterSet().getParameters(), this->referenceSurface());
-  }
-
-  /// @brief print information to output stream
-  ///
-  /// @return modified output stream object
-  std::ostream& print(std::ostream& sl) const {
-    // set stream output format
-    auto old_precision = sl.precision(7);
-    auto old_flags = sl.setf(std::ios::fixed);
-
-    sl << " * TrackParameters: ";
-    sl << parameters().transpose() << std::endl;
-    sl << " * charge: " << charge() << std::endl;
-    if (covariance()) {
-      sl << " * covariance matrix:\n" << *covariance() << std::endl;
-    } else {
-      sl << " * covariance matrix:\nnull" << std::endl;
-    }
-    sl << " * corresponding global parameters:" << std::endl;
-    sl << " *    position  (x y z) = (" << position().transpose() << ")"
-       << std::endl;
-    sl << " *    momentum  (px py pz) = (" << momentum().transpose() << ")"
-       << std::endl;
-
-    // reset stream format
-    sl.precision(old_precision);
-    sl.setf(old_flags);
-
-    return sl;
   }
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing

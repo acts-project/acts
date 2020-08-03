@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "ACTFW/Framework/BareService.hpp"
+
 #include <cstddef>
 #include <string>
-
-#include "ACTFW/Framework/BareService.hpp"
 
 namespace FW {
 

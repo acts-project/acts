@@ -7,11 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTFW/Options/CommonOptions.hpp"
+
+#include "ACTFW/Utilities/Options.hpp"
+
 #include <exception>
 #include <fstream>
 #include <regex>
 #include <system_error>
-#include "ACTFW/Utilities/Options.hpp"
 
 using namespace boost::program_options;
 

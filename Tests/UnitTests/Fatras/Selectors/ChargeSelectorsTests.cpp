@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
+
 #include "Dataset.hpp"
 
 using namespace ActsFatras;
@@ -17,26 +18,26 @@ BOOST_AUTO_TEST_SUITE(FatrasChargeSelectors)
 
 BOOST_AUTO_TEST_CASE(NegativeParticle) {
   const auto& particle = Dataset::centralElectron;
-  BOOST_TEST(not NeutralSelector()(particle));
-  BOOST_TEST(ChargedSelector()(particle));
-  BOOST_TEST(not PositiveSelector()(particle));
-  BOOST_TEST(NegativeSelector()(particle));
+  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(ChargedSelector()(particle));
+  BOOST_CHECK(not PositiveSelector()(particle));
+  BOOST_CHECK(NegativeSelector()(particle));
 }
 
 BOOST_AUTO_TEST_CASE(NeutralParticle) {
   const auto& particle = Dataset::centralNeutron;
-  BOOST_TEST(NeutralSelector()(particle));
-  BOOST_TEST(not ChargedSelector()(particle));
-  BOOST_TEST(not PositiveSelector()(particle));
-  BOOST_TEST(not NegativeSelector()(particle));
+  BOOST_CHECK(NeutralSelector()(particle));
+  BOOST_CHECK(not ChargedSelector()(particle));
+  BOOST_CHECK(not PositiveSelector()(particle));
+  BOOST_CHECK(not NegativeSelector()(particle));
 }
 
 BOOST_AUTO_TEST_CASE(PositiveParticle) {
   const auto& particle = Dataset::centralPositron;
-  BOOST_TEST(not NeutralSelector()(particle));
-  BOOST_TEST(ChargedSelector()(particle));
-  BOOST_TEST(PositiveSelector()(particle));
-  BOOST_TEST(not NegativeSelector()(particle));
+  BOOST_CHECK(not NeutralSelector()(particle));
+  BOOST_CHECK(ChargedSelector()(particle));
+  BOOST_CHECK(PositiveSelector()(particle));
+  BOOST_CHECK(not NegativeSelector()(particle));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

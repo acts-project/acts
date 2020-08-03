@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "ACTFW/Framework/WriterT.hpp"
 #include "ACTFW/TruthTracking/VertexAndTracks.hpp"
+
+#include <mutex>
 
 class TFile;
 class TTree;
