@@ -37,40 +37,32 @@ enum eConfigData {
   eDeltaRMax,
   eCotThetaMax,
   eCollisionRegionMin,
-  eCollisionRegionMax
+  eCollisionRegionMax,
+  eMaxScatteringAngle2,
+  eSigmaScattering,
+  eMinHelixDiameter2,
+  ePT2perRadius,
+  eDeltaInvHelixDiameter,
+  eImpactWeightFactor,
+  eFilterDeltaRMin
 };
 
 // maximize number of bottom and top spacepoints per middle sp (to be able to load data to global buffer)
 enum eMaxData {
-  eMaxBottomPerMiddleSP, eMaxTopPerMiddleSP
+  ePerBottom, ePerTop,
+  eNTrplPerSpBLimit
 };
 
-// store linear circle data in float arrays
+// store linear circle data in float arrays, index them with enum values
 enum eLinCircle {
   eZo, eCotTheta, eIDeltaR, eEr, eU, eV, eLIN
 };
 
-void offloadDupletSearchBottom( cl::sycl::queue q,
-                                const std::vector<float>& configData,
-                                const std::vector<int>& maxData,
-                                std::vector<int>& indBPerMSpCompat,
-                                std::vector<int>& indTPerMSpCompat,
-                                std::vector<int>& numBotCompatPerMSP,
-                                std::vector<int>& numTopCompatPerMSP,
-                                const std::vector<float>& bottomSPs,
-                                const std::vector<float>& middleSPs,
-                                const std::vector<float>& topSPs);
-
-void offloadTransformCoordinates( cl::sycl::queue q, const std::vector<int>& maxData,
-                                  const std::vector<int>& indBPerMSpCompat,
-                                  const std::vector<int>& indTPerMSpCompat,
-                                  const std::vector<int>& numBotCompatPerMSP,
-                                  const std::vector<int>& numTopCompatPerMSP,
-                                  const std::vector<float>& bottomSPs,
-                                  const std::vector<float>& middleSPs,
-                                  const std::vector<float>& topSPs,
-                                  std::vector<float>& linCircleBot,
-                                  std::vector<float>& linCircleTop);
+void offloadComputations( cl::sycl::queue q,
+                          const std::vector<float>& configData,
+                          const std::vector<float>& bottomSPs,
+                          const std::vector<float>& middleSPs,
+                          const std::vector<float>& topSPs);
 
 void outputPlatforms();
 void testDevice();

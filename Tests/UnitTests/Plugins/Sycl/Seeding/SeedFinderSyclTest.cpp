@@ -83,6 +83,10 @@ auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoin
   config.bFieldInZ = 0.00199724;
   config.beamPos = {-.5, -.5};
   config.impactMax = 10.;
+
+  // for sycl
+  config.nTrplPerSpBLimit = 100;
+  config.nAvgTrplPerSpBLimit = 6;
   return config;
 }
 
@@ -101,12 +105,16 @@ auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_
 
 auto main(int argc, char** argv) -> int {
   bool allgroup(false);
+  bool cpu(true);
+  int groups(500);
   try {
     po::options_description optionsDescription("Allowed options");
     optionsDescription.add_options()
       ("help,h", "Print usage message.")
       ("inputfile,f", po::value<std::string>(), "Provide path for input file.")
       ("platforms,p","List available platforms and devices.")
+      ("no_cpu,c","Do not execute code on cpu")
+      ("groups,g",po::value<int>(),"Add number of groups to execute on")
     ;
 
     po::variables_map vm;
@@ -115,6 +123,14 @@ auto main(int argc, char** argv) -> int {
     if (vm.count("help") != 0) {  
       std::cout << optionsDescription << "\n";
       return 0;
+    }
+
+    if(vm.count("no_cpu") != 0) {  
+      cpu = false;
+    }
+
+    if(vm.count("groups") != 0){
+      groups = vm["groups"].as<int>();
     }
 
     if(vm.count("inputfile") != 0){
@@ -144,17 +160,19 @@ auto main(int argc, char** argv) -> int {
       // ********* EXECUTE ON CPU ********** //
 
       auto start_cpu = std::chrono::system_clock::now();
-
       int group_count = 0;
       auto groupIt = spGroup.begin();
-      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
-      for (; !(groupIt == spGroup.end()); ++groupIt) {
-        seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
-            groupIt.bottom(), groupIt.middle(), groupIt.top()));
-        group_count++;
-        if (!allgroup && group_count >= 500) {
-          break;
+      if(cpu) {
+        std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+
+        for (; !(groupIt == spGroup.end()); ++groupIt) {
+          seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
+              groupIt.bottom(), groupIt.middle(), groupIt.top()));
+          group_count++;
+          if (!allgroup && group_count >= groups) {
+            break;
+          }
         }
       }
 
@@ -164,7 +182,7 @@ auto main(int argc, char** argv) -> int {
       std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
       double cpuTime = elapsec_cpu.count();
 
-      //----------- SYCL ----------//
+      //----------- EXECUTE ON GPU - SYCL ----------//
 
       auto start_sycl = std::chrono::system_clock::now();
 
@@ -176,7 +194,7 @@ auto main(int argc, char** argv) -> int {
         seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
             groupIt.bottom(), groupIt.middle(), groupIt.top()));
         group_count++;
-        if (!allgroup && group_count >= 500){
+        if (!allgroup && group_count >= groups){
             break;
         }
       }
@@ -184,16 +202,16 @@ auto main(int argc, char** argv) -> int {
       std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
       double syclTime = elapsec_sycl.count();
 
-      std::cout << "Analyzed " << group_count << " groups for CUDA" << std::endl;
+      std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
 
       std::cout << std::endl;
       std::cout << "----------------------- Time Metric -----------------------" << std::endl;
-      std::cout << "Seedfinding_Time  " << std::setw(11)
-                << (std::to_string(cpuTime)) << "  " << std::setw(11);
-      std::cout << std::to_string(syclTime) << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                << std::endl;
+      std::cout << std::setw(20) << " Device:" << std::setw(11) << "CPU" << std::setw(11) << "SYCL" << std::endl;
+      std::cout << std::setw(20) << " Seedfinding_Time:";
+      std::cout << std::setw(11) << std::to_string(cpuTime) << " ";
+      std::cout << std::setw(11) << std::to_string(syclTime);
       std::cout << std::endl;
+      std::cout << "-----------------------------------------------------------" << std::endl;
 
     for(const auto *S: spVec) {
         delete[] S;
