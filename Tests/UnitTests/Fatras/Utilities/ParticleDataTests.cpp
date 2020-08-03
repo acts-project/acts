@@ -24,39 +24,39 @@ static constexpr float eps = 0.001f;
 BOOST_AUTO_TEST_SUITE(FatrasParticleData)
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
-  BOOST_TEST(std::isnan(findCharge(PdgParticle::eInvalid)));
-  BOOST_TEST(findMass(PdgParticle::eInvalid) == 0.0f);
-  BOOST_TEST(findName(PdgParticle::eInvalid).empty());
+  BOOST_CHECK(std::isnan(findCharge(PdgParticle::eInvalid)));
+  BOOST_CHECK_EQUAL(findMass(PdgParticle::eInvalid), 0.0f);
+  BOOST_CHECK(findName(PdgParticle::eInvalid).empty());
 }
 
 BOOST_AUTO_TEST_CASE(Electron) {
-  BOOST_TEST(findCharge(PdgParticle::eAntiElectron) == 1_e);
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::eAntiElectron), 1_e);
   CHECK_CLOSE_REL(findMass(PdgParticle::eAntiElectron), 511_keV, eps);
-  BOOST_TEST(findName(PdgParticle::eAntiElectron) == "e+");
-  BOOST_TEST(findCharge(PdgParticle::eElectron) == -1_e);
+  BOOST_CHECK_EQUAL(findName(PdgParticle::eAntiElectron), "e+");
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::eElectron), -1_e);
   CHECK_CLOSE_REL(findMass(PdgParticle::eElectron), 511_keV, eps);
-  BOOST_TEST(findName(PdgParticle::eElectron) == "e-");
-  BOOST_TEST(findCharge(PdgParticle::ePositron) == 1_e);
+  BOOST_CHECK_EQUAL(findName(PdgParticle::eElectron), "e-");
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::ePositron), 1_e);
   CHECK_CLOSE_REL(findMass(PdgParticle::ePositron), 511_keV, eps);
-  BOOST_TEST(findName(PdgParticle::ePositron) == "e+");
+  BOOST_CHECK_EQUAL(findName(PdgParticle::ePositron), "e+");
 }
 
 BOOST_AUTO_TEST_CASE(Gamma) {
-  BOOST_TEST(findCharge(PdgParticle::eGamma) == 0);
-  BOOST_TEST(findMass(PdgParticle::eGamma) == 0);
-  BOOST_TEST(findName(PdgParticle::eGamma) == "gamma");
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::eGamma), 0);
+  BOOST_CHECK_EQUAL(findMass(PdgParticle::eGamma), 0);
+  BOOST_CHECK_EQUAL(findName(PdgParticle::eGamma), "gamma");
 }
 
 BOOST_AUTO_TEST_CASE(Pion) {
-  BOOST_TEST(findCharge(PdgParticle::ePionMinus) == -1_e);
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::ePionMinus), -1_e);
   CHECK_CLOSE_REL(findMass(PdgParticle::ePionMinus), 139.57_MeV, eps);
-  BOOST_TEST(findName(PdgParticle::ePionMinus) == "pi-");
-  BOOST_TEST(findCharge(PdgParticle::ePionPlus) == 1_e);
+  BOOST_CHECK_EQUAL(findName(PdgParticle::ePionMinus), "pi-");
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::ePionPlus), 1_e);
   CHECK_CLOSE_REL(findMass(PdgParticle::ePionPlus), 139.57_MeV, eps);
-  BOOST_TEST(findName(PdgParticle::ePionPlus) == "pi+");
-  BOOST_TEST(findCharge(PdgParticle::ePionZero) == 0);
+  BOOST_CHECK_EQUAL(findName(PdgParticle::ePionPlus), "pi+");
+  BOOST_CHECK_EQUAL(findCharge(PdgParticle::ePionZero), 0);
   CHECK_CLOSE_REL(findMass(PdgParticle::ePionZero), 134.98_MeV, eps);
-  BOOST_TEST(findName(PdgParticle::ePionZero) == "pi0");
+  BOOST_CHECK_EQUAL(findName(PdgParticle::ePionZero), "pi0");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

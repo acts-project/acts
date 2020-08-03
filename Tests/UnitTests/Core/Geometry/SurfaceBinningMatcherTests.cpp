@@ -57,18 +57,19 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
 
   // Always true
   for (int ib = 0; ib < binValues; ++ib) {
-    BOOST_TEST(
+    BOOST_CHECK(
         sbm(tgContext, (BinningValue)ib, oneSurface.get(), oneSurface.get()));
   }
   // Not matching in R
-  BOOST_TEST(!sbm(tgContext, binR, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, binR, oneSurface.get(), otherSurface.get()));
   // Not matching in phi
-  BOOST_TEST(!sbm(tgContext, binPhi, oneSurface.get(), otherSurface.get()));
+  BOOST_CHECK(!sbm(tgContext, binPhi, oneSurface.get(), otherSurface.get()));
 
   // Good enough matching in R
-  BOOST_TEST(sbm(tgContext, binR, oneSurface.get(), similarRSurface.get()));
+  BOOST_CHECK(sbm(tgContext, binR, oneSurface.get(), similarRSurface.get()));
   // Good enough matching in phi
-  BOOST_TEST(sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
+  BOOST_CHECK(
+      sbm(tgContext, binPhi, oneSurface.get(), similarPhiSurface.get()));
 }
 
 }  // namespace Test
