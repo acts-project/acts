@@ -11,6 +11,7 @@ target_sources_local(
     DiscSurface.cpp
     DiscTrapezoidBounds.cpp
     EllipseBounds.cpp
+    IntersectionHelper2D.cpp
     LineBounds.cpp
     LineSurface.cpp
     PerigeeSurface.cpp

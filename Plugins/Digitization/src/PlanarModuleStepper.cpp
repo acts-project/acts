@@ -54,7 +54,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   // Last one is also valid - now sort
   stepIntersections.push_back(Intersection(endPoint,
                                            (startPoint - endPoint).norm(),
-                                           Intersection::Status::reachable));
+                                           Intersection3D::Status::reachable));
   std::sort(stepIntersections.begin(), stepIntersections.end());
 
   Vector3D lastPosition = startPoint;

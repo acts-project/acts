@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   Vector3D direction{0., 0., 1.};
   auto sfIntersection =
       planeSurfaceObject->intersect(tgContext, offSurface, direction, true);
-  Intersection expectedIntersect{Vector3D{0, 1, 2}, 4.,
-                                 Intersection::Status::reachable};
+  Intersection3D expectedIntersect{Vector3D{0, 1, 2}, 4.,
+                                   Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   BOOST_CHECK_EQUAL(sfIntersection.intersection.position,
                     expectedIntersect.position);

@@ -117,7 +117,7 @@ namespace concept {
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
-        constexpr static bool update_surface_exists = has_method<const S, Intersection::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
+        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
         constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
         static_assert(set_step_size_exists, "setStepSize method not found");
