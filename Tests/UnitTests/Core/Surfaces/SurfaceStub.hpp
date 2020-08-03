@@ -84,7 +84,9 @@ class SurfaceStub : public Surface {
                                 const Vector3D& /*position*/,
                                 const Vector3D& /*direction*/,
                                 const BoundaryCheck& /*bcheck*/) const final {
-    return SurfaceIntersection();
+    Intersection stubIntersection(Vector3D(20., 0., 0.), 20.,
+                                  Intersection::Status::reachable);
+    return SurfaceIntersection(stubIntersection, this);
   }
 
   /// Return properly formatted class name
