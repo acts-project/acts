@@ -57,38 +57,6 @@ BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
   BOOST_CHECK(VerticesHelper::onHyperPlane(xyplane, 0.6));
 }
 
-BOOST_AUTO_TEST_CASE(VerticesHelperMasking) {
-  // A random shape of ordered vertices
-  std::vector<Vector2D> vertices = {Vector2D{-3., -4.}, Vector2D{4., -4.},
-                                    Vector2D{6., 4.}, Vector2D{0., 7.},
-                                    Vector2D{-6., 1.}};
-
-  Vector2D inside(0., 0.);
-  Vector2D outside(0., -5.);
-
-  // inside-outside test
-  auto masked = VerticesHelper::mask(vertices, inside, true, outside, false);
-  BOOST_CHECK(inside.isApprox(masked.first));
-  BOOST_CHECK(Vector2D(0., -4.).isApprox(masked.second));
-
-  // other way round test
-  masked = VerticesHelper::mask(vertices, outside, false, inside, true);
-  BOOST_CHECK(inside.isApprox(masked.second));
-  BOOST_CHECK(Vector2D(0., -4.).isApprox(masked.first));
-
-  outside = Vector2D(6., -2.);
-  inside = Vector2D(2., 2.);
-
-  // inside-outside test
-  masked = VerticesHelper::mask(vertices, inside, true, outside, false);
-  BOOST_CHECK(inside.isApprox(masked.first));
-  BOOST_CHECK(Vector2D(4.8, -0.8).isApprox(masked.second));
-  // other way round test
-  masked = VerticesHelper::mask(vertices, outside, false, inside, true);
-  BOOST_CHECK(inside.isApprox(masked.second));
-  BOOST_CHECK(Vector2D(4.8, -0.8).isApprox(masked.first));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

@@ -113,35 +113,3 @@ bool Acts::detail::VerticesHelper::onHyperPlane(
   }
   return true;
 }
-
-std::pair<Acts::Vector2D, Acts::Vector2D> Acts::detail::VerticesHelper::mask(
-    const std::vector<Vector2D>& vertices, const Vector2D& start,
-    bool startInside, const Vector2D& end, bool endInside) {
-  Acts::Vector2D nStart = start;
-  Acts::Vector2D nEnd = end;
-
-  auto segment = Eigen::ParametrizedLine<double, 2>::Through(start, end);
-
-  for (size_t iv = 0; iv < vertices.size(); ++iv) {
-    const Acts::Vector2D& current = vertices[iv];
-    const Acts::Vector2D& next =
-        (iv + 1) < vertices.size() ? vertices[iv + 1] : vertices[0];
-
-    const Acts::Vector2D edge((next - current).normalized());
-    const Acts::Vector2D n(edge.y(), -edge.x());
-
-    auto d =
-        segment.intersection(Eigen::Hyperplane<double, 2>(n, vertices[iv]));
-    if (d > 0 and d < (start - end).norm()) {
-      if (startInside and not endInside) {
-        nEnd = start + d * segment.direction();
-        break;
-      } else if (endInside and not startInside) {
-        nStart = start + d * segment.direction();
-        break;
-      }
-    }
-  }
-
-  return {nStart, nEnd};
-}

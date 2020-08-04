@@ -93,22 +93,6 @@ std::vector<Vector2D> circularVertices(double innerR, double outerR,
                                        double avgPhi = 0.,
                                        double halfPhi = M_PI,
                                        unsigned int lseg = 1);
-
-/// Masking a segment with a set of connected vertices
-///
-/// @param vertices The 2D vertices
-/// @param start The end position in 2D
-/// @param startInside The (pre-done) check if the start is inside
-/// @param end The end position in 2D
-/// @param endInside The (pre-done) check if the end is inside
-///
-/// Both points outside is currently not supported
-///
-/// @return The (optionally) clipped { start, end }
-std::pair<Vector2D, Vector2D> mask(const std::vector<Vector2D>& vertices,
-                                   const Vector2D& start, bool startInside,
-                                   const Vector2D& end, bool endInside);
-
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
 /// @tparam vertex_container_t is an iterable container

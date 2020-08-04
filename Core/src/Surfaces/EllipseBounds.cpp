@@ -117,64 +117,6 @@ double Acts::EllipseBounds::distanceToBoundary(
   return sf;
 }
 
-std::pair<Acts::Vector2D, Acts::Vector2D> Acts::EllipseBounds::mask(
-    const Vector2D& start, const Vector2D& end) const {
-  bool startInside = inside(start, true);
-  bool endInside = inside(end, true);
-  /*
-   if (not startInside or not endInside);
-     // Create the segment
-     auto segment = Eigen::ParametrizedLine<double, 2>::Through(start, end);
-     // Test phi bounaries first (if needed)
-     if (std::abs(get(eHalfPhiSector) - M_PI) > s_epsilon) {
-       std::vector<double> phiValues = {get(eAveragePhi) - get(eHalfPhiSector),
-                                        get(eAveragePhi) + get(eHalfPhiSector)};
-       for (auto phiv : phiValues) {
-         Vector2D n(sin(phiv), -cos(phiv));
-         auto d =
-             segment.intersection(Eigen::Hyperplane<double, 2>(n, {0., 0.}));
-         if (d > 0 and d < (start - end).norm()) {
-           if (startInside) {
-             return {start, start + d * segment.direction()};
-           }
-           return {start + d * segment.direction(), end};
-         }
-       }
-     }
-     // Intersect ellipse then
-     double s = (end-start).norm();
-     double d = std::numeric_limits<double>::max();
-     auto accept = [&](const Vector2D& solution) -> double {
-         Vector2D toSol = solution-start;
-         if (toSol.dot(segment.direction()) > 0.){
-           double dtSol = toSol.norm();
-
-         }
-     };
-
-     if (get(eInnerRx) > s_epsilon) {
-       auto intersection = detail::IntersectionHelper2D::intersectEllipse(
-           get(eInnerRx), get(eInnerRy), start, end);
-       if (std::get<0>(intersection)) {
-         // Valid intersection(s)
-         d = accept(std::get<1>(intersection));
-         d = accept(std::get<2>(intersection));
-       }
-     }
-     if (get(eOuterRy) > s_epsilon) {
-       auto intersection = detail::IntersectionHelper2D::intersectEllipse(
-           get(eOuterRx), get(eOuterRy), start, end);
-       if (std::get<0>(intersection)) {
-         // Valid intersection(s)
-         d = accept(std::get<1>(intersection));
-         d = accept(std::get<2>(intersection));
-       }
-     }
-   }
-   */
-  return {start, end};
-}
-
 std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
     unsigned int lseg) const {
   return detail::VerticesHelper::ellipsoidVertices(

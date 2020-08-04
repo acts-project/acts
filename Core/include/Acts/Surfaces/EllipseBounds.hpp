@@ -90,17 +90,6 @@ class EllipseBounds : public PlanarBounds {
   /// @return is a signed distance parameter
   double distanceToBoundary(const Vector2D& lposition) const final;
 
-  /// Mask a segment with the bounds shape, in case the segment is
-  /// fully inside the bounds, no clipping is done. Both outside
-  /// is currently not supported, it has to be checked upstream.
-  ///
-  /// @param start The start of the segment
-  /// @param end The end of the segment
-  ///
-  /// @return a pair of the (potentially) clipped bounds
-  virtual std::pair<Vector2D, Vector2D> mask(const Vector2D& start,
-                                             const Vector2D& end) const final;
-
   /// Return the vertices
   ///
   /// @param lseg the number of segments used to approximate
