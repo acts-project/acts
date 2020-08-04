@@ -43,5 +43,5 @@ void FW::Obj::ObjTrackingGeometryWriter::write(
 
   Acts::GeometryView::drawTrackingVolume(
       objVis, tVolume, context.geoContext, m_cfg.containerView,
-      m_cfg.volumeView, m_cfg.sensitiveView, m_cfg.passiveView, m_cfg.gridView);
+      m_cfg.volumeView, m_cfg.passiveView, m_cfg.sensitiveView, m_cfg.gridView);
 }
