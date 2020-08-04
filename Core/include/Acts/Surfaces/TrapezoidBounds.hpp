@@ -111,12 +111,6 @@ class TrapezoidBounds : public PlanarBounds {
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
 
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
-
   /// Return the vertices
   ///
   /// @param lseg the number of segments used to approximate
