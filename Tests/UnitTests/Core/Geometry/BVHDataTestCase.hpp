@@ -142,8 +142,8 @@ BOOST_DATA_TEST_CASE(
   using ActionList = Acts::ActionList<SteppingLogger, DebugOutput>;
   using AbortConditions = Acts::AbortList<>;
 
-  Acts::PropagatorOptions<ActionList, AbortConditions> options(tgContext,
-                                                               mfContext);
+  Acts::PropagatorOptions<ActionList, AbortConditions> options(
+      tgContext, mfContext, Acts::getDummyLogger());
 
   options.debug = false;
   options.pathLimit = 20_m;

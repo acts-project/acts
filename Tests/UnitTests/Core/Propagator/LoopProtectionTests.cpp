@@ -190,7 +190,7 @@ BOOST_DATA_TEST_CASE(
   using DebugOutput = Acts::DebugOutputActor;
   using ProopagatorOptions =
       PropagatorOptions<ActionList<DebugOutput>, AbortList<>>;
-  ProopagatorOptions options(tgContext, mfContext);
+  ProopagatorOptions options(tgContext, mfContext, getDummyLogger());
   options.debug = false;
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();

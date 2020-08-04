@@ -134,11 +134,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
 
   // Create some options
   using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-  StepWiseOptions swOptions(tgContext, mfContext);
+  StepWiseOptions swOptions(tgContext, mfContext, getDummyLogger());
 
   using PlainActors = ActionList<>;
   using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-  PlainOptions pOptions(tgContext, mfContext);
+  PlainOptions pOptions(tgContext, mfContext, getDummyLogger());
 
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();

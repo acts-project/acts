@@ -82,7 +82,8 @@ struct ParticleSimulator {
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx);
+    PropagatorOptions options(geoCtx, magCtx,
+                              Acts::LoggerWrapper{*localLogger});
     options.absPdgCode = particle.pdg();
     options.mass = particle.mass();
     options.debug = localLogger->doPrint(Acts::Logging::Level::DEBUG);

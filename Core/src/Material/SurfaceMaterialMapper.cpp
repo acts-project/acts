@@ -187,8 +187,9 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                                 MaterialVolumeCollector, DebugOutput>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  auto propLogger = getDefaultLogger("SufMatMapProp", Logging::INFO);
+  PropagatorOptions<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator

@@ -97,8 +97,9 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
-      const SourceLinkSelectorConfig& slsCfg, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
+      const SourceLinkSelectorConfig& slsCfg, LoggerWrapper logger_,
+      const Surface* rSurface = nullptr, bool mScattering = true,
+      bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -106,7 +107,8 @@ struct CombinatorialKalmanFilterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        smoothing(rSmoothing) {}
+        smoothing(rSmoothing),
+        logger(logger_) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -129,6 +131,9 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Whether to run smoothing to get fitted parameter
   bool smoothing = true;
+
+  /// Logger instance
+  LoggerWrapper logger;
 };
 
 template <typename source_link_t>
@@ -1114,8 +1119,8 @@ class CombinatorialKalmanFilter {
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
-                                                    tfOptions.magFieldContext);
+    PropagatorOptions<Actors, Aborters> propOptions(
+        tfOptions.geoContext, tfOptions.magFieldContext, tfOptions.logger);
     // Set max steps
     propOptions.maxSteps = 10000;
 

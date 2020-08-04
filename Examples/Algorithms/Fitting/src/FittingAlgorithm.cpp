@@ -86,9 +86,12 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
     }
 
     // Set the KalmanFitter options
+    auto kfLogger =
+        Acts::getDefaultLogger("FitAlgKfLogger", Acts::Logging::INFO);
     Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        Acts::VoidOutlierFinder(), &(*pSurface));
+        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{*kfLogger},
+        &(*pSurface));
 
     ACTS_DEBUG("Invoke fitter");
     auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);

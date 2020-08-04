@@ -70,7 +70,7 @@ struct KalmanFitterOptions {
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder_,
-                      const Surface* rSurface = nullptr,
+                      LoggerWrapper logger_, const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
@@ -80,7 +80,8 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering) {}
+        backwardFiltering(bwdFiltering),
+        logger(logger_) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -103,6 +104,9 @@ struct KalmanFitterOptions {
 
   /// Whether to run backward filtering
   bool backwardFiltering = false;
+
+  /// Logger
+  LoggerWrapper logger;
 };
 
 template <typename source_link_t>
@@ -903,6 +907,8 @@ class KalmanFitter {
            const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
       -> std::enable_if_t<!isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
+    const auto& logger = kfOptions.logger;
+
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -924,7 +930,7 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+        kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();

@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
@@ -333,7 +333,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     const Surface* rSurface = &rStart.referenceSurface();
 
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, sourcelinkSelectorConfig, rSurface);
+        tgContext, mfContext, calContext, sourcelinkSelectorConfig,
+        getDummyLogger(), rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);

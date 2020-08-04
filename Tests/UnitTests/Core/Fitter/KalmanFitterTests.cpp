@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
@@ -367,12 +367,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   MinimalOutlierFinder outlierFinder;
   outlierFinder.measurementSignificanceCutoff = 0.05;
-
-  KalmanFitter kFitter(rPropagator,
-                       getDefaultLogger("KalmanFilter", Logging::VERBOSE));
+  auto kfLogger = getDefaultLogger("KalmanFilter", Logging::VERBOSE);
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, outlierFinder, rSurface);
+      tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
+      rSurface);
+
+  KalmanFitter kFitter(rPropagator, std::move(kfLogger));
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);

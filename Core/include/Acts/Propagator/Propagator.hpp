@@ -82,8 +82,9 @@ struct PropagatorOptions {
 
   /// PropagatorOptions with context
   PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx,
-                    std::reference_wrapper<const MagneticFieldContext> mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+                    std::reference_wrapper<const MagneticFieldContext> mctx,
+                    LoggerWrapper logger_)
+      : geoContext(gctx), magFieldContext(mctx), logger(logger_) {}
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -94,7 +95,7 @@ struct PropagatorOptions {
   PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext);
+        geoContext, magFieldContext, logger);
     // Copy the options over
     eoptions.direction = direction;
     eoptions.absPdgCode = absPdgCode;
@@ -117,8 +118,6 @@ struct PropagatorOptions {
     // Action / abort list
     eoptions.actionList = std::move(actionList);
     eoptions.abortList = std::move(aborters);
-    // Logger instance
-    eoptions.logger = logger;
     // And return the options
     return eoptions;
   }
@@ -179,7 +178,7 @@ struct PropagatorOptions {
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 
-  LoggerWrapper logger{getDummyLogger()};
+  LoggerWrapper logger;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
