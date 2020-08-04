@@ -23,6 +23,8 @@ struct IntersectionHelper2D {
   /// @param s1 The end of the segement
   /// @param origin The Start of intersection line
   /// @param direction The Direction of intersection line
+  ///
+  /// @return the intersection point with status
   static Intersection2D intersectSegment(const Vector2D& s0, const Vector2D& s1,
                                          const Vector2D& origin,
                                          const Vector2D& dir);
@@ -34,7 +36,7 @@ struct IntersectionHelper2D {
   /// @param origin The Start of intersection line
   /// @param direction The Direction of intersection line
   ///
-  /// @return the intersection points and a boolean if successful
+  /// @return the intersection points
   static std::pair<Intersection2D, Intersection2D> intersectEllipse(
       double Rx, double Ry, const Vector2D& origin, const Vector2D& dir);
 
@@ -44,7 +46,7 @@ struct IntersectionHelper2D {
   /// @param origin The Start of intersection line
   /// @param direction The Direction of intersection line
   ///
-  /// @return the intersection points and a boolean if successful
+  /// @return the intersection points
   static inline std::pair<Intersection2D, Intersection2D> intersectCircle(
       double R, const Vector2D& origin, const Vector2D& dir) {
     return intersectEllipse(R, R, origin, dir);
