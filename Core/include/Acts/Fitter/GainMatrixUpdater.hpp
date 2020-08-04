@@ -121,8 +121,7 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
           // calculate filtered residual
-          par_t residual(trackState.calibratedSize());
-          residual = (calibrated - H * filtered);
+          const par_t residual = (calibrated - H * filtered);
           ACTS_VERBOSE("Residual: " << residual.transpose());
 
           trackState.chi2() =

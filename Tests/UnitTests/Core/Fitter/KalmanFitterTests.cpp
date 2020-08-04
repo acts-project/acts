@@ -230,19 +230,54 @@ struct MinimalOutlierFinder {
   ///
   /// @tparam track_state_t Type of the track state
   ///
-  /// @param trackState The trackState to investigate
+  /// @param state The track state to investigate
   ///
   /// @return Whether it's outlier or not
   template <typename track_state_t>
-  bool operator()(const track_state_t& trackState) const {
-    double chi2 = trackState.chi2();
+  bool operator()(const track_state_t& state) const {
+    // Can't determine if it's an outlier if no calibrated measurement or no
+    // predicted parameters
+    if (not state.hasCalibrated() or not state.hasPredicted()) {
+      return false;
+    }
+
+    // The predicted parameters coefficients
+    const auto& predicted = state.predicted();
+    // The predicted parameters covariance
+    const auto& predicted_covariance = state.predictedCovariance();
+
+    // Calculate the chi2 using predicted parameters and calibrated measurement
+    double chi2 = std::numeric_limits<double>::max();
+    visit_measurement(
+        state.calibrated(), state.calibratedCovariance(),
+        state.calibratedSize(),
+        [&](const auto calibrated, const auto calibrated_covariance) {
+          constexpr size_t measdim = decltype(calibrated)::RowsAtCompileTime;
+          using par_t = ActsVectorD<measdim>;
+
+          // Take the projector (measurement mapping function)
+          const ActsMatrixD<measdim, eBoundParametersSize> H =
+              state.projector()
+                  .template topLeftCorner<measdim, eBoundParametersSize>();
+
+          // Calculate the residual
+          const par_t residual = calibrated - H * predicted;
+
+          // Calculate the chi2
+          chi2 = (residual.transpose() *
+                  ((calibrated_covariance +
+                    H * predicted_covariance * H.transpose()))
+                      .inverse() *
+                  residual)
+                     .eval()(0, 0);
+        });
+
+    // In case the chi2 is too small
     if (std::abs(chi2) < chi2Tolerance) {
       return false;
     }
-    // The measurement dimension
-    size_t ndf = trackState.calibratedSize();
     // The chisq distribution
-    boost::math::chi_squared chiDist(ndf);
+    boost::math::chi_squared chiDist(state.calibratedSize());
     // The p-Value
     double pValue = 1 - boost::math::cdf(chiDist, chi2);
     // If pValue is NOT significant enough => outlier

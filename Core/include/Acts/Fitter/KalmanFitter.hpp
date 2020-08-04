@@ -499,40 +499,41 @@ class KalmanFitter {
         typeFlags.set(TrackStateFlag::MaterialFlag);
         typeFlags.set(TrackStateFlag::ParameterFlag);
 
-        // If the update is successful, set covariance and
-        auto updateRes = m_updater(state.geoContext, trackStateProxy, forward);
-        if (!updateRes.ok()) {
-          ACTS_ERROR("Update step failed: " << updateRes.error());
-          return updateRes.error();
-        } else {
-          if (not m_outlierFinder(trackStateProxy)) {
-            // Set the measurement type flag
-            typeFlags.set(TrackStateFlag::MeasurementFlag);
-            // Update the stepping state with filtered parameters
-            ACTS_VERBOSE(
-                "Filtering step successful, updated parameters are : \n"
-                << trackStateProxy.filtered().transpose());
-            // update stepping state using filtered parameters after kalman
-            // update We need to (re-)construct a BoundParameters instance
-            // here, which is a bit awkward.
-            stepper.update(state.stepping,
-                           MultiTrajectoryHelpers::freeFiltered(
-                               state.options.geoContext, trackStateProxy),
-                           trackStateProxy.filteredCovariance());
-            // We count the state with measurement
-            ++result.measurementStates;
-          } else {
-            ACTS_VERBOSE(
-                "Filtering step successful. But measurement is deterimined "
-                "to "
-                "be an outlier. Stepping state is not updated.")
-            // Set the outlier type flag
-            typeFlags.set(TrackStateFlag::OutlierFlag);
+        // Check if the state is an outlier.
+        // If not, run Kalman update, tag it as a
+        // measurement and update the stepping state. Otherwise, just tag it as
+        // an outlier
+        if (not m_outlierFinder(trackStateProxy)) {
+          // Run Kalman update
+          auto updateRes =
+              m_updater(state.geoContext, trackStateProxy, forward);
+          if (!updateRes.ok()) {
+            ACTS_ERROR("Update step failed: " << updateRes.error());
+            return updateRes.error();
           }
-
-          // Update state and stepper with post material effects
-          materialInteractor(surface, state, stepper, postUpdate);
+          // Set the measurement type flag
+          typeFlags.set(TrackStateFlag::MeasurementFlag);
+          // Update the stepping state with filtered parameters
+          ACTS_VERBOSE("Filtering step successful, updated parameters are : \n"
+                       << trackStateProxy.filtered().transpose());
+          // update stepping state using filtered parameters after kalman
+          stepper.update(state.stepping,
+                         MultiTrajectoryHelpers::freeFiltered(
+                             state.options.geoContext, trackStateProxy),
+                         trackStateProxy.filteredCovariance());
+          // We count the state with measurement
+          ++result.measurementStates;
+        } else {
+          ACTS_VERBOSE(
+              "Filtering step successful. But measurement is deterimined "
+              "to "
+              "be an outlier. Stepping state is not updated.")
+          // Set the outlier type flag
+          typeFlags.set(TrackStateFlag::OutlierFlag);
         }
+
+        // Update state and stepper with post material effects
+        materialInteractor(surface, state, stepper, postUpdate);
         // We count the processed state
         ++result.processedStates;
       } else if (surface->surfaceMaterial() != nullptr) {
