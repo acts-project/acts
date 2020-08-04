@@ -651,11 +651,11 @@ class Navigator {
 
         /*
         Vector3D pos = stepper.position(state.stepping);
-        double   mom
-            = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
-        double   q   = stepper.charge(state.stepping);
+        double mom =
+            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+        double q = stepper.charge(state.stepping);
         Vector3D dir = stepper.direction(state.stepping);
-        Vector3D B   = stepper.getField(state.stepping, pos);
+        Vector3D B = stepper.getField(state.stepping, pos);
         if (B.squaredNorm() > 1e-9) {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
@@ -667,17 +667,13 @@ class Navigator {
           }
           opening_angle = std::atan((1 - std::cos(s * ir)) / std::sin(s * ir));
         }
-        debugLog(state, [&] {
-          std::stringstream ss;
-          ss << std::fixed << std::setprecision(50);
-          ss << "Estimating opening angle for frustum nav:" << std::endl;
-          ss << "pos: " << pos.transpose() << std::endl;
-          ss << "dir: " << dir.transpose() << std::endl;
-          ss << "B: " << B.transpose() << " |B|: " << B.norm() << std::endl;
-          ss << "step mom: " << stepper.momentum(state.stepping) << std::endl;
-          ss << "=> opening angle: " << opening_angle << std::endl;
-          return ss.str();
-        });
+
+        ACTS_VERBOSE("Estimating opening angle for frustum nav:");
+        ACTS_VERBOSE("pos: " << pos.transpose());
+        ACTS_VERBOSE("dir: " << dir.transpose());
+        ACTS_VERBOSE("B: " << B.transpose() << " |B|: " << B.norm());
+        ACTS_VERBOSE("step mom: " << stepper.momentum(state.stepping));
+        ACTS_VERBOSE("=> opening angle: " << opening_angle);
         */
 
         auto protoNavSurfaces =

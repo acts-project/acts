@@ -93,6 +93,8 @@ struct Options {
 
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
+
+  LoggerWrapper logger{getDummyLogger()};
 };
 
 /// @brief mockup of propagtor state

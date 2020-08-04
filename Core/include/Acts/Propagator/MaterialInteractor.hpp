@@ -90,6 +90,7 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    const auto& logger = state.options.logger;
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&
@@ -128,16 +129,11 @@ struct MaterialInteractor {
       d.evaluatePointwiseMaterialInteraction(multipleScattering, energyLoss);
 
       if (energyLoss) {
-        debugLog(state, [=] {
-          using namespace UnitLiterals;
-          std::stringstream dstream;
-          dstream << d.slab;
-          dstream << " pdg=" << d.pdg;
-          dstream << " mass=" << d.mass / 1_MeV << "MeV";
-          dstream << " momentum=" << d.momentum / 1_GeV << "GeV";
-          dstream << " energyloss=" << d.Eloss / 1_MeV << "MeV";
-          return dstream.str();
-        });
+        using namespace UnitLiterals;
+        ACTS_VERBOSE(d.slab << " pdg=" << d.pdg << " mass=" << d.mass / 1_MeV
+                            << "MeV"
+                            << " momentum=" << d.momentum / 1_GeV << "GeV"
+                            << " energyloss=" << d.Eloss / 1_MeV << "MeV");
       }
 
       // To integrate process noise, we need to transport
@@ -232,31 +228,7 @@ struct MaterialInteractor {
     result.materialInL0 +=
         result.materialInteractions.back().materialProperties.thicknessInL0();
   }
-
-  /// The private propagation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the state.debug ==
-  /// true case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param state the propagator state for the debug flag, prefix and
-  /// length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
-    if (state.options.debug) {
-      std::stringstream dstream;
-      dstream << "   " << std::setw(state.options.debugPfxWidth);
-      dstream << "material interaction"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
-    }
-  }
-};
+};  // namespace Acts
 
 /// Using some short hands for Recorded Material
 using RecordedMaterial = MaterialInteractor::Result;

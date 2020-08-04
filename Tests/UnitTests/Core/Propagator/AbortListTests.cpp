@@ -80,6 +80,8 @@ struct PropagatorState {
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
+
+    LoggerWrapper logger{getDummyLogger()};
   };
 
   /// Give some options
