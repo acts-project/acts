@@ -54,10 +54,9 @@ FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
       stepper);
 
   // Set up propagator options
-  auto logger = Acts::getDefaultLogger("TVTAlgProp", Acts::Logging::INFO);
   Acts::PropagatorOptions<> pOptions(context.geoContext,
                                      context.magFieldContext,
-                                     Acts::LoggerWrapper{*logger});
+                                     Acts::LoggerWrapper{logger()});
   pOptions.direction = Acts::backward;
 
   // Create random number generator and spawn gaussian distribution

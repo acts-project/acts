@@ -64,9 +64,8 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
   MagneticField bField(m_cfg.bField);
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(Stepper(bField));
-  auto propLogger = Acts::getDefaultLogger("ItVtxFndProp", Acts::Logging::INFO);
   PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
-                                   Acts::LoggerWrapper{*propLogger});
+                                   Acts::LoggerWrapper{logger()});
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(std::move(vertexFitterCfg));

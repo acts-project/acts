@@ -51,11 +51,9 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
     const auto& initialParams = initialParameters[iseed];
 
     // Set the CombinatorialKalmanFilter options
-    auto ckfLogger =
-        Acts::getDefaultLogger("TrkFndAlgCKF", Acts::Logging::INFO);
     FW::TrackFindingAlgorithm::CKFOptions ckfOptions(
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{*ckfLogger},
+        m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
         &(*pSurface));
 
     ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
