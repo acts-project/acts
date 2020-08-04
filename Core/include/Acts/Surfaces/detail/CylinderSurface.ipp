@@ -49,15 +49,15 @@ inline SurfaceIntersection CylinderSurface::intersect(
 
   // Check the validity of the first solution
   Vector3D solution1 = position + qe.first * direction;
-  Intersection::Status status1 =
+  Intersection3D::Status status1 =
       qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
-          ? Intersection::Status::onSurface
-          : Intersection::Status::reachable;
+          ? Intersection3D::Status::onSurface
+          : Intersection3D::Status::reachable;
 
   // Helper method for boundary check
   auto boundaryCheck =
       [&](const Vector3D& solution,
-          Intersection::Status status) -> Intersection::Status {
+          Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
     if (!bcheck)
       return status;
@@ -72,36 +72,36 @@ inline SurfaceIntersection CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_Z];
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
-      return (cZ * cZ < hZ * hZ) ? status : Intersection::Status::missed;
+      return (cZ * cZ < hZ * hZ) ? status : Intersection3D::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)
                 ? status
-                : Intersection::Status::missed);
+                : Intersection3D::Status::missed);
   };
   // Check first solution for boundary compatiblity
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
-  Intersection first(solution1, qe.first, status1);
+  Intersection3D first(solution1, qe.first, status1);
   SurfaceIntersection cIntersection(first, this);
   if (qe.solutions == 1) {
     return cIntersection;
   }
   // Check the validity of the second solution
   Vector3D solution2 = position + qe.second * direction;
-  Intersection::Status status2 =
+  Intersection3D::Status status2 =
       qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
-          ? Intersection::Status::onSurface
-          : Intersection::Status::reachable;
+          ? Intersection3D::Status::onSurface
+          : Intersection3D::Status::reachable;
   // Check first solution for boundary compatiblity
   status2 = boundaryCheck(solution2, status2);
-  Intersection second(solution2, qe.second, status2);
+  Intersection3D second(solution2, qe.second, status2);
   // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection::Status::missed or
-                (status1 == Intersection::Status::missed and
-                 status2 == Intersection::Status::missed);
+  bool check1 = status1 != Intersection3D::Status::missed or
+                (status1 == Intersection3D::Status::missed and
+                 status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
   if ((check1 and qe.first * qe.first < qe.second * qe.second) or
-      status2 == Intersection::Status::missed) {
+      status2 == Intersection3D::Status::missed) {
     // And add the alternative
     cIntersection.alternative = second;
   } else {

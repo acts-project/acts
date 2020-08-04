@@ -42,37 +42,37 @@ inline SurfaceIntersection ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3D solution1 = position + qe.first * direction;
-  Intersection::Status status1 =
+  Intersection3D::Status status1 =
       (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
-          ? Intersection::Status::onSurface
-          : Intersection::Status::reachable;
+          ? Intersection3D::Status::onSurface
+          : Intersection3D::Status::reachable;
 
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
-    status1 = Intersection::Status::missed;
+    status1 = Intersection3D::Status::missed;
   }
 
   // Check the validity of the second solution
   Vector3D solution2 = position + qe.first * direction;
-  Intersection::Status status2 =
+  Intersection3D::Status status2 =
       (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
-          ? Intersection::Status::onSurface
-          : Intersection::Status::reachable;
+          ? Intersection3D::Status::onSurface
+          : Intersection3D::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
-    status2 = Intersection::Status::missed;
+    status2 = Intersection3D::Status::missed;
   }
 
   const auto& tf = transform(gctx);
   // Set the intersection
-  Intersection first(tf * solution1, qe.first, status1);
-  Intersection second(tf * solution2, qe.second, status2);
+  Intersection3D first(tf * solution1, qe.first, status1);
+  Intersection3D second(tf * solution2, qe.second, status2);
   SurfaceIntersection cIntersection(first, this);
   // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection::Status::missed or
-                (status1 == Intersection::Status::missed and
-                 status2 == Intersection::Status::missed);
+  bool check1 = status1 != Intersection3D::Status::missed or
+                (status1 == Intersection3D::Status::missed and
+                 status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
   if ((check1 and qe.first * qe.first < qe.second * qe.second) or
-      status2 == Intersection::Status::missed) {
+      status2 == Intersection3D::Status::missed) {
     // And add the alternative
     if (qe.solutions > 1) {
       cIntersection.alternative = second;

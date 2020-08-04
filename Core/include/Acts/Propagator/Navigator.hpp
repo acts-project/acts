@@ -541,7 +541,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus =
         stepper.updateSurfaceStatus(state.stepping, *surface, true);
-    if (surfaceStatus == Intersection::Status::onSurface) {
+    if (surfaceStatus == Intersection3D::Status::onSurface) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -633,7 +633,7 @@ class Navigator {
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
-      if (surfaceStatus == Intersection::Status::reachable) {
+      if (surfaceStatus == Intersection3D::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Surface reachable, step size updated to ";
@@ -792,7 +792,7 @@ class Navigator {
       // Try to step towards it
       auto layerStatus =
           stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
-      if (layerStatus == Intersection::Status::reachable) {
+      if (layerStatus == Intersection3D::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Layer reachable, step size updated to ";
@@ -947,7 +947,7 @@ class Navigator {
       // Step towards the boundary surfrace
       auto boundaryStatus =
           stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
-      if (boundaryStatus == Intersection::Status::reachable) {
+      if (boundaryStatus == Intersection3D::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Boundary reachable, step size updated to ";
@@ -1260,7 +1260,7 @@ class Navigator {
       auto targetStatus = stepper.updateSurfaceStatus(
           state.stepping, *state.navigation.targetSurface, true);
       // the only advance could have been to the target
-      if (targetStatus == Intersection::Status::onSurface) {
+      if (targetStatus == Intersection3D::Status::onSurface) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
         debugLog(state, [&] {
