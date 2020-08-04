@@ -536,19 +536,33 @@ class Logger {
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
 };
 
+/// @brief Class that contains (but doesn't own) a logger instance. Is callable
+/// so can be used with the logging macros.
 class LoggerWrapper {
  public:
-  explicit LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
+  LoggerWrapper() = delete;
 
-  bool doPrint(const Logging::Level& lvl) const {
-    return m_logger->doPrint(lvl);
-  }
+  /// @brief Constructor ensuring a logger instance is given
+  ///
+  /// @param logger
+  explicit LoggerWrapper(const Logger& logger);
 
-  Logging::OutStream log(const Logging::Level& lvl) const {
-    return m_logger->log(lvl);
-  }
+  /// Directly expose whether the contained logger will print at a level.
+  ///
+  /// @param lvl The level to check
+  /// @return Whether to print at this level or not.
+  bool doPrint(const Logging::Level& lvl) const;
 
-  const Logger& operator()() const { return *m_logger; }
+  /// Add a logging message at a given level
+  /// @param lvl The level to print at
+  /// @return Accumulating output stream.
+  Logging::OutStream log(const Logging::Level& lvl) const;
+
+  /// Call operator that returns the contained logger instance.
+  /// Enables using the logging macros `ACTS_*` when an instance of this class
+  /// is assigned to a local variable `logger`.
+  /// @return Reference to the logger instance.
+  const Logger& operator()() const;
 
  private:
   const Logger* m_logger;

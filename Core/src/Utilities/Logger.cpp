@@ -8,9 +8,29 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cassert>
+
 namespace Acts {
 
+LoggerWrapper::LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
+
+bool LoggerWrapper::doPrint(const Logging::Level& lvl) const {
+  assert(m_logger != nullptr);
+  return m_logger->doPrint(lvl);
+}
+
+Logging::OutStream LoggerWrapper::log(const Logging::Level& lvl) const {
+  assert(m_logger != nullptr);
+  return m_logger->log(lvl);
+}
+
+const Logger& LoggerWrapper::operator()() const {
+  assert(m_logger != nullptr);
+  return *m_logger;
+}
+
 namespace Logging {
+
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
  public:
