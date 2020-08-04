@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
       rSurface);
 
-  KalmanFitter kFitter(rPropagator, std::move(kfLogger));
+  KalmanFitter kFitter(rPropagator);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);

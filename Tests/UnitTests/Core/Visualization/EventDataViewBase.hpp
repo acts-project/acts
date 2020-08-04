@@ -257,12 +257,12 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   using Smoother = GainMatrixSmoother;
   using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
-  KalmanFitter kFitter(rPropagator,
-                       getDefaultLogger("KalmanFilter", Logging::WARNING));
+  KalmanFitter kFitter(rPropagator);
 
+  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
   KalmanFitterOptions<VoidOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, VoidOutlierFinder(), getDummyLogger(),
-      rSurface);
+      tgContext, mfContext, calContext, VoidOutlierFinder(),
+      LoggerWrapper{*logger}, rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
