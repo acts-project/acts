@@ -425,8 +425,9 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // forward material test
   const auto& covfwdResult = prop.propagate(start, fwdOptions).value();
 
-  BOOST_TEST(cov.determinant() <=
-             covfwdResult.endParameters->covariance().value().determinant());
+  BOOST_CHECK_LE(
+      cov.determinant(),
+      covfwdResult.endParameters->covariance().value().determinant());
 }
 
 // This test case checks that no segmentation fault appears

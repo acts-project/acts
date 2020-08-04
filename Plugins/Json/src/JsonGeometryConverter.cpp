@@ -20,6 +20,7 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -321,6 +322,13 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   Acts::ISurfaceMaterial* sMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
+  for (auto& [key, value] : material.items()) {
+    if (key == m_cfg.transfokeys and not value.empty()) {
+      bUtility = Acts::BinUtility(
+          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      break;
+    }
+  }
   // Convert the material
   Acts::MaterialPropertiesMatrix mpMatrix;
   // Structured binding
@@ -354,6 +362,13 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
+  for (auto& [key, value] : material.items()) {
+    if (key == m_cfg.transfokeys and not value.empty()) {
+      bUtility = Acts::BinUtility(
+          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      break;
+    }
+  }
   // Convert the material
   std::vector<std::vector<float>> mmat;
   // Structured binding
@@ -662,7 +677,7 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
     }
   }
   // add the bin utility
-  if (bUtility != nullptr) {
+  if (bUtility != nullptr && !bUtility->binningData().empty()) {
     std::vector<std::string> binkeys = {m_cfg.bin0key, m_cfg.bin1key};
     // loop over dimensions and write
     auto& binningData = bUtility->binningData();
@@ -687,6 +702,16 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
         binj.push_back(minMax);
       }
       smj[binkeys[ibin]] = binj;
+    }
+    if (bUtility->transform() != nullptr) {
+      std::vector<double> transfo;
+      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          transfo.push_back(transfo_matrix(j, i));
+        }
+      }
+      smj[m_cfg.transfokeys] = transfo;
     }
   }
   return smj;
@@ -777,7 +802,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
     }
   }
   // add the bin utility
-  if (bUtility != nullptr) {
+  if (bUtility != nullptr && !bUtility->binningData().empty()) {
     std::vector<std::string> binkeys = {m_cfg.bin0key, m_cfg.bin1key,
                                         m_cfg.bin2key};
     // loop over dimensions and write
@@ -803,6 +828,16 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
         binj.push_back(minMax);
       }
       smj[binkeys[ibin]] = binj;
+    }
+    if (bUtility->transform() != nullptr) {
+      std::vector<double> transfo;
+      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          transfo.push_back(transfo_matrix(j, i));
+        }
+      }
+      smj[m_cfg.transfokeys] = transfo;
     }
   }
   return smj;
@@ -889,6 +924,23 @@ Acts::BinUtility Acts::JsonGeometryConverter::jsonToBinUtility(
   return Acts::BinUtility();
 }
 
+/// Create the local to global transform
+Acts::Transform3D Acts::JsonGeometryConverter::jsonToTransform(
+    const json& transfo) {
+  Transform3D transform;
+  int i = 0;
+  int j = 0;
+  for (auto& element : transfo) {
+    transform(j, i) = element;
+    j++;
+    if (j == 4) {
+      i++;
+      j = 0;
+    }
+  }
+  return transform;
+}
+
 Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
     const Acts::Surface& surface) {
   Acts::BinUtility bUtility;
@@ -900,6 +952,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
       dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
   const Acts::AnnulusBounds* annulusBounds =
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
+  const Acts::RectangleBounds* rectangleBounds =
+      dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
 
   if (radialBounds != nullptr) {
     bUtility += BinUtility(1,
@@ -910,6 +964,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
                            Acts::open, Acts::binR);
+    return bUtility;
   }
   if (cylinderBounds != nullptr) {
     bUtility +=
@@ -923,6 +978,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
         BinUtility(1, -1 * cylinderBounds->get(CylinderBounds::eHalfLengthZ),
                    cylinderBounds->get(CylinderBounds::eHalfLengthZ),
                    Acts::open, Acts::binZ);
+    return bUtility;
   }
   if (annulusBounds != nullptr) {
     bUtility += BinUtility(1, annulusBounds->get(AnnulusBounds::eMinPhiRel),
@@ -930,7 +986,19 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
                            Acts::closed, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
                            Acts::open, Acts::binR);
+    return bUtility;
   }
+  if (rectangleBounds != nullptr) {
+    bUtility += BinUtility(1, rectangleBounds->get(RectangleBounds::eMinX),
+                           rectangleBounds->get(RectangleBounds::eMaxX),
+                           Acts::open, Acts::binX);
+    bUtility += BinUtility(1, rectangleBounds->get(RectangleBounds::eMinY),
+                           rectangleBounds->get(RectangleBounds::eMaxY),
+                           Acts::open, Acts::binY);
+    return bUtility;
+  }
+  ACTS_INFO(
+      "No corresponding bound found for the surface : " << surface.name());
   return bUtility;
 }
 
@@ -955,6 +1023,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
         BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                    cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                    Acts::open, Acts::binZ);
+    return bUtility;
   } else if (cuBounds != nullptr) {
     bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
@@ -965,6 +1034,9 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
     bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            Acts::open, Acts::binZ);
+    return bUtility;
   }
+  ACTS_INFO(
+      "No corresponding bound found for the volume : " << volume.volumeName());
   return bUtility;
 }

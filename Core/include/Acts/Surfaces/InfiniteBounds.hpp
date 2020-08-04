@@ -39,13 +39,6 @@ class InfiniteBounds : public SurfaceBounds {
     return true;
   }
 
-  /// Minimal distance calculation
-  /// ignores input parameter
-  /// @return always 0. (should be -NaN)
-  double distanceToBoundary(const Vector2D& /*position*/) const final {
-    return 0;
-  }
-
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& os) const final {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;

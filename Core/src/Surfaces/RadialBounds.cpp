@@ -34,13 +34,6 @@ bool Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
                          Vector2D(get(eMaxR), get(eHalfPhiSector)));
 }
 
-double Acts::RadialBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(get(eMinR), -get(eHalfPhiSector)),
-      Vector2D(get(eMaxR), get(eHalfPhiSector)));
-}
-
 std::vector<Acts::Vector2D> Acts::RadialBounds::vertices(
     unsigned int lseg) const {
   return detail::VerticesHelper::circularVertices(
