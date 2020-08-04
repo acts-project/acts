@@ -111,17 +111,6 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsProperties) {
   BOOST_CHECK(
       !cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance));
 
-  /// test for distanceToBoundary
-  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(origin), 0.5,
-                  1e-6);  // fail
-  CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(beyondEnd), 10.0,
-                  1e-6);  // pass
-  double sinPiBy8 = std::sin(M_PI / 8.);
-  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(atPi), sinPiBy8,
-                  1e-6);  // pass
-  CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(origin), 0.5,
-                  1e-6);  // fail
-
   /// test for r()
   CHECK_CLOSE_REL(cylinderBoundsObject.get(CylinderBounds::eR), nominalRadius,
                   1e-6);

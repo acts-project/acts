@@ -51,15 +51,6 @@ bool Acts::DiscTrapezoidBounds::inside(
                                                vertices);
 }
 
-double Acts::DiscTrapezoidBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                         {get(eHalfLengthXmaxR), get(eMaxR)},
-                         {-get(eHalfLengthXmaxR), get(eMaxR)},
-                         {-get(eHalfLengthXminR), get(eMinR)}};
-  return BoundaryCheck(true).distance(toLocalCartesian(lposition), vertices);
-}
-
 std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
   Vector2D cAxis(std::cos(get(eAveragePhi)), std::sin(get(eAveragePhi)));
