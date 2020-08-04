@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   Vector3D direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
-  Intersection expectedIntersect{Vector3D{1, 1, 2}, 99.,
-                                 Intersection::Status::reachable};
+  Intersection3D expectedIntersect{Vector3D{1, 1, 2}, 99.,
+                                   Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   CHECK_CLOSE_ABS(sfIntersection.intersection.position,
                   expectedIntersect.position, 1e-9);

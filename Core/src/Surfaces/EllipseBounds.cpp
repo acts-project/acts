@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 

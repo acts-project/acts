@@ -116,7 +116,7 @@ inline SurfaceIntersection DiscSurface::intersect(
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction);
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection::Status::unreachable and bcheck and
+  if (intersection.status != Intersection3D::Status::unreachable and bcheck and
       m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
@@ -128,10 +128,10 @@ inline SurfaceIntersection DiscSurface::intersect(
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_R];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                            tolerance)) {
-        intersection.status = Intersection::Status::missed;
+        intersection.status = Intersection3D::Status::missed;
       }
     } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
-      intersection.status = Intersection::Status::missed;
+      intersection.status = Intersection3D::Status::missed;
     }
   }
   return {intersection, this};

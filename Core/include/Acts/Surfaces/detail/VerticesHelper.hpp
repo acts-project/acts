@@ -93,7 +93,6 @@ std::vector<Vector2D> circularVertices(double innerR, double outerR,
                                        double avgPhi = 0.,
                                        double halfPhi = M_PI,
                                        unsigned int lseg = 1);
-
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
 /// @tparam vertex_container_t is an iterable container
