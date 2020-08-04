@@ -249,6 +249,10 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      if (result.finished) {
+        return;
+      }
+
       ACTS_VERBOSE("KalmanFitter step");
 
       // This following is added due to the fact that the navigation
@@ -288,7 +292,8 @@ class KalmanFitter {
             ACTS_ERROR("Error in forward filter: " << res.error());
             result.result = res.error();
           }
-        } else if (state.stepping.navDir == backward) {
+        } else if (state.stepping.navDir == backward and
+                   result.forwardFiltered) {
           ACTS_VERBOSE("Perform backward filter step");
           auto res = backwardFilter(surface, state, stepper, result);
           if (!res.ok()) {
@@ -332,35 +337,51 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if ((result.smoothed or state.stepping.navDir == backward) and
-          targetReached(state, stepper, *targetSurface) and
-          not result.finished) {
-        ACTS_VERBOSE("Completing");
-        // Transport & bind the parameter to the final surface
-        auto fittedState = stepper.boundState(state.stepping, *targetSurface);
-        // Assign the fitted parameters
-        result.fittedParameters = std::get<BoundParameters>(fittedState);
-        // Break the navigation for stopping the Propagation
-        state.navigation.navigationBreak = true;
+      if (result.smoothed or state.stepping.navDir == backward) {
+        if (targetSurface == nullptr) {
+          // If no target surface provided:
+          // -> Return an error when using backward filtering mode
+          // -> Fitting is finished here
+          if (backwardFiltering) {
+            ACTS_ERROR(
+                "The target surface needed for aborting backward propagation "
+                "is not provided");
+            result.result =
+                Result<void>(KalmanFitterError::BackwardUpdateFailed);
+          } else {
+            ACTS_VERBOSE(
+                "No target surface set. Completing without fitted track "
+                "parameter");
+            // Remember the track fitting is done
+            result.finished = true;
+          }
+        } else if (targetReached(state, stepper, *targetSurface)) {
+          ACTS_VERBOSE("Completing with fitted track parameter");
+          // Transport & bind the parameter to the final surface
+          auto fittedState = stepper.boundState(state.stepping, *targetSurface);
+          // Assign the fitted parameters
+          result.fittedParameters = std::get<BoundParameters>(fittedState);
 
-        // Reset smoothed status of states missed in backward filtering
-        if (backwardFiltering) {
-          result.fittedStates.applyBackwards(
-              result.trackTip, [&](auto trackState) {
-                auto fSurface = &trackState.referenceSurface();
-                auto surface_it = std::find_if(
-                    result.passedAgainSurfaces.begin(),
-                    result.passedAgainSurfaces.end(),
-                    [=](const Surface* s) { return s == fSurface; });
-                if (surface_it == result.passedAgainSurfaces.end()) {
-                  // If backward filtering missed this surface, then there is
-                  // no smoothed parameter
-                  trackState.data().ismoothed = detail_lt::IndexData::kInvalid;
-                }
-              });
+          // Reset smoothed status of states missed in backward filtering
+          if (backwardFiltering) {
+            result.fittedStates.applyBackwards(
+                result.trackTip, [&](auto trackState) {
+                  auto fSurface = &trackState.referenceSurface();
+                  auto surface_it = std::find_if(
+                      result.passedAgainSurfaces.begin(),
+                      result.passedAgainSurfaces.end(),
+                      [=](const Surface* s) { return s == fSurface; });
+                  if (surface_it == result.passedAgainSurfaces.end()) {
+                    // If backward filtering missed this surface, then there is
+                    // no smoothed parameter
+                    trackState.data().ismoothed =
+                        detail_lt::IndexData::kInvalid;
+                  }
+                });
+          }
+          // Remember the track fitting is done
+          result.finished = true;
         }
-        // Remember the track fitting is done
-        result.finished = true;
       }
     }
 
@@ -871,7 +892,7 @@ class KalmanFitter {
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const result_t& result) const {
-      if (!result.result.ok()) {
+      if (!result.result.ok() or result.finished) {
         return true;
       }
       return false;
@@ -958,7 +979,7 @@ class KalmanFitter {
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
     if (!kalmanResult.result.ok()) {
@@ -1056,7 +1077,7 @@ class KalmanFitter {
     /// It could happen that the fit ends in zero processed states.
     /// The result gets meaningless so such case is regarded as fit failure.
     if (kalmanResult.result.ok() and not kalmanResult.processedStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::PropagationInVain);
+      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
     }
 
     if (!kalmanResult.result.ok()) {
