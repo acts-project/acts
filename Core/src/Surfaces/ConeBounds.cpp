@@ -60,14 +60,6 @@ bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                          Vector2D(rphiHalf, get(eMaxZ)));
 }
 
-double Acts::ConeBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
-  return BoundaryCheck(true).distance(shifted(lposition),
-                                      Vector2D(-rphiHalf, get(eMinZ)),
-                                      Vector2D(rphiHalf, get(eMaxZ)));
-}
-
 std::ostream& Acts::ConeBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

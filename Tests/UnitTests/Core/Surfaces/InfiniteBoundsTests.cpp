@@ -37,10 +37,6 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
   const BoundaryCheck anyBoundaryCheck(true);
   BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
 
-  /// test for distanceToBoundary
-  BOOST_TEST_MESSAGE("Perhaps the following should be inf?");
-  BOOST_CHECK_EQUAL(infiniteBoundsObject.distanceToBoundary(anyVector), 0.);
-
   /// test for dump
   boost::test_tools::output_test_stream dumpOuput;
   infiniteBoundsObject.toStream(dumpOuput);

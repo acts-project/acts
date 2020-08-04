@@ -117,10 +117,6 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   Vector2D origin(0., 0.);
   Vector2D outside(30., 0.);
   Vector2D inSurface(2., 0.0);
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.distanceToBoundary(origin), 2.0,
-                  1e-6);
-  CHECK_CLOSE_REL(DiscTrapezoidBoundsObject.distanceToBoundary(outside), 24.0,
-                  1e-6);
   //
   /// Test dump
   boost::test_tools::output_test_stream dumpOuput;

@@ -95,15 +95,9 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
                     halfY);
   //
   /// Test distanceToBoundary
-  Vector2D origin(0., 0.);
   Vector2D outside(30., 0.);
   Vector2D inRectangle(2., 0.5);
-  CHECK_CLOSE_REL(trapezoidBoundsObject.distanceToBoundary(origin), -2.,
-                  1e-6);  // makes sense
-  CHECK_CLOSE_REL(trapezoidBoundsObject.distanceToBoundary(outside),
-                  std::hypot(2., 24.),
-                  1e-6);  // ok
-  //
+
   /// Test vertices
   std::vector<Vector2D> expectedVertices{
       {1., -2.}, {6., 2.}, {-6., 2.}, {-1., -2.}};
