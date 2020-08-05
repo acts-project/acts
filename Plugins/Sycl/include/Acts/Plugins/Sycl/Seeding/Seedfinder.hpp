@@ -17,52 +17,53 @@
 
 namespace Acts::Sycl {
 
-struct LinCircle {
-  float Zo;
-  float cotTheta;
-  float iDeltaR;
-  float Er;
-  float U;
-  float V;
-};
-
 // store SpacePoint data in float arrays, index them with enum values
 enum eSpacePoint {
-  eX, eY, eZ, eRadius, eVarianceR, eVarianceZ, eSP
+  eX = 0,
+  eY = 1,
+  eZ = 2,
+  eRadius = 3,
+  eVarianceR = 4,
+  eVarianceZ = 5,
+  eSP = 6
 };
 
 // store SeedfinderConfig data in float array, index it with enum values
 enum eConfigData {
-  eDeltaRMin,
-  eDeltaRMax,
-  eCotThetaMax,
-  eCollisionRegionMin,
-  eCollisionRegionMax,
-  eMaxScatteringAngle2,
-  eSigmaScattering,
-  eMinHelixDiameter2,
-  ePT2perRadius,
-  eDeltaInvHelixDiameter,
-  eImpactWeightFactor,
-  eFilterDeltaRMin
-};
-
-// maximize number of bottom and top spacepoints per middle sp (to be able to load data to global buffer)
-enum eMaxData {
-  ePerBottom, ePerTop,
-  eNTrplPerSpBLimit
+  eDeltaRMin = 0,
+  eDeltaRMax = 1,
+  eCotThetaMax = 2,
+  eCollisionRegionMin = 3,
+  eCollisionRegionMax = 4,
+  eMaxScatteringAngle2 = 5,
+  eSigmaScattering = 6,
+  eMinHelixDiameter2 = 7,
+  ePT2perRadius = 8,
+  eDeltaInvHelixDiameter = 9,
+  eImpactWeightFactor = 10,
+  eFilterDeltaRMin = 11,
+  eCompatSeedWeight = 12,
+  eCompatSeedLimit = 13
 };
 
 // store linear circle data in float arrays, index them with enum values
 enum eLinCircle {
-  eZo, eCotTheta, eIDeltaR, eEr, eU, eV, eLIN
+  eZo = 0,
+  eCotTheta = 1,
+  eIDeltaR = 2,
+  eEr = 3,
+  eU = 4,
+  eV = 5,
+  eLIN = 6
 };
 
 void offloadComputations( cl::sycl::queue q,
                           const std::vector<float>& configData,
                           const std::vector<float>& bottomSPs,
                           const std::vector<float>& middleSPs,
-                          const std::vector<float>& topSPs);
+                          const std::vector<float>& topSPs,
+                          std::vector<std::vector<int>>& seedIndices,
+                          std::vector<float>& seedWeight);
 
 void outputPlatforms();
 void testDevice();
@@ -94,11 +95,6 @@ class Seedfinder {
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
-
-  void transformCoordinates(
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
   cl::sycl::queue m_queue;

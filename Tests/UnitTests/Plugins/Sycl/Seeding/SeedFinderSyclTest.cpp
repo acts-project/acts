@@ -23,6 +23,7 @@
 
 // use boost program options for parsing command line arguments
 #include <boost/program_options.hpp>
+#include <string>
 namespace po = boost::program_options;
 
 auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
@@ -106,6 +107,7 @@ auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_
 auto main(int argc, char** argv) -> int {
   bool allgroup(false);
   bool cpu(true);
+  bool matches(false);
   int groups(500);
   try {
     po::options_description optionsDescription("Allowed options");
@@ -115,6 +117,7 @@ auto main(int argc, char** argv) -> int {
       ("platforms,p","List available platforms and devices.")
       ("no_cpu,c","Do not execute code on cpu")
       ("groups,g",po::value<int>(),"Add number of groups to execute on")
+      ("matches,m","Count matches")
     ;
 
     po::variables_map vm;
@@ -127,6 +130,10 @@ auto main(int argc, char** argv) -> int {
 
     if(vm.count("no_cpu") != 0) {  
       cpu = false;
+    }
+
+    if(vm.count("matches") != 0) {
+      matches = true;
     }
 
     if(vm.count("groups") != 0){
@@ -163,8 +170,8 @@ auto main(int argc, char** argv) -> int {
       int group_count = 0;
       auto groupIt = spGroup.begin();
 
+      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
       if(cpu) {
-        std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
         for (; !(groupIt == spGroup.end()); ++groupIt) {
           seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
@@ -206,15 +213,77 @@ auto main(int argc, char** argv) -> int {
 
       std::cout << std::endl;
       std::cout << "----------------------- Time Metric -----------------------" << std::endl;
-      std::cout << std::setw(20) << " Device:" << std::setw(11) << "CPU" << std::setw(11) << "SYCL" << std::endl;
+      std::cout << std::setw(20) << " Device:" << std::setw(11) << "CPU";
+      std::cout << std::setw(11) << "SYCL";
+      std::cout << std::setw(11) << "speedup" << std::endl;
       std::cout << std::setw(20) << " Seedfinding_Time:";
       std::cout << std::setw(11) << std::to_string(cpuTime) << " ";
       std::cout << std::setw(11) << std::to_string(syclTime);
+      std::cout << std::setw(11) << std::to_string(cpuTime/syclTime);
       std::cout << std::endl;
       std::cout << "-----------------------------------------------------------" << std::endl;
 
-    for(const auto *S: spVec) {
+      for(const auto *S: spVec) {
         delete[] S;
+      }
+
+      if(matches) {
+        int nSeed_cpu = 0;
+        for (auto& outVec : seedVector_cpu) {
+          nSeed_cpu += outVec.size();
+        }
+
+        int nSeed_cuda = 0;
+        for (auto& outVec : seedVector_sycl) {
+          nSeed_cuda += outVec.size();
+        }
+
+        std::cout << "Number of Seeds (CPU | CUDA): " << nSeed_cpu << " | "
+                  << nSeed_cuda << std::endl;
+
+        int nMatch = 0;
+
+        for (size_t i = 0; i < seedVector_cpu.size(); i++) {
+          auto regionVec_cpu = seedVector_cpu[i];
+          auto regionVec_cuda = seedVector_sycl[i];
+
+          std::vector<std::vector<SpacePoint>> seeds_cpu;
+          std::vector<std::vector<SpacePoint>> seeds_cuda;
+
+          // for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
+          for (auto sd : regionVec_cpu) {
+            std::vector<SpacePoint> seed_cpu;
+            seed_cpu.push_back(*(sd.sp()[0]));
+            seed_cpu.push_back(*(sd.sp()[1]));
+            seed_cpu.push_back(*(sd.sp()[2]));
+
+            seeds_cpu.push_back(seed_cpu);
+          }
+
+          for (auto sd : regionVec_cuda) {
+            std::vector<SpacePoint> seed_cuda;
+            seed_cuda.push_back(*(sd.sp()[0]));
+            seed_cuda.push_back(*(sd.sp()[1]));
+            seed_cuda.push_back(*(sd.sp()[2]));
+
+            seeds_cuda.push_back(seed_cuda);
+          }
+
+          for (auto seed : seeds_cpu) {
+            for (auto other : seeds_cuda) {
+              if (seed[0] == other[0] && seed[1] == other[1] && seed[2] == other[2]) {
+                nMatch++;
+                break;
+              }
+            }
+          }
+        }
+
+        if (cpu) {
+          std::cout << nMatch << " seeds are matched" << std::endl;
+          std::cout << "Matching rate: " << float(nMatch) / nSeed_cpu * 100 << "%"
+                    << std::endl;
+        }
       }
     }
 

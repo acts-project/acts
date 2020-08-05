@@ -2,6 +2,7 @@
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 #include <CL/sycl.hpp>
 #include <iostream>
+#include <numeric>
 #include <vector>
 #include <array>
 #include <exception>
@@ -127,11 +128,15 @@ namespace Acts::Sycl {
     
   }
 
+  class triplet;
+
   void offloadComputations(cl::sycl::queue q,
                           const std::vector<float>& configData,
                           const std::vector<float>& bottomSPs,
                           const std::vector<float>& middleSPs,
-                          const std::vector<float>& topSPs)
+                          const std::vector<float>& topSPs,
+                          std::vector<std::vector<int>>& seedIndices,
+                          std::vector<float>& seedWeight)
     {
 
     // each vector stores data of space points flattened out
@@ -155,27 +160,27 @@ namespace Acts::Sycl {
 
     try {
 
+      using am = sycl::access::mode;
+      using at = sycl::access::target;
+
       // reserve buffers
       sycl::buffer<float,1> configBuf (configData.data(),         sycl::range<1>(configData.size()));
       sycl::buffer<float,1> botSPBuf  (bottomSPs.data(),          sycl::range<1>(bottomSPs.size()));
       sycl::buffer<float,1> midSPBuf  (middleSPs.data(),          sycl::range<1>(middleSPs.size()));
       sycl::buffer<float,1> topSPBuf  (topSPs.data(),             sycl::range<1>(topSPs.size()));
+      sycl::buffer<int,1> numBotCompBuf(numBotCompMid.data(), (sycl::range<1>(M)));
+      sycl::buffer<int,1> numTopCompBuf(numTopCompMid.data(), (sycl::range<1>(M)));
 
+      // duplet search
       {
-        using am = sycl::access::mode;
-        using at = sycl::access::target;
-
         sycl::buffer<int,1> tmpIndBotCompBuf((sycl::range<1>(M*B)));
         sycl::buffer<int,1> tmpIndTopCompBuf((sycl::range<1>(M*T)));
-
-        sycl::buffer<int,1> numBotCompatBuf(numBotCompMid.data(), (sycl::range<1>(M)));
-        sycl::buffer<int,1> numTopCompatBuf(numTopCompMid.data(), (sycl::range<1>(M)));
 
         auto bottom_duplet_search = q.submit([&](sycl::handler &cghandler) {
           // add accessors to buffers
           auto configAcc =        configBuf.get_access<       am::read,           at::constant_buffer>(cghandler);
           auto indBotCompatAcc =  tmpIndBotCompBuf.get_access<am::discard_write,  at::global_buffer>(cghandler);
-          auto numBotCompatAcc =  numBotCompatBuf.get_access< am::atomic,         at::global_buffer>(cghandler);
+          auto numBotCompAcc =    numBotCompBuf.get_access< am::atomic,         at::global_buffer>(cghandler);
           auto botSPAcc =         botSPBuf.get_access<        am::read,           at::global_buffer>(cghandler);
           auto midSPAcc =         midSPBuf.get_access<        am::read,           at::global_buffer>(cghandler);
 
@@ -193,20 +198,19 @@ namespace Acts::Sycl {
                 !(sycl::abs(cotTheta) > configAcc[eCotThetaMax]) &&
                 !(zOrigin < configAcc[eCollisionRegionMin]) &&
                 !(zOrigin > configAcc[eCollisionRegionMax])) {
-              const int ind = numBotCompatAcc[mid].fetch_add(1);
+              const int ind = numBotCompAcc[mid].fetch_add(1);
               indBotCompatAcc[mid * B + ind] = bot;
             }
           });
         });
         bottom_duplet_search.wait();
-
     
         auto top_duplet_search = q.submit([&](sycl::handler &cghandler) {
           // add accessors to buffers
           auto configAcc =        configBuf.get_access<       am::read,           at::constant_buffer>(cghandler);
           auto indTopCompatAcc =  tmpIndTopCompBuf.get_access<am::discard_write,  at::global_buffer>(cghandler);
-          auto numTopCompatAcc =  numTopCompatBuf.get_access< am::atomic,         at::global_buffer>(cghandler);
-          auto numBotCompatAcc =  numBotCompatBuf.get_access< am::read,         at::global_buffer>(cghandler);
+          auto numTopCompatAcc =  numTopCompBuf.get_access< am::atomic,         at::global_buffer>(cghandler);
+          auto numBotCompAcc =  numBotCompBuf.get_access< am::read,         at::global_buffer>(cghandler);
           auto topSPAcc =         topSPBuf.get_access<        am::read,           at::global_buffer>(cghandler);
           auto midSPAcc =         midSPBuf.get_access<        am::read,           at::global_buffer>(cghandler);
           
@@ -214,7 +218,7 @@ namespace Acts::Sycl {
             const int mid = (idx / T);
             const int top = (idx % T);
 
-            if(numBotCompatAcc[mid] != 0) {
+            if(numBotCompAcc[mid] != 0) {
               const float deltaR = topSPAcc[top * int(eSP) + int(eRadius)] - midSPAcc[mid * int(eSP) + int(eRadius)];
               const float cotTheta = (topSPAcc[top * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eZ)]) / deltaR;
               const float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
@@ -234,32 +238,33 @@ namespace Acts::Sycl {
 
         // retrieve results from counting duplets
         {
-          auto nB = numBotCompatBuf.get_access<am::read>();
-          auto nT = numTopCompatBuf.get_access<am::read>();
+          auto nB = numBotCompBuf.get_access<am::read>();
+          auto nT = numTopCompBuf.get_access<am::read>();
 
           for(int i = 1; i < M + 1; ++i){
             sumBotCompPerMid[i] += sumBotCompPerMid[i-1] + nB[i-1];
             sumTopCompPerMid[i] += sumTopCompPerMid[i-1] + nT[i-1];
             sumCombMid[i] += sumCombMid[i-1] + nT[i-1]*nB[i-1];
           }
+
+          edgesBottom = sumBotCompPerMid[M];
+          edgesTop = sumTopCompPerMid[M];
+          edgesCombBotTop = sumCombMid[M];
+
+          if(edgesBottom == 0 || edgesTop == 0) return;
+
+          indBotCompMid.resize(edgesBottom,-1);
+          indTopCompMid.resize(edgesTop,-1);
         }
         
-        edgesBottom = sumBotCompPerMid[M];
-        edgesTop = sumTopCompPerMid[M];
-        edgesCombBotTop = sumCombMid[M];
-
-        if(edgesBottom == 0 || edgesTop == 0) return;
-
-        indBotCompMid.resize(edgesBottom,-1);
-        indTopCompMid.resize(edgesTop,-1);
+        sycl::buffer<int,1> indBotCompBuf (indBotCompMid.data(), sycl::range<1>(edgesBottom));
+        sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
+        sycl::buffer<int,1> sumBotCompBuf (sumBotCompPerMid.data(), sycl::range<1>(M+1));
+        sycl::buffer<int,1> sumTopCompBuf (sumTopCompPerMid.data(), sycl::range<1>(M+1));
+        sycl::buffer<int,1> sumCombBuf    (sumCombMid.data(), sycl::range<1>(M+1));
 
         // copy indices from temporary matrices to final, optimal size vectors
         {
-          sycl::buffer<int,1> indBotCompBuf (indBotCompMid.data(), sycl::range<1>(edgesBottom));
-          sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
-          sycl::buffer<int,1> sumBotCompBuf (sumBotCompPerMid.data(), sycl::range<1>(M+1));
-          sycl::buffer<int,1> sumTopCompBuf (sumTopCompPerMid.data(), sycl::range<1>(M+1));
-
           q.submit([&](sycl::handler &cghandler){
             auto indBotAcc = indBotCompBuf.get_access<am::write, at::global_buffer>(cghandler);
             auto sumBotAcc = sumBotCompBuf.get_access<am::read, at::global_buffer>(cghandler);
@@ -298,186 +303,259 @@ namespace Acts::Sycl {
             });
           });
         }        
-        
-        // print for checking results
-        /*{
-          for(int i = 1; i <= M; ++i) {
-            std::cout << i+1 << '\n';
-            std::cout << "Bottom: ";
-            for(int j = sumBotCompPerMid[i-1]; j < sumBotCompPerMid[i]; ++j){
-              std::cout << indBotCompMid[j] + 1 << " ";
+      } // destroy buffers, data is copied back to host 
+
+      // sort by top indices for later filter algorithm
+      // (ascending indices correspond to ascending radius because of previous sort)
+      {
+        for(int mid = 0; mid < M; ++mid){
+          int sort_begin = sumTopCompPerMid[mid];
+          int sort_end = sumTopCompPerMid[mid+1];
+          if(sort_begin != sort_end)
+          std::sort(indTopCompMid.begin() + sort_begin, indTopCompMid.begin() + sort_end);
+        }
+      }
+    
+      // linear transformation and initial triplet search
+      {
+        sycl::buffer<int,1> indBotCompBuf (indBotCompMid.data(), sycl::range<1>(edgesBottom));
+        sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
+        sycl::buffer<int,1> sumBotCompBuf (sumBotCompPerMid.data(), sycl::range<1>(M+1));
+        sycl::buffer<int,1> sumTopCompBuf (sumTopCompPerMid.data(), sycl::range<1>(M+1));
+        sycl::buffer<int,1> sumCombBuf    (sumCombMid.data(), sycl::range<1>(M+1));
+        sycl::buffer<float,2> linBotBuf((sycl::range<2>(edgesBottom,int(eLIN))));
+        sycl::buffer<float,2> linTopBuf((sycl::range<2>(edgesTop,int(eLIN))));
+        sycl::buffer<float,2> tripletBuf ((sycl::range<2>(edgesCombBotTop,2)));
+
+        // coordinate transformation middle-bottom
+        auto lin_bottom_transform = q.submit([&](sycl::handler &cghandler) {
+          // add accessors to buffers
+          auto indBotAcc =        indBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto sumBotCompAcc =    sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          // auto numBotCompAcc =    numBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto botSPAcc =         botSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+          auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+          auto linBotAcc =        linBotBuf.get_access<       am::discard_write,at::global_buffer>(cghandler);
+
+          cghandler.parallel_for<class transform_coord_bottom>(edgesBottom, [=](sycl::id<1> idx) {
+            // binary search mid space point index -> mid
+            int L = 0, R = M;
+            int mid = 0;
+            while(L < R - 1) {
+              mid = (L + R) / 2;
+              if(idx < sumBotCompAcc[mid]) R = mid;
+              else L = mid;
             }
-            std::cout << '\n';
+            mid = L;
 
-            std::cout << "Top: ";
-            for(int j = sumTopCompPerMid[i-1]; j < sumTopCompPerMid[i]; ++j){
-              std::cout << indTopCompMid[j] + 1 << " ";
-            }
-            std::cout << std::endl;
-          }
-        }*/
+            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
+            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
+            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
+            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
+            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float cosPhiM =     xM / rM;
+            float sinPhiM =     yM / rM;
 
-        sycl::buffer<int,1> topComp2SpFixed ((sycl::range<1>(edgesCombBotTop)));
-        // sycl::buffer<float,1> curvBuf ((sycl::range<1>(edgesCombBotTop)));
-        // sycl::buffer<float,1> impactBuf ((sycl::range<1>(edgesCombBotTop)));
+            // retrieve bottom space point index -> bot
+            int bot = indBotAcc[idx];
+            float deltaX = botSPAcc[bot * int(eSP) + int(eX)] - xM;
+            float deltaY = botSPAcc[bot * int(eSP) + int(eY)] - yM;
+            float deltaZ = botSPAcc[bot * int(eSP) + int(eZ)] - zM;
 
-        // linear transformation 
-        {
-          sycl::buffer<float,1> linBotBuf((sycl::range<1>(edgesBottom*int(eLIN))));
-          sycl::buffer<float,1> linTopBuf((sycl::range<1>(edgesTop*int(eLIN))));
-          sycl::buffer<int,1> indBotCompBuf (indBotCompMid.data(), sycl::range<1>(edgesBottom));
-          sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
-          sycl::buffer<int,1> sumBotCompBuf (sumBotCompPerMid.data(), sycl::range<1>(M+1));
-          sycl::buffer<int,1> sumTopCompBuf (sumTopCompPerMid.data(), sycl::range<1>(M+1));
+            float x = deltaX * cosPhiM + deltaY * sinPhiM;
+            float y = deltaY * cosPhiM - deltaX * sinPhiM;
+            float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+            float iDeltaR = sycl::sqrt(iDeltaR2);
+            float cot_theta = -(deltaZ * iDeltaR);
 
-          auto lin_bottom_transform = q.submit([&](sycl::handler &cghandler) {
-            // add accessors to buffers
-            auto indBotAcc =        indBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto sumBotCompAcc =    sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto numBotCompatAcc =  numBotCompatBuf.get_access< am::read,         at::global_buffer>(cghandler);
-            auto botSPAcc =         botSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
-            auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
-            auto linBotAcc =        linBotBuf.get_access<       am::discard_write,at::global_buffer>(cghandler);
-
-            cghandler.parallel_for<class transform_coord_bottom_v2>(edgesBottom, [=](sycl::id<1> idx) {
-              // binary search mid space point index -> mid
-              int L = 0, R = M;
-              int mid = 0;
-              while(L < R - 1) {
-                mid = (L + R) / 2;
-                if(idx < sumBotCompAcc[mid]) R = mid;
-                else L = mid;
-              }
-              mid = L;
-
-              float xM =          midSPAcc[mid * int(eSP) + int(eX)];
-              float yM =          midSPAcc[mid * int(eSP) + int(eY)];
-              float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
-              float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-              float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
-              float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
-              float cosPhiM =     xM / rM;
-              float sinPhiM =     yM / rM;
-
-              // retrieve bottom space point index -> bot
-              int bot = indBotAcc[idx];
-              float deltaX = botSPAcc[bot * int(eSP) + int(eX)] - xM;
-              float deltaY = botSPAcc[bot * int(eSP) + int(eY)] - yM;
-              float deltaZ = botSPAcc[bot * int(eSP) + int(eZ)] - zM;
-
-              float x = deltaX * cosPhiM + deltaY * sinPhiM;
-              float y = deltaY * cosPhiM - deltaX * sinPhiM;
-              float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-              float iDeltaR = sycl::sqrt(iDeltaR2);
-              float cot_theta = -(deltaZ * iDeltaR);
-
-              linBotAcc[idx * int(eLIN) + int(eCotTheta)] = cot_theta;
-              linBotAcc[idx * int(eLIN) + int(eZo)] = zM - rM * cot_theta;
-              linBotAcc[idx * int(eLIN) + int(eIDeltaR)] = iDeltaR;
-              linBotAcc[idx * int(eLIN) + int(eU)] = x * iDeltaR2;
-              linBotAcc[idx * int(eLIN) + int(eV)] = y * iDeltaR2;
-              linBotAcc[idx * int(eLIN) + int(eEr)] = ((varianceZM + botSPAcc[bot * int(eSP) + int(eVarianceZ)]) +
-              (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * int(eSP) + int(eVarianceR)])) * iDeltaR2;
-            });
+            linBotAcc[idx][int(eCotTheta)] = cot_theta;
+            linBotAcc[idx][int(eZo)] = zM - rM * cot_theta;
+            linBotAcc[idx][int(eIDeltaR)] = iDeltaR;
+            linBotAcc[idx][int(eU)] = x * iDeltaR2;
+            linBotAcc[idx][int(eV)] = y * iDeltaR2;
+            linBotAcc[idx][int(eEr)] = ((varianceZM + botSPAcc[bot * int(eSP) + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * int(eSP) + int(eVarianceR)])) * iDeltaR2;
           });
+        });
 
-          auto lin_top_transform = q.submit([&](sycl::handler &cghandler) {
+        lin_bottom_transform.wait();
+        // coordinate transformation middle-top
+        auto lin_top_transform = q.submit([&](sycl::handler &cghandler) {
 
-            // add accessors to buffers
-            auto indTopAcc =        indTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto sumTopCompAcc =    sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto numTopCompatAcc =  numTopCompatBuf.get_access< am::read,         at::global_buffer>(cghandler);
-            auto topSPAcc =         topSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
-            auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
-            auto linTopAcc =        linTopBuf.get_access<       am::discard_write,at::global_buffer>(cghandler);
+          // add accessors to buffers
+          auto indTopAcc =        indTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto sumTopCompAcc =    sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          // auto numTopCompatAcc =  numTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto topSPAcc =         topSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+          auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+          auto linTopAcc =        linTopBuf.get_access<       am::discard_write,at::global_buffer>(cghandler);
 
-            cghandler.parallel_for<class transform_coord_top_v2>(edgesTop, [=](sycl::id<1> idx) {
-              // binary search mid space point index -> mid
-              int L = 0, R = M;
-              int mid = 0;
-              while(L < R - 1) {
-                mid = (L + R) / 2;
-                if(idx < sumTopCompAcc[mid]) R = mid;
-                else L = mid;
-              }
-              mid = L;
+          cghandler.parallel_for<class transform_coord_top>(edgesTop, [=](sycl::id<1> idx) {
+            // binary search mid space point index -> mid
+            int L = 0, R = M;
+            int mid = 0;
+            while(L < R - 1) {
+              mid = (L + R) / 2;
+              if(idx < sumTopCompAcc[mid]) R = mid;
+              else L = mid;
+            }
+            mid = L;
 
-              float xM =          midSPAcc[mid * int(eSP) + int(eX)];
-              float yM =          midSPAcc[mid * int(eSP) + int(eY)];
-              float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
-              float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-              float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
-              float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
-              float cosPhiM =     xM / rM;
-              float sinPhiM =     yM / rM;
+            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
+            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
+            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
+            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
+            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float cosPhiM =     xM / rM;
+            float sinPhiM =     yM / rM;
 
-              // retrieve top space point index
-              int top = indTopAcc[idx];
-              float deltaX = topSPAcc[top * int(eSP) + int(eX)] - xM;
-              float deltaY = topSPAcc[top * int(eSP) + int(eY)] - yM;
-              float deltaZ = topSPAcc[top * int(eSP) + int(eZ)] - zM;
+            // retrieve top space point index
+            int top = indTopAcc[idx];
+            float deltaX = topSPAcc[top * int(eSP) + int(eX)] - xM;
+            float deltaY = topSPAcc[top * int(eSP) + int(eY)] - yM;
+            float deltaZ = topSPAcc[top * int(eSP) + int(eZ)] - zM;
 
-              float x = deltaX * cosPhiM + deltaY * sinPhiM;
-              float y = deltaY * cosPhiM - deltaX * sinPhiM;
-              float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-              float iDeltaR = sycl::sqrt(iDeltaR2);
-              float cot_theta = deltaZ * iDeltaR;
+            float x = deltaX * cosPhiM + deltaY * sinPhiM;
+            float y = deltaY * cosPhiM - deltaX * sinPhiM;
+            float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+            float iDeltaR = sycl::sqrt(iDeltaR2);
+            float cot_theta = deltaZ * iDeltaR;
 
-              linTopAcc[idx * int(eLIN) + int(eCotTheta)] = cot_theta;
-              linTopAcc[idx * int(eLIN) + int(eZo)] = zM - rM * cot_theta;
-              linTopAcc[idx * int(eLIN) + int(eIDeltaR)] = iDeltaR;
-              linTopAcc[idx * int(eLIN) + int(eU)] = x * iDeltaR2;
-              linTopAcc[idx * int(eLIN) + int(eV)] = y * iDeltaR2;
-              linTopAcc[idx * int(eLIN) + int(eEr)] = ((varianceZM + topSPAcc[top * int(eSP) + int(eVarianceZ)]) +
-              (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * int(eSP) + int(eVarianceR)])) * iDeltaR2;
-            });
+            linTopAcc[idx][int(eCotTheta)] = cot_theta;
+            linTopAcc[idx][int(eZo)] = zM - rM * cot_theta;
+            linTopAcc[idx][int(eIDeltaR)] = iDeltaR;
+            linTopAcc[idx][int(eU)] = x * iDeltaR2;
+            linTopAcc[idx][int(eV)] = y * iDeltaR2;
+            linTopAcc[idx][int(eEr)] = ((varianceZM + topSPAcc[top * int(eSP) + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * int(eSP) + int(eVarianceR)])) * iDeltaR2;
           });
+        });
+        lin_top_transform.wait();  
 
-          lin_bottom_transform.wait();
-          lin_top_transform.wait();
+        const float MIN = -100000;
 
-          // print for checking results
-          /*{
-            auto linBot = linBotBuf.get_access<am::read>();
-            auto linTop = linTopBuf.get_access<am::read>();
-            for(int i = 0; i < M; ++i) {
-              std::cout << i+1 << '\n';
-              std::cout << "Bottom linear: \n";
-              for(int j = ((i>0)? sumBotCompPerMid[i-1] : 0) *int(eLIN) ; j < sumBotCompPerMid[i] * int(eLIN); ++j){
-                std::cout << linBot[j] << " ";
-                if(j%6==5) std::cout << "\n";
-              }
-              std::cout << "Top linear: \n";
-              for(int j = ((i>0)? sumTopCompPerMid[i-1] : 0) *int(eLIN) ; j < sumTopCompPerMid[i] * int(eLIN); ++j){
-                std::cout << linTop[j] << " ";
-                if(j%6==5) std::cout << "\n";
+        int zero = 0;
+        sycl::buffer<int,1> countTopBuf(&zero, 1);
+
+        auto triplet_search = q.submit([&](sycl::handler &cghandler) {
+          auto sumCombAcc =     sumCombBuf.get_access<      am::read,         at::global_buffer>(cghandler);
+          auto sumTopCompAcc =  sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto sumBotCompAcc =  sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto numTopAcc =      numTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto indBotAcc =      indBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto indTopAcc =      indTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto linBotAcc =      linBotBuf.get_access<       am::read,         at::global_buffer>(cghandler);
+          auto linTopAcc =      linTopBuf.get_access<       am::read,         at::global_buffer>(cghandler);
+          auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+          auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(cghandler);
+
+          auto countTopAcc =    countTopBuf.get_access<     am::atomic,       at::global_buffer>(cghandler);
+          auto tripletAcc =     tripletBuf.get_access<      am::discard_write,at::global_buffer>(cghandler);
+
+          cghandler.parallel_for<triplet>(edgesCombBotTop, [=](sycl::id<1> idx){
+            // binary search mid space point index -> mid
+            int L = 0, R = M;
+            int mid = 0;
+            while(L < R - 1) {
+              mid = (L + R) / 2;
+              if(idx < sumCombAcc[mid]) R = mid;
+              else L = mid;
+            }
+            mid = L;
+
+            // initialize buffer
+            tripletAcc[idx][0] = MIN;
+            tripletAcc[idx][1] = MIN;
+
+            int ib = sumBotCompAcc[mid] + ((idx - sumCombAcc[mid]) / numTopAcc[mid]);
+            int it = sumTopCompAcc[mid] + ((idx - sumCombAcc[mid]) % numTopAcc[mid]);
+
+            int bot = indBotAcc[ib];
+            int top = indTopAcc[it];
+
+            const float Zob =         linBotAcc[ib][int(eZo)];
+            const float Vb =          linBotAcc[ib][int(eV)];
+            const float Ub =          linBotAcc[ib][int(eU)];
+            const float Erb =         linBotAcc[ib][int(eEr)];
+            const float cotThetab =   linBotAcc[ib][int(eCotTheta)];
+            const float iDeltaRb =    linBotAcc[ib][int(eIDeltaR)];
+
+            const float Zot =         linTopAcc[it][int(eZo)];
+            const float Vt =          linTopAcc[it][int(eV)];
+            const float Ut =          linTopAcc[it][int(eU)];
+            const float Ert =         linTopAcc[it][int(eEr)];
+            const float cotThetat =   linTopAcc[it][int(eCotTheta)];
+            const float iDeltaRt =    linTopAcc[it][int(eIDeltaR)];
+
+            const float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
+            const float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            const float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+
+            float iSinTheta2 = (1. + cotThetab * cotThetab);
+            float scatteringInRegion2 = configAcc[eMaxScatteringAngle2] * iSinTheta2;
+            scatteringInRegion2 *= configAcc[eSigmaScattering] * configAcc[eSigmaScattering];
+            float error2 = Ert + Erb + 2 * (cotThetab * cotThetat *
+              varianceRM + varianceZM) * iDeltaRb * iDeltaRt;
+            float deltaCotTheta = cotThetab - cotThetat;
+            float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+            deltaCotTheta = sycl::abs(deltaCotTheta);
+            float error = sycl::sqrt(error2);
+            float dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
+
+            float dU = Ut - Ub;
+            if((!(deltaCotTheta2 - error2 > 0) || dCotThetaMinusError2 <= scatteringInRegion2)
+                && dU != 0.) {
+              float A = (Vt - Vb) / dU;
+              float S2 = 1. + A * A;
+              float B = Vb - A * Ub;
+              float B2 = B * B;
+
+              float iHelixDiameter2 = B2 / S2;
+              float pT2scatter = 4 * iHelixDiameter2 * configAcc[ePT2perRadius];
+              float p2scatter = pT2scatter * iSinTheta2;
+
+              if(!(S2 < B2 * configAcc[eMinHelixDiameter2]) && 
+                  !((deltaCotTheta2 - error2 > 0) &&
+                  (dCotThetaMinusError2 > p2scatter * configAcc[eSigmaScattering] * configAcc[eSigmaScattering]))) {
+                int c = countTopAcc[0].fetch_add(1);
+                float Im = sycl::abs((A - B * rM) * rM);
+                tripletAcc[idx][0] = B / std::sqrt(S2);
+                tripletAcc[idx][1] = Im;
               }
             }
-            std::cout << std::endl;
-          }*/       
+          });
+        });
+        triplet_search.wait();
 
-          std::cout << edgesCombBotTop << std::endl;
+        int seedCounter = 0;
+        auto cc = countTopBuf.get_access<am::read>();
+        const int maxTriplets = cc[0]+1;
 
-          // triplet search
-          sycl::buffer<int,1> sumCombBuf (sumCombMid.data(), sycl::range<1>(M+1));
-          sycl::buffer<int,1> numTopCompBuf (numTopCompMid.data(), sycl::range<1>(M));
-          
-          auto triplet_search = q.submit([&](sycl::handler &cghandler) {
-            auto sumCombAcc =     sumCombBuf.get_access<      am::read,         at::global_buffer>(cghandler);
-            auto sumTopCompAcc =  sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto sumBotCompAcc =  sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto numTopAcc =      numTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto indBotAcc =      indBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto indTopAcc =      indTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
-            auto linBotAcc =      linBotBuf.get_access<       am::read,         at::global_buffer>(cghandler);
-            auto linTopAcc =      linTopBuf.get_access<       am::read,         at::global_buffer>(cghandler);
-            auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
-            auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(cghandler);
+        sycl::buffer<int,2>   seedIndBuf((sycl::range<2>(maxTriplets,3)));
+        sycl::buffer<float,1> seedWeightBuf((sycl::range<1>(maxTriplets)));
+        sycl::buffer<int,1>   countBuf(&seedCounter, 1);
 
-            auto topCompAcc =     topComp2SpFixed.get_access< am::discard_write,at::global_buffer>(cghandler);
-            // auto curvAcc =        curvBuf.get_access<         am::discard_write,at::global_buffer>(cghandler);
-            // auto impactAcc =      impactBuf.get_access<       am::discard_write,at::global_buffer>(cghandler); 
-            cghandler.parallel_for<class triplet_search_v2>(edgesCombBotTop, [=](sycl::id<1> idx){
+        auto seed_filter = q.submit([&](sycl::handler &cghandler) {
+          auto sumCombAcc =     sumCombBuf.get_access<      am::read,         at::global_buffer>(cghandler);
+          auto sumTopCompAcc =  sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto sumBotCompAcc =  sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto numTopAcc =      numTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto indBotAcc =      indBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+          auto indTopAcc =      indTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
+
+          auto tripletAcc =     tripletBuf.get_access<      am::read,         at::global_buffer>(cghandler);
+          auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(cghandler);
+          auto topSPAcc =       topSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
+
+          auto seedIndAcc =     seedIndBuf.get_access<      am::discard_write,at::global_buffer>(cghandler);
+          auto seedWeightAcc =  seedWeightBuf.get_access<   am::discard_write,at::global_buffer>(cghandler);
+          auto counter    =     countBuf.get_access<        am::atomic,       at::global_buffer>(cghandler);
+
+          cghandler.parallel_for<class triplet_filter>(edgesCombBotTop, [=](sycl::id<1> idx){
+            if(tripletAcc[idx][0] != MIN) {
               // binary search mid space point index -> mid
               int L = 0, R = M;
               int mid = 0;
@@ -488,71 +566,66 @@ namespace Acts::Sycl {
               }
               mid = L;
 
-              // initialize buffers allocated for triplet search
-              topCompAcc[idx] = -1;
+              int numT = numTopAcc[mid];
 
-              int ib = sumBotCompAcc[mid] + ((idx - sumCombAcc[mid]) / numTopAcc[mid]);
-              int it = sumTopCompAcc[mid] + ((idx - sumCombAcc[mid]) % numTopAcc[mid]);
+              int ib = sumBotCompAcc[mid] + ((idx - sumCombAcc[mid]) / numT);
+              int it = sumTopCompAcc[mid] + ((idx - sumCombAcc[mid]) % numT);
 
               int bot = indBotAcc[ib];
               int top = indTopAcc[it];
-              
-              const int lBoffset = ib * int(eLIN);
-              const int lToffset = it * int(eLIN);
 
-              const float Zob =         linBotAcc[lBoffset + int(eZo)];
-              const float Vb =          linBotAcc[lBoffset + int(eV)];
-              const float Ub =          linBotAcc[lBoffset + int(eU)];
-              const float Erb =         linBotAcc[lBoffset + int(eEr)];
-              const float cotThetab =   linBotAcc[lBoffset + int(eCotTheta)];
-              const float iDeltaRb =    linBotAcc[lBoffset + int(eIDeltaR)];
+              int numb = (idx - sumCombAcc[mid]) / numT;
+              // int numt = it - sumTopCompAcc[mid];
 
-              const float Zot =         linTopAcc[lToffset + int(eZo)];
-              const float Vt =          linTopAcc[lToffset + int(eV)];
-              const float Ut =          linTopAcc[lToffset + int(eU)];
-              const float Ert =         linTopAcc[lToffset + int(eEr)];
-              const float cotThetat =   linTopAcc[lToffset + int(eCotTheta)];
-              const float iDeltaRt =    linTopAcc[lToffset + int(eIDeltaR)];
+              int begin = sumCombAcc[mid] + numb * numT;
+              int end = sumCombAcc[mid] + (numb+1) * numT;
 
-              const float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-              const float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
-              const float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+              float invHelixDiameter = tripletAcc[idx][0];
+              float lowerLimitCurv = invHelixDiameter - configAcc[eDeltaInvHelixDiameter];
+              float upperLimitCurv = invHelixDiameter + configAcc[eDeltaInvHelixDiameter];
+              float currentTop_r = topSPAcc[top * int(eSP) + int(eRadius)];
+              float impact = tripletAcc[idx][1];
+              float weight = -(impact * configAcc[eImpactWeightFactor]);
 
-              float iSinTheta2 = (1. + cotThetab * cotThetab);
-              float scatteringInRegion2 = configAcc[eMaxScatteringAngle2] * iSinTheta2;
-              scatteringInRegion2 *= configAcc[eSigmaScattering] * configAcc[eSigmaScattering];
-              float error2 = Ert + Erb + 2 * (cotThetab * cotThetat *
-                varianceRM + varianceZM) * iDeltaRb * iDeltaRt;
-              float deltaCotTheta = cotThetab - cotThetat;
-              float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-
-              deltaCotTheta = sycl::abs(deltaCotTheta);
-              float error = sycl::sqrt(error2);
-              float dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
-
-              float dU = Ut - Ub;
-              if((!(deltaCotTheta2 - error2 > 0) || dCotThetaMinusError2 <= scatteringInRegion2)
-                  && dU != 0.) {
-                float A = (Vt - Vb) / dU;
-                float S2 = 1. + A * A;
-                float B = Vb - A * Ub;
-                float B2 = B * B;
-
-                float iHelixDiameter2 = B2 / S2;
-                float pT2scatter = 4 * iHelixDiameter2 * configAcc[ePT2perRadius];
-                float p2scatter = pT2scatter * iSinTheta2;
-
-                if(!(S2 < B2 * configAcc[eMinHelixDiameter2]) && 
-                    !((deltaCotTheta2 - error2 > 0) &&
-                    (dCotThetaMinusError2 > p2scatter * configAcc[eSigmaScattering] * configAcc[eSigmaScattering]))) {
-                  float Im = sycl::abs((A - B * rM) * rM);
-                  topCompAcc[idx] = top;
-                  // curvAcc[idx] = B / std::sqrt(S2);
-                  // impactAcc[idx] = Im;
+              float lastCompatibleSeedR = -1;
+              int compatCounter = 0;
+              for(int j = begin; j < end; ++j){
+                if(tripletAcc[j][0] != MIN && j != idx) {
+                  int top2 = indTopAcc[sumTopCompAcc[mid] + ((j - sumCombAcc[mid]) % numT)];
+                  float otherTop_r = topSPAcc[top2 * int(eSP) + int(eRadius)];
+                  float deltaR = sycl::abs(currentTop_r - otherTop_r);
+                  if(compatCounter < configAcc[eCompatSeedLimit] &&
+                    deltaR >= configAcc[eFilterDeltaRMin] &&
+                    tripletAcc[j][0] >= lowerLimitCurv &&
+                    tripletAcc[j][0] <= upperLimitCurv && 
+                    sycl::abs(lastCompatibleSeedR - otherTop_r) >= configAcc[eFilterDeltaRMin]){
+                      lastCompatibleSeedR = otherTop_r;
+                      ++compatCounter;
+                  }
                 }
               }
-            });
+              int i = counter[0].fetch_add(1);
+              seedIndAcc[i][0] = bot;
+              seedIndAcc[i][1] = mid;
+              seedIndAcc[i][2] = top;
+              seedWeightAcc[i] = weight + compatCounter * configAcc[eCompatSeedWeight];
+            }
           });
+        });
+
+        seed_filter.wait();
+
+        auto seedInd = seedIndBuf.get_access<am::read>();
+        auto seedWei = seedWeightBuf.get_access<am::read>();
+        auto c = countBuf.get_access<am::read>();
+
+        seedIndices.resize(c[0],std::vector<int>(3));
+        seedWeight.resize(c[0]);
+        for(int i = 0; i < c[0]; ++i) {
+          seedIndices[i][0] = seedInd[i][0];
+          seedIndices[i][1] = seedInd[i][1];
+          seedIndices[i][2] = seedInd[i][2];
+          seedWeight[i] = seedWei[i];
         }
       }
     }

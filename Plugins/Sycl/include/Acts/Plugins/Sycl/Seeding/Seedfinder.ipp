@@ -77,6 +77,18 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                           SP->varianceR(), SP->varianceZ()});
   }
 
+  // sort top space points BY RADIUS for later filter algorithm
+
+  // std::sort(topSPvec.begin(), topSPvec.end(), [](auto sp1, auto sp2){return sp1->radius() < sp2->radius();});
+  // offloadTopSPs.reserve(topSPvec.size() * int(eSP));
+  // for(auto SP: topSPvec) {
+  //   offloadTopSPs.insert(offloadTopSPs.end(),
+  //                        {SP->x(), SP->y(), SP->z(), SP->radius(),
+  //                         SP->varianceR(), SP->varianceZ()});
+  // }
+
+  // turns out they are already sorted
+
   const int numBottomSPs = bottomSPvec.size();
   const int numMiddleSPs = middleSPvec.size();
   const int numTopSPs = topSPvec.size();
@@ -95,15 +107,49 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     m_config.seedFilter->getSeedFilterConfig().deltaInvHelixDiameter,
     m_config.seedFilter->getSeedFilterConfig().impactWeightFactor,
     m_config.seedFilter->getSeedFilterConfig().deltaRMin,
+    m_config.seedFilter->getSeedFilterConfig().compatSeedWeight,
+    float(m_config.seedFilter->getSeedFilterConfig().compatSeedLimit)
   };
+
+  std::vector<std::vector<int>> seedIndices;
+  std::vector<float>  seedWeight;
 
   offloadComputations(m_queue,
                       offloadConfigData,
                       offloadBottomSPs,
                       offloadMiddleSPs,
-                      offloadTopSPs
+                      offloadTopSPs,
+                      seedIndices,
+                      seedWeight
   );
-  
+
+  std::vector<std::pair<
+        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        selectedSeeds;
+
+  // std::cout << seedWeight.size() << std::endl;
+  for(int i = 0; i < seedWeight.size(); ++i) {
+    auto bottomSP = *(bottomSPvec[seedIndices[i][0]]);
+    auto middleSP = *(middleSPvec[seedIndices[i][1]]);
+    auto topSP =    *(topSPvec[seedIndices[i][2]]);
+    auto weight =   seedWeight[i];
+    const IExperimentCuts<external_spacepoint_t>* m_experimentCuts = m_config.seedFilter->getExperimentCuts();
+    if (m_experimentCuts != nullptr) {
+      // add detector specific considerations on the seed weight
+      weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSP);
+      // discard seeds according to detector specific cuts (e.g.: weight)
+      if (m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP, topSP)) {
+        // selectedSeeds.push_back(std::make_pair(
+        //     weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
+        //                 bottomSP, middleSP, topSP, 0)));
+        outputVec.push_back(Seed<external_spacepoint_t>(
+          bottomSP.sp(), middleSP.sp(),
+          topSP.sp(), 0
+        ));
+      }
+    }
+  }
+
   return outputVec;
 }
 }  // namespace Acts::Sycl
