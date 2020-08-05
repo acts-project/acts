@@ -161,58 +161,57 @@ class DirectNavigator {
       } else if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE("Next surface reachable at distance  "
                      << stepper.outputStepSize(state.stepping));
-      });
+      }
     }
   }
-}
 
-/// @brief Navigator target call
-///
-/// @tparam propagator_state_t is the type of Propagatgor state
-/// @tparam stepper_t is the used type of the Stepper by the Propagator
-///
-/// @param [in,out] state is the mutable propagator state object
-/// @param [in] stepper Stepper in use
-template <typename propagator_state_t, typename stepper_t>
-void target(propagator_state_t& state, const stepper_t& stepper) const {
-  const auto& logger = state.options.logger;
-  // Screen output
-  ACTS_VERBOSE("Entering navigator::target.");
+  /// @brief Navigator target call
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
+  template <typename propagator_state_t, typename stepper_t>
+  void target(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
+    // Screen output
+    ACTS_VERBOSE("Entering navigator::target.");
 
-  // Navigator target always resets the current surface
-  state.navigation.currentSurface = nullptr;
-  // Output the position in the sequence
-  ACTS_VERBOSE(std::distance(state.navigation.nextSurfaceIter,
-                             state.navigation.surfaceSequence.end())
-               << " out of " << state.navigation.surfaceSequence.size()
-               << " surfaces remain to try.");
+    // Navigator target always resets the current surface
+    state.navigation.currentSurface = nullptr;
+    // Output the position in the sequence
+    ACTS_VERBOSE(std::distance(state.navigation.nextSurfaceIter,
+                               state.navigation.surfaceSequence.end())
+                 << " out of " << state.navigation.surfaceSequence.size()
+                 << " surfaces remain to try.");
 
-  if (state.navigation.nextSurfaceIter !=
-      state.navigation.surfaceSequence.end()) {
-    // Establish & update the surface status
-    auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, **state.navigation.nextSurfaceIter, false);
-    if (surfaceStatus == Intersection3D::Status::unreachable) {
-      ACTS_VERBOSE(
-          "Surface not reachable anymore, switching to next one in "
-          "sequence");
-      // Move the sequence to the next surface
-      ++state.navigation.nextSurfaceIter;
+    if (state.navigation.nextSurfaceIter !=
+        state.navigation.surfaceSequence.end()) {
+      // Establish & update the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.nextSurfaceIter, false);
+      if (surfaceStatus == Intersection3D::Status::unreachable) {
+        ACTS_VERBOSE(
+            "Surface not reachable anymore, switching to next one in "
+            "sequence");
+        // Move the sequence to the next surface
+        ++state.navigation.nextSurfaceIter;
+      } else {
+        ACTS_VERBOSE("Navigation stepSize set to "
+                     << stepper.outputStepSize(state.stepping));
+      }
     } else {
-      ACTS_VERBOSE("Navigation stepSize set to "
-                   << stepper.outputStepSize(state.stepping));
-    }
-  } else {
-    // Set the navigation break
-    state.navigation.navigationBreak = true;
-    // If no externally provided target is given, the target is reached
-    if (state.navigation.targetSurface == nullptr) {
-      state.navigation.targetReached = true;
-      // Announce it then
-      ACTS_VERBOSE("No target Surface, job done.");
+      // Set the navigation break
+      state.navigation.navigationBreak = true;
+      // If no externally provided target is given, the target is reached
+      if (state.navigation.targetSurface == nullptr) {
+        state.navigation.targetReached = true;
+        // Announce it then
+        ACTS_VERBOSE("No target Surface, job done.");
+      }
     }
   }
-}
-};  // namespace Acts
+};
 
 }  // namespace Acts
