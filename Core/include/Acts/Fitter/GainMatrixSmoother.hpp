@@ -65,7 +65,7 @@ class GainMatrixSmoother {
                    << prev_ts.previous());
 
       trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
-                                                     &logger, this](auto ts) {
+                                                     &logger](auto ts) {
         // should have filtered and predicted, this should also include the
         // covariances.
         assert(ts.hasFiltered());
