@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   // (bool) valid, it's contained in a Surface intersection
   auto sfIntersection =
       discSurfaceObject->intersect(tgContext, globalPosition, direction, false);
-  Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10.,
-                                 Intersection::Status::reachable};
+  Intersection3D expectedIntersect{Vector3D{1.2, 0., 0.}, 10.,
+                                   Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
   CHECK_CLOSE_ABS(sfIntersection.intersection.position,
                   expectedIntersect.position, 1e-9);

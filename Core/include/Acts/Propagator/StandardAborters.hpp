@@ -127,8 +127,8 @@ struct SurfaceReached {
         state.stepping.navDir * stepper.direction(state.stepping), true);
 
     // The target is reached
-    bool targetReached =
-        (sIntersection.intersection.status == Intersection::Status::onSurface);
+    bool targetReached = (sIntersection.intersection.status ==
+                          Intersection3D::Status::onSurface);
     double distance = sIntersection.intersection.pathLength;
 
     // Return true if you fall below tolerance

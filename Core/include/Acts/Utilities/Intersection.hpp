@@ -20,6 +20,7 @@ namespace Acts {
 ///  @struct Intersection
 ///
 ///  Intersection struct used for position
+template <unsigned int DIM>
 struct Intersection {
   /// Nested Status enum
   enum class Status : int {
@@ -30,7 +31,7 @@ struct Intersection {
   };
 
   /// Position of the intersection
-  Vector3D position{0., 0., 0.};
+  ActsVector<double, DIM> position = ActsVector<double, DIM>::Zero();
   /// Signed path length to the intersection (if valid)
   double pathLength{std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
@@ -41,7 +42,8 @@ struct Intersection {
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  Intersection(const Vector3D& sinter, double slength, Status sstatus)
+  Intersection(const ActsVector<double, DIM>& sinter, double slength,
+               Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
   /// Default constructor
@@ -53,7 +55,7 @@ struct Intersection {
   /// Smaller operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator<(const Intersection& si) const {
+  bool operator<(const Intersection<DIM>& si) const {
     if (status == Status::unreachable) {
       return false;
     }
@@ -68,7 +70,7 @@ struct Intersection {
   /// Greater operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator>(const Intersection& si) const {
+  bool operator>(const Intersection<DIM>& si) const {
     if (status == Status::unreachable) {
       return false;
     }
@@ -81,19 +83,23 @@ struct Intersection {
   }
 };
 
+using Intersection2D = Intersection<2>;
+
+using Intersection3D = Intersection<3>;
+
 /// @brief class extensions to return also the object and a representation
 template <typename object_t, typename representation_t = object_t>
 class ObjectIntersection {
  public:
   /// The intersection itself
-  Intersection intersection{};
+  Intersection3D intersection{};
   /// The object that was (tried to be) intersected
   const object_t* object{nullptr};
   /// The representation of this object
   const representation_t* representation{nullptr};
 
   /// The alternative intersections
-  Intersection alternative{};
+  Intersection3D alternative{};
 
   /// Default constructor
   ObjectIntersection() = default;
@@ -105,7 +111,7 @@ class ObjectIntersection {
   /// @param sRepresentation is the object represenatation
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  ObjectIntersection(const Intersection& sInter, const object_t* sObject)
+  ObjectIntersection(const Intersection3D& sInter, const object_t* sObject)
       : intersection(sInter), object(sObject), representation(sObject) {}
 
   /// Object intersection
@@ -113,7 +119,7 @@ class ObjectIntersection {
   /// @param sInter is the intersection
   /// @param sObject is the object to be instersected
   /// @param sRepresentation is the object represenatation
-  ObjectIntersection(const Intersection& sInter, const object_t* sObject,
+  ObjectIntersection(const Intersection3D& sInter, const object_t* sObject,
                      const representation_t* sRepresentation)
       : intersection(sInter),
         object(sObject),

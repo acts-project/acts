@@ -522,7 +522,7 @@ class Navigator {
     // it the current one to pass it to the other actors
     auto surfaceStatus =
         stepper.updateSurfaceStatus(state.stepping, *surface, true);
-    if (surfaceStatus == Intersection::Status::onSurface) {
+    if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
       // Set in navigation state, so actors and aborters can access it
@@ -602,7 +602,7 @@ class Navigator {
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
-      if (surfaceStatus == Intersection::Status::reachable) {
+      if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
@@ -750,7 +750,7 @@ class Navigator {
       // Try to step towards it
       auto layerStatus =
           stepper.updateSurfaceStatus(state.stepping, *layerSurface, true);
-      if (layerStatus == Intersection::Status::reachable) {
+      if (layerStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;
@@ -890,7 +890,7 @@ class Navigator {
       // Step towards the boundary surfrace
       auto boundaryStatus =
           stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true);
-      if (boundaryStatus == Intersection::Status::reachable) {
+      if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
@@ -1174,7 +1174,7 @@ class Navigator {
       auto targetStatus = stepper.updateSurfaceStatus(
           state.stepping, *state.navigation.targetSurface, true);
       // the only advance could have been to the target
-      if (targetStatus == Intersection::Status::onSurface) {
+      if (targetStatus == Intersection3D::Status::onSurface) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
         ACTS_VERBOSE(volInfo(state)
