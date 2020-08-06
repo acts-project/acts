@@ -13,8 +13,8 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 
 #include <array>
 #include <list>
