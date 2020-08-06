@@ -11,8 +11,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-namespace TrackingGeometryViewTest {
+namespace TrackingGeometryView3DTest {
 
 GeometryContext tgContext = GeometryContext();
 
@@ -35,7 +35,7 @@ auto tGeometry = cGeometry();
 ///
 /// @return a string containing all written caracters
 
-static inline std::string run(IVisualization& helper, bool triangulate,
+static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   std::stringstream cStream;
 
@@ -54,11 +54,11 @@ static inline std::string run(IVisualization& helper, bool triangulate,
 
   const Acts::TrackingVolume& tgVolume = *(tGeometry->highestTrackingVolume());
 
-  GeometryView::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
+  GeometryView3D::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
                                    viewVolume, viewPassive, viewSensitive,
                                    viewGrid, true, tag);
 
-  GeometryView::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
+  GeometryView3D::drawTrackingVolume(helper, tgVolume, tgContext, viewContainer,
                                    viewVolume, viewPassive, viewSensitive,
                                    viewGrid, false);
   helper.write(cStream);
@@ -66,5 +66,5 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   return cStream.str();
 }
 
-}  // namespace TrackingGeometryViewTest
+}  // namespace TrackingGeometryView3DTest
 }  // namespace Acts

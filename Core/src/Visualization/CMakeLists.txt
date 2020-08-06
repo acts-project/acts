@@ -1,7 +1,7 @@
 target_sources_local(
   ActsCore
   PRIVATE
-    IVisualization.cpp
-    GeometryView.cpp
-    EventDataView.cpp
+    IVisualization3D.cpp
+    GeometryView3D.cpp
+    EventDataView3D.cpp
 )

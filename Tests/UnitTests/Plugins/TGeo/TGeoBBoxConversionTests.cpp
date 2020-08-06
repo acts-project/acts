@@ -15,8 +15,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
@@ -45,7 +45,7 @@ ViewConfig blue({0, 0, 200});
 /// * the "(x/X)(y/Y)(z/Z)" orientations
 /// * the scaling functionality
 BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   double x = 10.;
   double y = 30.;
@@ -83,16 +83,16 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(transform_XYZ.isApprox(Transform3D::Identity()));
 
   const Vector3D offset_XYZ{-5.5 * x, 0., 0.};
-  GeometryView::drawSurface(objVis, *plane_XYZ, tgContext,
+  GeometryView3D::drawSurface(objVis, *plane_XYZ, tgContext,
                             Transform3D(Translation3D{offset_XYZ}));
   const Vector3D center_XYZ = plane_XYZ->center(tgContext) + offset_XYZ;
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_XYZ,
       center_XYZ + 0.6 * (maxX - minX) * rotation_XYZ.col(0), 4., 2.5, red);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_XYZ,
       center_XYZ + 0.6 * (maxY - minY) * rotation_XYZ.col(1), 4., 2.5, green);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_XYZ, center_XYZ + 2 * rotation_XYZ.col(2), 4., 2.5, blue);
 
   // Lower case ---------------------------------
@@ -112,16 +112,16 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_xyz.col(2).isApprox(rotation_XYZ.col(2)));
 
   const Vector3D offset_xyz{-2 * x, 0., 0.};
-  GeometryView::drawSurface(objVis, *plane_xyz, tgContext,
+  GeometryView3D::drawSurface(objVis, *plane_xyz, tgContext,
                             Transform3D(Translation3D{offset_xyz}));
   const Vector3D center_xyz = plane_xyz->center(tgContext) + offset_xyz;
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xyz,
       center_xyz + 0.6 * (maxX - minX) * rotation_xyz.col(0), 4., 2.5, red);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xyz,
       center_xyz + 0.6 * (maxY - minY) * rotation_xyz.col(1), 4., 2.5, green);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xyz, center_xyz + 2 * rotation_xyz.col(2), 4., 2.5, blue);
 
   // Mixed case ---------------------------------
@@ -141,17 +141,17 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_xYz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_xYz{2 * x, 0., 0.};
-  GeometryView::drawSurface(
+  GeometryView3D::drawSurface(
       objVis, *plane_xYz, tgContext,
       Translation3D{offset_xYz} * Transform3D::Identity());
   const Vector3D center_xYz = plane_xYz->center(tgContext) + offset_xYz;
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xYz,
       center_xYz + 0.6 * (maxX - minX) * rotation_xYz.col(0), 4., 2.5, red);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xYz,
       center_xYz + 0.6 * (maxY - minY) * rotation_xYz.col(1), 4., 2.5, green);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_xYz, center_xYz + 2 * rotation_xYz.col(2), 4., 2.5, blue);
 
   // Swap case --------------------------------- (x/y) here
@@ -175,16 +175,16 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
   BOOST_CHECK(rotation_YXz.col(2).isApprox(-1. * rotation_XYZ.col(2)));
 
   const Vector3D offset_YXz{5.5 * x, 0., 0.};
-  GeometryView::drawSurface(objVis, *plane_YXz, tgContext,
+  GeometryView3D::drawSurface(objVis, *plane_YXz, tgContext,
                             Transform3D(Translation3D{offset_YXz}));
   const Vector3D center_YXz = plane_YXz->center(tgContext) + offset_YXz;
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_YXz,
       center_YXz + 0.6 * (maxX - minX) * rotation_YXz.col(0), 4., 2.5, red);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_YXz,
       center_YXz + 0.6 * (maxY - minY) * rotation_YXz.col(1), 4., 2.5, green);
-  GeometryView::drawArrowForward(
+  GeometryView3D::drawArrowForward(
       objVis, center_YXz, center_YXz + 2 * rotation_YXz.col(2), 4., 2.5, blue);
 
   // Scaling test ---------------------------------

@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Visualization/EventDataView.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
 
-void Acts::EventDataView::drawCovarianceCartesian(
-    IVisualization& helper, const Vector2D& lposition,
+void Acts::EventDataView3D::drawCovarianceCartesian(
+    IVisualization3D& helper, const Vector2D& lposition,
     const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
     double locErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
@@ -22,11 +22,11 @@ void Acts::EventDataView::drawCovarianceCartesian(
                     Vector3D(lposition.x(), lposition.y(), viewConfig.offset));
   auto faces = detail::FacesHelper::convexFaceMesh(ellipse, true);
   Polyhedron ellipseHedron(ellipse, faces.first, faces.second);
-  Acts::GeometryView::drawPolyhedron(helper, ellipseHedron, viewConfig);
+  Acts::GeometryView3D::drawPolyhedron(helper, ellipseHedron, viewConfig);
 }
 
-void Acts::EventDataView::drawCovarianceAngular(
-    IVisualization& helper, const Vector3D& position, const Vector3D& direction,
+void Acts::EventDataView3D::drawCovarianceAngular(
+    IVisualization3D& helper, const Vector3D& position, const Vector3D& direction,
     const ActsSymMatrixD<2>& covariance, double directionScale,
     double angularErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
@@ -51,7 +51,7 @@ void Acts::EventDataView::drawCovarianceAngular(
   coneTop.push_back(anker);
   auto coneTopFaces = detail::FacesHelper::convexFaceMesh(coneTop, true);
   Polyhedron coneTopHedron(coneTop, coneTopFaces.first, coneTopFaces.second);
-  GeometryView::drawPolyhedron(helper, coneTopHedron, viewConfig);
+  GeometryView3D::drawPolyhedron(helper, coneTopHedron, viewConfig);
 
   std::vector<Vector3D> cone = ellipse;
   cone.push_back(position);
@@ -60,5 +60,5 @@ void Acts::EventDataView::drawCovarianceAngular(
   coneViewConfig.triangulate = true;
   auto coneFaces = detail::FacesHelper::convexFaceMesh(cone, true);
   Polyhedron coneHedron(cone, coneFaces.first, coneFaces.second);
-  GeometryView::drawPolyhedron(helper, coneHedron, coneViewConfig);
+  GeometryView3D::drawPolyhedron(helper, coneHedron, coneViewConfig);
 }

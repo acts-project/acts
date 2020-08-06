@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Visualization/GeometryView.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -22,7 +22,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-void Acts::GeometryView::drawPolyhedron(IVisualization& helper,
+void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                         const Polyhedron& polyhedron,
                                         const ViewConfig& ViewConfig) {
   if (ViewConfig.visible) {
@@ -35,7 +35,7 @@ void Acts::GeometryView::drawPolyhedron(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawSurface(IVisualization& helper,
+void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                      const Surface& surface,
                                      const GeometryContext& gctx,
                                      const Transform3D& transform,
@@ -48,7 +48,7 @@ void Acts::GeometryView::drawSurface(IVisualization& helper,
   drawPolyhedron(helper, surfaceHedron, ViewConfig);
 }
 
-void Acts::GeometryView::drawSurfaceArray(IVisualization& helper,
+void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
                                           const SurfaceArray& surfaceArray,
                                           const GeometryContext& gctx,
                                           const Transform3D& transform,
@@ -134,7 +134,7 @@ void Acts::GeometryView::drawSurfaceArray(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawVolume(IVisualization& helper,
+void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
                                     const AbstractVolume& volume,
                                     const GeometryContext& gctx,
                                     const Transform3D& transform,
@@ -146,7 +146,7 @@ void Acts::GeometryView::drawVolume(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
+void Acts::GeometryView3D::drawLayer(IVisualization3D& helper, const Layer& layer,
                                    const GeometryContext& gctx,
                                    const ViewConfig& layerConfig,
                                    const ViewConfig& sensitiveConfig,
@@ -176,8 +176,8 @@ void Acts::GeometryView::drawLayer(IVisualization& helper, const Layer& layer,
   }
 }
 
-void Acts::GeometryView::drawTrackingVolume(
-    IVisualization& helper, const TrackingVolume& tVolume,
+void Acts::GeometryView3D::drawTrackingVolume(
+    IVisualization3D& helper, const TrackingVolume& tVolume,
     const GeometryContext& gctx, const ViewConfig& containerView,
     const ViewConfig& volumeView, const ViewConfig& layerView,
     const ViewConfig& sensitiveView, const ViewConfig& gridView, bool writeIt,
@@ -243,7 +243,7 @@ void Acts::GeometryView::drawTrackingVolume(
   }
 }
 
-void Acts::GeometryView::drawSegmentBase(IVisualization& helper,
+void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
                                          const Vector3D& start,
                                          const Vector3D& end, int arrows,
                                          double arrowLength, double arrowWidth,
@@ -334,19 +334,19 @@ void Acts::GeometryView::drawSegmentBase(IVisualization& helper,
   }
 }
 
-void Acts::GeometryView::drawSegment(IVisualization& helper,
+void Acts::GeometryView3D::drawSegment(IVisualization3D& helper,
                                      const Vector3D& start, const Vector3D& end,
                                      const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, 0, 0., 0., viewConfig);
 }
 
-void Acts::GeometryView::drawArrowBackward(
-    IVisualization& helper, const Vector3D& start, const Vector3D& end,
+void Acts::GeometryView3D::drawArrowBackward(
+    IVisualization3D& helper, const Vector3D& start, const Vector3D& end,
     double arrowLength, double arrowWidth, const ViewConfig& viewConfig) {
   drawSegmentBase(helper, start, end, -1, arrowLength, arrowWidth, viewConfig);
 }
 
-void Acts::GeometryView::drawArrowForward(IVisualization& helper,
+void Acts::GeometryView3D::drawArrowForward(IVisualization3D& helper,
                                           const Vector3D& start,
                                           const Vector3D& end,
                                           double arrowLength, double arrowWidth,
@@ -354,7 +354,7 @@ void Acts::GeometryView::drawArrowForward(IVisualization& helper,
   drawSegmentBase(helper, start, end, 1, arrowLength, arrowWidth, viewConfig);
 }
 
-void Acts::GeometryView::drawArrowsBoth(IVisualization& helper,
+void Acts::GeometryView3D::drawArrowsBoth(IVisualization3D& helper,
                                         const Vector3D& start,
                                         const Vector3D& end, double arrowLength,
                                         double arrowWidth,

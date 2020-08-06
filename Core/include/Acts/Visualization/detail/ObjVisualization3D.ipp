@@ -7,13 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void ObjVisualization<T>::vertex(const Vector3D& vtx, ColorRGB color) {
+void ObjVisualization3D<T>::vertex(const Vector3D& vtx, ColorRGB color) {
   m_vertexColors[m_vertices.size()] = color;
   m_vertices.push_back(vtx.template cast<ValueType>());
 }
 
 template <typename T>
-void ObjVisualization<T>::line(const Vector3D& a, const Vector3D& b,
+void ObjVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
                                ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_lineColors[m_lines.size()] = color;
@@ -25,7 +25,7 @@ void ObjVisualization<T>::line(const Vector3D& a, const Vector3D& b,
 }
 
 template <typename T>
-void ObjVisualization<T>::face(const std::vector<Vector3D>& vtxs,
+void ObjVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
                                ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_faceColors[m_faces.size()] = color;
@@ -40,7 +40,7 @@ void ObjVisualization<T>::face(const std::vector<Vector3D>& vtxs,
 }
 
 template <typename T>
-void ObjVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
+void ObjVisualization3D<T>::faces(const std::vector<Vector3D>& vtxs,
                                 const std::vector<FaceType>& faces,
                                 ColorRGB color) {
   // No faces given - call the face() method
@@ -69,15 +69,15 @@ void ObjVisualization<T>::faces(const std::vector<Vector3D>& vtxs,
 }
 
 template <typename T>
-void ObjVisualization<T>::write(const std::string& path) const {
+void ObjVisualization3D<T>::write(const std::string& path) const {
   std::ofstream os;
   std::string objectpath = path;
-  if (not IVisualization::hasExtension(objectpath)) {
+  if (not IVisualization3D::hasExtension(objectpath)) {
     objectpath += std::string(".obj");
   }
   os.open(objectpath);
   std::string mtlpath = objectpath;
-  IVisualization::replaceExtension(mtlpath, ".mtl");
+  IVisualization3D::replaceExtension(mtlpath, ".mtl");
   os << "mtllib " << mtlpath << "\n";
   std::ofstream mtlos;
   mtlos.open(mtlpath);
@@ -87,13 +87,13 @@ void ObjVisualization<T>::write(const std::string& path) const {
 }
 
 template <typename T>
-void ObjVisualization<T>::write(std::ostream& os) const {
+void ObjVisualization3D<T>::write(std::ostream& os) const {
   std::stringstream sterile;
   write(os, sterile);
 }
 
 template <typename T>
-void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
+void ObjVisualization3D<T>::write(std::ostream& os, std::ostream& mos) const {
   std::map<std::string, bool> materials;
 
   auto mixColor = [&](const ColorRGB& color) -> std::string {
@@ -166,7 +166,7 @@ void ObjVisualization<T>::write(std::ostream& os, std::ostream& mos) const {
 }
 
 template <typename T>
-void ObjVisualization<T>::clear() {
+void ObjVisualization3D<T>::clear() {
   m_vertices.clear();
   m_faces.clear();
   m_lines.clear();

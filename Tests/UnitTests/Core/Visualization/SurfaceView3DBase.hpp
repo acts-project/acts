@@ -25,8 +25,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -34,7 +34,7 @@
 
 namespace Acts {
 
-namespace SurfaceViewTest {
+namespace SurfaceView3DTest {
 
 /// Helper method to visualiza all types of surfaces
 ///
@@ -43,7 +43,7 @@ namespace SurfaceViewTest {
 /// @param tag The test tag (mode) identification
 ///
 /// @return an overall string including all written output
-static inline std::string run(IVisualization& helper, bool triangulate,
+static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   auto gctx = GeometryContext();
   auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -68,7 +68,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       std::make_shared<ConeBounds>(coneAlpha, -coneCutZ, coneMaxZ);
   auto cone = Surface::makeShared<ConeSurface>(identity, coneBounds);
   coneSurfaces.push_back(cone);
-  GeometryView::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_ConeSurface") + tag);
@@ -80,7 +80,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
                                             halfPhiSector);
   cone = Surface::makeShared<ConeSurface>(identity, coneBounds);
   coneSurfaces.push_back(cone);
-  GeometryView::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_ConeSurfaceSector") + tag);
@@ -92,7 +92,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
                                             halfPhiSector, centralPhi);
   cone = Surface::makeShared<ConeSurface>(identity, coneBounds);
   coneSurfaces.push_back(cone);
-  GeometryView::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cone, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_ConeSurfaceSectorShifted") + tag);
@@ -106,7 +106,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       Transform3D(Translation3D{0.75 * coneMaxZ, 0., 0.})};
 
   for (size_t ic = 0; ic < coneSurfaces.size(); ++ic) {
-    GeometryView::drawSurface(helper, *coneSurfaces[ic], gctx, threeCones[ic],
+    GeometryView3D::drawSurface(helper, *coneSurfaces[ic], gctx, threeCones[ic],
                               sConfig);
   }
   helper.write(std::string("Surfaces_All_ConeSurfaces") + tag);
@@ -126,7 +126,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto cylinder =
       Surface::makeShared<CylinderSurface>(identity, cylinderBounds);
   cylinderSurfaces.push_back(cylinder);
-  GeometryView::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_CylinderSurface") + tag);
@@ -138,7 +138,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       cylinderRadius, cylinderHalfZ, halfPhiSector);
   cylinder = Surface::makeShared<CylinderSurface>(identity, cylinderBounds);
   cylinderSurfaces.push_back(cylinder);
-  GeometryView::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_CylinderSurfaceSector") + tag);
@@ -150,7 +150,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       cylinderRadius, cylinderHalfZ, halfPhiSector, centralPhi);
   cylinder = Surface::makeShared<CylinderSurface>(identity, cylinderBounds);
   cylinderSurfaces.push_back(cylinder);
-  GeometryView::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *cylinder, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_CylinderSurfaceSectorShifted") + tag);
@@ -164,7 +164,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       Transform3D(Translation3D{2.5 * cylinderRadius, 0., 0.})};
 
   for (size_t ic = 0; ic < cylinderSurfaces.size(); ++ic) {
-    GeometryView::drawSurface(helper, *cylinderSurfaces[ic], gctx,
+    GeometryView3D::drawSurface(helper, *cylinderSurfaces[ic], gctx,
                               threeCylinders[ic], sConfig);
   }
   helper.write(std::string("Surfaces_All_CylinderSurfaces") + tag);
@@ -179,7 +179,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
 
     auto bbBounds = std::make_shared<RectangleBounds>(rBounds);
     auto bbSurface = Surface::makeShared<PlaneSurface>(identity, bbBounds);
-    GeometryView::drawSurface(helper, *bbSurface, gctx, Transform3D::Identity(),
+    GeometryView3D::drawSurface(helper, *bbSurface, gctx, Transform3D::Identity(),
                               sConfig);
     ;
     helper.write(bbPath);
@@ -199,7 +199,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto radialBounds = std::make_shared<RadialBounds>(0., discRmax);
   auto disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(std::string("Surfaces_DiscSurfaceFull") + tag);
@@ -210,9 +210,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   radialBounds = std::make_shared<RadialBounds>(0., discRmax, halfPhiSector);
   disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscSurfaceFullSector") + tag);
   helper.write(cStream);
   helper.clear();
@@ -222,9 +222,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       std::make_shared<RadialBounds>(0., discRmax, halfPhiSector, centralPhi);
   disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscSurfaceFullSectorShifted") + tag);
   helper.write(cStream);
   helper.clear();
@@ -233,9 +233,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   radialBounds = std::make_shared<RadialBounds>(discRmin, discRmax);
   disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscSurfaceRing") + tag);
   helper.write(cStream);
   helper.clear();
@@ -245,9 +245,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       std::make_shared<RadialBounds>(discRmin, discRmax, halfPhiSector);
   disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscSurfaceRingSector") + tag);
   helper.write(cStream);
   helper.clear();
@@ -257,9 +257,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
                                                 halfPhiSector, centralPhi);
   disc = Surface::makeShared<DiscSurface>(identity, radialBounds);
   radialSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscSurfaceRingSectorShifted") + tag);
   helper.write(cStream);
   helper.clear();
@@ -273,7 +273,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       Transform3D(Translation3D{0., -1.5 * discRmax, 0.}),
       Transform3D(Translation3D{2.5 * discRmax, -1.5 * discRmax, 0.})};
   for (size_t ir = 0; ir < radialSurfaces.size(); ++ir) {
-    GeometryView::drawSurface(helper, *radialSurfaces[ir], gctx, sixDiscs[ir],
+    GeometryView3D::drawSurface(helper, *radialSurfaces[ir], gctx, sixDiscs[ir],
                               sConfig);
   }
   helper.write(std::string("Surfaces_All_DiscSurfaces_RadialBounds") + tag);
@@ -289,9 +289,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       discRmin, discRmax, annulusMinPhi, annulusMaxPhi, offset);
   disc = Surface::makeShared<DiscSurface>(identity, annulus);
   anomalDiscSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscAnulusBounds") + tag);
   helper.write(cStream);
   helper.clear();
@@ -302,9 +302,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       discTrapezoidHxRmin, discTrapezoidHxRmax, discRmin, discRmax);
   disc = Surface::makeShared<DiscSurface>(identity, discTrapezoid);
   anomalDiscSurfaces.push_back(disc);
-  GeometryView::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *disc, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(std::string("Surfaces_DiscTrapezoidBounds") + tag);
   helper.write(cStream);
   helper.clear();
@@ -314,7 +314,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       Transform3D(Translation3D{-5., 0., 0.}),
       Transform3D(Translation3D{5., 0., 0.})};
   for (size_t id = 0; id < anomalDiscSurfaces.size(); ++id) {
-    GeometryView::drawSurface(helper, *anomalDiscSurfaces[id], gctx,
+    GeometryView3D::drawSurface(helper, *anomalDiscSurfaces[id], gctx,
                               sixDiscs[id], sConfig);
   }
   helper.write(std::string("Surfaces_All_DiscSurfaces_AnomalBounds") + tag);
@@ -335,7 +335,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       std::make_shared<EllipseBounds>(0., 0., ellipseR1min, ellipseR1max);
   auto plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(name + tag);
@@ -349,7 +349,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
                                             ellipseR1min, ellipseR1max);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(name + tag);
@@ -363,7 +363,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       ellipseR0min, ellipseR0max, ellipseR1min, ellipseR1max, halfPhiSector);
   plane = Surface::makeShared<PlaneSurface>(identity, ellipse);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(name + tag);
@@ -377,7 +377,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
   ;
   helper.write(name + tag);
@@ -391,9 +391,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   triangle = std::make_shared<ConvexPolygonBounds<3>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, triangle);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -406,9 +406,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       std::make_shared<ConvexPolygonBounds<PolygonDynamic>>(tvertices);
   plane = Surface::makeShared<PlaneSurface>(identity, dynamicpolygon);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -419,9 +419,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto diamond = std::make_shared<DiamondBounds>(3., 6., 2., 2., 4.);
   plane = Surface::makeShared<PlaneSurface>(identity, diamond);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -432,9 +432,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto rectangle = std::make_shared<RectangleBounds>(2., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -445,9 +445,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   rectangle =
       std::make_shared<RectangleBounds>(Vector2D{1., 2.}, Vector2D{15., 12.});
   plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -458,9 +458,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   auto trapezoid = std::make_shared<TrapezoidBounds>(2., 5., 3.);
   plane = Surface::makeShared<PlaneSurface>(identity, trapezoid);
   planarSurfaces.push_back(plane);
-  GeometryView::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *plane, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -478,7 +478,7 @@ static inline std::string run(IVisualization& helper, bool triangulate,
       Transform3D(Translation3D{0., 10., 0.}),
       Transform3D(Translation3D{10., 10., 0.})};
   for (size_t ip = 0; ip < planarSurfaces.size(); ++ip) {
-    GeometryView::drawSurface(helper, *planarSurfaces[ip], gctx, ninePlanes[ip],
+    GeometryView3D::drawSurface(helper, *planarSurfaces[ip], gctx, ninePlanes[ip],
                               sConfig);
   }
   helper.write(std::string("Surfaces_All_PlaneSurfaces") + tag);
@@ -490,9 +490,9 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   name = "Surfaces_StrawSurface";
   auto tube = std::make_shared<LineBounds>(2., 20.);
   auto straw = Surface::makeShared<StrawSurface>(identity, tube);
-  GeometryView::drawSurface(helper, *straw, gctx, Transform3D::Identity(),
+  GeometryView3D::drawSurface(helper, *straw, gctx, Transform3D::Identity(),
                             sConfig);
-  ;
+  
   helper.write(name + tag);
   helper.write(cStream);
   helper.clear();
@@ -500,5 +500,5 @@ static inline std::string run(IVisualization& helper, bool triangulate,
   return cStream.str();
 }
 
-}  // namespace SurfaceViewTest
+}  // namespace SurfaceView3DTest
 }  // namespace Acts

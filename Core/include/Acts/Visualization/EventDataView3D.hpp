@@ -17,8 +17,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <optional>
@@ -31,7 +31,7 @@ static ViewConfig s_viewPredicted = ViewConfig({51, 204, 51});
 static ViewConfig s_viewFiltered = ViewConfig({255, 255, 0});
 static ViewConfig s_viewSmoothed = ViewConfig({0, 102, 255});
 
-struct EventDataView {
+struct EventDataView3D {
   /// Helper to find the egen values and corr angle
   ///
   /// @param covariance The covariance matrix
@@ -95,7 +95,7 @@ struct EventDataView {
   /// @param locErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
-      IVisualization& helper, const Vector2D& lposition,
+      IVisualization3D& helper, const Vector2D& lposition,
       const ActsSymMatrixD<2>& covariance, const Transform3D& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
@@ -109,7 +109,7 @@ struct EventDataView {
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
-      IVisualization& helper, const Vector3D& position,
+      IVisualization3D& helper, const Vector3D& position,
       const Vector3D& direction, const ActsSymMatrixD<2>& covariance,
       double directionScale = 1, double angularErrorScale = 1,
       const ViewConfig& viewConfig = s_viewParameter);
@@ -127,7 +127,7 @@ struct EventDataView {
   /// @param surfConfig The visualization option for the surface
   template <typename parameters_t>
   static inline void drawBoundParameters(
-      IVisualization& helper, const parameters_t& parameters,
+      IVisualization3D& helper, const parameters_t& parameters,
       const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
@@ -135,7 +135,7 @@ struct EventDataView {
       const ViewConfig& covConfig = s_viewParameter,
       const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
-      GeometryView::drawSurface(helper, parameters.referenceSurface(), gctx,
+      GeometryView3D::drawSurface(helper, parameters.referenceSurface(), gctx,
                                 Transform3D::Identity(), surfConfig);
     }
 
@@ -148,10 +148,10 @@ struct EventDataView {
     lparConfig.lineThickness = 0.05;
     Vector3D parLength = p * momentumScale * direction;
 
-    GeometryView::drawArrowBackward(
+    GeometryView3D::drawArrowBackward(
         helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
 
-    GeometryView::drawArrowForward(helper, position + 0.5 * parLength,
+    GeometryView3D::drawArrowForward(helper, position + 0.5 * parLength,
                                    position + parLength, 4., 2.5, lparConfig);
 
     if (parameters.covariance().has_value()) {
@@ -192,7 +192,7 @@ struct EventDataView {
   /// parameters
   template <typename source_link_t>
   static inline void drawMultiTrajectory(
-      IVisualization& helper,
+      IVisualization3D& helper,
       const Acts::MultiTrajectory<source_link_t>& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
@@ -218,7 +218,7 @@ struct EventDataView {
 
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
-        GeometryView::drawSurface(helper, state.referenceSurface(), gctx,
+        GeometryView3D::drawSurface(helper, state.referenceSurface(), gctx,
                                   Transform3D::Identity(), surfaceConfig);
       }
 

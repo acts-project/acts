@@ -15,9 +15,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <cmath>
 
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   GeometryContext tgContext = GeometryContext();
 
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   CylindricalTrackingGeometry ctGeometry(tgContext);
   CylindricalTrackingGeometry::DetectorStore dStore;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
 
   ViewConfig unsorted({252, 160, 0});
   for (auto& sf : cylinderSurfaces) {
-    GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
+    GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
                               unsorted);
   }
   // Draw the all surfaces
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig sorted(sortedColors[il]);
-      GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
+      GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
                                 sorted);
     }
     ++il;
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   }
 
   for (auto& sf : discSurfaces) {
-    GeometryView::drawSurface(objVis, *sf, tgContext);
+    GeometryView3D::drawSurface(objVis, *sf, tgContext);
   }
   // Draw the all surfaces
   objVis.write("ProtoLayerHelper_DiscLayers_unsorted");
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig ViewConfig(sortedColors[il]);
-      GeometryView::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
+      GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
                                 ViewConfig);
     }
     ++il;
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   }
 
   for (auto& sf : ringSurfaces) {
-    GeometryView::drawSurface(objVis, *sf, tgContext);
+    GeometryView3D::drawSurface(objVis, *sf, tgContext);
   }
   // Draw the all surfaces
   objVis.write("ProtoLayerHelper_RingLayers_unsorted");
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
     for (auto& layer : lSorted) {
       dColor[ir] -= il * 50;
       for (auto& sf : layer.surfaces()) {
-        GeometryView::drawSurface(objVis, *sf, tgContext);
+        GeometryView3D::drawSurface(objVis, *sf, tgContext);
       }
       ++il;
     }
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   size_t irz = 0;
   for (auto& layer : rzSorted) {
     for (auto& sf : layer.surfaces()) {
-      GeometryView::drawSurface(objVis, *sf, tgContext);
+      GeometryView3D::drawSurface(objVis, *sf, tgContext);
     }
     objVis.write("ProtoLayerHelper_RingLayers_rz_sorted" +
                  std::to_string(irz++));

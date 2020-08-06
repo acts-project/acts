@@ -15,8 +15,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
@@ -43,7 +43,7 @@ ViewConfig blue({0, 0, 200});
 ///
 /// * The TGeoTrd2 has x/z orientation
 BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   new TGeoManager("arb8", "poza12");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -81,13 +81,13 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     // Check if the surface is the (negative) identity
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
-    GeometryView::drawSurface(objVis, *plane, tgContext);
+    GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3D center = plane->center(tgContext);
-    GeometryView::drawArrowForward(objVis, center,
+    GeometryView3D::drawArrowForward(objVis, center,
                                    center + 30 * rotation.col(0), 4., 2.5, red);
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 30 * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
+    GeometryView3D::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
                                    4., 2.5, blue);
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +

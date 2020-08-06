@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
                {2, 1, 1},
                {0, 1, 1}}};
   GenericCuboidVolumeBounds cubo(vertices);
-  PlyVisualization<double> ply;
+  PlyVisualization3D<double> ply;
   cubo.draw(ply);
 
   std::ofstream os("cuboid.ply");

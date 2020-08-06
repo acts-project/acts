@@ -12,11 +12,11 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/EventDataView.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -24,7 +24,7 @@
 
 namespace Acts {
 
-namespace PrimitivesViewTest {
+namespace PrimitivesView3DTest {
 
 // Test on a plane
 auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
@@ -39,7 +39,7 @@ GeometryContext gctx = GeometryContext();
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string run(IVisualization& helper) {
+static inline std::string run(IVisualization3D& helper) {
   std::stringstream ss;
 
   ViewConfig lineView({0, 0, 255});
@@ -48,7 +48,7 @@ static inline std::string run(IVisualization& helper) {
   // Line visualization ------------------------------------------------
   Vector3D start = {1., 1., 1.};
   Vector3D end = {4., 4., 4.};
-  Acts::GeometryView::drawSegment(helper, start, end);
+  Acts::GeometryView3D::drawSegment(helper, start, end);
   helper.write("Primitives_Line");
   helper.write(ss);
   helper.clear();
@@ -56,22 +56,22 @@ static inline std::string run(IVisualization& helper) {
   // Arrows visualization ------------------------------------------------
   start = {1., 0., 0.};
   end = {4., 0., 0.};
-  Acts::GeometryView::drawArrowForward(helper, start, end, 3., 2., lineView);
+  Acts::GeometryView3D::drawArrowForward(helper, start, end, 3., 2., lineView);
 
   start = {1., 2., 0.};
   end = {4., 2., 0.};
-  Acts::GeometryView::drawArrowBackward(helper, start, end, 3., 2., lineView);
+  Acts::GeometryView3D::drawArrowBackward(helper, start, end, 3., 2., lineView);
 
   start = {1., 4., 0.};
   end = {4., 4., 0.};
-  Acts::GeometryView::drawArrowsBoth(helper, start, end, 3., 2., lineView);
+  Acts::GeometryView3D::drawArrowsBoth(helper, start, end, 3., 2., lineView);
 
   helper.write("Primitives_Arrows");
   helper.write(ss);
   helper.clear();
 
   // Error visualization: local ---------------------------------------------
-  Acts::GeometryView::drawSurface(helper, *plane, gctx);
+  Acts::GeometryView3D::drawSurface(helper, *plane, gctx);
 
   ViewConfig errorVis({250, 0, 0});
   errorVis.lineThickness = 0.025;
@@ -83,7 +83,7 @@ static inline std::string run(IVisualization& helper) {
   cov << s0 * s0, r01 * s0 * s1, r01 * s0 * s1, s1 * s1;
 
   Vector2D lcentered{0., 0.};
-  Acts::EventDataView::drawCovarianceCartesian(
+  Acts::EventDataView3D::drawCovarianceCartesian(
       helper, lcentered, cov, plane->transform(gctx), 1.0, errorVis);
 
   helper.write("Primitives_CartesianError");
@@ -91,7 +91,7 @@ static inline std::string run(IVisualization& helper) {
   helper.clear();
 
   // Error visualization: angular ---------------------------------------------
-  Acts::GeometryView::drawSurface(helper, *plane, gctx);
+  Acts::GeometryView3D::drawSurface(helper, *plane, gctx);
   cov = SymMatrix2D::Identity();
   s0 = 0.08;
   s1 = 0.035;
@@ -103,10 +103,10 @@ static inline std::string run(IVisualization& helper) {
 
   double directionScale = 5.;
 
-  Acts::EventDataView::drawCovarianceAngular(helper, origin, direction, cov,
+  Acts::EventDataView3D::drawCovarianceAngular(helper, origin, direction, cov,
                                              directionScale, 10., errorVis);
 
-  Acts::GeometryView::drawArrowForward(
+  Acts::GeometryView3D::drawArrowForward(
       helper, origin + 0.5 * directionScale * direction,
       origin + 1.2 * directionScale * direction, 3., 2., errorVis);
 
@@ -117,5 +117,5 @@ static inline std::string run(IVisualization& helper) {
   return ss.str();
 }
 
-}  // namespace PrimitivesViewTest
+}  // namespace PrimitivesView3DTest
 }  // namespace Acts
