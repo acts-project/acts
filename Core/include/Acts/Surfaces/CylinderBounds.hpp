@@ -94,12 +94,6 @@ class CylinderBounds : public SurfaceBounds {
   bool inside3D(const Vector3D& position,
                 const BoundaryCheck& bcheck = true) const;
 
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
-
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   double get(BoundValues bValue) const { return m_values[bValue]; }

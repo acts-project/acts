@@ -147,7 +147,7 @@ class DirectNavigator {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.nextSurfaceIter, false);
-      if (surfaceStatus == Intersection::Status::onSurface) {
+      if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
         debugLog(state, [&] {
@@ -168,7 +168,7 @@ class DirectNavigator {
           });
           stepper.releaseStepSize(state.stepping);
         }
-      } else if (surfaceStatus == Intersection::Status::reachable) {
+      } else if (surfaceStatus == Intersection3D::Status::reachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Next surface reachable at distance  "
@@ -207,7 +207,7 @@ class DirectNavigator {
       // Establish & update the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, **state.navigation.nextSurfaceIter, false);
-      if (surfaceStatus == Intersection::Status::unreachable) {
+      if (surfaceStatus == Intersection3D::Status::unreachable) {
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Surface not reachable anymore, switching to next one in "

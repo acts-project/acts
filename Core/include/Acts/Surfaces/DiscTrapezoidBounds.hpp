@@ -76,12 +76,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck = true) const final;
 
-  /// Minimal distance to boundary
-  /// @param lposition is the local position to be checked (in polar
-  /// coordinates)
-  /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lposition) const final;
-
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;
 

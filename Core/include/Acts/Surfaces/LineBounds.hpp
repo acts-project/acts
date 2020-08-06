@@ -61,13 +61,6 @@ class LineBounds : public SurfaceBounds {
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
 
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  ///
-  /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
-
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into

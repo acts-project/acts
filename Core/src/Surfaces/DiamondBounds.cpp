@@ -22,11 +22,6 @@ bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
   return bcheck.isInside(lposition, vertices());
 }
 
-double Acts::DiamondBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, vertices());
-}
-
 std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
     unsigned int /*lseg*/) const {
   // Vertices starting at lower left (min rel. phi)

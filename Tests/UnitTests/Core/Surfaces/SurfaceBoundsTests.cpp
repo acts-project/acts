@@ -33,9 +33,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }
-  double distanceToBoundary(const Vector2D& /*lpos*/) const final {
-    return 10.;
-  }
+
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "SurfaceBoundsStub";
     return sl;

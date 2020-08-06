@@ -34,7 +34,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   Vector3D trackDirection((endPoint - startPoint).normalized());
 
   // the intersections through the surfaces, start one is the first valid one
-  std::vector<Acts::Intersection> stepIntersections;
+  std::vector<Acts::Intersection3D> stepIntersections;
   stepIntersections.reserve(stepSurfaces.size() + 1);
 
   // run them - and check for the fast exit
@@ -52,9 +52,9 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
     }
   }
   // Last one is also valid - now sort
-  stepIntersections.push_back(Intersection(endPoint,
-                                           (startPoint - endPoint).norm(),
-                                           Intersection::Status::reachable));
+  stepIntersections.push_back(
+      Intersection3D(endPoint, (startPoint - endPoint).norm(),
+                     Intersection3D::Status::reachable));
   std::sort(stepIntersections.begin(), stepIntersections.end());
 
   Vector3D lastPosition = startPoint;
@@ -81,7 +81,7 @@ std::vector<Acts::DigitizationStep> Acts::PlanarModuleStepper::cellSteps(
   Vector3D intersection3D(moduleIntersection.x(), moduleIntersection.y(), 0.);
   size_t attempts = 0;
   // the collected intersections
-  std::vector<Acts::Intersection> boundaryIntersections;
+  std::vector<Acts::Intersection3D> boundaryIntersections;
   // run them - and check for the fast exit
   for (auto& bSurface : boundarySurfaces) {
     // count as an attempt

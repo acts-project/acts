@@ -23,9 +23,9 @@ namespace PlanarHelper {
 /// @param direction The starting direction for the intersection
 ///
 /// @return The intersection
-static Intersection intersect(const Transform3D& transform,
-                              const Vector3D& position,
-                              const Vector3D& direction) {
+static Intersection3D intersect(const Transform3D& transform,
+                                const Vector3D& position,
+                                const Vector3D& direction) {
   // Get the matrix from the transform (faster access)
   const auto& tMatrix = transform.matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
@@ -36,14 +36,14 @@ static Intersection intersect(const Transform3D& transform,
     // Translate that into a path
     double path = (pnormal.dot((pcenter - position))) / (denom);
     // Is valid hence either on surface or reachable
-    Intersection::Status status =
+    Intersection3D::Status status =
         (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)
-            ? Intersection::Status::onSurface
-            : Intersection::Status::reachable;
+            ? Intersection3D::Status::onSurface
+            : Intersection3D::Status::reachable;
     // Return the intersection
-    return Intersection{(position + path * direction), path, status};
+    return Intersection3D{(position + path * direction), path, status};
   }
-  return Intersection();
+  return Intersection3D();
 }
 
 }  // namespace PlanarHelper

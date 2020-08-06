@@ -23,11 +23,6 @@ bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
   return bcheck.isInside(lposition, vertices());
 }
 
-double Acts::TrapezoidBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, vertices());
-}
-
 std::vector<Acts::Vector2D> Acts::TrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
   double minhx = get(TrapezoidBounds::eHalfLengthXnegY);

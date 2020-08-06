@@ -103,13 +103,13 @@ inline SurfaceIntersection LineSurface::intersect(
   double eaTeb = ea.dot(eb);
   double denom = 1 - eaTeb * eaTeb;
   // validity parameter
-  Intersection::Status status = Intersection::Status::unreachable;
+  Intersection3D::Status status = Intersection3D::Status::unreachable;
   if (denom * denom > s_onSurfaceTolerance * s_onSurfaceTolerance) {
     double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // Check if we are on the surface already
     status = (u * u < s_onSurfaceTolerance * s_onSurfaceTolerance)
-                 ? Intersection::Status::onSurface
-                 : Intersection::Status::reachable;
+                 ? Intersection3D::Status::onSurface
+                 : Intersection3D::Status::reachable;
     Vector3D result = (ma + u * ea);
     // Evaluate the boundary check if requested
     // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
@@ -122,13 +122,13 @@ inline SurfaceIntersection LineSurface::intersect(
       if ((cZ * cZ > hZ * hZ) or
           ((vecLocal - cZ * eb).norm() >
            m_bounds->get(LineBounds::eR) + s_onSurfaceTolerance)) {
-        status = Intersection::Status::missed;
+        status = Intersection3D::Status::missed;
       }
     }
-    return {Intersection(result, u, status), this};
+    return {Intersection3D(result, u, status), this};
   }
   // return a false intersection
-  return {Intersection(position, std::numeric_limits<double>::max(), status),
+  return {Intersection3D(position, std::numeric_limits<double>::max(), status),
           this};
 }
 
