@@ -46,10 +46,6 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
-      - name: Unit tests
-        run: cmake --build build -- test
-      - name: Integration tests
-        run: cmake --build build -- integrationtests
   macos:
     runs-on: macos-10.15
     steps:
