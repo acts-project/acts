@@ -36,6 +36,7 @@ exclude_patterns = [
 primary_domain = 'cpp'
 highlight_language = 'cpp'
 smartquotes = True
+numfig = True
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -121,3 +122,4 @@ def setup(app):
     app.add_config_value('m2r_anonymous_references', False, 'env')
     app.add_config_value('m2r_disable_inline_math', False, 'env')
     app.add_directive('mdinclude', MdInclude)
+
