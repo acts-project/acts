@@ -289,7 +289,8 @@ class AxisAlignedBoundingBox {
    * @param trf An optional transform to apply first.
    */
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization3D& helper, std::array<int, 3> color = {120, 120, 120},
+  void draw(IVisualization3D& helper,
+            std::array<int, 3> color = {120, 120, 120},
             const transform_type& trf = transform_type::Identity()) const;
 
   /**

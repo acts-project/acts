@@ -83,12 +83,12 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
     auto rotation = transform.rotation();
     GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3D center = plane->center(tgContext);
-    GeometryView3D::drawArrowForward(objVis, center,
-                                   center + 30 * rotation.col(0), 4., 2.5, red);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 30 * rotation.col(0), 4., 2.5, red);
     GeometryView3D::drawArrowForward(
         objVis, center, center + 30 * rotation.col(1), 4., 2.5, green);
-    GeometryView3D::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
                  std::to_string(iarb8++));

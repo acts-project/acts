@@ -14,7 +14,7 @@ void Acts::IVisualization3D::vertex(const Vector3F& vtx, ColorRGB color) {
 }
 
 void Acts::IVisualization3D::face(const std::vector<Vector3F>& vtxs,
-                                ColorRGB color) {
+                                  ColorRGB color) {
   std::vector<Vector3D> vtxsd;
   std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
                  [](auto& v) { return v.template cast<double>(); });
@@ -22,7 +22,7 @@ void Acts::IVisualization3D::face(const std::vector<Vector3F>& vtxs,
 }
 
 void Acts::IVisualization3D::line(const Vector3F& a, const Vector3F& b,
-                                ColorRGB color) {
+                                  ColorRGB color) {
   Vector3D ad = a.template cast<double>();
   Vector3D bd = b.template cast<double>();
   line(ad, bd, color);
@@ -33,7 +33,7 @@ bool Acts::IVisualization3D::hasExtension(const std::string& path) const {
 }
 
 void Acts::IVisualization3D::replaceExtension(std::string& path,
-                                            const std::string& suffix) const {
+                                              const std::string& suffix) const {
   auto ppoint = path.find_last_of(".");
   if (ppoint != std::string::npos) {
     path.replace(ppoint, path.length(), suffix);

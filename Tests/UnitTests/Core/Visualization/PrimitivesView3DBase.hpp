@@ -104,7 +104,7 @@ static inline std::string run(IVisualization3D& helper) {
   double directionScale = 5.;
 
   Acts::EventDataView3D::drawCovarianceAngular(helper, origin, direction, cov,
-                                             directionScale, 10., errorVis);
+                                               directionScale, 10., errorVis);
 
   Acts::GeometryView3D::drawArrowForward(
       helper, origin + 0.5 * directionScale * direction,

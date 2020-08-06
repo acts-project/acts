@@ -16,7 +16,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "VisualizationTester.hpp"
+#include "Visualization3DTester.hpp"
 #include "VolumeView3DBase.hpp"
 
 namespace Acts {

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   ViewConfig unsorted({252, 160, 0});
   for (auto& sf : cylinderSurfaces) {
     GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                              unsorted);
+                                unsorted);
   }
   // Draw the all surfaces
   objVis.write("ProtoLayerHelper_CylinderLayers_unsorted");
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : radialLayers) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig sorted(sortedColors[il]);
-      GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                                sorted);
+      GeometryView3D::drawSurface(objVis, *sf, tgContext,
+                                  Transform3D::Identity(), sorted);
     }
     ++il;
   }
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   for (auto& layer : discLayersZ) {
     for (auto& sf : layer.surfaces()) {
       ViewConfig ViewConfig(sortedColors[il]);
-      GeometryView3D::drawSurface(objVis, *sf, tgContext, Transform3D::Identity(),
-                                ViewConfig);
+      GeometryView3D::drawSurface(objVis, *sf, tgContext,
+                                  Transform3D::Identity(), ViewConfig);
     }
     ++il;
   }

@@ -14,7 +14,7 @@ void ObjVisualization3D<T>::vertex(const Vector3D& vtx, ColorRGB color) {
 
 template <typename T>
 void ObjVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
-                               ColorRGB color) {
+                                 ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_lineColors[m_lines.size()] = color;
   }
@@ -26,7 +26,7 @@ void ObjVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
 
 template <typename T>
 void ObjVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
-                               ColorRGB color) {
+                                 ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_faceColors[m_faces.size()] = color;
   }
@@ -41,8 +41,8 @@ void ObjVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
 
 template <typename T>
 void ObjVisualization3D<T>::faces(const std::vector<Vector3D>& vtxs,
-                                const std::vector<FaceType>& faces,
-                                ColorRGB color) {
+                                  const std::vector<FaceType>& faces,
+                                  ColorRGB color) {
   // No faces given - call the face() method
   if (faces.empty()) {
     face(vtxs, color);

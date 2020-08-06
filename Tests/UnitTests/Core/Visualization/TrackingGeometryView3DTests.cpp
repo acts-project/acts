@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "TrackingGeometryView3DBase.hpp"
-#include "VisualizationTester.hpp"
+#include "Visualization3DTester.hpp"
 
 namespace Acts {
 namespace Test {

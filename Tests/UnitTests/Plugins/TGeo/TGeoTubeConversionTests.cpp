@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
     GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * rmax * Vector3D::UnitX(), 4., 2.5, red);
     GeometryView3D::drawArrowForward(objVis, center,
-                                   center + 1.2 * rmax * Vector3D::UnitY(), 4.,
-                                   2.5, green);
+                                     center + 1.2 * rmax * Vector3D::UnitY(),
+                                     4., 2.5, green);
     GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
     objVis.write("TGeoConversion_TGeoTube_DiscSurface_" +
@@ -211,11 +211,11 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
       CHECK_CLOSE_ABS(mphi, 0., s_epsilon);
       GeometryView3D::drawSurface(objVis, *discSegment, tgContext);
       GeometryView3D::drawArrowForward(objVis, center,
-                                     center + 1.2 * bmaxr * Vector3D::UnitX(),
-                                     4., 2.5, red);
+                                       center + 1.2 * bmaxr * Vector3D::UnitX(),
+                                       4., 2.5, red);
       GeometryView3D::drawArrowForward(objVis, center,
-                                     center + 1.2 * bmaxr * Vector3D::UnitY(),
-                                     4., 2.5, green);
+                                       center + 1.2 * bmaxr * Vector3D::UnitY(),
+                                       4., 2.5, green);
       GeometryView3D::drawArrowForward(
           objVis, center, center + 1.2 * hz * Vector3D::UnitZ(), 4., 2.5, blue);
       objVis.write("TGeoConversion_TGeoTube_DiscSegmentSurface_" +

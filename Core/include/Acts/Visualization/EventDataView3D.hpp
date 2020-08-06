@@ -136,7 +136,7 @@ struct EventDataView3D {
       const ViewConfig& surfConfig = s_viewSensitive) {
     if (surfConfig.visible) {
       GeometryView3D::drawSurface(helper, parameters.referenceSurface(), gctx,
-                                Transform3D::Identity(), surfConfig);
+                                  Transform3D::Identity(), surfConfig);
     }
 
     // Draw the parameter shaft and cone
@@ -152,7 +152,7 @@ struct EventDataView3D {
         helper, position, position + 0.5 * parLength, 100., 1.0, lparConfig);
 
     GeometryView3D::drawArrowForward(helper, position + 0.5 * parLength,
-                                   position + parLength, 4., 2.5, lparConfig);
+                                     position + parLength, 4., 2.5, lparConfig);
 
     if (parameters.covariance().has_value()) {
       auto paramVec = parameters.parameters();
@@ -219,7 +219,7 @@ struct EventDataView3D {
       // First, if necessary, draw the surface
       if (surfaceConfig.visible) {
         GeometryView3D::drawSurface(helper, state.referenceSurface(), gctx,
-                                  Transform3D::Identity(), surfaceConfig);
+                                    Transform3D::Identity(), surfaceConfig);
       }
 
       // Second, if necessary and present, draw the calibrated measurement (only
