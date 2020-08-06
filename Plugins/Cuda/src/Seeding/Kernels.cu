@@ -102,6 +102,9 @@ namespace Acts{
 		     int*  TcompIndex,
 		     int*  tmpTcompIndex){
     
+    if (grid.x == 0) {
+      return;
+    }
     //int sharedMemSize = (2*sizeof(int))*block.x + 2*sizeof(int);
     int sharedMemSize = 2*sizeof(int);
     
@@ -145,6 +148,10 @@ namespace Acts{
 			    float* spTcompMatPerSpM,
 			    float* circTcompMatPerSpM
 			    ){
+
+    if (grid.x == 0) {
+      return;
+    }
     int sharedMemSize = sizeof(float)*6;
     cuTransformCoordinate<<< grid, block, sharedMemSize >>>(
 				      nSpM,
@@ -196,6 +203,10 @@ namespace Acts{
 		     Triplet* TripletsPerSpM,
 		     cudaStream_t* stream
 		     ){    
+
+    if (grid.x == 0) {
+      return;
+    }
     int sharedMemSize = sizeof(Triplet)*(*nTrplPerSpBLimit_cpu);
     sharedMemSize += sizeof(float)*(*compatSeedLimit_cpu); 
     sharedMemSize += sizeof(int);
