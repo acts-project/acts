@@ -287,15 +287,16 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   Acts::Vector3D extraDirection = {0, 0, 0};
 
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
-    if (volIter != mappingVolumes.end() && !volIter->volume->inside(rmIter->position)){
-      double dist_vol = (volIter.position - mTrack.first.first).norm();
-      double rmIter = (volIter.position - mTrack.first.first).norm();
+    if (volIter != mappingVolumes.end() &&
+        !volIter->volume->inside(rmIter->position)) {
+      double dist_vol = (volIter->position - mTrack.first.first).norm();
+      double rmIter = (rmIter->position - mTrack.first.first).norm();
       // Material past the entry point to the current volume
-      if (rmIter>dist_vol){
+      if (rmIter > dist_vol) {
         // Switch to next material volume
         ++volIter;
       }
-    } 
+    }
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
       currentID = volIter->volume->geoID();
