@@ -68,7 +68,7 @@ void plot(std::vector<TH2F*> Map, std::vector<int> detectors, const std::string&
   return;
 }
 
-/// Initialise the histograms for each volume.
+/// Initialise the histograms for the detector.
 
 void Initialise_hist(std::vector<TH2F*>& volume_hist){
 
@@ -95,14 +95,14 @@ void Initialise_hist(std::vector<TH2F*>& volume_hist){
   volume_hist = v_hist;
 }
 
-/// Fill the histograms for each volumes.
+/// Fill the histograms for the detector.
 
 void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::vector<int> detectors,  const int& nbprocess){
   
   
   Initialise_hist(volume_hist);
 
-  //Get old file, old tree and set top branch address
+  //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
   TTree *tree = (TTree*)tfile->Get("material-tracks");
 
@@ -142,7 +142,7 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
     double matX0 = 0;
     double matL0 = 0;
 
-    // loop over all the material hit to do initialisation and compute weight
+    // loop over all the material hits
     for(int j=0; j<mat_X0->size(); j++ ){
 
       Acts::GeometryID ID;
@@ -154,7 +154,7 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
         ID = Acts::GeometryID(vol_id->at(j));
       }
 
-      // Check if the volume is part of the selected ones
+      // Check if the volume/surface is part of the selected ones
       if(std::find(detectors.begin(), detectors.end(), ID.volume()) != detectors.end()) {
         matX0 += mat_step_length->at(j) / mat_X0->at(j);
         matL0 += mat_step_length->at(j) / mat_L0->at(j);
@@ -171,12 +171,10 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
   volume_hist[1]->Divide(volume_hist[2]);
 }
 
-/// Plot the material on each volume.
-/// If a volume map json file is specify it is parse to associate name to the different volume id.
+/// Plot the material as function of eta and phi for a given detector/sub-detector
+/// detectors : list of the ID of the volume constitutive of the detector/sub-detector
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
-/// The parsing of the Json volume map file (use to associate the name to the volumes)
-/// might not work with version of root newer that version 6.18.04
 
 void Mat_map_volume_plot(std::string input_file = "", std::vector<int> detectors, int nbprocess = -1, std::string name = ""){
 
