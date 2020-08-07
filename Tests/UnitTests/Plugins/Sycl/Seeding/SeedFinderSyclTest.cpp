@@ -32,6 +32,7 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
 
   std::ifstream spFile(filename);
   if (spFile.is_open()) {
+    int id = 0;
     while (std::getline(spFile, line)) {
       std::stringstream ss(line);
       std::string linetype;
@@ -58,7 +59,8 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        readSP.emplace_back(new SpacePoint(x, y, z, r, layer, varianceR, varianceZ));
+        readSP.emplace_back(new SpacePoint(x, y, z, r, layer, varianceR, varianceZ, id));
+        ++id;
       }
     }
   }
@@ -76,7 +78,7 @@ auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoin
   config.collisionRegionMax = 250.;
   config.zMin = -2800.;
   config.zMax = 2800.;
-  config.maxSeedsPerSpM = 5;
+  config.maxSeedsPerSpM = 3;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
@@ -149,9 +151,9 @@ auto main(int argc, char** argv) -> int {
       auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
         Acts::BinFinder<SpacePoint>());
       auto config = setupSeedfinderConfiguration<SpacePoint>();
-      Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+      // Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
       config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-        Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
+        Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig()/*, &atlasCuts*/));
       Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config);
       Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
       auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/, float /*unused*/, float /*unused*/) -> Acts::Vector2D {
@@ -166,10 +168,10 @@ auto main(int argc, char** argv) -> int {
 
       // ********* EXECUTE ON CPU ********** //
 
-      auto start_cpu = std::chrono::system_clock::now();
       int group_count = 0;
       auto groupIt = spGroup.begin();
 
+      auto start_cpu = std::chrono::system_clock::now();
       std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
       if(cpu) {
 
@@ -183,20 +185,20 @@ auto main(int argc, char** argv) -> int {
         }
       }
 
+      auto end_cpu = std::chrono::system_clock::now();
       std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
 
-      auto end_cpu = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
       double cpuTime = elapsec_cpu.count();
 
       //----------- EXECUTE ON GPU - SYCL ----------//
 
-      auto start_sycl = std::chrono::system_clock::now();
 
       group_count = 0;
       std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
       groupIt = spGroup.begin();
 
+      auto start_sycl = std::chrono::system_clock::now();
       for (; !(groupIt == spGroup.end()); ++groupIt) {
         seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
             groupIt.bottom(), groupIt.middle(), groupIt.top()));
@@ -223,54 +225,46 @@ auto main(int argc, char** argv) -> int {
       std::cout << std::endl;
       std::cout << "-----------------------------------------------------------" << std::endl;
 
-      for(const auto *S: spVec) {
-        delete[] S;
-      }
-
       if(matches) {
         int nSeed_cpu = 0;
         for (auto& outVec : seedVector_cpu) {
           nSeed_cpu += outVec.size();
         }
 
-        int nSeed_cuda = 0;
+        int nSeed_sycl = 0;
         for (auto& outVec : seedVector_sycl) {
-          nSeed_cuda += outVec.size();
+          nSeed_sycl += outVec.size();
         }
 
-        std::cout << "Number of Seeds (CPU | CUDA): " << nSeed_cpu << " | "
-                  << nSeed_cuda << std::endl;
+        std::cout << "Number of Seeds (CPU | SYCL): " << nSeed_cpu << " | "
+                  << nSeed_sycl << std::endl;
 
         int nMatch = 0;
 
         for (size_t i = 0; i < seedVector_cpu.size(); i++) {
           auto regionVec_cpu = seedVector_cpu[i];
-          auto regionVec_cuda = seedVector_sycl[i];
+          auto regionVec_sycl = seedVector_sycl[i];
 
           std::vector<std::vector<SpacePoint>> seeds_cpu;
-          std::vector<std::vector<SpacePoint>> seeds_cuda;
+          std::vector<std::vector<SpacePoint>> seeds_sycl;
 
-          // for (size_t i_cpu = 0; i_cpu < regionVec_cpu.size(); i_cpu++) {
           for (auto sd : regionVec_cpu) {
             std::vector<SpacePoint> seed_cpu;
             seed_cpu.push_back(*(sd.sp()[0]));
             seed_cpu.push_back(*(sd.sp()[1]));
             seed_cpu.push_back(*(sd.sp()[2]));
-
             seeds_cpu.push_back(seed_cpu);
           }
-
-          for (auto sd : regionVec_cuda) {
-            std::vector<SpacePoint> seed_cuda;
-            seed_cuda.push_back(*(sd.sp()[0]));
-            seed_cuda.push_back(*(sd.sp()[1]));
-            seed_cuda.push_back(*(sd.sp()[2]));
-
-            seeds_cuda.push_back(seed_cuda);
+          for (auto sd : regionVec_sycl) {
+            std::vector<SpacePoint> seed_sycl;
+            seed_sycl.push_back(*(sd.sp()[0]));
+            seed_sycl.push_back(*(sd.sp()[1]));
+            seed_sycl.push_back(*(sd.sp()[2]));
+            seeds_sycl.push_back(seed_sycl);
           }
 
           for (auto seed : seeds_cpu) {
-            for (auto other : seeds_cuda) {
+            for (auto other : seeds_sycl) {
               if (seed[0] == other[0] && seed[1] == other[1] && seed[2] == other[2]) {
                 nMatch++;
                 break;
@@ -284,6 +278,10 @@ auto main(int argc, char** argv) -> int {
           std::cout << "Matching rate: " << float(nMatch) / nSeed_cpu * 100 << "%"
                     << std::endl;
         }
+      }
+
+      for(const auto *S: spVec) {
+        delete[] S;
       }
     }
 

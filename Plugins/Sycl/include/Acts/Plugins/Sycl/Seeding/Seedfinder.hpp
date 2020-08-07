@@ -18,7 +18,7 @@
 namespace Acts::Sycl {
 
 // store SpacePoint data in float arrays, index them with enum values
-enum eSpacePoint {
+enum eSpacePoint : int {
   eX = 0,
   eY = 1,
   eZ = 2,
@@ -29,7 +29,7 @@ enum eSpacePoint {
 };
 
 // store SeedfinderConfig data in float array, index it with enum values
-enum eConfigData {
+enum eConfigData : int {
   eDeltaRMin = 0,
   eDeltaRMax = 1,
   eCotThetaMax = 2,
@@ -43,11 +43,12 @@ enum eConfigData {
   eImpactWeightFactor = 10,
   eFilterDeltaRMin = 11,
   eCompatSeedWeight = 12,
-  eCompatSeedLimit = 13
+  eCompatSeedLimit = 13,
+  eImpactMax = 14,
 };
 
 // store linear circle data in float arrays, index them with enum values
-enum eLinCircle {
+enum eLinCircle : int {
   eZo = 0,
   eCotTheta = 1,
   eIDeltaR = 2,
@@ -63,7 +64,7 @@ void offloadComputations( cl::sycl::queue q,
                           const std::vector<float>& middleSPs,
                           const std::vector<float>& topSPs,
                           std::vector<std::vector<int>>& seedIndices,
-                          std::vector<float>& seedWeight);
+                          std::vector<std::vector<float>>& seedWeight);
 
 void outputPlatforms();
 void testDevice();

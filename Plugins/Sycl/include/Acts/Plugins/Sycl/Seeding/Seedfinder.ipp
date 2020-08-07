@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <type_traits>
+#include <exception>
 #include <boost/range/adaptors.hpp>
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
@@ -108,11 +109,12 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     m_config.seedFilter->getSeedFilterConfig().impactWeightFactor,
     m_config.seedFilter->getSeedFilterConfig().deltaRMin,
     m_config.seedFilter->getSeedFilterConfig().compatSeedWeight,
-    float(m_config.seedFilter->getSeedFilterConfig().compatSeedLimit)
+    float(m_config.seedFilter->getSeedFilterConfig().compatSeedLimit),
+    m_config.impactMax
   };
 
   std::vector<std::vector<int>> seedIndices;
-  std::vector<float>  seedWeight;
+  std::vector<std::vector<float>>  seedWeight;
 
   offloadComputations(m_queue,
                       offloadConfigData,
@@ -123,33 +125,24 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                       seedWeight
   );
 
-  std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        selectedSeeds;
 
-  // std::cout << seedWeight.size() << std::endl;
-  for(int i = 0; i < seedWeight.size(); ++i) {
-    auto bottomSP = *(bottomSPvec[seedIndices[i][0]]);
-    auto middleSP = *(middleSPvec[seedIndices[i][1]]);
-    auto topSP =    *(topSPvec[seedIndices[i][2]]);
-    auto weight =   seedWeight[i];
-    const IExperimentCuts<external_spacepoint_t>* m_experimentCuts = m_config.seedFilter->getExperimentCuts();
-    if (m_experimentCuts != nullptr) {
-      // add detector specific considerations on the seed weight
-      weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSP);
-      // discard seeds according to detector specific cuts (e.g.: weight)
-      if (m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP, topSP)) {
-        // selectedSeeds.push_back(std::make_pair(
-        //     weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-        //                 bottomSP, middleSP, topSP, 0)));
-        outputVec.push_back(Seed<external_spacepoint_t>(
-          bottomSP.sp(), middleSP.sp(),
-          topSP.sp(), 0
-        ));
-      }
+  for(int mi = 0; mi < numMiddleSPs && mi < seedIndices.size() && mi < seedWeight.size(); ++mi) {
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        seedsPerSPM;
+    for(int j = 0; j*2+1 < seedIndices[mi].size() && 
+                    seedIndices[mi][2*j] != -1 &&
+                    seedIndices[mi][2*j+1] != -1 ; ++j){
+      auto& bottomSP = *(bottomSPvec[seedIndices[mi][2*j]]);
+      auto& middleSP = *(middleSPvec[mi]);
+      auto& topSP =    *(topSPvec[seedIndices[mi][2*j+1]]);
+      float weight =   seedWeight[mi][j];
+
+      seedsPerSPM.emplace_back(std::make_pair(weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
+                        bottomSP, middleSP, topSP, 0)));
+
     }
+     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, outputVec);
   }
-
   return outputVec;
 }
 }  // namespace Acts::Sycl

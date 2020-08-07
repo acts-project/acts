@@ -136,13 +136,13 @@ namespace Acts::Sycl {
                           const std::vector<float>& middleSPs,
                           const std::vector<float>& topSPs,
                           std::vector<std::vector<int>>& seedIndices,
-                          std::vector<float>& seedWeight)
+                          std::vector<std::vector<float>>& seedWeight)
     {
 
     // each vector stores data of space points flattened out
-    const int M = (middleSPs.size()) / int(eSP); 
-    const int B = (bottomSPs.size()) / int(eSP);
-    const int T = (topSPs.size()) / int(eSP);
+    const int M = (middleSPs.size()) / eSP; 
+    const int B = (bottomSPs.size()) / eSP;
+    const int T = (topSPs.size()) / eSP;
 
     std::vector<int> numBotCompMid(M,0);
     std::vector<int> numTopCompMid(M,0);
@@ -189,9 +189,9 @@ namespace Acts::Sycl {
             const int mid = (int(idx) / B);
             const int bot = (int(idx) % B);
 
-            const float deltaR = midSPAcc[mid * int(eSP) + int(eRadius)] - botSPAcc[bot * int(eSP) + int(eRadius)];
-            const float cotTheta = (midSPAcc[mid * int(eSP) + int(eZ)] - botSPAcc[bot * int(eSP) + int(eZ)]) / deltaR;
-            const float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
+            const float deltaR = midSPAcc[mid * eSP + eRadius] - botSPAcc[bot * eSP + eRadius];
+            const float cotTheta = (midSPAcc[mid * eSP + int(eZ)] - botSPAcc[bot * eSP + int(eZ)]) / deltaR;
+            const float zOrigin = midSPAcc[mid * eSP + int(eZ)] - midSPAcc[mid * eSP + eRadius] * cotTheta;
 
             if( !(deltaR < configAcc[eDeltaRMin]) &&
                 !(deltaR > configAcc[eDeltaRMax]) &&
@@ -219,9 +219,9 @@ namespace Acts::Sycl {
             const int top = (idx % T);
 
             if(numBotCompAcc[mid] != 0) {
-              const float deltaR = topSPAcc[top * int(eSP) + int(eRadius)] - midSPAcc[mid * int(eSP) + int(eRadius)];
-              const float cotTheta = (topSPAcc[top * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eZ)]) / deltaR;
-              const float zOrigin = midSPAcc[mid * int(eSP) + int(eZ)] - midSPAcc[mid * int(eSP) + int(eRadius)] * cotTheta;
+              const float deltaR = topSPAcc[top * eSP + eRadius] - midSPAcc[mid * eSP + eRadius];
+              const float cotTheta = (topSPAcc[top * eSP + int(eZ)] - midSPAcc[mid * eSP + int(eZ)]) / deltaR;
+              const float zOrigin = midSPAcc[mid * eSP + int(eZ)] - midSPAcc[mid * eSP + eRadius] * cotTheta;
 
               if( !(deltaR < configAcc[eDeltaRMin]) &&
                   !(deltaR > configAcc[eDeltaRMax]) &&
@@ -348,20 +348,20 @@ namespace Acts::Sycl {
             }
             mid = L;
 
-            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
-            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
-            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
-            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
-            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float xM =          midSPAcc[mid * eSP + int(eX)];
+            float yM =          midSPAcc[mid * eSP + int(eY)];
+            float zM =          midSPAcc[mid * eSP + int(eZ)];
+            float rM =          midSPAcc[mid * eSP + eRadius];
+            float varianceZM =  midSPAcc[mid * eSP + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * eSP + int(eVarianceR)];
             float cosPhiM =     xM / rM;
             float sinPhiM =     yM / rM;
 
             // retrieve bottom space point index -> bot
             int bot = indBotAcc[idx];
-            float deltaX = botSPAcc[bot * int(eSP) + int(eX)] - xM;
-            float deltaY = botSPAcc[bot * int(eSP) + int(eY)] - yM;
-            float deltaZ = botSPAcc[bot * int(eSP) + int(eZ)] - zM;
+            float deltaX = botSPAcc[bot * eSP + int(eX)] - xM;
+            float deltaY = botSPAcc[bot * eSP + int(eY)] - yM;
+            float deltaZ = botSPAcc[bot * eSP + int(eZ)] - zM;
 
             float x = deltaX * cosPhiM + deltaY * sinPhiM;
             float y = deltaY * cosPhiM - deltaX * sinPhiM;
@@ -374,8 +374,8 @@ namespace Acts::Sycl {
             linBotAcc[idx][int(eIDeltaR)] = iDeltaR;
             linBotAcc[idx][int(eU)] = x * iDeltaR2;
             linBotAcc[idx][int(eV)] = y * iDeltaR2;
-            linBotAcc[idx][int(eEr)] = ((varianceZM + botSPAcc[bot * int(eSP) + int(eVarianceZ)]) +
-            (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * int(eSP) + int(eVarianceR)])) * iDeltaR2;
+            linBotAcc[idx][int(eEr)] = ((varianceZM + botSPAcc[bot * eSP + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * eSP + int(eVarianceR)])) * iDeltaR2;
           });
         });
 
@@ -402,20 +402,20 @@ namespace Acts::Sycl {
             }
             mid = L;
 
-            float xM =          midSPAcc[mid * int(eSP) + int(eX)];
-            float yM =          midSPAcc[mid * int(eSP) + int(eY)];
-            float zM =          midSPAcc[mid * int(eSP) + int(eZ)];
-            float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-            float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
-            float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
+            float xM =          midSPAcc[mid * eSP + int(eX)];
+            float yM =          midSPAcc[mid * eSP + int(eY)];
+            float zM =          midSPAcc[mid * eSP + int(eZ)];
+            float rM =          midSPAcc[mid * eSP + eRadius];
+            float varianceZM =  midSPAcc[mid * eSP + int(eVarianceZ)];
+            float varianceRM =  midSPAcc[mid * eSP + int(eVarianceR)];
             float cosPhiM =     xM / rM;
             float sinPhiM =     yM / rM;
 
             // retrieve top space point index
             int top = indTopAcc[idx];
-            float deltaX = topSPAcc[top * int(eSP) + int(eX)] - xM;
-            float deltaY = topSPAcc[top * int(eSP) + int(eY)] - yM;
-            float deltaZ = topSPAcc[top * int(eSP) + int(eZ)] - zM;
+            float deltaX = topSPAcc[top * eSP + int(eX)] - xM;
+            float deltaY = topSPAcc[top * eSP + int(eY)] - yM;
+            float deltaZ = topSPAcc[top * eSP + int(eZ)] - zM;
 
             float x = deltaX * cosPhiM + deltaY * sinPhiM;
             float y = deltaY * cosPhiM - deltaX * sinPhiM;
@@ -428,16 +428,44 @@ namespace Acts::Sycl {
             linTopAcc[idx][int(eIDeltaR)] = iDeltaR;
             linTopAcc[idx][int(eU)] = x * iDeltaR2;
             linTopAcc[idx][int(eV)] = y * iDeltaR2;
-            linTopAcc[idx][int(eEr)] = ((varianceZM + topSPAcc[top * int(eSP) + int(eVarianceZ)]) +
-            (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * int(eSP) + int(eVarianceR)])) * iDeltaR2;
+            linTopAcc[idx][int(eEr)] = ((varianceZM + topSPAcc[top * eSP + int(eVarianceZ)]) +
+            (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * eSP + int(eVarianceR)])) * iDeltaR2;
           });
         });
         lin_top_transform.wait();  
 
-        const float MIN = -100000;
+        // print for checking results
+        /*{
+          auto linBot = linBotBuf.get_access<am::read>();
+          auto linTop = linTopBuf.get_access<am::read>();
+          for(int i = 0; i < M; ++i) {
+            std::cout << i+1 << '\n';
+            std::cout << "Bottom linear: \n";
+            for(int j = ((i>0)? sumBotCompPerMid[i-1] : 0); j < sumBotCompPerMid[i]; ++j){
+              for(int k = 0; k < eLIN; ++k) {
+                std::cout << linBot[j][k] << " ";
+              } 
+              std::cout << "\n";
+            }
+            std::cout << "Top linear: \n";
+            for(int j = ((i>0)? sumTopCompPerMid[i-1] : 0); j < sumTopCompPerMid[i]; ++j){
+              for(int k = 0; k < eLIN; ++k) {
+                std::cout << linTop[j][k] << " ";
+              } 
+              std::cout << "\n";
+            }
+          }
+        }*/
 
+        const float MIN = -1000000;
+
+        // count number of triplets overall
         int zero = 0;
-        sycl::buffer<int,1> countTopBuf(&zero, 1);
+        sycl::buffer<int,1> maxTripletBuf(&zero, 1);
+
+        // count maximum number of triplets per middle space point
+        std::vector<int> zeros(M,0);
+        sycl::buffer<int,1> countTripletBuf(zeros.data(),sycl::range<1>(zeros.size()));
 
         auto triplet_search = q.submit([&](sycl::handler &cghandler) {
           auto sumCombAcc =     sumCombBuf.get_access<      am::read,         at::global_buffer>(cghandler);
@@ -451,7 +479,8 @@ namespace Acts::Sycl {
           auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer>(cghandler);
           auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(cghandler);
 
-          auto countTopAcc =    countTopBuf.get_access<     am::atomic,       at::global_buffer>(cghandler);
+          auto countTripletsAcc=countTripletBuf.get_access< am::atomic,       at::global_buffer>(cghandler);
+          auto maxTripletsAcc = maxTripletBuf.get_access<   am::atomic,       at::global_buffer>(cghandler);
           auto tripletAcc =     tripletBuf.get_access<      am::discard_write,at::global_buffer>(cghandler);
 
           cghandler.parallel_for<triplet>(edgesCombBotTop, [=](sycl::id<1> idx){
@@ -475,23 +504,23 @@ namespace Acts::Sycl {
             int bot = indBotAcc[ib];
             int top = indTopAcc[it];
 
-            const float Zob =         linBotAcc[ib][int(eZo)];
-            const float Vb =          linBotAcc[ib][int(eV)];
-            const float Ub =          linBotAcc[ib][int(eU)];
-            const float Erb =         linBotAcc[ib][int(eEr)];
-            const float cotThetab =   linBotAcc[ib][int(eCotTheta)];
-            const float iDeltaRb =    linBotAcc[ib][int(eIDeltaR)];
+            const float Zob =         linBotAcc[ib][eZo];
+            const float Vb =          linBotAcc[ib][eV];
+            const float Ub =          linBotAcc[ib][eU];
+            const float Erb =         linBotAcc[ib][eEr];
+            const float cotThetab =   linBotAcc[ib][eCotTheta];
+            const float iDeltaRb =    linBotAcc[ib][eIDeltaR];
 
-            const float Zot =         linTopAcc[it][int(eZo)];
-            const float Vt =          linTopAcc[it][int(eV)];
-            const float Ut =          linTopAcc[it][int(eU)];
-            const float Ert =         linTopAcc[it][int(eEr)];
-            const float cotThetat =   linTopAcc[it][int(eCotTheta)];
-            const float iDeltaRt =    linTopAcc[it][int(eIDeltaR)];
+            const float Zot =         linTopAcc[it][eZo];
+            const float Vt =          linTopAcc[it][eV];
+            const float Ut =          linTopAcc[it][eU];
+            const float Ert =         linTopAcc[it][eEr];
+            const float cotThetat =   linTopAcc[it][eCotTheta];
+            const float iDeltaRt =    linTopAcc[it][eIDeltaR];
 
-            const float rM =          midSPAcc[mid * int(eSP) + int(eRadius)];
-            const float varianceRM =  midSPAcc[mid * int(eSP) + int(eVarianceR)];
-            const float varianceZM =  midSPAcc[mid * int(eSP) + int(eVarianceZ)];
+            const float rM =          midSPAcc[mid*eSP + eRadius];
+            const float varianceRM =  midSPAcc[mid*eSP + eVarianceR];
+            const float varianceZM =  midSPAcc[mid*eSP + eVarianceZ];
 
             float iSinTheta2 = (1. + cotThetab * cotThetab);
             float scatteringInRegion2 = configAcc[eMaxScatteringAngle2] * iSinTheta2;
@@ -506,8 +535,8 @@ namespace Acts::Sycl {
             float dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
 
             float dU = Ut - Ub;
-            if((!(deltaCotTheta2 - error2 > 0) || dCotThetaMinusError2 <= scatteringInRegion2)
-                && dU != 0.) {
+            if((!(deltaCotTheta2 - error2 > 0) || !(dCotThetaMinusError2 > scatteringInRegion2))
+                && !(dU == 0.)) {
               float A = (Vt - Vb) / dU;
               float S2 = 1. + A * A;
               float B = Vb - A * Ub;
@@ -516,12 +545,14 @@ namespace Acts::Sycl {
               float iHelixDiameter2 = B2 / S2;
               float pT2scatter = 4 * iHelixDiameter2 * configAcc[ePT2perRadius];
               float p2scatter = pT2scatter * iSinTheta2;
+              float Im = sycl::abs((A - B * rM) * rM);
 
               if(!(S2 < B2 * configAcc[eMinHelixDiameter2]) && 
                   !((deltaCotTheta2 - error2 > 0) &&
-                  (dCotThetaMinusError2 > p2scatter * configAcc[eSigmaScattering] * configAcc[eSigmaScattering]))) {
-                int c = countTopAcc[0].fetch_add(1);
-                float Im = sycl::abs((A - B * rM) * rM);
+                  (dCotThetaMinusError2 > p2scatter * configAcc[eSigmaScattering] * configAcc[eSigmaScattering])) &&
+                  Im <= configAcc[eImpactMax]) {
+                int c = countTripletsAcc[mid].fetch_add(1);
+                maxTripletsAcc[0].fetch_max(c);
                 tripletAcc[idx][0] = B / std::sqrt(S2);
                 tripletAcc[idx][1] = Im;
               }
@@ -530,15 +561,40 @@ namespace Acts::Sycl {
         });
         triplet_search.wait();
 
+        /*auto tripletAccCheck = tripletBuf.get_access<am::read>();
+        for(int idx = 0; idx < edgesCombBotTop; ++idx) {
+          if(tripletAccCheck[idx][0] == MIN) continue;
+          int L = 0, R = M, mid = 0;
+          while(L < R - 1) {
+            mid = (L + R) / 2;
+            if(idx < sumCombMid[mid]) R = mid;
+            else L = mid;
+          }
+          mid = L;
+
+          int ib = sumBotCompPerMid[mid] + ((idx - sumCombMid[mid]) / numTopCompMid[mid]);
+          int it = sumTopCompPerMid[mid] + ((idx - sumCombMid[mid]) % numTopCompMid[mid]);
+
+          int bot = indBotCompMid[ib];
+          int top = indTopCompMid[it];
+
+          std::cout << "bottom, middle, top: " << bot << " " << mid << " " << top << " ";
+          std::cout << tripletAccCheck[idx][0] << " " << tripletAccCheck[idx][1] << "\n";
+        }*/
+
         int seedCounter = 0;
-        auto cc = countTopBuf.get_access<am::read>();
+        auto cc = maxTripletBuf.get_access<am::read>();
         const int maxTriplets = cc[0]+1;
 
-        sycl::buffer<int,2>   seedIndBuf((sycl::range<2>(maxTriplets,3)));
-        sycl::buffer<float,1> seedWeightBuf((sycl::range<1>(maxTriplets)));
+        // std::cout << maxTriplets << std::endl;
+        zeros.resize(M,0);
+        sycl::buffer<int,1> countTripletBuf2(zeros.data(),sycl::range<1>(zeros.size()));
+
+        sycl::buffer<int,2>   seedIndBuf((sycl::range<2>(M,maxTriplets*2)));
+        sycl::buffer<float,2> seedWeightBuf((sycl::range<2>(M,maxTriplets)));
         sycl::buffer<int,1>   countBuf(&seedCounter, 1);
 
-        auto seed_filter = q.submit([&](sycl::handler &cghandler) {
+        auto seed_filter_2sp_fixed = q.submit([&](sycl::handler &cghandler) {
           auto sumCombAcc =     sumCombBuf.get_access<      am::read,         at::global_buffer>(cghandler);
           auto sumTopCompAcc =  sumTopCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
           auto sumBotCompAcc =  sumBotCompBuf.get_access<   am::read,         at::global_buffer>(cghandler);
@@ -552,13 +608,12 @@ namespace Acts::Sycl {
 
           auto seedIndAcc =     seedIndBuf.get_access<      am::discard_write,at::global_buffer>(cghandler);
           auto seedWeightAcc =  seedWeightBuf.get_access<   am::discard_write,at::global_buffer>(cghandler);
-          auto counter    =     countBuf.get_access<        am::atomic,       at::global_buffer>(cghandler);
+          auto countTripletsAcc=countTripletBuf2.get_access< am::atomic,       at::global_buffer>(cghandler);
 
           cghandler.parallel_for<class triplet_filter>(edgesCombBotTop, [=](sycl::id<1> idx){
             if(tripletAcc[idx][0] != MIN) {
               // binary search mid space point index -> mid
-              int L = 0, R = M;
-              int mid = 0;
+              int L = 0, R = M, mid = 0;
               while(L < R - 1) {
                 mid = (L + R) / 2;
                 if(idx < sumCombAcc[mid]) R = mid;
@@ -575,7 +630,6 @@ namespace Acts::Sycl {
               int top = indTopAcc[it];
 
               int numb = (idx - sumCombAcc[mid]) / numT;
-              // int numt = it - sumTopCompAcc[mid];
 
               int begin = sumCombAcc[mid] + numb * numT;
               int end = sumCombAcc[mid] + (numb+1) * numT;
@@ -583,7 +637,7 @@ namespace Acts::Sycl {
               float invHelixDiameter = tripletAcc[idx][0];
               float lowerLimitCurv = invHelixDiameter - configAcc[eDeltaInvHelixDiameter];
               float upperLimitCurv = invHelixDiameter + configAcc[eDeltaInvHelixDiameter];
-              float currentTop_r = topSPAcc[top * int(eSP) + int(eRadius)];
+              float currentTop_r = topSPAcc[top * eSP + eRadius];
               float impact = tripletAcc[idx][1];
               float weight = -(impact * configAcc[eImpactWeightFactor]);
 
@@ -592,9 +646,9 @@ namespace Acts::Sycl {
               for(int j = begin; j < end; ++j){
                 if(tripletAcc[j][0] != MIN && j != idx) {
                   int top2 = indTopAcc[sumTopCompAcc[mid] + ((j - sumCombAcc[mid]) % numT)];
-                  float otherTop_r = topSPAcc[top2 * int(eSP) + int(eRadius)];
+                  float otherTop_r = topSPAcc[top2 * eSP + eRadius];
                   float deltaR = sycl::abs(currentTop_r - otherTop_r);
-                  if(compatCounter < configAcc[eCompatSeedLimit] &&
+                  if(compatCounter < configAcc[eCompatSeedLimit]-0.1 &&
                     deltaR >= configAcc[eFilterDeltaRMin] &&
                     tripletAcc[j][0] >= lowerLimitCurv &&
                     tripletAcc[j][0] <= upperLimitCurv && 
@@ -604,28 +658,31 @@ namespace Acts::Sycl {
                   }
                 }
               }
-              int i = counter[0].fetch_add(1);
-              seedIndAcc[i][0] = bot;
-              seedIndAcc[i][1] = mid;
-              seedIndAcc[i][2] = top;
-              seedWeightAcc[i] = weight + compatCounter * configAcc[eCompatSeedWeight];
+              int i = countTripletsAcc[mid].fetch_add(1);
+              seedIndAcc[mid][2*i] = bot;
+              seedIndAcc[mid][2*i+1] = top;
+              seedWeightAcc[mid][i] = weight + compatCounter * configAcc[eCompatSeedWeight];
             }
           });
         });
 
-        seed_filter.wait();
+        seed_filter_2sp_fixed.wait();
 
         auto seedInd = seedIndBuf.get_access<am::read>();
         auto seedWei = seedWeightBuf.get_access<am::read>();
-        auto c = countBuf.get_access<am::read>();
+        auto ct = countTripletBuf2.get_access<am::read>();
 
-        seedIndices.resize(c[0],std::vector<int>(3));
-        seedWeight.resize(c[0]);
-        for(int i = 0; i < c[0]; ++i) {
-          seedIndices[i][0] = seedInd[i][0];
-          seedIndices[i][1] = seedInd[i][1];
-          seedIndices[i][2] = seedInd[i][2];
-          seedWeight[i] = seedWei[i];
+        seedIndices.resize(M,std::vector<int>(maxTriplets*2,-1));
+        seedWeight.resize(M,std::vector<float>(maxTriplets,0));
+        for(int i = 0; i < M; ++i) {
+          // std::cout << "max: " << ct[i] << '\n';
+          for(int j = 0; j < ct[i] && j < maxTriplets; ++j) {
+            seedIndices[i][2*j] = seedInd[i][2*j];
+            seedIndices[i][2*j+1] = seedInd[i][2*j+1];
+            seedWeight[i][j] = seedWei[i][j];
+            // std::cout << "middle " << i << "; bottom: " << seedIndices[i][2*j] << "; top: " << seedIndices[i][2*j+1] << " ";
+            // std::cout << "weight: "<< seedWeight[i][j] << std::endl;
+          }
         }
       }
     }
