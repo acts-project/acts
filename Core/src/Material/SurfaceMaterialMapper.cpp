@@ -249,10 +249,10 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     // Material not inside current volume
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      double dist_vol = (volIter->position - mTrack.first.first).norm();
-      double dist_mat = (rmIter->position - mTrack.first.first).norm();
-      // Material past the entry point to the curent volume
-      if (dist_mat > dist_vol) {
+      double distVol = (volIter->position - mTrack.first.first).norm();
+      double distMat = (rmIter->position - mTrack.first.first).norm();
+      // Material past the entry point to the current volume
+      if (distMat > distVol) {
         // Switch to next material volume
         ++volIter;
       }
