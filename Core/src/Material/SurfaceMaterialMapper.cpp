@@ -231,7 +231,6 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto rmIter = rMaterial.begin();
   auto sfIter = mappingSurfaces.begin();
   auto volIter = mappingVolumes.begin();
-  bool encounterVolume = false;
 
   // Use those to minimize the lookup
   GeometryID lastID = GeometryID();
@@ -247,16 +246,20 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+    // Material not inside current volume
+    if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      encounterVolume = false;
-      // Switch to next material volume
-      ++volIter;
+      double distVol = (volIter->position - mTrack.first.first).norm();
+      double distMat = (rmIter->position - mTrack.first.first).norm();
+      // Material past the entry point to the current volume
+      if (distMat > distVol) {
+        // Switch to next material volume
+        ++volIter;
+      }
     }
     /// check if we are inside a material volume
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
-      encounterVolume = true;
       ++rmIter;
       continue;
     }
