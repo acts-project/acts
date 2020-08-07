@@ -325,6 +325,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
               std::pair(properties, extraPosition));
         }
       }
+      rmIter->volume = volIter->volume;
       encounterVolume = true;
     }
     ++rmIter;

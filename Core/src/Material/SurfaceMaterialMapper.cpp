@@ -282,8 +282,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         currentPos, rmIter->materialProperties, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
-    // Update the material interaction with the associated surface and direction
-    rmIter->direction = mTrack.first.second.normalized();
+    // Update the material interaction with the associated surface
     rmIter->surface = sfIter->surface;
     // Switch to next material
     ++rmIter;
