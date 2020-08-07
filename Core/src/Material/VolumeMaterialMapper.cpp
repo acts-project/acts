@@ -275,7 +275,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // onto the mapping volume:
   auto rmIter = rMaterial.begin();
   auto volIter = mappingVolumes.begin();
-  bool encounterVolume = false;
 
   // Use those to minimize the lookup
   GeometryID lastID = GeometryID();
@@ -288,11 +287,15 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   Acts::Vector3D extraDirection = {0, 0, 0};
 
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
-    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+    if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      encounterVolume = false;
-      // Switch to next assignment volume
-      ++volIter;
+      double distVol = (volIter->position - mTrack.first.first).norm();
+      double distMat = (rmIter->position - mTrack.first.first).norm();
+      // Material past the entry point to the current volume
+      if (distMat > distVol) {
+        // Switch to next material volume
+        ++volIter;
+      }
     }
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
@@ -325,7 +328,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
               std::pair(properties, extraPosition));
         }
       }
-      encounterVolume = true;
     }
     ++rmIter;
   }
