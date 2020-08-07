@@ -55,6 +55,8 @@ class RootMaterialTrackWriter
     bool prePostStep = false;
     /// Write the surface to which the material step correpond
     bool storesurface = false;
+    /// Write the volume to which the material step correpond
+    bool storevolume = false;
   };
 
   /// Constructor with
@@ -129,11 +131,13 @@ class RootMaterialTrackWriter
                                ///< associated with the step
   std::vector<float> m_sur_z;  ///< z position of the center of the suface
                                ///< associated with the step
-
   std::vector<float>
       m_sur_range_min;  ///< Min range of the suface associated with the step
   std::vector<float>
       m_sur_range_max;  ///< Max range of the suface associated with the step
+
+  std::vector<std::uint64_t>
+      m_vol_id;  ///< ID of the volume associated with the step
 };
 
 }  // namespace FW
