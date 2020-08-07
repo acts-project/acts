@@ -27,7 +27,7 @@ class Surface;
 class CylinderBounds;
 class RadialBounds;
 class PlanarBounds;
-class IVisualization;
+class IVisualization3D;
 
 /// @class CylinderVolumeBounds
 ///

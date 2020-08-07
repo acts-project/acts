@@ -31,7 +31,7 @@ class SurfaceBounds;
 class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
-class IVisualization;
+class IVisualization3D;
 
 /// Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;

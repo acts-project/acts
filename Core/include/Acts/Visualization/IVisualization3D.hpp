@@ -21,7 +21,7 @@ namespace Acts {
 /// Partially abstract base class which provides an interface to visualization
 /// helper classes. It provides a number of methods that all the helpers need to
 /// conform to.
-class IVisualization {
+class IVisualization3D {
  public:
   using FaceType = std::vector<size_t>;
 
@@ -79,16 +79,16 @@ class IVisualization {
   /// them and calls the above methods.
   ///
 
-  /// @copydoc Acts::IVisualization::vertex(const Vector3D&, ColorRGB)
+  /// @copydoc Acts::IVisualization3D::vertex(const Vector3D&, ColorRGB)
   ///
   void vertex(const Vector3F& vtx, ColorRGB color = {120, 120, 120});
 
-  /// @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, ColorRGB)
+  /// @copydoc Acts::IVisualization3D::face(std::vector<Vector3F>&, ColorRGB)
   ///
   void face(const std::vector<Vector3F>& vtxs,
             ColorRGB color = {120, 120, 120});
 
-  ///  @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
+  ///  @copydoc Acts::IVisualization3D::line(const Vector3F&, const Vector3F&,
   /// ColorRGB)
   ///
   void line(const Vector3F& a, const Vector3F& b,
@@ -114,7 +114,7 @@ class IVisualization {
 /// Overload of the << operator to facilitate writing to streams.
 /// @param os The output stream
 /// @param hlp The helper instance
-inline std::ostream& operator<<(std::ostream& os, const IVisualization& hlp) {
+inline std::ostream& operator<<(std::ostream& os, const IVisualization3D& hlp) {
   hlp.write(os);
   return os;
 }

@@ -30,8 +30,8 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/EventDataView.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/EventDataView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -41,7 +41,7 @@
 #include <string>
 
 namespace Acts {
-namespace EventDataViewTest {
+namespace EventDataView3DTest {
 using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
@@ -57,7 +57,7 @@ std::default_random_engine generator(42);
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundParameters(IVisualization& helper) {
+static inline std::string testBoundParameters(IVisualization3D& helper) {
   std::stringstream ss;
 
   ViewConfig pcolor({20, 120, 20});
@@ -91,7 +91,7 @@ static inline std::string testBoundParameters(IVisualization& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  EventDataView::drawBoundParameters(
+  EventDataView3D::drawBoundParameters(
       helper, BoundParameters(gctx, std::move(cov), pars, plane), gctx,
       momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
 
@@ -101,7 +101,7 @@ static inline std::string testBoundParameters(IVisualization& helper) {
   return ss.str();
 }
 
-static inline std::string testMultiTrajectory(IVisualization& helper) {
+static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::stringstream ss;
 
   // Create a test context
@@ -287,7 +287,7 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   ViewConfig spcolor({20, 120, 20});
   spcolor.offset = -0.04;
 
-  EventDataView::drawMultiTrajectory(
+  EventDataView3D::drawMultiTrajectory(
       helper, fittedTrack.fittedStates, fittedTrack.trackTip, tgContext,
       momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
       ppcolor, fpcolor, spcolor);
@@ -298,5 +298,5 @@ static inline std::string testMultiTrajectory(IVisualization& helper) {
   return ss.str();
 }
 
-}  // namespace EventDataViewTest
+}  // namespace EventDataView3DTest
 }  // namespace Acts

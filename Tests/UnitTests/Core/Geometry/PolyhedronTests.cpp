@@ -15,8 +15,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <fstream>
 
@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(tfaces == triangle.faces);
   BOOST_CHECK(tfaces == triangle.triangularMesh);
 
-  ObjVisualization objVis;
-  GeometryView::drawPolyhedron(objVis, triangle);
+  ObjVisualization3D objVis;
+  GeometryView3D::drawPolyhedron(objVis, triangle);
   objVis.write("Polyhedron_Triangle");
   objVis.clear();
 
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(rfaces == rectangle.faces);
   BOOST_CHECK(rmesh == rectangle.triangularMesh);
 
-  GeometryView::drawPolyhedron(objVis, rectangle);
+  GeometryView3D::drawPolyhedron(objVis, rectangle);
   objVis.write("Polyhedron_Rectangle");
   objVis.clear();
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   BOOST_CHECK(tr.triangularMesh == triangle.triangularMesh);
   tr.merge(rectangle);
 
-  GeometryView::drawPolyhedron(objVis, tr);
+  GeometryView3D::drawPolyhedron(objVis, tr);
   objVis.write("Polyhedron_TriangleRectangle");
   objVis.clear();
 }
