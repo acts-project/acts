@@ -144,6 +144,7 @@ int materialMappingExample(int argc, char* argv[],
       matTrackWriterRootConfig.collection =
           mmAlgConfig.mappingMaterialCollection;
       matTrackWriterRootConfig.storesurface = true;
+      matTrackWriterRootConfig.storevolume = true;
       auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
           matTrackWriterRootConfig, logLevel);
       sequencer.addWriter(matTrackWriterRoot);
