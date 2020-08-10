@@ -75,7 +75,7 @@ Acts::Frustum<value_t, DIM, SIDES>::Frustum(const VertexType& origin,
 
 template <typename value_t, size_t DIM, size_t SIDES>
 template <size_t D, std::enable_if_t<D == 3, int>>
-void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization& helper,
+void Acts::Frustum<value_t, DIM, SIDES>::draw(IVisualization3D& helper,
                                               value_type far_distance) const {
   static_assert(DIM == 3, "Drawing is only supported in 3D");
 

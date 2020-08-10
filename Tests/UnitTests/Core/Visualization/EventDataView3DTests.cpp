@@ -9,15 +9,15 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <fstream>
 #include <iostream>
 
-#include "EventDataViewBase.hpp"
-#include "VisualizationTester.hpp"
+#include "EventDataView3DBase.hpp"
+#include "Visualization3DTester.hpp"
 
 namespace Acts {
 
@@ -26,8 +26,8 @@ namespace Test {
 BOOST_AUTO_TEST_SUITE(Visualization)
 
 BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
-  ObjVisualization obj;
-  auto objTest = EventDataViewTest::testBoundParameters(obj);
+  ObjVisualization3D obj;
+  auto objTest = EventDataView3DTest::testBoundParameters(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
-  PlyVisualization ply;
-  auto plyTest = EventDataViewTest::testBoundParameters(ply);
+  PlyVisualization3D ply;
+  auto plyTest = EventDataView3DTest::testBoundParameters(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {
@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
-  ObjVisualization obj;
-  auto objTest = EventDataViewTest::testMultiTrajectory(obj);
+  ObjVisualization3D obj;
+  auto objTest = EventDataView3DTest::testMultiTrajectory(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -56,8 +56,8 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
-  PlyVisualization ply;
-  auto plyTest = EventDataViewTest::testMultiTrajectory(ply);
+  PlyVisualization3D ply;
+  auto plyTest = EventDataView3DTest::testMultiTrajectory(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {

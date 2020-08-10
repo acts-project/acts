@@ -15,7 +15,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     Ray<float, 3> ray3({0, 0, -2}, {0, 0, 1});
     BOOST_CHECK(bb3.intersect(ray3));
 
-    PlyVisualization<float> ply;
+    PlyVisualization3D<float> ply;
 
     ray3.draw(ply);
     std::ofstream os("ray3d.ply");
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   AbstractVolume vol(trf, cubo);
 
-  PlyVisualization<double> ply;
+  PlyVisualization3D<double> ply;
 
   Transform3D trl = Transform3D::Identity();
   trl.translation() = trf->translation();
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     }
   }
 
-  PlyVisualization<float> helper;
+  PlyVisualization3D<float> helper;
   BOOST_TEST_CONTEXT("3D - 3 Sides") {
     using Frustum3 = Frustum<float, 3, 3>;
     std::ofstream os;
@@ -1149,7 +1149,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     Object o;
 
-    PlyVisualization<float> ply;
+    PlyVisualization3D<float> ply;
 
     Frustum fr({0, 0, 0}, {0, 0, 1}, M_PI / 8.);
     fr.draw(ply, 10);
@@ -1172,7 +1172,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     Object o;
 
-    PlyVisualization<float> ply;
+    PlyVisualization3D<float> ply;
 
     // Frustum fr({0, 0, 0}, {0, 0, 1}, M_PI/8.);
     vec3 pos = {-12.4205, 29.3578, 44.6207};

@@ -9,14 +9,14 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Visualization/IVisualization.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <iostream>
 #include <string>
 
-#include "VisualizationTester.hpp"
+#include "Visualization3DTester.hpp"
 
 using boost::test_tools::output_test_stream;
 
@@ -25,7 +25,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(VisualizationTesterObj) {
+BOOST_AUTO_TEST_CASE(Visualization3DTesterObj) {
   // Test the tester
   std::string validObj = R"(# obj test file
 mtllib material.mtl
@@ -81,7 +81,7 @@ l 4 1
   }
 }
 
-BOOST_AUTO_TEST_CASE(VisualizationTesterPly) {
+BOOST_AUTO_TEST_CASE(Visualization3DTesterPly) {
   // Test the tester
   std::string validPly = R"(ply
 format ascii 1.0		
@@ -158,13 +158,13 @@ end_header
   }
 }
 
-BOOST_AUTO_TEST_CASE(VisualizationConstruction) {
+BOOST_AUTO_TEST_CASE(Visualization3DConstruction) {
   // this doesn't really test anything, other than conformance to the
-  // IVisualization interface
-  PlyVisualization ply;
-  ObjVisualization obj;
+  // IVisualization3D interface
+  PlyVisualization3D ply;
+  ObjVisualization3D obj;
 
-  IVisualization* vis;
+  IVisualization3D* vis;
   vis = &ply;
   std::cout << *vis << std::endl;
   vis = &obj;
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(VisualizationConstruction) {
 }
 
 BOOST_AUTO_TEST_CASE(PlyOutputTest) {
-  PlyVisualization ply;
+  PlyVisualization3D ply;
   output_test_stream output;
 
   ply.vertex({0, 0, 0});
@@ -291,7 +291,7 @@ end_header
 }
 
 BOOST_AUTO_TEST_CASE(ObjOutputTest) {
-  ObjVisualization obj;
+  ObjVisualization3D obj;
 
   output_test_stream output;
 

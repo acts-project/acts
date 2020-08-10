@@ -11,8 +11,8 @@
 #include <Acts/Geometry/Layer.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
-#include <Acts/Visualization/GeometryView.hpp>
-#include <Acts/Visualization/ObjVisualization.hpp>
+#include <Acts/Visualization/GeometryView3D.hpp>
+#include <Acts/Visualization/ObjVisualization3D.hpp>
 
 #include <iostream>
 
@@ -39,9 +39,9 @@ void FW::Obj::ObjTrackingGeometryWriter::write(
     const AlgorithmContext& context, const Acts::TrackingVolume& tVolume) {
   ACTS_DEBUG(">>Obj: Writer for TrackingVolume object called.");
 
-  Acts::ObjVisualization objVis(m_cfg.outputPrecision, m_cfg.outputScalor);
+  Acts::ObjVisualization3D objVis(m_cfg.outputPrecision, m_cfg.outputScalor);
 
-  Acts::GeometryView::drawTrackingVolume(
+  Acts::GeometryView3D::drawTrackingVolume(
       objVis, tVolume, context.geoContext, m_cfg.containerView,
       m_cfg.volumeView, m_cfg.passiveView, m_cfg.sensitiveView, m_cfg.gridView);
 }

@@ -3,13 +3,13 @@ Visualization
 
 A very lightweight layer for visualiazing Acts geometry objects and event data model is provided within the Core component.
 Acts does not provide a viewer per se, but instead it was chosen to plug a visitor that can then be used for visualizing the given objects.
-The visitor has to implement the `IVisualization` interface and can then straight forwardly used with the visualization helper structs. 
+The visitor has to implement the `IVisualization3D` interface and can then straight forwardly used with the visualization helper structs. 
 Two visualization helpers that implement industry standard 3D formats can be used from this component, 
 but evidently any other visitor can be plugged in as long as it satisfies the `IVsualization` interface.
 
 The two provided visualization visitors are:
- * `ObjVisualization` writing the `.obj` format, and an associated `.mtl` file for the color and material definitions
- * `PlyVisualization` writing the `.ply` format, which contains already the color/material information
+ * `ObjVisualization3D` writing the `.obj` format, and an associated `.mtl` file for the color and material definitions
+ * `PlyVisualization3D` writing the `.ply` format, which contains already the color/material information
 
 Behind the scene
 ----------------
@@ -23,7 +23,7 @@ that build up the object to display.
 Convenience helper functions
 ----------------------------
 
-The visualziation package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView` and `EventDataView` structs, that receive:
+The visualziation package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView3D` and `EventDataView3D` structs, that receive:
  * A visualization visotor
  * The object to be written
  * A geometry context where needed
