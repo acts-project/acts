@@ -45,13 +45,13 @@ namespace Details {
 ///            @c Acts::SeedfinderConfig
 /// @param[in] collisionRegionMax Configuration parameter from
 ///            @c Acts::SeedfinderConfig
-/// @param[out] middleBottomCounts 1-D array of the middle-bottom dublets found
-///             for each middle spacepoint
+/// @param[out] middleBottomCounts 1-D array of the number of middle-bottom
+///             dublets found for each middle spacepoint
 /// @param[out] middleBottomDublets 2-D matrix of size
 ///             @c nMiddleSPs x @c nBottomSPs, holding the bottom spacepoint
 ///             indices for the identified middle-bottom dublets
-/// @param[out] middleTopCounts 1-D array of the middle-top dublets found
-///             for each middle spacepoint
+/// @param[out] middleTopCounts 1-D array of the number of middle-top dublets
+///             found for each middle spacepoint
 /// @param[out] middleTopDublets 2-D matrix of size
 ///             @c nMiddleSPs x @c nTopSPs, holding the top spacepoint
 ///             indices for the identified middle-top dublets
