@@ -20,9 +20,11 @@ target_link_libraries(
 # Set up the "CUDA 2" plugin.
 add_library(
   ActsCuda2Plugin SHARED
+  include/Acts/Plugins/Cuda/Seeding2/Details/CountDublets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/FindDublets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/Types.hpp
   include/Acts/Plugins/Cuda/Utilities/Arrays.hpp
+  src/Seeding2/CountDublets.cu
   src/Seeding2/FindDublets.cu
   src/Utilities/Arrays.cu
   src/Utilities/ErrorCheck.cuh

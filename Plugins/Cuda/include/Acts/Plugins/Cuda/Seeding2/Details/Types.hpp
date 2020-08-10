@@ -32,11 +32,11 @@ struct DubletCounts {
   /// The total number of triplet candidates found
   std::size_t nTriplets = 0;
   /// The maximal number of middle-bottom dublets
-  std::size_t maxMBDublets = 0;
+  unsigned int maxMBDublets = 0;
   /// The maximal number of middle-top dublets
-  std::size_t maxMTDublets = 0;
+  unsigned int maxMTDublets = 0;
   /// The maximal number of triplets for any middle SP
-  std::size_t maxTriplets = 0;
+  unsigned int maxTriplets = 0;
 };  // struct DubletCounts
 
 /// Helper struct holding the linearly transformed coordinates of spacepoints
