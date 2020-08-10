@@ -131,7 +131,7 @@ __global__ void transformCoordinates(
   while (runningIndex >= (tmpValue = (middleBottomCounts[middleIndex] +
                                       middleTopCounts[middleIndex]))) {
     middleIndex += 1;
-    assert(middleIndex < nMiddleSP);
+    assert(middleIndex < nMiddleSPs);
     runningIndex -= tmpValue;
   }
   const bool transformBottom =
@@ -225,7 +225,7 @@ __global__ void findTriplets(
     unsigned int* maxTripletsPerSpB, unsigned int* tripletCount,
     Details::Triplet* triplets) {
   // A sanity check.
-  assert(middleIndex < nMiddleSP);
+  assert(middleIndex < nMiddleSPs);
 
   // The total number of dublets for this middle spacepoint.
   const unsigned int nMiddleBottomDublets = middleBottomCounts[middleIndex];
@@ -243,10 +243,10 @@ __global__ void findTriplets(
   const std::size_t bottomIndex =
       ACTS_CUDA_MATRIX2D_ELEMENT(middleBottomDublets, nMiddleSPs, nBottomSPs,
                                  middleIndex, bottomDubletIndex);
-  assert(bottomIndex < nBottomSP);
+  assert(bottomIndex < nBottomSPs);
   const std::size_t topIndex = ACTS_CUDA_MATRIX2D_ELEMENT(
       middleTopDublets, nMiddleSPs, nTopSPs, middleIndex, topDubletIndex);
-  assert(topIndex < nTopSP);
+  assert(topIndex < nTopSPs);
 
   // Load the transformed coordinates of the bottom spacepoint into the thread.
   const Details::LinCircle lb =
@@ -633,6 +633,7 @@ std::vector<std::vector<Triplet>> findTriplets(
     const unsigned int nMiddleTopDublets =
         middleTopCountsHost.get()[middleIndex];
     if ((nMiddleBottomDublets == 0) || (nMiddleTopDublets == 0)) {
+      result.emplace_back();
       continue;
     }
 
@@ -680,6 +681,7 @@ std::vector<std::vector<Triplet>> findTriplets(
                                      sizeof(int), cudaMemcpyDeviceToHost));
     // If no such triplet has been found, stop here for this middle spacepoint.
     if (maxTripletsPerSpB == 0) {
+      result.emplace_back();
       continue;
     }
 
@@ -728,6 +730,7 @@ std::vector<std::vector<Triplet>> findTriplets(
   }
 
   // Return the indices of all identified triplets.
+  assert(result.size() == nMiddleSPs);
   return result;
 }
 
