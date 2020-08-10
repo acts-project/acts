@@ -98,10 +98,6 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   BOOST_CHECK(!lineBoundsObject.inside(Vector2D{-0.8, 10},
                                        trueBoundaryCheckWithTolerance));
 
-  /// test for distanceToBoundary
-  CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR), 1.,
-                  1e-6);  // why?
-
   /// test for r()
   BOOST_CHECK_EQUAL(lineBoundsObject.get(LineBounds::eR), nominalRadius);
 

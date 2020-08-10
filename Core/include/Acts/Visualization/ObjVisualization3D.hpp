@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
@@ -26,7 +26,7 @@ namespace Acts {
 /// supported in this implementation.
 ///
 template <typename T = double>
-class ObjVisualization : public IVisualization {
+class ObjVisualization3D : public IVisualization3D {
  public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
                 "Use either double or float");
@@ -43,29 +43,29 @@ class ObjVisualization : public IVisualization {
   /// Constructor that allows to set scalor and precision
   /// @param prec The output precission with std::setprecision
   /// @param scale An (optional) scaling for the writing out
-  ObjVisualization(unsigned int prec = 4, double scale = 1.)
+  ObjVisualization3D(unsigned int prec = 4, double scale = 1.)
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
-  /// @copydoc Acts::IVisualization::vertex()
+  /// @copydoc Acts::IVisualization3D::vertex()
   void vertex(const Vector3D& vtx, ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization::line()
+  /// @copydoc Acts::IVisualization3D::line()
   void line(const Vector3D& a, const Vector3D& b,
             ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization::face()
+  /// @copydoc Acts::IVisualization3D::face()
   void face(const std::vector<Vector3D>& vtxs,
             ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization::faces()
+  /// @copydoc Acts::IVisualization3D::faces()
   void faces(const std::vector<Vector3D>& vtxs,
              const std::vector<FaceType>& faces,
              ColorRGB color = {0, 0, 0}) final;
 
-  /// @copydoc Acts::IVisualization::write()
+  /// @copydoc Acts::IVisualization3D::write()
   void write(const std::string& path) const final;
 
-  /// @copydoc Acts::IVisualization::write()
+  /// @copydoc Acts::IVisualization3D::write()
   void write(std::ostream& os) const final;
 
   /// Write the object and the material file
@@ -73,7 +73,7 @@ class ObjVisualization : public IVisualization {
   /// @param mos the output stream for the auxiliary material file
   void write(std::ostream& os, std::ostream& mos) const;
 
-  ///  @copydoc Acts::IVisualization::clear()
+  ///  @copydoc Acts::IVisualization3D::clear()
   void clear() final;
 
  private:
@@ -90,6 +90,6 @@ class ObjVisualization : public IVisualization {
   std::map<size_t, ColorRGB> m_faceColors;
 };
 
-#include "detail/ObjVisualization.ipp"
+#include "detail/ObjVisualization3D.ipp"
 
 }  // namespace Acts

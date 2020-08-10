@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-class IVisualization;
+class IVisualization3D;
 
 class CylinderBounds;
 class DiscBounds;

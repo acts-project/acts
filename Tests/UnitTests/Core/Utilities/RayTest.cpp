@@ -11,7 +11,7 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Ray.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 using boost::test_tools::output_test_stream;
 
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(ray_construction) {
   BOOST_CHECK(!output.is_empty(true));
 
   // compile draw call, doesn't actually test anything
-  PlyVisualization hlp;
+  PlyVisualization3D hlp;
   ray3.draw(hlp);
 }
 BOOST_AUTO_TEST_SUITE_END()

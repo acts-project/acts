@@ -46,11 +46,6 @@ bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
   return bcheck.isInside(lposition, m_vertices);
 }
 
-double Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, m_vertices);
-}
-
 std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<
     Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};

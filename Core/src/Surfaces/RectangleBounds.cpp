@@ -19,11 +19,6 @@ bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
   return bcheck.isInside(lposition, m_min, m_max);
 }
 
-double Acts::RectangleBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, min(), max());
-}
-
 std::vector<Acts::Vector2D> Acts::RectangleBounds::vertices(
     unsigned int /*lseg*/) const {
   // counter-clockwise starting from bottom-left corner

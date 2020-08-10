@@ -509,8 +509,8 @@ class AtlasStepper {
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  Intersection::Status updateSurfaceStatus(State& state, const Surface& surface,
-                                           const BoundaryCheck& bcheck) const {
+  Intersection3D::Status updateSurfaceStatus(
+      State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(*this, state,
                                                            surface, bcheck);
   }

@@ -19,7 +19,7 @@ enum class CombinatorialKalmanFilterError {
   SmoothFailed = 2,
   OutputConversionFailed = 3,
   SourcelinkSelectionFailed = 4,
-  NoTracksFound = 5,
+  NoTrackFound = 5,
   PropagationReachesMaxSteps = 6
 };
 
@@ -42,7 +42,7 @@ class CombinatorialKalmanFilterErrorCategory : public std::error_category {
         return "Kalman output conversion failed";
       case CombinatorialKalmanFilterError::SourcelinkSelectionFailed:
         return "Source link selection failed";
-      case CombinatorialKalmanFilterError::NoTracksFound:
+      case CombinatorialKalmanFilterError::NoTrackFound:
         return "No track is found";
       case CombinatorialKalmanFilterError::PropagationReachesMaxSteps:
         return "Propagation reaches max steps before track finding is "

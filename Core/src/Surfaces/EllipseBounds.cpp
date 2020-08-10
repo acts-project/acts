@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -44,76 +45,6 @@ bool Acts::EllipseBounds::inside(const Vector2D& lposition,
       ((square(lposition[Acts::eLOC_X] / (get(eInnerRy) + tol0)) +
         square(lposition[Acts::eLOC_Y] / (get(eOuterRy) + tol0))) < 1);
   return (insidePhi && insideInner && insideOuter);
-}
-
-// For ellipse bound this is only approximation which is valid
-// only if m_values.at(EllipseBounds::bv_rMinX) ~=
-// m_values.at(EllipseBounds::bv_rMinY)
-// and m_values.at(EllipseBounds::bv_rMaxX) ~=
-// m_values.at(EllipseBounds::bv_rMaxY)
-//
-double Acts::EllipseBounds::distanceToBoundary(
-    const Vector2D& lposition) const {
-  double r = perp(lposition);
-  if (r == 0) {
-    return std::min(get(eInnerRx), get(eOuterRx));
-  }
-
-  double sn = lposition[eLOC_X] / r;
-  double cs = lposition[eLOC_Y] / r;
-  double dF = detail::radian_sym(phi(lposition) - get(eAveragePhi));
-  double sf = 0.;
-
-  if (get(eHalfPhiSector) < M_PI) {
-    double df = std::abs(dF) - get(eHalfPhiSector);
-    sf = r * std::sin(df);
-    if (df > 0.) {
-      r *= std::cos(df);
-    }
-  } else {
-    sf = -1.e+10;
-  }
-
-  if (sf <= 0.) {
-    double a = cs / get(eInnerRy);
-    double b = sn / get(eOuterRy);
-    double sr0 = r - 1. / std::hypot(a, b);
-    if (sr0 >= 0.) {
-      return sr0;
-    }
-    a = cs / get(eInnerRx);
-    b = sn / get(eOuterRx);
-    double sr1 = 1. / std::hypot(a, b) - r;
-    if (sr1 >= 0.) {
-      return sr1;
-    }
-    if (sf < sr0) {
-      sf = sr0;
-    }
-    if (sf < sr1) {
-      sf = sr1;
-    }
-    return sf;
-  }
-
-  double fb;
-  fb = (dF > 0.) ? (get(eAveragePhi) + get(eHalfPhiSector))
-                 : (get(eAveragePhi) - get(eHalfPhiSector));
-  sn = sin(fb);
-  cs = cos(fb);
-  double a = cs / get(eInnerRy);
-  double b = sn / get(eOuterRy);
-  double sr0 = r - 1. / std::hypot(a, b);
-  if (sr0 >= 0.) {
-    return std::hypot(sr0, sf);
-  }
-  a = cs / get(eInnerRx);
-  b = sn / get(eOuterRx);
-  double sr1 = (1. / std::hypot(a, b)) - r;
-  if (sr1 >= 0.) {
-    return std::hypot(sr1, sf);
-  }
-  return sf;
 }
 
 std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(

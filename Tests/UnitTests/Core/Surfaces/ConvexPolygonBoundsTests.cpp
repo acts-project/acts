@@ -70,11 +70,6 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   BOOST_CHECK(!triangle.inside({0.8, 0.8}, bc));
   BOOST_CHECK(!triangle.inside({0.3, -0.2}, bc));
 
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.2, 0.2}), -0.0894427, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.4, 0.9}), 0.0447213, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.8, 0.8}), 0.1788854, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
-
   // rectangular poly
   vertices = {{0, 0}, {1, 0}, {0.9, 1.2}, {0.5, 1}};
   poly<4> quad(vertices);
@@ -87,11 +82,6 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   BOOST_CHECK(!quad.inside({0.4, 0.9}, bc));
   BOOST_CHECK(quad.inside({0.8, 0.8}, bc));
   BOOST_CHECK(!quad.inside({0.3, -0.2}, bc));
-
-  CHECK_CLOSE_ABS(quad.distanceToBoundary({0.2, 0.2}), -0.089442, 1e-6);
-  CHECK_CLOSE_ABS(quad.distanceToBoundary({0.4, 0.9}), 0.044721, 1e-6);
-  CHECK_CLOSE_ABS(quad.distanceToBoundary({0.8, 0.8}), -0.132872, 1e-6);
-  CHECK_CLOSE_ABS(quad.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsRecreation) {
@@ -125,11 +115,6 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   BOOST_CHECK(!triangle.inside({0.4, 0.9}, bc));
   BOOST_CHECK(!triangle.inside({0.8, 0.8}, bc));
   BOOST_CHECK(!triangle.inside({0.3, -0.2}, bc));
-
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.2, 0.2}), -0.0894427, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.4, 0.9}), 0.0447213, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.8, 0.8}), 0.1788854, 1e-6);
-  CHECK_CLOSE_ABS(triangle.distanceToBoundary({0.3, -0.2}), 0.2, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

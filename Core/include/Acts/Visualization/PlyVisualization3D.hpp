@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
@@ -22,8 +22,8 @@ namespace Acts {
 
 template <typename T = double>
 
-/// @brief Helper to write out PlyVisualization visualization format
-class PlyVisualization : public IVisualization {
+/// @brief Helper to write out PlyVisualization3D visualization format
+class PlyVisualization3D : public IVisualization3D {
  public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
                 "Use either double or float");
@@ -34,28 +34,28 @@ class PlyVisualization : public IVisualization {
   /// Type of a vertex based on the value type
   using VertexType = ActsVector<ValueType, 3>;
 
-  /// @copydoc Acts::IVisualization::vertex()
+  /// @copydoc Acts::IVisualization3D::vertex()
   void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
 
-  /// @copydoc Acts::IVisualization::line()
+  /// @copydoc Acts::IVisualization3D::line()
   void face(const std::vector<Vector3D>& vtxs,
             ColorRGB color = {120, 120, 120}) final;
 
-  /// @copydoc Acts::IVisualization::faces()
+  /// @copydoc Acts::IVisualization3D::faces()
   void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
              ColorRGB color = {120, 120, 120}) final;
 
-  /// @copydoc Acts::IVisualization::face()
+  /// @copydoc Acts::IVisualization3D::face()
   void line(const Vector3D& a, const Vector3D& b,
             ColorRGB color = {120, 120, 120}) final;
 
-  /// @copydoc Acts::IVisualization::write()
+  /// @copydoc Acts::IVisualization3D::write()
   void write(const std::string& path) const final;
 
-  /// @copydoc Acts::IVisualization::write()
+  /// @copydoc Acts::IVisualization3D::write()
   void write(std::ostream& os) const final;
 
-  /// @copydoc Acts::IVisualization::clear()
+  /// @copydoc Acts::IVisualization3D::clear()
   void clear() final;
 
  private:
@@ -64,6 +64,6 @@ class PlyVisualization : public IVisualization {
   std::vector<std::pair<std::pair<size_t, size_t>, ColorRGB>> m_edges;
 };
 
-#include "detail/PlyVisualization.ipp"
+#include "detail/PlyVisualization3D.ipp"
 
 }  // namespace Acts

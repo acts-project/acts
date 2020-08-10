@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 namespace Acts {
 
@@ -60,7 +60,7 @@ class Ray {
   /// @param helper The visualization helper
   /// @param far_distance The "length" of the drawn line representing the ray
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, value_type far_distance = 10) const;
+  void draw(IVisualization3D& helper, value_type far_distance = 10) const;
 
  private:
   VertexType m_origin;

@@ -247,7 +247,7 @@ const SurfaceIntersection Layer::surfaceOnApproach(
           std::copysign(1., options.navDir);
       return sIntersection;
     } else if (sIntersection.alternative.status >=
-               Intersection::Status::reachable) {
+               Intersection3D::Status::reachable) {
       // Test the alternative
       cLimit = sIntersection.alternative.pathLength;
       withinLimit = (cLimit > oLimit and

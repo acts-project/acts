@@ -16,8 +16,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <fstream>
 #include <random>
@@ -550,8 +550,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_dependentBinCounts,
   BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10u);
 
   // Write the surrace array with grid
-  ObjVisualization objVis;
-  GeometryView::drawSurfaceArray(objVis, *sArray, tgContext);
+  ObjVisualization3D objVis;
+  GeometryView3D::drawSurfaceArray(objVis, *sArray, tgContext);
   objVis.write("SurfaceArrayCreator_EndcapGrid");
 }
 
@@ -583,8 +583,8 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
   SurfaceArray sa(std::move(sl), brl);
 
   // Write the surrace array with grid
-  ObjVisualization objVis;
-  GeometryView::drawSurfaceArray(objVis, sa, tgContext);
+  ObjVisualization3D objVis;
+  GeometryView3D::drawSurfaceArray(objVis, sa, tgContext);
   objVis.write("SurfaceArrayCreator_BarrelGrid");
 
   // actually filled SA

@@ -70,13 +70,6 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& position,
                 Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
-double Acts::CylinderBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-      Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
-}
-
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
