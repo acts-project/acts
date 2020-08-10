@@ -13,7 +13,7 @@ env:
 jobs:
   ubuntu2004:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v4
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -31,7 +31,7 @@ jobs:
         run: cmake --build build -- integrationtests
   cuda:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu1804_cuda:ubuntu1804-cuda
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu1804_cuda:ubuntu1804-cuda:v4
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -73,7 +73,7 @@ jobs:
         run: cmake --build build -- integrationtests
   lcg:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}-lcg${{ matrix.lcg }}:v3
+    container: gitlab-registry.cern.ch/acts/machines/${{ matrix.os }}-lcg${{ matrix.lcg }}:v4
     strategy:
       matrix:
         os:
@@ -103,7 +103,7 @@ jobs:
         run: source ${SETUP} && cmake --build build -- integrationtests
   docs:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v4
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -120,7 +120,7 @@ jobs:
           path: docs/_build/html/
   downstream:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v3
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v4
     steps:
       - uses: actions/checkout@v2
       - name: Configure Acts
