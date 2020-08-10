@@ -23,12 +23,6 @@ bool Acts::LineBounds::inside(const Acts::Vector2D& lposition,
                          Vector2D(r, halfLengthZ));
 }
 
-double Acts::LineBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  // per definition the min Distance of a correct local position is r
-  return lposition[Acts::eLOC_R];
-}
-
 // ostream operator overload
 std::ostream& Acts::LineBounds::toStream(std::ostream& sl) const {
   sl << std::setiosflags(std::ios::fixed);

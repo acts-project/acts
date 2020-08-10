@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@
 
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include "../Surfaces/SurfaceStub.hpp"
@@ -79,6 +79,36 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
     BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
                       someSurfaces.at(i).get());
   }
+}
+
+/// Unit test for testing GenericApproachDescriptor overstepping
+/// - for the approach estimate, there is no overstepping tolerance
+/// allowed
+BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
+  Vector3D origin{0., -0.5, 1.};
+  Vector3D direction{0., 1., 0.};
+  BoundaryCheck bcheck{true};
+
+  auto conCyl = Surface::makeShared<CylinderSurface>(
+      std::make_shared<Transform3D>(Transform3D::Identity()), 10., 20.);
+
+  std::vector<std::shared_ptr<const Surface>> approachSurface = {conCyl};
+
+  GenericApproachDescriptor gad(approachSurface);
+
+  auto sfIntersection =
+      gad.approachSurface(GeometryContext(), origin, direction, bcheck);
+
+  // No overstepping allowed, the preferred solution should be the forward one
+  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength, 10.5, s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position.x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position.y(), 10., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.intersection.position.z(), 1., s_epsilon);
+
+  CHECK_CLOSE_ABS(sfIntersection.alternative.pathLength, -9.5, s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.alternative.position.x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.alternative.position.y(), -10., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.alternative.position.z(), 1., s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

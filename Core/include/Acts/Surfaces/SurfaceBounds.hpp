@@ -68,12 +68,6 @@ class SurfaceBounds {
   virtual bool inside(const Vector2D& lposition,
                       const BoundaryCheck& bcheck) const = 0;
 
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  virtual double distanceToBoundary(const Vector2D& lposition) const = 0;
-
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the outstream in which the string dump is done

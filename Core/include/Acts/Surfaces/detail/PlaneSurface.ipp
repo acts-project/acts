@@ -34,14 +34,14 @@ inline SurfaceIntersection PlaneSurface::intersect(
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction);
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+  if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
     if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                          bcheck)) {
-      intersection.status = Intersection::Status::missed;
+      intersection.status = Intersection3D::Status::missed;
     }
   }
   return {intersection, this};

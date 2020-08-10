@@ -29,7 +29,7 @@ namespace detail {
 /// @param surface [in] The surface provided
 /// @param bcheck [in] The boundary check for this status update
 template <typename stepper_t>
-Acts::Intersection::Status updateSingleSurfaceStatus(
+Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
     const Surface& surface, const BoundaryCheck& bcheck) {
   auto sIntersection =
@@ -37,15 +37,15 @@ Acts::Intersection::Status updateSingleSurfaceStatus(
                         state.navDir * stepper.direction(state), bcheck);
 
   // The intersection is on surface already
-  if (sIntersection.intersection.status == Intersection::Status::onSurface) {
+  if (sIntersection.intersection.status == Intersection3D::Status::onSurface) {
     // Release navigation step size
     state.stepSize.release(ConstrainedStep::actor);
-    return Intersection::Status::onSurface;
+    return Intersection3D::Status::onSurface;
   } else if (sIntersection.intersection or sIntersection.alternative) {
     // Path and overstep limit checking
     double pLimit = state.stepSize.value(ConstrainedStep::aborter);
     double oLimit = stepper.overstepLimit(state);
-    auto checkIntersection = [&](const Intersection& intersection) -> bool {
+    auto checkIntersection = [&](const Intersection3D& intersection) -> bool {
       double cLimit = intersection.pathLength;
       bool accept = (cLimit > oLimit and cLimit * cLimit < pLimit * pLimit);
       if (accept) {
@@ -57,10 +57,10 @@ Acts::Intersection::Status updateSingleSurfaceStatus(
     if (checkIntersection(sIntersection.intersection) or
         (sIntersection.alternative and
          checkIntersection(sIntersection.alternative))) {
-      return Intersection::Status::reachable;
+      return Intersection3D::Status::reachable;
     }
   }
-  return Intersection::Status::unreachable;
+  return Intersection3D::Status::unreachable;
 }
 
 /// Update the Step size - single component

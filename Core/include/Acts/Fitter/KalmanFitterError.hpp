@@ -19,7 +19,7 @@ enum class KalmanFitterError {
   BackwardUpdateFailed = 2,
   SmoothFailed = 3,
   OutputConversionFailed = 4,
-  PropagationInVain = 5
+  NoMeasurementFound = 5
 };
 
 namespace detail {
@@ -39,7 +39,7 @@ class KalmanFitterErrorCategory : public std::error_category {
         return "Kalman smooth failed";
       case KalmanFitterError::OutputConversionFailed:
         return "Kalman output conversion failed";
-      case KalmanFitterError::PropagationInVain:
+      case KalmanFitterError::NoMeasurementFound:
         return "No measurement detected during the propagation";
       default:
         return "unknown";
