@@ -70,7 +70,7 @@ struct KalmanFitterOptions {
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder_,
-                      const Surface* rSurface = nullptr,
+                      LoggerWrapper logger_, const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
@@ -80,7 +80,8 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering) {}
+        backwardFiltering(bwdFiltering),
+        logger(logger_) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -103,6 +104,9 @@ struct KalmanFitterOptions {
 
   /// Whether to run backward filtering
   bool backwardFiltering = false;
+
+  /// Logger
+  LoggerWrapper logger;
 };
 
 template <typename source_link_t>
@@ -195,20 +199,12 @@ class KalmanFitter {
   KalmanFitter() = delete;
 
   /// Constructor from arguments
-  KalmanFitter(propagator_t pPropagator,
-               std::unique_ptr<const Logger> logger =
-                   getDefaultLogger("KalmanFilter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)), m_logger(logger.release()) {}
+  KalmanFitter(propagator_t pPropagator)
+      : m_propagator(std::move(pPropagator)) {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
-
-  /// Logger getter to support macros
-  const Logger& logger() const { return *m_logger; }
-
-  /// Owned logging instance
-  std::shared_ptr<const Logger> m_logger;
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
@@ -249,6 +245,8 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      const auto& logger = state.options.logger;
+
       if (result.finished) {
         return;
       }
@@ -453,6 +451,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
+      const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -620,6 +619,7 @@ class KalmanFitter {
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
                                 result_type& result) const {
+      const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
@@ -669,7 +669,8 @@ class KalmanFitter {
                          trackStateProxy.predicted()));
 
         // If the update is successful, set covariance and
-        auto updateRes = m_updater(state.geoContext, trackStateProxy, backward);
+        auto updateRes =
+            m_updater(state.geoContext, trackStateProxy, backward, logger);
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -746,6 +747,7 @@ class KalmanFitter {
     void materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
+      const auto& logger = state.options.logger;
       // Indicator if having material
       bool hasMaterial = false;
 
@@ -797,6 +799,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
+      const auto& logger = state.options.logger;
       // Remember you smoothed the track states
       result.smoothed = true;
 
@@ -834,7 +837,7 @@ class KalmanFitter {
 
       // Smooth the track states
       auto smoothRes = m_smoother(state.geoContext, result.fittedStates,
-                                  measurementIndices.front());
+                                  measurementIndices.front(), logger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -860,12 +863,6 @@ class KalmanFitter {
 
       return Result<void>::success();
     }
-
-    /// Pointer to a logger that is owned by the parent, KalmanFilter
-    const Logger* m_logger;
-
-    /// Getter for the logger, to support logging macros
-    const Logger& logger() const { return *m_logger; }
 
     /// The Kalman updater
     updater_t m_updater;
@@ -925,6 +922,8 @@ class KalmanFitter {
            const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
       -> std::enable_if_t<!isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
+    const auto& logger = kfOptions.logger;
+
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -946,11 +945,10 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+        kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.m_logger = m_logger.get();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
@@ -959,10 +957,6 @@ class KalmanFitter {
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
-
-    // also set logger on updater and smoother
-    kalmanActor.m_updater.m_logger = m_logger;
-    kalmanActor.m_smoother.m_logger = m_logger;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
@@ -1018,6 +1012,7 @@ class KalmanFitter {
            const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
+    const auto& logger = kfOptions.logger;
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does not fulfill SourceLinkConcept");
 
@@ -1043,7 +1038,6 @@ class KalmanFitter {
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.m_logger = m_logger.get();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
@@ -1052,10 +1046,6 @@ class KalmanFitter {
 
     // Set config for outlier finder
     kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
-
-    // also set logger on updater and smoother
-    kalmanActor.m_updater.m_logger = m_logger;
-    kalmanActor.m_smoother.m_logger = m_logger;
 
     // Set the surface sequence
     auto& dInitializer =

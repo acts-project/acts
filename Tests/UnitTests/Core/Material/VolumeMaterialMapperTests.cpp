@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Launch propagation and gather result
   PropagatorOptions<ActionList<MaterialCollector, DebugOutputActor>,
                     AbortList<EndOfWorldReached>>
-      po(gc, mc);
+      po(gc, mc, getDummyLogger());
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
   po.debug = true;

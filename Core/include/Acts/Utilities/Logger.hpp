@@ -521,12 +521,51 @@ class Logger {
                                         std::placeholders::_1));
   }
 
+  template <typename Callable>
+  void log(const Logging::Level& lvl, Callable&& callable) const {
+    if (doPrint(lvl)) {
+      callable(log(lvl));
+    }
+  }
+
  private:
   /// policy object for printing debug messages
   std::unique_ptr<Logging::OutputPrintPolicy> m_printPolicy;
 
   /// policy object for filtering debug messages
   std::unique_ptr<Logging::OutputFilterPolicy> m_filterPolicy;
+};
+
+/// @brief Class that contains (but doesn't own) a logger instance. Is callable
+/// so can be used with the logging macros.
+class LoggerWrapper {
+ public:
+  LoggerWrapper() = delete;
+
+  /// @brief Constructor ensuring a logger instance is given
+  ///
+  /// @param logger
+  explicit LoggerWrapper(const Logger& logger);
+
+  /// Directly expose whether the contained logger will print at a level.
+  ///
+  /// @param lvl The level to check
+  /// @return Whether to print at this level or not.
+  bool doPrint(const Logging::Level& lvl) const;
+
+  /// Add a logging message at a given level
+  /// @param lvl The level to print at
+  /// @return Accumulating output stream.
+  Logging::OutStream log(const Logging::Level& lvl) const;
+
+  /// Call operator that returns the contained logger instance.
+  /// Enables using the logging macros `ACTS_*` when an instance of this class
+  /// is assigned to a local variable `logger`.
+  /// @return Reference to the logger instance.
+  const Logger& operator()() const;
+
+ private:
+  const Logger* m_logger;
 };
 
 /// @brief get default debug output logger
@@ -545,5 +584,7 @@ class Logger {
 std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout);
+
+LoggerWrapper getDummyLogger();
 
 }  // namespace Acts

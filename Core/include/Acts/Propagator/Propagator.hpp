@@ -20,6 +20,7 @@
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -81,8 +82,9 @@ struct PropagatorOptions {
 
   /// PropagatorOptions with context
   PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx,
-                    std::reference_wrapper<const MagneticFieldContext> mctx)
-      : geoContext(gctx), magFieldContext(mctx) {}
+                    std::reference_wrapper<const MagneticFieldContext> mctx,
+                    LoggerWrapper logger_)
+      : geoContext(gctx), magFieldContext(mctx), logger(logger_) {}
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -93,7 +95,7 @@ struct PropagatorOptions {
   PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext);
+        geoContext, magFieldContext, logger);
     // Copy the options over
     eoptions.direction = direction;
     eoptions.absPdgCode = absPdgCode;
@@ -175,6 +177,8 @@ struct PropagatorOptions {
 
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+
+  LoggerWrapper logger;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -385,20 +389,6 @@ class Propagator final {
 
   /// Implementation of navigator
   navigator_t m_navigator;
-
-  /// The private propagation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the
-  /// options.debug == true case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the nested propagator state object
-  ///
-  /// @param state the propagator state for the debug flag, prefix/length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const;
 };
 
 }  // namespace Acts

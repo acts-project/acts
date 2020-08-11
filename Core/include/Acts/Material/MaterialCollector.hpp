@@ -60,18 +60,15 @@ struct MaterialCollector {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    const auto& logger = state.options.logger;
     if (state.navigation.currentSurface) {
       if (state.navigation.currentSurface == state.navigation.targetSurface and
           not state.navigation.targetReached) {
         return;
       }
 
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Material check on surface ";
-        dstream << state.navigation.currentSurface->geoID();
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Material check on surface "
+                   << state.navigation.currentSurface->geoID());
 
       if (state.navigation.currentSurface->surfaceMaterial()) {
         // get the material propertices and only continue
@@ -83,38 +80,28 @@ struct MaterialCollector {
           double prepofu = 1.;
           if (state.navigation.startSurface ==
               state.navigation.currentSurface) {
-            debugLog(state, [&] {
-              return std::string("Update on start surface: post-update mode.");
-            });
+            ACTS_VERBOSE("Update on start surface: post-update mode.");
             prepofu =
                 state.navigation.currentSurface->surfaceMaterial()->factor(
                     state.stepping.navDir, postUpdate);
           } else if (state.navigation.targetSurface ==
                      state.navigation.currentSurface) {
-            debugLog(state, [&] {
-              return std::string("Update on target surface: pre-update mode");
-            });
+            ACTS_VERBOSE("Update on target surface: pre-update mode");
             prepofu =
                 state.navigation.currentSurface->surfaceMaterial()->factor(
                     state.stepping.navDir, preUpdate);
           } else {
-            debugLog(state, [&] {
-              return std::string("Update while pass through: full mode.");
-            });
+            ACTS_VERBOSE("Update while pass through: full mode.");
           }
 
           // the pre/post factor has been applied
           // now check if there's still something to do
           if (prepofu == 0.) {
-            debugLog(state, [&] {
-              return std::string("Pre/Post factor set material to zero.");
-            });
+            ACTS_VERBOSE("Pre/Post factor set material to zero.");
             return;
           }
           // more debugging output to the screen
-          debugLog(state, [&] {
-            return std::string("Material properties found for this surface.");
-          });
+          ACTS_VERBOSE("Material properties found for this surface.");
 
           // the path correction from the surface intersection
           double pCorrection =
@@ -125,13 +112,9 @@ struct MaterialCollector {
           result.materialInX0 += pCorrection * mProperties->thicknessInX0();
           result.materialInL0 += pCorrection * mProperties->thicknessInL0();
 
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "t/X0 (t/L0) increased to ";
-            dstream << result.materialInX0 << " (";
-            dstream << result.materialInL0 << " )";
-            return dstream.str();
-          });
+          ACTS_VERBOSE("t/X0 (t/L0) increased to "
+                       << result.materialInX0 << " (" << result.materialInL0
+                       << " )");
 
           // if configured, record the individual material hits
           if (detailedCollection) {
@@ -155,30 +138,5 @@ struct MaterialCollector {
   /// - this does not apply to the surface collector
   template <typename propagator_state_t>
   void operator()(propagator_state_t& /*state*/) const {}
-
- private:
-  /// The private propagation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the state.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param state the propagator state for the debug flag, prefix and
-  /// length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
-    if (state.options.debug) {
-      std::stringstream dstream;
-      dstream << "   " << std::setw(state.options.debugPfxWidth);
-      dstream << "material collector"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
-    }
-  }
-};
+};  // namespace Acts
 }  // namespace Acts
