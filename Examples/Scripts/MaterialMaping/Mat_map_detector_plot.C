@@ -21,7 +21,7 @@ void plot(std::vector<TH2F*> Map, std::vector<int> detectors, const std::string&
   std::string sVol = "Detector volumes :";
   for(auto const& det: detectors) {
     sVol += " ";
-    sVol += std::to_string(detectors);
+    sVol += std::to_string(det);
   }
   TText *vol = new TText(.1, .95, sVol.c_str());
   vol->SetNDC();
@@ -70,17 +70,17 @@ void plot(std::vector<TH2F*> Map, std::vector<int> detectors, const std::string&
 
 /// Initialise the histograms for the detector.
 
-void Initialise_hist(std::vector<TH2F*>& volume_hist){
+void Initialise_hist(std::vector<TH2F*>& detector_hist){
 
   TH2F * Map_X0;
   TH2F * Map_L0;
   TH2F * Map_scale;
 
-  Map_X0    = new TH2F("Map_X0_volume","Map_X0_volume",
+  Map_X0    = new TH2F("Map_X0_detector","Map_X0_detector",
                        100,-6,6,50,-3.2,3.2);
-  Map_L0    = new TH2F("Map_L0_volume","Map_L0_volume",
+  Map_L0    = new TH2F("Map_L0_detector","Map_L0_detector",
                        100,-6,6,50,-3.2,3.2);
-  Map_scale = new TH2F("Map_Scale_volume","Map_Scale_volume",
+  Map_scale = new TH2F("Map_Scale_detector","Map_Scale_detector",
                        100,-6,6,50,-3.2,3.2);
   Map_X0->GetXaxis()->SetTitle("Eta");
   Map_X0->GetYaxis()->SetTitle("Phi");
@@ -92,15 +92,15 @@ void Initialise_hist(std::vector<TH2F*>& volume_hist){
   v_hist.push_back(Map_X0);
   v_hist.push_back(Map_L0);
   v_hist.push_back(Map_scale);
-  volume_hist = v_hist;
+  detector_hist = v_hist;
 }
 
 /// Fill the histograms for the detector.
 
-void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::vector<int> detectors,  const int& nbprocess){
+void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std::vector<int> detectors,  const int& nbprocess){
   
   
-  Initialise_hist(volume_hist);
+  Initialise_hist(detector_hist);
 
   //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
@@ -117,7 +117,6 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
   std::vector<int32_t> *sur_type = 0;
 
   std::vector<uint64_t> *vol_id = 0;
-  std::vector<int32_t> *vol_type = 0;
 
   tree->SetBranchAddress("v_phi",&v_phi);
   tree->SetBranchAddress("v_eta",&v_eta);
@@ -130,8 +129,7 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
   tree->SetBranchAddress("sur_type",&sur_type);
 
   tree->SetBranchAddress("vol_id",&vol_id);
-  tree->SetBranchAddress("vol_type",&vol_type);
-
+  
   int nentries = tree->GetEntries();
   if(nentries > nbprocess && nbprocess != -1) nentries = nbprocess;
   // Loop over all the material tracks.
@@ -162,13 +160,13 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
     }
 
     if (matX0 != 0 && matL0 != 0){
-      volume_hist[0]->Fill(v_eta, v_phi, matX0);
-      volume_hist[1]->Fill(v_eta, v_phi, matL0);
-      volume_hist[2]->Fill(v_eta, v_phi);
+      detector_hist[0]->Fill(v_eta, v_phi, matX0);
+      detector_hist[1]->Fill(v_eta, v_phi, matL0);
+      detector_hist[2]->Fill(v_eta, v_phi);
     }
   }
-  volume_hist[0]->Divide(volume_hist[2]);
-  volume_hist[1]->Divide(volume_hist[2]);
+  detector_hist[0]->Divide(detector_hist[2]);
+  detector_hist[1]->Divide(detector_hist[2]);
 }
 
 /// Plot the material as function of eta and phi for a given detector/sub-detector
@@ -176,13 +174,14 @@ void Fill(std::vector<TH2F*>& volume_hist, const std::string& input_file, std::v
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
 
-void Mat_map_volume_plot(std::string input_file = "", std::vector<int> detectors, int nbprocess = -1, std::string name = ""){
-
+void Mat_map_detector_plot(std::string input_file = "",
+                         std::vector<int> detectors = vector<int>(), int nbprocess = -1,
+                         std::string name = "") {
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  std::vector<TH2F*> volume_hist;
+  std::vector<TH2F*> detector_hist;
 
-  Fill(volume_hist, input_file, detectors, nbprocess);
-  plot(volume_hist, detectors, name);
+  Fill(detector_hist, input_file, detectors, nbprocess);
+  plot(detector_hist, detectors, name);
 }

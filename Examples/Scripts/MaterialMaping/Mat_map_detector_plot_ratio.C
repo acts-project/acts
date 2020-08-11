@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Mat_map_volume_plot.C"
+#include "Mat_map_detector_plot.C"
 
 /// Draw and save the ratio plots.
 
@@ -31,7 +31,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
   std::string sVol = "Detector volumes :";
   for(auto const& det: detectors) {
     sVol += " ";
-    sVol += std::to_string(detectors);
+    sVol += std::to_string(det);
   }
   TText *vol = new TText(.1, .95, sVol.c_str());
   vol->SetNDC();
@@ -80,7 +80,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
 } 
 
 
-/// Plot the material ratio between the geantino scan and the map validation for each volume.
+/// Plot the material ratio between the geantino scan and the map validation for each detector.
 /// detectors : list of the ID of the volume constitutive of the detector/sub-detector
 /// nbprocess : number of parameter to be processed
 /// name : name of the output directory.
@@ -88,18 +88,18 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, std::
 /// name_geant : name of the output directory for the geantino scan.
 /// The map valdation and geantino scan plots are only saved if name_prop and name_geant are defined.
 
-void Mat_map_volume_plot_ratio(std::string input_file_prop = "", std::string input_file_geant = "", std::vector<int> detectors, int nbprocess = -1, std::string name = "", std::string name_prop = "", std::string name_geant = ""){
+void Mat_map_detector_plot_ratio(std::string input_file_prop = "", std::string input_file_geant = "", std::vector<int> detectors = vector<int>(), int nbprocess = -1, std::string name = "", std::string name_prop = "", std::string name_geant = ""){
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
-  std::vector<TH2F*> volume_hist_prop;
-  std::vector<TH2F*> volume_hist_geant;
+  std::vector<TH2F*> detector_hist_prop;
+  std::vector<TH2F*> detector_hist_geant;
 
-  Fill(volume_hist_prop, input_file_prop, detectors, nbprocess);
-  Fill(volume_hist_geant, input_file_geant, detectors, nbprocess);
+  Fill(detector_hist_prop, input_file_prop, detectors, nbprocess);
+  Fill(detector_hist_geant, input_file_geant, detectors, nbprocess);
 
-  plot(volume_hist_prop, detectors, name_prop);
-  plot(volume_hist_geant, detectors, name_geant);
-  plot_ratio(volume_hist_prop, volume_hist_geant, detectors, name);
+  plot(detector_hist_prop, detectors, name_prop);
+  plot(detector_hist_geant, detectors, name_geant);
+  plot_ratio(detector_hist_prop, detector_hist_geant, detectors, name);
 }
