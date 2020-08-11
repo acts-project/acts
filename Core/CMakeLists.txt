@@ -39,7 +39,6 @@ install(
 
 # target source files are added separately
 add_subdirectory(src/EventData)
-add_subdirectory(src/Fitter)
 add_subdirectory(src/Geometry)
 add_subdirectory(src/MagneticField)
 add_subdirectory(src/Material)

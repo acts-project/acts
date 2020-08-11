@@ -20,6 +20,7 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
 #include <functional>
@@ -191,8 +192,8 @@ class TrackingVolume : public Volume {
   /// @return is the templated boundary intersection
   std::vector<BoundaryIntersection> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction,
-      const NavigationOptions<Surface>& options) const;
+      const Vector3D& direction, const NavigationOptions<Surface>& options,
+      LoggerWrapper logger = getDummyLogger()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition

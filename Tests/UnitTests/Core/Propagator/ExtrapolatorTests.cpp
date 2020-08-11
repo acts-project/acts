@@ -114,7 +114,7 @@ BOOST_DATA_TEST_CASE(
       0, 0;
   CurvilinearParameters start(cov, pos, mom, q, time);
 
-  PropagatorOptions<> options(tgContext, mfContext);
+  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
@@ -167,7 +167,8 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
+  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext,
+                                                        getDummyLogger());
 
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
@@ -177,7 +178,7 @@ BOOST_DATA_TEST_CASE(
   auto collector_result = result.get<PlaneCollector::result_type>();
 
   // step through the surfaces and go step by step
-  PropagatorOptions<> optionsEmpty(tgContext, mfContext);
+  PropagatorOptions<> optionsEmpty(tgContext, mfContext, getDummyLogger());
 
   optionsEmpty.maxStepSize = 25_cm;
   optionsEmpty.debug = true;
@@ -242,7 +243,7 @@ BOOST_DATA_TEST_CASE(
   using DebugOutput = DebugOutputActor;
 
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   options.debug = debugMode;
   options.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
@@ -307,7 +308,7 @@ BOOST_DATA_TEST_CASE(
   using DebugOutput = DebugOutputActor;
 
   PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   options.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 

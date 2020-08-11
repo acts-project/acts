@@ -69,7 +69,8 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     using PropagatorOptions =
         Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
 
-    PropagatorOptions options(context.geoContext, context.magFieldContext);
+    PropagatorOptions options(context.geoContext, context.magFieldContext,
+                              Acts::LoggerWrapper{logger()});
     options.pathLimit = pathLength;
     options.debug = m_cfg.debugOutput;
 

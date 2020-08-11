@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
@@ -307,9 +307,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
       // strip volume chi2/nSourceLinks cutoff: 8.0/5
       {makeId(3), {8.0, 5}},
   };
-  CombinatorialKalmanFilter cKF(
-      rPropagator,
-      getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE));
+  CombinatorialKalmanFilter cKF(rPropagator);
 
   // Run the CombinaltorialKamanFitter for track finding from different starting
   // parameter
@@ -332,8 +330,11 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
+    auto logger =
+        getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE);
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, sourcelinkSelectorConfig, rSurface);
+        tgContext, mfContext, calContext, sourcelinkSelectorConfig,
+        LoggerWrapper{*logger}, rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);

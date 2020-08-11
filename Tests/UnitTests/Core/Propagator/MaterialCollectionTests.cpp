@@ -123,7 +123,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   using AbortListType = AbortList<>;
 
   using Options = PropagatorOptions<ActionListType, AbortListType>;
-  Options fwdOptions(tgContext, mfContext);
+  Options fwdOptions(tgContext, mfContext, getDummyLogger());
 
   fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
@@ -170,7 +170,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // backward material test
-  Options bwdOptions(tgContext, mfContext);
+  Options bwdOptions(tgContext, mfContext, getDummyLogger());
   bwdOptions.maxStepSize = -25_cm;
   bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = backward;
@@ -236,7 +236,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next
   // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext);
+  Options fwdStepOptions(tgContext, mfContext, getDummyLogger());
   fwdStepOptions.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
   fwdStepOptions.debug = debugModeFwdStep;
@@ -326,7 +326,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext);
+  Options bwdStepOptions(tgContext, mfContext, getDummyLogger());
 
   bwdStepOptions.maxStepSize = -25_cm;
   bwdStepOptions.pathLimit = -25_cm;

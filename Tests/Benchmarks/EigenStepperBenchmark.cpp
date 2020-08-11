@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  PropagatorOptions<> options(tgContext, mfContext);
+  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.pathLimit = maxPathInM * UnitConstants::m;
 
   Vector3D pos(0, 0, 0);

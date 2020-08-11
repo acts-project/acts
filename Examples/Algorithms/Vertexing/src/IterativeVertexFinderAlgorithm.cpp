@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -63,7 +64,8 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
   MagneticField bField(m_cfg.bField);
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(Stepper(bField));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
+                                   Acts::LoggerWrapper{logger()});
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(std::move(vertexFitterCfg));

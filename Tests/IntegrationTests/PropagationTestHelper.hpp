@@ -88,7 +88,7 @@ Vector3D constant_field_propagation(const Propagator_type& propagator,
   namespace VH = VectorHelpers;
 
   // setup propagation options
-  PropagatorOptions<> options(tgContext, mfContext);
+  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.pathLimit = 5_m;
   options.maxStepSize = 1_cm;
   options.debug = debug;
@@ -176,12 +176,14 @@ void foward_backward(const Propagator_type& propagator, double pT, double phi,
   using DebugOutput = Acts::DebugOutputActor;
   using ActionList = Acts::ActionList<DebugOutput>;
 
-  PropagatorOptions<ActionList> fwdOptions(tgContext, mfContext);
+  PropagatorOptions<ActionList> fwdOptions(tgContext, mfContext,
+                                           getDummyLogger());
   fwdOptions.pathLimit = plimit;
   fwdOptions.maxStepSize = 1_cm;
   fwdOptions.debug = debug;
 
-  PropagatorOptions<ActionList> bwdOptions(tgContext, mfContext);
+  PropagatorOptions<ActionList> bwdOptions(tgContext, mfContext,
+                                           getDummyLogger());
   bwdOptions.direction = backward;
   bwdOptions.pathLimit = -plimit;
   bwdOptions.maxStepSize = 1_cm;
@@ -242,7 +244,7 @@ std::pair<Vector3D, double> to_cylinder(
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
-  PropagatorOptions<> options(tgContext, mfContext);
+  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   // setup propagation options
   options.maxStepSize = plimit * 0.1;
   options.pathLimit = plimit;
@@ -318,7 +320,8 @@ std::pair<Vector3D, double> to_surface(
   using DebugOutput = DebugOutputActor;
 
   // setup propagation options
-  PropagatorOptions<ActionList<DebugOutput>> options(tgContext, mfContext);
+  PropagatorOptions<ActionList<DebugOutput>> options(tgContext, mfContext,
+                                                     getDummyLogger());
   // setup propagation options
   options.maxStepSize = plimit;
   options.pathLimit = plimit;
@@ -449,7 +452,8 @@ Covariance covariance_curvilinear(const Propagator_type& propagator, double pT,
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
-  DenseStepperPropagatorOptions<> options(tgContext, mfContext);
+  DenseStepperPropagatorOptions<> options(tgContext, mfContext,
+                                          getDummyLogger());
   options.maxStepSize = plimit;
   options.pathLimit = 0.1 * plimit;
   options.debug = debug;
@@ -498,7 +502,8 @@ Covariance covariance_bound(const Propagator_type& propagator, double pT,
   using namespace Acts::UnitLiterals;
 
   // setup propagation options
-  DenseStepperPropagatorOptions<> options(tgContext, mfContext);
+  DenseStepperPropagatorOptions<> options(tgContext, mfContext,
+                                          getDummyLogger());
   options.maxStepSize = 0.1 * plimit;
   options.pathLimit = plimit;
   options.debug = debug;

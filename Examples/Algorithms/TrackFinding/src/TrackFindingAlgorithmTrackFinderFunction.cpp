@@ -40,14 +40,14 @@ struct TrackFinderFunctionImpl {
 FW::TrackFindingAlgorithm::TrackFinderFunction
 FW::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding track
   // finder.
   return std::visit(
-      [trackingGeometry, lvl](auto&& inputField) -> TrackFinderFunction {
+      [trackingGeometry](auto&& inputField) -> TrackFinderFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -69,9 +69,7 @@ FW::TrackFindingAlgorithm::makeTrackFinderFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        CKF trackFinder(
-            std::move(propagator),
-            Acts::getDefaultLogger("CombinatorialKalmanFilter", lvl));
+        CKF trackFinder(std::move(propagator));
 
         // build the track finder functions. owns the track finder object.
         return TrackFinderFunctionImpl<CKF>(std::move(trackFinder));

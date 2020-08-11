@@ -48,7 +48,8 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
   MagneticField bField(m_cfg.bField);
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(Stepper(bField));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
+                                   Acts::LoggerWrapper{logger()});
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
