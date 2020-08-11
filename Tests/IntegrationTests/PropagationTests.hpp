@@ -78,14 +78,15 @@ inline void checkParametersConsistency(
 /// Propagate the initial parameters the given path length along its
 /// trajectory and then propagate the final parameters back. Verify that the
 /// propagated parameters match the initial ones.
-template <template <typename, typename> class options_t, typename propagator_t>
+template <typename propagator_t, template <typename, typename>
+                                 class options_t = Acts::PropagatorOptions>
 inline void runForwardBackwardTest(const propagator_t& propagator,
                                    const Acts::GeometryContext& geoCtx,
                                    const Acts::MagneticFieldContext& magCtx,
                                    const Acts::CurvilinearParameters& initial,
                                    double pathLength, double epsPos,
                                    double epsDir, double epsMom,
-                                   bool debug = false) {
+                                   bool showDebug) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
@@ -98,13 +99,13 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
   fwdOptions.direction = Acts::forward;
   fwdOptions.pathLimit = pathLength;
   fwdOptions.maxStepSize = 1_cm;
-  fwdOptions.debug = debug;
+  fwdOptions.debug = showDebug;
   // backward propagation
   options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx);
   bwdOptions.direction = Acts::backward;
   bwdOptions.pathLimit = -pathLength;
   bwdOptions.maxStepSize = 1_cm;
-  bwdOptions.debug = debug;
+  bwdOptions.debug = showDebug;
 
   // propagate parameters forward
   auto fwdResult = propagator.propagate(initial, fwdOptions);
@@ -114,11 +115,11 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
       propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
   BOOST_CHECK(bwdResult.ok());
 
-  // check that initial and propagated parameters match
+  // check that initial and back-propagated parameters match
   checkParametersConsistency(initial, *(bwdResult.value().endParameters),
                              geoCtx, epsPos, epsDir, epsMom);
 
-  if (debug) {
+  if (showDebug) {
     auto fwdOutput = fwdResult.value().template get<DebugOutput::result_type>();
     auto fwdParams = *(fwdResult.value().endParameters);
     std::cout << ">>>>> Output for forward propagation " << std::endl;
@@ -147,7 +148,7 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::CurvilinearParameters& initial,
-    const Acts::Surface& targetSurface, double pathLimit, bool debug = false) {
+    const Acts::Surface& targetSurface, double pathLimit, bool showDebug) {
   using namespace Acts::UnitLiterals;
 
   using DebugOutput = Acts::DebugOutputActor;
@@ -159,13 +160,13 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   options.direction = Acts::forward;
   options.pathLimit = pathLimit;
   options.maxStepSize = 1_cm;
-  options.debug = debug;
+  options.debug = showDebug;
 
   auto result = propagator.propagate(initial, targetSurface, options);
   BOOST_CHECK(result.ok());
   BOOST_CHECK(result.value().endParameters);
 
-  if (debug) {
+  if (showDebug) {
     auto output = result.value().template get<DebugOutput::result_type>();
     auto params = *(result.value().endParameters);
     std::cout << ">>>>> Output for to-surface propagation " << std::endl;

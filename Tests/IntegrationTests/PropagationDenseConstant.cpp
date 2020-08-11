@@ -38,6 +38,7 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_keV;
+constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -84,7 +85,8 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
   const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
   const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
   runForwardBackwardTest<Acts::DenseStepperPropagatorOptions>(
-      propagator, geoCtx, magCtx, initial, s, epsPos, epsDir, epsMom);
+      propagator, geoCtx, magCtx, initial, s, epsPos, epsDir, epsMom,
+      showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

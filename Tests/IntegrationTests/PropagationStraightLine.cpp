@@ -27,6 +27,7 @@ using namespace Acts::UnitLiterals;
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
+constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -44,8 +45,8 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
   const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
-  runForwardBackwardTest<Acts::PropagatorOptions>(
-      propagator, geoCtx, magCtx, initial, s, epsPos, epsDir, epsMom);
+  runForwardBackwardTest(propagator, geoCtx, magCtx, initial, s, epsPos, epsDir,
+                         epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

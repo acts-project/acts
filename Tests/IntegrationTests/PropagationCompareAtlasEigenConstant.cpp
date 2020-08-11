@@ -35,6 +35,8 @@ using EigenPropagator = Acts::Propagator<EigenStepper>;
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
+constexpr bool showDebug = false;
+
 constexpr auto bZ = 2_T;
 
 const Acts::GeometryContext geoCtx;
@@ -59,10 +61,12 @@ BOOST_DATA_TEST_CASE(ToCylinder,
 
   const auto initial = makeParametersCurvilinear(phi, theta, p, q);
   const auto targetSurface = makeTargetCylinder(cylinderRadius);
-  auto [atlasParams, atlasPath] = transportToSurface(
-      atlasPropagator, geoCtx, magCtx, initial, *targetSurface, smax);
-  auto [eigenParams, eigenPath] = transportToSurface(
-      eigenPropagator, geoCtx, magCtx, initial, *targetSurface, smax);
+  auto [atlasParams, atlasPath] =
+      transportToSurface(atlasPropagator, geoCtx, magCtx, initial,
+                         *targetSurface, smax, showDebug);
+  auto [eigenParams, eigenPath] =
+      transportToSurface(eigenPropagator, geoCtx, magCtx, initial,
+                         *targetSurface, smax, showDebug);
 
   checkParametersConsistency(atlasParams, eigenParams, geoCtx, epsPos, epsDir,
                              epsMom);
