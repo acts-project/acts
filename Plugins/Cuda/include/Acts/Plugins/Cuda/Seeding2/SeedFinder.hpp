@@ -8,6 +8,9 @@
 
 #pragma once
 
+// CUDA plugin include(s).
+#include "Acts/Plugins/Cuda/Seeding2/TripletFilterConfig.hpp"
+
 // Acts include(s).
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -24,7 +27,8 @@ class SeedFinder {
 
  public:
   SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
-             const SeedFilterConfig& filterConfig);
+             const SeedFilterConfig& seedFilterConfig,
+             const TripletFilterConfig& tripletFilterConfig);
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
@@ -41,8 +45,10 @@ class SeedFinder {
  private:
   /// Configuration for the seed finder
   SeedfinderConfig<external_spacepoint_t> m_commonConfig;
-  /// Configuration for the seed filter
-  SeedFilterConfig m_filterConfig;
+  /// Configuration for the (host) seed filter
+  SeedFilterConfig m_seedFilterConfig;
+  /// Configuration for the (device) triplet filter
+  TripletFilterConfig m_tripletFilterConfig;
 };
 
 }  // namespace Cuda

@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Acts include(s).
-#include "Acts/Seeding/SeedFilterConfig.hpp"
-
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
@@ -20,7 +17,15 @@
 #include <vector>
 
 namespace Acts {
+
+// Forward declaration(s).
+struct SeedFilterConfig;
+
 namespace Cuda {
+
+// Forward declaration(s).
+struct TripletFilterConfig;
+
 namespace Details {
 
 /// Find all viable triplets from the provided spacepoint dublets
@@ -32,7 +37,10 @@ namespace Details {
 /// @param[in] maxBlockSize The maximum block size to use on the GPU
 /// @param[in] dubletCounts The output object from
 ///            @c Acts::Cuda::Details::countDublets
-/// @param[in] config Configuration parameters for the triplet finding/filtering
+/// @param[in] seedConfig Configuration parameters for the triplet
+///            finding/filtering
+/// @param[in] filterConfig User provided settings (code...) for the triplet
+///            filtering
 /// @param[in] nBottomSPs The number of bottom spacepoints in @c bottomSPs
 /// @param[in] bottomSPs Properties of all of the bottom spacepoints
 /// @param[in] nMiddleSPs The number of middle spacepoints in @c middleSPs
@@ -63,10 +71,10 @@ namespace Details {
 ///
 std::vector<std::vector<Triplet> > findTriplets(
     std::size_t maxBlockSize, const DubletCounts& dubletCounts,
-    const SeedFilterConfig& config, std::size_t nBottomSPs,
-    const device_array<SpacePoint>& bottomSPs, std::size_t nMiddleSPs,
-    const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
-    const device_array<SpacePoint>& topSPs,
+    const SeedFilterConfig& seedConfig, const TripletFilterConfig& filterConfig,
+    std::size_t nBottomSPs, const device_array<SpacePoint>& bottomSPs,
+    std::size_t nMiddleSPs, const device_array<SpacePoint>& middleSPs,
+    std::size_t nTopSPs, const device_array<SpacePoint>& topSPs,
     const device_array<unsigned int>& middleBottomCounts,
     const device_array<std::size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,

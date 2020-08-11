@@ -29,8 +29,11 @@ namespace Cuda {
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedfinderConfig<external_spacepoint_t> commonConfig,
-    const SeedFilterConfig& filterConfig)
-    : m_commonConfig(std::move(commonConfig)), m_filterConfig(filterConfig) {
+    const SeedFilterConfig& seedFilterConfig,
+    const TripletFilterConfig& tripletFilterConfig)
+    : m_commonConfig(std::move(commonConfig)),
+      m_seedFilterConfig(seedFilterConfig),
+      m_tripletFilterConfig(tripletFilterConfig) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_commonConfig.highland =
@@ -158,11 +161,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Launch the triplet finding code on all of the previously found dublets.
   auto tripletCandidates = Details::findTriplets(
-      m_commonConfig.maxBlockSize, dubletCounts, m_filterConfig,
-      bottomSPVec.size(), bottomSPDeviceArray, middleSPVec.size(),
-      middleSPDeviceArray, topSPVec.size(), topSPDeviceArray,
-      middleBottomCounts, middleBottomDublets, middleTopCounts,
-      middleTopDublets, m_commonConfig.maxScatteringAngle2,
+      m_commonConfig.maxBlockSize, dubletCounts, m_seedFilterConfig,
+      m_tripletFilterConfig, bottomSPVec.size(), bottomSPDeviceArray,
+      middleSPVec.size(), middleSPDeviceArray, topSPVec.size(),
+      topSPDeviceArray, middleBottomCounts, middleBottomDublets,
+      middleTopCounts, middleTopDublets, m_commonConfig.maxScatteringAngle2,
       m_commonConfig.sigmaScattering, m_commonConfig.minHelixDiameter2,
       m_commonConfig.pT2perRadius, m_commonConfig.impactMax);
   assert(tripletCandidates.size() == middleSPVec.size());

@@ -24,6 +24,9 @@ add_library(
   include/Acts/Plugins/Cuda/Seeding2/Details/FindDublets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/FindTriplets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/Types.hpp
+  include/Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp
+  include/Acts/Plugins/Cuda/Seeding2/SeedFinder.ipp
+  include/Acts/Plugins/Cuda/Seeding2/TripletFilterConfig.hpp
   include/Acts/Plugins/Cuda/Utilities/Arrays.hpp
   src/Seeding2/CountDublets.cu
   src/Seeding2/FindDublets.cu
@@ -43,6 +46,9 @@ target_include_directories(
 target_link_libraries(
   ActsCuda2Plugin
   PUBLIC ActsCore)
+
+set_target_properties(ActsCuda2Plugin
+  PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 # Install all CUDA plugins.
 install(

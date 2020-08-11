@@ -9,8 +9,12 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/FindTriplets.hpp"
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
+#include "Acts/Plugins/Cuda/Seeding2/TripletFilterConfig.hpp"
 #include "../Utilities/ErrorCheck.cuh"
 #include "../Utilities/MatrixMacros.hpp"
+
+// Acts include(s).
+#include "Acts/Seeding/SeedFilterConfig.hpp"
 
 // CUDA include(s).
 #include <cuda_runtime.h>
@@ -365,29 +369,12 @@ __global__ void findTriplets(
   return;
 }
 
-/// Code copied from @c Acts::ATLASCuts
-__device__ float seedWeight(const Details::SpacePoint& bottom,
-                            const Details::SpacePoint&,
-                            const Details::SpacePoint& top) {
-  float weight = 0;
-  if (bottom.radius > 150) {
-    weight = 400;
-  }
-  if (top.radius < 150) {
-    weight = 200;
-  }
-  return weight;
-}
-
-/// Code copied from @c Acts::ATLASCuts
-__device__ bool singleSeedCut(float weight, const Details::SpacePoint& bottom,
-                              const Details::SpacePoint&,
-                              const Details::SpacePoint&) {
-  return !(bottom.radius > 150. && weight < 380.);
-}
-
 /// Kernel performing the "2 fixed spacepoint filtering" of the triplets
 ///
+/// @param[in] seedWeight Pointer to the user-provided seed weight calculating
+///            function
+/// @param[in] singleSeedCut Pointer to the user-provided seed filtering
+///            function
 /// @param[in] middleIndex The middle spacepoint index to run the triplet search
 ///            for
 /// @param[in] maxMBDublets The maximal number of middle-bottom dublets found
@@ -419,6 +406,8 @@ __device__ bool singleSeedCut(float weight, const Details::SpacePoint& bottom,
 ///             this filter
 ///
 __global__ void filterTriplets2Sp(
+    TripletFilterConfig::seedWeightFunc_t seedWeight,
+    TripletFilterConfig::singleSeedCutFunc_t singleSeedCut,
     std::size_t middleIndex, int maxMBDublets, int maxMTDublets,
     unsigned int nMiddleBottomDublets, std::size_t nBottomSPs,
     const Details::SpacePoint* bottomSPs, std::size_t nMiddleSPs,
@@ -429,7 +418,9 @@ __global__ void filterTriplets2Sp(
     const Details::Triplet* allTriplets, float deltaInvHelixDiameter,
     float deltaRMin, float compatSeedWeight, std::size_t compatSeedLimit,
     unsigned int* nFilteredTriplets, Details::Triplet* filteredTriplets) {
-  // A sanity check.
+  // Sanity checks.
+  assert(seedWeight != nullptr);
+  assert(singleSeedCut != nullptr);
   assert(middleIndex < nMiddleSPs);
 
   // Get the indices of the objects to operate on.
@@ -542,10 +533,10 @@ namespace Details {
 
 std::vector<std::vector<Triplet>> findTriplets(
     std::size_t maxBlockSize, const DubletCounts& dubletCounts,
-    const SeedFilterConfig& config, std::size_t nBottomSPs,
-    const device_array<SpacePoint>& bottomSPs, std::size_t nMiddleSPs,
-    const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
-    const device_array<SpacePoint>& topSPs,
+    const SeedFilterConfig& seedConfig, const TripletFilterConfig& filterConfig,
+    std::size_t nBottomSPs, const device_array<SpacePoint>& bottomSPs,
+    std::size_t nMiddleSPs, const device_array<SpacePoint>& middleSPs,
+    std::size_t nTopSPs, const device_array<SpacePoint>& topSPs,
     const device_array<unsigned int>& middleBottomCounts,
     const device_array<std::size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,
@@ -665,7 +656,7 @@ std::vector<std::vector<Triplet>> findTriplets(
         bottomSPLinTransArray.get(), topSPLinTransArray.get(),
         // Configuration constants.
         maxScatteringAngle2, sigmaScattering, minHelixDiameter2, pT2perRadius,
-        impactMax, config.impactWeightFactor,
+        impactMax, seedConfig.impactWeightFactor,
         // Variables storing the results of the triplet finding.
         tripletsPerBottomDublet.get(), tripletIndices.get(),
         objectCounts.get() + MaxTripletsPerSpB,
@@ -693,7 +684,11 @@ std::vector<std::vector<Triplet>> findTriplets(
         ((maxTripletsPerSpB + blockSizeF2SP.y - 1) / blockSizeF2SP.y));
 
     // Launch the "2SpFixed" filtering of the triplets.
+    assert(filterConfig.seedWeight != nullptr);
+    assert(filterConfig.singleSeedCut != nullptr);
     Kernels::filterTriplets2Sp<<<numBlocksF2SP, blockSizeF2SP>>>(
+        // Pointers to the user provided filter functions.
+        filterConfig.seedWeight, filterConfig.singleSeedCut,
         // Parameters needed to use all the arrays.
         middleIndex, dubletCounts.maxMBDublets, dubletCounts.maxMTDublets,
         nMiddleBottomDublets,
@@ -704,8 +699,8 @@ std::vector<std::vector<Triplet>> findTriplets(
         tripletsPerBottomDublet.get(), tripletIndices.get(),
         objectCounts.get() + AllTriplets, allTriplets.get(),
         // Configuration constants.
-        config.deltaInvHelixDiameter, config.deltaRMin, config.compatSeedWeight,
-        config.compatSeedLimit,
+        seedConfig.deltaInvHelixDiameter, seedConfig.deltaRMin,
+        seedConfig.compatSeedWeight, seedConfig.compatSeedLimit,
         // Variables storing the results of the filtering.
         objectCounts.get() + FilteredTriplets, filteredTriplets.get());
     ACTS_CUDA_ERROR_CHECK(cudaGetLastError());
