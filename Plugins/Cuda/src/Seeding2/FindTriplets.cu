@@ -369,6 +369,35 @@ __global__ void findTriplets(
   return;
 }
 
+/// Functions housed here "temporarily" until we figure out why function
+/// pointers don't work properly in optimised builds. (But do so in debug ones.)
+/// @{
+
+/// Code mimicking @c TestHostCuts::seedWeight
+__device__ float defaultSeedWeight(
+    const Acts::Cuda::Details::SpacePoint& bottom,
+    const Acts::Cuda::Details::SpacePoint&,
+    const Acts::Cuda::Details::SpacePoint& top) {
+  float weight = 0;
+  if (bottom.radius > 150) {
+    weight = 400;
+  }
+  if (top.radius < 150) {
+    weight = 200;
+  }
+  return weight;
+}
+
+/// Code mimicking @c TestHostCuts::singleSeedCut
+__device__ bool defaultSingleSeedCut(
+    float weight, const Acts::Cuda::Details::SpacePoint& bottom,
+    const Acts::Cuda::Details::SpacePoint&,
+    const Acts::Cuda::Details::SpacePoint&) {
+  return !(bottom.radius > 150. && weight < 380.);
+}
+
+/// @}
+
 /// Kernel performing the "2 fixed spacepoint filtering" of the triplets
 ///
 /// @param[in] seedWeight Pointer to the user-provided seed weight calculating
@@ -406,8 +435,8 @@ __global__ void findTriplets(
 ///             this filter
 ///
 __global__ void filterTriplets2Sp(
-    TripletFilterConfig::seedWeightFunc_t seedWeight,
-    TripletFilterConfig::singleSeedCutFunc_t singleSeedCut,
+    TripletFilterConfig::seedWeightFunc_t /*seedWeight*/,
+    TripletFilterConfig::singleSeedCutFunc_t /*singleSeedCut*/,
     std::size_t middleIndex, int maxMBDublets, int maxMTDublets,
     unsigned int nMiddleBottomDublets, std::size_t nBottomSPs,
     const Details::SpacePoint* bottomSPs, std::size_t nMiddleSPs,
@@ -514,10 +543,11 @@ __global__ void filterTriplets2Sp(
 
   // Decide whether to keep the triplet or not.
   triplet1.weight +=
-      seedWeight(bottomSPs[triplet1.bottomIndex], middleSPs[middleIndex],
-                 topSPs[triplet1.topIndex]);
-  if (!singleSeedCut(triplet1.weight, bottomSPs[triplet1.bottomIndex],
-                     middleSPs[middleIndex], topSPs[triplet1.topIndex])) {
+      defaultSeedWeight(bottomSPs[triplet1.bottomIndex], middleSPs[middleIndex],
+                        topSPs[triplet1.topIndex]);
+  if (!defaultSingleSeedCut(triplet1.weight, bottomSPs[triplet1.bottomIndex],
+                            middleSPs[middleIndex],
+                            topSPs[triplet1.topIndex])) {
     return;
   }
 
