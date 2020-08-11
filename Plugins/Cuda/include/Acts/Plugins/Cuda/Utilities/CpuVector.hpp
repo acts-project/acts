@@ -10,6 +10,8 @@
 
 #include "Acts/Plugins/Cuda/Utilities/CudaVector.cu"
 
+#include <cstring>
+
 namespace Acts {
 
 template <typename var_t>
@@ -44,7 +46,7 @@ class CpuVector {
   ~CpuVector() {
     if (!m_pinned) {
       delete m_hostPtr;
-    } else if (m_pinned) {
+    } else if (m_pinned && m_hostPtr) {
       cudaFreeHost(m_hostPtr);
     }
   }
@@ -66,7 +68,7 @@ class CpuVector {
   void zeros() { memset(m_hostPtr, 0, m_size * sizeof(var_t)); }
 
  private:
-  var_t* m_hostPtr;
+  var_t* m_hostPtr = nullptr;
   size_t m_size;
   bool m_pinned;
 };
