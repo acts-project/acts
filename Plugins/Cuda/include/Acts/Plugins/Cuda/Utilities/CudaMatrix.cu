@@ -55,7 +55,7 @@ public:
   }
   
   ~CudaMatrix(){
-    cudaFree(m_devPtr);
+    if(m_devPtr) cudaFree(m_devPtr);
   }
 
   var_t* get(size_t row=0, size_t col=0){
@@ -76,7 +76,7 @@ public:
   }
   
 private:
-  var_t* m_devPtr; 
+  var_t* m_devPtr = nullptr; 
   size_t m_nCols;
   size_t m_nRows;
   size_t m_size;

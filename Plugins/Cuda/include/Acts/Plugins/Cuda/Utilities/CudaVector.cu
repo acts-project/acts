@@ -43,7 +43,7 @@ public:
   }
   
   ~CudaVector(){ 
-    cudaFree(m_devPtr); 
+    if(m_devPtr) cudaFree(m_devPtr); 
   }
   
   var_t* get(size_t offset=0) { return m_devPtr+offset; }
@@ -60,7 +60,7 @@ public:
   }
   
 private:
-  var_t* m_devPtr; 
+  var_t* m_devPtr = nullptr; 
   size_t m_size;
 };
 }
