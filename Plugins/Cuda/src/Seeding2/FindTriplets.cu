@@ -599,9 +599,6 @@ std::vector<std::vector<Triplet>> findTriplets(
   auto middleTopCountsHost = make_host_array<unsigned int>(nMiddleSPs);
   copyToHost(middleTopCountsHost, middleTopCounts, nMiddleSPs);
 
-  // The maximal number of triplets we should consider per middle spacepoint.
-  const int maxTriplets = dubletCounts.maxMBDublets * dubletCounts.maxMTDublets;
-
   // Helper variables for handling the various object counts in device memory.
   enum ObjectCountType : int {
     AllTriplets = 0,        ///< All viable triplets
@@ -619,9 +616,10 @@ std::vector<std::vector<Triplet>> findTriplets(
 
   // Allocate enough memory for triplet candidates that would suffice for every
   // middle spacepoint.
-  auto allTriplets = make_device_array<Triplet>(maxTriplets);
-  auto filteredTriplets = make_device_array<Triplet>(maxTriplets);
-  auto filteredTripletsHost = make_host_array<Triplet>(maxTriplets);
+  auto allTriplets = make_device_array<Triplet>(dubletCounts.maxTriplets);
+  auto filteredTriplets = make_device_array<Triplet>(dubletCounts.maxTriplets);
+  auto filteredTripletsHost =
+      make_host_array<Triplet>(dubletCounts.maxTriplets);
 
   // Allocate and initialise the array holding the per bottom dublet triplet
   // numbers.
@@ -674,7 +672,7 @@ std::vector<std::vector<Triplet>> findTriplets(
     Kernels::findTriplets<<<numBlocksFT, blockSizeFT>>>(
         // Parameters needed to use all the arrays.
         middleIndex, dubletCounts.maxMBDublets, dubletCounts.maxMTDublets,
-        maxTriplets,
+        dubletCounts.maxTriplets,
         // Parameters of all of the spacepoints.
         nBottomSPs, bottomSPs.get(), nMiddleSPs, middleSPs.get(), nTopSPs,
         topSPs.get(),
