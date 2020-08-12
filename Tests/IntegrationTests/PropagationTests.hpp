@@ -92,13 +92,13 @@ inline void runForwardBackwardTest(
   using Aborts = AbortList<>;
 
   // forward propagation
-  options_t<Actions, Aborts> fwdOptions(geoCtx, magCtx);
+  options_t<Actions, Aborts> fwdOptions(geoCtx, magCtx, getDummyLogger());
   fwdOptions.direction = Acts::forward;
   fwdOptions.pathLimit = pathLength;
   fwdOptions.maxStepSize = 1_cm;
   fwdOptions.debug = showDebug;
   // backward propagation
-  options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx);
+  options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx, getDummyLogger());
   bwdOptions.direction = Acts::backward;
   bwdOptions.pathLimit = -pathLength;
   bwdOptions.maxStepSize = 1_cm;
@@ -155,7 +155,7 @@ inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx);
+  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
   options.direction = Acts::forward;
   options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
@@ -192,7 +192,7 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx);
+  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
   options.direction = Acts::forward;
   options.pathLimit = pathLimit;
   options.maxStepSize = 1_cm;
