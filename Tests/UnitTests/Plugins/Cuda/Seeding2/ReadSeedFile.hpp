@@ -18,4 +18,4 @@
 
 /// Function used to read in text files holding seeds
 std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
-    const std::string& fileName);
+    const std::string& fileName, bool filterDuplicates = false);

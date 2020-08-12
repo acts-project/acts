@@ -12,11 +12,16 @@
 // System include(s).
 #include <cmath>
 #include <fstream>
+#include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 
+/// Difference allowed on floating point numbers to still be treated equal
+static constexpr float allowedDiff = std::numeric_limits<float>::epsilon() * 4;
+
 std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
-    const std::string& fileName) {
+    const std::string& fileName, bool filterDuplicates) {
   // The result object.
   std::vector<std::unique_ptr<TestSpacePoint> > result;
 
@@ -28,6 +33,7 @@ std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
 
   // Read the file's lines one by one, and create spacepoint objects out of
   // them.
+  std::size_t duplicatesFound = 0;
   while (!spFile.eof()) {
     std::string line;
     std::getline(spFile, line);
@@ -59,8 +65,28 @@ std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
     }
 
     // Create a new spacepoint object.
-    result.emplace_back(
+    std::unique_ptr<TestSpacePoint> sp(
         new TestSpacePoint{x, y, z, r, layer, varianceR, varianceZ});
+
+    // Check if we already have another spacepoint with the same coordinates.
+    if (filterDuplicates) {
+      for (const auto& otherSP : result) {
+        if ((std::abs(sp->x() - otherSP->x()) < allowedDiff) &&
+            (std::abs(sp->y() - otherSP->y()) < allowedDiff) &&
+            (std::abs(sp->z() - otherSP->z()) < allowedDiff)) {
+          ++duplicatesFound;
+          continue;
+        }
+      }
+    }
+
+    // Store the new spacepoint.
+    result.push_back(std::move(sp));
+  }
+  // Tell the user how many duplicates were found.
+  if (duplicatesFound) {
+    std::cerr << duplicatesFound << " duplicates found in: " << fileName
+              << std::endl;
   }
 
   return result;

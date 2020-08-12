@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
   cmdl.interpret(argc, argv);
 
   // Read in the seeds from the input text file.
-  auto spacepoints = readSeedFile(cmdl.spFile);
+  auto spacepoints = readSeedFile(cmdl.spFile, cmdl.filterDuplicates);
   std::cout << "Read " << spacepoints.size()
             << " spacepoints from file: " << cmdl.spFile << std::endl;
 

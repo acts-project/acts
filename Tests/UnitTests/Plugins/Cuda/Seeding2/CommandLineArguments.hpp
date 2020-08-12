@@ -23,6 +23,8 @@ struct CommandLineArguments {
   bool onlyGPU = false;
   /// The number of groups to process as a maximum
   std::size_t groupsToIterate = 500;
+  /// Look for spacepoint duplicates in the received input file, and remove them
+  bool filterDuplicates = false;
 
   /// Interpret the command line arguments of the test executable
   void interpret(int argc, char* argv[]);

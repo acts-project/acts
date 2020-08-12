@@ -31,7 +31,10 @@ void CommandLineArguments::interpret(int argc, char* argv[]) {
       "onlyGPU,g", po::bool_switch(),
       "Run the seed finding using only the GPU implementation")(
       "groupsToIterate,n", po::value<unsigned int>()->default_value(500),
-      "The number of groups to process as a maximum");
+      "The number of groups to process as a maximum")(
+      "filterDuplicates,d", po::bool_switch(),
+      "Look for spacepoint duplicates in the input file, and remove them "
+      "(slow!)");
 
   // Parse the command line arguments.
   po::variables_map vm;
@@ -49,5 +52,6 @@ void CommandLineArguments::interpret(int argc, char* argv[]) {
   quiet = vm["quiet"].as<bool>();
   onlyGPU = vm["onlyGPU"].as<bool>();
   groupsToIterate = vm["groupsToIterate"].as<unsigned int>();
+  filterDuplicates = vm["filterDuplicates"].as<bool>();
   return;
 }

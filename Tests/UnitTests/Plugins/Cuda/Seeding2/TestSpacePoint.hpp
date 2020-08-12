@@ -8,6 +8,9 @@
 
 #pragma once
 
+// System include(s).
+#include <iosfwd>
+
 /// Simple spacepoint implementation for the test
 struct TestSpacePoint {
   float m_x;
@@ -25,3 +28,6 @@ struct TestSpacePoint {
 
 /// Helper operator for comparing the test spacepoints
 bool operator==(const TestSpacePoint& a, const TestSpacePoint& b);
+
+/// Output / print operator for @c TestSpacePoint
+std::ostream& operator<<(std::ostream& out, const TestSpacePoint& sp);

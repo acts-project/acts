@@ -11,6 +11,7 @@
 
 // System include(s).
 #include <cmath>
+#include <iostream>
 #include <limits>
 
 /// Difference allowed on floating point numbers to still be treated equal
@@ -25,4 +26,10 @@ bool operator==(const TestSpacePoint& a, const TestSpacePoint& b) {
           (a.m_surface == b.m_surface) &&
           (std::abs(a.m_varianceR - b.m_varianceR) < allowedDiff) &&
           (std::abs(a.m_varianceZ - b.m_varianceZ) < allowedDiff));
+}
+
+std::ostream& operator<<(std::ostream& out, const TestSpacePoint& sp) {
+  out << "[surface: " << sp.m_surface << ", x: " << sp.m_x << ", y: " << sp.m_y
+      << ", z: " << sp.m_z << "]";
+  return out;
 }
