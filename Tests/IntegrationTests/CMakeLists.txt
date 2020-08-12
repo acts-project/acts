@@ -25,9 +25,9 @@ macro(add_integrationtest _name)
       Boost::unit_test_framework
       ${integrationtest_extra_libraries})
   # register as integration test executable
-  set(_test "integrationtests-${_name}")
-  add_custom_target(${_test} COMMAND ${_target})
-  add_dependencies(integrationtests ${_test})
+  set(_run "RunIntegrationTest${_name}")
+  add_custom_target(${_run} COMMAND ${_target})
+  add_dependencies(integrationtests ${_run})
 endmacro()
 
 add_integrationtest(BVHNavigation BVHNavigationTest.cpp)
