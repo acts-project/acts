@@ -37,8 +37,8 @@ constexpr bool showDebug = false;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double Bz) {
-  MagneticField magField(Acts::Vector3D(0.0, 0.0, Bz));
+inline Propagator makePropagator(double bz) {
+  MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
 }
@@ -50,10 +50,19 @@ BOOST_AUTO_TEST_SUITE(PropagationEigenConstant)
 BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
-                     phi, theta, p, q, s, bZ) {
-  runForwardBackwardTest(makePropagator(bZ), geoCtx, magCtx,
+                     phi, theta, p, q, s, bz) {
+  runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
                          epsDir, epsMom, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
+                   makeParametersCurvilinear(phi, theta, p, q), s,
+                   PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

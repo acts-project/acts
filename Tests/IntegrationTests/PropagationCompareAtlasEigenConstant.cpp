@@ -37,11 +37,11 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 constexpr bool showDebug = false;
 
-constexpr auto bZ = 2_T;
+constexpr auto bz = 2_T;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
-const MagneticField magField(Acts::Vector3D::UnitZ() * bZ);
+const MagneticField magField(Acts::Vector3D::UnitZ() * bz);
 const AtlasPropagator atlasPropagator{AtlasStepper(magField)};
 const EigenPropagator eigenPropagator{EigenStepper(magField)};
 
@@ -55,17 +55,17 @@ BOOST_DATA_TEST_CASE(ToCylinder,
                          ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, smax) {
   // transverse radius of the track
-  double rt = std::abs(std::sin(theta) * p / bZ);
+  double rt = std::abs(std::sin(theta) * p / bz);
   // make sure the cylinder is reachables
   double cylinderRadius = std::min(rt, 0.5 * smax);
 
-  const auto initial = makeParametersCurvilinear(phi, theta, p, q);
+  const auto initialParams = makeParametersCurvilinear(phi, theta, p, q);
   const auto targetSurface = makeTargetCylinder(cylinderRadius);
   auto [atlasParams, atlasPath] =
-      transportToSurface(atlasPropagator, geoCtx, magCtx, initial,
+      transportToSurface(atlasPropagator, geoCtx, magCtx, initialParams,
                          *targetSurface, smax, showDebug);
   auto [eigenParams, eigenPath] =
-      transportToSurface(eigenPropagator, geoCtx, magCtx, initial,
+      transportToSurface(eigenPropagator, geoCtx, magCtx, initialParams,
                          *targetSurface, smax, showDebug);
 
   checkParametersConsistency(atlasParams, eigenParams, epsPos, epsDir, epsMom);

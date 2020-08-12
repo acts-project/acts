@@ -50,10 +50,19 @@ BOOST_AUTO_TEST_SUITE(PropagationAtlasConstant)
 BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
-                     phi, theta, p, q, s, bZ) {
-  runForwardBackwardTest(makePropagator(bZ), geoCtx, magCtx,
+                     phi, theta, p, q, s, bz) {
+  runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
                          epsDir, epsMom, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
+                   makeParametersCurvilinear(phi, theta, p, q), s,
+                   PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -43,7 +43,7 @@ constexpr bool showDebug = false;
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double Bz) {
+inline Propagator makePropagator(double bz) {
   using namespace Acts;
 
   // avoid rebuilding the tracking geometry for every propagator
@@ -67,7 +67,7 @@ inline Propagator makePropagator(double Bz) {
     detector = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
   }
 
-  MagneticField magField(Acts::Vector3D(0.0, 0.0, Bz));
+  MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper), Acts::Navigator(detector));
 }
@@ -76,14 +76,29 @@ inline Propagator makePropagator(double Bz) {
 
 BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 
+// does not seem to work as-is
 BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
-                     phi, theta, p, q, s, b) {
+                     phi, theta, p, q, s, bz) {
   runForwardBackwardTest<Acts::DenseStepperPropagatorOptions>(
       makePropagator(b), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
       showDebug);
+}
+
+// TODO the path lengths returned by the dense propagator is always zero
+//      check whether this is a wrongly returned value or a true problem where
+//      no propagation occurs.
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest<Propagator, Acts::ChargedPolicy, PlaneSurfaceBuilder,
+                   Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, PlaneSurfaceBuilder(),
+      epsPos, epsDir, epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

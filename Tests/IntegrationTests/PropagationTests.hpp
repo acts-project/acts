@@ -243,8 +243,9 @@ inline void runToSurfaceTest(
     double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
     double epsDir, double epsMom, bool showDebug) {
   // free propagation for the given path length
-  auto [freeParams, freePathLength] = transportFreely(
-      propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
+  auto [freeParams, freePathLength] =
+      transportFreely<propagator_t, charge_t, options_t>(
+          propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
   // TODO produce surface
@@ -252,12 +253,13 @@ inline void runToSurfaceTest(
   BOOST_CHECK(surface);
 
   // bound propagation onto the surface
-  // increase path length limit to ensure the surface is reached
+  // increase path length limit to ensure the surface can be reached
   auto [surfParams, surfPathLength] =
-      transportToSurface(propagator, geoCtx, magCtx, initialParams, *surface,
-                         2 * pathLength, showDebug);
-  CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
+      transportToSurface<propagator_t, charge_t, options_t>(
+          propagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength,
+          showDebug);
 
+  CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
   CHECK_CLOSE_ABS(freeParams.position(), surfParams.position(), epsPos);
   CHECK_CLOSE_ABS(freeParams.time(), surfParams.time(), epsPos);
   CHECK_CLOSE_ABS(freeParams.momentum().normalized(),
