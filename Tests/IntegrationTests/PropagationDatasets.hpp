@@ -37,9 +37,9 @@ const auto absMomentum = bdata::make({0.5_GeV, 1_GeV, 10_GeV, 100_GeV});
 const auto chargeNonZero = bdata::make({1_e, -1_e});
 
 // how long to propagated (either relatively or absolute)
-const auto propagationFraction = bdata::make({0.0, 0.125, 0.2, 0.4});
-// WARNING the maximum must be small enough to not exceed the track apogee of
-//         the lowest momentum and highest magnetic field
+const auto propagationFraction = bdata::make({0.125, 0.2, 0.4});
+// WARNING the maximum path length must be small enough to not exceed the track
+//         apogee of the lowest momentum and highest magnetic field
 const auto pathLength = bdata::make({1_cm, 10_cm});
 
 // magnetic field strength

@@ -47,6 +47,16 @@ BOOST_DATA_TEST_CASE(
                          epsDir, epsMom, showDebug);
 }
 
+// True forward/backward tracks do not work with z cylinders
+BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
+                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
+  runToSurfaceTest(
+      propagator, geoCtx, magCtx, makeParametersCurvilinear(phi, theta, p, q),
+      s, ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
+}
+
 BOOST_DATA_TEST_CASE(
     ToDisc,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
@@ -63,6 +73,16 @@ BOOST_DATA_TEST_CASE(
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
+}
+
+// True forward/backward tracks do not work with z straws
+BOOST_DATA_TEST_CASE(ToStrawAlongZ,
+                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
+  runToSurfaceTest(propagator, geoCtx, magCtx,
+                   makeParametersCurvilinear(phi, theta, p, q), s,
+                   ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

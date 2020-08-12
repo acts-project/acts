@@ -241,6 +241,31 @@ inline std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(
       std::move(transform), radius, std::numeric_limits<double>::max());
 }
 
+/// Construct a z-cylinder centered at zero with the track on its surface.
+struct ZCylinderSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::CylinderSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    auto transform =
+        std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
+    auto radius = params.position().template head<2>().norm();
+    auto halfz = std::numeric_limits<double>::max();
+    return Acts::Surface::makeShared<Acts::CylinderSurface>(
+        std::move(transform), radius, halfz);
+  }
+};
+
+/// Construct a disc at track position with plane normal along track tangent.
+struct DiscSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::DiscSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::DiscSurface>(
+        makeCurvilinearTransform(params));
+  }
+};
+
+/// Construct a plane at track position with plane normal along track tangent.
 struct PlaneSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::PlaneSurface> operator()(
@@ -250,12 +275,14 @@ struct PlaneSurfaceBuilder {
   }
 };
 
-struct DiscSurfaceBuilder {
+/// Construct a z-straw at the track position.
+struct ZStrawSurfaceBuilder {
   template <typename charge_t>
-  std::shared_ptr<Acts::DiscSurface> operator()(
+  std::shared_ptr<Acts::StrawSurface> operator()(
       const Acts::SingleTrackParameters<charge_t>& params) {
-    return Acts::Surface::makeShared<Acts::DiscSurface>(
-        makeCurvilinearTransform(params));
+    return Acts::Surface::makeShared<Acts::StrawSurface>(
+        std::make_shared<Acts::Transform3D>(
+            Acts::Translation3D(params.position())));
   }
 };
 
@@ -278,11 +305,11 @@ inline void runToSurfaceTest(
           propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
-  // TODO produce surface
+  // build a target surface at the given position
   auto surface = buildTargetSurface(freeParams);
   BOOST_CHECK(surface);
 
-  // bound propagation onto the surface
+  // bound propagation onto the target surface
   // increase path length limit to ensure the surface can be reached
   auto [surfParams, surfPathLength] =
       transportToSurface<propagator_t, charge_t, options_t>(
