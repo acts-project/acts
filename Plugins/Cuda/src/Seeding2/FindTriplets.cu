@@ -448,8 +448,8 @@ __global__ void filterTriplets2Sp(
     float deltaRMin, float compatSeedWeight, std::size_t compatSeedLimit,
     unsigned int* nFilteredTriplets, Details::Triplet* filteredTriplets) {
   // Sanity checks.
-  assert(seedWeight != nullptr);
-  assert(singleSeedCut != nullptr);
+//  assert(seedWeight != nullptr);
+//  assert(singleSeedCut != nullptr);
   assert(middleIndex < nMiddleSPs);
 
   // Get the indices of the objects to operate on.
