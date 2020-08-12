@@ -42,21 +42,17 @@ BOOST_DATA_TEST_CASE(
     ForwardBackward,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
     theta, p, q, s) {
-  // phi is ill-defined in forward/backward tracks
-  const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
-  const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
-  runForwardBackwardTest(propagator, geoCtx, magCtx, initial, s, epsPos, epsDir,
-                         epsMom, showDebug);
+  runForwardBackwardTest(propagator, geoCtx, magCtx,
+                         makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
+                         epsDir, epsMom, showDebug);
 }
 
 BOOST_DATA_TEST_CASE(
     ToPlane,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
     theta, p, q, s) {
-  // phi is ill-defined in forward/backward tracks
-  const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
-  const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
-  runToSurfaceTest(propagator, geoCtx, magCtx, initial, s,
+  runToSurfaceTest(propagator, geoCtx, magCtx,
+                   makeParametersCurvilinear(phi, theta, p, q), s,
                    PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
 }
 

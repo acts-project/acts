@@ -80,12 +80,9 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, b) {
-  const auto propagator = makePropagator(b);
-  // phi is ill-defined in forward/backward tracks
-  const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
-  const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
   runForwardBackwardTest<Acts::DenseStepperPropagatorOptions>(
-      propagator, geoCtx, magCtx, initial, s, epsPos, epsDir, epsMom,
+      makePropagator(b), geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
       showDebug);
 }
 

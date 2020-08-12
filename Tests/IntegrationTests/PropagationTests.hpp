@@ -28,6 +28,12 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
+  // phi is ill-defined in forward/backward tracks. normalize the value to
+  // ensure parameter comparisons give correct answers.
+  if (not((0 < theta) and (theta < M_PI))) {
+    phi = 0;
+  }
+
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
   Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
