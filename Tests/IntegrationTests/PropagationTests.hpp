@@ -80,13 +80,11 @@ inline void checkParametersConsistency(
 /// propagated parameters match the initial ones.
 template <typename propagator_t, template <typename, typename>
                                  class options_t = Acts::PropagatorOptions>
-inline void runForwardBackwardTest(const propagator_t& propagator,
-                                   const Acts::GeometryContext& geoCtx,
-                                   const Acts::MagneticFieldContext& magCtx,
-                                   const Acts::CurvilinearParameters& initial,
-                                   double pathLength, double epsPos,
-                                   double epsDir, double epsMom,
-                                   bool showDebug) {
+inline void runForwardBackwardTest(
+    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::CurvilinearParameters& initialParams, double pathLength,
+    double epsPos, double epsDir, double epsMom, bool showDebug) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
@@ -108,7 +106,7 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
   bwdOptions.debug = showDebug;
 
   // propagate parameters forward
-  auto fwdResult = propagator.propagate(initial, fwdOptions);
+  auto fwdResult = propagator.propagate(initialParams, fwdOptions);
   BOOST_CHECK(fwdResult.ok());
   // propagate propagated parameters back
   auto bwdResult =
@@ -116,7 +114,7 @@ inline void runForwardBackwardTest(const propagator_t& propagator,
   BOOST_CHECK(bwdResult.ok());
 
   // check that initial and back-propagated parameters match
-  checkParametersConsistency(initial, *(bwdResult.value().endParameters),
+  checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
                              geoCtx, epsPos, epsDir, epsMom);
 
   if (showDebug) {
@@ -142,13 +140,15 @@ std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(double radius) {
       std::move(transform), radius, std::numeric_limits<double>::max());
 }
 
-/// Propagate the initial parameters to the target surface.
-template <typename propagator_t>
-inline std::pair<Acts::BoundParameters, double> transportToSurface(
+/// Propagate the initial parameters freely in space.
+template <typename propagator_t, typename charge_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
+inline std::pair<Acts::BoundParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::CurvilinearParameters& initial,
-    const Acts::Surface& targetSurface, double pathLimit, bool showDebug) {
+    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
+    double pathLength, bool showDebug) {
   using namespace Acts::UnitLiterals;
 
   using DebugOutput = Acts::DebugOutputActor;
@@ -156,13 +156,13 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  Acts::PropagatorOptions<Actions, Aborts> options(geoCtx, magCtx);
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::forward;
-  options.pathLimit = pathLimit;
+  options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
   options.debug = showDebug;
 
-  auto result = propagator.propagate(initial, targetSurface, options);
+  auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
   BOOST_CHECK(result.value().endParameters);
 
@@ -175,4 +175,79 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   }
 
   return {*result.value().endParameters, result.value().pathLength};
+}
+
+/// Propagate the initial parameters to the target surface.
+template <typename propagator_t, typename charge_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
+inline std::pair<Acts::BoundParameters, double> transportToSurface(
+    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
+    const Acts::Surface& targetSurface, double pathLimit, bool showDebug) {
+  using namespace Acts::UnitLiterals;
+
+  using DebugOutput = Acts::DebugOutputActor;
+  using Actions = Acts::ActionList<DebugOutput>;
+  using Aborts = Acts::AbortList<>;
+
+  // setup propagation options
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
+  options.direction = Acts::forward;
+  options.pathLimit = pathLimit;
+  options.maxStepSize = 1_cm;
+  options.debug = showDebug;
+
+  auto result = propagator.propagate(initialParams, targetSurface, options);
+  BOOST_CHECK(result.ok());
+  BOOST_CHECK(result.value().endParameters);
+
+  if (showDebug) {
+    auto output = result.value().template get<DebugOutput::result_type>();
+    auto params = *(result.value().endParameters);
+    std::cout << ">>>>> Output for to-surface propagation " << std::endl;
+    std::cout << output.debugString << std::endl;
+    std::cout << params << std::endl;
+  }
+
+  return {*result.value().endParameters, result.value().pathLength};
+}
+
+// Propagate the initial parameters once for the given path length and
+// use the propagated parameters to define a target surface. Propagate the
+// initial parameters again to the target surface. Verify that the surface has
+// been found and the parameters are consistent.
+template <typename propagator_t, typename charge_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
+inline void runToSurfaceTest(
+    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
+    double pathLength, double epsPos, double epsDir, double epsMom,
+    bool showDebug) {
+  // free propagation for the given path length
+  auto [freeParams, freePathLength] = transportFreely(
+      propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
+  CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
+
+  // TODO produce surface
+  auto surface = makeTargetCylinder(freeParams.position(geoCtx).norm());
+  BOOST_CHECK(surface);
+
+  // bound propagation onto the surface
+  // increase path length limit to ensure the surface is reached
+  auto [surfParams, surfPathLength] =
+      transportToSurface(propagator, geoCtx, magCtx, initialParams, *surface,
+                         2 * pathLength, showDebug);
+  CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
+
+  CHECK_CLOSE_ABS(freeParams.position(geoCtx), surfParams.position(geoCtx),
+                  epsPos);
+  CHECK_CLOSE_ABS(freeParams.time(), surfParams.time(), epsPos);
+  CHECK_CLOSE_ABS(freeParams.momentum().normalized(),
+                  surfParams.momentum().normalized(), epsDir);
+  CHECK_CLOSE_ABS(freeParams.momentum().norm(), surfParams.momentum().norm(),
+                  epsMom);
 }
