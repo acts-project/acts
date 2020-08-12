@@ -13,7 +13,9 @@
 #include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -50,6 +52,8 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
 }
 
 /// Check that two parameters object are consistent within the tolerances.
+///
+/// \warning Does not check that they are defined on the same surface.
 template <typename charge_t>
 inline void checkParametersConsistency(
     const Acts::SingleTrackParameters<charge_t>& cmp,
@@ -210,6 +214,23 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   return {*result.value().endParameters, result.value().pathLength};
 }
 
+/// Construct the transformation from the curvilinear to the global coordinates.
+template <typename charge_t>
+inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
+    const Acts::SingleTrackParameters<charge_t>& params) {
+  Acts::Vector3D unitW = params.momentum().normalized();
+  auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
+
+  Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
+  rotation.col(0) = unitU;
+  rotation.col(1) = unitV;
+  rotation.col(2) = unitW;
+  Acts::Translation3D offset(params.position());
+  Acts::Transform3D toGlobal = offset * rotation;
+
+  return std::make_shared<Acts::Transform3D>(toGlobal);
+}
+
 /// Build a cylinder along z with the given radius.
 inline std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(
     double radius) {
@@ -225,7 +246,16 @@ struct PlaneSurfaceBuilder {
   std::shared_ptr<Acts::PlaneSurface> operator()(
       const Acts::SingleTrackParameters<charge_t>& params) {
     return Acts::Surface::makeShared<Acts::PlaneSurface>(
-        params.position(), params.momentum().normalized());
+        makeCurvilinearTransform(params));
+  }
+};
+
+struct DiscSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::DiscSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::DiscSurface>(
+        makeCurvilinearTransform(params));
   }
 };
 

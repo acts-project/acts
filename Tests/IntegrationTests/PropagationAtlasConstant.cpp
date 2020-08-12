@@ -56,6 +56,15 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                          epsDir, epsMom, showDebug);
 }
 
+BOOST_DATA_TEST_CASE(ToDisc,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
+                   makeParametersCurvilinear(phi, theta, p, q), s,
+                   DiscSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
+}
+
 BOOST_DATA_TEST_CASE(ToPlane,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
