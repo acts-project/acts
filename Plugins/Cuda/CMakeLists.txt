@@ -19,7 +19,7 @@ target_link_libraries(
 
 # Set up the "CUDA 2" plugin.
 add_library(
-  ActsCuda2Plugin SHARED
+  ActsCuda2Plugin STATIC
   include/Acts/Plugins/Cuda/Seeding2/Details/CountDublets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/FindDublets.hpp
   include/Acts/Plugins/Cuda/Seeding2/Details/FindTriplets.hpp
@@ -47,8 +47,9 @@ target_link_libraries(
   ActsCuda2Plugin
   PUBLIC ActsCore)
 
-set_target_properties(ActsCuda2Plugin
-  PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(ActsCuda2Plugin PROPERTIES
+  CUDA_SEPARABLE_COMPILATION ON
+  POSITION_INDEPENDENT_CODE ON)
 
 # Install all CUDA plugins.
 install(
