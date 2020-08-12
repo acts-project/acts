@@ -18,6 +18,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <limits>
@@ -34,16 +35,20 @@ using MagneticField = Acts::ConstantBField;
 using Stepper = Acts::EigenStepper<
     MagneticField, Acts::StepperExtensionList<Acts::DenseEnvironmentExtension>>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 
+// absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
-constexpr auto epsMom = 1_keV;
+constexpr auto epsMom = 1_eV;
+// relative covariance tolerance
+constexpr auto epsCov = 0.0125;
 constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
-inline Propagator makePropagator(double bz) {
+inline std::shared_ptr<const Acts::TrackingGeometry> makeDetector() {
   using namespace Acts;
 
   // avoid rebuilding the tracking geometry for every propagator
@@ -67,9 +72,23 @@ inline Propagator makePropagator(double bz) {
     detector = TrackingGeometryBuilder(tgbCfg).trackingGeometry(geoCtx);
   }
 
+  return detector;
+}
+
+inline Propagator makePropagator(double bz) {
+  using namespace Acts;
+
   MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper), Acts::Navigator(detector));
+  return Propagator(std::move(stepper), Acts::Navigator(makeDetector()));
+}
+
+inline RiddersPropagator makeRiddersPropagator(double bz) {
+  using namespace Acts;
+
+  MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
+  Stepper stepper(std::move(magField));
+  return RiddersPropagator(std::move(stepper), Acts::Navigator(makeDetector()));
 }
 
 }  // namespace
@@ -77,28 +96,40 @@ inline Propagator makePropagator(double bz) {
 BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 
 // does not seem to work as-is
-BOOST_DATA_TEST_CASE(ForwardBackward,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
-                         ds::pathLength* ds::magneticField,
-                     phi, theta, p, q, s, bz) {
-  runForwardBackwardTest<Acts::DenseStepperPropagatorOptions>(
-      makePropagator(b), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
-      showDebug);
-}
+// BOOST_DATA_TEST_CASE(ForwardBackward,
+//                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+//                          ds::pathLength* ds::magneticField,
+//                      phi, theta, p, q, s, bz) {
+//   runForwardBackwardTest<Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(b), geoCtx, magCtx,
+//       makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
+//       showDebug);
+// }
 
 // TODO the path lengths returned by the dense propagator is always zero
 //      check whether this is a wrongly returned value or a true problem where
 //      no propagation occurs.
-BOOST_DATA_TEST_CASE(ToPlane,
+// BOOST_DATA_TEST_CASE(ToPlane,
+//                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+//                          ds::pathLength* ds::magneticField,
+//                      phi, theta, p, q, s, bz) {
+//   runToSurfaceTest<Propagator, Acts::ChargedPolicy, PlaneSurfaceBuilder,
+//                    Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(bz), geoCtx, magCtx,
+//       makeParametersCurvilinear(phi, theta, p, q), s, PlaneSurfaceBuilder(),
+//       epsPos, epsDir, epsMom, showDebug);
+// }
+
+BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runToSurfaceTest<Propagator, Acts::ChargedPolicy, PlaneSurfaceBuilder,
-                   Acts::DenseStepperPropagatorOptions>(
-      makePropagator(bz), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, PlaneSurfaceBuilder(),
-      epsPos, epsDir, epsMom, showDebug);
+  runFreePropagationComparisonTest<Propagator, RiddersPropagator,
+                                   Acts::ChargedPolicy,
+                                   Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
+      epsDir, epsMom, epsCov, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

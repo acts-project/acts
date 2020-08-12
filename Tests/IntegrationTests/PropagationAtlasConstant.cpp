@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include <limits>
 
@@ -28,10 +29,14 @@ using namespace Acts::UnitLiterals;
 using MagneticField = Acts::ConstantBField;
 using Stepper = Acts::AtlasStepper<MagneticField>;
 using Propagator = Acts::Propagator<Stepper>;
+using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
 
+// absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
+// relative covariance tolerance
+constexpr auto epsCov = 0.0125;
 constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
@@ -41,6 +46,12 @@ inline Propagator makePropagator(double Bz) {
   MagneticField magField(Acts::Vector3D(0.0, 0.0, Bz));
   Stepper stepper(std::move(magField));
   return Propagator(std::move(stepper));
+}
+
+inline RiddersPropagator makeRiddersPropagator(double bz) {
+  MagneticField magField(Acts::Vector3D(0.0, 0.0, bz));
+  Stepper stepper(std::move(magField));
+  return RiddersPropagator(std::move(stepper));
 }
 
 }  // namespace
@@ -93,6 +104,16 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
   runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runFreePropagationComparisonTest(
+      makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
+      epsDir, epsMom, epsCov, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

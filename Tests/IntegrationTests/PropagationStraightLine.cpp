@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
 #include <limits>
@@ -24,15 +25,23 @@ namespace {
 namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
+using Stepper = Acts::StraightLineStepper;
+using Propagator = Acts::Propagator<Stepper>;
+using RiddersPropagator = Acts::RiddersPropagator<Propagator>;
+
+// absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
+// relative covariance tolerance
+constexpr auto epsCov = 0.00125;
 constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
-const Acts::StraightLineStepper stepper;
-const Acts::Propagator<Acts::StraightLineStepper> propagator(stepper);
+const Stepper stepper;
+const Propagator propagator(stepper);
+const RiddersPropagator riddersPropagator(stepper);
 
 }  // namespace
 
@@ -83,6 +92,16 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
   runToSurfaceTest(propagator, geoCtx, magCtx,
                    makeParametersCurvilinear(phi, theta, p, q), s,
                    ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(
+    CovarianceCurvilinear,
+    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
+    theta, p, q, s) {
+  runFreePropagationComparisonTest(
+      propagator, riddersPropagator, geoCtx, magCtx,
+      makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
+      epsDir, epsMom, epsCov, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
