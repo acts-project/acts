@@ -130,15 +130,6 @@ inline void runForwardBackwardTest(
   }
 }
 
-/// Build a cylinder along z with the given radius.
-std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(double radius) {
-  using namespace Acts;
-
-  auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
-  return Surface::makeShared<CylinderSurface>(
-      std::move(transform), radius, std::numeric_limits<double>::max());
-}
-
 /// Propagate the initial parameters freely in space.
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
@@ -213,26 +204,45 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   return {*result.value().endParameters, result.value().pathLength};
 }
 
+/// Build a cylinder along z with the given radius.
+inline std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(
+    double radius) {
+  using namespace Acts;
+
+  auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
+  return Surface::makeShared<CylinderSurface>(
+      std::move(transform), radius, std::numeric_limits<double>::max());
+}
+
+struct PlaneSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::PlaneSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::PlaneSurface>(
+        params.position(), params.momentum().normalized());
+  }
+};
+
 // Propagate the initial parameters once for the given path length and
 // use the propagated parameters to define a target surface. Propagate the
 // initial parameters again to the target surface. Verify that the surface has
 // been found and the parameters are consistent.
-template <typename propagator_t, typename charge_t,
+template <typename propagator_t, typename charge_t, typename surface_builder_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
 inline void runToSurfaceTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
-    double pathLength, double epsPos, double epsDir, double epsMom,
-    bool showDebug) {
+    const Acts::SingleTrackParameters<charge_t>& initialParams,
+    double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
+    double epsDir, double epsMom, bool showDebug) {
   // free propagation for the given path length
   auto [freeParams, freePathLength] = transportFreely(
       propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
   // TODO produce surface
-  auto surface = makeTargetCylinder(freeParams.position(geoCtx).norm());
+  auto surface = buildTargetSurface(freeParams);
   BOOST_CHECK(surface);
 
   // bound propagation onto the surface
