@@ -46,10 +46,9 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
 /// Check that two parameters object are consistent within the tolerances.
 template <typename charge_t>
 inline void checkParametersConsistency(
-    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
-    const Acts::SingleBoundTrackParameters<charge_t>& ref,
-    const Acts::GeometryContext& geoCtx, double epsPos, double epsDir,
-    double epsMom) {
+    const Acts::SingleTrackParameters<charge_t>& cmp,
+    const Acts::SingleTrackParameters<charge_t>& ref, double epsPos,
+    double epsDir, double epsMom) {
   using namespace Acts;
 
   // check stored parameters
@@ -68,7 +67,7 @@ inline void checkParametersConsistency(
   CHECK_CLOSE_ABS(cmp.template get<eBoundQOverP>(),
                   ref.template get<eBoundQOverP>(), epsMom);
   // check derived parameters
-  CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
+  CHECK_CLOSE_ABS(cmp.position(), ref.position(), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
   CHECK_CLOSE_ABS(cmp.momentum(), ref.momentum(), epsMom);
   // charge should be identical not just similar
@@ -115,7 +114,7 @@ inline void runForwardBackwardTest(
 
   // check that initial and back-propagated parameters match
   checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
-                             geoCtx, epsPos, epsDir, epsMom);
+                             epsPos, epsDir, epsMom);
 
   if (showDebug) {
     auto fwdOutput = fwdResult.value().template get<DebugOutput::result_type>();
@@ -144,10 +143,10 @@ std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(double radius) {
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
-inline std::pair<Acts::BoundParameters, double> transportFreely(
+inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
+    const Acts::SingleTrackParameters<charge_t>& initialParams,
     double pathLength, bool showDebug) {
   using namespace Acts::UnitLiterals;
 
@@ -184,7 +183,7 @@ template <typename propagator_t, typename charge_t,
 inline std::pair<Acts::BoundParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleBoundTrackParameters<charge_t>& initialParams,
+    const Acts::SingleTrackParameters<charge_t>& initialParams,
     const Acts::Surface& targetSurface, double pathLimit, bool showDebug) {
   using namespace Acts::UnitLiterals;
 
@@ -243,8 +242,7 @@ inline void runToSurfaceTest(
                          2 * pathLength, showDebug);
   CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
 
-  CHECK_CLOSE_ABS(freeParams.position(geoCtx), surfParams.position(geoCtx),
-                  epsPos);
+  CHECK_CLOSE_ABS(freeParams.position(), surfParams.position(), epsPos);
   CHECK_CLOSE_ABS(freeParams.time(), surfParams.time(), epsPos);
   CHECK_CLOSE_ABS(freeParams.momentum().normalized(),
                   surfParams.momentum().normalized(), epsDir);

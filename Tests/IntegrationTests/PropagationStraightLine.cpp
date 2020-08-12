@@ -56,8 +56,8 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phiFixed = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
   const auto initial = makeParametersCurvilinear(phiFixed, theta, p, q);
-  runToSurfaceTest(propagator, geoCtx, magCtx, initial, s, epsPos, epsDir,
-                   epsMom, showDebug);
+  runToSurfaceTest(propagator, geoCtx, magCtx, initial, s,
+                   PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

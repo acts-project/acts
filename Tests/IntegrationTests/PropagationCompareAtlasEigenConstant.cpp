@@ -68,8 +68,7 @@ BOOST_DATA_TEST_CASE(ToCylinder,
       transportToSurface(eigenPropagator, geoCtx, magCtx, initial,
                          *targetSurface, smax, showDebug);
 
-  checkParametersConsistency(atlasParams, eigenParams, geoCtx, epsPos, epsDir,
-                             epsMom);
+  checkParametersConsistency(atlasParams, eigenParams, epsPos, epsDir, epsMom);
   CHECK_CLOSE_ABS(atlasPath, eigenPath, epsPos);
 }
 
