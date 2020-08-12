@@ -238,8 +238,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<MaterialVolumeCollector, DebugOutputActor>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
+  PropagatorOptions<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material volume by using the straight line propagator

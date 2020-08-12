@@ -40,7 +40,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// contains shared_ptr anyways.
   static TrackFinderFunction makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      Options::BFieldVariant magneticField, Acts::Logging::Level lvl);
+      Options::BFieldVariant magneticField);
 
   struct Config {
     /// Input source links collection.

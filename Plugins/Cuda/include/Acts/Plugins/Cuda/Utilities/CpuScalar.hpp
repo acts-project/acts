@@ -41,7 +41,7 @@ class CpuScalar {
   ~CpuScalar() {
     if (!m_pinned) {
       delete m_hostPtr;
-    } else if (m_pinned) {
+    } else if (m_pinned && m_hostPtr) {
       cudaFreeHost(m_hostPtr);
     }
   }
@@ -51,7 +51,7 @@ class CpuScalar {
   void Set(var_t val) { m_hostPtr[0] = val; }
 
  private:
-  var_t* m_hostPtr;
+  var_t* m_hostPtr = nullptr;
   size_t m_size;
   bool m_pinned;
 };

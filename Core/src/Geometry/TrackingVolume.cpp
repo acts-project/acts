@@ -475,8 +475,9 @@ void Acts::TrackingVolume::visitSurfaces(
 std::vector<Acts::BoundaryIntersection>
 Acts::TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction,
-    const NavigationOptions<Surface>& options) const {
+    const Vector3D& direction, const NavigationOptions<Surface>& options,
+    LoggerWrapper logger) const {
+  ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
   std::vector<BoundaryIntersection> bIntersections;
@@ -497,41 +498,68 @@ Acts::TrackingVolume::compatibleBoundaries(
       return BoundaryIntersection();
     }
 
+    ACTS_VERBOSE("Check intersection with surface "
+                 << &bSurface->surfaceRepresentation());
     double cLimit = sIntersection.intersection.pathLength;
+    ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                                << ", " << cLimit);
+
     // Check if the surface is within limit
     bool withinLimit =
         (cLimit > oLimit and
          cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
     if (withinLimit) {
+      ACTS_VERBOSE("Intersection is WITHIN limit");
       sIntersection.intersection.pathLength *=
           std::copysign(1., options.navDir);
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
+    } else {
+      ACTS_VERBOSE("Intersection is OUTSIDE limit");
     }
+
     // Check the alternative
     if (sIntersection.alternative) {
+      ACTS_VERBOSE("Consider alternative");
       // Test the alternative
       cLimit = sIntersection.alternative.pathLength;
+      ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                                  << ", " << cLimit);
       withinLimit = (cLimit > oLimit and
                      cLimit * cLimit <= pLimit * pLimit + s_onSurfaceTolerance);
       if (sIntersection.alternative and withinLimit) {
+        ACTS_VERBOSE("Intersection is WITHIN limit");
         sIntersection.alternative.pathLength *=
             std::copysign(1., options.navDir);
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
+      } else {
+        ACTS_VERBOSE("Intersection is OUTSIDE limit");
       }
+    } else {
+      ACTS_VERBOSE("No alternative for intersection");
     }
     // Return an invalid one
+    ACTS_VERBOSE("No intersection accepted");
     return BoundaryIntersection();
   };
 
   /// Helper function to process boundary surfaces
   auto processBoundaries =
       [&](const TrackingVolumeBoundaries& bSurfaces) -> void {
+    ACTS_VERBOSE("Processing boundaries");
     // Loop over the boundary surfaces
     for (auto& bsIter : bSurfaces) {
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
+      if (logger().doPrint(Logging::VERBOSE)) {
+        auto os = logger().log(Logging::VERBOSE);
+        os << "Consider boundary surface " << &bSurfaceRep << " :\n";
+        std::stringstream strm;
+        bSurfaceRep.toStream(gctx, strm);
+        os << strm.str();
+      }
+
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
         auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
@@ -539,20 +567,29 @@ Acts::TrackingVolume::compatibleBoundaries(
         // Intersect and continue
         auto bIntersection = checkIntersection(bCandidate, bsIter.get());
         if (bIntersection) {
+          ACTS_VERBOSE(" - Proceed with surface");
           bIntersections.push_back(bIntersection);
+        } else {
+          ACTS_VERBOSE(" - Surface intersecion invalid");
         }
+      } else {
+        ACTS_VERBOSE(" - Surface is excluded surface");
       }
     }
   };
 
   // Process the boundaries of the current volume
   auto& bSurfaces = boundarySurfaces();
+  ACTS_VERBOSE("Volume reports " << bSurfaces.size() << " boundary surfaces");
   processBoundaries(bSurfaces);
 
   // Process potential boundaries of contained volumes
   auto confinedDenseVolumes = denseVolumes();
+  ACTS_VERBOSE("Volume reports " << confinedDenseVolumes.size()
+                                 << " confined dense volumes");
   for (const auto& dv : confinedDenseVolumes) {
     auto& bSurfacesConfined = dv->boundarySurfaces();
+    ACTS_VERBOSE(" -> " << bSurfacesConfined.size() << " boundary surfaces");
     processBoundaries(bSurfacesConfined);
   }
 

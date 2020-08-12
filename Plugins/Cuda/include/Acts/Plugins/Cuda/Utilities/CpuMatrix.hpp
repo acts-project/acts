@@ -47,7 +47,7 @@ class CpuMatrix {
   ~CpuMatrix() {
     if (!m_pinned) {
       delete m_hostPtr;
-    } else if (m_pinned) {
+    } else if (m_pinned && m_hostPtr) {
       cudaFreeHost(m_hostPtr);
     }
   }
@@ -75,7 +75,7 @@ class CpuMatrix {
   void zeros() { memset(m_hostPtr, 0, m_size * sizeof(var_t)); }
 
  private:
-  var_t* m_hostPtr;
+  var_t* m_hostPtr = nullptr;
   size_t m_nCols;
   size_t m_nRows;
   size_t m_size;

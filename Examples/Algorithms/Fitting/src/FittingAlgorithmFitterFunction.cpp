@@ -46,13 +46,13 @@ struct FitterFunctionImpl {
 
 FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
-      [trackingGeometry, lvl](auto&& inputField) -> FitterFunction {
+      [trackingGeometry](auto&& inputField) -> FitterFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -71,8 +71,7 @@ FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter fitter(std::move(propagator),
-                      Acts::getDefaultLogger("KalmanFitter", lvl));
+        Fitter fitter(std::move(propagator));
 
         // build the fitter functions. owns the fitter object.
         return FitterFunctionImpl<Fitter>(std::move(fitter));

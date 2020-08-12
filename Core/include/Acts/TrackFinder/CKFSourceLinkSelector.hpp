@@ -57,11 +57,7 @@ struct CKFSourceLinkSelector {
   ///
   /// @param config a config instance
   /// @param logger a logger instance
-  CKFSourceLinkSelector(
-      Config cfg,
-      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("CKFSourceLinkSelector", Logging::INFO).release()))
-      : m_config(std::move(cfg)), m_logger(std::move(logger)) {}
+  CKFSourceLinkSelector(Config cfg) : m_config(std::move(cfg)) {}
 
   /// @brief Operater that select the source links compatible with
   /// the given track parameter on a surface
@@ -83,7 +79,8 @@ struct CKFSourceLinkSelector {
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks,
       std::vector<std::pair<size_t, double>>& sourcelinkChi2,
-      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier) const {
+      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier,
+      LoggerWrapper logger) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
     // Return error if no source link
@@ -191,15 +188,6 @@ struct CKFSourceLinkSelector {
 
   /// The config
   Config m_config;
-
-  /// Pointer to a logger that is owned by the parent, track finder
-  std::shared_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger, to support logging macros
-  const Logger& logger() const {
-    assert(m_logger);
-    return *m_logger;
-  }
 };
 
 }  // namespace Acts

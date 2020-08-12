@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
 #include <optional>
@@ -54,7 +55,8 @@ FW::ProcessCode FW::TruthVerticesToTracksAlgorithm::execute(
 
   // Set up propagator options
   Acts::PropagatorOptions<> pOptions(context.geoContext,
-                                     context.magFieldContext);
+                                     context.magFieldContext,
+                                     Acts::LoggerWrapper{logger()});
   pOptions.direction = Acts::backward;
 
   // Create random number generator and spawn gaussian distribution

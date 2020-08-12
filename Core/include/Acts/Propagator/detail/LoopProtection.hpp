@@ -25,6 +25,7 @@ struct LoopProtection {
   /// @param [in] stepper Stepper used
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper) const {
+    const auto& logger = state.options.logger;
     // Estimate the loop protection limit
     if (state.options.loopProtection) {
       // Get the field at the start position
@@ -43,54 +44,10 @@ struct LoopProtection {
         double pathLimit = pathAborter.internalLimit;
         if (loopLimit * loopLimit < pathLimit * pathLimit) {
           pathAborter.internalLimit = loopLimit;
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "Path aborter limit set to ";
-            dstream << loopLimit << " (full helix =  " << helixPath << ")";
-            return dstream.str();
-          });
-        }
-      }
-    }
-  }
 
-  /// The private loop protection debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the
-  /// state.options.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param[in,out] state the propagator state for the debug flag,
-  ///      prefix and length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
-    if (state.options.debug) {
-      std::string input = logAction();
-      std::string::size_type start = 0u;
-      while (start != std::string::npos) {
-        std::string line;
-        std::stringstream dstream;
-        // select the current line
-        const auto pos = input.find_first_of('\n', start);
-        if (pos != std::string::npos) {
-          // exclude newline and ensure we start the next search after it
-          line = input.substr(start, pos - start - 1u);
-          start = pos + 1u;
-        } else {
-          line = input.substr(start);
-          start = std::string::npos;
+          ACTS_VERBOSE("Path aborter limit set to "
+                       << loopLimit << " (full helix =  " << helixPath << ")");
         }
-        dstream << '\n';
-        dstream << " ∞ " << std::setw(state.options.debugPfxWidth)
-                << " loop protection "
-                << " | ";
-        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
-        state.options.debugString += dstream.str();
       }
     }
   }

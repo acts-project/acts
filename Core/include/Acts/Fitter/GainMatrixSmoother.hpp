@@ -27,15 +27,6 @@ namespace Acts {
 /// @tparam jacobian_t Type of the Jacobian
 class GainMatrixSmoother {
  public:
-  /// @brief Gain Matrix smoother implementation
-  ///
-
-  /// Constructor with (non-owning) logger
-  /// @param logger a logger instance
-  GainMatrixSmoother(
-      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()));
-
   /// Operater for Kalman smoothing
   ///
   /// @tparam source_link_t The type of source link
@@ -50,7 +41,8 @@ class GainMatrixSmoother {
   template <typename source_link_t>
   Result<void> operator()(const GeometryContext& /* gctx */,
                           MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex) const {
+                          size_t entryIndex,
+                          LoggerWrapper logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
 
@@ -73,7 +65,7 @@ class GainMatrixSmoother {
                    << prev_ts.previous());
 
       trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
-                                                     this](auto ts) {
+                                                     &logger](auto ts) {
         // should have filtered and predicted, this should also include the
         // covariances.
         assert(ts.hasFiltered());
@@ -154,11 +146,5 @@ class GainMatrixSmoother {
     // construct parameters from last track state
     return Result<void>::success();
   }
-
-  /// Pointer to a logger that is owned by the parent, KalmanFilter
-  std::shared_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger, to support logging macros
-  const Logger& logger() const;
 };
 }  // namespace Acts

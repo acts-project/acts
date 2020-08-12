@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
       particleSmearingCfg.outputTrackParameters;
   trackFindingCfg.outputTrajectories = "trajectories";
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
-      trackingGeometry, magneticField, logLevel);
+      trackingGeometry, magneticField);
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));
 
