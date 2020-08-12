@@ -32,9 +32,12 @@ using AtlasPropagator = Acts::Propagator<AtlasStepper>;
 using EigenStepper = Acts::EigenStepper<MagneticField>;
 using EigenPropagator = Acts::Propagator<EigenStepper>;
 
+// absolute parameter tolerances for position, direction, and absolute momentum
 constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
+// relative covariance tolerance
+constexpr auto epsCov = 0.0125;
 constexpr bool showDebug = false;
 
 constexpr auto bz = 2_T;
@@ -49,7 +52,17 @@ const EigenPropagator eigenPropagator{EigenStepper(magField)};
 
 BOOST_AUTO_TEST_SUITE(PropagationCompareAtlasEigenConstant)
 
-// for a cylinder around z, forward/backward tracks can never reach it.
+BOOST_DATA_TEST_CASE(
+    Forward,
+    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
+    theta, p, q, s) {
+  runFreePropagationComparisonTest(
+      atlasPropagator, eigenPropagator, geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
+      epsCov, showDebug);
+}
+
+// True forward/backward tracks do not work with z cylinders
 BOOST_DATA_TEST_CASE(ToCylinder,
                      ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
