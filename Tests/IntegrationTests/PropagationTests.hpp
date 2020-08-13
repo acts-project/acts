@@ -379,7 +379,7 @@ inline void runToSurfaceTest(
           propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
-  // build a target surface at the given position
+  // build a target surface at the propagated position
   auto surface = buildTargetSurface(freeParams);
   BOOST_CHECK(surface);
 
@@ -419,6 +419,47 @@ inline void runFreePropagationComparisonTest(
   auto [refParams, refPath] =
       transportFreely<ref_propagator_t, charge_t, options_t>(
           refPropagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
+  // check parameter comparison
+  checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
+  checkCovarianceConsistency(cmpParams, refParams, tolCov);
+  CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
+}
+
+// Propagate the initial parameters along their trajectory for the given path
+// length using the reference propagator. Use the propagated track parameters to
+// define a target plane. Propagate the initial parameters using two different
+// propagators and verify consistent output.
+template <typename cmp_propagator_t, typename ref_propagator_t,
+          typename charge_t, typename surface_builder_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
+inline void runToSurfaceComparisonTest(
+    const cmp_propagator_t& cmpPropagator,
+    const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
+    double epsDir, double epsMom, double tolCov, bool showDebug) {
+  // free propagation with the reference propagator for the given path length
+  auto [freeParams, freePathLength] =
+      transportFreely<ref_propagator_t, charge_t, options_t>(
+          refPropagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
+  CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
+
+  // build a target surface at the propagated position
+  auto surface = buildTargetSurface(freeParams);
+  BOOST_CHECK(surface);
+
+  // propagate twice to the surface using the two different propagators
+  // increase path length limit to ensure the surface can be reached
+  auto [cmpParams, cmpPath] =
+      transportToSurface<cmp_propagator_t, charge_t, options_t>(
+          cmpPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength, showDebug);
+  auto [refParams, refPath] =
+      transportToSurface<ref_propagator_t, charge_t, options_t>(
+          refPropagator, geoCtx, magCtx, initialParams, *surface,
+          1.5 * pathLength, showDebug);
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);

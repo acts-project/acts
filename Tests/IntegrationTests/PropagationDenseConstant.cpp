@@ -42,7 +42,7 @@ constexpr auto epsPos = 1_um;
 constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
-constexpr auto epsCov = 0.0125;
+constexpr auto epsCov = 0.05;
 constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
@@ -95,6 +95,8 @@ inline RiddersPropagator makeRiddersPropagator(double bz) {
 
 BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 
+// check that the propagation is reversible and self-consistent
+
 // does not seem to work as-is
 // BOOST_DATA_TEST_CASE(ForwardBackward,
 //                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
@@ -105,6 +107,8 @@ BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 //       makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
 //       showDebug);
 // }
+
+// check that reachable surfaces are correctly reached
 
 // TODO the path lengths returned by the dense propagator is always zero
 //      check whether this is a wrongly returned value or a true problem where
@@ -120,6 +124,8 @@ BOOST_AUTO_TEST_SUITE(PropagationDenseConstant)
 //       epsPos, epsDir, epsMom, showDebug);
 // }
 
+// check covariance transport using the ridders propagator for comparison
+
 BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
@@ -131,5 +137,74 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
       epsDir, epsMom, epsCov, showDebug);
 }
+
+// fails due to zero path length (as discussed above)
+
+// BOOST_DATA_TEST_CASE(
+//     CovarianceToCylinderAlongZ,
+//     ds::phiNoAmbiguity* ds::thetaNoForwardBackward* ds::absMomentum*
+//         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+//     phi, theta, p, q, s, bz) {
+//   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
+//   Acts::ChargedPolicy,
+//                              ZCylinderSurfaceBuilder,
+//                              Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+//       ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+// }
+
+// NOTE msmk 2020-08-13
+// i suspect that this does not work because the Ridders propagator does not now
+// about the parameter bounds, e.g. that the radial component is always
+// positive. there are also some NaNs in the covariance from the regular
+// propagator.
+
+// BOOST_DATA_TEST_CASE(CovarianceToDisc,
+//                      ds::phi* ds::thetaCentral* ds::absMomentum*
+//                          ds::chargeNonZero* ds::pathLength*
+//                          ds::magneticField,
+//                      phi, theta, p, q, s, bz) {
+//   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
+//   Acts::ChargedPolicy,
+//                              DiscSurfaceBuilder,
+//                              Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+//       DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+// }
+
+// fails due to zero path length (as discussed above)
+
+// BOOST_DATA_TEST_CASE(CovarianceToPlane,
+//                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+//                          ds::pathLength* ds::magneticField,
+//                      phi, theta, p, q, s, bz) {
+//   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
+//   Acts::ChargedPolicy,
+//                              PlaneSurfaceBuilder,
+//                              Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+//       PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+// }
+
+// TODO fails with zero pathlength (as above) and large covariance missmatches
+
+// BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
+//                      ds::phiNoAmbiguity* ds::thetaCentral* ds::absMomentum*
+//                          ds::chargeNonZero* ds::pathLength*
+//                          ds::magneticField,
+//                      phi, theta, p, q, s, bz) {
+//   // the numerical covariance transport to straw surfaces does not seem to be
+//   // stable. use a higher tolerance for now.
+//   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
+//   Acts::ChargedPolicy,
+//                              ZStrawSurfaceBuilder,
+//                              Acts::DenseStepperPropagatorOptions>(
+//       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+//       ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125, showDebug);
+// }
 
 BOOST_AUTO_TEST_SUITE_END()

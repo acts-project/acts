@@ -18,7 +18,11 @@ using namespace Acts::UnitLiterals;
 
 // direction angles
 // upper limit is max+eps to ensure max is included
+// this includes both 180° and -180° which refer to the same point
 const auto phi = bdata::xrange(-180_degree, 181_degree, 45_degree);
+// exclude 180° and -180° e.g. to avoid numerical issues
+const auto phiNoAmbiguity = bdata::xrange(-135_degree, 136_degree, 45_degree);
+const auto thetaCentral = bdata::make({60_degree, 90_degree, 120_degree});
 const auto thetaNoForwardBackward = bdata::make({
     10_degree,
     20_degree,
