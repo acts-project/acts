@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
     } else {
       BOOST_CHECK_GT(std::abs(pos.x()), 1_um);
       CHECK_SMALL(pos.y(), 1_um);
-      BOOST_CHECK_GT(std::abs(pos.z()), 1_um);
+      BOOST_CHECK_GT(std::abs(pos.z()), 0.125_um);
     }
   }
   for (const auto& mom : stepResultB.momentum) {

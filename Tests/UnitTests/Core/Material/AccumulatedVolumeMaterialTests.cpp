@@ -21,11 +21,11 @@ BOOST_AUTO_TEST_CASE(vacuum) {
   AccumulatedVolumeMaterial avm;
 
   // averaging over nothing is vacuum
-  BOOST_CHECK_EQUAL(avm.average(), Material());
+  BOOST_CHECK(not avm.average());
 
   // averaging over vacuum is still vacuum
   avm.accumulate(MaterialProperties(1));
-  BOOST_CHECK_EQUAL(avm.average(), Material());
+  BOOST_CHECK(not avm.average());
 }
 
 BOOST_AUTO_TEST_CASE(single_material) {
@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(single_material) {
 }
 
 BOOST_AUTO_TEST_CASE(two_materials) {
-  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
-  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMassDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMassDensity(6., 7., 8., 9., 10.);
 
   MaterialProperties matprop1(mat1, 1);
   MaterialProperties matprop2(mat2, 1);
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(two_materials) {
 }
 
 BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
-  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
-  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMassDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMassDensity(6., 7., 8., 9., 10.);
 
   MaterialProperties matprop1(mat1, 0.5);
   MaterialProperties matprop2(mat2, 2);
