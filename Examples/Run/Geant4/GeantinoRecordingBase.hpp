@@ -1,13 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/DD4hepDetector/DD4hepDetectorOptions.hpp"
-#include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
+#pragma once
+
+#include <boost/program_options.hpp>
+
 #include "ACTFW/Framework/RandomNumbers.hpp"
 #include "ACTFW/Framework/Sequencer.hpp"
 #include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
@@ -15,37 +17,23 @@
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
-#include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
-
-#include <boost/program_options.hpp>
+#include "G4VUserDetectorConstruction.hh"
 
 using namespace ActsExamples;
 using namespace FW;
 
-int main(int argc, char* argv[]) {
-  // setup and parse options
-  auto desc = Options::makeDefaultOptions();
-  Options::addSequencerOptions(desc);
-  Options::addOutputOptions(desc);
-  Options::addDD4hepOptions(desc);
-  auto vm = Options::parse(desc, argc, argv);
-  if (vm.empty()) {
-    return EXIT_FAILURE;
-  }
-
+/// @brief method to process a geometry
+/// @param detector The detector descriptor instance
+int runSimulation(const boost::program_options::variables_map& vm,
+                  std::unique_ptr<G4VUserDetectorConstruction> g4detector) {
   Sequencer sequencer(Options::readSequencerConfig(vm));
   auto logLevel = Options::readLogLevel(vm);
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
-  // setup the DD4hep detector
-  auto dd4hepCfg = Options::readDD4hepConfig<po::variables_map>(vm);
-  auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
-
-  // setup the Geant4 algorithm
+  // Setup the Geant4 algorithm
   GeantinoRecording::Config g4;
   std::string materialTrackCollection = g4.outputMaterialTracks;
-  g4.detectorConstruction =
-      std::make_unique<DD4hepDetectorConstruction>(*geometrySvc->lcdd());
+  g4.detectorConstruction = std::move(g4detector);
   g4.tracksPerEvent = 100;
   g4.seed1 = 536235167;
   g4.seed2 = 729237523;
