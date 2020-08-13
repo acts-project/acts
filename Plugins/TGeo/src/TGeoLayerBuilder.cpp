@@ -157,6 +157,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
         gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
     if (tVolume == nullptr) {
       tVolume = gGeoManager->GetTopVolume();
+      ACTS_DEBUG("- search volume is TGeo top volume");
     } else {
       ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
     }
@@ -167,9 +168,16 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       tgpOptions.targetNames = layerCfg.sensorNames;
       tgpOptions.parseRanges = layerCfg.parseRanges;
       tgpOptions.unit = m_cfg.unit;
-
       TGeoParser::State tgpState;
       tgpState.volume = tVolume;
+
+      ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
+                                << " search restrictions.");
+      for (const auto& prange : layerCfg.parseRanges) {
+        ACTS_VERBOSE(" - range " << binningValueNames[prange.first]
+                                 << " within [ " << prange.second.first << ", "
+                                 << prange.second.second << "]");
+      }
 
       TGeoParser::select(tgpState, tgpOptions);
 
