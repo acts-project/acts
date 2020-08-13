@@ -15,6 +15,7 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <limits>
@@ -47,9 +48,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
   BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
   // ctor with LineBounds, detector element, Identifier
-  MaterialProperties properties{1., 1., 1., 20., 10, 5.};
   auto pMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(properties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pLineBounds, 0.2, pMaterial};
   BOOST_CHECK(LineSurfaceStub(pLineBounds, detElement).constructedOk());
   LineSurfaceStub lineToCopy(pTransform, 2.0, 20.);
