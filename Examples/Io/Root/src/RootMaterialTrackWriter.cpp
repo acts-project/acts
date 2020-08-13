@@ -81,7 +81,7 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("mat_ey", &m_step_ey);
     m_outputTree->Branch("mat_ez", &m_step_ez);
   }
-  if (m_cfg.storesurface) {
+  if (m_cfg.storeSurface) {
     m_outputTree->Branch("sur_id", &m_sur_id);
     m_outputTree->Branch("sur_type", &m_sur_type);
     m_outputTree->Branch("sur_x", &m_sur_x);
@@ -90,7 +90,7 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
   }
-  if (m_cfg.storevolume) {
+  if (m_cfg.storeVolume) {
     m_outputTree->Branch("vol_id", &m_vol_id);
   }
 }

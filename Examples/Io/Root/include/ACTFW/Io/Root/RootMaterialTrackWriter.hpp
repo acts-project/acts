@@ -54,9 +54,9 @@ class RootMaterialTrackWriter
     /// Write aut pre and post step (for G4), otherwise central step position
     bool prePostStep = false;
     /// Write the surface to which the material step correpond
-    bool storesurface = false;
+    bool storeSurface = false;
     /// Write the volume to which the material step correpond
-    bool storevolume = false;
+    bool storeVolume = false;
   };
 
   /// Constructor with
