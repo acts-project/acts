@@ -191,10 +191,13 @@ inline void runForwardBackwardTest(
   // propagate parameters forward
   auto fwdResult = propagator.propagate(initialParams, fwdOptions);
   BOOST_CHECK(fwdResult.ok());
+  CHECK_CLOSE_ABS(fwdResult.value().pathLength, pathLength, epsPos);
+
   // propagate propagated parameters back
   auto bwdResult =
       propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
   BOOST_CHECK(bwdResult.ok());
+  CHECK_CLOSE_ABS(bwdResult.value().pathLength, -pathLength, epsPos);
 
   // check that initial and back-propagated parameters match
   checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
@@ -398,6 +401,7 @@ inline void runToSurfaceTest(
                   freeParams.momentum().normalized(), epsDir);
   CHECK_CLOSE_ABS(surfParams.momentum().norm(), freeParams.momentum().norm(),
                   epsMom);
+  CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
 }
 
 // Propagate the initial parameters along their trajectory for the given path
@@ -422,6 +426,8 @@ inline void runFreePropagationComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
+  CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
+  CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
 }
 
@@ -463,5 +469,7 @@ inline void runToSurfaceComparisonTest(
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
+  CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
+  CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
 }
