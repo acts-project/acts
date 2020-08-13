@@ -303,9 +303,10 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         lConfig.volumeName = volumeName[ncp][ti[ncp]];
         lConfig.sensorNames = splitAtOr(sensitiveNames[ncp][ti[ncp]]);
         lConfig.localAxes = sensitiveAxes[ncp][ti[ncp]];
+
         // Fill the parsing restrictions in r
         auto rR = rRange[ncp];
-        if (rRange.size() > ti[ncp]) {
+        if (rR.size() > ti[ncp]) {
           double rMin = rR[ti[ncp]].lower.value_or(0.);
           double rMax =
               rR[ti[ncp]].upper.value_or(std::numeric_limits<double>::max());
@@ -320,7 +321,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> readTGeoLayerBuilderConfigs(
         }
         // Fill the parsing restrictions in z
         auto zR = zRange[ncp];
-        if (zRange.size() > ti[ncp]) {
+        if (zR.size() > ti[ncp]) {
           double zMin =
               zR[ti[ncp]].lower.value_or(-std::numeric_limits<double>::max());
           double zMax =
