@@ -64,7 +64,7 @@ BOOST_DATA_TEST_CASE(
 
 // True forward/backward tracks do not work with z cylinders
 BOOST_DATA_TEST_CASE(ToCylinder,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, smax) {
   // transverse radius of the track

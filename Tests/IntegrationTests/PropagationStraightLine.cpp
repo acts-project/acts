@@ -62,7 +62,7 @@ BOOST_DATA_TEST_CASE(
 
 // True forward/backward tracks do not work with z cylinders
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, s) {
   runToSurfaceTest(
@@ -90,7 +90,7 @@ BOOST_DATA_TEST_CASE(
 
 // True forward/backward tracks do not work with z straws
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, s) {
   runToSurfaceTest(propagator, geoCtx, magCtx,
@@ -111,7 +111,7 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
-                     ds::phiNoAmbiguity* ds::thetaNoForwardBackward*
+                     ds::phiWithoutAmbiguity* ds::thetaWithoutBeam*
                          ds::absMomentum* ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, s) {
   runToSurfaceComparisonTest(
@@ -127,7 +127,8 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
 // propagator.
 
 // BOOST_DATA_TEST_CASE(CovarianceToDisc,
-//                      ds::phiNoAmbiguity* ds::thetaCentral* ds::absMomentum*
+//                      ds::phiWithoutAmbiguity* ds::thetaCentral*
+//                      ds::absMomentum*
 //                          ds::chargeNonZero* ds::pathLength,
 //                      phi, theta, p, q, s) {
 //   runToSurfaceComparisonTest(
@@ -147,7 +148,7 @@ BOOST_DATA_TEST_CASE(
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
                      phi, theta, p, q, s) {
   // the numerical covariance transport to straw surfaces does not seem to be

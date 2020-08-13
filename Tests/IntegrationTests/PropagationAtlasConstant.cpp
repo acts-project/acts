@@ -73,7 +73,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
 
 // True forward/backward tracks do not work with z cylinders
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
@@ -102,7 +102,7 @@ BOOST_DATA_TEST_CASE(ToPlane,
 
 // True forward/backward tracks do not work with z straws
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceTest(makePropagator(bz), geoCtx, magCtx,
@@ -124,7 +124,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
 
 BOOST_DATA_TEST_CASE(
     CovarianceToCylinderAlongZ,
-    ds::phiNoAmbiguity* ds::thetaNoForwardBackward* ds::absMomentum*
+    ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
         ds::chargeNonZero* ds::pathLength* ds::magneticField,
     phi, theta, p, q, s, bz) {
   runToSurfaceComparisonTest(
@@ -161,7 +161,7 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
-                     ds::phi* ds::thetaNoForwardBackward* ds::absMomentum*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   // the numerical covariance transport to straw surfaces does not seem to be

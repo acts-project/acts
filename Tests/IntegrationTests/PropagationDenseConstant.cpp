@@ -143,7 +143,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
 // TODO fails due to zero path length (as discussed above)
 BOOST_DATA_TEST_CASE(
     CovarianceToCylinderAlongZ,
-    ds::phiNoAmbiguity* ds::thetaNoForwardBackward* ds::absMomentum*
+    ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
         ds::chargeNonZero* ds::pathLength* ds::magneticField,
     phi, theta, p, q, s, bz) {
   runToSurfaceComparisonTest<Propagator, RiddersPropagator, Acts::ChargedPolicy,
@@ -188,7 +188,8 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
 
 // TODO fails with zero pathlength (as above) and large covariance missmatches
 // BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
-//                      ds::phiNoAmbiguity* ds::thetaCentral* ds::absMomentum*
+//                      ds::phiWithoutAmbiguity* ds::thetaCentral*
+//                      ds::absMomentum*
 //                          ds::chargeNonZero* ds::pathLength*
 //                          ds::magneticField,
 //                      phi, theta, p, q, s, bz) {
