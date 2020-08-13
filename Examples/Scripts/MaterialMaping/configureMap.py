@@ -87,3 +87,4 @@ with open(inFileName,'r+') as json_file:
     json_file.seek(0) 
     json.dump(data, json_file, indent=4)
     json_file.truncate()
+    
