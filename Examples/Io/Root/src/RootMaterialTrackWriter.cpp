@@ -219,7 +219,7 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
       }
 
       // Store surface information
-      if (m_cfg.storesurface) {
+      if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
         Acts::GeometryID slayerID;
         if (surface) {
@@ -268,7 +268,7 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
       }
 
       // store volume information
-      if (m_cfg.storevolume) {
+      if (m_cfg.storeVolume) {
         const Acts::Volume* volume = mint.volume;
         Acts::GeometryID vlayerID;
         if (volume) {
