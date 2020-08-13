@@ -80,6 +80,33 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
                                withoutCov.time());
 }
 
+/// Construct (initial) neutral curvilinear parameters.
+inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
+    double phi, double theta, double absMom) {
+  using namespace Acts;
+  using namespace Acts::UnitLiterals;
+
+  // phi is ill-defined in forward/backward tracks. normalize the value to
+  // ensure parameter comparisons give correct answers.
+  if (not((0 < theta) and (theta < M_PI))) {
+    phi = 0;
+  }
+
+  Vector3D pos = Vector3D::Zero();
+  double time = 0.0;
+  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
+  NeutralCurvilinearTrackParameters params(std::nullopt, pos, mom, time);
+
+  // ensure initial parameters are valid
+  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
+  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
+  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
+  // charge should be identical not just similar
+  BOOST_CHECK_EQUAL(params.charge(), 0);
+
+  return params;
+}
+
 /// Check that two parameters object are consistent within the tolerances.
 ///
 /// \warning Does not check that they are defined on the same surface.
