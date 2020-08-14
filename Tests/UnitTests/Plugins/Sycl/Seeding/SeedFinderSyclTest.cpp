@@ -24,6 +24,7 @@
 // use boost program options for parsing command line arguments
 #include <boost/program_options.hpp>
 #include <string>
+#include <limits>
 namespace po = boost::program_options;
 
 auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
@@ -78,7 +79,7 @@ auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoin
   config.collisionRegionMax = 250.;
   config.zMin = -2800.;
   config.zMax = 2800.;
-  config.maxSeedsPerSpM = 3;
+  config.maxSeedsPerSpM = 5;
   // 2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
@@ -151,9 +152,9 @@ auto main(int argc, char** argv) -> int {
       auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
         Acts::BinFinder<SpacePoint>());
       auto config = setupSeedfinderConfiguration<SpacePoint>();
-      // Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+      Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
       config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-        Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig()/*, &atlasCuts*/));
+        Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
       Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config);
       Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
       auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/, float /*unused*/, float /*unused*/) -> Acts::Vector2D {
@@ -170,19 +171,18 @@ auto main(int argc, char** argv) -> int {
 
       int group_count = 0;
       auto groupIt = spGroup.begin();
+      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
       auto start_cpu = std::chrono::system_clock::now();
-      std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
       if(cpu) {
-
         for (; !(groupIt == spGroup.end()); ++groupIt) {
-          seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
-              groupIt.bottom(), groupIt.middle(), groupIt.top()));
-          group_count++;
-          if (!allgroup && group_count >= groups) {
-            break;
+            seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
+                groupIt.bottom(), groupIt.middle(), groupIt.top()));
+            group_count++;
+            if (!allgroup && group_count >= groups) {
+              break;
+            }
           }
-        }
       }
 
       auto end_cpu = std::chrono::system_clock::now();
@@ -199,13 +199,14 @@ auto main(int argc, char** argv) -> int {
       groupIt = spGroup.begin();
 
       auto start_sycl = std::chrono::system_clock::now();
+      // int s = 0;
       for (; !(groupIt == spGroup.end()); ++groupIt) {
-        seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
-            groupIt.bottom(), groupIt.middle(), groupIt.top()));
-        group_count++;
-        if (!allgroup && group_count >= groups){
-            break;
-        }
+          seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
+              groupIt.bottom(), groupIt.middle(), groupIt.top()));
+          group_count++;
+          if (!allgroup && group_count >= groups){
+              break;
+          }
       }
       auto end_sycl = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;

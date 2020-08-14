@@ -43,8 +43,13 @@ enum eConfigData : int {
   eImpactWeightFactor = 10,
   eFilterDeltaRMin = 11,
   eCompatSeedWeight = 12,
-  eCompatSeedLimit = 13,
-  eImpactMax = 14,
+  eImpactMax = 13,
+};
+
+// store limits for algorithm in separate array
+enum eMaxData : int {
+  eCompatSeedLimit = 0,
+  eMaxSeedsPerSpM = 1
 };
 
 // store linear circle data in float arrays, index them with enum values
@@ -60,6 +65,7 @@ enum eLinCircle : int {
 
 void offloadComputations( cl::sycl::queue q,
                           const std::vector<float>& configData,
+                          const std::vector<int>& maxData,
                           const std::vector<float>& bottomSPs,
                           const std::vector<float>& middleSPs,
                           const std::vector<float>& topSPs,
