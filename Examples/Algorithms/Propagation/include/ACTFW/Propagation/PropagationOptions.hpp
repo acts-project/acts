@@ -23,7 +23,7 @@ namespace FW {
 
 namespace Options {
 
-/// @brief ExtrapolationAlgorithm options
+/// @brief PropagationAlgorithm options
 ///
 /// @tparam aopt_t Type of the options class from boost
 template <typename aopt_t>
@@ -82,16 +82,15 @@ void addPropagationOptions(aopt_t& opt) {
       "Transverse momentum below which loops are being detected [in GeV].");
 }
 
-/// read the evgen options and return a Config file
+/// Read the pgropagator options and return a Config file
 ///
 /// @tparam vmap_t is the Type of the Parameter map to be read out
-/// @tparam bfield_t is the Type of the Magnetic field
+/// @tparam propagator_t is the Type of the Propagator used
 ///
 /// @param vm is the parameter map for the options
-/// @param magField is the magnetic field objects as shared pointer
-/// @param tGeometry is the tracking geometry object
+/// @param propagator is the propagator to be used in this job
 ///
-/// @returns a Config object for the ExtrapolationAlgorithm
+/// @returns a Config object for the PropagationAlgorithm
 template <typename vmap_t, typename propagator_t>
 typename FW::PropagationAlgorithm<propagator_t>::Config readPropagationConfig(
     const vmap_t& vm, propagator_t propagator) {
