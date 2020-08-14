@@ -12,12 +12,12 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
 
 class G4RunManager;
-class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
@@ -40,9 +40,9 @@ class GeantinoRecording final : public FW::BareAlgorithm {
     /// The number of tracks per event.
     size_t tracksPerEvent = 0;
     /// random number seed 1.
-    int seed1 = 12345;
+    unsigned int seed1 = 12345;
     /// random number seed 2.
-    int seed2 = 45678;
+    unsigned int seed2 = 45678;
   };
 
   GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);
