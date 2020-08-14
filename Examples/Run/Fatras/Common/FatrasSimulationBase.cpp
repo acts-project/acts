@@ -42,6 +42,7 @@
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <boost/program_options.hpp>
 
