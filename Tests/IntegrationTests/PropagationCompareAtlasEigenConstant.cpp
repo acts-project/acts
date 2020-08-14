@@ -17,6 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 
 #include <limits>
+#include <utility>
 
 #include "PropagationDatasets.hpp"
 #include "PropagationTests.hpp"
@@ -40,22 +41,24 @@ constexpr auto epsMom = 1_eV;
 constexpr auto epsCov = 0.0125;
 constexpr bool showDebug = false;
 
-constexpr auto bz = 2_T;
-
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
-const MagneticField magField(Acts::Vector3D::UnitZ() * bz);
-const AtlasPropagator atlasPropagator{AtlasStepper(magField)};
-const EigenPropagator eigenPropagator{EigenStepper(magField)};
+
+inline std::pair<AtlasPropagator, EigenPropagator> makePropagators(double bz) {
+  MagneticField field(Acts::Vector3D(0.0, 0.0, bz));
+  return {AtlasPropagator(AtlasStepper(field)),
+          EigenPropagator(EigenStepper(field))};
+}
 
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(PropagationCompareAtlasEigenConstant)
 
-BOOST_DATA_TEST_CASE(
-    Forward,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+BOOST_DATA_TEST_CASE(Forward,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runFreePropagationComparisonTest(
       atlasPropagator, eigenPropagator, geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
@@ -64,21 +67,48 @@ BOOST_DATA_TEST_CASE(
 
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                      ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
-                         ds::chargeNonZero* ds::pathLength,
-                     phi, theta, p, q, s) {
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov, showDebug);
 }
 
-BOOST_DATA_TEST_CASE(
-    ToPlane,
-    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
-    theta, p, q, s) {
+// TODO fails due to different treatment of the local phi coordinate
+// BOOST_DATA_TEST_CASE(
+//     ToDisc,
+//     ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
+//         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+//     phi, theta, p, q, s, bz) {
+//   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
+//   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx,
+//   magCtx,
+//                              makeParametersCurvilinear(phi, theta, p, q), s,
+//                              DiscSurfaceBuilder(), epsPos, epsDir, epsMom,
+//                              epsCov, showDebug);
+// }
+
+BOOST_DATA_TEST_CASE(ToPlane,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              PlaneSurfaceBuilder(), epsPos, epsDir, epsMom,
+                             epsCov, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(ToStrawAlongZ,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
+  runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
+                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom,
                              epsCov, showDebug);
 }
 
