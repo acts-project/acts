@@ -12,20 +12,11 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <cassert>
 
 namespace ActsFatras {
-
-/// Do not select any surface, ever.
-struct NoSurface {
-  constexpr bool operator()(const Acts::Surface &) const { return false; }
-};
-
-/// Select every surface.
-struct EverySurface {
-  constexpr bool operator()(const Acts::Surface &) const { return true; }
-};
 
 /// Interactor result (and intermediate state).
 ///

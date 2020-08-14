@@ -14,6 +14,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/Kernel/Interactor.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <limits>
 #include <random>

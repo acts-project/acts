@@ -21,6 +21,7 @@
 #include "ActsFatras/Kernel/Simulator.hpp"
 #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <algorithm>
