@@ -21,6 +21,8 @@
 
 #include <utility>
 
+// parameter construction helpers
+
 /// Construct (initial) curvilinear parameters.
 inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
                                                              double theta,
@@ -107,6 +109,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
   return params;
 }
 
+// helpers to compare track parameters
+
 /// Check that two parameters object are consistent within the tolerances.
 ///
 /// \warning Does not check that they are defined on the same surface.
@@ -156,66 +160,71 @@ inline void checkCovarianceConsistency(
   }
 }
 
-/// Propagate the initial parameters the given path length along its
-/// trajectory and then propagate the final parameters back. Verify that the
-/// propagated parameters match the initial ones.
-template <typename propagator_t, typename charge_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
-inline void runForwardBackwardTest(
-    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
-    const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength, double epsPos, double epsDir, double epsMom,
-    bool showDebug) {
-  using namespace Acts;
-  using namespace Acts::UnitLiterals;
+// helpers to construct target surfaces from track states
 
-  using DebugOutput = DebugOutputActor;
-  using Actions = ActionList<DebugOutput>;
-  using Aborts = AbortList<>;
+/// Construct the transformation from the curvilinear to the global coordinates.
+template <typename charge_t>
+inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
+    const Acts::SingleTrackParameters<charge_t>& params) {
+  Acts::Vector3D unitW = params.momentum().normalized();
+  auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
-  // forward propagation
-  options_t<Actions, Aborts> fwdOptions(geoCtx, magCtx, getDummyLogger());
-  fwdOptions.direction = Acts::forward;
-  fwdOptions.pathLimit = pathLength;
-  fwdOptions.maxStepSize = 1_cm;
-  fwdOptions.debug = showDebug;
-  // backward propagation
-  options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx, getDummyLogger());
-  bwdOptions.direction = Acts::backward;
-  bwdOptions.pathLimit = -pathLength;
-  bwdOptions.maxStepSize = 1_cm;
-  bwdOptions.debug = showDebug;
+  Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
+  rotation.col(0) = unitU;
+  rotation.col(1) = unitV;
+  rotation.col(2) = unitW;
+  Acts::Translation3D offset(params.position());
+  Acts::Transform3D toGlobal = offset * rotation;
 
-  // propagate parameters forward
-  auto fwdResult = propagator.propagate(initialParams, fwdOptions);
-  BOOST_CHECK(fwdResult.ok());
-  CHECK_CLOSE_ABS(fwdResult.value().pathLength, pathLength, epsPos);
-
-  // propagate propagated parameters back
-  auto bwdResult =
-      propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
-  BOOST_CHECK(bwdResult.ok());
-  CHECK_CLOSE_ABS(bwdResult.value().pathLength, -pathLength, epsPos);
-
-  // check that initial and back-propagated parameters match
-  checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
-                             epsPos, epsDir, epsMom);
-
-  if (showDebug) {
-    auto fwdOutput = fwdResult.value().template get<DebugOutput::result_type>();
-    auto fwdParams = *(fwdResult.value().endParameters);
-    std::cout << ">>>>> Output for forward propagation " << std::endl;
-    std::cout << fwdOutput.debugString << std::endl;
-    std::cout << fwdParams << std::endl;
-    auto bwdOutput = bwdResult.value().template get<DebugOutput::result_type>();
-    auto bwdParams = *(bwdResult.value().endParameters);
-    std::cout << ">>>>> Output for backward propagation " << std::endl;
-    std::cout << bwdOutput.debugString << std::endl;
-    std::cout << bwdParams << std::endl;
-  }
+  return std::make_shared<Acts::Transform3D>(toGlobal);
 }
+
+/// Construct a z-cylinder centered at zero with the track on its surface.
+struct ZCylinderSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::CylinderSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    auto transform =
+        std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
+    auto radius = params.position().template head<2>().norm();
+    auto halfz = std::numeric_limits<double>::max();
+    return Acts::Surface::makeShared<Acts::CylinderSurface>(
+        std::move(transform), radius, halfz);
+  }
+};
+
+/// Construct a disc at track position with plane normal along track tangent.
+struct DiscSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::DiscSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::DiscSurface>(
+        makeCurvilinearTransform(params));
+  }
+};
+
+/// Construct a plane at track position with plane normal along track tangent.
+struct PlaneSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::PlaneSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::PlaneSurface>(
+        makeCurvilinearTransform(params));
+  }
+};
+
+/// Construct a z-straw at the track position.
+struct ZStrawSurfaceBuilder {
+  template <typename charge_t>
+  std::shared_ptr<Acts::StrawSurface> operator()(
+      const Acts::SingleTrackParameters<charge_t>& params) {
+    return Acts::Surface::makeShared<Acts::StrawSurface>(
+        std::make_shared<Acts::Transform3D>(
+            Acts::Translation3D(params.position())));
+  }
+};
+
+// helper functions to run the propagation with additional checks
 
 /// Propagate the initial parameters freely in space.
 template <typename propagator_t, typename charge_t,
@@ -291,82 +300,73 @@ inline std::pair<Acts::BoundParameters, double> transportToSurface(
   return {*result.value().endParameters, result.value().pathLength};
 }
 
-/// Construct the transformation from the curvilinear to the global coordinates.
-template <typename charge_t>
-inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
-    const Acts::SingleTrackParameters<charge_t>& params) {
-  Acts::Vector3D unitW = params.momentum().normalized();
-  auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
+// self-consistency tests for a single propagator
 
-  Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
-  rotation.col(0) = unitU;
-  rotation.col(1) = unitV;
-  rotation.col(2) = unitW;
-  Acts::Translation3D offset(params.position());
-  Acts::Transform3D toGlobal = offset * rotation;
-
-  return std::make_shared<Acts::Transform3D>(toGlobal);
-}
-
-/// Build a cylinder along z with the given radius.
-inline std::shared_ptr<Acts::CylinderSurface> makeTargetCylinder(
-    double radius) {
+/// Propagate the initial parameters the given path length along its
+/// trajectory and then propagate the final parameters back. Verify that the
+/// propagated parameters match the initial ones.
+template <typename propagator_t, typename charge_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
+inline void runForwardBackwardTest(
+    const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
+    const Acts::MagneticFieldContext& magCtx,
+    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    double pathLength, double epsPos, double epsDir, double epsMom,
+    bool showDebug) {
   using namespace Acts;
+  using namespace Acts::UnitLiterals;
 
-  auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
-  return Surface::makeShared<CylinderSurface>(
-      std::move(transform), radius, std::numeric_limits<double>::max());
+  using DebugOutput = DebugOutputActor;
+  using Actions = ActionList<DebugOutput>;
+  using Aborts = AbortList<>;
+
+  // forward propagation
+  options_t<Actions, Aborts> fwdOptions(geoCtx, magCtx, getDummyLogger());
+  fwdOptions.direction = Acts::forward;
+  fwdOptions.pathLimit = pathLength;
+  fwdOptions.maxStepSize = 1_cm;
+  fwdOptions.debug = showDebug;
+  // backward propagation
+  options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx, getDummyLogger());
+  bwdOptions.direction = Acts::backward;
+  bwdOptions.pathLimit = -pathLength;
+  bwdOptions.maxStepSize = 1_cm;
+  bwdOptions.debug = showDebug;
+
+  // propagate parameters forward
+  auto fwdResult = propagator.propagate(initialParams, fwdOptions);
+  BOOST_CHECK(fwdResult.ok());
+  CHECK_CLOSE_ABS(fwdResult.value().pathLength, pathLength, epsPos);
+
+  // propagate propagated parameters back
+  auto bwdResult =
+      propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
+  BOOST_CHECK(bwdResult.ok());
+  CHECK_CLOSE_ABS(bwdResult.value().pathLength, -pathLength, epsPos);
+
+  // check that initial and back-propagated parameters match
+  checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
+                             epsPos, epsDir, epsMom);
+
+  if (showDebug) {
+    auto fwdOutput = fwdResult.value().template get<DebugOutput::result_type>();
+    auto fwdParams = *(fwdResult.value().endParameters);
+    std::cout << ">>>>> Output for forward propagation " << std::endl;
+    std::cout << fwdOutput.debugString << std::endl;
+    std::cout << fwdParams << std::endl;
+    auto bwdOutput = bwdResult.value().template get<DebugOutput::result_type>();
+    auto bwdParams = *(bwdResult.value().endParameters);
+    std::cout << ">>>>> Output for backward propagation " << std::endl;
+    std::cout << bwdOutput.debugString << std::endl;
+    std::cout << bwdParams << std::endl;
+  }
 }
 
-/// Construct a z-cylinder centered at zero with the track on its surface.
-struct ZCylinderSurfaceBuilder {
-  template <typename charge_t>
-  std::shared_ptr<Acts::CylinderSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
-    auto transform =
-        std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
-    auto radius = params.position().template head<2>().norm();
-    auto halfz = std::numeric_limits<double>::max();
-    return Acts::Surface::makeShared<Acts::CylinderSurface>(
-        std::move(transform), radius, halfz);
-  }
-};
-
-/// Construct a disc at track position with plane normal along track tangent.
-struct DiscSurfaceBuilder {
-  template <typename charge_t>
-  std::shared_ptr<Acts::DiscSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
-    return Acts::Surface::makeShared<Acts::DiscSurface>(
-        makeCurvilinearTransform(params));
-  }
-};
-
-/// Construct a plane at track position with plane normal along track tangent.
-struct PlaneSurfaceBuilder {
-  template <typename charge_t>
-  std::shared_ptr<Acts::PlaneSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
-    return Acts::Surface::makeShared<Acts::PlaneSurface>(
-        makeCurvilinearTransform(params));
-  }
-};
-
-/// Construct a z-straw at the track position.
-struct ZStrawSurfaceBuilder {
-  template <typename charge_t>
-  std::shared_ptr<Acts::StrawSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
-    return Acts::Surface::makeShared<Acts::StrawSurface>(
-        std::make_shared<Acts::Transform3D>(
-            Acts::Translation3D(params.position())));
-  }
-};
-
-// Propagate the initial parameters once for the given path length and
-// use the propagated parameters to define a target surface. Propagate the
-// initial parameters again to the target surface. Verify that the surface has
-// been found and the parameters are consistent.
+/// Propagate the initial parameters once for the given path length and
+/// use the propagated parameters to define a target surface. Propagate the
+/// initial parameters again to the target surface. Verify that the surface has
+/// been found and the parameters are consistent.
 template <typename propagator_t, typename charge_t, typename surface_builder_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
@@ -404,8 +404,10 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
 }
 
-// Propagate the initial parameters along their trajectory for the given path
-// length using two different propagators and verify consistent output.
+// consistency tests between two propagators
+
+/// Propagate the initial parameters along their trajectory for the given path
+/// length using two different propagators and verify consistent output.
 template <
     typename cmp_propagator_t, typename ref_propagator_t, typename charge_t,
     template <typename, typename> class options_t = Acts::PropagatorOptions>
@@ -431,10 +433,10 @@ inline void runFreePropagationComparisonTest(
   CHECK_CLOSE_ABS(cmpPath, refPath, epsPos);
 }
 
-// Propagate the initial parameters along their trajectory for the given path
-// length using the reference propagator. Use the propagated track parameters to
-// define a target plane. Propagate the initial parameters using two different
-// propagators and verify consistent output.
+/// Propagate the initial parameters along their trajectory for the given path
+/// length using the reference propagator. Use the propagated track parameters
+/// to define a target plane. Propagate the initial parameters using two
+/// different propagators and verify consistent output.
 template <typename cmp_propagator_t, typename ref_propagator_t,
           typename charge_t, typename surface_builder_t,
           template <typename, typename>

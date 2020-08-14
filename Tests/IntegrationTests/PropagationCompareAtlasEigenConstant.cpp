@@ -62,27 +62,24 @@ BOOST_DATA_TEST_CASE(
       epsCov, showDebug);
 }
 
-// True forward/backward tracks do not work with z cylinders
-BOOST_DATA_TEST_CASE(ToCylinder,
+BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                      ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength,
-                     phi, theta, p, q, smax) {
-  // transverse radius of the track
-  double rt = std::abs(std::sin(theta) * p / bz);
-  // make sure the cylinder is reachables
-  double cylinderRadius = std::min(rt, 0.5 * smax);
+                     phi, theta, p, q, s) {
+  runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
+                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom,
+                             epsCov, showDebug);
+}
 
-  const auto initialParams = makeParametersCurvilinear(phi, theta, p, q);
-  const auto targetSurface = makeTargetCylinder(cylinderRadius);
-  auto [atlasParams, atlasPath] =
-      transportToSurface(atlasPropagator, geoCtx, magCtx, initialParams,
-                         *targetSurface, smax, showDebug);
-  auto [eigenParams, eigenPath] =
-      transportToSurface(eigenPropagator, geoCtx, magCtx, initialParams,
-                         *targetSurface, smax, showDebug);
-
-  checkParametersConsistency(atlasParams, eigenParams, epsPos, epsDir, epsMom);
-  CHECK_CLOSE_ABS(atlasPath, eigenPath, epsPos);
+BOOST_DATA_TEST_CASE(
+    ToPlane,
+    ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
+    theta, p, q, s) {
+  runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
+                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             PlaneSurfaceBuilder(), epsPos, epsDir, epsMom,
+                             epsCov, showDebug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
