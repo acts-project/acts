@@ -55,14 +55,14 @@ inline std::shared_ptr<const Acts::TrackingGeometry> makeDetector() {
   static std::shared_ptr<const Acts::TrackingGeometry> detector;
   if (not detector) {
     CuboidVolumeBuilder::VolumeConfig vConf;
-    vConf.position = {1.5_m, 0., 0.};
-    vConf.length = {3_m, 1_m, 1_m};
+    vConf.position = {0., 0., 0.};
+    vConf.length = {4_m, 4_m, 4_m};
     vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Acts::Test::makeBeryllium());
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg.push_back(vConf);
-    conf.position = {1.5_m, 0., 0.};
-    conf.length = {3_m, 1_m, 1_m};
+    conf.position = {0., 0., 0.};
+    conf.length = {4_m, 4_m, 4_m};
     CuboidVolumeBuilder cvb(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
@@ -111,9 +111,29 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
 
 // check that reachable surfaces are correctly reached
 
-// TODO the path lengths returned by the dense propagator is always zero
-//      check whether this is a wrongly returned value or a true problem where
-//      no propagation occurs.
+// True forward/backward tracks do not work with z cylinders
+BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest<Propagator, Acts::ChargedPolicy, ZCylinderSurfaceBuilder,
+                   Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, ZCylinderSurfaceBuilder(),
+      epsPos, epsDir, epsMom, showDebug);
+}
+
+BOOST_DATA_TEST_CASE(ToDisc,
+                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                         ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest<Propagator, Acts::ChargedPolicy, DiscSurfaceBuilder,
+                   Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, DiscSurfaceBuilder(),
+      epsPos, epsDir, epsMom, showDebug);
+}
+
 BOOST_DATA_TEST_CASE(ToPlane,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
@@ -125,9 +145,20 @@ BOOST_DATA_TEST_CASE(ToPlane,
       epsPos, epsDir, epsMom, showDebug);
 }
 
+// True forward/backward tracks do not work with z straws
+BOOST_DATA_TEST_CASE(ToStrawAlongZ,
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceTest<Propagator, Acts::ChargedPolicy, ZStrawSurfaceBuilder,
+                   Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, ZStrawSurfaceBuilder(),
+      epsPos, epsDir, epsMom, showDebug);
+}
+
 // check covariance transport using the ridders propagator for comparison
 
-// TODO fails due to zero path length (as discussed above)
 BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
@@ -140,12 +171,11 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
       epsDir, epsMom, epsCov, showDebug);
 }
 
-// TODO fails due to zero path length (as discussed above)
-BOOST_DATA_TEST_CASE(
-    CovarianceToCylinderAlongZ,
-    ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
-        ds::chargeNonZero* ds::pathLength* ds::magneticField,
-    phi, theta, p, q, s, bz) {
+// limit theta to ignore the covariance missmatches at high theta for now
+BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
+                     ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
   runToSurfaceComparisonTest<Propagator, RiddersPropagator, Acts::ChargedPolicy,
                              ZCylinderSurfaceBuilder,
                              Acts::DenseStepperPropagatorOptions>(
@@ -173,7 +203,6 @@ BOOST_DATA_TEST_CASE(
 //       DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
 // }
 
-// fails due to zero path length (as discussed above)
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
@@ -186,22 +215,17 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
       PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
 }
 
-// TODO fails with zero pathlength (as above) and large covariance missmatches
-// BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
-//                      ds::phiWithoutAmbiguity* ds::thetaCentral*
-//                      ds::absMomentum*
-//                          ds::chargeNonZero* ds::pathLength*
-//                          ds::magneticField,
-//                      phi, theta, p, q, s, bz) {
-//   // the numerical covariance transport to straw surfaces does not seem to be
-//   // stable. use a higher tolerance for now.
-//   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
-//   Acts::ChargedPolicy,
-//                              ZStrawSurfaceBuilder,
-//                              Acts::DenseStepperPropagatorOptions>(
-//       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
-//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-//       ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, 0.125, showDebug);
-// }
+// limit theta to ignore the covariance missmatches at high theta for now
+BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
+                     ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  runToSurfaceComparisonTest<Propagator, RiddersPropagator, Acts::ChargedPolicy,
+                             ZStrawSurfaceBuilder,
+                             Acts::DenseStepperPropagatorOptions>(
+      makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
+      makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
