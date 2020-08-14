@@ -8,16 +8,12 @@
 
 #pragma once
 
-#include "ACTFW/Utilities/Options.hpp"
 #include "ACTFW/Utilities/OptionsFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include <iostream>
-
 #include "GeantinoRecording.hpp"
 
-namespace po = boost::program_options;
 using namespace Acts::UnitLiterals;
 
 namespace FW {

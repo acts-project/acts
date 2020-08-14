@@ -25,7 +25,7 @@ using namespace FW;
 
 /// @brief method to process a geometry
 /// @param detector The detector descriptor instance
-int runGeantinoRecording(
+inline int runGeantinoRecording(
     const boost::program_options::variables_map& vm,
     std::unique_ptr<G4VUserDetectorConstruction> g4detector) {
   Sequencer sequencer(Options::readSequencerConfig(vm));

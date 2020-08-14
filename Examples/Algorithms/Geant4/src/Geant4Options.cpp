@@ -17,14 +17,14 @@ void FW::Options::addGeant4Options(FW::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("g4-rnd-seed1", po::value<unsigned int>()->default_value(287362910),
+  opt("g4-rnd-seed1", value<unsigned int>()->default_value(287362910),
       "The first seed of the G4 random number generation");
-  opt("g4-rnd-seed2", po::value<unsigned int>()->default_value(730284537),
+  opt("g4-rnd-seed2", value<unsigned int>()->default_value(730284537),
       "The second seed of the G4 random number generation");
-  opt("g4-pg-nparticles", po::value<unsigned int>()->default_value(100),
+  opt("g4-pg-nparticles", value<unsigned int>()->default_value(100),
       "The number of particles produced by the g4 particle gun");
   opt("g4-material-tracks",
-      po::value<std::string>()->default_value("geant4-material-tracks"),
+      value<std::string>()->default_value("geant4-material-tracks"),
       "The output collection for material tracks");
 }
 
