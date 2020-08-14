@@ -86,6 +86,9 @@ BOOST_DATA_TEST_CASE(
       epsCov, showDebug);
 }
 
-// TODO charged particle w/ infinite momentum and non-zero magnetic field
+// TODO add comparison tests between the straight line and eigen propagator for
+//      a charged particle w/ infinite momentum in a non-zero magnetic field.
+//      these should be identical. requires proper handling of q/p=0 in the
+//      track parameters.
 
 BOOST_AUTO_TEST_SUITE_END()
