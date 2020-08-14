@@ -13,7 +13,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "ActsFatras/Kernel/Interactor.hpp"
+#include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <limits>
@@ -22,6 +22,7 @@
 using namespace ActsFatras;
 
 namespace {
+
 constexpr auto eps = std::numeric_limits<Particle::Scalar>::epsilon();
 
 struct MockPhysicsList {
@@ -76,8 +77,9 @@ struct MockPropagatorState {
 template <typename SurfaceSelector>
 struct Fixture {
   using Generator = std::ranlux48;
-  using Interactor = typename ActsFatras::Interactor<Generator, MockPhysicsList,
-                                                     SurfaceSelector>;
+  using Interactor =
+      typename ActsFatras::detail::Interactor<Generator, MockPhysicsList,
+                                              SurfaceSelector>;
   using InteractorResult = typename Interactor::result_type;
 
   Generator generator;
@@ -122,6 +124,7 @@ std::shared_ptr<Acts::Surface> makeMaterialSurface() {
       std::make_shared<Acts::HomogeneousSurfaceMaterial>(std::move(slab)));
   return surface;
 }
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasInteractor)

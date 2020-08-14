@@ -75,11 +75,11 @@ struct ParticleSimulator {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
-    using Interact =
-        Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
-    using InteractorResult = typename Interact::result_type;
-    using Actions = Acts::ActionList<Interact, Acts::DebugOutputActor>;
-    using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
+    using Interactor =
+        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
+    using InteractorResult = typename Interactor::result_type;
+    using Actions = Acts::ActionList<Interactor, Acts::DebugOutputActor>;
+    using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
                                   Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
@@ -90,7 +90,7 @@ struct ParticleSimulator {
     options.mass = particle.mass();
     options.debug = localLogger->doPrint(Acts::Logging::Level::DEBUG);
     // setup the interactor as part of the propagator options
-    auto &interactor = options.actionList.template get<Interact>();
+    auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;

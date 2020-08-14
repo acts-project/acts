@@ -13,11 +13,11 @@
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/SimulationResult.hpp"
-#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <cassert>
 
 namespace ActsFatras {
+namespace detail {
 
 /// Fatras interactor plugin for the Acts propagator.
 ///
@@ -31,7 +31,7 @@ namespace ActsFatras {
 /// @tparam physics_list_t is a simulation physics lists
 /// @tparam hit_surface_selector_t is a selector of sensitive hit surfaces
 template <typename generator_t, typename physics_list_t,
-          typename hit_surface_selector_t = NoSurface>
+          typename hit_surface_selector_t>
 struct Interactor {
   using result_type = SimulationResult;
 
@@ -152,4 +152,5 @@ struct Interactor {
   void operator()(propagator_state_t &, stepper_t &) const {}
 };
 
+}  // namespace detail
 }  // namespace ActsFatras
