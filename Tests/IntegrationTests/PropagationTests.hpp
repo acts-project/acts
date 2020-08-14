@@ -226,7 +226,9 @@ struct ZStrawSurfaceBuilder {
 
 // helper functions to run the propagation with additional checks
 
-/// Propagate the initial parameters freely in space.
+/// Propagate the initial parameters for the given pathlength in space.
+///
+/// Use a negative path length to indicate backward propagation.
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
@@ -243,7 +245,7 @@ inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
 
   // setup propagation options
   options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
-  options.direction = Acts::forward;
+  options.direction = (0 <= pathLength) ? Acts::forward : Acts::backward;
   options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
   options.debug = showDebug;
@@ -255,7 +257,7 @@ inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
   if (showDebug) {
     auto output = result.value().template get<DebugOutput::result_type>();
     auto params = *(result.value().endParameters);
-    std::cout << ">>>>> Output for to-surface propagation " << std::endl;
+    std::cout << ">>>>> Output for free propagation " << std::endl;
     std::cout << output.debugString << std::endl;
     std::cout << params << std::endl;
   }
@@ -314,53 +316,18 @@ inline void runForwardBackwardTest(
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, double epsPos, double epsDir, double epsMom,
     bool showDebug) {
-  using namespace Acts;
-  using namespace Acts::UnitLiterals;
-
-  using DebugOutput = DebugOutputActor;
-  using Actions = ActionList<DebugOutput>;
-  using Aborts = AbortList<>;
-
-  // forward propagation
-  options_t<Actions, Aborts> fwdOptions(geoCtx, magCtx, getDummyLogger());
-  fwdOptions.direction = Acts::forward;
-  fwdOptions.pathLimit = pathLength;
-  fwdOptions.maxStepSize = 1_cm;
-  fwdOptions.debug = showDebug;
-  // backward propagation
-  options_t<Actions, Aborts> bwdOptions(geoCtx, magCtx, getDummyLogger());
-  bwdOptions.direction = Acts::backward;
-  bwdOptions.pathLimit = -pathLength;
-  bwdOptions.maxStepSize = 1_cm;
-  bwdOptions.debug = showDebug;
-
   // propagate parameters forward
-  auto fwdResult = propagator.propagate(initialParams, fwdOptions);
-  BOOST_CHECK(fwdResult.ok());
-  CHECK_CLOSE_ABS(fwdResult.value().pathLength, pathLength, epsPos);
-
-  // propagate propagated parameters back
-  auto bwdResult =
-      propagator.propagate(*(fwdResult.value().endParameters), bwdOptions);
-  BOOST_CHECK(bwdResult.ok());
-  CHECK_CLOSE_ABS(bwdResult.value().pathLength, -pathLength, epsPos);
-
+  auto [fwdParams, fwdPathLength] =
+      transportFreely<propagator_t, charge_t, options_t>(
+          propagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
+  CHECK_CLOSE_ABS(fwdPathLength, pathLength, epsPos);
+  // propagate propagated parameters back again
+  auto [bwdParams, bwdPathLength] =
+      transportFreely<propagator_t, charge_t, options_t>(
+          propagator, geoCtx, magCtx, fwdParams, -pathLength, showDebug);
+  CHECK_CLOSE_ABS(bwdPathLength, -pathLength, epsPos);
   // check that initial and back-propagated parameters match
-  checkParametersConsistency(initialParams, *(bwdResult.value().endParameters),
-                             epsPos, epsDir, epsMom);
-
-  if (showDebug) {
-    auto fwdOutput = fwdResult.value().template get<DebugOutput::result_type>();
-    auto fwdParams = *(fwdResult.value().endParameters);
-    std::cout << ">>>>> Output for forward propagation " << std::endl;
-    std::cout << fwdOutput.debugString << std::endl;
-    std::cout << fwdParams << std::endl;
-    auto bwdOutput = bwdResult.value().template get<DebugOutput::result_type>();
-    auto bwdParams = *(bwdResult.value().endParameters);
-    std::cout << ">>>>> Output for backward propagation " << std::endl;
-    std::cout << bwdOutput.debugString << std::endl;
-    std::cout << bwdParams << std::endl;
-  }
+  checkParametersConsistency(initialParams, bwdParams, epsPos, epsDir, epsMom);
 }
 
 /// Propagate the initial parameters once for the given path length and
