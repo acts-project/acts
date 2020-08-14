@@ -146,17 +146,10 @@ int materialMappingExample(int argc, char* argv[],
       matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
       matTrackWriterRootConfig.collection =
           mmAlgConfig.mappingMaterialCollection;
-<<<<<<< HEAD
       matTrackWriterRootConfig.storeSurface = true;
-      matTrackWriterRootConfig.storeVolume = true;
-      auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
-          matTrackWriterRootConfig, logLevel);
-=======
-      matTrackWriterRootConfig.storesurface = true;
       auto matTrackWriterRoot =
           std::make_shared<ActsExamples::RootMaterialTrackWriter>(
               matTrackWriterRootConfig, logLevel);
->>>>>>> a89ce2590... Harmonizing namespaces and build targets
       sequencer.addWriter(matTrackWriterRoot);
     }
   }

@@ -11,14 +11,13 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-<<<<<<< HEAD
-#include "G4VUserDetectorConstruction.hh"
-=======
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
->>>>>>> a89ce2590... Harmonizing namespaces and build targets
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
+#include <string>
 
 class G4RunManager;
 
@@ -33,7 +32,7 @@ using RecordedMaterialTrack =
 ///
 /// This initiates the Geant4 simulation, and creates and writes out
 /// the MaterialTrack entities which are needed for material mapping.
-class GeantinoRecording final : public ActsExamples::BareAlgorithm {
+class GeantinoRecording final : public BareAlgorithm {
  public:
   struct Config {
     /// Output collection for the generated material tracks.

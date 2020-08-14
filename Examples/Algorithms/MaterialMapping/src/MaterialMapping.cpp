@@ -90,11 +90,10 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
 
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
-  if (m_cfg.materialSurfaceMapper) {
-    // Write to the collection to the EventStore
-    std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
-        context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
-            m_cfg.collection);
+  // Take the collection from the EventStore
+  std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
+      context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
+          m_cfg.collection);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
@@ -116,5 +115,8 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
       m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
     }
   }
+  // Write take the collection to the EventStore
+  context.eventStore.add(m_cfg.mappingMaterialCollection,
+                         std::move(mtrackCollection));
   return ActsExamples::ProcessCode::SUCCESS;
 }
