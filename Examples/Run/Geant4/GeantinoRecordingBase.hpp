@@ -16,6 +16,7 @@
 #include "ACTFW/Io/Root/RootSimHitWriter.hpp"
 #include "ACTFW/Options/CommonOptions.hpp"
 #include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
 #include "G4VUserDetectorConstruction.hh"
 
@@ -31,14 +32,11 @@ int runSimulation(const boost::program_options::variables_map& vm,
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
   // Setup the Geant4 algorithm
-  GeantinoRecording::Config g4;
-  std::string materialTrackCollection = g4.outputMaterialTracks;
-  g4.detectorConstruction = std::move(g4detector);
-  g4.tracksPerEvent = 100;
-  g4.seed1 = 536235167;
-  g4.seed2 = 729237523;
+  auto g4Config = Options::readGeantinoRecordingConfig(vm);
+  auto outputMaterialTracks = g4Config.outputMaterialTracks;
+  g4Config.detectorConstruction = std::move(g4detector);
   sequencer.addAlgorithm(
-      std::make_shared<GeantinoRecording>(std::move(g4), logLevel));
+      std::make_shared<GeantinoRecording>(std::move(g4Config), logLevel));
 
   // setup the output writing
   if (vm["output-root"].template as<bool>()) {
@@ -46,9 +44,9 @@ int runSimulation(const boost::program_options::variables_map& vm,
     RootMaterialTrackWriter::Config materialTrackWriter;
     materialTrackWriter.prePostStep = true;
     materialTrackWriter.recalculateTotals = true;
-    materialTrackWriter.collection = materialTrackCollection;
+    materialTrackWriter.collection = outputMaterialTracks;
     materialTrackWriter.filePath =
-        joinPaths(outputDir, materialTrackCollection + ".root");
+        joinPaths(outputDir, outputMaterialTracks + ".root");
     sequencer.addWriter(std::make_shared<RootMaterialTrackWriter>(
         materialTrackWriter, logLevel));
   }

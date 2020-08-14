@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addOutputOptions(desc);
   Options::addDD4hepOptions(desc);
+  Options::addGeant4Options(desc);
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;

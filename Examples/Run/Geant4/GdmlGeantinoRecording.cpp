@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addOutputOptions(desc);
+  Options::addGeant4Options(desc);
   desc.add_options()(
       "gdml-file",
       boost::program_options::value<std::string>()->default_value(""),
