@@ -25,7 +25,7 @@ target_link_libraries(
 target_compile_definitions(
   ActsExamplesFramework
   # framework event data is based on a specific identifier
-  PUBLIC ACTS_CORE_IDENTIFIER_PLUGIN="${CMAKE_CURRENT_SOURCE_DIR}/include/ACTFW/EventData/SimIdentifier.hpp"
+  PUBLIC ACTS_CORE_IDENTIFIER_PLUGIN="${CMAKE_CURRENT_SOURCE_DIR}/include/ActsExamples/EventData/SimIdentifier.hpp"
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
 # set per-target c++17 requirement that will be propagated to linked targets
 target_compile_features(

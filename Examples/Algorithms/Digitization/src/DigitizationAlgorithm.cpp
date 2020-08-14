@@ -6,13 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 
-#include "ACTFW/EventData/GeometryContainers.hpp"
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/EventData/SimVertex.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
@@ -25,13 +20,19 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
-FW::DigitizationAlgorithm::DigitizationAlgorithm(
-    FW::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : FW::BareAlgorithm("DigitizationAlgorithm", lvl), m_cfg(std::move(cfg)) {
+ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
+    ActsExamples::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimulatedHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
   }
@@ -71,12 +72,12 @@ FW::DigitizationAlgorithm::DigitizationAlgorithm(
   });
 }
 
-FW::ProcessCode FW::DigitizationAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Prepare the input and output collections
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
-  FW::GeometryIdMultimap<Acts::PlanarModuleCluster> clusters;
+  ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster> clusters;
 
   for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
     // can only digitize hits on digitizable surfaces
@@ -166,5 +167,5 @@ FW::ProcessCode FW::DigitizationAlgorithm::execute(
 
   // write the clusters to the EventStore
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

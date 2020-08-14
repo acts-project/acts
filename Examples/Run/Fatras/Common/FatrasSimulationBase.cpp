@@ -8,21 +8,6 @@
 
 #include "FatrasSimulationBase.hpp"
 
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Fatras/FatrasAlgorithm.hpp"
-#include "ACTFW/Fatras/FatrasOptions.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Generators/FlattenEvent.hpp"
-#include "ACTFW/Generators/ParticleSelector.hpp"
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootSimHitWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -33,6 +18,21 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Fatras/FatrasAlgorithm.hpp"
+#include "ActsExamples/Fatras/FatrasOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/FlattenEvent.hpp"
+#include "ActsExamples/Generators/ParticleSelector.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
@@ -82,23 +82,26 @@ struct HitSurfaceSelector {
 /// simulation
 template <typename magnetic_field_t>
 void setupSimulationAlgorithms(
-    const FW::Options::Variables& variables, FW::Sequencer& sequencer,
-    std::shared_ptr<const FW::RandomNumbers> randomNumbers,
+    const ActsExamples::Options::Variables& variables,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     magnetic_field_t&& magneticField) {
   // Read the log level
-  Acts::Logging::Level logLevel = FW::Options::readLogLevel(variables);
+  Acts::Logging::Level logLevel =
+      ActsExamples::Options::readLogLevel(variables);
 
   // Convert generated events to selected particles
-  auto select = FW::ParticleSelector::readConfig(variables);
+  auto select = ActsExamples::ParticleSelector::readConfig(variables);
   select.inputEvent = "event_generated";
   select.outputEvent = "event_selected";
   sequencer.addAlgorithm(
-      std::make_shared<FW::ParticleSelector>(select, logLevel));
-  FW::FlattenEvent::Config flatten;
+      std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
+  ActsExamples::FlattenEvent::Config flatten;
   flatten.inputEvent = select.outputEvent;
   flatten.outputParticles = "particles_selected";
-  sequencer.addAlgorithm(std::make_shared<FW::FlattenEvent>(flatten, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<ActsExamples::FlattenEvent>(flatten, logLevel));
 
   // setup propagator-related types
   // use the default navigation
@@ -127,7 +130,7 @@ void setupSimulationAlgorithms(
   using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                           NeutralSelector, NeutralSimulator>;
   // final algorihm type
-  using SimulationAlgorithm = FW::FatrasAlgorithm<Simulator>;
+  using SimulationAlgorithm = ActsExamples::FatrasAlgorithm<Simulator>;
 
   // construct the simulator
   Navigator navigator(trackingGeometry);
@@ -143,7 +146,8 @@ void setupSimulationAlgorithms(
   Simulator simulator(std::move(chargedSimulator), std::move(neutralSimulator));
 
   // construct/add the simulation algorithm
-  auto fatras = FW::Options::readFatrasConfig(variables, std::move(simulator));
+  auto fatras =
+      ActsExamples::Options::readFatrasConfig(variables, std::move(simulator));
   fatras.inputParticles = flatten.outputParticles;
   fatras.outputParticlesInitial = "particles_initial";
   fatras.outputParticlesFinal = "particles_final";
@@ -153,59 +157,61 @@ void setupSimulationAlgorithms(
       std::make_shared<SimulationAlgorithm>(fatras, logLevel));
 
   // Output directory
-  const auto outputDir = FW::ensureWritableDirectory(
+  const auto outputDir = ActsExamples::ensureWritableDirectory(
       variables["output-dir"].template as<std::string>());
 
   // Write simulation information as CSV files
   if (variables["output-csv"].template as<bool>()) {
-    FW::CsvParticleWriter::Config writeInitial;
+    ActsExamples::CsvParticleWriter::Config writeInitial;
     writeInitial.inputParticles = fatras.outputParticlesInitial;
     writeInitial.outputDir = outputDir;
     writeInitial.outputStem = fatras.outputParticlesInitial;
-    sequencer.addWriter(
-        std::make_shared<FW::CsvParticleWriter>(writeInitial, logLevel));
-    FW::CsvParticleWriter::Config writeFinal;
+    sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
+        writeInitial, logLevel));
+    ActsExamples::CsvParticleWriter::Config writeFinal;
     writeFinal.inputParticles = fatras.outputParticlesFinal;
     writeFinal.outputDir = outputDir;
     writeFinal.outputStem = fatras.outputParticlesFinal;
-    sequencer.addWriter(
-        std::make_shared<FW::CsvParticleWriter>(writeFinal, logLevel));
+    sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
+        writeFinal, logLevel));
   }
 
   // Write simulation information as ROOT files
   if (variables["output-root"].template as<bool>()) {
     // write initial simulated particles
-    FW::RootParticleWriter::Config writeInitial;
+    ActsExamples::RootParticleWriter::Config writeInitial;
     writeInitial.inputParticles = fatras.outputParticlesInitial;
-    writeInitial.filePath =
-        FW::joinPaths(outputDir, fatras.outputParticlesInitial + ".root");
-    sequencer.addWriter(
-        std::make_shared<FW::RootParticleWriter>(writeInitial, logLevel));
+    writeInitial.filePath = ActsExamples::joinPaths(
+        outputDir, fatras.outputParticlesInitial + ".root");
+    sequencer.addWriter(std::make_shared<ActsExamples::RootParticleWriter>(
+        writeInitial, logLevel));
 
     // write final simulated particles
-    FW::RootParticleWriter::Config writeFinal;
+    ActsExamples::RootParticleWriter::Config writeFinal;
     writeFinal.inputParticles = fatras.outputParticlesFinal;
-    writeFinal.filePath =
-        FW::joinPaths(outputDir, fatras.outputParticlesFinal + ".root");
-    sequencer.addWriter(
-        std::make_shared<FW::RootParticleWriter>(writeFinal, logLevel));
+    writeFinal.filePath = ActsExamples::joinPaths(
+        outputDir, fatras.outputParticlesFinal + ".root");
+    sequencer.addWriter(std::make_shared<ActsExamples::RootParticleWriter>(
+        writeFinal, logLevel));
 
     // write simulated hits
-    FW::RootSimHitWriter::Config writeHits;
+    ActsExamples::RootSimHitWriter::Config writeHits;
     writeHits.inputSimulatedHits = fatras.outputHits;
-    writeHits.filePath = FW::joinPaths(outputDir, fatras.outputHits + ".root");
+    writeHits.filePath =
+        ActsExamples::joinPaths(outputDir, fatras.outputHits + ".root");
     sequencer.addWriter(
-        std::make_shared<FW::RootSimHitWriter>(writeHits, logLevel));
+        std::make_shared<ActsExamples::RootSimHitWriter>(writeHits, logLevel));
   }
 }
 
 }  // namespace
 
-void FW::setupSimulation(
-    const FW::Options::Variables& variables, FW::Sequencer& sequencer,
+void ActsExamples::setupSimulation(
+    const ActsExamples::Options::Variables& variables,
+    ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
-  auto magneticFieldVariant = FW::Options::readBField(variables);
+  auto magneticFieldVariant = ActsExamples::Options::readBField(variables);
   std::visit(
       [&](auto&& inputField) {
         using magnetic_field_t =

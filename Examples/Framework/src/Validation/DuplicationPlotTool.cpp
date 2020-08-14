@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Validation/DuplicationPlotTool.hpp"
+#include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -15,12 +15,13 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-FW::DuplicationPlotTool::DuplicationPlotTool(
-    const FW::DuplicationPlotTool::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::DuplicationPlotTool::DuplicationPlotTool(
+    const ActsExamples::DuplicationPlotTool::Config& cfg,
+    Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("DuplicationPlotTool", lvl)) {}
 
-void FW::DuplicationPlotTool::book(
+void ActsExamples::DuplicationPlotTool::book(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache) const {
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
@@ -52,7 +53,7 @@ void FW::DuplicationPlotTool::book(
       bNum);
 }
 
-void FW::DuplicationPlotTool::clear(
+void ActsExamples::DuplicationPlotTool::clear(
     DuplicationPlotCache& duplicationPlotCache) const {
   delete duplicationPlotCache.duplicationRate_vs_pT;
   delete duplicationPlotCache.duplicationRate_vs_eta;
@@ -62,7 +63,7 @@ void FW::DuplicationPlotTool::clear(
   delete duplicationPlotCache.nDuplicated_vs_phi;
 }
 
-void FW::DuplicationPlotTool::write(
+void ActsExamples::DuplicationPlotTool::write(
     const DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache)
     const {
   ACTS_DEBUG("Write the plots to output file.");
@@ -74,7 +75,7 @@ void FW::DuplicationPlotTool::write(
   duplicationPlotCache.nDuplicated_vs_phi->Write();
 }
 
-void FW::DuplicationPlotTool::fill(
+void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundParameters& fittedParameters, bool status) const {
   const auto& momentum = fittedParameters.momentum();
@@ -90,7 +91,7 @@ void FW::DuplicationPlotTool::fill(
                        status);
 }
 
-void FW::DuplicationPlotTool::fill(
+void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
   const auto t_phi = phi(truthParticle.unitDirection());

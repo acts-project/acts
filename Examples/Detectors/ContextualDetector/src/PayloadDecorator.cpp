@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/ContextualDetector/PayloadDecorator.hpp"
+#include "ActsExamples/ContextualDetector/PayloadDecorator.hpp"
 
-#include "ACTFW/ContextualDetector/PayloadDetectorElement.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "ActsExamples/ContextualDetector/PayloadDetectorElement.hpp"
 
-FW::Contextual::PayloadDecorator::PayloadDecorator(
-    const FW::Contextual::PayloadDecorator::Config& cfg,
+ActsExamples::Contextual::PayloadDecorator::PayloadDecorator(
+    const ActsExamples::Contextual::PayloadDecorator::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {
   if (m_cfg.trackingGeometry != nullptr) {
@@ -21,7 +21,7 @@ FW::Contextual::PayloadDecorator::PayloadDecorator(
   }
 }
 
-FW::ProcessCode FW::Contextual::PayloadDecorator::decorate(
+ActsExamples::ProcessCode ActsExamples::Contextual::PayloadDecorator::decorate(
     AlgorithmContext& context) {
   // Start with the nominal map
   std::vector<Acts::Transform3D> aStore = m_nominalStore;
@@ -41,7 +41,7 @@ FW::ProcessCode FW::Contextual::PayloadDecorator::decorate(
   return ProcessCode::SUCCESS;
 }
 
-void FW::Contextual::PayloadDecorator::parseGeometry(
+void ActsExamples::Contextual::PayloadDecorator::parseGeometry(
     const Acts::TrackingGeometry& tGeometry) {
   // Double-visit - first count
   size_t nTransforms = 0;

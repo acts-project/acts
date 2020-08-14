@@ -6,17 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
-#include "ACTFW/Framework/IContextDecorator.hpp"
-#include "ACTFW/TGeoDetector/BuildTGeoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/TGeoDetector/BuildTGeoDetector.hpp"
 
 void TGeoDetector::addOptions(
     boost::program_options::options_description& opt) const {
-  FW::Options::addTGeoGeometryOptions(opt);
+  ActsExamples::Options::addTGeoGeometryOptions(opt);
 }
 
 auto TGeoDetector::finalize(const boost::program_options::variables_map& vm,
@@ -24,7 +24,7 @@ auto TGeoDetector::finalize(const boost::program_options::variables_map& vm,
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext tGeoContext;
   TrackingGeometryPtr tgeoTrackingGeometry =
-      FW::TGeo::buildTGeoDetector(vm, tGeoContext, detectorStore);
+      ActsExamples::TGeo::buildTGeoDetector(vm, tGeoContext, detectorStore);
 
   ContextDecorators tgeoContextDeocrators = {};
   // return the pair of geometry and empty decorators

@@ -10,7 +10,7 @@
 
 #include <memory>
 
-namespace FW {
+namespace ActsExamples {
 
 class IBaseDetector;
 
@@ -21,4 +21,4 @@ class IBaseDetector;
 /// @param detector detector instance
 int fatrasMain(int argc, char* argv[], std::shared_ptr<IBaseDetector> detector);
 
-}  // namespace FW
+}  // namespace ActsExamples

@@ -6,18 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/ContextualDetector/AlignmentDecorator.hpp"
+#include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 
 #include <Acts/Geometry/TrackingGeometry.hpp>
 
 #include <random>
 
-FW::Contextual::AlignmentDecorator::AlignmentDecorator(
-    const FW::Contextual::AlignmentDecorator::Config& cfg,
+ActsExamples::Contextual::AlignmentDecorator::AlignmentDecorator(
+    const ActsExamples::Contextual::AlignmentDecorator::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-FW::ProcessCode FW::Contextual::AlignmentDecorator::decorate(
+ActsExamples::ProcessCode
+ActsExamples::Contextual::AlignmentDecorator::decorate(
     AlgorithmContext& context) {
   // We need to lock the Decorator
   std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);

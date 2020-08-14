@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ACTFW/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -16,7 +16,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace FW {
+namespace ActsExamples {
 
 namespace Options {
 
@@ -36,4 +36,4 @@ ActsExamples::GeantinoRecording::Config readGeantinoRecordingConfig(
     const Variables& variables);
 
 }  // namespace Options
-}  // namespace FW
+}  // namespace ActsExamples

@@ -8,20 +8,20 @@
 
 #pragma once
 
-#include "ACTFW/Framework/BareAlgorithm.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
 #include <memory>
 #include <string>
 
-namespace FW {
+namespace ActsExamples {
 
 /// An example algorithm that uses the random number generator to generate data.
-class HelloRandomAlgorithm : public FW::BareAlgorithm {
+class HelloRandomAlgorithm : public ActsExamples::BareAlgorithm {
  public:
   struct Config {
-    std::shared_ptr<FW::RandomNumbers> randomNumbers = nullptr;
+    std::shared_ptr<ActsExamples::RandomNumbers> randomNumbers = nullptr;
     /// Random distribution parameters.
     std::array<double, 2> gaussParameters = {{0., 1.}};
     std::array<double, 2> uniformParameters = {{0., 1.}};
@@ -36,10 +36,11 @@ class HelloRandomAlgorithm : public FW::BareAlgorithm {
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(
+      const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;
 };
 
-}  // namespace FW
+}  // namespace ActsExamples

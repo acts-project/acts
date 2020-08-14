@@ -8,18 +8,18 @@
 
 #pragma once
 
-#include "ACTFW/Io/Root/RootBFieldWriter.hpp"
-#include "ACTFW/Utilities/Options.hpp"
+#include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <boost/program_options.hpp>
 
-namespace FW {
+namespace ActsExamples {
 namespace BField {
 
 template <typename bfield_t>
 void writeField(boost::program_options::variables_map vm,
                 std::shared_ptr<const bfield_t> bField) {
-  using Writer = FW::RootBFieldWriter<bfield_t>;
+  using Writer = ActsExamples::RootBFieldWriter<bfield_t>;
   using Config = typename Writer::Config;
   using GridType = typename Writer::GridType;
 
@@ -46,7 +46,7 @@ void writeField(boost::program_options::variables_map vm,
   writerConfig.zBins = vm["bf-ZBins"].template as<size_t>();
   writerConfig.phiBins = vm["bf-PhiBins"].template as<size_t>();
 
-  FW::RootBFieldWriter<bfield_t>::run(writerConfig);
+  ActsExamples::RootBFieldWriter<bfield_t>::run(writerConfig);
 }
 }  // namespace BField
-}  // namespace FW
+}  // namespace ActsExamples

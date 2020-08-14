@@ -6,22 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 
 #include <boost/program_options.hpp>
 
-FW::CsvParticleReader::Config FW::Options::readCsvParticleReaderConfig(
-    const Variables& vm) {
-  FW::CsvParticleReader::Config cfg;
+ActsExamples::CsvParticleReader::Config
+ActsExamples::Options::readCsvParticleReaderConfig(const Variables& vm) {
+  ActsExamples::CsvParticleReader::Config cfg;
   if (not vm["input-dir"].empty()) {
     cfg.inputDir = vm["input-dir"].as<std::string>();
   }
   return cfg;
 }
 
-FW::CsvPlanarClusterReader::Config
-FW::Options::readCsvPlanarClusterReaderConfig(const Variables& vm) {
-  FW::CsvPlanarClusterReader::Config cfg;
+ActsExamples::CsvPlanarClusterReader::Config
+ActsExamples::Options::readCsvPlanarClusterReaderConfig(const Variables& vm) {
+  ActsExamples::CsvPlanarClusterReader::Config cfg;
   if (not vm["input-dir"].empty()) {
     cfg.inputDir = vm["input-dir"].as<std::string>();
   }

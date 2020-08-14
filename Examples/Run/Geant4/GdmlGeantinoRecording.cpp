@@ -8,12 +8,12 @@
 
 #include <boost/program_options.hpp>
 
-#include "ACTFW/Options/CommonOptions.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "GeantinoRecordingBase.hpp"
 
 using namespace ActsExamples;
-using namespace FW;
+using namespace ActsExamples;
 
 int main(int argc, char* argv[]) {
   // Setup and parse options
