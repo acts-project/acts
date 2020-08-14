@@ -111,7 +111,7 @@ void Fill(std::map<uint64_t,TGraph*>& surface_hist,  std::map<uint64_t,sinfo>& s
 
   std::map<uint64_t,std::pair<std::vector<float>,std::vector<float>>> surface_pos;
 
-  //Get old file, old tree and set top branch address
+  //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
   TTree *tree = (TTree*)tfile->Get("material-tracks");
 
@@ -152,7 +152,7 @@ void Fill(std::map<uint64_t,TGraph*>& surface_hist,  std::map<uint64_t,sinfo>& s
     if(i%1000==0) std::cout << "processed " << i << " events out of " << nentries << std::endl;
     tree->GetEntry(i);
 
-    // loop over all the material hit.
+    // loop over all the material hits.
     for(int j=0; j<mat_x->size(); j++ ){
 
       // Ignore surface of incorrect type

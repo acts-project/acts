@@ -81,7 +81,7 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("mat_ey", &m_step_ey);
     m_outputTree->Branch("mat_ez", &m_step_ez);
   }
-  if (m_cfg.storesurface) {
+  if (m_cfg.storeSurface) {
     m_outputTree->Branch("sur_id", &m_sur_id);
     m_outputTree->Branch("sur_type", &m_sur_type);
     m_outputTree->Branch("sur_x", &m_sur_x);
@@ -89,6 +89,9 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_z", &m_sur_z);
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
+  }
+  if (m_cfg.storeVolume) {
+    m_outputTree->Branch("vol_id", &m_vol_id);
   }
 }
 
@@ -140,6 +143,8 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
     m_sur_range_min.clear();
     m_sur_range_max.clear();
 
+    m_vol_id.clear();
+
     // Reserve the vector then
     size_t mints = mtrack.second.materialInteractions.size();
     m_step_sx.reserve(mints);
@@ -168,6 +173,8 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
     m_sur_z.reserve(mints);
     m_sur_range_min.reserve(mints);
     m_sur_range_max.reserve(mints);
+
+    m_vol_id.reserve(mints);
 
     // reset the global counter
     if (m_cfg.recalculateTotals) {
@@ -211,14 +218,15 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
         m_step_ez.push_back(posPos.z());
       }
 
-      if (m_cfg.storesurface) {
+      // Store surface information
+      if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        Acts::GeometryID layerID;
+        Acts::GeometryID slayerID;
         if (surface) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
-          layerID = surface->geoID();
-          m_sur_id.push_back(layerID.value());
+          slayerID = surface->geoID();
+          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(surface->type());
           m_sur_x.push_back(sfIntersection.intersection.position.x());
           m_sur_y.push_back(sfIntersection.intersection.position.y());
@@ -243,12 +251,12 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          layerID.setVolume(0);
-          layerID.setBoundary(0);
-          layerID.setLayer(0);
-          layerID.setApproach(0);
-          layerID.setSensitive(0);
-          m_sur_id.push_back(layerID.value());
+          slayerID.setVolume(0);
+          slayerID.setBoundary(0);
+          slayerID.setLayer(0);
+          slayerID.setApproach(0);
+          slayerID.setSensitive(0);
+          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(-1);
 
           m_sur_x.push_back(0);
@@ -256,6 +264,23 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
           m_sur_z.push_back(0);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
+        }
+      }
+
+      // store volume information
+      if (m_cfg.storeVolume) {
+        const Acts::Volume* volume = mint.volume;
+        Acts::GeometryID vlayerID;
+        if (volume) {
+          vlayerID = volume->geoID();
+          m_vol_id.push_back(vlayerID.value());
+        } else {
+          vlayerID.setVolume(0);
+          vlayerID.setBoundary(0);
+          vlayerID.setLayer(0);
+          vlayerID.setApproach(0);
+          vlayerID.setSensitive(0);
+          m_vol_id.push_back(vlayerID.value());
         }
       }
 
