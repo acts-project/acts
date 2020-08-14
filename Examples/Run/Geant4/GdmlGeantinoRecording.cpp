@@ -36,5 +36,5 @@ int main(int argc, char* argv[]) {
   // Setup the GDML detector
   auto g4detector = std::make_unique<GdmlDetectorConstruction>(gdmlFile);
 
-  return runSimulation(vm, std::move(g4detector));
+  return runGeantinoRecording(vm, std::move(g4detector));
 }

@@ -12,12 +12,12 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
 
 class G4RunManager;
-class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 

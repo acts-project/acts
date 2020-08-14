@@ -36,5 +36,5 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<G4VUserDetectorConstruction> g4detector =
       std::make_unique<DD4hepDetectorConstruction>(*geometrySvc->lcdd());
 
-  return runSimulation(vm, std::move(g4detector));
+  return runGeantinoRecording(vm, std::move(g4detector));
 }

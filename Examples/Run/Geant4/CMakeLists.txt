@@ -1,8 +1,8 @@
 add_executable(
-  ActsExampleGdmlGeantinoRecording
+  ActsExampleGeantinoRecordingGdml
   GdmlGeantinoRecording.cpp)
 target_link_libraries(
-  ActsExampleGdmlGeantinoRecording
+  ActsExampleGeantinoRecordingGdml
   PRIVATE
     ActsExamplesCommon
     ActsExamplesDetectorDD4hep
@@ -12,7 +12,7 @@ target_link_libraries(
     Boost::program_options)
 
 install(
-  TARGETS ActsExampleGdmlGeantinoRecording
+  TARGETS ActsExampleGeantinoRecordingGdml
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)

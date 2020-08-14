@@ -25,8 +25,9 @@ using namespace FW;
 
 /// @brief method to process a geometry
 /// @param detector The detector descriptor instance
-int runSimulation(const boost::program_options::variables_map& vm,
-                  std::unique_ptr<G4VUserDetectorConstruction> g4detector) {
+int runGeantinoRecording(
+    const boost::program_options::variables_map& vm,
+    std::unique_ptr<G4VUserDetectorConstruction> g4detector) {
   Sequencer sequencer(Options::readSequencerConfig(vm));
   auto logLevel = Options::readLogLevel(vm);
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
