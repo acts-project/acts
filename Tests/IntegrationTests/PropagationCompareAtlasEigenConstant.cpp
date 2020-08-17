@@ -76,19 +76,16 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                              epsCov, showDebug);
 }
 
-// TODO fails due to different treatment of the local phi coordinate
-// BOOST_DATA_TEST_CASE(
-//     ToDisc,
-//     ds::phiWithoutAmbiguity* ds::thetaWithoutBeam* ds::absMomentum*
-//         ds::chargeNonZero* ds::pathLength* ds::magneticField,
-//     phi, theta, p, q, s, bz) {
-//   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
-//   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx,
-//   magCtx,
-//                              makeParametersCurvilinear(phi, theta, p, q), s,
-//                              DiscSurfaceBuilder(), epsPos, epsDir, epsMom,
-//                              epsCov, showDebug);
-// }
+BOOST_DATA_TEST_CASE(ToDisc,
+                     ds::phiWithoutAmbiguity* ds::theta* ds::absMomentum*
+                         ds::chargeNonZero* ds::pathLength* ds::magneticField,
+                     phi, theta, p, q, s, bz) {
+  auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
+  runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
+                             makeParametersCurvilinear(phi, theta, p, q), s,
+                             DiscSurfaceBuilder(), epsPos, epsDir, epsMom,
+                             epsCov, showDebug);
+}
 
 BOOST_DATA_TEST_CASE(ToPlane,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*

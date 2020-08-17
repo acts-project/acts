@@ -120,22 +120,15 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
       ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
 }
 
-// NOTE msmk 2020-08-13
-// i suspect that this does not work because the Ridders propagator does not now
-// about the parameter bounds, e.g. that the radial component is always
-// positive. there are also some NaNs in the covariance from the regular
-// propagator.
-
-// BOOST_DATA_TEST_CASE(CovarianceToDisc,
-//                      ds::phiWithoutAmbiguity* ds::thetaCentral*
-//                      ds::absMomentum*
-//                          ds::chargeNonZero* ds::pathLength,
-//                      phi, theta, p, q, s) {
-//   runToSurfaceComparisonTest(
-//       propagator, riddersPropagator, geoCtx, magCtx,
-//       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-//       DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
-// }
+BOOST_DATA_TEST_CASE(CovarianceToDisc,
+                     ds::phiWithoutAmbiguity* ds::thetaWithoutBeam*
+                         ds::absMomentum* ds::chargeNonZero* ds::pathLength,
+                     phi, theta, p, q, s) {
+  runToSurfaceComparisonTest(
+      propagator, riddersPropagator, geoCtx, magCtx,
+      makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+}
 
 BOOST_DATA_TEST_CASE(
     CovarianceToPlane,

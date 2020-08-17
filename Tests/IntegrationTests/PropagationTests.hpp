@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <utility>
@@ -198,8 +199,21 @@ struct DiscSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::DiscSurface> operator()(
       const Acts::SingleTrackParameters<charge_t>& params) {
-    return Acts::Surface::makeShared<Acts::DiscSurface>(
-        makeCurvilinearTransform(params));
+    using namespace Acts;
+    using namespace Acts::UnitLiterals;
+
+    auto cl = makeCurvilinearTransform(params);
+    // shift the origin of the plane so the local particle position does not
+    // sit directly at the rho=0,phi=undefined singularity
+    // TODO this is a hack do avoid issues with the numerical covariance
+    //      transport that does not work well at rho=0,
+    Acts::Vector3D localOffset = Acts::Vector3D::Zero();
+    localOffset[Acts::ePos0] = 1_cm;
+    localOffset[Acts::ePos1] = -1_cm;
+    Acts::Vector3D globalOriginDelta = cl->linear() * localOffset;
+    cl->pretranslate(globalOriginDelta);
+
+    return Acts::Surface::makeShared<Acts::DiscSurface>(std::move(cl));
   }
 };
 
