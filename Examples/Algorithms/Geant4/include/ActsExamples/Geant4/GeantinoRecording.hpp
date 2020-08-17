@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include "ACTFW/Framework/BareAlgorithm.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
+#include <string>
 
 class G4RunManager;
 
@@ -30,7 +32,7 @@ using RecordedMaterialTrack =
 ///
 /// This initiates the Geant4 simulation, and creates and writes out
 /// the MaterialTrack entities which are needed for material mapping.
-class GeantinoRecording final : public FW::BareAlgorithm {
+class GeantinoRecording final : public BareAlgorithm {
  public:
   struct Config {
     /// Output collection for the generated material tracks.
@@ -48,7 +50,8 @@ class GeantinoRecording final : public FW::BareAlgorithm {
   GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);
   ~GeantinoRecording();
 
-  FW::ProcessCode execute(const FW::AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(
+      const ActsExamples::AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

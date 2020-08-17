@@ -3,42 +3,42 @@ add_subdirectory(Common)
 
 # Generic detector
 add_executable(
-  ActsSimFatrasGeneric
+  ActsExampleFatrasGeneric
   GenericFatrasExample.cpp)
 target_link_libraries(
-  ActsSimFatrasGeneric
+  ActsExampleFatrasGeneric
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorGeneric)
 
 # Generic detector with IOV based alignment
 add_executable(
-  ActsSimFatrasAligned
+  ActsExampleFatrasAligned
   AlignedFatrasExample.cpp)
 target_link_libraries(
-  ActsSimFatrasAligned
+  ActsExampleFatrasAligned
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual)
 
 # Generic detector with Payload based alignment
 add_executable(
-  ActsSimFatrasPayload
+  ActsExampleFatrasPayload
   PayloadFatrasExample.cpp)
 target_link_libraries(
-  ActsSimFatrasPayload
+  ActsExampleFatrasPayload
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorContextual)
 
 # TGeo detector
 add_executable(
-  ActsSimFatrasTGeo
+  ActsExampleFatrasTGeo
   TGeoFatrasExample.cpp)
 target_link_libraries(
-  ActsSimFatrasTGeo
+  ActsExampleFatrasTGeo
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorTGeo)
 
 install(
   TARGETS
-    ActsSimFatrasGeneric
-    ActsSimFatrasAligned
-    ActsSimFatrasPayload
-    ActsSimFatrasTGeo
+    ActsExampleFatrasGeneric
+    ActsExampleFatrasAligned
+    ActsExampleFatrasPayload
+    ActsExampleFatrasTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)

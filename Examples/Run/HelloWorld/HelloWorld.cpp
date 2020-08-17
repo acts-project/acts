@@ -9,9 +9,9 @@
 /// @file
 /// @brief An example tools that shows the sequencer functionality
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -25,32 +25,34 @@ int main(int argc, char* argv[]) {
   // setup options
   // every component should have an associated option setup function
   // that should be called here.
-  auto opt = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(opt);
-  FW::Options::addRandomNumbersOptions(opt);
+  auto opt = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(opt);
+  ActsExamples::Options::addRandomNumbersOptions(opt);
   // parse options from command line flags
-  auto vm = FW::Options::parse(opt, argc, argv);
+  auto vm = ActsExamples::Options::parse(opt, argc, argv);
   // an empty varaibles map indicates an error
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
   // extract some common options
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // setup basic tools shared among algorithms
-  auto rnd = std::make_shared<FW::RandomNumbers>(
-      FW::Options::readRandomNumbersConfig(vm));
+  auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
+      ActsExamples::Options::readRandomNumbersConfig(vm));
 
   // setup the sequencer first w/ config derived from options
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
   // add HelloWorld algorithm that does nothing
-  sequencer.addAlgorithm(std::make_shared<FW::HelloLoggerAlgorithm>(logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<ActsExamples::HelloLoggerAlgorithm>(logLevel));
 
   // add HelloRandom algorithm that uses RandomNumbers to generate some
   // random numbers from various distributions.
-  FW::HelloRandomAlgorithm::Config rndCfg;
+  ActsExamples::HelloRandomAlgorithm::Config rndCfg;
   rndCfg.randomNumbers = rnd;
   rndCfg.gaussParameters = {{0., 2.5}};
   rndCfg.uniformParameters = {{-1.23, 4.25}};
@@ -58,20 +60,22 @@ int main(int argc, char* argv[]) {
   rndCfg.drawsPerEvent = 5000;
   rndCfg.output = "random_data";
   sequencer.addAlgorithm(
-      std::make_shared<FW::HelloRandomAlgorithm>(rndCfg, logLevel));
+      std::make_shared<ActsExamples::HelloRandomAlgorithm>(rndCfg, logLevel));
 
   // add HelloWhiteBoardAlgorithm the reads/writes data from/to the event store
-  FW::HelloWhiteBoardAlgorithm::Config wbCfg;
+  ActsExamples::HelloWhiteBoardAlgorithm::Config wbCfg;
   // use data from previous algorithm as input
   wbCfg.input = rndCfg.output;
   wbCfg.output = "copied_data";
   sequencer.addAlgorithm(
-      std::make_shared<FW::HelloWhiteBoardAlgorithm>(wbCfg, logLevel));
+      std::make_shared<ActsExamples::HelloWhiteBoardAlgorithm>(wbCfg,
+                                                               logLevel));
 
   // add HelloService that generates an event block index.
-  FW::HelloService::Config svcCfg;
+  ActsExamples::HelloService::Config svcCfg;
   svcCfg.eventsPerBlock = 3;
-  sequencer.addService(std::make_shared<FW::HelloService>(svcCfg, logLevel));
+  sequencer.addService(
+      std::make_shared<ActsExamples::HelloService>(svcCfg, logLevel));
 
   // Run all configured algorithms and return the appropriate status.
   return sequencer.run();

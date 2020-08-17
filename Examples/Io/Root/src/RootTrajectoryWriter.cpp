@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootTrajectoryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
 
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <ios>
 #include <stdexcept>
@@ -28,11 +28,12 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 using Measurement =
-    Acts::Measurement<FW::SimSourceLink, Acts::BoundParametersIndices,
+    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundParametersIndices,
                       Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
-FW::RootTrajectoryWriter::RootTrajectoryWriter(
-    const FW::RootTrajectoryWriter::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
+    const ActsExamples::RootTrajectoryWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.inputTrajectories, "RootTrajectoryWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -232,13 +233,13 @@ FW::RootTrajectoryWriter::RootTrajectoryWriter(
   }
 }
 
-FW::RootTrajectoryWriter::~RootTrajectoryWriter() {
+ActsExamples::RootTrajectoryWriter::~RootTrajectoryWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootTrajectoryWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -249,7 +250,7 @@ FW::ProcessCode FW::RootTrajectoryWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootTrajectoryWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;

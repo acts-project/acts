@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstdlib>
 #include <istream>
@@ -16,8 +16,8 @@ namespace {
 static constexpr char s_rangeSeparator = ':';
 }
 
-std::istream& FW::Options::operator>>(std::istream& is,
-                                      FW::Options::Interval& interval) {
+std::istream& ActsExamples::Options::operator>>(
+    std::istream& is, ActsExamples::Options::Interval& interval) {
   std::string buf;
   is >> buf;
 
@@ -46,8 +46,8 @@ std::istream& FW::Options::operator>>(std::istream& is,
   return is;
 }
 
-std::ostream& FW::Options::operator<<(std::ostream& os,
-                                      const FW::Options::Interval& interval) {
+std::ostream& ActsExamples::Options::operator<<(
+    std::ostream& os, const ActsExamples::Options::Interval& interval) {
   if (not interval.lower.has_value() and not interval.upper.has_value()) {
     os << "unbounded";
   } else {
@@ -62,16 +62,17 @@ std::ostream& FW::Options::operator<<(std::ostream& os,
   return os;
 }
 
-std::istream& FW::Options::operator>>(
-    std::istream& is, std::vector<FW::Options::Interval>& intervals) {
+std::istream& ActsExamples::Options::operator>>(
+    std::istream& is, std::vector<ActsExamples::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     is >> interval;
   }
   return is;
 }
 
-std::ostream& FW::Options::operator<<(
-    std::ostream& os, const std::vector<FW::Options::Interval>& intervals) {
+std::ostream& ActsExamples::Options::operator<<(
+    std::ostream& os,
+    const std::vector<ActsExamples::Options::Interval>& intervals) {
   for (auto& interval : intervals) {
     os << interval;
   }

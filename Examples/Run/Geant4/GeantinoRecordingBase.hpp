@@ -10,18 +10,17 @@
 
 #include <boost/program_options.hpp>
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ACTFW/Io/Root/RootSimHitWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include "G4VUserDetectorConstruction.hh"
 
 using namespace ActsExamples;
-using namespace FW;
 
 /// @brief method to process a geometry
 /// @param detector The detector descriptor instance

@@ -6,17 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/GenericDetector/GenericDetector.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Csv/CsvOptionsReader.hpp"
-#include "ACTFW/Io/Csv/CsvParticleReader.hpp"
-#include "ACTFW/Io/Csv/CsvPlanarClusterReader.hpp"
-#include "ACTFW/Io/Csv/CsvPlanarClusterWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Printers/PrintHits.hpp"
-#include "ACTFW/Utilities/Options.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
+#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Printers/PrintHits.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <memory>
 
@@ -24,26 +24,27 @@ int main(int argc, char* argv[]) {
   GenericDetector detector;
 
   // setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addInputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addInputOptions(desc);
   detector.addOptions(desc);
 
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
   // Read some standard options
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
   auto inputDir = vm["input-dir"].as<std::string>();
 
   // Setup detector geometry
-  auto geometry = FW::Geometry::build(vm, detector);
+  auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
   for (auto cdr : geometry.second) {
@@ -51,22 +52,24 @@ int main(int argc, char* argv[]) {
   }
 
   // Read particles from CSV files
-  auto particleReaderCfg = FW::Options::readCsvParticleReaderConfig(vm);
+  auto particleReaderCfg =
+      ActsExamples::Options::readCsvParticleReaderConfig(vm);
   particleReaderCfg.outputParticles = "particles";
-  sequencer.addReader(
-      std::make_shared<FW::CsvParticleReader>(particleReaderCfg, logLevel));
+  sequencer.addReader(std::make_shared<ActsExamples::CsvParticleReader>(
+      particleReaderCfg, logLevel));
 
   // Read clusters from CSV files
-  auto clusterReaderCfg = FW::Options::readCsvPlanarClusterReaderConfig(vm);
+  auto clusterReaderCfg =
+      ActsExamples::Options::readCsvPlanarClusterReaderConfig(vm);
   clusterReaderCfg.trackingGeometry = trackingGeometry;
   clusterReaderCfg.outputClusters = "clusters";
   clusterReaderCfg.outputHitParticlesMap = "hit_particle_map";
   clusterReaderCfg.outputHitIds = "hit_ids";
-  sequencer.addReader(
-      std::make_shared<FW::CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
+  sequencer.addReader(std::make_shared<ActsExamples::CsvPlanarClusterReader>(
+      clusterReaderCfg, logLevel));
 
   // Print some information as crosscheck
-  FW::PrintHits::Config printCfg;
+  ActsExamples::PrintHits::Config printCfg;
   printCfg.inputClusters = clusterReaderCfg.outputClusters;
   printCfg.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
   printCfg.inputHitIds = clusterReaderCfg.outputHitIds;
@@ -77,7 +80,8 @@ int main(int argc, char* argv[]) {
   printCfg.volumeId = 13;
   printCfg.layerId = 4;
   printCfg.moduleId = 116;
-  sequencer.addAlgorithm(std::make_shared<FW::PrintHits>(printCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<ActsExamples::PrintHits>(printCfg, logLevel));
 
   return sequencer.run();
 }

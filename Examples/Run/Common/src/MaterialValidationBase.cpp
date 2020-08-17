@@ -6,19 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
-#include "ACTFW/Propagation/PropagationAlgorithm.hpp"
-#include "ACTFW/Propagation/PropagationOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
+#include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/ConstantBField.hpp>
 #include <Acts/MagneticField/InterpolatedBFieldMap.hpp>
@@ -47,12 +47,12 @@ namespace {
 ///
 /// @return a process code
 template <typename bfield_t>
-FW::ProcessCode setupPropagation(
-    FW::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
-    std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
+ActsExamples::ProcessCode setupPropagation(
+    ActsExamples::Sequencer& sequencer, bfield_t bfield, po::variables_map& vm,
+    std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
   Acts::Navigator navigator(tGeometry);
@@ -71,16 +71,18 @@ FW::ProcessCode setupPropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig = FW::Options::readPropagationConfig(vm, propagator);
+  auto pAlgConfig =
+      ActsExamples::Options::readPropagationConfig(vm, propagator);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
   pAlgConfig.recordMaterialInteractions = true;
-  auto propagationAlg = std::make_shared<FW::PropagationAlgorithm<Propagator>>(
-      pAlgConfig, logLevel);
+  auto propagationAlg =
+      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
+          pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
 
 /// @brief Straight Line Propagation setup
@@ -91,12 +93,12 @@ FW::ProcessCode setupPropagation(
 /// @param tGeometry The TrackingGeometry object
 ///
 /// @return a process code
-FW::ProcessCode setupStraightLinePropagation(
-    FW::Sequencer& sequencer, po::variables_map& vm,
-    std::shared_ptr<FW::RandomNumbers> randomNumberSvc,
+ActsExamples::ProcessCode setupStraightLinePropagation(
+    ActsExamples::Sequencer& sequencer, po::variables_map& vm,
+    std::shared_ptr<ActsExamples::RandomNumbers> randomNumberSvc,
     std::shared_ptr<const Acts::TrackingGeometry> tGeometry) {
   // Get the log level
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
   Acts::Navigator navigator(tGeometry);
@@ -109,55 +111,58 @@ FW::ProcessCode setupStraightLinePropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig = FW::Options::readPropagationConfig(vm, propagator);
+  auto pAlgConfig =
+      ActsExamples::Options::readPropagationConfig(vm, propagator);
   pAlgConfig.randomNumberSvc = randomNumberSvc;
-  auto propagationAlg = std::make_shared<FW::PropagationAlgorithm<Propagator>>(
-      pAlgConfig, logLevel);
+  auto propagationAlg =
+      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
+          pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
 
 }  // namespace
 
 int materialValidationExample(int argc, char* argv[],
-                              FW::IBaseDetector& detector) {
+                              ActsExamples::IBaseDetector& detector) {
   // Setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addBFieldOptions(desc);
-  FW::Options::addRandomNumbersOptions(desc);
-  FW::Options::addPropagationOptions(desc);
-  FW::Options::addOutputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addRandomNumbersOptions(desc);
+  ActsExamples::Options::addPropagationOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
   // Now read the standard options
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // The geometry, material and decoration
-  auto geometry = FW::Geometry::build(vm, detector);
+  auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
 
   // Create the random number engine
-  auto randomNumberSvcCfg = FW::Options::readRandomNumbersConfig(vm);
+  auto randomNumberSvcCfg = ActsExamples::Options::readRandomNumbersConfig(vm);
   auto randomNumberSvc =
-      std::make_shared<FW::RandomNumbers>(randomNumberSvcCfg);
+      std::make_shared<ActsExamples::RandomNumbers>(randomNumberSvcCfg);
 
   // Create BField service
-  auto bFieldVar = FW::Options::readBField(vm);
+  auto bFieldVar = ActsExamples::Options::readBField(vm);
 
   if (vm["prop-stepper"].template as<int>() == 0) {
     // Straight line stepper was chosen
@@ -180,14 +185,15 @@ int materialValidationExample(int argc, char* argv[],
 
   if (vm["output-root"].template as<bool>()) {
     // Write the propagation steps as ROOT TTree
-    FW::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
+    ActsExamples::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
     matTrackWriterRootConfig.collection = matCollection;
     matTrackWriterRootConfig.filePath =
-        FW::joinPaths(outputDir, matCollection + ".root");
+        ActsExamples::joinPaths(outputDir, matCollection + ".root");
     matTrackWriterRootConfig.storeSurface = true;
     matTrackWriterRootConfig.storeVolume = true;
-    auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
-        matTrackWriterRootConfig, logLevel);
+    auto matTrackWriterRoot =
+        std::make_shared<ActsExamples::RootMaterialTrackWriter>(
+            matTrackWriterRootConfig, logLevel);
     sequencer.addWriter(matTrackWriterRoot);
   }
 

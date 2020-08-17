@@ -6,25 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Generators/MultiplicityGenerators.hpp"
-#include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
-#include "ACTFW/Generators/VertexGenerators.hpp"
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootParticleWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Options/Pythia8Options.hpp"
-#include "ACTFW/TruthTracking/TrackSelector.hpp"
-#include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
-#include "ACTFW/Vertexing/VertexFitAlgorithm.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/MultiplicityGenerators.hpp"
+#include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
+#include "ActsExamples/Generators/VertexGenerators.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/Pythia8Options.hpp"
+#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthVerticesToTracks.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Vertexing/VertexFitAlgorithm.hpp"
 #include <Acts/EventData/TrackParameters.hpp>
 
 #include <memory>
 
 #include <boost/program_options.hpp>
 
-using namespace FW;
+using namespace ActsExamples;
 
 /// Main vertex fitter example executable
 ///
@@ -75,11 +75,11 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the fit algorithm with Billoir fitter
-  FWE::VertexFitAlgorithm::Config vertexFitCfg;
+  ActsExamples::VertexFitAlgorithm::Config vertexFitCfg;
   vertexFitCfg.trackCollection = selectorConfig.output;
   vertexFitCfg.bField = trkConvConfig.bField;
-  sequencer.addAlgorithm(
-      std::make_shared<FWE::VertexFitAlgorithm>(vertexFitCfg, logLevel));
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::VertexFitAlgorithm>(
+      vertexFitCfg, logLevel));
 
   return sequencer.run();
 }

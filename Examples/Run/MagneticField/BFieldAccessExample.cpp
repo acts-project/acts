@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Utilities/Options.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <random>
 #include <string>
@@ -120,9 +120,9 @@ void accessRandom(field_t& bField, field_context_t& bFieldContext,
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // Declare the supported program options.
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addBFieldOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addBFieldOptions(desc);
   desc.add_options()("bf-phi-range",
                      po::value<read_range>()->default_value({-M_PI, M_PI}),
                      "range in which the phi parameter is generated.")(
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
       "number of steps for magnetic field access.")(
       "bf-tracklength", po::value<double>()->default_value(100.),
       "track length in [mm] magnetic field access.");
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
@@ -148,8 +148,8 @@ int main(int argc, char* argv[]) {
   // Why does this need number-of-events? If it really does emulate
   // per-event access patterns this should be switched to a proper
   // Sequencer-based tool. Otherwise it should be removed.
-  auto nEvents = FW::Options::readSequencerConfig(vm).events;
-  auto bFieldVar = FW::Options::readBField(vm);
+  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
+  auto bFieldVar = ActsExamples::Options::readBField(vm);
 
   // Get the phi and eta range
   auto phir = vm["bf-phi-range"].as<read_range>();

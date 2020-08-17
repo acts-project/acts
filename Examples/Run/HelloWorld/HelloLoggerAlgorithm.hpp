@@ -8,19 +8,20 @@
 
 #pragma once
 
-#include "ACTFW/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <memory>
 
-namespace FW {
+namespace ActsExamples {
 
 /// A simple algorithm that just prints hello world.
-class HelloLoggerAlgorithm : public FW::BareAlgorithm {
+class HelloLoggerAlgorithm : public ActsExamples::BareAlgorithm {
  public:
   HelloLoggerAlgorithm(Acts::Logging::Level level);
 
   // Log a few messages.
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(
+      const AlgorithmContext& ctx) const final override;
 };
 
-}  // namespace FW
+}  // namespace ActsExamples

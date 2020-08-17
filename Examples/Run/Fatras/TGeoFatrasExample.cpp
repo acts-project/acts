@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
 #include "FatrasMain.hpp"
 
 int main(int argc, char* argv[]) {
-  return FW::fatrasMain(argc, argv, std::make_shared<TGeoDetector>());
+  return ActsExamples::fatrasMain(argc, argv, std::make_shared<TGeoDetector>());
 }

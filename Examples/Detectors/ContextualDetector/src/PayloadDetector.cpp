@@ -6,27 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/ContextualDetector/PayloadDetector.hpp"
+#include "ActsExamples/ContextualDetector/PayloadDetector.hpp"
 
-#include "ACTFW/ContextualDetector/PayloadDecorator.hpp"
-#include "ACTFW/ContextualDetector/PayloadDetectorElement.hpp"
-#include "ACTFW/Framework/IContextDecorator.hpp"
-#include "ACTFW/GenericDetector/BuildGenericDetector.hpp"
-#include "ACTFW/GenericDetector/GenericDetectorOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldScalor.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/ContextualDetector/PayloadDecorator.hpp"
+#include "ActsExamples/ContextualDetector/PayloadDetectorElement.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldScalor.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
 #include <boost/program_options.hpp>
 
 void PayloadDetector::addOptions(
     boost::program_options::options_description& opt) const {
   /// Add the generic geometry options
-  FW::Options::addGenericGeometryOptions(opt);
+  ActsExamples::Options::addGenericGeometryOptions(opt);
   // Add the bfield options for the magnetic field scaling
-  FW::Options::addBFieldOptions(opt);
+  ActsExamples::Options::addBFieldOptions(opt);
   // specify the rotation setp
   opt.add_options()(
       "align-rotation-step",
@@ -56,7 +56,7 @@ auto PayloadDetector::finalize(
 
   /// return the generic detector - with payload context decorator
   TrackingGeometryPtr pTrackingGeometry =
-      FW::Generic::buildDetector<DetectorElement>(
+      ActsExamples::Generic::buildDetector<DetectorElement>(
           nominalContext, detectorStore, 0, std::move(mdecorator), buildProto,
           surfaceLogLevel, layerLogLevel, volumeLogLevel);
 
@@ -77,10 +77,11 @@ auto PayloadDetector::finalize(
   pContextDecorators.push_back(agcDecorator);
 
   if (vm["bf-context-scalable"].template as<bool>()) {
-    FW::BField::BFieldScalor::Config bfsConfig;
+    ActsExamples::BField::BFieldScalor::Config bfsConfig;
     bfsConfig.scalor = vm["bf-bscalor"].template as<double>();
 
-    auto bfDecorator = std::make_shared<FW::BField::BFieldScalor>(bfsConfig);
+    auto bfDecorator =
+        std::make_shared<ActsExamples::BField::BFieldScalor>(bfsConfig);
 
     pContextDecorators.push_back(bfDecorator);
   }

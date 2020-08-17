@@ -2,8 +2,8 @@
 #
 # This script tests whether the output of a certain ACTS framework example is
 # reproducible between single-threaded and multi-threaded runs. For example,
-# "./testReproducibility.sh ACTFWGenericFatrasExample" will run the
-# ACTFWGenericFatrasExample in single-threaded and multi-threaded mode and
+# "./testReproducibility.sh ActsExampleFatrasGeneric" will run the
+# ActsExampleFatrasGeneric in single-threaded and multi-threaded mode and
 # check whether the output is the same aside from threading-induced event reordering.
 #
 set -uo pipefail
@@ -14,7 +14,7 @@ if [[ $ARGC -lt 2 ]]; then
   echo ""
   echo " Usage: "$0" <example> <flags> <output1> [<output2> ...]"
   echo ""
-  echo " <example> is the executable name (e.g. ACTFWGenericFatrasExample)"
+  echo " <example> is the executable name (e.g. ActsExampleFatrasGeneric)"
   echo " <flags> is a string containing CLI flags (e.g. \"-n 5\")"
   echo " <outputN> is the output name (which is the output file name without the trailing '.root')"
   echo ""

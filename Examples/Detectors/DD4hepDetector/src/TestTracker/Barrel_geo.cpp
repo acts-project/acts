@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/DD4hepDetector/DD4hepDetectorHelper.hpp"
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorHelper.hpp"
 
 #include "DD4hep/DetFactoryHelper.h"
 
@@ -67,9 +67,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
 
       // create the Acts::DigitizationModule (needed to do geometric
       // digitization) for all modules which have the same segmentation
-      auto digiModule = FW::DD4hep::DD4hepDetectorHelper::rectangleDigiModule(
-          x_module.length(), x_module.width(), x_module.thickness(),
-          sens.readout().segmentation());
+      auto digiModule =
+          ActsExamples::DD4hep::DD4hepDetectorHelper::rectangleDigiModule(
+              x_module.length(), x_module.width(), x_module.thickness(),
+              sens.readout().segmentation());
 
       // Visualization
       mod_vol.setVisAttributes(lcdd, x_module.visStr());

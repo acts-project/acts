@@ -1,1 +1,1 @@
-add_unittest(CombinatorialKalmanFilterTests CombinatorialKalmanFilterTests.cpp)
+add_unittest(CombinatorialKalmanFilter CombinatorialKalmanFilterTests.cpp)

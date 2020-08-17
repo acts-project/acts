@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimIdentifier.hpp"
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/EventData/SimVertex.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimIdentifier.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <stdexcept>
 
@@ -23,8 +23,9 @@
 
 #include "TrackMlData.hpp"
 
-FW::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
-    const FW::CsvPlanarClusterWriter::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
+    const ActsExamples::CsvPlanarClusterWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.inputClusters, "CsvPlanarClusterWriter", lvl), m_cfg(cfg) {
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimulatedHits.empty()) {
@@ -32,9 +33,10 @@ FW::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   }
 }
 
-FW::ProcessCode FW::CsvPlanarClusterWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
     const AlgorithmContext& ctx,
-    const FW::GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) {
+    const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
+        clusters) {
   // retrieve simulated hits
   const auto& simHits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
@@ -133,5 +135,5 @@ FW::ProcessCode FW::CsvPlanarClusterWriter::writeT(
     hit.hit_id += 1;
   }
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
