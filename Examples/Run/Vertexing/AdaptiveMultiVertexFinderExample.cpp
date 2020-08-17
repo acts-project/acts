@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
   ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
   sequencer.addAlgorithm(
-      std::make_shared<ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm>(
+      std::make_shared<ActsExamples::AdaptiveMultiVertexFinderAlgorithm>(
           vertexFindingCfg, logLevel));
 
   return sequencer.run();
