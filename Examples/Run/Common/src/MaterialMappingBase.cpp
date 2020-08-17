@@ -148,6 +148,7 @@ int materialMappingExample(int argc, char* argv[],
           mmAlgConfig.mappingMaterialCollection;
       matTrackWriterRootConfig.storeSurface = true;
       matTrackWriterRootConfig.storeVolume = true;
+      matTrackWriterRootConfig.storeVolume = true;
       auto matTrackWriterRoot =
           std::make_shared<ActsExamples::RootMaterialTrackWriter>(
               matTrackWriterRootConfig, logLevel);
