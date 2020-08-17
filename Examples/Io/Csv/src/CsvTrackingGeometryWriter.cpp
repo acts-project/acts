@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
 #include <Acts/Plugins/Digitization/DigitizationModule.hpp>
@@ -24,7 +24,7 @@
 
 #include "TrackMlData.hpp"
 
-using namespace FW;
+using namespace ActsExamples;
 
 CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
     const CsvTrackingGeometryWriter::Config& cfg, Acts::Logging::Level lvl)

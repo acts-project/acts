@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/DD4hepDetector/DD4hepDetectorHelper.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorHelper.hpp"
 
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -15,7 +15,7 @@
 
 #include "DD4hep/CartesianGridXY.h"
 
-using namespace FW::DD4hep;
+using namespace ActsExamples::DD4hep;
 
 std::shared_ptr<const Acts::DigitizationModule>
 DD4hepDetectorHelper::rectangleDigiModule(

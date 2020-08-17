@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
-namespace FW {
+namespace ActsExamples {
 
 namespace Generic {
 
@@ -136,4 +136,4 @@ std::vector<Acts::Vector3D> modulePositionsRing(double z, double radius,
 
 }  // end of namespace Generic
 
-}  // end of namespace FW
+}  // end of namespace ActsExamples

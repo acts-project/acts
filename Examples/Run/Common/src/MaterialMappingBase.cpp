@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Root/RootMaterialTrackReader.hpp"
-#include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ACTFW/Io/Root/RootMaterialWriter.hpp"
-#include "ACTFW/MaterialMapping/MaterialMapping.hpp"
-#include "ACTFW/MaterialMapping/MaterialMappingOptions.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/Json/JsonMaterialWriter.hpp"
-#include "ACTFW/Propagation/PropagationOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
+#include "ActsExamples/MaterialMapping/MaterialMappingOptions.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
@@ -34,31 +34,32 @@
 namespace po = boost::program_options;
 
 int materialMappingExample(int argc, char* argv[],
-                           FW::IBaseDetector& detector) {
+                           ActsExamples::IBaseDetector& detector) {
   // Setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addMaterialMappingOptions(desc);
-  FW::Options::addPropagationOptions(desc);
-  FW::Options::addInputOptions(desc);
-  FW::Options::addOutputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addMaterialMappingOptions(desc);
+  ActsExamples::Options::addPropagationOptions(desc);
+  ActsExamples::Options::addInputOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
   // Get the log level
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // The geometry, material and decoration
-  auto geometry = FW::Geometry::build(vm, detector);
+  auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
 
   /// Default contexts
@@ -83,18 +84,19 @@ int materialMappingExample(int argc, char* argv[],
 
   if (vm["input-root"].template as<bool>()) {
     // Read the material step information from a ROOT TTree
-    FW::RootMaterialTrackReader::Config matTrackReaderRootConfig;
+    ActsExamples::RootMaterialTrackReader::Config matTrackReaderRootConfig;
     if (not matCollection.empty()) {
       matTrackReaderRootConfig.collection = matCollection;
     }
     matTrackReaderRootConfig.fileList = intputFiles;
     auto matTrackReaderRoot =
-        std::make_shared<FW::RootMaterialTrackReader>(matTrackReaderRootConfig);
+        std::make_shared<ActsExamples::RootMaterialTrackReader>(
+            matTrackReaderRootConfig);
     sequencer.addReader(matTrackReaderRoot);
   }
 
   /// The material mapping algorithm
-  FW::MaterialMapping::Config mmAlgConfig(geoContext, mfContext);
+  ActsExamples::MaterialMapping::Config mmAlgConfig(geoContext, mfContext);
   if (mapSurface) {
     // Get a Navigator
     Acts::Navigator navigator(tGeometry);
@@ -129,24 +131,26 @@ int materialMappingExample(int argc, char* argv[],
 
   if (!materialFileName.empty() and vm["output-root"].template as<bool>()) {
     // The writer of the indexed material
-    FW::RootMaterialWriter::Config rmwConfig("MaterialWriter");
+    ActsExamples::RootMaterialWriter::Config rmwConfig("MaterialWriter");
     rmwConfig.fileName = materialFileName + ".root";
-    FW::RootMaterialWriter rmwImpl(rmwConfig);
+    ActsExamples::RootMaterialWriter rmwImpl(rmwConfig);
     // Fullfill the IMaterialWriter interface
-    using RootWriter = FW::MaterialWriterT<FW::RootMaterialWriter>;
+    using RootWriter =
+        ActsExamples::MaterialWriterT<ActsExamples::RootMaterialWriter>;
     mmAlgConfig.materialWriters.push_back(
         std::make_shared<RootWriter>(std::move(rmwImpl)));
 
     if (mapSurface) {
       // Write the propagation steps as ROOT TTree
-      FW::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
+      ActsExamples::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
       matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
       matTrackWriterRootConfig.collection =
           mmAlgConfig.mappingMaterialCollection;
       matTrackWriterRootConfig.storeSurface = true;
       matTrackWriterRootConfig.storeVolume = true;
-      auto matTrackWriterRoot = std::make_shared<FW::RootMaterialTrackWriter>(
-          matTrackWriterRootConfig, logLevel);
+      auto matTrackWriterRoot =
+          std::make_shared<ActsExamples::RootMaterialTrackWriter>(
+              matTrackWriterRootConfig, logLevel);
       sequencer.addWriter(matTrackWriterRoot);
     }
   }
@@ -169,16 +173,17 @@ int materialMappingExample(int argc, char* argv[],
         vm["mat-output-volumes"].template as<bool>();
     jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
     // The writer
-    FW::Json::JsonMaterialWriter jmwImpl(jmConverterCfg,
-                                         materialFileName + ".json");
+    ActsExamples::JsonMaterialWriter jmwImpl(jmConverterCfg,
+                                             materialFileName + ".json");
     // Fullfill the IMaterialWriter interface
-    using JsonWriter = FW::MaterialWriterT<FW::Json::JsonMaterialWriter>;
+    using JsonWriter =
+        ActsExamples::MaterialWriterT<ActsExamples::JsonMaterialWriter>;
     mmAlgConfig.materialWriters.push_back(
         std::make_shared<JsonWriter>(std::move(jmwImpl)));
   }
 
   // Create the material mapping
-  auto mmAlg = std::make_shared<FW::MaterialMapping>(mmAlgConfig);
+  auto mmAlg = std::make_shared<ActsExamples::MaterialMapping>(mmAlgConfig);
 
   // Append the Algorithm
   sequencer.addAlgorithm(mmAlg);

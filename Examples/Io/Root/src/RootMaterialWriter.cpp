@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
@@ -18,8 +18,8 @@
 #include <TFile.h>
 #include <TH2F.h>
 
-FW::RootMaterialWriter::RootMaterialWriter(
-    const FW::RootMaterialWriter::Config& cfg)
+ActsExamples::RootMaterialWriter::RootMaterialWriter(
+    const ActsExamples::RootMaterialWriter::Config& cfg)
     : m_cfg(cfg) {
   // Validate the configuration
   if (m_cfg.folderNameBase.empty()) {
@@ -33,7 +33,7 @@ FW::RootMaterialWriter::RootMaterialWriter(
   }
 }
 
-void FW::RootMaterialWriter::write(
+void ActsExamples::RootMaterialWriter::write(
     const Acts::DetectorMaterialMaps& detMaterial) {
   // Setup ROOT I/O
   TFile* outputFile = TFile::Open(m_cfg.fileName.c_str(), "recreate");
@@ -161,7 +161,8 @@ void FW::RootMaterialWriter::write(
   outputFile->Close();
 }
 
-void FW::RootMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
+void ActsExamples::RootMaterialWriter::write(
+    const Acts::TrackingGeometry& tGeometry) {
   // Create a detector material map and loop recursively through it
   Acts::DetectorMaterialMaps detMatMap;
   auto hVolume = tGeometry.highestTrackingVolume();
@@ -172,7 +173,7 @@ void FW::RootMaterialWriter::write(const Acts::TrackingGeometry& tGeometry) {
   write(detMatMap);
 }
 
-void FW::RootMaterialWriter::collectMaterial(
+void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::TrackingVolume& tVolume,
     Acts::DetectorMaterialMaps& detMatMap) {
   // If the volume has volume material, write that
@@ -205,7 +206,7 @@ void FW::RootMaterialWriter::collectMaterial(
   }
 }
 
-void FW::RootMaterialWriter::collectMaterial(
+void ActsExamples::RootMaterialWriter::collectMaterial(
     const Acts::Layer& tLayer, Acts::DetectorMaterialMaps& detMatMap) {
   // If the representing surface has material, collect it
   const auto& rSurface = tLayer.surfaceRepresentation();

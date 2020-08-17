@@ -1,10 +1,10 @@
 add_library(
   ActsExamplesGenerators SHARED
-  ACTFW/Generators/EventGenerator.cpp
-  ACTFW/Generators/FlattenEvent.cpp
-  ACTFW/Generators/ParametricProcessGenerator.cpp
-  ACTFW/Generators/ParticleSelector.cpp
-  ACTFW/Options/ParticleGunOptions.cpp)
+  ActsExamples/Generators/EventGenerator.cpp
+  ActsExamples/Generators/FlattenEvent.cpp
+  ActsExamples/Generators/ParametricProcessGenerator.cpp
+  ActsExamples/Generators/ParticleSelector.cpp
+  ActsExamples/Options/ParticleGunOptions.cpp)
 target_include_directories(
   ActsExamplesGenerators
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
 
 #include <map>
@@ -19,8 +19,9 @@
 
 #include "TrackMlData.hpp"
 
-FW::CsvParticleWriter::CsvParticleWriter(
-    const FW::CsvParticleWriter::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::CsvParticleWriter::CsvParticleWriter(
+    const ActsExamples::CsvParticleWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "CsvParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
@@ -28,8 +29,9 @@ FW::CsvParticleWriter::CsvParticleWriter(
   }
 }
 
-FW::ProcessCode FW::CsvParticleWriter::writeT(
-    const FW::AlgorithmContext& ctx, const SimParticleContainer& particles) {
+ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
+    const ActsExamples::AlgorithmContext& ctx,
+    const SimParticleContainer& particles) {
   auto pathParticles = perEventFilepath(
       m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
   dfe::NamedTupleCsvWriter<ParticleData> writer(pathParticles,

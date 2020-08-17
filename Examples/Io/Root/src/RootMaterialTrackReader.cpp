@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootMaterialTrackReader.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iostream>
 
 #include <TChain.h>
 #include <TFile.h>
 
-FW::RootMaterialTrackReader::RootMaterialTrackReader(
-    const FW::RootMaterialTrackReader::Config& cfg)
-    : FW::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
+ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
+    const ActsExamples::RootMaterialTrackReader::Config& cfg)
+    : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
@@ -56,7 +56,7 @@ FW::RootMaterialTrackReader::RootMaterialTrackReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
 
-FW::RootMaterialTrackReader::~RootMaterialTrackReader() {
+ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;
@@ -68,16 +68,17 @@ FW::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_step_rho;
 }
 
-std::string FW::RootMaterialTrackReader::name() const {
+std::string ActsExamples::RootMaterialTrackReader::name() const {
   return m_cfg.name;
 }
 
-std::pair<size_t, size_t> FW::RootMaterialTrackReader::availableEvents() const {
+std::pair<size_t, size_t>
+ActsExamples::RootMaterialTrackReader::availableEvents() const {
   return {0u, m_events};
 }
 
-FW::ProcessCode FW::RootMaterialTrackReader::read(
-    const FW::AlgorithmContext& context) {
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
+    const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded material from tracks.");
   // read in the material track
   if (m_inputChain && context.eventNumber < m_events) {
@@ -131,5 +132,5 @@ FW::ProcessCode FW::RootMaterialTrackReader::read(
     context.eventStore.add(m_cfg.collection, std::move(mtrackCollection));
   }
   // Return success flag
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

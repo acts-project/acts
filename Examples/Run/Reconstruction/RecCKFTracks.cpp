@@ -6,35 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Digitization/HitSmearing.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/GenericDetector/GenericDetector.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Csv/CsvOptionsReader.hpp"
-#include "ACTFW/Io/Csv/CsvParticleReader.hpp"
-#include "ACTFW/Io/Csv/CsvPlanarClusterReader.hpp"
-#include "ACTFW/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ACTFW/TrackFinding/TrackFindingOptions.hpp"
-#include "ACTFW/TruthTracking/ParticleSmearing.hpp"
-#include "ACTFW/TruthTracking/TruthSeedSelector.hpp"
-#include "ACTFW/Utilities/Options.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
+#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
 
 #include <memory>
 
 using namespace Acts::UnitLiterals;
-using namespace FW;
+using namespace ActsExamples;
 
 int main(int argc, char* argv[]) {
   GenericDetector detector;
 
   // setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
+  auto desc = ActsExamples::Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   Options::addGeometryOptions(desc);
@@ -56,8 +56,8 @@ int main(int argc, char* argv[]) {
   auto logLevel = Options::readLogLevel(vm);
   auto inputDir = vm["input-dir"].as<std::string>();
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
-  auto rnd =
-      std::make_shared<FW::RandomNumbers>(Options::readRandomNumbersConfig(vm));
+  auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
+      Options::readRandomNumbersConfig(vm));
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, detector);

@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Validation/ProtoTrackClassification.hpp"
+#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 
-#include "ACTFW/Utilities/Range.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
 
-void FW::identifyContributingParticles(
+void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
-    std::vector<FW::ParticleHitCount>& particleHitCount) {
+    std::vector<ActsExamples::ParticleHitCount>& particleHitCount) {
   particleHitCount.clear();
 
   for (auto hitIndex : protoTrack) {

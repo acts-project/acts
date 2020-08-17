@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexAndTracksReader.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 #include <Acts/Surfaces/PerigeeSurface.hpp>
 
 #include <iostream>
@@ -17,8 +17,9 @@
 #include <TChain.h>
 #include <TFile.h>
 
-FW::RootVertexAndTracksReader::RootVertexAndTracksReader(
-    FW::RootVertexAndTracksReader::Config cfg, Acts::Logging::Level lvl)
+ActsExamples::RootVertexAndTracksReader::RootVertexAndTracksReader(
+    ActsExamples::RootVertexAndTracksReader::Config cfg,
+    Acts::Logging::Level lvl)
     : m_cfg(std::move(cfg)),
       m_events(0),
       m_inputChain(nullptr),
@@ -51,7 +52,7 @@ FW::RootVertexAndTracksReader::RootVertexAndTracksReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
 
-FW::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
+ActsExamples::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
   delete m_ptrVx;
   delete m_ptrVy;
   delete m_ptrVz;
@@ -65,17 +66,17 @@ FW::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
   delete m_ptrTrkCov;
 }
 
-std::string FW::RootVertexAndTracksReader::name() const {
+std::string ActsExamples::RootVertexAndTracksReader::name() const {
   return "RootVertexAndTracksReader";
 }
 
-std::pair<size_t, size_t> FW::RootVertexAndTracksReader::availableEvents()
-    const {
+std::pair<size_t, size_t>
+ActsExamples::RootVertexAndTracksReader::availableEvents() const {
   return {0u, m_events};
 }
 
-FW::ProcessCode FW::RootVertexAndTracksReader::read(
-    const FW::AlgorithmContext& context) {
+ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksReader::read(
+    const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read vertex and tracks.");
 
   if (m_inputChain && context.eventNumber < m_events) {
@@ -83,7 +84,7 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
     std::lock_guard<std::mutex> lock(m_read_mutex);
 
     // The collection to be written
-    std::vector<FW::VertexAndTracks> mCollection;
+    std::vector<ActsExamples::VertexAndTracks> mCollection;
 
     for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
       // Read the correct entry: batch size * event_number + ib
@@ -93,7 +94,7 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
 
       // Loop over all vertices
       for (size_t idx = 0; idx < m_ptrVx->size(); ++idx) {
-        FW::VertexAndTracks vtxAndTracks;
+        ActsExamples::VertexAndTracks vtxAndTracks;
         vtxAndTracks.vertex.position4[0] = (*m_ptrVx)[idx];
         vtxAndTracks.vertex.position4[1] = (*m_ptrVy)[idx];
         vtxAndTracks.vertex.position4[2] = (*m_ptrVz)[idx];
@@ -137,5 +138,5 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
     context.eventStore.add(m_cfg.outputCollection, std::move(mCollection));
   }
   // Return success flag
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

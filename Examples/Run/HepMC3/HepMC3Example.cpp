@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/EventData/SimVertex.hpp"
-#include "ACTFW/Plugins/HepMC3/HepMC3Event.hpp"
-#include "ACTFW/Plugins/HepMC3/HepMC3Reader.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/Plugins/HepMC3/HepMC3Event.hpp"
+#include "ActsExamples/Plugins/HepMC3/HepMC3Reader.hpp"
 
 #include <fstream>
 
@@ -20,7 +20,7 @@
 /// Straight forward example of reading a HepMC3 file.
 ///
 int main(int /*argc*/, char** /*argv*/) {
-  FW::HepMC3ReaderAscii simReader;
+  ActsExamples::HepMC3ReaderAscii simReader;
 
   std::cout << "Preparing reader " << std::flush;
   HepMC3::ReaderAscii reader("test.hepmc3");
@@ -40,7 +40,7 @@ int main(int /*argc*/, char** /*argv*/) {
   }
   std::cout << std::endl;
 
-  FW::HepMC3Event simEvent;
+  ActsExamples::HepMC3Event simEvent;
 
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
@@ -58,7 +58,8 @@ int main(int /*argc*/, char** /*argv*/) {
   std::cout << "Event time: " << simEvent.eventTime(genevt) << std::endl;
 
   std::cout << "Beam particles: ";
-  std::vector<std::unique_ptr<FW::SimParticle>> beam = simEvent.beams(genevt);
+  std::vector<std::unique_ptr<ActsExamples::SimParticle>> beam =
+      simEvent.beams(genevt);
   if (beam.empty())
     std::cout << "none" << std::endl;
   else {
@@ -68,7 +69,7 @@ int main(int /*argc*/, char** /*argv*/) {
   }
 
   std::cout << std::endl << "Vertices: ";
-  std::vector<std::unique_ptr<FW::SimVertex>> vertices =
+  std::vector<std::unique_ptr<ActsExamples::SimVertex>> vertices =
       simEvent.vertices(genevt);
   if (vertices.empty())
     std::cout << "none" << std::endl;
@@ -88,7 +89,7 @@ int main(int /*argc*/, char** /*argv*/) {
   }
 
   std::cout << "Total particle record:" << std::endl;
-  std::vector<std::unique_ptr<FW::SimParticle>> particles =
+  std::vector<std::unique_ptr<ActsExamples::SimParticle>> particles =
       simEvent.particles(genevt);
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle->pdg())
@@ -98,7 +99,7 @@ int main(int /*argc*/, char** /*argv*/) {
               << "), mass:  " << particle->mass() << std::endl;
 
   std::cout << std::endl << "Initial to final state: ";
-  std::vector<std::unique_ptr<FW::SimParticle>> fState =
+  std::vector<std::unique_ptr<ActsExamples::SimParticle>> fState =
       simEvent.finalState(genevt);
   for (auto& pbeam : beam)
     std::cout << HepPID::particleName(pbeam->pdg()) << " ";

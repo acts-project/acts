@@ -6,10 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/TutorialAMVFAlgorithm.hpp"
+#include "ActsExamples/Vertexing/TutorialAMVFAlgorithm.hpp"
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -29,15 +27,18 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
-FWE::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(const Config& cfg,
-                                                  Acts::Logging::Level level)
-    : FW::BareAlgorithm("Tutorial AMVF Algorithm", level), m_cfg(cfg) {}
+ActsExamples::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(
+    const Config& cfg, Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("Tutorial AMVF Algorithm", level),
+      m_cfg(cfg) {}
 
 /// @brief Tutorial algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices using the AMVF
-FW::ProcessCode FWE::TutorialAMVFAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
   // Get the input track collection
@@ -65,15 +66,16 @@ FW::ProcessCode FWE::TutorialAMVFAlgorithm::execute(
   ///////////////////////////////////////////////
 
   //* Do not change the code below this line *//
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
 
 std::vector<Acts::BoundParameters>
-FWE::TutorialAMVFAlgorithm::getInputTrackCollection(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::TutorialAMVFAlgorithm::getInputTrackCollection(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
-  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
-      m_cfg.trackCollection);
+  const auto& input =
+      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
+          m_cfg.trackCollection);
   std::vector<Acts::BoundParameters> inputTrackCollection;
 
   for (auto& vertexAndTracks : input) {

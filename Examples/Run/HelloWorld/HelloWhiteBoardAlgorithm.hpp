@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include "ACTFW/Framework/BareAlgorithm.hpp"
-#include "ACTFW/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 
-namespace FW {
+namespace ActsExamples {
 
 /// Example algorithm that reads/writes data from/to the event store.
-class HelloWhiteBoardAlgorithm : public FW::BareAlgorithm {
+class HelloWhiteBoardAlgorithm : public ActsExamples::BareAlgorithm {
  public:
   struct Config {
     /// Input collection name.
@@ -29,10 +29,11 @@ class HelloWhiteBoardAlgorithm : public FW::BareAlgorithm {
                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Read input and copy to the output
-  FW::ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(
+      const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;
 };
 
-}  // namespace FW
+}  // namespace ActsExamples

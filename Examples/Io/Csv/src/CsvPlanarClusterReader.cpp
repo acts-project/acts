@@ -6,26 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 
-#include "ACTFW/EventData/GeometryContainers.hpp"
-#include "ACTFW/EventData/IndexContainers.hpp"
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimIdentifier.hpp"
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
-#include "ACTFW/Utilities/Range.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimIdentifier.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <dfe/dfe_io_dsv.hpp>
 
 #include "TrackMlData.hpp"
 
-FW::CsvPlanarClusterReader::CsvPlanarClusterReader(
-    const FW::CsvPlanarClusterReader::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
+    const ActsExamples::CsvPlanarClusterReader::Config& cfg,
+    Acts::Logging::Level lvl)
     : m_cfg(cfg)
       // TODO check that all files (hits,cells,truth) exists
       ,
@@ -52,11 +53,13 @@ FW::CsvPlanarClusterReader::CsvPlanarClusterReader(
   });
 }
 
-std::string FW::CsvPlanarClusterReader::CsvPlanarClusterReader::name() const {
+std::string ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader::name()
+    const {
   return "CsvPlanarClusterReader";
 }
 
-std::pair<size_t, size_t> FW::CsvPlanarClusterReader::availableEvents() const {
+std::pair<size_t, size_t>
+ActsExamples::CsvPlanarClusterReader::availableEvents() const {
   return m_eventsRange;
 }
 
@@ -79,7 +82,7 @@ struct CompareHitId {
 };
 
 /// Convert separate volume/layer/module id into a single geometry identifier.
-inline Acts::GeometryID extractGeometryId(const FW::HitData& data) {
+inline Acts::GeometryID extractGeometryId(const ActsExamples::HitData& data) {
   // if available, use the encoded geometry directly
   if (data.geometry_id != 0u) {
     return data.geometry_id;
@@ -93,7 +96,8 @@ inline Acts::GeometryID extractGeometryId(const FW::HitData& data) {
 }
 
 struct CompareGeometryId {
-  bool operator()(const FW::HitData& left, const FW::HitData& right) const {
+  bool operator()(const ActsExamples::HitData& left,
+                  const ActsExamples::HitData& right) const {
     auto leftId = extractGeometryId(left).value();
     auto rightId = extractGeometryId(right).value();
     return leftId < rightId;
@@ -104,7 +108,7 @@ template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
     const std::vector<std::string>& optionalColumns, size_t event) {
-  std::string path = FW::perEventFilepath(inputDir, filename, event);
+  std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
@@ -116,35 +120,35 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<FW::HitData> readHitsByGeoId(const std::string& inputDir,
-                                         size_t event) {
+std::vector<ActsExamples::HitData> readHitsByGeoId(const std::string& inputDir,
+                                                   size_t event) {
   // geometry_id and t are optional columns
-  auto hits = readEverything<FW::HitData>(inputDir, "hits.csv",
-                                          {"geometry_id", "t"}, event);
+  auto hits = readEverything<ActsExamples::HitData>(
+      inputDir, "hits.csv", {"geometry_id", "t"}, event);
   // sort same way they will be sorted in the output container
   std::sort(hits.begin(), hits.end(), CompareGeometryId{});
   return hits;
 }
 
-std::vector<FW::CellData> readCellsByHitId(const std::string& inputDir,
-                                           size_t event) {
+std::vector<ActsExamples::CellData> readCellsByHitId(
+    const std::string& inputDir, size_t event) {
   // timestamp is an optional element
-  auto cells =
-      readEverything<FW::CellData>(inputDir, "cells.csv", {"timestamp"}, event);
+  auto cells = readEverything<ActsExamples::CellData>(inputDir, "cells.csv",
+                                                      {"timestamp"}, event);
   // sort for fast hit id look up
   std::sort(cells.begin(), cells.end(), CompareHitId{});
   return cells;
 }
 
-std::vector<FW::TruthHitData> readTruthHitsByHitId(const std::string& inputDir,
-                                                   size_t event) {
+std::vector<ActsExamples::TruthHitData> readTruthHitsByHitId(
+    const std::string& inputDir, size_t event) {
   // define all optional columns
   std::vector<std::string> optionalColumns = {
       "geometry_id", "tt",      "te",     "deltapx",
       "deltapy",     "deltapz", "deltae", "index",
   };
-  auto truths = readEverything<FW::TruthHitData>(inputDir, "truth.csv",
-                                                 optionalColumns, event);
+  auto truths = readEverything<ActsExamples::TruthHitData>(
+      inputDir, "truth.csv", optionalColumns, event);
   // sort for fast hit id look up
   std::sort(truths.begin(), truths.end(), CompareHitId{});
   return truths;
@@ -152,8 +156,8 @@ std::vector<FW::TruthHitData> readTruthHitsByHitId(const std::string& inputDir,
 
 }  // namespace
 
-FW::ProcessCode FW::CsvPlanarClusterReader::read(
-    const FW::AlgorithmContext& ctx) {
+ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
+    const ActsExamples::AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
   // monotonic. internally, we want continous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first
@@ -284,5 +288,5 @@ FW::ProcessCode FW::CsvPlanarClusterReader::read(
   ctx.eventStore.add(m_cfg.outputHitParticlesMap, std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputSimulatedHits, std::move(simHits));
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

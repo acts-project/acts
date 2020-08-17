@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
 #include "Acts/Utilities/Units.hpp"
 
@@ -16,8 +16,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
-FW::RootSimHitWriter::RootSimHitWriter(const FW::RootSimHitWriter::Config& cfg,
-                                       Acts::Logging::Level lvl)
+ActsExamples::RootSimHitWriter::RootSimHitWriter(
+    const ActsExamples::RootSimHitWriter::Config& cfg, Acts::Logging::Level lvl)
     : WriterT(cfg.inputSimulatedHits, "RootSimHitWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -62,13 +62,13 @@ FW::RootSimHitWriter::RootSimHitWriter(const FW::RootSimHitWriter::Config& cfg,
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-FW::RootSimHitWriter::~RootSimHitWriter() {
+ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootSimHitWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -78,8 +78,8 @@ FW::ProcessCode FW::RootSimHitWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootSimHitWriter::writeT(const AlgorithmContext& ctx,
-                                             const FW::SimHitContainer& hits) {
+ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
+    const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& hits) {
   if (not m_outputFile) {
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;
@@ -120,5 +120,5 @@ FW::ProcessCode FW::RootSimHitWriter::writeT(const AlgorithmContext& ctx,
     // Fill the tree
     m_outputTree->Fill();
   }
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

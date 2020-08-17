@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
@@ -24,8 +24,9 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
-    const FW::RootMaterialTrackWriter::Config& cfg, Acts::Logging::Level level)
+ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
+    const ActsExamples::RootMaterialTrackWriter::Config& cfg,
+    Acts::Logging::Level level)
     : WriterT(cfg.collection, "RootMaterialTrackWriter", level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -95,19 +96,19 @@ FW::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-FW::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
   m_outputFile->Close();
 }
 
-FW::ProcessCode FW::RootMaterialTrackWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
   m_outputFile->cd();
   m_outputTree->Write();
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<Acts::RecordedMaterialTrack>& materialTracks) {
   // Exclusive access to the tree while writing
@@ -303,5 +304,5 @@ FW::ProcessCode FW::RootMaterialTrackWriter::writeT(
   }
 
   // return success
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

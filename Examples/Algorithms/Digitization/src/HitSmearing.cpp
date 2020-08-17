@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Digitization/HitSmearing.hpp"
+#include "ActsExamples/Digitization/HitSmearing.hpp"
 
-#include "ACTFW/EventData/GeometryContainers.hpp"
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimSourceLink.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimSourceLink.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-FW::HitSmearing::HitSmearing(const Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
+                                       Acts::Logging::Level lvl)
     : BareAlgorithm("HitSmearing", lvl), m_cfg(cfg) {
   if (m_cfg.inputSimulatedHits.empty()) {
     throw std::invalid_argument("Missing input simulated hits collection");
@@ -42,7 +43,8 @@ FW::HitSmearing::HitSmearing(const Config& cfg, Acts::Logging::Level lvl)
   });
 }
 
-FW::ProcessCode FW::HitSmearing::execute(const AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
+    const AlgorithmContext& ctx) const {
   // setup input and output containers
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);

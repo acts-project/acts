@@ -6,11 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/VertexFitAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexFitAlgorithm.hpp"
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -23,17 +20,20 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
 #include <iostream>
 
-FWE::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
-                                            Acts::Logging::Level level)
-    : FW::BareAlgorithm("VertexFit", level), m_cfg(cfg) {}
+ActsExamples::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
+                                                     Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("VertexFit", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives a set of tracks belonging to a common
 /// vertex and fits the associated vertex to it
-FW::ProcessCode FWE::VertexFitAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
@@ -58,8 +58,9 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
-  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
-      m_cfg.trackCollection);
+  const auto& input =
+      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
+          m_cfg.trackCollection);
   for (auto& vertexAndTracks : input) {
     const auto& inputTrackCollection = vertexAndTracks.tracks;
 
@@ -126,5 +127,5 @@ FW::ProcessCode FWE::VertexFitAlgorithm::execute(
               << vertexAndTracks.vertex.position().z() << ")");
   }
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

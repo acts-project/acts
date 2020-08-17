@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Root/RootPropagationStepsWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
-#include "ACTFW/Plugins/Obj/ObjPropagationStepsWriter.hpp"
-#include "ACTFW/Propagation/PropagationAlgorithm.hpp"
-#include "ACTFW/Propagation/PropagationOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
+#include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
+#include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/MagneticField/ConstantBField.hpp>
 #include <Acts/MagneticField/InterpolatedBFieldMap.hpp>
@@ -32,30 +32,32 @@
 
 #include <boost/program_options.hpp>
 
-int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
+int propagationExample(int argc, char* argv[],
+                       ActsExamples::IBaseDetector& detector) {
   // Setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addBFieldOptions(desc);
-  FW::Options::addRandomNumbersOptions(desc);
-  FW::Options::addPropagationOptions(desc);
-  FW::Options::addOutputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addRandomNumbersOptions(desc);
+  ActsExamples::Options::addPropagationOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
   // Now read the standard options
-  auto logLevel = FW::Options::readLogLevel(vm);
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // The geometry, material and decoration
-  auto geometry = FW::Geometry::build(vm, detector);
+  auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
   // Add the decorator to the sequencer
@@ -64,12 +66,12 @@ int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
   }
 
   // Create the random number engine
-  auto randomNumberSvcCfg = FW::Options::readRandomNumbersConfig(vm);
+  auto randomNumberSvcCfg = ActsExamples::Options::readRandomNumbersConfig(vm);
   auto randomNumberSvc =
-      std::make_shared<FW::RandomNumbers>(randomNumberSvcCfg);
+      std::make_shared<ActsExamples::RandomNumbers>(randomNumberSvcCfg);
 
   // Create BField service
-  auto bFieldVar = FW::Options::readBField(vm);
+  auto bFieldVar = ActsExamples::Options::readBField(vm);
   // auto field2D = std::get<std::shared_ptr<InterpolatedBFieldMap2D>>(bField);
   // auto field3D = std::get<std::shared_ptr<InterpolatedBFieldMap3D>>(bField);
 
@@ -108,10 +110,11 @@ int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
 
               // Read the propagation config and create the algorithms
               auto pAlgConfig =
-                  FW::Options::readPropagationConfig(vm, propagator);
+                  ActsExamples::Options::readPropagationConfig(vm, propagator);
               pAlgConfig.randomNumberSvc = randomNumberSvc;
               sequencer.addAlgorithm(
-                  std::make_shared<FW::PropagationAlgorithm<Propagator>>(
+                  std::make_shared<
+                      ActsExamples::PropagationAlgorithm<Propagator>>(
                       pAlgConfig, logLevel));
             },
             *var_stepper);
@@ -125,18 +128,19 @@ int propagationExample(int argc, char* argv[], FW::IBaseDetector& detector) {
 
   if (vm["output-root"].template as<bool>()) {
     // Write the propagation steps as ROOT TTree
-    FW::RootPropagationStepsWriter::Config pstepWriterRootConfig;
+    ActsExamples::RootPropagationStepsWriter::Config pstepWriterRootConfig;
     pstepWriterRootConfig.collection = psCollection;
     pstepWriterRootConfig.filePath =
-        FW::joinPaths(outputDir, psCollection + ".root");
-    sequencer.addWriter(std::make_shared<FW::RootPropagationStepsWriter>(
-        pstepWriterRootConfig));
+        ActsExamples::joinPaths(outputDir, psCollection + ".root");
+    sequencer.addWriter(
+        std::make_shared<ActsExamples::RootPropagationStepsWriter>(
+            pstepWriterRootConfig));
   }
 
   if (vm["output-obj"].template as<bool>()) {
     using PropagationSteps = Acts::detail::Step;
     using ObjPropagationStepsWriter =
-        FW::Obj::ObjPropagationStepsWriter<PropagationSteps>;
+        ActsExamples::ObjPropagationStepsWriter<PropagationSteps>;
 
     // Write the propagation steps as Obj TTree
     ObjPropagationStepsWriter::Config pstepWriterObjConfig;

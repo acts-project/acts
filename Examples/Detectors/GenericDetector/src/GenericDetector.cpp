@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "ACTFW/Framework/IContextDecorator.hpp"
-#include "ACTFW/GenericDetector/BuildGenericDetector.hpp"
-#include "ACTFW/GenericDetector/GenericDetectorElement.hpp"
-#include "ACTFW/GenericDetector/GenericDetectorOptions.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorOptions.hpp"
 
 #include <boost/program_options.hpp>
 
 void GenericDetector::addOptions(
     boost::program_options::options_description& opt) const {
-  FW::Options::addGenericGeometryOptions(opt);
+  ActsExamples::Options::addGenericGeometryOptions(opt);
 }
 
 auto GenericDetector::finalize(
@@ -42,9 +42,10 @@ auto GenericDetector::finalize(
       (vm["mat-input-type"].template as<std::string>() == "proto");
 
   /// Return the generic detector
-  TrackingGeometryPtr gGeometry = FW::Generic::buildDetector<DetectorElement>(
-      nominalContext, detectorStore, buildLevel, std::move(mdecorator),
-      buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
+  TrackingGeometryPtr gGeometry =
+      ActsExamples::Generic::buildDetector<DetectorElement>(
+          nominalContext, detectorStore, buildLevel, std::move(mdecorator),
+          buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
   ContextDecorators gContextDeocrators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
