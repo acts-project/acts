@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the finding algorithm
-  ActsExamplesE::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
+  ActsExamples::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
   vertexFindingCfg.bField = trkConvConfig.bField;
   sequencer.addAlgorithm(
