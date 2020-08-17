@@ -20,7 +20,7 @@
 
 #include <memory>
 
-namespace ActsExamplesE {
+namespace ActsExamples {
 
 class TutorialAMVFAlgorithm : public ActsExamples::BareAlgorithm {
  public:
