@@ -392,7 +392,7 @@ inline void runToSurfaceTest(
 template <
     typename cmp_propagator_t, typename ref_propagator_t, typename charge_t,
     template <typename, typename> class options_t = Acts::PropagatorOptions>
-inline void runFreePropagationComparisonTest(
+inline void runForwardComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,

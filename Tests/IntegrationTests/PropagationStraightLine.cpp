@@ -104,7 +104,7 @@ BOOST_DATA_TEST_CASE(
     CovarianceCurvilinear,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
     theta, p, q, s) {
-  runFreePropagationComparisonTest(
+  runForwardComparisonTest(
       propagator, riddersPropagator, geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
       epsDir, epsMom, epsCov, showDebug);

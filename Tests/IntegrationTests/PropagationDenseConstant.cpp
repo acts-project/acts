@@ -163,9 +163,8 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runFreePropagationComparisonTest<Propagator, RiddersPropagator,
-                                   Acts::ChargedPolicy,
-                                   Acts::DenseStepperPropagatorOptions>(
+  runForwardComparisonTest<Propagator, RiddersPropagator, Acts::ChargedPolicy,
+                           Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
       epsDir, epsMom, epsCov, showDebug);

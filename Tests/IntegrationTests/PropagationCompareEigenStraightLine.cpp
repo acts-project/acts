@@ -80,10 +80,9 @@ BOOST_DATA_TEST_CASE(
     ChargedZeroMagneticField,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
     theta, p, q, s) {
-  runFreePropagationComparisonTest(
-      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
-      epsCov, showDebug);
+  runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
+                           magCtx, makeParametersCurvilinear(phi, theta, p, q),
+                           s, epsPos, epsDir, epsMom, epsCov, showDebug);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for
