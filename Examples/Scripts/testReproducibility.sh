@@ -14,7 +14,7 @@ if [[ $ARGC -lt 2 ]]; then
   echo ""
   echo " Usage: "$0" <example> <flags> <output1> [<output2> ...]"
   echo ""
-  echo " <example> is the executable name (e.g. ActsExamplesGenericFatrasExample)"
+  echo " <example> is the executable name (e.g. ActsExampleFatrasGeneric)"
   echo " <flags> is a string containing CLI flags (e.g. \"-n 5\")"
   echo " <outputN> is the output name (which is the output file name without the trailing '.root')"
   echo ""
