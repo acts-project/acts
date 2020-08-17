@@ -16,7 +16,7 @@
 
 using namespace Acts::UnitLiterals;
 
-namespace ActsExamplesE {
+namespace ActsExamples {
 
 class VertexFitAlgorithm : public ActsExamples::BareAlgorithm {
  public:
