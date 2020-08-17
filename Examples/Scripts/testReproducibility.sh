@@ -2,8 +2,8 @@
 #
 # This script tests whether the output of a certain ACTS framework example is
 # reproducible between single-threaded and multi-threaded runs. For example,
-# "./testReproducibility.sh ActsExamplesGenericFatrasExample" will run the
-# ActsExamplesGenericFatrasExample in single-threaded and multi-threaded mode and
+# "./testReproducibility.sh ActsExampleFatrasGeneric" will run the
+# ActsExampleFatrasGeneric in single-threaded and multi-threaded mode and
 # check whether the output is the same aside from threading-induced event reordering.
 #
 set -uo pipefail
