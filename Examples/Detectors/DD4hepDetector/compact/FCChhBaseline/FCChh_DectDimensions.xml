@@ -113,7 +113,7 @@
     <constant name="ExtBarHCal1_zOffset" value="5000*mm + ExtBarHCal1_dz"/>
     <constant name="ExtBarHCal2_dz" value="1600*mm"/>
     <constant name="ExtBarHCal2_zOffset" value="ExtBarHCal1_zOffset + ExtBarHCal1_dz + ExtBarHCal2_dz"/>
-    <!-- Forward calorimeters (EMActsExamplesD + HActsExamplesD) -->
+    <!-- Forward calorimeters (EMFWD + HFWD) -->
     <constant name="FwdECal_id" value="10"/>
     <constant name="FwdHCal_id" value="11"/>
     <constant name="FwdCal_dz" value="1500*mm"/>
