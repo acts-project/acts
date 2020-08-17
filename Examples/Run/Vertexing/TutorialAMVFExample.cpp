@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the finding algorithm
-  ActsExamplesE::TutorialAMVFAlgorithm::Config vertexFindingCfg;
+  ActsExamples::TutorialAMVFAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = selectorConfig.output;
   sequencer.addAlgorithm(std::make_shared<ActsExamplesE::TutorialAMVFAlgorithm>(
       vertexFindingCfg, logLevel));
