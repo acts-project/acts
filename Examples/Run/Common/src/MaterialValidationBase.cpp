@@ -190,6 +190,7 @@ int materialValidationExample(int argc, char* argv[],
     matTrackWriterRootConfig.filePath =
         ActsExamples::joinPaths(outputDir, matCollection + ".root");
     matTrackWriterRootConfig.storeSurface = true;
+    matTrackWriterRootConfig.storeVolume = true;
     auto matTrackWriterRoot =
         std::make_shared<ActsExamples::RootMaterialTrackWriter>(
             matTrackWriterRootConfig, logLevel);
