@@ -26,13 +26,13 @@
 
 #include <iostream>
 
-ActsExamplesE::VertexFitAlgorithm::VertexFitAlgorithm(
-    const Config& cfg, Acts::Logging::Level level)
+ActsExamples::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
+                                                     Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("VertexFit", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives a set of tracks belonging to a common
 /// vertex and fits the associated vertex to it
-ActsExamples::ProcessCode ActsExamplesE::VertexFitAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;

@@ -54,4 +54,4 @@ class VertexFitAlgorithm : public ActsExamples::BareAlgorithm {
   Config m_cfg;
 };
 
-}  // namespace ActsExamplesE
+}  // namespace ActsExamples

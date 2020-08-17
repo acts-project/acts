@@ -30,14 +30,14 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
-ActsExamplesE::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(
+ActsExamples::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("Tutorial AMVF Algorithm", level),
       m_cfg(cfg) {}
 
 /// @brief Tutorial algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices using the AMVF
-ActsExamples::ProcessCode ActsExamplesE::TutorialAMVFAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
@@ -70,7 +70,7 @@ ActsExamples::ProcessCode ActsExamplesE::TutorialAMVFAlgorithm::execute(
 }
 
 std::vector<Acts::BoundParameters>
-ActsExamplesE::TutorialAMVFAlgorithm::getInputTrackCollection(
+ActsExamples::TutorialAMVFAlgorithm::getInputTrackCollection(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input =

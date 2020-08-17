@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
   Acts::Vector3D bField(0., 0., 2. * Acts::units::_T);
 
   // Add the finding algorithm
-  ActsExamplesE::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
+  ActsExamples::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = vtxAndTracksReaderCfg.outputCollection;
   vertexFindingCfg.bField = bField;
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
       vtxAndTracksReaderCfg, logLevel));
 
   sequencer.addAlgorithm(
-      std::make_shared<ActsExamplesE::IterativeVertexFinderAlgorithm>(
+      std::make_shared<ActsExamples::IterativeVertexFinderAlgorithm>(
           vertexFindingCfg, logLevel));
 
   return sequencer.run();

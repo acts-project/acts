@@ -30,7 +30,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
-ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
                                        Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("AMVF Algorithm", level), m_cfg(cfg) {}
@@ -38,7 +38,7 @@ ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
 ActsExamples::ProcessCode
-ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::execute(
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
@@ -130,7 +130,7 @@ ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::execute(
 }
 
 std::vector<Acts::BoundParameters>
-ActsExamplesE::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input =

@@ -75,10 +75,10 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackSelector>(selectorConfig, logLevel));
 
   // Add the fit algorithm with Billoir fitter
-  ActsExamplesE::VertexFitAlgorithm::Config vertexFitCfg;
+  ActsExamples::VertexFitAlgorithm::Config vertexFitCfg;
   vertexFitCfg.trackCollection = selectorConfig.output;
   vertexFitCfg.bField = trkConvConfig.bField;
-  sequencer.addAlgorithm(std::make_shared<ActsExamplesE::VertexFitAlgorithm>(
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::VertexFitAlgorithm>(
       vertexFitCfg, logLevel));
 
   return sequencer.run();

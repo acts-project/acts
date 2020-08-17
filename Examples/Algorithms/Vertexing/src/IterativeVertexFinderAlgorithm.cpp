@@ -33,14 +33,13 @@
 
 #include <iostream>
 
-ActsExamplesE::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
+ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("VertexFinding", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-ActsExamples::ProcessCode
-ActsExamplesE::IterativeVertexFinderAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;

@@ -46,4 +46,4 @@ class IterativeVertexFinderAlgorithm : public ActsExamples::BareAlgorithm {
   Config m_cfg;
 };
 
-}  // namespace ActsExamplesE
+}  // namespace ActsExamples

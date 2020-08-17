@@ -46,4 +46,4 @@ class AdaptiveMultiVertexFinderAlgorithm : public ActsExamples::BareAlgorithm {
       const ActsExamples::AlgorithmContext& ctx) const;
 };
 
-}  // namespace ActsExamplesE
+}  // namespace ActsExamples
