@@ -6,16 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/DD4hepDetector/DD4hepDetectorOptions.hpp"
-#include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "../GeantinoRecordingBase.hpp"
 
 #include <boost/program_options.hpp>
 
 using namespace ActsExamples;
-using namespace FW;
 
 int main(int argc, char* argv[]) {
   // Setup and parse options

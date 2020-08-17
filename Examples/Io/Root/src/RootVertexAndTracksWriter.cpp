@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootVertexAndTracksWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexAndTracksWriter.hpp"
 
 #include <Acts/Utilities/Helpers.hpp>
 
@@ -20,8 +20,9 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-FW::RootVertexAndTracksWriter::RootVertexAndTracksWriter(
-    const FW::RootVertexAndTracksWriter::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::RootVertexAndTracksWriter::RootVertexAndTracksWriter(
+    const ActsExamples::RootVertexAndTracksWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.collection, "RootVertexAndTracksWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -102,13 +103,13 @@ FW::RootVertexAndTracksWriter::RootVertexAndTracksWriter(
   }
 }
 
-FW::RootVertexAndTracksWriter::~RootVertexAndTracksWriter() {
+ActsExamples::RootVertexAndTracksWriter::~RootVertexAndTracksWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootVertexAndTracksWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -118,7 +119,7 @@ FW::ProcessCode FW::RootVertexAndTracksWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-void FW::RootVertexAndTracksWriter::ClearAll() {
+void ActsExamples::RootVertexAndTracksWriter::ClearAll() {
   m_vx.clear();
   m_vy.clear();
   m_vz.clear();
@@ -173,7 +174,7 @@ void FW::RootVertexAndTracksWriter::ClearAll() {
   m_cov66.clear();
 }
 
-FW::ProcessCode FW::RootVertexAndTracksWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksWriter::writeT(
     const AlgorithmContext& context,
     const std::vector<VertexAndTracks>& vertexAndTracksCollection) {
   if (m_outputFile == nullptr || vertexAndTracksCollection.empty()) {

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
 
@@ -17,7 +17,7 @@
 #include <sstream>
 #include <stdexcept>
 
-std::string FW::ensureWritableDirectory(const std::string& dir) {
+std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
   using namespace std::filesystem;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
@@ -29,7 +29,8 @@ std::string FW::ensureWritableDirectory(const std::string& dir) {
   return canonical(dir_path).native();
 }
 
-std::string FW::joinPaths(const std::string& dir, const std::string& name) {
+std::string ActsExamples::joinPaths(const std::string& dir,
+                                    const std::string& name) {
   if (dir.empty()) {
     return name;
   } else {
@@ -37,8 +38,9 @@ std::string FW::joinPaths(const std::string& dir, const std::string& name) {
   }
 }
 
-std::string FW::perEventFilepath(const std::string& dir,
-                                 const std::string& name, size_t event) {
+std::string ActsExamples::perEventFilepath(const std::string& dir,
+                                           const std::string& name,
+                                           size_t event) {
   char prefix[64];
 
   snprintf(prefix, sizeof(prefix), "event%09zu-", event);
@@ -50,7 +52,7 @@ std::string FW::perEventFilepath(const std::string& dir,
   }
 }
 
-std::pair<size_t, size_t> FW::determineEventFilesRange(
+std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
     const std::string& dir, const std::string& name) {
   using namespace std::filesystem;
 

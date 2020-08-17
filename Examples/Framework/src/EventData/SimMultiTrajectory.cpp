@@ -6,12 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/EventData/SimMultiTrajectory.hpp"
+#include "ActsExamples/EventData/SimMultiTrajectory.hpp"
 
-std::vector<FW::ParticleHitCount>
-FW::SimMultiTrajectory::identifyMajorityParticle(
+std::vector<ActsExamples::ParticleHitCount>
+ActsExamples::SimMultiTrajectory::identifyMajorityParticle(
     const size_t& entryIndex) const {
-  std::vector<FW::ParticleHitCount> particleHitCount;
+  std::vector<ActsExamples::ParticleHitCount> particleHitCount;
   particleHitCount.reserve(10);
   if (not m_trackTips.empty()) {
     if (not hasTrajectory(entryIndex)) {
@@ -26,7 +26,7 @@ FW::SimMultiTrajectory::identifyMajorityParticle(
       const auto particleId = state.uncalibrated().truthHit().particleId();
       // Find if the particle already exists
       auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
-                             [=](const FW::ParticleHitCount& phc) {
+                             [=](const ActsExamples::ParticleHitCount& phc) {
                                return phc.particleId == particleId;
                              });
 
@@ -41,11 +41,11 @@ FW::SimMultiTrajectory::identifyMajorityParticle(
   }
   if (not particleHitCount.empty()) {
     // sort by hit count, i.e. majority particle first
-    std::sort(
-        particleHitCount.begin(), particleHitCount.end(),
-        [](const FW::ParticleHitCount& lhs, const FW::ParticleHitCount& rhs) {
-          return lhs.hitCount > rhs.hitCount;
-        });
+    std::sort(particleHitCount.begin(), particleHitCount.end(),
+              [](const ActsExamples::ParticleHitCount& lhs,
+                 const ActsExamples::ParticleHitCount& rhs) {
+                return lhs.hitCount > rhs.hitCount;
+              });
   }
 
   return particleHitCount;

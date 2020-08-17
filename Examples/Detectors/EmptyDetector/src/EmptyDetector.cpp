@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/EmptyDetector/EmptyDetector.hpp"
+#include "ActsExamples/EmptyDetector/EmptyDetector.hpp"
 
-#include "ACTFW/EmptyDetector/EmptyDetectorOptions.hpp"
-#include "ACTFW/Framework/IContextDecorator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EmptyDetector/EmptyDetectorOptions.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <boost/program_options.hpp>
 
 void EmptyDetector::addOptions(
     boost::program_options::options_description& opt) const {
-  FW::Options::addEmptyGeometryOptions(opt);
+  ActsExamples::Options::addEmptyGeometryOptions(opt);
 }
 
 auto EmptyDetector::finalize(

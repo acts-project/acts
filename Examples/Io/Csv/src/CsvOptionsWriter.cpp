@@ -6,14 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Csv/CsvOptionsWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 
 #include <limits>
 
 #include <boost/program_options.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 
-void FW::Options::addCsvWriterOptions(FW::Options::Description& desc) {
+void ActsExamples::Options::addCsvWriterOptions(
+    ActsExamples::Options::Description& desc) {
   using namespace boost::program_options;
 
   desc.add_options()(
@@ -23,9 +24,10 @@ void FW::Options::addCsvWriterOptions(FW::Options::Description& desc) {
       "csv-tg-perevent", bool_switch(), "Write tracking geometry per event.");
 }
 
-FW::CsvParticleWriter::Config FW::Options::readCsvParticleWriterConfig(
-    const FW::Options::Variables& vm) {
-  FW::CsvParticleWriter::Config cfg;
+ActsExamples::CsvParticleWriter::Config
+ActsExamples::Options::readCsvParticleWriterConfig(
+    const ActsExamples::Options::Variables& vm) {
+  ActsExamples::CsvParticleWriter::Config cfg;
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
@@ -33,10 +35,10 @@ FW::CsvParticleWriter::Config FW::Options::readCsvParticleWriterConfig(
   return cfg;
 }
 
-FW::CsvPlanarClusterWriter::Config
-FW::Options::readCsvPlanarClusterWriterConfig(
-    const FW::Options::Variables& vm) {
-  FW::CsvPlanarClusterWriter::Config cfg;
+ActsExamples::CsvPlanarClusterWriter::Config
+ActsExamples::Options::readCsvPlanarClusterWriterConfig(
+    const ActsExamples::Options::Variables& vm) {
+  ActsExamples::CsvPlanarClusterWriter::Config cfg;
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
@@ -44,10 +46,10 @@ FW::Options::readCsvPlanarClusterWriterConfig(
   return cfg;
 }
 
-FW::CsvTrackingGeometryWriter::Config
-FW::Options::readCsvTrackingGeometryWriterConfig(
-    const FW::Options::Variables& vm) {
-  FW::CsvTrackingGeometryWriter::Config cfg;
+ActsExamples::CsvTrackingGeometryWriter::Config
+ActsExamples::Options::readCsvTrackingGeometryWriterConfig(
+    const ActsExamples::Options::Variables& vm) {
+  ActsExamples::CsvTrackingGeometryWriter::Config cfg;
   if (not vm["output-dir"].empty()) {
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }

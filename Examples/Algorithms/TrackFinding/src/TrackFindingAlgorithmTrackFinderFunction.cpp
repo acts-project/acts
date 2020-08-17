@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
-#include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -16,6 +14,8 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include <random>
 #include <stdexcept>
@@ -27,9 +27,9 @@ struct TrackFinderFunctionImpl {
 
   TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
 
-  FW::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const FW::SimSourceLinkContainer& sourceLinks,
-      const FW::TrackParameters& initialParameters,
+  ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
+      const ActsExamples::SimSourceLinkContainer& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
       const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>&
           options) const {
     return trackFinder.findTracks(sourceLinks, initialParameters, options);
@@ -37,8 +37,8 @@ struct TrackFinderFunctionImpl {
 };
 }  // namespace
 
-FW::TrackFindingAlgorithm::TrackFinderFunction
-FW::TrackFindingAlgorithm::makeTrackFinderFunction(
+ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
+ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;

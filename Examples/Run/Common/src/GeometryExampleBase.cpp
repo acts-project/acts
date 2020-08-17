@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Framework/AlgorithmContext.hpp"
-#include "ACTFW/Framework/IContextDecorator.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Csv/CsvOptionsWriter.hpp"
-#include "ACTFW/Io/Csv/CsvTrackingGeometryWriter.hpp"
-#include "ACTFW/Io/Root/RootMaterialWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/Json/JsonMaterialWriter.hpp"
-#include "ACTFW/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
-#include "ACTFW/Plugins/Obj/ObjWriterOptions.hpp"
-#include "ACTFW/Utilities/Options.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
+#include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
+#include "ActsExamples/Plugins/Obj/ObjWriterOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 
@@ -27,29 +27,30 @@
 #include <string>
 #include <vector>
 
-int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
+int processGeometry(int argc, char* argv[],
+                    ActsExamples::IBaseDetector& detector) {
   // setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addObjWriterOptions(desc);
-  FW::Options::addCsvWriterOptions(desc);
-  FW::Options::addOutputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addObjWriterOptions(desc);
+  ActsExamples::Options::addCsvWriterOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
   // Now read the standard options
-  auto logLevel = FW::Options::readLogLevel(vm);
-  auto nEvents = FW::Options::readSequencerConfig(vm).events;
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
+  auto nEvents = ActsExamples::Options::readSequencerConfig(vm).events;
 
   // The geometry, material and decoration
-  auto geometry = FW::Geometry::build(vm, detector);
+  auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
 
@@ -61,16 +62,16 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
 
   for (size_t ievt = 0; ievt < nEvents; ++ievt) {
     // Setup the event and algorithm context
-    FW::WhiteBoard eventStore(
+    ActsExamples::WhiteBoard eventStore(
         Acts::getDefaultLogger("EventStore#" + std::to_string(ievt), logLevel));
     size_t ialg = 0;
 
     // The geometry context
-    FW::AlgorithmContext context(ialg, ievt, eventStore);
+    ActsExamples::AlgorithmContext context(ialg, ievt, eventStore);
 
     /// Decorate the context
     for (auto& cdr : contextDecorators) {
-      if (cdr->decorate(context) != FW::ProcessCode::SUCCESS)
+      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
         throw std::runtime_error("Failed to decorate event context");
     }
 
@@ -89,10 +90,12 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
     // OBJ output
     if (vm["output-obj"].as<bool>()) {
       // Configure the tracking geometry writer
-      auto tgObjWriterConfig = FW::Options::readObjTrackingGeometryWriterConfig(
-          vm, "ObjTrackingGeometryWriter", volumeLogLevel);
-      auto tgObjWriter = std::make_shared<FW::Obj::ObjTrackingGeometryWriter>(
-          tgObjWriterConfig);
+      auto tgObjWriterConfig =
+          ActsExamples::Options::readObjTrackingGeometryWriterConfig(
+              vm, "ObjTrackingGeometryWriter", volumeLogLevel);
+      auto tgObjWriter =
+          std::make_shared<ActsExamples::ObjTrackingGeometryWriter>(
+              tgObjWriterConfig);
       // Write the tracking geometry object
       tgObjWriter->write(context, *tGeometry);
     }
@@ -100,12 +103,13 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
     // CSV output
     if (vm["output-csv"].as<bool>()) {
       // setup the tracking geometry writer
-      FW::CsvTrackingGeometryWriter::Config tgCsvWriterConfig;
+      ActsExamples::CsvTrackingGeometryWriter::Config tgCsvWriterConfig;
       tgCsvWriterConfig.trackingGeometry = tGeometry;
       tgCsvWriterConfig.outputDir = outputDir;
       tgCsvWriterConfig.writePerEvent = true;
-      auto tgCsvWriter = std::make_shared<FW::CsvTrackingGeometryWriter>(
-          tgCsvWriterConfig, logLevel);
+      auto tgCsvWriter =
+          std::make_shared<ActsExamples::CsvTrackingGeometryWriter>(
+              tgCsvWriterConfig, logLevel);
 
       // Write the tracking geometry object
       tgCsvWriter->write(context);
@@ -116,9 +120,9 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
 
     if (!materialFileName.empty() and vm["output-root"].template as<bool>()) {
       // The writer of the indexed material
-      FW::RootMaterialWriter::Config rmwConfig("MaterialWriter");
+      ActsExamples::RootMaterialWriter::Config rmwConfig("MaterialWriter");
       rmwConfig.fileName = materialFileName + ".root";
-      FW::RootMaterialWriter rmwImpl(rmwConfig);
+      ActsExamples::RootMaterialWriter rmwImpl(rmwConfig);
       rmwImpl.write(*tGeometry);
     }
 
@@ -144,8 +148,8 @@ int processGeometry(int argc, char* argv[], FW::IBaseDetector& detector) {
       jmConverterCfg.processnonmaterial =
           vm["mat-output-allmaterial"].template as<bool>();
       // The writer
-      FW::Json::JsonMaterialWriter jmwImpl(std::move(jmConverterCfg),
-                                           materialFileName + ".json");
+      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmConverterCfg),
+                                               materialFileName + ".json");
 
       jmwImpl.write(*tGeometry);
     }

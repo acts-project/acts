@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Validation/ResPlotTool.hpp"
+#include "ActsExamples/Validation/ResPlotTool.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-FW::ResPlotTool::ResPlotTool(const FW::ResPlotTool::Config& cfg,
-                             Acts::Logging::Level lvl)
+ActsExamples::ResPlotTool::ResPlotTool(
+    const ActsExamples::ResPlotTool::Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("ResPlotTool", lvl)) {}
 
-void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
+void ActsExamples::ResPlotTool::book(
+    ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
   PlotHelpers::Binning bPull = m_cfg.varBinning.at("Pull");
@@ -88,7 +89,7 @@ void FW::ResPlotTool::book(ResPlotTool::ResPlotCache& resPlotCache) const {
   }
 }
 
-void FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
+void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Delete the hists.");
   for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
@@ -109,7 +110,7 @@ void FW::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   }
 }
 
-void FW::ResPlotTool::write(
+void ActsExamples::ResPlotTool::write(
     const ResPlotTool::ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Write the hists to output file.");
   for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
@@ -131,10 +132,10 @@ void FW::ResPlotTool::write(
   }
 }
 
-void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
-                           const Acts::GeometryContext& gctx,
-                           const ActsFatras::Particle& truthParticle,
-                           const Acts::BoundParameters& fittedParamters) const {
+void ActsExamples::ResPlotTool::fill(
+    ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
+    const ActsFatras::Particle& truthParticle,
+    const Acts::BoundParameters& fittedParamters) const {
   using ParametersVector = Acts::BoundParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
@@ -193,7 +194,7 @@ void FW::ResPlotTool::fill(ResPlotTool::ResPlotCache& resPlotCache,
 
 // get the mean and width of residual/pull in each eta/pT bin and fill them into
 // histograms
-void FW::ResPlotTool::refinement(
+void ActsExamples::ResPlotTool::refinement(
     ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");

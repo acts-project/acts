@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Geometry/GeometryExampleBase.hpp"
-#include "ACTFW/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/Geometry/GeometryExampleBase.hpp"
+#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
 /// @brief main executable
 ///

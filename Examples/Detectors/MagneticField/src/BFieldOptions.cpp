@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 
-#include "ACTFW/Plugins/BField/BFieldUtils.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
-#include "ACTFW/Utilities/Options.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/Plugins/BField/BFieldUtils.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <iostream>
 #include <tuple>
@@ -37,7 +37,7 @@ using InterpolatedBFieldMap2D =
 using InterpolatedBFieldMap3D =
     Acts::InterpolatedBFieldMap<InterpolatedMapper3D>;
 
-namespace FW {
+namespace ActsExamples {
 
 namespace Options {
 
@@ -90,7 +90,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
   std::shared_ptr<InterpolatedBFieldMap2D> map2D = nullptr;
   std::shared_ptr<InterpolatedBFieldMap3D> map3D = nullptr;
   std::shared_ptr<Acts::ConstantBField> mapConst = nullptr;
-  std::shared_ptr<FW::BField::ScalableBField> mapScale = nullptr;
+  std::shared_ptr<ActsExamples::BField::ScalableBField> mapScale = nullptr;
 
   int bfieldmaptype = constant;
   if (vm.count("bf-map") && vm["bf-map"].template as<std::string>() != "") {
@@ -144,7 +144,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
   // set the mapper - foort
   if (bfieldmaptype == root) {
     if (vm["bf-rz"].template as<bool>()) {
-      auto mapper2D = FW::BField::root::fieldMapperRZ(
+      auto mapper2D = ActsExamples::BField::root::fieldMapperRZ(
           [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
             return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
           },
@@ -159,7 +159,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
       return std::make_shared<InterpolatedBFieldMap2D>(std::move(config2D));
 
     } else {
-      auto mapper3D = FW::BField::root::fieldMapperXYZ(
+      auto mapper3D = ActsExamples::BField::root::fieldMapperXYZ(
           [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
             return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                     binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
@@ -176,7 +176,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
     }
   } else if (bfieldmaptype == text) {
     if (vm["bf-rz"].template as<bool>()) {
-      auto mapper2D = FW::BField::txt::fieldMapperRZ(
+      auto mapper2D = ActsExamples::BField::txt::fieldMapperRZ(
           [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
             return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
           },
@@ -191,7 +191,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
       return std::make_shared<InterpolatedBFieldMap2D>(std::move(config2D));
 
     } else {
-      auto mapper3D = FW::BField::txt::fieldMapperXYZ(
+      auto mapper3D = ActsExamples::BField::txt::fieldMapperXYZ(
           [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
             return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2)) +
                     binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
@@ -219,7 +219,7 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
     }
     if (vm["bf-context-scalable"].template as<bool>()) {
       // Create the scalable magnetic field
-      return std::make_shared<FW::BField::ScalableBField>(
+      return std::make_shared<ActsExamples::BField::ScalableBField>(
           bFieldValues.at(0) * Acts::units::_T,
           bFieldValues.at(1) * Acts::units::_T,
           bFieldValues.at(2) * Acts::units::_T);
@@ -233,4 +233,4 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
   }
 }
 }  // namespace Options
-}  // namespace FW
+}  // namespace ActsExamples

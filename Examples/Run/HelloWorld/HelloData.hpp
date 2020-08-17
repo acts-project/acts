@@ -11,7 +11,7 @@
 #include <ostream>
 #include <vector>
 
-namespace FW {
+namespace ActsExamples {
 
 /// An example data object to be shared via the event store.
 struct HelloData {
@@ -28,4 +28,4 @@ inline std::ostream& operator<<(std::ostream& os, const HelloData& data) {
 
 using HelloDataCollection = std::vector<HelloData>;
 
-}  // namespace FW
+}  // namespace ActsExamples

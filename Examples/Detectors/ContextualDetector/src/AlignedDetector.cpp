@@ -6,28 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/ContextualDetector/AlignedDetector.hpp"
+#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
-#include "ACTFW/ContextualDetector/AlignedDetectorElement.hpp"
-#include "ACTFW/ContextualDetector/AlignmentDecorator.hpp"
-#include "ACTFW/Framework/IContextDecorator.hpp"
-#include "ACTFW/GenericDetector/BuildGenericDetector.hpp"
-#include "ACTFW/GenericDetector/GenericDetectorOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Plugins/BField/BFieldScalor.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/ContextualDetector/AlignedDetectorElement.hpp"
+#include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/GenericDetectorOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Plugins/BField/BFieldScalor.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
 #include <boost/program_options.hpp>
 
 void AlignedDetector::addOptions(
     boost::program_options::options_description& opt) const {
   // Add the generic geometry options
-  FW::Options::addGenericGeometryOptions(opt);
+  ActsExamples::Options::addGenericGeometryOptions(opt);
   // Add the bfield options for the magnetic field scaling
-  FW::Options::addBFieldOptions(opt);
+  ActsExamples::Options::addBFieldOptions(opt);
   // specify the rotation setp
   opt.add_options()(
       "align-seed",
@@ -80,7 +80,7 @@ auto AlignedDetector::finalize(
 
   /// return the generic detector - with aligned context decorator
   TrackingGeometryPtr aTrackingGeometry =
-      FW::Generic::buildDetector<DetectorElement>(
+      ActsExamples::Generic::buildDetector<DetectorElement>(
           nominalContext, detectorStore, buildLevel, std::move(mdecorator),
           buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
 
@@ -88,10 +88,10 @@ auto AlignedDetector::finalize(
       Acts::Logging::Level(vm["align-loglevel"].template as<size_t>());
 
   // Let's create a reandom number service
-  FW::RandomNumbers::Config randomNumberConfig;
+  ActsExamples::RandomNumbers::Config randomNumberConfig;
   randomNumberConfig.seed = vm["align-seed"].template as<size_t>();
   auto randomNumberSvc =
-      std::make_shared<FW::RandomNumbers>(randomNumberConfig);
+      std::make_shared<ActsExamples::RandomNumbers>(randomNumberConfig);
 
   // Alignment decorator service
   Decorator::Config agcsConfig;
@@ -119,10 +119,11 @@ auto AlignedDetector::finalize(
       Acts::getDefaultLogger("AlignmentDecorator", decoratorLogLevel))};
 
   if (vm["bf-context-scalable"].template as<bool>()) {
-    FW::BField::BFieldScalor::Config bfsConfig;
+    ActsExamples::BField::BFieldScalor::Config bfsConfig;
     bfsConfig.scalor = vm["bf-bscalor"].template as<double>();
 
-    auto bfDecorator = std::make_shared<FW::BField::BFieldScalor>(bfsConfig);
+    auto bfDecorator =
+        std::make_shared<ActsExamples::BField::BFieldScalor>(bfsConfig);
 
     aContextDecorators.push_back(bfDecorator);
   }

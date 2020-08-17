@@ -6,10 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -29,15 +27,19 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
-FWE::AdaptiveMultiVertexFinderAlgorithm::AdaptiveMultiVertexFinderAlgorithm(
-    const Config& cfg, Acts::Logging::Level level)
-    : FW::BareAlgorithm("AMVF Algorithm", level), m_cfg(cfg) {}
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
+    AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
+                                       Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("AMVF Algorithm", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
   //////////////////////////////////////////////
@@ -124,15 +126,16 @@ FW::ProcessCode FWE::AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_ERROR("Error in vertex finder: " << res.error().message());
   }
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
 
 std::vector<Acts::BoundParameters>
-FWE::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
-  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
-      m_cfg.trackCollection);
+  const auto& input =
+      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
+          m_cfg.trackCollection);
   std::vector<Acts::BoundParameters> inputTrackCollection;
 
   for (auto& vertexAndTracks : input) {

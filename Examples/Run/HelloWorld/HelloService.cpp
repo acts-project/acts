@@ -8,9 +8,9 @@
 
 #include "HelloService.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-namespace FW {
+namespace ActsExamples {
 
 HelloService::HelloService(const Config& cfg, Acts::Logging::Level level)
     : BareService("HelloService", level), m_cfg(cfg) {}
@@ -28,4 +28,4 @@ void HelloService::prepare(AlgorithmContext& ctx) {
   ctx.eventStore.add(m_cfg.blockIndexName, std::move(blockIndex));
 }
 
-}  // namespace FW
+}  // namespace ActsExamples

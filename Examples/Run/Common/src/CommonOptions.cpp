@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 
-#include "ACTFW/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <exception>
 #include <fstream>
@@ -17,8 +17,8 @@
 
 using namespace boost::program_options;
 
-boost::program_options::options_description FW::Options::makeDefaultOptions(
-    std::string caption) {
+boost::program_options::options_description
+ActsExamples::Options::makeDefaultOptions(std::string caption) {
   options_description opt(caption);
 
   opt.add_options()("help,h", "Produce help message");
@@ -33,7 +33,7 @@ boost::program_options::options_description FW::Options::makeDefaultOptions(
   return opt;
 }
 
-void FW::Options::addSequencerOptions(
+void ActsExamples::Options::addSequencerOptions(
     boost::program_options::options_description& opt) {
   // sequencer options
   opt.add_options()("events,n", value<size_t>(),
@@ -45,13 +45,13 @@ void FW::Options::addSequencerOptions(
       "Number of parallel jobs, negative for automatic.");
 }
 
-void FW::Options::addRandomNumbersOptions(
+void ActsExamples::Options::addRandomNumbersOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()("rnd-seed", value<uint64_t>()->default_value(1234567890u),
                     "Random numbers seed.");
 }
 
-void FW::Options::addGeometryOptions(
+void ActsExamples::Options::addGeometryOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()("geo-surface-loglevel", value<size_t>()->default_value(3),
                     "The outoput log level for the surface building.")(
@@ -63,7 +63,7 @@ void FW::Options::addGeometryOptions(
       "Sub detectors for the output writing");
 }
 
-void FW::Options::addMaterialOptions(
+void ActsExamples::Options::addMaterialOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()(
       "mat-input-type", value<std::string>()->default_value("build"),
@@ -90,7 +90,7 @@ void FW::Options::addMaterialOptions(
       "Add protoMaterial to all surfaces and volume for the mapping.");
 }
 
-void FW::Options::addOutputOptions(
+void ActsExamples::Options::addOutputOptions(
     boost::program_options::options_description& opt) {
   // Add specific options for this example
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
@@ -107,7 +107,7 @@ void FW::Options::addOutputOptions(
       "Switch on to write '.txt' ouput file(s).");
 }
 
-void FW::Options::addInputOptions(
+void ActsExamples::Options::addInputOptions(
     boost::program_options::options_description& opt) {
   // Add specific options for this example
   opt.add_options()("input-dir", value<std::string>()->default_value(""),
@@ -124,7 +124,7 @@ void FW::Options::addInputOptions(
       "Switch on to read '.json' file(s).");
 }
 
-boost::program_options::variables_map FW::Options::parse(
+boost::program_options::variables_map ActsExamples::Options::parse(
     const boost::program_options::options_description& opt, int argc,
     char* argv[]) noexcept(false) {
   variables_map vm;
@@ -165,12 +165,12 @@ boost::program_options::variables_map FW::Options::parse(
   return vm;
 }
 
-Acts::Logging::Level FW::Options::readLogLevel(
+Acts::Logging::Level ActsExamples::Options::readLogLevel(
     const boost::program_options::variables_map& vm) {
   return Acts::Logging::Level(vm["loglevel"].as<size_t>());
 }
 
-FW::Sequencer::Config FW::Options::readSequencerConfig(
+ActsExamples::Sequencer::Config ActsExamples::Options::readSequencerConfig(
     const boost::program_options::variables_map& vm) {
   Sequencer::Config cfg;
   cfg.skip = vm["skip"].as<size_t>();
@@ -186,9 +186,10 @@ FW::Sequencer::Config FW::Options::readSequencerConfig(
 }
 
 // Read the random numbers config.
-FW::RandomNumbers::Config FW::Options::readRandomNumbersConfig(
+ActsExamples::RandomNumbers::Config
+ActsExamples::Options::readRandomNumbersConfig(
     const boost::program_options::variables_map& vm) {
-  FW::RandomNumbers::Config cfg;
+  ActsExamples::RandomNumbers::Config cfg;
   cfg.seed = vm["rnd-seed"].as<uint64_t>();
   return cfg;
 }

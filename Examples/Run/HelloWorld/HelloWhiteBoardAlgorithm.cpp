@@ -8,13 +8,13 @@
 
 #include "HelloWhiteBoardAlgorithm.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include "HelloData.hpp"
 
-FW::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
+ActsExamples::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
-    : FW::BareAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
+    : ActsExamples::BareAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
   // non-optional config settings must be checked on construction.
   if (m_cfg.input.empty()) {
     throw std::invalid_argument("Missing input collection");
@@ -24,8 +24,8 @@ FW::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
   }
 }
 
-FW::ProcessCode FW::HelloWhiteBoardAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::HelloWhiteBoardAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // event-store is append-only and always returns a const reference.
   ACTS_INFO("Reading HelloDataCollection " << m_cfg.input);
   const auto& in = ctx.eventStore.get<HelloDataCollection>(m_cfg.input);
@@ -39,5 +39,5 @@ FW::ProcessCode FW::HelloWhiteBoardAlgorithm::execute(
   ACTS_INFO("Writing HelloDataCollection " << m_cfg.output);
   ctx.eventStore.add(m_cfg.output, std::move(copy));
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -1,4 +1,4 @@
-add_unittest(ConstantBFieldTests ConstantBFieldTests.cpp)
-add_unittest(InterpolatedBFieldMapTests InterpolatedBFieldMapTests.cpp)
-add_unittest(MagneticFieldInterfaceConsistencyTests MagneticFieldInterfaceConsistencyTests.cpp)
-add_unittest(SolenoidBFieldTests SolenoidBFieldTests.cpp)
+add_unittest(ConstantBField ConstantBFieldTests.cpp)
+add_unittest(InterpolatedBFieldMap InterpolatedBFieldMapTests.cpp)
+add_unittest(MagneticFieldInterfaceConsistency MagneticFieldInterfaceConsistencyTests.cpp)
+add_unittest(SolenoidBField SolenoidBFieldTests.cpp)

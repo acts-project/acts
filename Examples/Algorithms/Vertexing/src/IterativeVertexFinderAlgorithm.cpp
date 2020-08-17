@@ -6,10 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -28,19 +26,21 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 
 #include <iostream>
 
-FWE::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
+ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
-    : FW::BareAlgorithm("VertexFinding", level), m_cfg(cfg) {}
+    : ActsExamples::BareAlgorithm("VertexFinding", level), m_cfg(cfg) {}
 
 /// @brief Algorithm that receives all selected tracks from an event
 /// and finds and fits its vertices
-FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
@@ -87,8 +87,9 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Setup containers
-  const auto& input = ctx.eventStore.get<std::vector<FW::VertexAndTracks>>(
-      m_cfg.trackCollection);
+  const auto& input =
+      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
+          m_cfg.trackCollection);
   std::vector<Acts::BoundParameters> inputTrackCollection;
 
   ACTS_INFO("Truth vertices in event: " << input.size());
@@ -129,5 +130,5 @@ FW::ProcessCode FWE::IterativeVertexFinderAlgorithm::execute(
     ACTS_ERROR("Error in vertex finder.");
   }
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/MaterialMapping/MaterialMapping.hpp"
+#include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
-FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
-                                     Acts::Logging::Level level)
-    : FW::BareAlgorithm("MaterialMapping", level),
+ActsExamples::MaterialMapping::MaterialMapping(
+    const ActsExamples::MaterialMapping::Config& cnf,
+    Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("MaterialMapping", level),
       m_cfg(cnf),
       m_mappingState(cnf.geoContext, cnf.magFieldContext),
       m_mappingStateVol(cnf.geoContext, cnf.magFieldContext) {
@@ -40,7 +41,7 @@ FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
   }
 }
 
-FW::MaterialMapping::~MaterialMapping() {
+ActsExamples::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
@@ -87,8 +88,8 @@ FW::MaterialMapping::~MaterialMapping() {
   }
 }
 
-FW::ProcessCode FW::MaterialMapping::execute(
-    const FW::AlgorithmContext& context) const {
+ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
+    const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
   std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
       context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
@@ -117,5 +118,5 @@ FW::ProcessCode FW::MaterialMapping::execute(
   // Write take the collection to the EventStore
   context.eventStore.add(m_cfg.mappingMaterialCollection,
                          std::move(mtrackCollection));
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
-#include "ACTFW/EventData/Track.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 
-FW::TrackFindingAlgorithm::TrackFindingAlgorithm(Config cfg,
-                                                 Acts::Logging::Level level)
-    : FW::BareAlgorithm("TrackFindingAlgorithm", level), m_cfg(std::move(cfg)) {
+ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
+    Config cfg, Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("TrackFindingAlgorithm", level),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing input source links collection");
   }
@@ -29,8 +30,8 @@ FW::TrackFindingAlgorithm::TrackFindingAlgorithm(Config cfg,
   }
 }
 
-FW::ProcessCode FW::TrackFindingAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto sourceLinks =
       ctx.eventStore.get<SimSourceLinkContainer>(m_cfg.inputSourceLinks);
@@ -51,7 +52,7 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
     const auto& initialParams = initialParameters[iseed];
 
     // Set the CombinatorialKalmanFilter options
-    FW::TrackFindingAlgorithm::CKFOptions ckfOptions(
+    ActsExamples::TrackFindingAlgorithm::CKFOptions ckfOptions(
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
         m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
         &(*pSurface));
@@ -74,5 +75,5 @@ FW::ProcessCode FW::TrackFindingAlgorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
