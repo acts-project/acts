@@ -8,3 +8,8 @@ approval_rules:
     count: 1
     teams:
     - "acts-project/reviewers"
+  options:
+    allow_author: false # just for completeness
+    allow_contributor: true # Update button 'contributions' should be ignored
+    invalidate_on_push: true
+    ignore_update_merges: true
