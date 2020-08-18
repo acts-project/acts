@@ -683,29 +683,32 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   int jj = threadIdx.x;            
   
   // bubble sort tIndex
-  for (int i = 0; i < *nTrplPerSpB/2+1; i++){
-    if (threadIdx.x < *nTrplPerSpB){    
-      if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
-	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+
+  // Ensure that number of Trpl is smaller than its limit...
+  if (*nTrplPerSpB <= *nTrplPerSpBLimit){  
+    for (int i = 0; i < *nTrplPerSpB/2+1; i++){
+      if (threadIdx.x < *nTrplPerSpB){    
+	if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
+	  if (triplets[jj+1].tIndex < triplets[jj].tIndex){
 	  Triplet tempVal = triplets[jj];
 	  triplets[jj] = triplets[jj+1];	  
 	  triplets[jj+1] = tempVal;
+	  }
 	}
       }
+      __syncthreads();
+      if (threadIdx.x < *nTrplPerSpB){    
+	if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
+	  if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	    Triplet tempVal = triplets[jj];
+	    triplets[jj] = triplets[jj+1];
+	    triplets[jj+1] = tempVal;
+	  }
+	}
+      }     
+      __syncthreads();
     }
-    __syncthreads();
-    if (threadIdx.x < *nTrplPerSpB){    
-      if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
-	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
-	  Triplet tempVal = triplets[jj];
-	  triplets[jj] = triplets[jj+1];
-	  triplets[jj+1] = tempVal;
-	}
-      }
-    }     
-    __syncthreads();
   }
-  
   __syncthreads();
 
   // serial algorithm for seed filtering
