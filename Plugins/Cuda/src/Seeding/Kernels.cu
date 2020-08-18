@@ -679,35 +679,32 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   if (threadIdx.x == 0 && *nTrplPerSpB > *nTrplPerSpBLimit){
     *nTrplPerSpB = *nTrplPerSpBLimit;
   }
-  
+
+  __syncthreads();
   int jj = threadIdx.x;            
   
   // bubble sort tIndex
-
-  // Ensure that number of Trpl is smaller than its limit...
-  if (*nTrplPerSpB <= *nTrplPerSpBLimit){  
-    for (int i = 0; i < *nTrplPerSpB/2+1; i++){
-      if (threadIdx.x < *nTrplPerSpB){    
-	if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
-	  if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+  for (int i = 0; i < *nTrplPerSpB/2+1; i++){
+    if (threadIdx.x < *nTrplPerSpB){    
+      if (jj % 2 == 0 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
 	  Triplet tempVal = triplets[jj];
 	  triplets[jj] = triplets[jj+1];	  
 	  triplets[jj+1] = tempVal;
-	  }
 	}
       }
-      __syncthreads();
-      if (threadIdx.x < *nTrplPerSpB){    
-	if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
-	  if (triplets[jj+1].tIndex < triplets[jj].tIndex){
-	    Triplet tempVal = triplets[jj];
+    }
+    __syncthreads();
+    if (threadIdx.x < *nTrplPerSpB){    
+      if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
+	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
+	  Triplet tempVal = triplets[jj];
 	    triplets[jj] = triplets[jj+1];
 	    triplets[jj+1] = tempVal;
-	  }
 	}
-      }     
-      __syncthreads();
-    }
+      }
+    }     
+    __syncthreads();
   }
   __syncthreads();
 
