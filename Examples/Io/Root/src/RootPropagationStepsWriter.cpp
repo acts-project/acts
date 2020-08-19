@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootPropagationStepsWriter.hpp"
+#include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
@@ -21,8 +21,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
-FW::RootPropagationStepsWriter::RootPropagationStepsWriter(
-    const FW::RootPropagationStepsWriter::Config& cfg,
+ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
+    const ActsExamples::RootPropagationStepsWriter::Config& cfg,
     Acts::Logging::Level level)
     : WriterT(cfg.collection, "RootPropagationStepsWriter", level),
       m_cfg(cfg),
@@ -68,14 +68,14 @@ FW::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("step_usr", &m_step_usr);
 }
 
-FW::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
   /// Close the file if it's yours
   if (m_cfg.rootFile == nullptr) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootPropagationStepsWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -84,7 +84,7 @@ FW::ProcessCode FW::RootPropagationStepsWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootPropagationStepsWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     const AlgorithmContext& context,
     const std::vector<PropagationSteps>& stepCollection) {
   // Exclusive access to the tree while writing
@@ -178,5 +178,5 @@ FW::ProcessCode FW::RootPropagationStepsWriter::writeT(
     }
     m_outputTree->Fill();
   }
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

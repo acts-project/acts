@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -17,8 +17,9 @@
 #include <TFile.h>
 #include <TTree.h>
 
-FW::RootParticleWriter::RootParticleWriter(
-    const FW::RootParticleWriter::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::RootParticleWriter::RootParticleWriter(
+    const ActsExamples::RootParticleWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "RootParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
@@ -63,13 +64,13 @@ FW::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("sub_particle", &m_subParticle);
 }
 
-FW::RootParticleWriter::~RootParticleWriter() {
+ActsExamples::RootParticleWriter::~RootParticleWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootParticleWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -79,7 +80,7 @@ FW::ProcessCode FW::RootParticleWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootParticleWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
   if (not m_outputFile) {
     ACTS_ERROR("Missing output file");

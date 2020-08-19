@@ -1,10 +1,10 @@
 add_library(
   ActsExamplesTruthTracking SHARED
-  ACTFW/TruthTracking/ParticleSmearing.cpp
-  ACTFW/TruthTracking/TrackSelector.cpp
-  ACTFW/TruthTracking/TruthTrackFinder.cpp
-  ACTFW/TruthTracking/TruthVerticesToTracks.cpp
-  ACTFW/TruthTracking/TruthSeedSelector.cpp
+  ActsExamples/TruthTracking/ParticleSmearing.cpp
+  ActsExamples/TruthTracking/TrackSelector.cpp
+  ActsExamples/TruthTracking/TruthTrackFinder.cpp
+  ActsExamples/TruthTracking/TruthVerticesToTracks.cpp
+  ActsExamples/TruthTracking/TruthSeedSelector.cpp
   )
 target_include_directories(
   ActsExamplesTruthTracking

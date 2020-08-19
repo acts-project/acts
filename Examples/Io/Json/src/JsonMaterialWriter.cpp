@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Plugins/Json/JsonMaterialWriter.hpp"
 
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
@@ -16,7 +16,7 @@
 #include <iostream>
 #include <stdexcept>
 
-FW::Json::JsonMaterialWriter::JsonMaterialWriter(
+ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
     const Acts::JsonGeometryConverter::Config& cfg, const std::string& fileName)
     : m_cfg(cfg), m_fileName(fileName) {
   // Validate the configuration
@@ -25,9 +25,9 @@ FW::Json::JsonMaterialWriter::JsonMaterialWriter(
   }
 }
 
-FW::Json::JsonMaterialWriter::~JsonMaterialWriter() {}
+ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() {}
 
-void FW::Json::JsonMaterialWriter::write(
+void ActsExamples::JsonMaterialWriter::write(
     const Acts::DetectorMaterialMaps& detMaterial) {
   // Evoke the converter
   Acts::JsonGeometryConverter jmConverter(m_cfg);
@@ -37,7 +37,7 @@ void FW::Json::JsonMaterialWriter::write(
   ofj << std::setw(4) << jout << std::endl;
 }
 
-void FW::Json::JsonMaterialWriter::write(
+void ActsExamples::JsonMaterialWriter::write(
     const Acts::TrackingGeometry& tGeometry) {
   // Evoke the converter
   Acts::JsonGeometryConverter jmConverter(m_cfg);

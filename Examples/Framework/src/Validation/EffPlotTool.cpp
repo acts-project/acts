@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Validation/EffPlotTool.hpp"
+#include "ActsExamples/Validation/EffPlotTool.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -14,11 +14,12 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-FW::EffPlotTool::EffPlotTool(const FW::EffPlotTool::Config& cfg,
-                             Acts::Logging::Level lvl)
+ActsExamples::EffPlotTool::EffPlotTool(
+    const ActsExamples::EffPlotTool::Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg), m_logger(Acts::getDefaultLogger("EffPlotTool", lvl)) {}
 
-void FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
+void ActsExamples::EffPlotTool::book(
+    EffPlotTool::EffPlotCache& effPlotCache) const {
   PlotHelpers::Binning bPhi = m_cfg.varBinning.at("Phi");
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
@@ -34,13 +35,13 @@ void FW::EffPlotTool::book(EffPlotTool::EffPlotCache& effPlotCache) const {
       "trackeff_vs_phi", "Tracking efficiency;#phi;Efficiency", bPhi);
 }
 
-void FW::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
+void ActsExamples::EffPlotTool::clear(EffPlotCache& effPlotCache) const {
   delete effPlotCache.trackEff_vs_pT;
   delete effPlotCache.trackEff_vs_eta;
   delete effPlotCache.trackEff_vs_phi;
 }
 
-void FW::EffPlotTool::write(
+void ActsExamples::EffPlotTool::write(
     const EffPlotTool::EffPlotCache& effPlotCache) const {
   ACTS_DEBUG("Write the plots to output file.");
   effPlotCache.trackEff_vs_pT->Write();
@@ -48,9 +49,9 @@ void FW::EffPlotTool::write(
   effPlotCache.trackEff_vs_phi->Write();
 }
 
-void FW::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
-                           const ActsFatras::Particle& truthParticle,
-                           bool status) const {
+void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
+                                     const ActsFatras::Particle& truthParticle,
+                                     bool status) const {
   const auto t_phi = phi(truthParticle.unitDirection());
   const auto t_eta = eta(truthParticle.unitDirection());
   const auto t_pT = truthParticle.transverseMomentum();

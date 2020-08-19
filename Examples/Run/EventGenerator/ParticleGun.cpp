@@ -6,21 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Generators/FlattenEvent.hpp"
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootParticleWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Options/ParticleGunOptions.hpp"
-#include "ACTFW/Printers/PrintParticles.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/FlattenEvent.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/ParticleGunOptions.hpp"
+#include "ActsExamples/Printers/PrintParticles.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
 
 #include <cstdlib>
 #include <memory>
 
-using namespace FW;
+using namespace ActsExamples;
 
 int main(int argc, char* argv[]) {
   // setup and parse options

@@ -6,16 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/MaterialMapping/MaterialMapping.hpp"
+#include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
-FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
-                                     Acts::Logging::Level level)
-    : FW::BareAlgorithm("MaterialMapping", level),
+ActsExamples::MaterialMapping::MaterialMapping(
+    const ActsExamples::MaterialMapping::Config& cnf,
+    Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("MaterialMapping", level),
       m_cfg(cnf),
       m_mappingState(cnf.geoContext, cnf.magFieldContext),
       m_mappingStateVol(cnf.geoContext, cnf.magFieldContext) {
@@ -40,7 +41,7 @@ FW::MaterialMapping::MaterialMapping(const FW::MaterialMapping::Config& cnf,
   }
 }
 
-FW::MaterialMapping::~MaterialMapping() {
+ActsExamples::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
   if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
@@ -87,14 +88,14 @@ FW::MaterialMapping::~MaterialMapping() {
   }
 }
 
-FW::ProcessCode FW::MaterialMapping::execute(
-    const FW::AlgorithmContext& context) const {
-  if (m_cfg.materialSurfaceMapper) {
-    // Write to the collection to the EventStore
-    std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
-        context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
-            m_cfg.collection);
+ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
+    const ActsExamples::AlgorithmContext& context) const {
+  // Take the collection from the EventStore
+  std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
+      context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
+          m_cfg.collection);
 
+  if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
@@ -103,16 +104,8 @@ FW::ProcessCode FW::MaterialMapping::execute(
       // Map this one onto the geometry
       m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
     }
-
-    context.eventStore.add(m_cfg.mappingMaterialCollection,
-                           std::move(mtrackCollection));
   }
   if (m_cfg.materialVolumeMapper) {
-    // Write to the collection to the EventStore
-    std::vector<Acts::RecordedMaterialTrack> mtrackCollection =
-        context.eventStore.get<std::vector<Acts::RecordedMaterialTrack>>(
-            m_cfg.collection);
-
     // To make it work with the framework needs a lock guard
     auto mappingState =
         const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
@@ -122,5 +115,8 @@ FW::ProcessCode FW::MaterialMapping::execute(
       m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
     }
   }
-  return FW::ProcessCode::SUCCESS;
+  // Write take the collection to the EventStore
+  context.eventStore.add(m_cfg.mappingMaterialCollection,
+                         std::move(mtrackCollection));
+  return ActsExamples::ProcessCode::SUCCESS;
 }

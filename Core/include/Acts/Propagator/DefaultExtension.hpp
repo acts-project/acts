@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {

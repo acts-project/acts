@@ -253,7 +253,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
       // Material past the entry point to the current volume
-      if (distMat > distVol) {
+      if (distMat - distVol > s_epsilon) {
         // Switch to next material volume
         ++volIter;
       }
@@ -286,8 +286,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         currentPos, rmIter->materialProperties, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
-    // Update the material interaction with the associated surface and direction
-    rmIter->direction = mTrack.first.second.normalized();
+    // Update the material interaction with the associated surface
     rmIter->surface = sfIter->surface;
     // Switch to next material
     ++rmIter;

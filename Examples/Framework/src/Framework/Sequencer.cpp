@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/Sequencer.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "ACTFW/Framework/ProcessCode.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -22,7 +22,7 @@
 #include <dfe/dfe_namedtuple.hpp>
 #include <tbb/tbb.h>
 
-FW::Sequencer::Sequencer(const Sequencer::Config& cfg)
+ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
   // automatically determine the number of concurrent threads to use
@@ -32,7 +32,7 @@ FW::Sequencer::Sequencer(const Sequencer::Config& cfg)
   ROOT::EnableThreadSafety();
 }
 
-void FW::Sequencer::addService(std::shared_ptr<IService> service) {
+void ActsExamples::Sequencer::addService(std::shared_ptr<IService> service) {
   if (not service) {
     throw std::invalid_argument("Can not add empty/NULL service");
   }
@@ -40,7 +40,7 @@ void FW::Sequencer::addService(std::shared_ptr<IService> service) {
   ACTS_INFO("Added service '" << m_services.back()->name() << "'");
 }
 
-void FW::Sequencer::addContextDecorator(
+void ActsExamples::Sequencer::addContextDecorator(
     std::shared_ptr<IContextDecorator> decorator) {
   if (not decorator) {
     throw std::invalid_argument("Can not add empty/NULL context decorator");
@@ -49,7 +49,7 @@ void FW::Sequencer::addContextDecorator(
   ACTS_INFO("Added context decarator '" << m_decorators.back()->name() << "'");
 }
 
-void FW::Sequencer::addReader(std::shared_ptr<IReader> reader) {
+void ActsExamples::Sequencer::addReader(std::shared_ptr<IReader> reader) {
   if (not reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
@@ -57,7 +57,8 @@ void FW::Sequencer::addReader(std::shared_ptr<IReader> reader) {
   ACTS_INFO("Added reader '" << m_readers.back()->name() << "'");
 }
 
-void FW::Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
+void ActsExamples::Sequencer::addAlgorithm(
+    std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
@@ -65,7 +66,7 @@ void FW::Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   ACTS_INFO("Added algorithm '" << m_algorithms.back()->name() << "'");
 }
 
-void FW::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
+void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (not writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
@@ -73,7 +74,7 @@ void FW::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
 }
 
-std::vector<std::string> FW::Sequencer::listAlgorithmNames() const {
+std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
   std::vector<std::string> names;
 
   // WARNING this must be done in the same order as in the processing
@@ -107,8 +108,8 @@ size_t saturatedAdd(size_t a, size_t b) {
 }
 }  // namespace
 
-std::pair<std::size_t, std::size_t> FW::Sequencer::determineEventsRange()
-    const {
+std::pair<std::size_t, std::size_t>
+ActsExamples::Sequencer::determineEventsRange() const {
   constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
 
   // Note on skipping events:
@@ -224,7 +225,7 @@ void storeTiming(const std::vector<std::string>& identifiers,
 }
 }  // namespace
 
-int FW::Sequencer::run() {
+int ActsExamples::Sequencer::run() {
   // measure overall wall clock
   Timepoint clockWallStart = Clock::now();
   // per-algorithm time measures

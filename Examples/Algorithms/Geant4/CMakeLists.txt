@@ -3,6 +3,7 @@ add_library(
   src/EventAction.cpp
   src/GdmlDetectorConstruction.cpp
   src/GeantinoRecording.cpp
+  src/Geant4Options.cpp
   src/PrimaryGeneratorAction.cpp
   src/RunAction.cpp
   src/SteppingAction.cpp)

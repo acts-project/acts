@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Utilities/Helpers.hpp"
+#include "ActsExamples/Utilities/Helpers.hpp"
 
-namespace FW {
+namespace ActsExamples {
 
 namespace PlotHelpers {
 TH1F* bookHisto(const char* histName, const char* histTitle,
@@ -100,4 +100,4 @@ void fillProf(TProfile* profile, float xValue, float yValue, float weight) {
 
 }  // namespace PlotHelpers
 
-}  // namespace FW
+}  // namespace ActsExamples

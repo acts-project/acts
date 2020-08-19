@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootTrackParameterWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 
 #include <Acts/Utilities/Helpers.hpp>
 
@@ -17,8 +17,9 @@
 #include <TFile.h>
 #include <TTree.h>
 
-FW::RootTrackParameterWriter::RootTrackParameterWriter(
-    const FW::RootTrackParameterWriter::Config& cfg, Acts::Logging::Level level)
+ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
+    const ActsExamples::RootTrackParameterWriter::Config& cfg,
+    Acts::Logging::Level level)
     : TrackParameterWriter(cfg.collection, "RootTrackParameterWriter", level),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -52,13 +53,13 @@ FW::RootTrackParameterWriter::RootTrackParameterWriter(
   }
 }
 
-FW::RootTrackParameterWriter::~RootTrackParameterWriter() {
+ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootTrackParameterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -68,8 +69,8 @@ FW::ProcessCode FW::RootTrackParameterWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootTrackParameterWriter::writeT(
-    const FW::AlgorithmContext& ctx,
+ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
+    const ActsExamples::AlgorithmContext& ctx,
     const std::vector<BoundTrackParameters>& trackParams) {
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;

@@ -8,19 +8,19 @@
 
 #include "FatrasMain.hpp"
 
-#include "ACTFW/Detector/IBaseDetector.hpp"
-#include "ACTFW/Fatras/FatrasOptions.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Generators/ParticleSelector.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Options/ParticleGunOptions.hpp"
-#include "ACTFW/Options/Pythia8Options.hpp"
-#include "ACTFW/Plugins/BField/BFieldOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Fatras/FatrasOptions.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Generators/ParticleSelector.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/ParticleGunOptions.hpp"
+#include "ActsExamples/Options/Pythia8Options.hpp"
+#include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
 
@@ -30,43 +30,45 @@
 #include "FatrasEvgenBase.hpp"
 #include "FatrasSimulationBase.hpp"
 
-int FW::fatrasMain(int argc, char* argv[],
-                   std::shared_ptr<FW::IBaseDetector> detector) {
+int ActsExamples::fatrasMain(
+    int argc, char* argv[],
+    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   using boost::program_options::value;
 
   // setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addParticleGunOptions(desc);
-  FW::Options::addPythia8Options(desc);
-  FW::Options::addRandomNumbersOptions(desc);
-  FW::Options::addBFieldOptions(desc);
-  FW::ParticleSelector::addOptions(desc);
-  FW::Options::addFatrasOptions(desc);
-  FW::Options::addOutputOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addParticleGunOptions(desc);
+  ActsExamples::Options::addPythia8Options(desc);
+  ActsExamples::Options::addRandomNumbersOptions(desc);
+  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::ParticleSelector::addOptions(desc);
+  ActsExamples::Options::addFatrasOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
   desc.add_options()("evg-input-type",
                      value<std::string>()->default_value("pythia8"),
                      "Type of evgen input 'gun', 'pythia8'");
   // Add specific options for this geometry
   detector->addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
 
-  FW::Sequencer sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer sequencer(
+      ActsExamples::Options::readSequencerConfig(vm));
 
-  // auto logLevel = FW::Options::readLogLevel(vm);
+  // auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Create the random number engine
-  auto randomNumberSvcCfg = FW::Options::readRandomNumbersConfig(vm);
+  auto randomNumberSvcCfg = ActsExamples::Options::readRandomNumbersConfig(vm);
   auto randomNumberSvc =
-      std::make_shared<FW::RandomNumbers>(randomNumberSvcCfg);
+      std::make_shared<ActsExamples::RandomNumbers>(randomNumberSvcCfg);
 
   // The geometry, material and decoration
-  auto geometry = FW::Geometry::build(vm, *detector);
+  auto geometry = ActsExamples::Geometry::build(vm, *detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
   // Add the decorator to the sequencer
@@ -75,7 +77,7 @@ int FW::fatrasMain(int argc, char* argv[],
   }
 
   // make sure the output directory exists
-  FW::ensureWritableDirectory(vm["output-dir"].as<std::string>());
+  ActsExamples::ensureWritableDirectory(vm["output-dir"].as<std::string>());
 
   // (A) EVGEN
   // Setup the evgen input to the simulation

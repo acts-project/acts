@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ACTFW/EventData/SimHit.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 
 #include <memory>
 

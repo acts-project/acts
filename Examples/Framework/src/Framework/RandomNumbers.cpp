@@ -8,22 +8,22 @@
 
 //
 //  RandomNumbers.cpp
-//  ACTFW
+//  ActsExamples
 //
 //  Created by Andreas Salzburger on 17/05/16.
 //
 //
 
-#include "ACTFW/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
-FW::RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
+ActsExamples::RandomNumbers::RandomNumbers(const Config& cfg) : m_cfg(cfg) {}
 
-FW::RandomEngine FW::RandomNumbers::spawnGenerator(
+ActsExamples::RandomEngine ActsExamples::RandomNumbers::spawnGenerator(
     const AlgorithmContext& context) const {
   return RandomEngine(generateSeed(context));
 }
 
-uint64_t FW::RandomNumbers::generateSeed(
+uint64_t ActsExamples::RandomNumbers::generateSeed(
     const AlgorithmContext& context) const {
   // use Cantor pairing function to generate a unique generator id from
   // algorithm and event number to get a consistent seed

@@ -6,25 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Generators/FlattenEvent.hpp"
-#include "ACTFW/Generators/ParticleSelector.hpp"
-#include "ACTFW/Generators/Pythia8ProcessGenerator.hpp"
-#include "ACTFW/Io/Csv/CsvParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootParticleWriter.hpp"
-#include "ACTFW/Io/Root/RootVertexAndTracksWriter.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Options/Pythia8Options.hpp"
-#include "ACTFW/TruthTracking/TrackSelector.hpp"
-#include "ACTFW/TruthTracking/TruthVerticesToTracks.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Generators/FlattenEvent.hpp"
+#include "ActsExamples/Generators/ParticleSelector.hpp"
+#include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
+#include "ActsExamples/Io/Root/RootVertexAndTracksWriter.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/Pythia8Options.hpp"
+#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthVerticesToTracks.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/EventData/TrackParameters.hpp>
 
 #include <memory>
 
 #include <boost/program_options.hpp>
 
-using namespace FW;
+using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
 
 /// Main vertex finder example executable
