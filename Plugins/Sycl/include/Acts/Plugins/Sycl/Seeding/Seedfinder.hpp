@@ -13,67 +13,19 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Plugins/Sycl/Utilities/Helpers.h"
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
 
-// store SpacePoint data in float arrays, index them with enum values
-enum eSpacePoint : int {
-  eX = 0,
-  eY = 1,
-  eZ = 2,
-  eRadius = 3,
-  eVarianceR = 4,
-  eVarianceZ = 5,
-  eSP = 6
-};
-
-// store SeedfinderConfig data in float array, index it with enum values
-enum eConfigData : int {
-  eDeltaRMin = 0,
-  eDeltaRMax = 1,
-  eCotThetaMax = 2,
-  eCollisionRegionMin = 3,
-  eCollisionRegionMax = 4,
-  eMaxScatteringAngle2 = 5,
-  eSigmaScattering = 6,
-  eMinHelixDiameter2 = 7,
-  ePT2perRadius = 8,
-  eDeltaInvHelixDiameter = 9,
-  eImpactWeightFactor = 10,
-  eFilterDeltaRMin = 11,
-  eCompatSeedWeight = 12,
-  eImpactMax = 13,
-};
-
-// store limits for algorithm in separate array
-enum eMaxData : int {
-  eCompatSeedLimit = 0,
-  eMaxSeedsPerSpM = 1
-};
-
-// store linear circle data in float arrays, index them with enum values
-enum eLinCircle : int {
-  eZo = 0,
-  eCotTheta = 1,
-  eIDeltaR = 2,
-  eEr = 3,
-  eU = 4,
-  eV = 5,
-  eLIN = 6
-};
-
 void offloadComputations( cl::sycl::queue q,
                           const std::vector<float>& configData,
                           const std::vector<int>& maxData,
-                          const std::vector<float>& bottomSPs,
-                          const std::vector<float>& middleSPs,
-                          const std::vector<float>& topSPs,
+                          const std::vector<offloadSpacePoint>& bottomSPs,
+                          const std::vector<offloadSpacePoint>& middleSPs,
+                          const std::vector<offloadSpacePoint>& topSPs,
                           std::vector<std::vector<int>>& seedIndices,
                           std::vector<std::vector<float>>& seedWeight);
-
-void outputPlatforms();
-void testDevice();
 
 struct nvidia_selector : public cl::sycl::device_selector {
   int operator()(const cl::sycl::device& d) const override {

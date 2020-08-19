@@ -16,126 +16,9 @@
 #include <exception>
 #include <algorithm>
 
+
 namespace Acts::Sycl {
   namespace sycl = cl::sycl;
-
-  void outputPlatforms() {
-    for (const sycl::platform& platform :
-      sycl::platform::get_platforms()) {
-      // Print some information about the platform.
-      std::cout << "============ Platform ============" << std::endl;
-      std::cout << " Name   : "
-                << platform.get_info<sycl::info::platform::name>()
-                << std::endl;
-      std::cout << " Vendor : "
-                << platform.get_info<sycl::info::platform::vendor>()
-                << std::endl;
-      std::cout << " Version: "
-                << platform.get_info<sycl::info::platform::version>()
-                << std::endl;
-
-      // Loop over all devices available from this platform.
-      for (const sycl::device& device : platform.get_devices()) {
-        // Print some information about the device.
-        std::cout << "------------- Device -------------" << std::endl;
-        std::cout << " Name   : "
-                  << device.get_info<sycl::info::device::name>() << std::endl;
-        std::cout << " Vendor : "
-                  << device.get_info<sycl::info::device::vendor>()
-                  << std::endl;
-        std::cout << " Version: "
-                  << device.get_info<sycl::info::device::version>()
-                  << std::endl;
-      }
-    }
-  }
-
-  void testDevice() {
-    nvidia_selector device_selector;
-    try {
-      sycl::device device = sycl::device(device_selector);
-      std::cout << "------------- Device -------------" << std::endl;
-      std::cout << " Name   : "
-                << device.get_info<sycl::info::device::name>() << std::endl;
-      std::cout << " Vendor : "
-                << device.get_info<sycl::info::device::vendor>()
-                << std::endl;
-      std::cout << " Version: "
-                << device.get_info<sycl::info::device::version>()
-                << std::endl;
-      std::cout << " Number of work-groups (compute units): "
-                << device.get_info<sycl::info::device::max_compute_units>()
-                << std::endl;
-      std::cout << " Max work-group size (threads per compute unit): "
-                << device.get_info<sycl::info::device::max_work_group_size>()
-                << std::endl;
-      std::cout << " Local memory size: "
-                << device.get_info<sycl::info::device::local_mem_size>()
-                << std::endl;
-      std::cout << " Global memory size: "
-                << device.get_info<sycl::info::device::global_mem_size>()
-                << std::endl;
-    } catch (std::exception &e) {
-      std::cerr << e.what() << std::endl;
-    }
-
-    sycl::device device = sycl::device(device_selector);
-
-    sycl::queue d_queue(device_selector,[] (sycl::exception_list el) {
-      for (auto ex : el) { std::rethrow_exception(ex); }
-    });
-
-    auto wgroup_size = device.get_info<sycl::info::device::max_work_group_size>();
-    if (wgroup_size % 2 != 0) {
-      throw "Work-group size has to be even!";
-    }
-
-    auto has_local_mem = device.is_host()
-          || (device.get_info<sycl::info::device::local_mem_type>()
-          != sycl::info::local_mem_type::none);
-    auto local_mem_size = device.get_info<sycl::info::device::local_mem_size>();
-    if (!has_local_mem
-        || local_mem_size < (wgroup_size * sizeof(int32_t)))
-    {
-      throw "Device doesn't have enough local memory!";
-    }
-
-    std::vector<int> a_array(wgroup_size, 0), b_array(wgroup_size, 0), c_array(wgroup_size, 0);
-    for (int i = 0; i < wgroup_size; ++i) {
-      a_array[i] = b_array[i] = c_array[i] = i;
-    }
-    try {
-      sycl::range<1> len{wgroup_size};
-      sycl::buffer<int, 1> a_buf(a_array.data(), len);
-      sycl::buffer<int, 1> b_buf(b_array.data(), len);
-      sycl::buffer<int, 1> c_buf(c_array.data(), len);
-
-      sycl::buffer<float, 1> tmp(sycl::range<1>(1024));
-      auto e = d_queue.submit([&](sycl::handler &h) {
-        auto c = c_buf.get_access<sycl::access::mode::discard_write>(h);
-        auto a = a_buf.get_access<sycl::access::mode::read>(h);
-        auto b = b_buf.get_access<sycl::access::mode::read>(h);
-        h.parallel_for<class vec_add>(len, [=](sycl::id<1> idx) { c[idx] = a[idx] + b[idx]; });
-      });
-      e.wait();
-
-      auto e2 = d_queue.submit([&](sycl::handler &h){
-        auto tmpAcc = tmp.get_access<sycl::access::mode::discard_write>(h);
-        h.parallel_for<class tmp>(1024, [=](sycl::id<1> idx)
-        {
-          tmpAcc[idx] = int(idx);
-        });
-      });
-
-      e2.wait();
-      auto c = tmp.get_access<sycl::access::mode::read>();
-      std::cout << c[0] << ", " << c[1] << "... " << c[1023] << "\n";
-    }
-    catch (sycl::exception const& e) {
-      std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
-    }
-    
-  }
 
   class triplet_search_kernel;
   class filter_2sp_fixed_kernel;
@@ -143,23 +26,21 @@ namespace Acts::Sycl {
   void offloadComputations(cl::sycl::queue q,
                           const std::vector<float>& configData,
                           const std::vector<int>& limitData,
-                          const std::vector<float>& bottomSPs,
-                          const std::vector<float>& middleSPs,
-                          const std::vector<float>& topSPs,
+                          const std::vector<offloadSpacePoint>& bottomSPs,
+                          const std::vector<offloadSpacePoint>& middleSPs,
+                          const std::vector<offloadSpacePoint>& topSPs,
                           std::vector<std::vector<int>>& seedIndices,
                           std::vector<std::vector<float>>& seedWeight)
   {
 
-    // Each vector stores data of space points flattened out
-    // [  X_0, Y_0, Z_0, Radius_0, VarianceR_0, VarianceZ_0,
-    //    X_1, Y_1, Z_1, Radius_1, VarianceR_1, VarianceZ_1, ...]
+    // Each vector stores data of space points in simplified 
+    // structures of float variables
     // M: number of middle space points
     // B: number of bottom space points
     // T: number of top space points
-    // eSP: number of values stored for each SP, which is currently 6 (eSP = 6)
-    const size_t M = (middleSPs.size()) / eSP; 
-    const size_t B = (bottomSPs.size()) / eSP;
-    const size_t T = (topSPs.size()) / eSP;
+    const size_t M = middleSPs.size();
+    const size_t B = bottomSPs.size();
+    const size_t T = topSPs.size();
 
     // Store the number of compatible bottom/top space points per middle space point.
     std::vector<int> numBotCompMid(M,0);
@@ -174,8 +55,8 @@ namespace Acts::Sycl {
     // bipartite graphs for bottom-middle and top-middle space points.
     // We store the indices of the bottom/top space points of the edges of the graphs.
     // They index the bottomSPs and topSPs vectors.
-    std::vector<int> indBotCompMid;
-    std::vector<int> indTopCompMid;
+    // std::vector<int> indBotCompMid;
+    // std::vector<int> indTopCompMid;
 
     // Similarly to indBotCompMid and indTopCompMid, we store the indices of the 
     // middle space points of the corresponding edges.
@@ -202,9 +83,12 @@ namespace Acts::Sycl {
       //  - numBotCompBuf, numTopCompBuf: number of compatible bottom/top space points per middle sp
       sycl::buffer<float,1>   configBuf (configData.data(),         sycl::range<1>(configData.size()));
       sycl::buffer<int,1>     limitBuf  (limitData.data(),          sycl::range<1>(limitData.size()));
-      sycl::buffer<float,1>   botSPBuf  (bottomSPs.data(),          sycl::range<1>(bottomSPs.size()));
-      sycl::buffer<float,1>   midSPBuf  (middleSPs.data(),          sycl::range<1>(middleSPs.size()));
-      sycl::buffer<float,1>   topSPBuf  (topSPs.data(),             sycl::range<1>(topSPs.size()));
+      sycl::buffer<offloadSpacePoint,1>
+        botSPBuf  (bottomSPs.data(),          sycl::range<1>(bottomSPs.size()));
+      sycl::buffer<offloadSpacePoint,1>
+        midSPBuf  (middleSPs.data(),          sycl::range<1>(middleSPs.size()));
+      sycl::buffer<offloadSpacePoint,1>
+        topSPBuf  (topSPs.data(),             sycl::range<1>(topSPs.size()));
       sycl::buffer<int,1>     numBotCompBuf(numBotCompMid.data(), (sycl::range<1>(M)));
       sycl::buffer<int,1>     numTopCompBuf(numTopCompMid.data(), (sycl::range<1>(M)));
 
@@ -214,12 +98,14 @@ namespace Acts::Sycl {
 
       // The limit of compatible bottom [top] space points per middle space point is B [T].
       // Temporarily we reserve buffers of this size (M*B and M*T).
-      // Because we only reserve these on the GPU side, it is not so much of an overhead.
       // We store the indices of bottom [top] space points in bottomSPs [topSPs].
       // We move the indices to optimal size vectors for algorithmic and performance reasons.
 
       sycl::buffer<int,1> tmpIndBotCompBuf((sycl::range<1>(M*B)));
       sycl::buffer<int,1> tmpIndTopCompBuf((sycl::range<1>(M*T)));
+
+      // If it would be possible, we would only allocate memory for these buffers on the GPU side.
+      // However, the current SYCL implementation reserves these on the host, and 
 
       auto bottom_duplet_search = q.submit([&](sycl::handler &h) {
         // Add accessors to buffers:
@@ -234,9 +120,12 @@ namespace Acts::Sycl {
           const int mid = idx[0];
           const int bot = idx[1];
 
-          const float deltaR = midSPAcc[mid * eSP + eRadius] - botSPAcc[bot * eSP + eRadius];
-          const float cotTheta = (midSPAcc[mid * eSP + eZ] - botSPAcc[bot * eSP + eZ]) / deltaR;
-          const float zOrigin = midSPAcc[mid * eSP + eZ] - midSPAcc[mid * eSP + eRadius] * cotTheta;
+          offloadSpacePoint midSP = midSPAcc[mid];
+          offloadSpacePoint botSP = botSPAcc[bot];
+
+          const float deltaR = midSP.r - botSP.r;
+          const float cotTheta = (midSP.z - botSP.z) / deltaR;
+          const float zOrigin = midSP.z - midSP.r * cotTheta;
 
           if( !(deltaR < configAcc[eDeltaRMin]) &&
               !(deltaR > configAcc[eDeltaRMax]) &&
@@ -268,10 +157,13 @@ namespace Acts::Sycl {
           const int mid = idx[0];
           const int top = idx[1];
 
+          offloadSpacePoint midSP = midSPAcc[mid];
+          offloadSpacePoint topSP = topSPAcc[top];
+
           if(numBotCompAcc[mid] != 0) {
-            const float deltaR = topSPAcc[top * eSP + eRadius] - midSPAcc[mid * eSP + eRadius];
-            const float cotTheta = (topSPAcc[top * eSP + eZ] - midSPAcc[mid * eSP + eZ]) / deltaR;
-            const float zOrigin = midSPAcc[mid * eSP + eZ] - midSPAcc[mid * eSP + eRadius] * cotTheta;
+            const float deltaR = topSP.r - midSP.r;
+            const float cotTheta = (topSP.z - midSP.z) / deltaR;
+            const float zOrigin = midSP.z - midSP.r * cotTheta;
 
             if( !(deltaR < configAcc[eDeltaRMin]) &&
                 !(deltaR > configAcc[eDeltaRMax]) &&
@@ -305,6 +197,9 @@ namespace Acts::Sycl {
 
           maxBotCompMid = std::max(maxBotCompMid, nB[i-1]);
           maxTopCompMid = std::max(maxTopCompMid, nT[i-1]);
+
+          numBotCompMid[i-1] = nB[i-1];
+          numTopCompMid[i-1] = nT[i-1]; 
         }
 
         edgesBottom = sumBotCompUptoMid[M];
@@ -312,19 +207,19 @@ namespace Acts::Sycl {
 
         if(edgesBottom == 0 || edgesTop == 0) return;
 
-        indBotCompMid.resize(edgesBottom,0);
-        indTopCompMid.resize(edgesTop,0);
-
         indMidBotComp.reserve(edgesBottom);
         indMidBotComp.reserve(edgesTop);
+
+        
 
         for(int mid = 0; mid < M; ++mid) {
           std::fill_n(std::back_inserter(indMidBotComp), nB[mid], mid);
           std::fill_n(std::back_inserter(indMidTopComp), nT[mid], mid);
         }
       }
-      
-      sycl::buffer<int,1> indBotCompBuf (indBotCompMid.data(), sycl::range<1>(edgesBottom));
+
+      std::vector<int>    indTopCompMid(edgesTop);
+      sycl::buffer<int,1> indBotCompBuf ((sycl::range<1>(edgesBottom)));
 
       sycl::buffer<int,1> indMidBotCompBuf (indMidBotComp.data(), sycl::range<1>(edgesBottom));
       sycl::buffer<int,1> indMidTopCompBuf (indMidTopComp.data(), sycl::range<1>(edgesTop));
@@ -334,12 +229,12 @@ namespace Acts::Sycl {
 
       // Copy indices from temporary matrices to final, optimal size vectors.
       {
-        sycl::buffer<int,1> tmp2IndTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
+        sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
         q.submit([&](sycl::handler &h){
-          auto indBotAcc = indBotCompBuf.get_access<am::write, at::global_buffer>(h);
-          auto indMidBotCompAcc = indMidBotCompBuf.get_access<am::write, at::global_buffer>(h);
-          auto sumBotAcc = sumBotCompBuf.get_access<am::read, at::global_buffer>(h);
-          auto tmpBotIndices = tmpIndBotCompBuf.get_access< am::read,  at::global_buffer>(h);
+          auto indBotAcc = indBotCompBuf.get_access<            am::write,  at::global_buffer>(h);
+          auto indMidBotCompAcc = indMidBotCompBuf.get_access<  am::read,   at::global_buffer>(h);
+          auto sumBotAcc = sumBotCompBuf.get_access<            am::read,   at::global_buffer>(h);
+          auto tmpBotIndices = tmpIndBotCompBuf.get_access<     am::read,   at::global_buffer>(h);
 
           h.parallel_for<class ind_copy_bottom>(edgesBottom, [=](sycl::id<1> idx){
             int mid = indMidBotCompAcc[idx];
@@ -349,29 +244,28 @@ namespace Acts::Sycl {
         });
 
         q.submit([&](sycl::handler &h){
-          auto indTopAcc =      tmp2IndTopCompBuf.get_access<am::write, at::global_buffer>(h);
-          auto indMidTopCompAcc = indMidTopCompBuf.get_access<am::write, at::global_buffer>(h);
-          auto sumTopAcc =      sumTopCompBuf.get_access<am::read, at::global_buffer>(h);
-          auto tmpTopIndices =  tmpIndTopCompBuf.get_access< am::read,  at::global_buffer>(h);
+          auto indTopAcc =          indTopCompBuf.get_access<     am::write,  at::global_buffer>(h);
+          auto indMidTopCompAcc =   indMidTopCompBuf.get_access<  am::read,   at::global_buffer>(h);
+          auto sumTopAcc =          sumTopCompBuf.get_access<     am::read,   at::global_buffer>(h);
+          auto tmpTopIndices =      tmpIndTopCompBuf.get_access<  am::read,   at::global_buffer>(h);
 
           h.parallel_for<class ind_copy_top>(edgesTop, [=](sycl::id<1> idx){
             int mid = indMidTopCompAcc[idx];
             int ind = tmpTopIndices[mid*T + idx - sumTopAcc[mid]];
+            
             indTopAcc[idx] = ind;     
           });
         });
-      } // tmp2IndTopCompBuf buffer gets destroyed, data is copied back to indTopCompMid       
+      } // indTopCompBuf buffer gets destroyed, data is copied back to indTopCompMid       
 
       // Sort by top indices for later filter algorithm. -> see filter_2sp_fixed_kernel
       // (ascending indices correspond to ascending radius because top space points are
       // already sorted by radius)
-      {
-        for(int mid = 0; mid < M; ++mid){
-          int sort_begin = sumTopCompUptoMid[mid];
-          int sort_end = sumTopCompUptoMid[mid+1];
-          if(sort_begin != sort_end) {
-            std::sort(indTopCompMid.begin() + sort_begin, indTopCompMid.begin() + sort_end);
-          }
+      for(int mid = 0; mid < M; ++mid){
+        int sort_begin = sumTopCompUptoMid[mid];
+        int sort_end = sumTopCompUptoMid[mid+1];
+        if(sort_begin != sort_end) {
+          std::sort(indTopCompMid.begin() + sort_begin, indTopCompMid.begin() + sort_end);
         }
       }
     
@@ -385,36 +279,35 @@ namespace Acts::Sycl {
       // 1 - 2x_0*u - 2y_0*v = 0
 
       sycl::buffer<int,1> indTopCompBuf (indTopCompMid.data(), sycl::range<1>(edgesTop));
-      sycl::buffer<float,2> linBotBuf((sycl::range<2>(edgesBottom,int(eLIN))));
-      sycl::buffer<float,2> linTopBuf((sycl::range<2>(edgesTop,int(eLIN))));
+      sycl::buffer<offloadLinEqCircle,1> linBotBuf((sycl::range<1>(edgesBottom)));
+      sycl::buffer<offloadLinEqCircle,1> linTopBuf((sycl::range<1>(edgesTop)));
 
       // coordinate transformation middle-bottom pairs
       q.submit([&](sycl::handler &h) {
         // add accessors to buffers
         auto indBotAcc =        indBotCompBuf.get_access<   am::read,         at::global_buffer>(h);
-        auto indMidBotCompAcc = indMidBotCompBuf.get_access<am::write, at::global_buffer>(h);
+        auto indMidBotCompAcc = indMidBotCompBuf.get_access<am::read,         at::global_buffer>(h);
         auto sumBotAcc =        sumBotCompBuf.get_access<   am::read,         at::global_buffer>(h);
         auto botSPAcc =         botSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto linBotAcc =        linBotBuf.get_access<       am::discard_write,at::global_buffer>(h);
 
         h.parallel_for<class transform_coord_bottom>(edgesBottom, [=](sycl::id<1> idx) {
-          int mid = indMidBotCompAcc[idx];
+          offloadSpacePoint midSP = midSPAcc[indMidBotCompAcc[idx]];
+          offloadSpacePoint botSP = botSPAcc[indBotAcc[idx]];
 
-          float xM =          midSPAcc[mid * eSP + eX];
-          float yM =          midSPAcc[mid * eSP + eY];
-          float zM =          midSPAcc[mid * eSP + eZ];
-          float rM =          midSPAcc[mid * eSP + eRadius];
-          float varianceZM =  midSPAcc[mid * eSP + eVarianceZ];
-          float varianceRM =  midSPAcc[mid * eSP + eVarianceR];
+          float xM =          midSP.x;
+          float yM =          midSP.y;
+          float zM =          midSP.z;
+          float rM =          midSP.r;
+          float varianceZM =  midSP.varZ;
+          float varianceRM =  midSP.varR;
           float cosPhiM =     xM / rM;
           float sinPhiM =     yM / rM;
 
-          // retrieve bottom space point index -> bot
-          int bot = indBotAcc[idx];
-          float deltaX = botSPAcc[bot * eSP + eX] - xM;
-          float deltaY = botSPAcc[bot * eSP + eY] - yM;
-          float deltaZ = botSPAcc[bot * eSP + eZ] - zM;
+          float deltaX = botSP.x - xM;
+          float deltaY = botSP.y - yM;
+          float deltaZ = botSP.z - zM;
 
           float x = deltaX * cosPhiM + deltaY * sinPhiM;
           float y = deltaY * cosPhiM - deltaX * sinPhiM;
@@ -422,13 +315,16 @@ namespace Acts::Sycl {
           float iDeltaR = sycl::sqrt(iDeltaR2);
           float cot_theta = -(deltaZ * iDeltaR);
 
-          linBotAcc[idx][eCotTheta] = cot_theta;
-          linBotAcc[idx][eZo] = zM - rM * cot_theta;
-          linBotAcc[idx][eIDeltaR] = iDeltaR;
-          linBotAcc[idx][eU] = x * iDeltaR2;
-          linBotAcc[idx][eV] = y * iDeltaR2;
-          linBotAcc[idx][eEr] = ((varianceZM + botSPAcc[bot * eSP + eVarianceZ]) +
-          (cot_theta * cot_theta) * (varianceRM + botSPAcc[bot * eSP + eVarianceR])) * iDeltaR2;
+          offloadLinEqCircle L;
+          L.cotTheta = cot_theta;
+          L.zo = zM - rM * cot_theta;
+          L.iDeltaR = iDeltaR;
+          L.u = x * iDeltaR2;
+          L.v = y * iDeltaR2;
+          L.er = ((varianceZM + botSP.varZ) +
+          (cot_theta * cot_theta) * (varianceRM + botSP.varR)) * iDeltaR2;
+
+          linBotAcc[idx] = L;
         });
       });
       
@@ -436,29 +332,28 @@ namespace Acts::Sycl {
       q.submit([&](sycl::handler &h) {
         // add accessors to buffers
         auto indTopAcc =        indTopCompBuf.get_access<   am::read,         at::global_buffer>(h);
-        auto indMidTopCompAcc = indMidTopCompBuf.get_access<am::write, at::global_buffer>(h);
+        auto indMidTopCompAcc = indMidTopCompBuf.get_access<am::read,         at::global_buffer>(h);
         auto sumTopAcc =        sumTopCompBuf.get_access<   am::read,         at::global_buffer>(h);
         auto topSPAcc =         topSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto linTopAcc =        linTopBuf.get_access<       am::discard_write,at::global_buffer>(h);
 
         h.parallel_for<class transform_coord_top>(edgesTop, [=](sycl::id<1> idx) {
-          int mid = indMidTopCompAcc[idx];
+          offloadSpacePoint midSP = midSPAcc[indMidTopCompAcc[idx]];
+          offloadSpacePoint topSP = topSPAcc[indTopAcc[idx]];
 
-          float xM =          midSPAcc[mid * eSP + eX];
-          float yM =          midSPAcc[mid * eSP + eY];
-          float zM =          midSPAcc[mid * eSP + eZ];
-          float rM =          midSPAcc[mid * eSP + eRadius];
-          float varianceZM =  midSPAcc[mid * eSP + eVarianceZ];
-          float varianceRM =  midSPAcc[mid * eSP + eVarianceR];
+          float xM =          midSP.x;
+          float yM =          midSP.y;
+          float zM =          midSP.z;
+          float rM =          midSP.r;
+          float varianceZM =  midSP.varZ;
+          float varianceRM =  midSP.varR;
           float cosPhiM =     xM / rM;
           float sinPhiM =     yM / rM;
 
-          // retrieve top space point index
-          int top = indTopAcc[idx];
-          float deltaX = topSPAcc[top * eSP + eX] - xM;
-          float deltaY = topSPAcc[top * eSP + eY] - yM;
-          float deltaZ = topSPAcc[top * eSP + eZ] - zM;
+          float deltaX = topSP.x - xM;
+          float deltaY = topSP.y - yM;
+          float deltaZ = topSP.z - zM;
 
           float x = deltaX * cosPhiM + deltaY * sinPhiM;
           float y = deltaY * cosPhiM - deltaX * sinPhiM;
@@ -466,20 +361,22 @@ namespace Acts::Sycl {
           float iDeltaR = sycl::sqrt(iDeltaR2);
           float cot_theta = deltaZ * iDeltaR;
 
-          linTopAcc[idx][eCotTheta] = cot_theta;
-          linTopAcc[idx][eZo] = zM - rM * cot_theta;
-          linTopAcc[idx][eIDeltaR] = iDeltaR;
-          linTopAcc[idx][eU] = x * iDeltaR2;
-          linTopAcc[idx][eV] = y * iDeltaR2;
-          linTopAcc[idx][eEr] = ((varianceZM + topSPAcc[top * eSP + eVarianceZ]) +
-          (cot_theta * cot_theta) * (varianceRM + topSPAcc[top * eSP + eVarianceR])) * iDeltaR2;
+          offloadLinEqCircle L;
+          L.cotTheta = cot_theta;
+          L.zo = zM - rM * cot_theta;
+          L.iDeltaR = iDeltaR;
+          L.u = x * iDeltaR2;
+          L.v = y * iDeltaR2;
+          L.er = ((varianceZM + topSP.varZ) +
+          (cot_theta * cot_theta) * (varianceRM + topSP.varR)) * iDeltaR2;
+
+          linTopAcc[idx] = L;
         });
       });
 
       //************************************************//
       // **** LINEAR EQUATION TRANSFORMATION - END **** //
       //************************************************//
-
 
       //************************************************//
       // *********** TRIPLET SEARCH - BEGIN *********** //
@@ -499,19 +396,18 @@ namespace Acts::Sycl {
         size_t maxTriplets = 0;
         sycl::buffer<size_t,1> maxTripletBuf(&maxTriplets, 1);
 
-        auto triplet_search = q.submit([&](sycl::handler &h) {
+        q.submit([&](sycl::handler &h) {
           auto numTopAcc =      numTopCompBuf.get_access<   am::read,         at::global_buffer> (h, 1, MID);
           auto numBotAcc =      numBotCompBuf.get_access<   am::read,         at::global_buffer> (h, 1, MID);
+          auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer> (h, 1, MID);
           auto indBotAcc =      indBotCompBuf.get_access<   am::read,         at::global_buffer>
             (h, numBotCompMid[MID], sumBotCompUptoMid[MID]);
           auto indTopAcc =      indTopCompBuf.get_access<   am::read,         at::global_buffer>
             (h, numTopCompMid[MID], sumTopCompUptoMid[MID]);
           auto linBotAcc =      linBotBuf.get_access<       am::read,         at::global_buffer>
-            (h, sycl::range<2>{size_t(numBotCompMid[MID]), eLIN}, sycl::range<2>{size_t(sumBotCompUptoMid[MID]), 0});
+            (h, numBotCompMid[MID], sumBotCompUptoMid[MID]);
           auto linTopAcc =      linTopBuf.get_access<       am::read,         at::global_buffer>
-            (h, sycl::range<2>{size_t(numTopCompMid[MID]), eLIN}, sycl::range<2>{size_t(sumTopCompUptoMid[MID]), 0});
-          auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer>
-            (h, eSP, MID*eSP);
+            (h, numTopCompMid[MID], sumTopCompUptoMid[MID]);
           auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(h);
 
           auto curvImpactAcc =  curvImpactBuf.get_access<   am::discard_write,at::global_buffer>(h);
@@ -534,23 +430,23 @@ namespace Acts::Sycl {
               int bot = indBotAcc[ib];
               int top = indTopAcc[it];
 
-              const float Zob =         linBotAcc[ib][eZo];
-              const float Vb =          linBotAcc[ib][eV];
-              const float Ub =          linBotAcc[ib][eU];
-              const float Erb =         linBotAcc[ib][eEr];
-              const float cotThetab =   linBotAcc[ib][eCotTheta];
-              const float iDeltaRb =    linBotAcc[ib][eIDeltaR];
+              const float Zob =         linBotAcc[ib].zo;
+              const float Vb =          linBotAcc[ib].v;
+              const float Ub =          linBotAcc[ib].u;
+              const float Erb =         linBotAcc[ib].er;
+              const float cotThetab =   linBotAcc[ib].cotTheta;
+              const float iDeltaRb =    linBotAcc[ib].iDeltaR;
 
-              const float Zot =         linTopAcc[it][eZo];
-              const float Vt =          linTopAcc[it][eV];
-              const float Ut =          linTopAcc[it][eU];
-              const float Ert =         linTopAcc[it][eEr];
-              const float cotThetat =   linTopAcc[it][eCotTheta];
-              const float iDeltaRt =    linTopAcc[it][eIDeltaR];
+              const float Zot =         linTopAcc[it].zo;
+              const float Vt =          linTopAcc[it].v;
+              const float Ut =          linTopAcc[it].u;
+              const float Ert =         linTopAcc[it].er;
+              const float cotThetat =   linTopAcc[it].cotTheta;
+              const float iDeltaRt =    linTopAcc[it].iDeltaR;
 
-              const float rM =          midSPAcc[eRadius];
-              const float varianceRM =  midSPAcc[eVarianceR];
-              const float varianceZM =  midSPAcc[eVarianceZ];
+              const float rM =          midSPAcc[0].r;
+              const float varianceRM =  midSPAcc[0].varR;
+              const float varianceZM =  midSPAcc[0].varZ;
 
               float iSinTheta2 = (1. + cotThetab * cotThetab);
               float scatteringInRegion2 = configAcc[eMaxScatteringAngle2] * iSinTheta2;
@@ -589,22 +485,24 @@ namespace Acts::Sycl {
               }
             }
           });
-        });
-        triplet_search.wait();
+        }).wait();
         maxTriplets = (maxTripletBuf.get_access<am::read>())[0];
 
         if(maxTriplets == 0) continue;
 
         // Reserve memory for triplet/seed indices and weights.
-        sycl::buffer<int,2>       seedIndBuf((sycl::range<2>(maxTriplets,2)));
-        sycl::buffer<float,1>     seedWeightBuf((sycl::range<1>(maxTriplets)));
+        // We could reserve these buffers outside the loop, and it would provide a performance
+        // boost, if sub-buffers or sub-accessors had a correct implementation.
+        // However, they don't.
+        sycl::buffer<int,2>       seedIndBuf((sycl::range<2>{maxTriplets,2}));
+        sycl::buffer<float,1>     seedWeightBuf((sycl::range<1>(maxTriplets)));        
 
         // Experiment specific cuts may reduce the number of triplets/seeds,
         // so we count them again. We only copy back to the host that many values.
         size_t countTriplets = 0;
         sycl::buffer<size_t,1>    countTripletsBuf(&countTriplets, 1);
 
-        auto seed_filter_2sp_fixed = q.submit([&](sycl::handler &h) {
+        q.submit([&](sycl::handler &h) {
           // Since we only use part of the buffers, we can use sub-accessors.
           auto numTopAcc = numTopCompBuf.get_access<  am::read, at::global_buffer> (h, 1, MID);
           auto numBotAcc = numBotCompBuf.get_access<  am::read, at::global_buffer> (h, 1, MID);
@@ -618,9 +516,13 @@ namespace Acts::Sycl {
           auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(h);
           auto limitAcc =       limitBuf.get_access<        am::read,         at::constant_buffer>(h);
 
-          auto tmpSeedIndAcc =  seedIndBuf.get_access<      am::discard_write,at::global_buffer>(h);
-          auto seedWeightAcc =  seedWeightBuf.get_access<   am::discard_write,at::global_buffer>(h);
-          auto countTripletsAcc=countTripletsBuf.get_access<        am::atomic,       at::global_buffer>(h);
+          // Use sub-accessors, so maybe with a future implementation this would
+          // provide a benefit, currently it is no overhead
+          auto seedIndAcc =  seedIndBuf.get_access<      am::write,        at::global_buffer>
+            (h, sycl::range<2>{maxTriplets,2},sycl::range<2>{0,0});
+          auto seedWeightAcc =  seedWeightBuf.get_access<   am::write,        at::global_buffer>
+            (h,maxTriplets,0);
+          auto countTripletsAcc=countTripletsBuf.get_access<am::atomic,       at::global_buffer>(h);
 
           h.parallel_for<filter_2sp_fixed_kernel>
             (sycl::range<2>{size_t(numBotCompMid[MID]), size_t(numTopCompMid[MID])}, // number of threads
@@ -633,7 +535,7 @@ namespace Acts::Sycl {
 
               float lowerLimitCurv = curvImpactAcc[idx[0]][idx[1]][0] - configAcc[eDeltaInvHelixDiameter];
               float upperLimitCurv = curvImpactAcc[idx[0]][idx[1]][0] + configAcc[eDeltaInvHelixDiameter];
-              float currentTop_r = topSPAcc[top * eSP + eRadius];
+              float currentTop_r = topSPAcc[top].r;
               float weight = -(curvImpactAcc[idx[0]][idx[1]][1] * configAcc[eImpactWeightFactor]);
 
               float lastCompatibleSeedR = currentTop_r;
@@ -641,7 +543,7 @@ namespace Acts::Sycl {
 
               for(int j = 0; j < numTopAcc[0]; ++j){
                 if(curvImpactAcc[idx[0]][j][0] != MIN && j != idx[1]) {
-                  float otherTop_r = topSPAcc[indTopAcc[j] * eSP + eRadius];
+                  float otherTop_r = topSPAcc[indTopAcc[j]].r;
                   float deltaR = sycl::abs(currentTop_r - otherTop_r);
                   if(compatCounter < limitAcc[eCompatSeedLimit] &&
                     deltaR >= configAcc[eFilterDeltaRMin] &&
@@ -657,28 +559,31 @@ namespace Acts::Sycl {
               weight += compatCounter * configAcc[eCompatSeedWeight];
 
               // ATLAS experiment specific cuts
-              if(botSPAcc[bot*eSP+eRadius] > 150){
-                weight += 400;
+              float w = 0;
+              if(botSPAcc[bot].r > 150){
+                w = 400;
               }
-              if(topSPAcc[top*eSP+eRadius] < 150){
-                weight += 200;
+              if(topSPAcc[top].r < 150){
+                w = 200;
               }
+              weight += w;
 
-              if(!(botSPAcc[bot*eSP+eRadius] > 150. && weight < 380)) {
+              if(!(botSPAcc[bot].r > 150. && weight < 380)) {
                 int i = countTripletsAcc[0].fetch_add(1);
-                tmpSeedIndAcc[i][0] = bot;
-                tmpSeedIndAcc[i][1] = top;
+                seedIndAcc[i][0] = bot;
+                seedIndAcc[i][1] = top;
                 seedWeightAcc[i] = weight;
               }
             }
           });
-        });
-        seed_filter_2sp_fixed.wait();
+        }).wait();
         countTriplets = (countTripletsBuf.get_access<am::read>())[0];
 
         // Sub-accessor to seed indices and weights.
-        auto seedInd = seedIndBuf.get_access<am::read>(sycl::range<2>{countTriplets,2},sycl::range<2>{0,0});
-        auto seedWei = seedWeightBuf.get_access<am::read>(sycl::range<1>{countTriplets},sycl::range<1>{0});
+        // Unfortunately this currently copies all data back
+        // Hopefully, a future implementation would provide performance benefits
+        auto seedInd = seedIndBuf.get_access<am::read>(sycl::range<2>{countTriplets,2},sycl::id<2>{0,0});
+        auto seedWei = seedWeightBuf.get_access<am::read>(sycl::range<1>{countTriplets},sycl::id<1>{0});
 
         seedIndices[MID].reserve(countTriplets*2);
         seedWeight[MID].reserve(countTriplets);

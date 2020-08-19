@@ -117,10 +117,9 @@ auto main(int argc, char** argv) -> int {
     optionsDescription.add_options()
       ("help,h", "Print usage message.")
       ("inputfile,f", po::value<std::string>(), "Provide path for input file.")
-      ("platforms,p","List available platforms and devices.")
       ("no_cpu,c","Do not execute code on cpu")
       ("groups,g",po::value<int>(),"Add number of groups to execute on")
-      ("matches,m","Count matches")
+      ("matches,m","Count seed matches")
     ;
 
     po::variables_map vm;
@@ -284,11 +283,6 @@ auto main(int argc, char** argv) -> int {
       for(const auto *S: spVec) {
         delete[] S;
       }
-    }
-
-    if(vm.count("platforms") != 0){
-      Acts::Sycl::testDevice();
-      Acts::Sycl::outputPlatforms();
     }
   }
   catch (std::exception &e){

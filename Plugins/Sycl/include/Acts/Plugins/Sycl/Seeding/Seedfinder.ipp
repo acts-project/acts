@@ -57,9 +57,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  std::vector<float> offloadBottomSPs;
-  std::vector<float> offloadMiddleSPs;
-  std::vector<float> offloadTopSPs;
+  std::vector<offloadSpacePoint> offloadBottomSPs;
+  std::vector<offloadSpacePoint> offloadMiddleSPs;
+  std::vector<offloadSpacePoint> offloadTopSPs;
 
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPvec;
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
@@ -68,21 +68,21 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   for(auto SP: bottomSPs) {
     bottomSPvec.push_back(SP);
     offloadBottomSPs.insert(offloadBottomSPs.end(),
-                            {SP->x(), SP->y(), SP->z(), SP->radius(),
+                            offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                              SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: middleSPs) {
     middleSPvec.push_back(SP);
     offloadMiddleSPs.insert(offloadMiddleSPs.end(),
-                            {SP->x(), SP->y(), SP->z(), SP->radius(),
+                            offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                              SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: topSPs) {
     topSPvec.push_back(SP);
     offloadTopSPs.insert(offloadTopSPs.end(),
-                         {SP->x(), SP->y(), SP->z(), SP->radius(),
+                         offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                           SP->varianceR(), SP->varianceZ()});
   }
 
