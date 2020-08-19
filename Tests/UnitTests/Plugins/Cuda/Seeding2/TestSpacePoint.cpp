@@ -20,12 +20,7 @@ static constexpr float allowedDiff = std::numeric_limits<float>::epsilon() * 4;
 bool operator==(const TestSpacePoint& a, const TestSpacePoint& b) {
   return ((std::abs(a.m_x - b.m_x) < allowedDiff) &&
           (std::abs(a.m_y - b.m_y) < allowedDiff) &&
-          (std::abs(a.m_z - b.m_z) < allowedDiff) &&
-          (std::abs(a.m_r - b.m_r) < allowedDiff) &&
-          (std::abs(a.m_x - b.m_x) < allowedDiff) &&
-          (a.m_surface == b.m_surface) &&
-          (std::abs(a.m_varianceR - b.m_varianceR) < allowedDiff) &&
-          (std::abs(a.m_varianceZ - b.m_varianceZ) < allowedDiff));
+          (std::abs(a.m_z - b.m_z) < allowedDiff));
 }
 
 std::ostream& operator<<(std::ostream& out, const TestSpacePoint& sp) {

@@ -17,9 +17,6 @@
 #include <sstream>
 #include <stdexcept>
 
-/// Difference allowed on floating point numbers to still be treated equal
-static constexpr float allowedDiff = std::numeric_limits<float>::epsilon() * 4;
-
 std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
     const std::string& fileName, bool filterDuplicates) {
   // The result object.
@@ -70,13 +67,16 @@ std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
 
     // Check if we already have another spacepoint with the same coordinates.
     if (filterDuplicates) {
+      bool discardSP = false;
       for (const auto& otherSP : result) {
-        if ((std::abs(sp->x() - otherSP->x()) < allowedDiff) &&
-            (std::abs(sp->y() - otherSP->y()) < allowedDiff) &&
-            (std::abs(sp->z() - otherSP->z()) < allowedDiff)) {
+        if (*sp == *otherSP) {
           ++duplicatesFound;
-          continue;
+          discardSP = true;
+          break;
         }
+      }
+      if (discardSP) {
+        continue;
       }
     }
 
