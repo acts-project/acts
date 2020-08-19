@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
@@ -18,99 +17,111 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
+#include <type_traits>
 
 namespace Acts {
 
-/// Single track parameters bound to a reference surface.
+/// Track parameters bound to a reference surface for a single track.
 ///
-/// @tparam charge_policy_t Selection type for the particle charge
+/// @tparam charge_t Helper type to interpret the particle charge/momentum
 ///
-/// This is a base class for bound parameters. All parameters and their
-/// corresponding covariance matrix are stored in bound parametrization. The
-/// specific definition of the local spatial parameters is defined by the
-/// associated surface.
+/// This is intended as a user-facing data class that adds additional accessors
+/// and charge/momentum interpretation on top of the pure parameters vector. All
+/// parameters and their corresponding covariance matrix are stored in bound
+/// parametrization. The specific definition of the local spatial parameters is
+/// defined by the associated surface.
 ///
 /// @note This class holds shared ownership on its reference surface.
-template <class charge_policy_t>
+template <class charge_t>
 class SingleBoundTrackParameters {
  public:
   using Scalar = BoundScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 
-  /// Construct charged bound parameters from parameters vector on the surface.
+  /// Construct from a parameters vector on the surface and charge magnitude.
   ///
-  /// @param[in] surface The reference surface the parameters are defined on
-  /// @param[in] params The parameter vector
-  /// @param[in] cov Optional covariance in the reference frame
-  template <typename T = charge_policy_t,
-            std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
+  /// @param surface Reference surface the parameters are defined on
+  /// @param params Bound parameters vector
+  /// @param absQ Particle charge magnitude/ absolute charge value
+  /// @param cov Bound parameters covariance matrix
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                             const ParametersVector& params, Scalar absQ,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
+      : m_paramSet(std::move(cov), params),
+        m_surface(std::move(surface)),
+        m_chargeInterpreter(absQ) {
+    assert((0 <= absQ) and "Charge magnitude must be positive");
+    assert(m_surface);
+  }
+
+  /// Construct from a parameters vector on the surface.
+  ///
+  /// @param surface Reference surface the parameters are defined on
+  /// @param params Bound parameters vector
+  /// @param cov Bound parameters covariance matrix
+  ///
+  /// This constructor is only available if there are no potential charge
+  /// ambiguities, i.e. the charge type is default-constructible.
+  template <typename T = charge_t,
+            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
                              const ParametersVector& params,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_paramSet(std::move(cov), params),
-        m_chargePolicy(std::copysign(1., params[eBoundQOverP])),
-        m_surface(std::move(surface)) {
+        m_surface(std::move(surface)),
+        m_chargeInterpreter(T()) {
     assert(m_surface);
   }
 
-  /// Construct neutral bound parameters from parameters vector on the surface.
+  /// Construct from four-position, direction, absolute momentum, and charge.
   ///
-  /// @param[in] surface The reference surface the parameters are defined on
-  /// @param[in] params The parameter vector
-  /// @param[in] cov Optional covariance in the reference frame
-  template <typename T = charge_policy_t,
-            std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
+  /// @param surface Reference surface the parameters are defined on
+  /// @param geoCtx Geometry context for the local-to-global transformation
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param p Absolute momentum
+  /// @param q Particle charge
+  /// @param cov Bound parameters covariance matrix
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params,
+                             const GeometryContext& geoCtx,
+                             const Vector4D& pos4, const Vector3D& dir,
+                             Scalar p, Scalar q,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), params), m_surface(std::move(surface)) {
+      : m_paramSet(std::move(cov),
+                   detail::transformFreeToBoundParameters(
+                       pos4.segment<3>(ePos0), pos4[eTime], dir,
+                       (q != Scalar(0)) ? (q / p) : (1 / p), *surface, geoCtx)),
+        m_surface(std::move(surface)),
+        m_chargeInterpreter(std::abs(q)) {
+    assert((0 <= p) and "Absolute momentum must be positive");
     assert(m_surface);
   }
 
-  /// Construct charged bound parameters from global position and momentum.
+  /// Construct from four-position, direction, and charge-over-momentum.
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
-  /// @param[in] cov Optional covariance in the reference frame
-  /// @param[in] pos The global track three-position vector
-  /// @param[in] mom The global track three-momentum vector
-  /// @param[in] charge The particle charge
-  /// @param[in] time The time coordinate
-  /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = charge_policy_t,
-            std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& geoCtx,
-                             std::optional<CovarianceMatrix> cov,
-                             const Vector3D& pos, const Vector3D& mom,
-                             Scalar charge, Scalar time,
-                             std::shared_ptr<const Surface> surface)
-      : m_paramSet(std::move(cov),
-                   detail::transformFreeToBoundParameters(
-                       pos, time, mom, charge / mom.norm(), *surface, geoCtx)),
-        m_chargePolicy(charge),
-        m_surface(std::move(surface)) {
-    assert(m_surface);
-  }
-
-  /// Construct neutral bound parameters from global position and momentum.
+  /// @param surface Reference surface the parameters are defined on
+  /// @param geoCtx Geometry context for the local-to-global transformation
+  /// @param pos4 Track position/time four-vector
+  /// @param dir Track direction three-vector; normalization is ignored.
+  /// @param qOverP Charge-over-momentum-like parameter
+  /// @param cov Bound parameters covariance matrix
   ///
-  /// @param[in] geoCtx Geometry context for the local-to-global transformation
-  /// @param[in] cov Optional covariance in the reference frame
-  /// @param[in] pos The global track three-position vector
-  /// @param[in] mom The global track three-momentum vector
-  /// @param[in] time The time coordinate
-  /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = charge_policy_t,
-            std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& geoCtx,
-                             std::optional<CovarianceMatrix> cov,
-                             const Vector3D& pos, const Vector3D& mom,
-                             Scalar time,
-                             std::shared_ptr<const Surface> surface)
-      : m_paramSet(std::move(cov),
-                   detail::transformFreeToBoundParameters(
-                       pos, time, mom, 1 / mom.norm(), *surface, geoCtx)),
-        m_surface(std::move(surface)) {
+  /// This constructor is only available if there are no potential charge
+  /// ambiguities, i.e. the charge type is default-constructible. The position
+  /// must be located on the surface.
+  template <typename T = charge_t,
+            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                             const GeometryContext& geoCtx,
+                             const Vector4D& pos4, const Vector3D& dir,
+                             Scalar qOverP,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
+      : m_paramSet(std::move(cov), detail::transformFreeToBoundParameters(
+                                       pos4.segment<3>(ePos0), pos4[eTime], dir,
+                                       qOverP, *surface, geoCtx)),
+        m_surface(std::move(surface)),
+        m_chargeInterpreter(T()) {
     assert(m_surface);
   }
 
@@ -119,9 +130,9 @@ class SingleBoundTrackParameters {
 
   /// Access the parameter set holding the parameters vector and covariance.
   const FullParameterSet& getParameterSet() const { return m_paramSet; }
-  /// Access the bound parameters vector.
+  /// Parameters vector.
   ParametersVector parameters() const { return m_paramSet.getParameters(); }
-  /// Access the optional covariance matrix.
+  /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const {
     return m_paramSet.getCovariance();
   }
@@ -140,7 +151,7 @@ class SingleBoundTrackParameters {
   /// @retval parameter standard deviation if the covariance is available
   template <BoundIndices kIndex>
   Scalar uncertainty() const {
-    return m_paramSet.getUncertainty<kIndex>();
+    return m_paramSet.template getUncertainty<kIndex>();
   }
 
   /// Space-time position four-vector.
@@ -160,7 +171,7 @@ class SingleBoundTrackParameters {
     pos4[eTime] = get<eBoundTime>();
     return pos4;
   }
-  /// Access the spatial position vector.
+  /// Spatial position three-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   ///
@@ -174,28 +185,32 @@ class SingleBoundTrackParameters {
         makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
     return m_surface->localToGlobal(geoCtx, loc, dir);
   }
-  /// Access the time coordinate.
+  /// Time coordinate.
   Scalar time() const { return get<eBoundTime>(); }
 
-  /// Direction unit three-vector, i.e. the normalized momentum three-vector.
+  /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3D unitDirection() const {
     return makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
   }
   /// Absolute momentum.
-  Scalar absoluteMomentum() const { return 1 / std::abs(get<eBoundQOverP>()); }
-  /// Absolute transverse momentum.
+  Scalar absoluteMomentum() const {
+    return m_chargeInterpreter.extractMomentum(get<eBoundQOverP>());
+  }
+  /// Transverse momentum.
   Scalar transverseMomentum() const {
     return std::sin(get<eBoundTheta>()) * absoluteMomentum();
   }
   /// Momentum three-vector.
   Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
 
-  /// Access the particle electric charge.
-  Scalar charge() const { return m_chargePolicy.getCharge(); }
+  /// Particle electric charge.
+  constexpr Scalar charge() const {
+    return m_chargeInterpreter.extractCharge(get<eBoundQOverP>());
+  }
 
-  /// Access the reference surface onto which the parameters are bound.
+  /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }
-  /// Access the reference frame in which the local error is defined.
+  /// Reference frame in which the local error is defined.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   ///
@@ -209,17 +224,17 @@ class SingleBoundTrackParameters {
  private:
   /// parameter set holding parameters vector and covariance.
   FullParameterSet m_paramSet;
-  /// charge policy to distinguish differently charged particles
-  charge_policy_t m_chargePolicy;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
+  // TODO use [[no_unique_address]] once we switch to C++20
+  charge_t m_chargeInterpreter;
 
   /// Compare two bound parameters for equality.
   friend bool operator==(const SingleBoundTrackParameters& lhs,
                          const SingleBoundTrackParameters& rhs) {
     return (lhs.m_paramSet == rhs.m_paramSet) and
-           (lhs.m_chargePolicy == rhs.m_chargePolicy) and
-           (lhs.m_surface == rhs.m_surface);
+           (lhs.m_surface == rhs.m_surface) and
+           (lhs.m_chargeInterpreter == rhs.m_chargeInterpreter);
   }
   /// Compare two bound parameters for inequality.
   friend bool operator!=(const SingleBoundTrackParameters& lhs,
