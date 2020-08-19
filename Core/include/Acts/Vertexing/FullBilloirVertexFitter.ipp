@@ -314,13 +314,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       iTrack = 0;
       for (auto& bTrack : billoirTracks) {
         // new refitted trackparameters
-        BoundVector paramVec;
-        paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
-            trackMomenta[iTrack](2), 0.;
-
-        BoundParameters refittedParams(vertexingOptions.geoContext,
-                                       covDeltaPmat[iTrack], paramVec, perigee);
-
+        BoundVector paramVec = BoundVector::Zero();
+        paramVec[eBoundPhi] = trackMomenta[iTrack](0);
+        paramVec[eBoundTheta] = trackMomenta[iTrack](1);
+        paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
+        BoundParameters refittedParams(perigee, paramVec, covDeltaPmat[iTrack]);
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,
                                              bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));

@@ -162,11 +162,9 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   std::vector<BoundVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-    parameters_t tp = startPars;
-
     // Treatment for theta
     if (param == eTHETA) {
-      const double current_theta = tp.template get<eTHETA>();
+      const double current_theta = startPars.template get<eTHETA>();
       if (current_theta + h > M_PI) {
         h = M_PI - current_theta;
       }
@@ -175,38 +173,13 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     }
 
-    // Modify start parameter and propagate
-    switch (param) {
-      case 0: {
-        tp.template set<eLOC_0>(options.geoContext,
-                                tp.template get<eLOC_0>() + h);
-        break;
-      }
-      case 1: {
-        tp.template set<eLOC_1>(options.geoContext,
-                                tp.template get<eLOC_1>() + h);
-        break;
-      }
-      case 2: {
-        tp.template set<ePHI>(options.geoContext, tp.template get<ePHI>() + h);
-        break;
-      }
-      case 3: {
-        tp.template set<eTHETA>(options.geoContext,
-                                tp.template get<eTHETA>() + h);
-        break;
-      }
-      case 4: {
-        tp.template set<eQOP>(options.geoContext, tp.template get<eQOP>() + h);
-        break;
-      }
-      case 5: {
-        tp.template set<eT>(options.geoContext, tp.template get<eT>() + h);
-        break;
-      }
-      default:
-        return {};
-    }
+    // Modify start parameter
+    BoundVector values = startPars.parameters();
+    values[param] += h;
+
+    // Propagate with updated start parameters
+    BoundParameters tp(startPars.referenceSurface().getSharedPtr(), values,
+                       startPars.covariance());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);

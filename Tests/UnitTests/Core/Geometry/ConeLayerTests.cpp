@@ -10,7 +10,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Geometry/ConeLayer.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
