@@ -1,0 +1,55 @@
+# Build files
+build/
+
+# conda
+environment.yml
+
+# mkdocs
+site/
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Python cache files
+__pycache__/
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Eclipse files
+.cproject
+.project
+language.settings.xml
+
+# VSCode files
+.vscode/
+
+# Qt Creator files
+CMakeLists.txt.user

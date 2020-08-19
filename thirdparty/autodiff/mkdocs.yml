@@ -1,0 +1,63 @@
+# Project information
+site_name: autodiff
+site_description: autodiff documentation.
+site_author: Allan leal
+site_url: https://autodiff.github.io
+
+# Repository
+repo_name: autodiff/autodiff
+repo_url: https://github.com/autodiff/autodiff/
+
+# Copyright
+copyright: 'Copyright &copy; 2018–2020 Allan Leal'
+
+# Configuration
+theme:
+  name: material
+  palette:
+    primary: 'teal'
+    accent: 'pink'
+  favicon: 'img/logo.png'
+
+# Navigation
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Tutorials: tutorials.md
+  - FAQ: faq.md
+  - About: about.md
+
+# Customization
+extra_css:
+    - css/extra.css
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Plugins
+plugins:
+  - search
+  - macros
+
+# Macros
+extra:
+  autodiff: <span style="font-family:'Comfortaa'">autodiff</span>

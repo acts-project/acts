@@ -28,3 +28,18 @@ following folders removed:
 -   test
 -   include
 -   third_party
+
+## autodiff
+
+A copy of [autodiff](https://github.com/benjaminhuth/autodiff) revision f4a82c2.This 
+fork differs from the [original library](https://github.com/autodiff/autodiff) by 
+supporting `std::hypot` and some small changes to prevent the library from 
+triggering `-Wshadow`. The following files/folders have been removed:
+
+-   art
+-   benchmarks
+-   ci
+-   cmake
+-   docs
+-   test
+-   CMakeLists.txt
