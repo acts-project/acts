@@ -29,6 +29,7 @@ option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
 option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json installation" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_AUTODIFF_PLUGIN "Build autodiff plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options

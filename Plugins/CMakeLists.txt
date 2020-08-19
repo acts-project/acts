@@ -5,6 +5,7 @@ add_component_if(Cuda CudaPlugin ACTS_BUILD_CUDA_PLUGIN)
 add_component_if(Digitization DigitizationPlugin ACTS_BUILD_DIGITIZATION_PLUGIN)
 add_component_if(Identification IdentificationPlugin ACTS_BUILD_IDENTIFICATION_PLUGIN)
 add_component_if(Json JsonPlugin ACTS_BUILD_JSON_PLUGIN)
+add_component_if(Autodiff AutodiffPlugin ACTS_BUILD_AUTODIFF_PLUGIN)
 # legacy behaves like a plugin but is not named like one for historical reasons
 add_component_if(Legacy Legacy ACTS_BUILD_LEGACY)
 # dependent plugins. depend either on a independent plugins or on one another
