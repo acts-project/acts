@@ -18,9 +18,9 @@ namespace Acts {
 
 /// @brief Default RKN4 evaluator for autodiff
 template <template <typename> typename basic_extension_t>
-struct AutodiffExtension {
+struct AutodiffExtensionWrapper {
   /// @brief Default constructor
-  AutodiffExtension() = default;
+  AutodiffExtensionWrapper() = default;
 
   /// Some typedefs
   using AutodiffScalar = autodiff::dual;

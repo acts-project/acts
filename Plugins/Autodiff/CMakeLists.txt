@@ -15,9 +15,6 @@ target_include_directories(
     
 target_link_libraries(
   ActsAutodiffPlugin INTERFACE ActsCore)
-  
-target_compile_definitions(
-  ActsAutodiffPlugin INTERFACE AUTODIFF_PLUGIN_ENABLED)
 
 install(
   TARGETS ActsAutodiffPlugin
