@@ -42,4 +42,4 @@ triggering `-Wshadow`. The following files/folders have been removed:
 -   cmake
 -   docs
 -   test
--   CMakeLists.txt
+-   most files except headers
