@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest) {
   BoundVector pars;
   pars << 182.34, -82., 0.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundParameters atCylinder(tgContext, cov, std::move(pars), cSurface);
+  BoundParameters atCylinder(cSurface, std::move(pars), std::move(cov));
 
   // run the test
   testJacobianToGlobal(atCylinder);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest) {
   BoundVector pars;
   pars << 192.34, 1.823, 0.734, 0.235, 1. / (100_GeV), 0;
 
-  BoundParameters atDisc(tgContext, cov, std::move(pars), dSurface);
+  BoundParameters atDisc(dSurface, std::move(pars), std::move(cov));
 
   // run the test
   testJacobianToGlobal(atDisc);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   BoundVector pars;
   pars << 12.34, -8722., 2.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundParameters atPlane(tgContext, cov, std::move(pars), pSurface);
+  BoundParameters atPlane(pSurface, std::move(pars), std::move(cov));
 
   // run the test
   testJacobianToGlobal(atPlane);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
   BoundVector pars;
   pars << -3.34, -822., -0.734, 0.85, 1. / (100_GeV), 0;
 
-  BoundParameters perigee(tgContext, cov, std::move(pars), pSurface);
+  BoundParameters perigee(pSurface, std::move(pars), std::move(cov));
 
   // run the test
   testJacobianToGlobal(perigee);
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   BoundVector pars;
   pars << -8.34, 812., 0.734, 0.25, 1. / (100_GeV), 0;
 
-  BoundParameters atStraw(tgContext, cov, std::move(pars), sSurface);
+  BoundParameters atStraw(sSurface, std::move(pars), std::move(cov));
 
   // run the test
   testJacobianToGlobal(atStraw);

@@ -119,9 +119,7 @@ std::tuple<
         std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
-    auto boundParams =
-        BoundParameters(geoCtx, std::move(covMat), params, perigeeSurface);
-    tracks.push_back(boundParams);
+    tracks.emplace_back(perigeeSurface, params, std::move(covMat));
   }
 
   // Read in reference vertex data

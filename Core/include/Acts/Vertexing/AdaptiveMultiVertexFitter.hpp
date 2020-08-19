@@ -299,8 +299,7 @@ class AdaptiveMultiVertexFitter {
   /// of current vertex position
   ///
   /// @param state The state object
-  /// @param geoContext The geometry context
-  void doVertexSmoothing(State& state, const GeometryContext& geoContext) const;
+  void doVertexSmoothing(State& state) const;
 };
 
 }  // namespace Acts

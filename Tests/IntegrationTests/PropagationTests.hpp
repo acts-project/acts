@@ -117,9 +117,10 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 /// \warning Does not check that they are defined on the same surface.
 template <typename charge_t>
 inline void checkParametersConsistency(
-    const Acts::SingleTrackParameters<charge_t>& cmp,
-    const Acts::SingleTrackParameters<charge_t>& ref, double epsPos,
-    double epsDir, double epsMom) {
+    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
+    const Acts::SingleBoundTrackParameters<charge_t>& ref,
+    const Acts::GeometryContext& geoCtx, double epsPos, double epsDir,
+    double epsMom) {
   using namespace Acts;
 
   // check stored parameters
@@ -138,7 +139,7 @@ inline void checkParametersConsistency(
   CHECK_CLOSE_ABS(cmp.template get<eBoundQOverP>(),
                   ref.template get<eBoundQOverP>(), epsMom);
   // check derived parameters
-  CHECK_CLOSE_ABS(cmp.position(), ref.position(), epsPos);
+  CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
   CHECK_CLOSE_ABS(cmp.momentum(), ref.momentum(), epsMom);
   // charge should be identical not just similar
@@ -150,8 +151,8 @@ inline void checkParametersConsistency(
 /// \warning Does not check that the parameters value itself are consistent.
 template <typename charge_t>
 inline void checkCovarianceConsistency(
-    const Acts::SingleTrackParameters<charge_t>& cmp,
-    const Acts::SingleTrackParameters<charge_t>& ref,
+    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
+    const Acts::SingleBoundTrackParameters<charge_t>& ref,
     double relativeTolerance) {
   BOOST_CHECK(
       not(cmp.covariance().has_value() xor ref.covariance().has_value()));
@@ -166,7 +167,8 @@ inline void checkCovarianceConsistency(
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
 inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
-    const Acts::SingleTrackParameters<charge_t>& params) {
+    const Acts::SingleBoundTrackParameters<charge_t>& params,
+    const Acts::GeometryContext& geoCtx) {
   Acts::Vector3D unitW = params.momentum().normalized();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
@@ -174,7 +176,7 @@ inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
-  Acts::Translation3D offset(params.position());
+  Acts::Translation3D offset(params.position(geoCtx));
   Acts::Transform3D toGlobal = offset * rotation;
 
   return std::make_shared<Acts::Transform3D>(toGlobal);
@@ -184,10 +186,11 @@ inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
 struct ZCylinderSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::CylinderSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
+      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GeometryContext& geoCtx) {
     auto transform =
         std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
-    auto radius = params.position().template head<2>().norm();
+    auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
     return Acts::Surface::makeShared<Acts::CylinderSurface>(
         std::move(transform), radius, halfz);
@@ -198,11 +201,12 @@ struct ZCylinderSurfaceBuilder {
 struct DiscSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::DiscSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
+      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
     using namespace Acts::UnitLiterals;
 
-    auto cl = makeCurvilinearTransform(params);
+    auto cl = makeCurvilinearTransform(params, geoCtx);
     // shift the origin of the plane so the local particle position does not
     // sit directly at the rho=0,phi=undefined singularity
     // TODO this is a hack do avoid issues with the numerical covariance
@@ -221,9 +225,10 @@ struct DiscSurfaceBuilder {
 struct PlaneSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::PlaneSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
+      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::PlaneSurface>(
-        makeCurvilinearTransform(params));
+        makeCurvilinearTransform(params, geoCtx));
   }
 };
 
@@ -231,10 +236,11 @@ struct PlaneSurfaceBuilder {
 struct ZStrawSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::StrawSurface> operator()(
-      const Acts::SingleTrackParameters<charge_t>& params) {
+      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
         std::make_shared<Acts::Transform3D>(
-            Acts::Translation3D(params.position())));
+            Acts::Translation3D(params.position(geoCtx))));
   }
 };
 
@@ -341,7 +347,8 @@ inline void runForwardBackwardTest(
           propagator, geoCtx, magCtx, fwdParams, -pathLength, showDebug);
   CHECK_CLOSE_ABS(bwdPathLength, -pathLength, epsPos);
   // check that initial and back-propagated parameters match
-  checkParametersConsistency(initialParams, bwdParams, epsPos, epsDir, epsMom);
+  checkParametersConsistency(initialParams, bwdParams, geoCtx, epsPos, epsDir,
+                             epsMom);
 }
 
 /// Propagate the initial parameters once for the given path length and
@@ -364,7 +371,7 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
   // build a target surface at the propagated position
-  auto surface = buildTargetSurface(freeParams);
+  auto surface = buildTargetSurface(freeParams, geoCtx);
   BOOST_CHECK(surface);
 
   // bound propagation onto the target surface
@@ -407,7 +414,8 @@ inline void runForwardComparisonTest(
       transportFreely<ref_propagator_t, charge_t, options_t>(
           refPropagator, geoCtx, magCtx, initialParams, pathLength, showDebug);
   // check parameter comparison
-  checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
+  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
+                             epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);
@@ -436,7 +444,7 @@ inline void runToSurfaceComparisonTest(
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
   // build a target surface at the propagated position
-  auto surface = buildTargetSurface(freeParams);
+  auto surface = buildTargetSurface(freeParams, geoCtx);
   BOOST_CHECK(surface);
 
   // propagate twice to the surface using the two different propagators
@@ -450,7 +458,8 @@ inline void runToSurfaceComparisonTest(
           refPropagator, geoCtx, magCtx, initialParams, *surface,
           1.5 * pathLength, showDebug);
   // check parameter comparison
-  checkParametersConsistency(cmpParams, refParams, epsPos, epsDir, epsMom);
+  checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
+                             epsMom);
   checkCovarianceConsistency(cmpParams, refParams, tolCov);
   CHECK_CLOSE_ABS(cmpPath, pathLength, epsPos);
   CHECK_CLOSE_ABS(refPath, pathLength, epsPos);

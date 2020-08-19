@@ -124,25 +124,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.charge(), +1., 1e-6);
   BOOST_CHECK_EQUAL(nfp.charge(), 0.);
   CHECK_CLOSE_ABS(fp.time(), t, 1e-6);
-
-  // Test setters
-  GeometryContext dummy;
-  fp.set<eFreePos0>(dummy, 8.);
-  fp.set<eFreePos1>(dummy, 9.);
-  fp.set<eFreePos2>(dummy, 10.);
-  fp.set<eFreeTime>(dummy, 11.);
-  fp.set<eFreeDir0>(dummy, 12.);
-  fp.set<eFreeDir1>(dummy, 13.);
-  fp.set<eFreeDir2>(dummy, 14.);
-  fp.set<eFreeQOverP>(dummy, 15.);
-  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), 8., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), 9., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), 10., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), 11., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), 12., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), 13., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), 14., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), 15., 1e-6);
 }
+
 }  // namespace Test
 }  // namespace Acts

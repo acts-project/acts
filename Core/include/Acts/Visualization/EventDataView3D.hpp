@@ -240,9 +240,8 @@ struct EventDataView3D {
       if (predictedConfig.visible and state.hasPredicted()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.predictedCovariance(),
-                            state.predicted(),
-                            state.referenceSurface().getSharedPtr()),
+            BoundParameters(state.referenceSurface().getSharedPtr(),
+                            state.predicted(), state.predictedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));
       }
@@ -250,8 +249,8 @@ struct EventDataView3D {
       if (filteredConfig.visible and state.hasFiltered()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.filteredCovariance(), state.filtered(),
-                            state.referenceSurface().getSharedPtr()),
+            BoundParameters(state.referenceSurface().getSharedPtr(),
+                            state.filtered(), state.filteredCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
       }
@@ -259,8 +258,8 @@ struct EventDataView3D {
       if (smoothedConfig.visible and state.hasSmoothed()) {
         drawBoundParameters(
             helper,
-            BoundParameters(gctx, state.smoothedCovariance(), state.smoothed(),
-                            state.referenceSurface().getSharedPtr()),
+            BoundParameters(state.referenceSurface().getSharedPtr(),
+                            state.smoothed(), state.smoothedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));
       }
