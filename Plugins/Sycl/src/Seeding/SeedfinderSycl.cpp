@@ -24,13 +24,11 @@ namespace Acts::Sycl {
   class filter_2sp_fixed_kernel;
 
   void offloadComputations(cl::sycl::queue q,
-                          const std::vector<float>& configData,
-                          const std::vector<int>& limitData,
+                          const offloadSeedfinderConfig& configData,
                           const std::vector<offloadSpacePoint>& bottomSPs,
                           const std::vector<offloadSpacePoint>& middleSPs,
                           const std::vector<offloadSpacePoint>& topSPs,
-                          std::vector<std::vector<int>>& seedIndices,
-                          std::vector<std::vector<float>>& seedWeight)
+                          std::vector<std::vector<SeedData>>& seeds)
   {
 
     // Each vector stores data of space points in simplified 
@@ -78,17 +76,12 @@ namespace Acts::Sycl {
 
       // Reserve buffers:
       //  - configBuf: offloaded data of the SeedfinderConfig class instance m_config
-      //  - limitBuf: required limit values, such as compatSeedLimit
       //  - botSPBuf, midSPBuf, topSPBuf: space point data
       //  - numBotCompBuf, numTopCompBuf: number of compatible bottom/top space points per middle sp
-      sycl::buffer<float,1>   configBuf (configData.data(),         sycl::range<1>(configData.size()));
-      sycl::buffer<int,1>     limitBuf  (limitData.data(),          sycl::range<1>(limitData.size()));
-      sycl::buffer<offloadSpacePoint,1>
-        botSPBuf  (bottomSPs.data(),          sycl::range<1>(bottomSPs.size()));
-      sycl::buffer<offloadSpacePoint,1>
-        midSPBuf  (middleSPs.data(),          sycl::range<1>(middleSPs.size()));
-      sycl::buffer<offloadSpacePoint,1>
-        topSPBuf  (topSPs.data(),             sycl::range<1>(topSPs.size()));
+      sycl::buffer<offloadSeedfinderConfig,1>     configBuf (&configData,1);
+      sycl::buffer<offloadSpacePoint,1>   botSPBuf  (bottomSPs.data(),  sycl::range<1>(bottomSPs.size()));
+      sycl::buffer<offloadSpacePoint,1>   midSPBuf  (middleSPs.data(),  sycl::range<1>(middleSPs.size()));
+      sycl::buffer<offloadSpacePoint,1>   topSPBuf  (topSPs.data(),     sycl::range<1>(topSPs.size()));
       sycl::buffer<int,1>     numBotCompBuf(numBotCompMid.data(), (sycl::range<1>(M)));
       sycl::buffer<int,1>     numTopCompBuf(numTopCompMid.data(), (sycl::range<1>(M)));
 
@@ -122,16 +115,17 @@ namespace Acts::Sycl {
 
           offloadSpacePoint midSP = midSPAcc[mid];
           offloadSpacePoint botSP = botSPAcc[bot];
+          offloadSeedfinderConfig config = configAcc[0];
 
           const float deltaR = midSP.r - botSP.r;
           const float cotTheta = (midSP.z - botSP.z) / deltaR;
           const float zOrigin = midSP.z - midSP.r * cotTheta;
 
-          if( !(deltaR < configAcc[eDeltaRMin]) &&
-              !(deltaR > configAcc[eDeltaRMax]) &&
-              !(sycl::abs(cotTheta) > configAcc[eCotThetaMax]) &&
-              !(zOrigin < configAcc[eCollisionRegionMin]) &&
-              !(zOrigin > configAcc[eCollisionRegionMax])
+          if( !(deltaR < config.deltaRMin) &&
+              !(deltaR > config.deltaRMax) &&
+              !(sycl::abs(cotTheta) > config.cotThetaMax) &&
+              !(zOrigin < config.collisionRegionMin) &&
+              !(zOrigin > config.collisionRegionMax)
               && mid < M && bot < B) {
             // Besides checking the conditions that make a duplet compatible,
             // we also check whether this thread actually makes sense (within bounds).
@@ -159,17 +153,18 @@ namespace Acts::Sycl {
 
           offloadSpacePoint midSP = midSPAcc[mid];
           offloadSpacePoint topSP = topSPAcc[top];
+          offloadSeedfinderConfig config = configAcc[0];
 
           if(numBotCompAcc[mid] != 0) {
             const float deltaR = topSP.r - midSP.r;
             const float cotTheta = (topSP.z - midSP.z) / deltaR;
             const float zOrigin = midSP.z - midSP.r * cotTheta;
 
-            if( !(deltaR < configAcc[eDeltaRMin]) &&
-                !(deltaR > configAcc[eDeltaRMax]) &&
-                !(sycl::abs(cotTheta) > configAcc[eCotThetaMax]) &&
-                !(zOrigin < configAcc[eCollisionRegionMin]) &&
-                !(zOrigin > configAcc[eCollisionRegionMax]) &&
+            if( !(deltaR < config.deltaRMin) &&
+                !(deltaR > config.deltaRMax) &&
+                !(sycl::abs(cotTheta) > config.cotThetaMax) &&
+                !(zOrigin < config.collisionRegionMin) &&
+                !(zOrigin > config.collisionRegionMax) &&
                 mid < M && top < T) {
               // Besides checking the conditions that make a duplet compatible,
               // we also check whether this thread actually makes sense (within bounds).
@@ -218,8 +213,10 @@ namespace Acts::Sycl {
         }
       }
 
-      std::vector<int>    indTopCompMid(edgesTop);
+      std::vector<int> indTopCompMid(edgesTop);
+
       sycl::buffer<int,1> indBotCompBuf ((sycl::range<1>(edgesBottom)));
+      // sycl::buffer<int,1> indTopCompBuf ((sycl::range<1>(edgesTop)));
 
       sycl::buffer<int,1> indMidBotCompBuf (indMidBotComp.data(), sycl::range<1>(edgesBottom));
       sycl::buffer<int,1> indMidTopCompBuf (indMidTopComp.data(), sycl::range<1>(edgesTop));
@@ -256,7 +253,7 @@ namespace Acts::Sycl {
             indTopAcc[idx] = ind;     
           });
         });
-      } // indTopCompBuf buffer gets destroyed, data is copied back to indTopCompMid       
+      }    
 
       // Sort by top indices for later filter algorithm. -> see filter_2sp_fixed_kernel
       // (ascending indices correspond to ascending radius because top space points are
@@ -382,10 +379,9 @@ namespace Acts::Sycl {
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-      seedIndices.resize(M);
-      seedWeight.resize(M);
+      seeds.resize(M);
       const float MIN = -100000.f;
-      sycl::buffer<float,3> curvImpactBuf ((sycl::range<3>(maxBotCompMid, maxTopCompMid, 2)));
+      sycl::buffer<TripletData,2> curvImpactBuf ((sycl::range<2>(maxBotCompMid, maxTopCompMid)));
       
       // Start kernels and load data to memory separately for each middle space point.
       // This way we don't run out of memory. (yay)
@@ -421,36 +417,41 @@ namespace Acts::Sycl {
             // Check whether we are within bounds:
             // this costs us extra computing power, but gives better results.
             if(idx[0] < numBotAcc[0] && idx[1] < numTopAcc[0]) {
-              curvImpactAcc[idx[0]][idx[1]][0] = MIN;
-              curvImpactAcc[idx[0]][idx[1]][1] = MIN;
+              TripletData T = {MIN, MIN};
+              curvImpactAcc[idx[0]][idx[1]] = T;
 
               int ib = idx[0];
               int it = idx[1];
 
               int bot = indBotAcc[ib];
               int top = indTopAcc[it];
+              offloadSeedfinderConfig config = configAcc[0];
 
-              const float Zob =         linBotAcc[ib].zo;
-              const float Vb =          linBotAcc[ib].v;
-              const float Ub =          linBotAcc[ib].u;
-              const float Erb =         linBotAcc[ib].er;
-              const float cotThetab =   linBotAcc[ib].cotTheta;
-              const float iDeltaRb =    linBotAcc[ib].iDeltaR;
+              offloadLinEqCircle linBotEq = linBotAcc[ib];
+              offloadLinEqCircle linTopEq = linTopAcc[it];
+              offloadSpacePoint midSP = midSPAcc[0];
 
-              const float Zot =         linTopAcc[it].zo;
-              const float Vt =          linTopAcc[it].v;
-              const float Ut =          linTopAcc[it].u;
-              const float Ert =         linTopAcc[it].er;
-              const float cotThetat =   linTopAcc[it].cotTheta;
-              const float iDeltaRt =    linTopAcc[it].iDeltaR;
+              // const float Zob =         linBotEq.zo;
+              const float Vb =          linBotEq.v;
+              const float Ub =          linBotEq.u;
+              const float Erb =         linBotEq.er;
+              const float cotThetab =   linBotEq.cotTheta;
+              const float iDeltaRb =    linBotEq.iDeltaR;
 
-              const float rM =          midSPAcc[0].r;
-              const float varianceRM =  midSPAcc[0].varR;
-              const float varianceZM =  midSPAcc[0].varZ;
+              // const float Zot =         linTopEq.zo;
+              const float Vt =          linTopEq.v;
+              const float Ut =          linTopEq.u;
+              const float Ert =         linTopEq.er;
+              const float cotThetat =   linTopEq.cotTheta;
+              const float iDeltaRt =    linTopEq.iDeltaR;
+
+              const float rM =          midSP.r;
+              const float varianceRM =  midSP.varR;
+              const float varianceZM =  midSP.varZ;
 
               float iSinTheta2 = (1. + cotThetab * cotThetab);
-              float scatteringInRegion2 = configAcc[eMaxScatteringAngle2] * iSinTheta2;
-              scatteringInRegion2 *= configAcc[eSigmaScattering] * configAcc[eSigmaScattering];
+              float scatteringInRegion2 = config.maxScatteringAngle2 * iSinTheta2;
+              scatteringInRegion2 *= config.sigmaScattering * config.sigmaScattering;
               float error2 = Ert + Erb + 2 * (cotThetab * cotThetat *
                 varianceRM + varianceZM) * iDeltaRb * iDeltaRt;
               float deltaCotTheta = cotThetab - cotThetat;
@@ -470,17 +471,18 @@ namespace Acts::Sycl {
                 float B2 = B * B;
 
                 float iHelixDiameter2 = B2 / S2;
-                float pT2scatter = 4 * iHelixDiameter2 * configAcc[ePT2perRadius];
+                float pT2scatter = 4 * iHelixDiameter2 * config.pT2perRadius;
                 float p2scatter = pT2scatter * iSinTheta2;
                 float Im = sycl::abs((A - B * rM) * rM);
 
-                if(!(S2 < B2 * configAcc[eMinHelixDiameter2]) && 
+                if(!(S2 < B2 * config.minHelixDiameter2) && 
                     !((deltaCotTheta2 - error2 > 0) &&
-                    (dCotThetaMinusError2 > p2scatter * configAcc[eSigmaScattering] * configAcc[eSigmaScattering])) &&
-                    !(Im > configAcc[eImpactMax])) {
+                    (dCotThetaMinusError2 > p2scatter * config.sigmaScattering * config.sigmaScattering)) &&
+                    !(Im > config.impactMax)) {
                   maxTripletsAcc[0].fetch_add(1);
-                  curvImpactAcc[idx[0]][idx[1]][0] = B / std::sqrt(S2);
-                  curvImpactAcc[idx[0]][idx[1]][1] = Im;
+                  T.curvature = B / std::sqrt(S2);
+                  T.impact = Im;
+                  curvImpactAcc[idx[0]][idx[1]] = T;
                 }
               }
             }
@@ -494,8 +496,10 @@ namespace Acts::Sycl {
         // We could reserve these buffers outside the loop, and it would provide a performance
         // boost, if sub-buffers or sub-accessors had a correct implementation.
         // However, they don't.
-        sycl::buffer<int,2>       seedIndBuf((sycl::range<2>{maxTriplets,2}));
-        sycl::buffer<float,1>     seedWeightBuf((sycl::range<1>(maxTriplets)));        
+        // sycl::buffer<int,2>       seedIndBuf((sycl::range<2>{maxTriplets,2}));
+        // sycl::buffer<float,1>     seedWeightBuf((sycl::range<1>(maxTriplets))); 
+
+        sycl::buffer<SeedData,1> seedBuf((sycl::range<1>(maxTriplets)));       
 
         // Experiment specific cuts may reduce the number of triplets/seeds,
         // so we count them again. We only copy back to the host that many values.
@@ -514,13 +518,14 @@ namespace Acts::Sycl {
           auto topSPAcc =       topSPBuf.get_access<        am::read,         at::global_buffer>(h);
           auto botSPAcc =       botSPBuf.get_access<        am::read,         at::global_buffer>(h);
           auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(h);
-          auto limitAcc =       limitBuf.get_access<        am::read,         at::constant_buffer>(h);
 
           // Use sub-accessors, so maybe with a future implementation this would
           // provide a benefit, currently it is no overhead
-          auto seedIndAcc =  seedIndBuf.get_access<      am::write,        at::global_buffer>
-            (h, sycl::range<2>{maxTriplets,2},sycl::range<2>{0,0});
-          auto seedWeightAcc =  seedWeightBuf.get_access<   am::write,        at::global_buffer>
+          // auto seedIndAcc =  seedIndBuf.get_access<      am::write,        at::global_buffer>
+          //   (h, sycl::range<2>{maxTriplets,2},sycl::range<2>{0,0});
+          // auto seedWeightAcc =  seedWeightBuf.get_access<   am::write,        at::global_buffer>
+          //   (h,maxTriplets,0);
+          auto seedAcc =  seedBuf.get_access<   am::write,        at::global_buffer>
             (h,maxTriplets,0);
           auto countTripletsAcc=countTripletsBuf.get_access<am::atomic,       at::global_buffer>(h);
 
@@ -528,35 +533,38 @@ namespace Acts::Sycl {
             (sycl::range<2>{size_t(numBotCompMid[MID]), size_t(numTopCompMid[MID])}, // number of threads
             [=](sycl::id<2> idx){
             if(idx[0] < numBotAcc[0] && idx[1] < numTopAcc[0] 
-                && curvImpactAcc[idx[0]][idx[1]][0] != MIN) {
+                && curvImpactAcc[idx[0]][idx[1]].curvature != MIN) {
 
               int bot = indBotAcc[idx[0]];
               int top = indTopAcc[idx[1]];
+              offloadSeedfinderConfig config = configAcc[0];
 
-              float lowerLimitCurv = curvImpactAcc[idx[0]][idx[1]][0] - configAcc[eDeltaInvHelixDiameter];
-              float upperLimitCurv = curvImpactAcc[idx[0]][idx[1]][0] + configAcc[eDeltaInvHelixDiameter];
+              float invHelixDiameter = curvImpactAcc[idx[0]][idx[1]].curvature;
+              float lowerLimitCurv = invHelixDiameter - config.deltaInvHelixDiameter;
+              float upperLimitCurv = invHelixDiameter + config.deltaInvHelixDiameter;
               float currentTop_r = topSPAcc[top].r;
-              float weight = -(curvImpactAcc[idx[0]][idx[1]][1] * configAcc[eImpactWeightFactor]);
+              float weight = -(curvImpactAcc[idx[0]][idx[1]].impact * config.impactWeightFactor);
 
               float lastCompatibleSeedR = currentTop_r;
               int compatCounter = 0;
 
               for(int j = 0; j < numTopAcc[0]; ++j){
-                if(curvImpactAcc[idx[0]][j][0] != MIN && j != idx[1]) {
+                float otherCurv = curvImpactAcc[idx[0]][j].curvature;
+                if(otherCurv != MIN && j != idx[1]) {
                   float otherTop_r = topSPAcc[indTopAcc[j]].r;
                   float deltaR = sycl::abs(currentTop_r - otherTop_r);
-                  if(compatCounter < limitAcc[eCompatSeedLimit] &&
-                    deltaR >= configAcc[eFilterDeltaRMin] &&
-                    curvImpactAcc[idx[0]][j][0] >= lowerLimitCurv &&
-                    curvImpactAcc[idx[0]][j][0] <= upperLimitCurv && 
-                    sycl::abs(lastCompatibleSeedR - otherTop_r) >= configAcc[eFilterDeltaRMin]){
+                  if(compatCounter < config.compatSeedLimit &&
+                    deltaR >= config.filterDeltaRMin &&
+                    otherCurv >= lowerLimitCurv &&
+                    otherCurv <= upperLimitCurv &&
+                    sycl::abs(lastCompatibleSeedR - otherTop_r) >= config.filterDeltaRMin){
                       lastCompatibleSeedR = otherTop_r;
                       ++compatCounter;
                   }
                 }
               }
 
-              weight += compatCounter * configAcc[eCompatSeedWeight];
+              weight += compatCounter * config.compatSeedWeight;
 
               // ATLAS experiment specific cuts
               float w = 0;
@@ -570,9 +578,11 @@ namespace Acts::Sycl {
 
               if(!(botSPAcc[bot].r > 150. && weight < 380)) {
                 int i = countTripletsAcc[0].fetch_add(1);
-                seedIndAcc[i][0] = bot;
-                seedIndAcc[i][1] = top;
-                seedWeightAcc[i] = weight;
+                SeedData D;
+                D.bottom = bot;
+                D.top = top;
+                D.weight = weight;
+                seedAcc[i] = D;
               }
             }
           });
@@ -580,17 +590,13 @@ namespace Acts::Sycl {
         countTriplets = (countTripletsBuf.get_access<am::read>())[0];
 
         // Sub-accessor to seed indices and weights.
-        // Unfortunately this currently copies all data back
-        // Hopefully, a future implementation would provide performance benefits
-        auto seedInd = seedIndBuf.get_access<am::read>(sycl::range<2>{countTriplets,2},sycl::id<2>{0,0});
-        auto seedWei = seedWeightBuf.get_access<am::read>(sycl::range<1>{countTriplets},sycl::id<1>{0});
+        // Unfortunately this currently copies all data back.
+        // Hopefully, a future implementation would provide performance benefits.
+        auto seedAcc = seedBuf.get_access<am::read>(sycl::range<1>{countTriplets},sycl::id<1>{0});
 
-        seedIndices[MID].reserve(countTriplets*2);
-        seedWeight[MID].reserve(countTriplets);
+        seeds[MID].reserve(countTriplets);
         for(int j = 0; j < countTriplets; ++j) {
-          seedIndices[MID].push_back(seedInd[j][0]);
-          seedIndices[MID].push_back(seedInd[j][1]);
-          seedWeight[MID].push_back(seedWei[j]);
+          seeds[MID].push_back(seedAcc[j]);
         }
       }
 

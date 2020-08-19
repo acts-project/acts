@@ -17,15 +17,12 @@
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-
 void offloadComputations( cl::sycl::queue q,
-                          const std::vector<float>& configData,
-                          const std::vector<int>& maxData,
+                          const offloadSeedfinderConfig& configData,
                           const std::vector<offloadSpacePoint>& bottomSPs,
                           const std::vector<offloadSpacePoint>& middleSPs,
                           const std::vector<offloadSpacePoint>& topSPs,
-                          std::vector<std::vector<int>>& seedIndices,
-                          std::vector<std::vector<float>>& seedWeight);
+                          std::vector<std::vector<SeedData>>& seeds);
 
 struct nvidia_selector : public cl::sycl::device_selector {
   int operator()(const cl::sycl::device& d) const override {
