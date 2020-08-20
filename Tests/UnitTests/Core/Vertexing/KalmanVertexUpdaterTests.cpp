@@ -124,8 +124,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(geoContext, std::move(covMat), paramVec,
-                           perigeeSurface);
+    BoundParameters params(perigeeSurface, paramVec, std::move(covMat));
 
     // Linearized state of the track
     LinearizedTrack linTrack =

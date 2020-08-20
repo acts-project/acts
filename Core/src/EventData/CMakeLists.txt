@@ -5,4 +5,6 @@ target_sources_local(
     MeasurementHelpers.cpp
     NeutralTrackParameters.cpp
     PrintParameters.cpp
+    TransformationBoundToFree.cpp
+    TransformationFreeToBound.cpp
 )

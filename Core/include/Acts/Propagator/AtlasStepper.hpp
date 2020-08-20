@@ -12,7 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -316,11 +316,10 @@ class AtlasStepper {
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
       const Surface& surface, const NavigationDirection navDir = forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
-    using transformation = detail::coordinate_transformation;
     // Update the stepping state
     update(state,
-           transformation::boundParameters2freeParameters(state.geoContext,
-                                                          boundParams, surface),
+           detail::transformBoundToFreeParameters(surface, state.geoContext,
+                                                  boundParams),
            cov);
     state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
