@@ -134,8 +134,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
-                                                                    values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vals(
+        *this, head, values...);
   }
 
   /**
@@ -156,8 +156,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
   /**
@@ -295,8 +295,8 @@ class ParameterSet {
    * @param values vector of length #kNumberOfParameters
    */
   void setParameters(const ParameterVector& values) {
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
   /**
