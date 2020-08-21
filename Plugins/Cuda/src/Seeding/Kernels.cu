@@ -679,7 +679,8 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   if (threadIdx.x == 0 && *nTrplPerSpB > *nTrplPerSpBLimit){
     *nTrplPerSpB = *nTrplPerSpBLimit;
   }
-  
+
+  __syncthreads();
   int jj = threadIdx.x;            
   
   // bubble sort tIndex
@@ -698,14 +699,13 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
       if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
 	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
 	  Triplet tempVal = triplets[jj];
-	  triplets[jj] = triplets[jj+1];
-	  triplets[jj+1] = tempVal;
+	    triplets[jj] = triplets[jj+1];
+	    triplets[jj+1] = tempVal;
 	}
       }
     }     
     __syncthreads();
   }
-  
   __syncthreads();
 
   // serial algorithm for seed filtering
