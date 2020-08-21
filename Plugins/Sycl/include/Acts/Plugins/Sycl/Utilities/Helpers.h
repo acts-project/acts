@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <bits/stdint-uintn.h>
 struct offloadSpacePoint {
   float x;
   float y;
@@ -53,7 +54,8 @@ struct TripletData{
 };
 
 struct SeedData{
-  int bottom;
-  int top;
+  uint32_t bottom;
+  uint32_t top;
+  uint32_t middle;
   float weight;
 };

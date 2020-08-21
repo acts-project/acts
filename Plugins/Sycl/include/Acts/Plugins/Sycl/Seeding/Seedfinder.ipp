@@ -35,19 +35,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 
-  // catch asynchronous exceptions
-  auto exception_handler = [] (cl::sycl::exception_list exceptions) {
-  for (std::exception_ptr const& e : exceptions) {
-      try {
-        std::rethrow_exception(e);
-      } catch(cl::sycl::exception const& e) {
-        std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
-      }
-    }
-  };
-
-  // create queue with costum device selector
-  m_queue = cl::sycl::queue(nvidia_selector(), exception_handler);
+  m_queue = createQueue();  
 }
 
 template <typename external_spacepoint_t>
@@ -129,6 +117,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP =    *(topSPvec[seeds[mi][j].top]);
       float weight =   seeds[mi][j].weight;
+
+      std::cout << mi << " " << weight << "\n";
 
       seedsPerSPM.emplace_back(std::make_pair(weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));

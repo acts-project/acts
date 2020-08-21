@@ -14,26 +14,23 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Plugins/Sycl/Utilities/Helpers.h"
-#include <CL/sycl.hpp>
+
+inline namespace cl{
+  namespace sycl{
+    class queue;
+  }
+};
 
 namespace Acts::Sycl {
-void offloadComputations( cl::sycl::queue q,
+
+void offloadComputations( cl::sycl::queue* q,
                           const offloadSeedfinderConfig& configData,
                           const std::vector<offloadSpacePoint>& bottomSPs,
                           const std::vector<offloadSpacePoint>& middleSPs,
                           const std::vector<offloadSpacePoint>& topSPs,
                           std::vector<std::vector<SeedData>>& seeds);
 
-struct nvidia_selector : public cl::sycl::device_selector {
-  int operator()(const cl::sycl::device& d) const override {
-    if(d.get_info<cl::sycl::info::device::vendor>().find("NVIDIA") != std::string::npos) {
-      return 1;
-    }
-    else {
-      return -1;
-    }
-  }; 
-};
+cl::sycl::queue* createQueue();
 
 template <typename external_spacepoint_t>
 class Seedfinder {
@@ -53,7 +50,7 @@ class Seedfinder {
  private:
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
-  cl::sycl::queue m_queue;
+  cl::sycl::queue* m_queue;
 };
 
 } // namespace Acts::Sycl
