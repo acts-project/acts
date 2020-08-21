@@ -8,6 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/detail/MPL/all_of.hpp"
+#include "Acts/Utilities/detail/MPL/any_of.hpp"
+#include "Acts/Utilities/detail/MPL/are_sorted.hpp"
+#include "Acts/Utilities/detail/MPL/are_within.hpp"
+#include "Acts/Utilities/detail/MPL/at_index.hpp"
+#include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
+#include "Acts/Utilities/detail/MPL/type_collector.hpp"
+
 #include <type_traits>
 
 #include <boost/hana.hpp>
@@ -20,14 +28,6 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/type.hpp>
 #include <boost/hana/union.hpp>
-
-#include "Acts/Utilities/detail/MPL/all_of.hpp"
-#include "Acts/Utilities/detail/MPL/any_of.hpp"
-#include "Acts/Utilities/detail/MPL/are_sorted.hpp"
-#include "Acts/Utilities/detail/MPL/are_within.hpp"
-#include "Acts/Utilities/detail/MPL/at_index.hpp"
-#include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
-#include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace hana = boost::hana;
 namespace Acts {

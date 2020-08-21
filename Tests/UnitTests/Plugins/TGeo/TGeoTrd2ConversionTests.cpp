@@ -15,8 +15,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
 #include "TGeoMatrix.h"
@@ -42,7 +43,7 @@ ViewConfig blue({0, 0, 200});
 ///
 /// * The TGeoTrd2 has x/z orientation
 BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   double hxmin = 10.;
   double hxmax = 30.;
@@ -64,11 +65,11 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
   for (const auto &axes : axesTypes) {
     auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
-    BOOST_TEST(plane != nullptr);
-    BOOST_TEST(plane->type() == Surface::Plane);
+    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
-    BOOST_TEST(bounds != nullptr);
+    BOOST_CHECK_NE(bounds, nullptr);
     double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
     double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
     double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
@@ -81,16 +82,17 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    GeometryView::drawSurface(objVis, *plane, tgContext,
-                              Translation3D{offset} * Transform3D::Identity());
+    GeometryView3D::drawSurface(
+        objVis, *plane, tgContext,
+        Translation3D{offset} * Transform3D::Identity());
     const Vector3D center = plane->center(tgContext) + offset;
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 4.,
         2.5, red);
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * hY * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
   }
   objVis.write("TGeoConversion_TGeoTrd2_xz_PlaneSurface");
 
@@ -107,7 +109,7 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
 ///
 /// * The TGeoTrd2 has y/z orientation
 BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   double hxmin = 10.;
   double hxmax = 30.;
@@ -129,11 +131,11 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
   for (const auto &axes : axesTypes) {
     auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
-    BOOST_TEST(plane != nullptr);
-    BOOST_TEST(plane->type() == Surface::Plane);
+    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
-    BOOST_TEST(bounds != nullptr);
+    BOOST_CHECK_NE(bounds, nullptr);
     double hXminY = bounds->get(TrapezoidBounds::eHalfLengthXnegY);
     double hXmaxY = bounds->get(TrapezoidBounds::eHalfLengthXposY);
     double hY = bounds->get(TrapezoidBounds::eHalfLengthY);
@@ -146,16 +148,17 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
     const Vector3D offset{(-5.5 + (itrd++) * 2.5) * hxmax, 0., 0.};
-    GeometryView::drawSurface(objVis, *plane, tgContext,
-                              Translation3D{offset} * Transform3D::Identity());
+    GeometryView3D::drawSurface(
+        objVis, *plane, tgContext,
+        Translation3D{offset} * Transform3D::Identity());
     const Vector3D center = plane->center(tgContext) + offset;
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * (hXminY + hXmaxY) * rotation.col(0), 4.,
         2.5, red);
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 1.2 * hY * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
   }
   objVis.write("TGeoConversion_TGeoTrd2_yz_PlaneSurface");
 

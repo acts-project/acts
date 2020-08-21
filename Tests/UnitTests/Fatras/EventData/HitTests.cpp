@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+
+#include <limits>
 
 using namespace ActsFatras;
 
@@ -30,9 +30,9 @@ BOOST_AUTO_TEST_CASE(WithoutInteraction) {
   auto m4 = Hit::Vector4(1, 1, 1, 4);
   auto h = Hit(gid, pid, p4, m4, m4, 12u);
 
-  BOOST_TEST(h.geometryId() == gid);
-  BOOST_TEST(h.particleId() == pid);
-  BOOST_TEST(h.index() == 12u);
+  BOOST_CHECK_EQUAL(h.geometryId(), gid);
+  BOOST_CHECK_EQUAL(h.particleId(), pid);
+  BOOST_CHECK_EQUAL(h.index(), 12u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(WithEnergyLoss) {
   auto m41 = Hit::Vector4(1.5, 0, 0, 1.5);
   auto h = Hit(gid, pid, p4, m40, m41, 13u);
 
-  BOOST_TEST(h.geometryId() == gid);
-  BOOST_TEST(h.particleId() == pid);
-  BOOST_TEST(h.index() == 13u);
+  BOOST_CHECK_EQUAL(h.geometryId(), gid);
+  BOOST_CHECK_EQUAL(h.particleId(), pid);
+  BOOST_CHECK_EQUAL(h.index(), 13u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE(WithScattering) {
   auto m41 = Hit::Vector4(0, -2, 2, 5);
   auto h = Hit(gid, pid, p4, m40, m41, 42u);
 
-  BOOST_TEST(h.geometryId() == gid);
-  BOOST_TEST(h.particleId() == pid);
-  BOOST_TEST(h.index() == 42u);
+  BOOST_CHECK_EQUAL(h.geometryId(), gid);
+  BOOST_CHECK_EQUAL(h.particleId(), pid);
+  BOOST_CHECK_EQUAL(h.index(), 42u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);
@@ -101,9 +101,9 @@ BOOST_AUTO_TEST_CASE(WithEverything) {
   auto m41 = Hit::Vector4(2, 1, 2, 4);
   auto h = Hit(gid, pid, p4, m40, m41, 1u);
 
-  BOOST_TEST(h.geometryId() == gid);
-  BOOST_TEST(h.particleId() == pid);
-  BOOST_TEST(h.index() == 1u);
+  BOOST_CHECK_EQUAL(h.geometryId(), gid);
+  BOOST_CHECK_EQUAL(h.particleId(), pid);
+  BOOST_CHECK_EQUAL(h.index(), 1u);
   CHECK_CLOSE_REL(h.position4(), p4, eps);
   CHECK_CLOSE_REL(h.position(), Hit::Vector3(1, 2, 3), eps);
   CHECK_CLOSE_REL(h.time(), 4, eps);

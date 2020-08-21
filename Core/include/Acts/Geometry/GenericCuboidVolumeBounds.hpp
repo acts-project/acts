@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-class IVisualization;
+class IVisualization3D;
 
 class GenericCuboidVolumeBounds : public VolumeBounds {
  public:
@@ -92,7 +92,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// @param helper The visualizatin helper
   /// @param transform Optional transformation matrix
   ///
-  void draw(IVisualization& helper,
+  void draw(IVisualization3D& helper,
             const Transform3D& transform = Transform3D::Identity()) const;
 
  private:

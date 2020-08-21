@@ -47,7 +47,7 @@ class AnnulusBounds : public DiscBounds {
   /// @brief Default constructor from parameters
   /// @param minR inner radius, in module system
   /// @param maxR outer radius, in module system
-  /// @param minPhiRel right angular edge, in strip system, rel to avgOhi
+  /// @param minPhiRel right angular edge, in strip system, rel to avgPhi
   /// @param maxPhiRel left angular edge, in strip system, rel to avgPhi
   /// @param moduleOrigin The origin offset between the two systems.
   /// @param avgPhi (Optional) internal rotation of this bounds object's local
@@ -83,12 +83,6 @@ class AnnulusBounds : public DiscBounds {
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2D& lposition,
                       const BoundaryCheck& bcheck) const final;
-
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  virtual double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Outstream operator
   ///

@@ -9,7 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
-#include <memory>
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -28,6 +27,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -122,7 +123,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   using AbortListType = AbortList<>;
 
   using Options = PropagatorOptions<ActionListType, AbortListType>;
-  Options fwdOptions(tgContext, mfContext);
+  Options fwdOptions(tgContext, mfContext, getDummyLogger());
 
   fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
@@ -169,7 +170,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // backward material test
-  Options bwdOptions(tgContext, mfContext);
+  Options bwdOptions(tgContext, mfContext, getDummyLogger());
   bwdOptions.maxStepSize = -25_cm;
   bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = backward;
@@ -235,7 +236,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next
   // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext);
+  Options fwdStepOptions(tgContext, mfContext, getDummyLogger());
   fwdStepOptions.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
   fwdStepOptions.debug = debugModeFwdStep;
@@ -261,7 +262,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // move forward step by step through the surfaces
-  const SingleTrackParameters<ChargedPolicy>* sParameters = &start;
+  const BoundParameters* sParameters = &start;
   std::vector<std::unique_ptr<const BoundParameters>> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
@@ -325,7 +326,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext);
+  Options bwdStepOptions(tgContext, mfContext, getDummyLogger());
 
   bwdStepOptions.maxStepSize = -25_cm;
   bwdStepOptions.pathLimit = -25_cm;
@@ -424,8 +425,9 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // forward material test
   const auto& covfwdResult = prop.propagate(start, fwdOptions).value();
 
-  BOOST_TEST(cov.determinant() <=
-             covfwdResult.endParameters->covariance().value().determinant());
+  BOOST_CHECK_LE(
+      cov.determinant(),
+      covfwdResult.endParameters->covariance().value().determinant());
 }
 
 // This test case checks that no segmentation fault appears

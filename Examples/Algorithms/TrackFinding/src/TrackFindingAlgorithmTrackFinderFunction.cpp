@@ -6,12 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/TrackFinding/TrackFindingAlgorithm.hpp"
-
-#include <random>
-#include <stdexcept>
-
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -20,6 +14,11 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+
+#include <random>
+#include <stdexcept>
 
 namespace {
 template <typename TrackFinder>
@@ -28,9 +27,9 @@ struct TrackFinderFunctionImpl {
 
   TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
 
-  FW::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const FW::SimSourceLinkContainer& sourceLinks,
-      const FW::TrackParameters& initialParameters,
+  ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
+      const ActsExamples::SimSourceLinkContainer& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
       const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>&
           options) const {
     return trackFinder.findTracks(sourceLinks, initialParameters, options);
@@ -38,17 +37,17 @@ struct TrackFinderFunctionImpl {
 };
 }  // namespace
 
-FW::TrackFindingAlgorithm::TrackFinderFunction
-FW::TrackFindingAlgorithm::makeTrackFinderFunction(
+ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
+ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding track
   // finder.
   return std::visit(
-      [trackingGeometry, lvl](auto&& inputField) -> TrackFinderFunction {
+      [trackingGeometry](auto&& inputField) -> TrackFinderFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -70,9 +69,7 @@ FW::TrackFindingAlgorithm::makeTrackFinderFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        CKF trackFinder(
-            std::move(propagator),
-            Acts::getDefaultLogger("CombinatorialKalmanFilter", lvl));
+        CKF trackFinder(std::move(propagator));
 
         // build the track finder functions. owns the track finder object.
         return TrackFinderFunctionImpl<CKF>(std::move(trackFinder));

@@ -10,8 +10,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <memory>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
@@ -25,6 +23,8 @@
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -108,7 +108,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Options definition
   using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
-  Options pOptions(tgContext, mfContext);
+  Options pOptions(tgContext, mfContext, getDummyLogger());
   pOptions.debug = debugMode;
   if (oversteppingTest) {
     pOptions.maxStepSize = oversteppingMaxStepSize;
@@ -150,7 +150,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
     // Direct options definition
     using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
-    DirectOptions dOptions(tgContext, mfContext);
+    DirectOptions dOptions(tgContext, mfContext, getDummyLogger());
     dOptions.debug = debugMode;
     // Set the surface sequence
     auto& dInitializer =

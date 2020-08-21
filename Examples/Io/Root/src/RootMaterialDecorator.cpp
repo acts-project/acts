@@ -6,13 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootMaterialDecorator.hpp"
+#include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
 #include <Acts/Geometry/GeometryID.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
 #include <Acts/Utilities/BinningType.hpp>
+
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
 #include <TFile.h>
 #include <TH2F.h>
 #include <TIterator.h>
@@ -21,14 +28,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
-#include <cstdio>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <string>
 
-FW::RootMaterialDecorator::RootMaterialDecorator(
-    const FW::RootMaterialDecorator::Config& cfg)
+ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
+    const ActsExamples::RootMaterialDecorator::Config& cfg)
     : m_cfg(cfg), m_inputFile(nullptr) {
   // Validate the configuration
   if (m_cfg.folderNameBase.empty()) {
@@ -189,6 +191,6 @@ FW::RootMaterialDecorator::RootMaterialDecorator(
   }
 }
 
-FW::RootMaterialDecorator::~RootMaterialDecorator() {
+ActsExamples::RootMaterialDecorator::~RootMaterialDecorator() {
   m_inputFile->Close();
 }

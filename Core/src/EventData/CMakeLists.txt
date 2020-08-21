@@ -4,4 +4,7 @@ target_sources_local(
     ChargedTrackParameters.cpp
     MeasurementHelpers.cpp
     NeutralTrackParameters.cpp
+    PrintParameters.cpp
+    TransformationBoundToFree.cpp
+    TransformationFreeToBound.cpp
 )

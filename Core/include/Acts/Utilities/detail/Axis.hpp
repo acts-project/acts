@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
-#include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 namespace Acts {
 

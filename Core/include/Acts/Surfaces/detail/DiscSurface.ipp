@@ -107,16 +107,16 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
   return rframeT;
 }
 
-inline Intersection DiscSurface::intersectionEstimate(
+inline SurfaceIntersection DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction);
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection::Status::unreachable and bcheck and
+  if (intersection.status != Intersection3D::Status::unreachable and bcheck and
       m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
@@ -128,13 +128,13 @@ inline Intersection DiscSurface::intersectionEstimate(
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_R];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                            tolerance)) {
-        intersection.status = Intersection::Status::missed;
+        intersection.status = Intersection3D::Status::missed;
       }
     } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
-      intersection.status = Intersection::Status::missed;
+      intersection.status = Intersection3D::Status::missed;
     }
   }
-  return intersection;
+  return {intersection, this};
 }
 
 inline const LocalCartesianToBoundLocalMatrix

@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsRecreation) {
 
 // Unit tests for AnnulusBounds exception throwing
 BOOST_AUTO_TEST_CASE(AnnulusBoundsExcpetion) {
-  // Exception for negative inenr radius
+  // Exception for negative inner radius
   BOOST_CHECK_THROW(AnnulusBounds(-1., maxRadius, minPhi, maxPhi, offset),
                     std::logic_error);
   // Exception for negative outer radius

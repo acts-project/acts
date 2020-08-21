@@ -12,6 +12,7 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    magnetic_field
    material
    propagation
+   seeding
    utilities/grid_axis
    utilities/logging
    utilities/units

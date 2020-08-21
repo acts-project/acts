@@ -6,26 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
-#include <TFile.h>
-#include <TTree.h>
-#include <ios>
-#include <stdexcept>
-
-#include "ACTFW/EventData/SimHit.hpp"
-#include "ACTFW/EventData/SimIdentifier.hpp"
-#include "ACTFW/EventData/SimParticle.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimIdentifier.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 
-FW::RootPlanarClusterWriter::RootPlanarClusterWriter(
-    const FW::RootPlanarClusterWriter::Config& cfg, Acts::Logging::Level lvl)
+#include <ios>
+#include <stdexcept>
+
+#include <TFile.h>
+#include <TTree.h>
+
+ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
+    const ActsExamples::RootPlanarClusterWriter::Config& cfg,
+    Acts::Logging::Level lvl)
     : WriterT(cfg.inputClusters, "RootPlanarClusterWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
@@ -76,14 +78,14 @@ FW::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode, "truth_barcode/l");
 }
 
-FW::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
   /// Close the file if it's yours
   if (m_cfg.rootFile == nullptr) {
     m_outputFile->Close();
   }
 }
 
-FW::ProcessCode FW::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -92,9 +94,10 @@ FW::ProcessCode FW::RootPlanarClusterWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const AlgorithmContext& ctx,
-    const FW::GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) {
+    const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
+        clusters) {
   // retrieve simulated hits
   const auto& simHits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
@@ -117,7 +120,7 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
     Acts::Vector3D pos(0, 0, 0);
     Acts::Vector3D mom(1, 1, 1);
     // the cluster surface
-    const auto& clusterSurface = cluster.referenceSurface();
+    const auto& clusterSurface = cluster.referenceObject();
     // transform local into global position information
     clusterSurface.localToGlobal(ctx.geoContext, local, mom, pos);
     // identification
@@ -191,5 +194,5 @@ FW::ProcessCode FW::RootPlanarClusterWriter::writeT(
     m_t_ly.clear();
     m_t_barcode.clear();
   }
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

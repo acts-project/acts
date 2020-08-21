@@ -9,9 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-#include <random>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
@@ -19,6 +16,10 @@
 #include "ActsFatras/Physics/Scattering/GaussianMixture.hpp"
 #include "ActsFatras/Physics/Scattering/GeneralMixture.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
+
+#include <limits>
+#include <random>
+
 #include "Dataset.hpp"
 
 namespace {
@@ -36,9 +37,9 @@ void test(const Scattering& scattering, uint32_t seed,
   CHECK_CLOSE_REL(after.absMomentum(), before.absMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering has changed the direction
-  BOOST_TEST(before.unitDirection().dot(after.unitDirection()) < 1);
+  BOOST_CHECK_LT(before.unitDirection().dot(after.unitDirection()), 1);
   // scattering creates no new particles
-  BOOST_TEST(outgoing.empty());
+  BOOST_CHECK(outgoing.empty());
 }
 }  // namespace
 

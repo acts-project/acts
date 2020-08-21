@@ -31,7 +31,7 @@ class SurfaceBounds;
 class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
-class IVisualization;
+class IVisualization3D;
 
 /// Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
@@ -417,29 +417,7 @@ class Surface : public virtual GeometryObject,
   virtual SurfaceIntersection intersect(const GeometryContext& gctx,
                                         const Vector3D& position,
                                         const Vector3D& direction,
-                                        const BoundaryCheck& bcheck) const
-
-  {
-    // Get the intersection with the surface
-    auto sIntersection =
-        intersectionEstimate(gctx, position, direction, bcheck);
-    // return a surface intersection with result direction
-    return SurfaceIntersection(sIntersection, this);
-  }
-
-  /// Straight line intersection from position and momentum
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  ///        inside bounds (check is done)
-  /// @param direction 3D direction representation - expected to be normalized
-  ///        (no check done)
-  /// @param bcheck boundary check directive for this operation
-  ///
-  /// @return Intersection object
-  virtual Intersection intersectionEstimate(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const BoundaryCheck& bcheck) const = 0;
+                                        const BoundaryCheck& bcheck) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

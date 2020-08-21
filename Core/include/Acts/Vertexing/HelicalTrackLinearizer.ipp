@@ -11,7 +11,7 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundParameters& params, const SpacePointVector& linPoint,
+        const BoundParameters& params, const Vector4D& linPoint,
         const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
@@ -20,7 +20,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
   // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
+  auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
+  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
   pOptions.direction = backward;
 
   const BoundParameters* endParams = nullptr;
@@ -34,14 +35,22 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   BoundVector paramsAtPCA = endParams->parameters();
-  SpacePointVector positionAtPCA = SpacePointVector::Zero();
-  VectorHelpers::position(positionAtPCA) = endParams->position();
+  Vector4D positionAtPCA = Vector4D::Zero();
+  {
+    auto pos = endParams->position();
+    positionAtPCA[ePos0] = pos[ePos0];
+    positionAtPCA[ePos1] = pos[ePos1];
+    positionAtPCA[ePos2] = pos[ePos2];
+  }
   BoundSymMatrix parCovarianceAtPCA = *(endParams->covariance());
 
   if (endParams->covariance()->determinant() == 0) {
     // Use the original parameters
     paramsAtPCA = params.parameters();
-    VectorHelpers::position(positionAtPCA) = params.position();
+    auto pos = endParams->position();
+    positionAtPCA[ePos0] = pos[ePos0];
+    positionAtPCA[ePos1] = pos[ePos1];
+    positionAtPCA[ePos2] = pos[ePos2];
     parCovarianceAtPCA = *(params.covariance());
   }
 
@@ -106,7 +115,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  SpacePointToBoundMatrix positionJacobian;
+  ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4> positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;

@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (auto& vtxPos : vtxPosVec) {
     Vertex<BoundParameters> vtx(vtxPos);
     // Set some vertex covariance
-    SpacePointSymMatrix posCovariance(SpacePointSymMatrix::Identity());
+    SymMatrix4D posCovariance(SymMatrix4D::Identity());
     vtx.setFullCovariance(posCovariance);
     // Add to vertex list
     vtxList.push_back(vtx);
@@ -157,15 +157,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
 
     // Construct random track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::ParametersVector paramVec;
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(vtxPosVec[vtxIdx]);
 
-    allTracks.push_back(BoundParameters(geoContext, std::move(covMat), paramVec,
-                                        perigeeSurface));
+    allTracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
   }
 
   if (debugMode) {
@@ -421,7 +420,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
       magFieldContext);
 
   // The constraint vertex position covariance
-  SpacePointSymMatrix covConstr(SpacePointSymMatrix::Identity());
+  SymMatrix4D covConstr(SymMatrix4D::Identity());
   covConstr = covConstr * 1e+8;
   covConstr(3, 3) = 0.;
 

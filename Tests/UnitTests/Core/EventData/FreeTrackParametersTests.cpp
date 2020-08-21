@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
 
   // Test if the object can be created w/o covariance
   FreeTrackParameters fpwoCov(cov, params);
-  BOOST_TEST(!fpwoCov.covariance().has_value());
+  BOOST_CHECK(!fpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(fpwoCov.parameters(), params, 1e-6);
 
   // Test if the object can be create with covariance
@@ -47,30 +47,30 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.parameters(), params, 1e-6);
 
   // Test == comparison
-  BOOST_TEST(fp == fp);
-  BOOST_TEST(fp != fpwoCov);
+  BOOST_CHECK_EQUAL(fp, fp);
+  BOOST_CHECK_NE(fp, fpwoCov);
 
   FreeTrackParameters fpCopyConstr(fp);
-  BOOST_TEST(fpCopyConstr == fp);
+  BOOST_CHECK_EQUAL(fpCopyConstr, fp);
 
   covCpy = *cov;
   FreeTrackParameters fpMoveConstr(FreeTrackParameters(covCpy, params));
-  BOOST_TEST(fpMoveConstr == fp);
+  BOOST_CHECK_EQUAL(fpMoveConstr, fp);
 
   // Test copy assignment
   FreeTrackParameters fpCopyAssignment = fp;
-  BOOST_TEST(fpCopyAssignment == fp);
+  BOOST_CHECK_EQUAL(fpCopyAssignment, fp);
 
   // Test move assignment
   covCpy = *cov;
   FreeTrackParameters fpMoveAssignment = FreeTrackParameters(covCpy, params);
-  BOOST_TEST(fpMoveAssignment == fp);
+  BOOST_CHECK_EQUAL(fpMoveAssignment, fp);
 
   /// Repeat constructing and assignment with neutral parameters
 
   // Test if the object can be created w/o covariance
   NeutralFreeTrackParameters nfpwoCov(std::nullopt, params);
-  BOOST_TEST(!nfpwoCov.covariance().has_value());
+  BOOST_CHECK(!nfpwoCov.covariance().has_value());
   CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
 
   covCpy = *cov;
@@ -79,22 +79,22 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
 
   NeutralFreeTrackParameters nfpCopyConstr(nfp);
-  BOOST_TEST(nfpCopyConstr == nfp);
+  BOOST_CHECK_EQUAL(nfpCopyConstr, nfp);
 
   covCpy = *cov;
   NeutralFreeTrackParameters nfpMoveConstr(
       NeutralFreeTrackParameters(covCpy, params));
-  BOOST_TEST(nfpMoveConstr == nfp);
+  BOOST_CHECK_EQUAL(nfpMoveConstr, nfp);
 
   // Test copy assignment
   NeutralFreeTrackParameters nfpCopyAssignment = nfp;
-  BOOST_TEST(nfpCopyAssignment == nfp);
+  BOOST_CHECK_EQUAL(nfpCopyAssignment, nfp);
 
   // Test move assignment
   covCpy = *cov;
   NeutralFreeTrackParameters nfpMoveAssignment =
       NeutralFreeTrackParameters(covCpy, params);
-  BOOST_TEST(nfpMoveAssignment == nfp);
+  BOOST_CHECK_EQUAL(nfpMoveAssignment, nfp);
 
   /// Test getters/setters
 
@@ -122,27 +122,9 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);
   CHECK_CLOSE_ABS(fp.momentum(), dir / qop, 1e-6);
   CHECK_CLOSE_ABS(fp.charge(), +1., 1e-6);
-  BOOST_TEST(nfp.charge() == 0.);
+  BOOST_CHECK_EQUAL(nfp.charge(), 0.);
   CHECK_CLOSE_ABS(fp.time(), t, 1e-6);
-
-  // Test setters
-  GeometryContext dummy;
-  fp.set<eFreePos0>(dummy, 8.);
-  fp.set<eFreePos1>(dummy, 9.);
-  fp.set<eFreePos2>(dummy, 10.);
-  fp.set<eFreeTime>(dummy, 11.);
-  fp.set<eFreeDir0>(dummy, 12.);
-  fp.set<eFreeDir1>(dummy, 13.);
-  fp.set<eFreeDir2>(dummy, 14.);
-  fp.set<eFreeQOverP>(dummy, 15.);
-  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), 8., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), 9., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), 10., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), 11., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), 12., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), 13., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), 14., 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), 15., 1e-6);
 }
+
 }  // namespace Test
 }  // namespace Acts

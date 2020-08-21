@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/DD4hepDetector/DD4hepDetector.hpp"
-#include "ACTFW/MaterialMapping/MaterialMappingBase.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/MaterialMapping/MaterialMappingBase.hpp"
 
 /// @brief main executable
 ///

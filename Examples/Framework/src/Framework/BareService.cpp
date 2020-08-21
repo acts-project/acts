@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Framework/BareService.hpp"
+#include "ActsExamples/Framework/BareService.hpp"
 
-namespace FW {
+namespace ActsExamples {
 
 BareService::BareService(std::string name, Acts::Logging::Level level)
     : m_name(std::move(name)),
@@ -26,4 +26,4 @@ void BareService::prepare(AlgorithmContext&) {
   // nothing to do in the default implementation
 }
 
-}  // namespace FW
+}  // namespace ActsExamples

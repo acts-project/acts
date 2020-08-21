@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include <limits>
-#include <sstream>
-#include <string>
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <limits>
+#include <sstream>
+#include <string>
 
 namespace Acts {
 
@@ -37,30 +39,6 @@ struct TargetOptions {
   TargetOptions(NavigationDirection ndir) : navDir(ndir) {}
 };
 
-/// The debug logging for standard aborters
-///
-/// It needs to be fed by a lambda function that returns a string,
-/// that guarantees that the lambda is only called in the
-/// state.options.debug == true case in order not to spend time
-/// when not needed.
-///
-/// @param state the propagator cache for the debug flag, prefix/stream
-/// @param logAction is a callable function that returns a streamable object
-template <typename propagator_state_t>
-void targetDebugLog(propagator_state_t& state, const std::string& status,
-                    const std::function<std::string()>& logAction) {
-  if (state.options.debug) {
-    std::stringstream dstream;
-    dstream << " " << status << " ";
-    dstream << std::setw(state.options.debugPfxWidth);
-    dstream << " Target "
-            << " | ";
-    dstream << std::setw(state.options.debugMsgWidth);
-    dstream << logAction() << '\n';
-    state.options.debugString += dstream.str();
-  }
-}
-
 /// This is the condition that the pathLimit has been reached
 struct PathLimitReached {
   /// Boolean switch for Loop protection
@@ -75,6 +53,7 @@ struct PathLimitReached {
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state,
                   const stepper_t& /*unused*/) const {
+    const auto& logger = state.options.logger;
     if (state.navigation.targetReached) {
       return true;
     }
@@ -85,20 +64,14 @@ struct PathLimitReached {
     state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
     bool limitReached = (distance * distance < tolerance * tolerance);
     if (limitReached) {
-      targetDebugLog(state, "x", [&] {
-        std::stringstream dstream;
-        dstream << "Path limit reached at distance " << distance;
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Target: x | "
+                   << "Path limit reached at distance " << distance);
       // reaching the target means navigation break
       state.navigation.targetReached = true;
     } else {
-      targetDebugLog(state, "o", [&] {
-        std::stringstream dstream;
-        dstream << "Target stepSize (path limit) updated to ";
-        dstream << state.stepping.stepSize.toString();
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Target: 0 | "
+                   << "Target stepSize (path limit) updated to "
+                   << state.stepping.stepSize.toString());
     }
     // path limit check
     return limitReached;
@@ -133,19 +106,16 @@ struct SurfaceReached {
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Surface& targetSurface) const {
+    const auto& logger = state.options.logger;
     if (state.navigation.targetReached) {
       return true;
     }
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
-    // @todo - do not apply the isOnSurface check here, but handle by the
-    // intersectionEstimate
     if ((state.navigation.currentSurface &&
          state.navigation.currentSurface == &targetSurface)) {
-      targetDebugLog(state, "x", [&] {
-        std::string ds("Target surface reached.");
-        return ds;
-      });
+      ACTS_VERBOSE("Target: x | "
+                   << "Target surface reached.");
       // reaching the target calls a navigation break
       state.navigation.targetReached = true;
       return true;
@@ -157,26 +127,21 @@ struct SurfaceReached {
         state.stepping.navDir * stepper.direction(state.stepping), true);
 
     // The target is reached
-    bool targetReached =
-        (sIntersection.intersection.status == Intersection::Status::onSurface);
+    bool targetReached = (sIntersection.intersection.status ==
+                          Intersection3D::Status::onSurface);
     double distance = sIntersection.intersection.pathLength;
 
     // Return true if you fall below tolerance
     if (targetReached) {
-      targetDebugLog(state, "x", [&] {
-        std::stringstream dstream;
-        dstream << "Target surface reached at distance (tolerance) ";
-        dstream << distance << " (" << tolerance << ")";
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Target: x | "
+                   << "Target surface reached at distance (tolerance) "
+                   << distance << " (" << tolerance << ")");
       // assigning the currentSurface
       state.navigation.currentSurface = &targetSurface;
-      targetDebugLog(state, "x", [&] {
-        std::stringstream dstream;
-        dstream << "Current surface set to target surface  ";
-        dstream << state.navigation.currentSurface->geoID();
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Target: x | "
+                   << "Current surface set to target surface  "
+                   << state.navigation.currentSurface->geoID());
+
       // reaching the target calls a navigation break
       state.navigation.targetReached = true;
     } else {
@@ -189,12 +154,9 @@ struct SurfaceReached {
       }
       state.stepping.stepSize.update(state.stepping.navDir * distance,
                                      ConstrainedStep::aborter);
-      targetDebugLog(state, "o", [&] {
-        std::stringstream dstream;
-        dstream << "Target stepSize (surface) updated to ";
-        dstream << state.stepping.stepSize.toString();
-        return dstream.str();
-      });
+      ACTS_VERBOSE("Target: 0 | "
+                   << "Target stepSize (surface) updated to "
+                   << state.stepping.stepSize.toString());
     }
     // path limit check
     return targetReached;

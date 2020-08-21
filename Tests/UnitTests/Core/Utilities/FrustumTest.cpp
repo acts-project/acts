@@ -11,7 +11,7 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 using boost::test_tools::output_test_stream;
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   const auto& normals33 = fr33.normals();
   BOOST_CHECK_EQUAL(normals33.size(), 4u);
 
-  PlyVisualization<float> hlp;
+  PlyVisualization3D<float> hlp;
   // compile call to draw, does not actually test anything
   fr33.draw(hlp);
 

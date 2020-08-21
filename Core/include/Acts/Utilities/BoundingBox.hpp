@@ -8,6 +8,12 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -15,11 +21,6 @@
 #include <ostream>
 #include <tuple>
 #include <vector>
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Ray.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
 
 namespace Acts {
 
@@ -288,7 +289,8 @@ class AxisAlignedBoundingBox {
    * @param trf An optional transform to apply first.
    */
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, std::array<int, 3> color = {120, 120, 120},
+  void draw(IVisualization3D& helper,
+            std::array<int, 3> color = {120, 120, 120},
             const transform_type& trf = transform_type::Identity()) const;
 
   /**

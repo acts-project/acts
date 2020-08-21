@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
+
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
@@ -186,8 +187,9 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                                 MaterialVolumeCollector, DebugOutput>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  auto propLogger = getDefaultLogger("SufMatMapProp", Logging::INFO);
+  PropagatorOptions<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
@@ -230,7 +232,6 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto rmIter = rMaterial.begin();
   auto sfIter = mappingSurfaces.begin();
   auto volIter = mappingVolumes.begin();
-  bool encounterVolume = false;
 
   // Use those to minimize the lookup
   GeometryID lastID = GeometryID();
@@ -246,16 +247,20 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+    // Material not inside current volume
+    if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      encounterVolume = false;
-      // Switch to next material volume
-      ++volIter;
+      double distVol = (volIter->position - mTrack.first.first).norm();
+      double distMat = (rmIter->position - mTrack.first.first).norm();
+      // Material past the entry point to the current volume
+      if (distMat - distVol > s_epsilon) {
+        // Switch to next material volume
+        ++volIter;
+      }
     }
     /// check if we are inside a material volume
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
-      encounterVolume = true;
       ++rmIter;
       continue;
     }
@@ -281,8 +286,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         currentPos, rmIter->materialProperties, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
-    // Update the material interaction with the associated surface and direction
-    rmIter->direction = mTrack.first.second.normalized();
+    // Update the material interaction with the associated surface
     rmIter->surface = sfIter->surface;
     // Switch to next material
     ++rmIter;

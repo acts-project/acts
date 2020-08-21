@@ -12,9 +12,10 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <boost/container/small_vector.hpp>
 #include <cmath>
 #include <exception>
+
+#include <boost/container/small_vector.hpp>
 
 namespace Acts {
 
@@ -103,12 +104,6 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
 
-  /// Return the smallest distance to any point on the boundary of this bounds
-  /// object.
-  /// @param lposition The local position to get the distance to
-  /// @return The smallest distance to the boundary.
-  double distanceToBoundary(const Vector2D& lposition) const final;
-
   /// Return the vertices
   ///
   /// @param lseg the number of segments used to approximate
@@ -163,12 +158,6 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @return Whether the points is inside
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
-
-  /// Return the smallest distance to any point on the boundary of this bounds
-  /// object.
-  /// @param lpos The lposition position to get the distance to
-  /// @return The smallest distance to the boundary.
-  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///

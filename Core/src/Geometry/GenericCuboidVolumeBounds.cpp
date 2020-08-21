@@ -7,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <array>
 #include <ostream>
@@ -211,7 +212,7 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
   return {entity, vmin - envelope, vmax + envelope};
 }
 
-void Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
+void Acts::GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
                                            const Transform3D& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,
                        const auto& d) {

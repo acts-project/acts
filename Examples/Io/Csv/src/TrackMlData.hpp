@@ -12,9 +12,10 @@
 #pragma once
 
 #include <cstdint>
+
 #include <dfe/dfe_namedtuple.hpp>
 
-namespace FW {
+namespace ActsExamples {
 
 struct ParticleData {
   /// Event-unique particle identifier a.k.a barcode.
@@ -127,4 +128,4 @@ struct SurfaceData {
                  module_hv, pitch_u, pitch_v);
 };
 
-}  // namespace FW
+}  // namespace ActsExamples

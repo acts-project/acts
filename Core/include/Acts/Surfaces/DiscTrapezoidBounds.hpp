@@ -7,14 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
-
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cmath>
 #include <vector>
 
 namespace Acts {
@@ -76,12 +75,6 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param bcheck is the boundary check directive
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck = true) const final;
-
-  /// Minimal distance to boundary
-  /// @param lposition is the local position to be checked (in polar
-  /// coordinates)
-  /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Output Method for std::ostream
   std::ostream& toStream(std::ostream& sl) const final;

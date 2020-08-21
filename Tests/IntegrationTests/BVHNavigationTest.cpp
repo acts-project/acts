@@ -9,15 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <array>
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <random>
-#include <string>
-#include <vector>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -35,6 +26,15 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
+
+#include <array>
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <limits>
+#include <random>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace IntegrationTest {

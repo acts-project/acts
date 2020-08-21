@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <functional>
-#include <unordered_map>
-
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <functional>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -119,8 +119,8 @@ VolumeTrajectoryStateContainer trajectoryState(
 template <typename track_state_proxy_t>
 FreeVector freeFiltered(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::coordinate_transformation::boundParameters2freeParameters(
-      gctx, trackStateProxy.filtered(), trackStateProxy.referenceSurface());
+  return detail::transformBoundToFreeParameters(
+      trackStateProxy.referenceSurface(), gctx, trackStateProxy.filtered());
 }
 
 /// @brief Transforms the smoothed parameters from a @c TrackStateProxy to free
@@ -134,8 +134,8 @@ FreeVector freeFiltered(const GeometryContext& gctx,
 template <typename track_state_proxy_t>
 FreeVector freeSmoothed(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::coordinate_transformation::boundParameters2freeParameters(
-      gctx, trackStateProxy.smoothed(), trackStateProxy.referenceSurface());
+  return detail::transformBoundToFreeParameters(
+      trackStateProxy.referenceSurface(), gctx, trackStateProxy.smoothed());
 }
 }  // namespace MultiTrajectoryHelpers
 

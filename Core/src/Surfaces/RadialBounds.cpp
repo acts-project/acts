@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/RadialBounds.hpp"
+
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -31,13 +32,6 @@ bool Acts::RadialBounds::inside(const Acts::Vector2D& lposition,
   return bcheck.isInside(shifted(lposition),
                          Vector2D(get(eMinR), -get(eHalfPhiSector)),
                          Vector2D(get(eMaxR), get(eHalfPhiSector)));
-}
-
-double Acts::RadialBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(get(eMinR), -get(eHalfPhiSector)),
-      Vector2D(get(eMaxR), get(eHalfPhiSector)));
 }
 
 std::vector<Acts::Vector2D> Acts::RadialBounds::vertices(

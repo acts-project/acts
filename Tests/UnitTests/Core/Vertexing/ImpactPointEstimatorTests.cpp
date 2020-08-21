@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     }
 
     // The track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::ParametersVector paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -122,8 +122,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Distance in transverse plane
     double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
@@ -236,7 +235,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
     double z0 = z0Dist(gen);
 
     // The track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::ParametersVector paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -244,8 +243,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(geoContext, std::move(covMat), paramVec,
-                            perigeeSurface);
+    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Estimate 3D distance
     auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
@@ -381,12 +379,12 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   double y = vXYDist(gen);
   double z = vZDist(gen);
 
-  SpacePointVector vertexPosition(x, y, z, 0.);
+  Vector4D vertexPosition(x, y, z, 0.);
 
   // Constraint for vertex fit
   Vertex<BoundParameters> myConstraint;
   // Some abitrary values
-  SpacePointSymMatrix myCovMat = SpacePointSymMatrix::Zero();
+  SymMatrix4D myCovMat = SymMatrix4D::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
@@ -428,8 +426,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    BoundParameters track = BoundParameters(geoContext, std::move(covMat),
-                                            paramVec, perigeeSurface);
+    BoundParameters track(perigeeSurface, paramVec, std::move(covMat));
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =

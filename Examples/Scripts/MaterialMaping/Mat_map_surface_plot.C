@@ -143,7 +143,7 @@ void Fill(std::map<uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<uint64_
 
   std::map<uint64_t,float> surface_weight;
 
-  //Get old file, old tree and set top branch address
+  //Get file, tree and set top branch address
   TFile *tfile = new TFile(input_file.c_str());
   TTree *tree = (TTree*)tfile->Get("material-tracks");
 
@@ -186,7 +186,7 @@ void Fill(std::map<uint64_t,std::vector<TH2F*>>& surface_hist,  std::map<uint64_
     for (auto weight_it = surface_weight.begin(); weight_it != surface_weight.end(); weight_it++){
       weight_it->second = 0;
     }
-    // loop over all the material hit to do initialisation and compute weight
+    // loop over all the material hits to do initialisation and compute weight
     for(int j=0; j<mat_X0->size(); j++ ){
 
       // Ignore surface of incorrect type

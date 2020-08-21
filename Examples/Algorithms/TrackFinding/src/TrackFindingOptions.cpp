@@ -6,26 +6,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/TrackFinding/TrackFindingOptions.hpp"
-
-#include <boost/program_options.hpp>
-#include <string>
+#include "ActsExamples/TrackFinding/TrackFindingOptions.hpp"
 
 #include "Acts/Geometry/GeometryID.hpp"
 
-void FW::Options::addTrackFindingOptions(FW::Options::Description& desc) {
+#include <string>
+
+#include <boost/program_options.hpp>
+
+void ActsExamples::Options::addTrackFindingOptions(
+    ActsExamples::Options::Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
   opt("ckf-slselection-chi2max", value<double>()->default_value(15),
       "Global criteria of maximum chi2 for CKF source link selection");
-  opt("ckf-slselection-nmax", value<int>()->default_value(10),
+  opt("ckf-slselection-nmax", value<size_t>()->default_value(10),
       "Global criteria of maximum number of source link candidates on a "
       "surface for CKF source link selection");
 }
 
-FW::TrackFindingAlgorithm::Config FW::Options::readTrackFindingConfig(
-    const FW::Options::Variables& variables) {
+ActsExamples::TrackFindingAlgorithm::Config
+ActsExamples::Options::readTrackFindingConfig(
+    const ActsExamples::Options::Variables& variables) {
   auto chi2Max = variables["ckf-slselection-chi2max"].template as<double>();
   auto nMax = variables["ckf-slselection-nmax"].template as<size_t>();
 

@@ -105,12 +105,6 @@ bool Acts::ConvexPolygonBounds<N>::inside(
 }
 
 template <int N>
-double Acts::ConvexPolygonBounds<N>::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, m_vertices);
-}
-
-template <int N>
 std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<N>::vertices(
     unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
+
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
@@ -16,11 +17,6 @@
 bool Acts::RectangleBounds::inside(const Acts::Vector2D& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_min, m_max);
-}
-
-double Acts::RectangleBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, min(), max());
 }
 
 std::vector<Acts::Vector2D> Acts::RectangleBounds::vertices(

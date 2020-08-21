@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
+
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
@@ -67,13 +68,6 @@ bool Acts::CylinderBounds::inside3D(const Vector3D& position,
   return bcheck.transformed(jacobian())
       .isInside(lpos, Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
                 Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
-}
-
-double Acts::CylinderBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(
-      shifted(lposition), Vector2D(-get(eHalfPhiSector), -get(eHalfLengthZ)),
-      Vector2D(get(eHalfPhiSector), get(eHalfLengthZ)));
 }
 
 std::ostream& Acts::CylinderBounds::toStream(std::ostream& sl) const {

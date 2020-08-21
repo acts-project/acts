@@ -11,35 +11,35 @@ set(_common_libraries
   Boost::program_options)
 
 # Finder example
-add_executable(ActsRecIterativeVertexFinder IterativeVertexFinderExample.cpp)
-target_link_libraries(ActsRecIterativeVertexFinder PRIVATE ${_common_libraries})
+add_executable(ActsExampleIterativeVertexFinder IterativeVertexFinderExample.cpp)
+target_link_libraries(ActsExampleIterativeVertexFinder PRIVATE ${_common_libraries})
 
 # Fitter example
-add_executable(ActsRecVertexFitter VertexFitterExample.cpp)
-target_link_libraries(ActsRecVertexFitter PRIVATE ${_common_libraries})
+add_executable(ActsExampleVertexFitter VertexFitterExample.cpp)
+target_link_libraries(ActsExampleVertexFitter PRIVATE ${_common_libraries})
 
 # Writer example
-add_executable(ActsRecVertexWriter VertexAndTracksWriterExample.cpp)
-target_link_libraries(ActsRecVertexWriter PRIVATE ${_common_libraries})
+add_executable(ActsExampleVertexWriter VertexAndTracksWriterExample.cpp)
+target_link_libraries(ActsExampleVertexWriter PRIVATE ${_common_libraries})
 
 # Reader example
-add_executable(ActsRecVertexReader VertexAndTracksReaderAndFinderExample.cpp)
-target_link_libraries(ActsRecVertexReader PRIVATE ${_common_libraries})
+add_executable(ActsExampleVertexReader VertexAndTracksReaderAndFinderExample.cpp)
+target_link_libraries(ActsExampleVertexReader PRIVATE ${_common_libraries})
 
 # Tutorial AMVF example
 add_executable(ActsTutorialAMVF TutorialAMVFExample.cpp)
 target_link_libraries(ActsTutorialAMVF PRIVATE ${_common_libraries})
 
 # Full AMVF example
-add_executable(ActsRecAdaptiveMultiVertexFinder AdaptiveMultiVertexFinderExample.cpp)
-target_link_libraries(ActsRecAdaptiveMultiVertexFinder PRIVATE ${_common_libraries})
+add_executable(ActsExampleAdaptiveMultiVertexFinder AdaptiveMultiVertexFinderExample.cpp)
+target_link_libraries(ActsExampleAdaptiveMultiVertexFinder PRIVATE ${_common_libraries})
 
 install(
   TARGETS
-    ActsRecVertexFitter
-    ActsRecIterativeVertexFinder
-    ActsRecVertexWriter
-    ActsRecVertexReader
-    ActsRecAdaptiveMultiVertexFinder
+    ActsExampleVertexFitter
+    ActsExampleIterativeVertexFinder
+    ActsExampleVertexWriter
+    ActsExampleVertexReader
+    ActsExampleAdaptiveMultiVertexFinder
     ActsTutorialAMVF
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

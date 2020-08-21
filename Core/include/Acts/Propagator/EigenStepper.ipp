@@ -6,11 +6,36 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 template <typename B, typename E, typename A>
 Acts::EigenStepper<B, E, A>::EigenStepper(B bField)
     : m_bField(std::move(bField)) {}
+
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::resetState(State& state,
+                                             const BoundVector& boundParams,
+                                             const BoundSymMatrix& cov,
+                                             const Surface& surface,
+                                             const NavigationDirection navDir,
+                                             const double stepSize) const {
+  // Update the stepping state
+  update(state,
+         detail::transformBoundToFreeParameters(surface, state.geoContext,
+                                                boundParams),
+         cov);
+  state.navDir = navDir;
+  state.stepSize = ConstrainedStep(stepSize);
+  state.pathAccumulated = 0.;
+
+  // Reinitialize the stepping jacobian
+  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal,
+                               position(state), direction(state), boundParams);
+  state.jacobian = BoundMatrix::Identity();
+  state.jacTransport = FreeMatrix::Identity();
+  state.derivative = FreeVector::Zero();
+}
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,

@@ -12,7 +12,7 @@
 #include <ostream>
 #include <string>
 
-#include "../../external/acts-core/thirdparty/nlohmann_json/single_include/nlohmann/json.hpp"
+#include "../../../thirdparty/nlohmann_json/single_include/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

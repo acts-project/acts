@@ -6,18 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
+#include "ActsExamples/Io/Root/RootVertexAndTracksReader.hpp"
 
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 #include <Acts/Surfaces/PerigeeSurface.hpp>
-#include <TChain.h>
-#include <TFile.h>
+
 #include <iostream>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "ACTFW/TruthTracking/VertexAndTracks.hpp"
+#include <TChain.h>
+#include <TFile.h>
 
-FW::RootVertexAndTracksReader::RootVertexAndTracksReader(
-    FW::RootVertexAndTracksReader::Config cfg, Acts::Logging::Level lvl)
+ActsExamples::RootVertexAndTracksReader::RootVertexAndTracksReader(
+    ActsExamples::RootVertexAndTracksReader::Config cfg,
+    Acts::Logging::Level lvl)
     : m_cfg(std::move(cfg)),
       m_events(0),
       m_inputChain(nullptr),
@@ -50,7 +52,7 @@ FW::RootVertexAndTracksReader::RootVertexAndTracksReader(
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
 }
 
-FW::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
+ActsExamples::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
   delete m_ptrVx;
   delete m_ptrVy;
   delete m_ptrVz;
@@ -64,17 +66,17 @@ FW::RootVertexAndTracksReader::~RootVertexAndTracksReader() {
   delete m_ptrTrkCov;
 }
 
-std::string FW::RootVertexAndTracksReader::name() const {
+std::string ActsExamples::RootVertexAndTracksReader::name() const {
   return "RootVertexAndTracksReader";
 }
 
-std::pair<size_t, size_t> FW::RootVertexAndTracksReader::availableEvents()
-    const {
+std::pair<size_t, size_t>
+ActsExamples::RootVertexAndTracksReader::availableEvents() const {
   return {0u, m_events};
 }
 
-FW::ProcessCode FW::RootVertexAndTracksReader::read(
-    const FW::AlgorithmContext& context) {
+ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksReader::read(
+    const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read vertex and tracks.");
 
   if (m_inputChain && context.eventNumber < m_events) {
@@ -82,7 +84,9 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
     std::lock_guard<std::mutex> lock(m_read_mutex);
 
     // The collection to be written
-    std::vector<FW::VertexAndTracks> mCollection;
+    std::vector<ActsExamples::VertexAndTracks> mCollection;
+    auto perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
+        Acts::Vector3D(0., 0., 0.));
 
     for (size_t ib = 0; ib < m_cfg.batchSize; ++ib) {
       // Read the correct entry: batch size * event_number + ib
@@ -92,7 +96,7 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
 
       // Loop over all vertices
       for (size_t idx = 0; idx < m_ptrVx->size(); ++idx) {
-        FW::VertexAndTracks vtxAndTracks;
+        ActsExamples::VertexAndTracks vtxAndTracks;
         vtxAndTracks.vertex.position4[0] = (*m_ptrVx)[idx];
         vtxAndTracks.vertex.position4[1] = (*m_ptrVy)[idx];
         vtxAndTracks.vertex.position4[2] = (*m_ptrVz)[idx];
@@ -104,10 +108,13 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
           // Take only tracks that belong to current vertex
           if (static_cast<size_t>((*m_ptrVtxID)[trkId]) == idx) {
             // Get track parameter
-            Acts::BoundVector newTrackParams;
-            newTrackParams << (*m_ptrD0)[trkId], (*m_ptrZ0)[trkId],
-                (*m_ptrPhi)[trkId], (*m_ptrTheta)[trkId], (*m_ptrQP)[trkId],
-                (*m_ptrTime)[trkId];
+            Acts::BoundVector newTrackParams = Acts::BoundVector::Zero();
+            newTrackParams[Acts::eBoundLoc0] = (*m_ptrD0)[trkId];
+            newTrackParams[Acts::eBoundLoc1] = (*m_ptrZ0)[trkId];
+            newTrackParams[Acts::eBoundPhi] = (*m_ptrPhi)[trkId];
+            newTrackParams[Acts::eBoundTheta] = (*m_ptrTheta)[trkId];
+            newTrackParams[Acts::eBoundQOverP] = (*m_ptrQP)[trkId];
+            newTrackParams[Acts::eBoundTime] = (*m_ptrTime)[trkId];
 
             // Get track covariance vector
             std::vector<double> trkCovVec = (*m_ptrTrkCov)[trkId];
@@ -117,12 +124,8 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
                 Eigen::Map<Acts::BoundSymMatrix>(trkCovVec.data());
 
             // Create track parameters and add to track list
-            std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
-                Acts::Surface::makeShared<Acts::PerigeeSurface>(
-                    Acts::Vector3D(0., 0., 0.));
-            tracks.push_back(
-                Acts::BoundParameters(context.geoContext, std::move(covMat),
-                                      newTrackParams, perigeeSurface));
+            tracks.emplace_back(perigeeSurface, newTrackParams,
+                                std::move(covMat));
           }
         }  // End loop over all tracks
         // Set tracks
@@ -136,5 +139,5 @@ FW::ProcessCode FW::RootVertexAndTracksReader::read(
     context.eventStore.add(m_cfg.outputCollection, std::move(mCollection));
   }
   // Return success flag
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

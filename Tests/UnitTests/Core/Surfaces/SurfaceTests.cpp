@@ -10,8 +10,6 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"   //to get s_noBounds
@@ -20,6 +18,8 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 #include "SurfaceStub.hpp"
 
@@ -100,14 +100,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   Vector2D outside{20., 20.};
   BOOST_CHECK(!surface.insideBounds(
       outside));  // fails: m_bounds only in derived classes
-  // intersectionEstimate (should delegate to derived class method of same
-  // name)
   Vector3D mom{100., 200., 300.};
-  auto intersectionEstimate = surface.intersectionEstimate(
-      tgContext, reference, mom.normalized(), false);
-  const Intersection ref{Vector3D{1, 1, 1}, 20.,
-                         Intersection::Status::reachable};
-  BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,

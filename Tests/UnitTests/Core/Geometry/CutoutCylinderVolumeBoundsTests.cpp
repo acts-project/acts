@@ -8,17 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
-#include <iostream>
-#include <memory>
-
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
+
+#include <fstream>
+#include <iostream>
+#include <memory>
 
 namespace Acts {
 namespace Test {
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
 
   auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
-  BOOST_TEST(ccvbOrientedSurfaces.size(), 8);
+  BOOST_CHECK_EQUAL(ccvbOrientedSurfaces.size(), 8);
 
   auto geoCtx = GeometryContext();
   Vector3D xaxis(1., 0., 0.);

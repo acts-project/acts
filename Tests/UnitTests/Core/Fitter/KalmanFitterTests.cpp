@@ -6,13 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/math/distributions/chi_squared.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <algorithm>
-#include <cmath>
-#include <random>
-#include <vector>
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -40,6 +34,13 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <random>
+#include <vector>
+
+#include <boost/math/distributions/chi_squared.hpp>
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -47,14 +48,13 @@ namespace Test {
 
 // A few initialisations and definitionas
 using SourceLink = MinimalSourceLink;
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
-
 using DebugOutput = DebugOutputActor;
 
 std::normal_distribution<double> gauss(0., 1.);
@@ -71,7 +71,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType =
+    Measurement<SourceLink, BoundParametersIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -229,19 +230,54 @@ struct MinimalOutlierFinder {
   ///
   /// @tparam track_state_t Type of the track state
   ///
-  /// @param trackState The trackState to investigate
+  /// @param state The track state to investigate
   ///
   /// @return Whether it's outlier or not
   template <typename track_state_t>
-  bool operator()(const track_state_t& trackState) const {
-    double chi2 = trackState.chi2();
+  bool operator()(const track_state_t& state) const {
+    // Can't determine if it's an outlier if no calibrated measurement or no
+    // predicted parameters
+    if (not state.hasCalibrated() or not state.hasPredicted()) {
+      return false;
+    }
+
+    // The predicted parameters coefficients
+    const auto& predicted = state.predicted();
+    // The predicted parameters covariance
+    const auto& predicted_covariance = state.predictedCovariance();
+
+    // Calculate the chi2 using predicted parameters and calibrated measurement
+    double chi2 = std::numeric_limits<double>::max();
+    visit_measurement(
+        state.calibrated(), state.calibratedCovariance(),
+        state.calibratedSize(),
+        [&](const auto calibrated, const auto calibrated_covariance) {
+          constexpr size_t measdim = decltype(calibrated)::RowsAtCompileTime;
+          using par_t = ActsVectorD<measdim>;
+
+          // Take the projector (measurement mapping function)
+          const ActsMatrixD<measdim, eBoundParametersSize> H =
+              state.projector()
+                  .template topLeftCorner<measdim, eBoundParametersSize>();
+
+          // Calculate the residual
+          const par_t residual = calibrated - H * predicted;
+
+          // Calculate the chi2
+          chi2 = (residual.transpose() *
+                  ((calibrated_covariance +
+                    H * predicted_covariance * H.transpose()))
+                      .inverse() *
+                  residual)
+                     .eval()(0, 0);
+        });
+
+    // In case the chi2 is too small
     if (std::abs(chi2) < chi2Tolerance) {
       return false;
     }
-    // The measurement dimension
-    size_t ndf = trackState.calibratedSize();
     // The chisq distribution
-    boost::math::chi_squared chiDist(ndf);
+    boost::math::chi_squared chiDist(state.calibratedSize());
     // The p-Value
     double pValue = 1 - boost::math::cdf(chiDist, chi2);
     // If pValue is NOT significant enough => outlier
@@ -304,7 +340,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
@@ -366,12 +402,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   MinimalOutlierFinder outlierFinder;
   outlierFinder.measurementSignificanceCutoff = 0.05;
-
-  KalmanFitter kFitter(rPropagator,
-                       getDefaultLogger("KalmanFilter", Logging::VERBOSE));
+  auto kfLogger = getDefaultLogger("KalmanFilter", Logging::VERBOSE);
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, outlierFinder, rSurface);
+      tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
+      rSurface);
+
+  KalmanFitter kFitter(rPropagator);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
@@ -399,6 +436,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                   fittedAgainParameters.parameters().template head<5>(), 1e-5);
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
                   fittedAgainParameters.parameters().template tail<1>(), 1e-5);
+
+  // Fit without target surface
+  kfOptions.referenceSurface = nullptr;
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto fittedWithoutTargetSurface = *fitRes;
+  // Check if there is no fitted parameters
+  BOOST_CHECK(fittedWithoutTargetSurface.fittedParameters == std::nullopt);
+
+  // Reset the target surface
+  kfOptions.referenceSurface = rSurface;
 
   // Change the order of the sourcelinks
   std::vector<SourceLink> shuffledMeasurements = {
@@ -470,6 +518,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       nSmoothed++;
   });
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
+
+  // Reset to use smoothing formalism
+  kfOptions.backwardFiltering = false;
 
   // Extract outliers from result of propagation.
   // This vector owns the outliers

@@ -8,9 +8,10 @@
 
 #include "EventAction.hpp"
 
+#include <stdexcept>
+
 #include <G4Event.hh>
 #include <G4RunManager.hh>
-#include <stdexcept>
 
 #include "PrimaryGeneratorAction.hpp"
 #include "SteppingAction.hpp"

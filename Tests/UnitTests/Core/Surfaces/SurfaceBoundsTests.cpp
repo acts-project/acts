@@ -9,10 +9,11 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
-#include <numeric>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <numeric>
 
 namespace Acts {
 
@@ -32,9 +33,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }
-  double distanceToBoundary(const Vector2D& /*lpos*/) const final {
-    return 10.;
-  }
+
   std::ostream& toStream(std::ostream& sl) const final {
     sl << "SurfaceBoundsStub";
     return sl;

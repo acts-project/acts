@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <stdio.h>
+#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+
+#include <stdio.h>
+
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
@@ -100,9 +102,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     auto nt1 = std::get<BinningType>(lCfg.binning1);
 
     if (type == 0) {
-      ACTS_DEBUG("- creating CylinderLayer with " << lSurfaces.size()
-                                                  << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
+      ACTS_DEBUG("- creating CylinderLayer with "
+                 << lSurfaces.size() << " surfaces at r = " << pl.medium(binR));
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
       if (nb0 > 0 and nb1 > 0) {
@@ -113,9 +115,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
             m_cfg.layerCreator->cylinderLayer(gctx, lSurfaces, nt0, nt1, pl));
       }
     } else {
-      ACTS_DEBUG("- creating DiscLayer with " << lSurfaces.size()
-                                              << " surfaces.");
       ProtoLayer pl(gctx, lSurfaces);
+      ACTS_DEBUG("- creating DiscLayer with "
+                 << lSurfaces.size() << " surfaces at z = " << pl.medium(binZ));
       pl.envelope[Acts::binR] = {lCfg.envelope.first, lCfg.envelope.second};
       pl.envelope[Acts::binZ] = {lCfg.envelope.second, lCfg.envelope.second};
       if (nb0 > 0 and nb1 > 0) {
@@ -129,7 +131,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
   };
 
   for (auto layerCfg : layerConfigs) {
-    ACTS_DEBUG("- layer configuration found for layer " << layerCfg.layerName
+    ACTS_DEBUG("- layer configuration found for layer " << layerCfg.volumeName
                                                         << " with sensors ");
     for (auto& sensor : layerCfg.sensorNames) {
       ACTS_DEBUG("  - sensor: " << sensor);
@@ -150,17 +152,32 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
       }
     }
 
-    // Step down from the top volume each time to collect the logical tree
-    TGeoVolume* tvolume = gGeoManager->GetTopVolume();
-    if (tvolume != nullptr) {
+    // Either pick the configured volume or take the top level volume
+    TGeoVolume* tVolume =
+        gGeoManager->FindVolumeFast(layerCfg.volumeName.c_str());
+    if (tVolume == nullptr) {
+      tVolume = gGeoManager->GetTopVolume();
+      ACTS_DEBUG("- search volume is TGeo top volume");
+    } else {
+      ACTS_DEBUG("- setting search volume to " << tVolume->GetName());
+    }
+
+    if (tVolume != nullptr) {
       TGeoParser::Options tgpOptions;
-      tgpOptions.volumeNames = {layerCfg.layerName};
+      tgpOptions.volumeNames = {layerCfg.volumeName};
       tgpOptions.targetNames = layerCfg.sensorNames;
       tgpOptions.parseRanges = layerCfg.parseRanges;
       tgpOptions.unit = m_cfg.unit;
-
       TGeoParser::State tgpState;
-      tgpState.volume = tvolume;
+      tgpState.volume = tVolume;
+
+      ACTS_DEBUG("- applying  " << layerCfg.parseRanges.size()
+                                << " search restrictions.");
+      for (const auto& prange : layerCfg.parseRanges) {
+        ACTS_VERBOSE(" - range " << binningValueNames[prange.first]
+                                 << " within [ " << prange.second.first << ", "
+                                 << prange.second.second << "]");
+      }
 
       TGeoParser::select(tgpState, tgpOptions);
 

@@ -8,12 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
-#include <memory>
-#include <vector>
-
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -27,8 +21,15 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Kernel/Interactor.hpp"
+#include "ActsFatras/Kernel/SimulationResult.hpp"
+#include "ActsFatras/Kernel/detail/Interactor.hpp"
 #include "ActsFatras/Kernel/detail/SimulatorError.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <memory>
+#include <vector>
 
 namespace ActsFatras {
 
@@ -67,27 +68,29 @@ struct ParticleSimulator {
   ///
   /// @tparam generator_t is the type of the random number generator
   template <typename generator_t>
-  Acts::Result<InteractorResult> simulate(
+  Acts::Result<SimulationResult> simulate(
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
     assert(localLogger and "Missing local logger");
 
     // propagator-related additional types
-    using Interact =
-        Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
-    using Actions = Acts::ActionList<Interact, Acts::DebugOutputActor>;
-    using Abort = Acts::AbortList<typename Interact::ParticleNotAlive,
+    using Interactor =
+        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
+    using InteractorResult = typename Interactor::result_type;
+    using Actions = Acts::ActionList<Interactor, Acts::DebugOutputActor>;
+    using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
                                   Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx);
+    PropagatorOptions options(geoCtx, magCtx,
+                              Acts::LoggerWrapper{*localLogger});
     options.absPdgCode = particle.pdg();
     options.mass = particle.mass();
     options.debug = localLogger->doPrint(Acts::Logging::Level::DEBUG);
     // setup the interactor as part of the propagator options
-    auto &interactor = options.actionList.template get<Interact>();
+    auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;
@@ -198,7 +201,7 @@ struct Simulator {
         (simulatedParticlesInitial.size() == simulatedParticlesFinal.size()) and
         "Inconsistent initial sizes of the simulated particle containers");
 
-    using ParticleSimulatorResult = Acts::Result<InteractorResult>;
+    using ParticleSimulatorResult = Acts::Result<SimulationResult>;
 
     std::vector<FailedParticle> failedParticles;
 
@@ -282,7 +285,7 @@ struct Simulator {
   /// @tparam particles_t is a SequenceContainer for particles
   /// @tparam hits_t is a SequenceContainer for hits
   template <typename particles_t, typename hits_t>
-  void copyOutputs(const InteractorResult &result,
+  void copyOutputs(const SimulationResult &result,
                    particles_t &particlesInitial, particles_t &particlesFinal,
                    hits_t &hits) const {
     // initial particle state was already pushed to the container before

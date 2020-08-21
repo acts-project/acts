@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+
 #include <cmath>
 #include <type_traits>
-
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 

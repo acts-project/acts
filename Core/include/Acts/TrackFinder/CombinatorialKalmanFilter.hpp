@@ -1,12 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -94,8 +97,9 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
-      const SourceLinkSelectorConfig& slsCfg, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
+      const SourceLinkSelectorConfig& slsCfg, LoggerWrapper logger_,
+      const Surface* rSurface = nullptr, bool mScattering = true,
+      bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -103,7 +107,8 @@ struct CombinatorialKalmanFilterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        smoothing(rSmoothing) {}
+        smoothing(rSmoothing),
+        logger(logger_) {}
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -126,6 +131,9 @@ struct CombinatorialKalmanFilterOptions {
 
   /// Whether to run smoothing to get fitted parameter
   bool smoothing = true;
+
+  /// Logger instance
+  LoggerWrapper logger;
 };
 
 template <typename source_link_t>
@@ -219,21 +227,12 @@ class CombinatorialKalmanFilter {
   CombinatorialKalmanFilter() = delete;
 
   /// Constructor from arguments
-  CombinatorialKalmanFilter(propagator_t pPropagator,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("CombinatorialKalmanFilter",
-                                                 Logging::INFO))
-      : m_propagator(std::move(pPropagator)), m_logger(logger.release()) {}
+  CombinatorialKalmanFilter(propagator_t pPropagator)
+      : m_propagator(std::move(pPropagator)) {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
-
-  /// Logger getter to support macros
-  const Logger& logger() const { return *m_logger; }
-
-  /// Owned logging instance
-  std::shared_ptr<const Logger> m_logger;
 
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
@@ -279,6 +278,12 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      const auto& logger = state.options.logger;
+
+      if (result.finished) {
+        return;
+      }
+
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
 
       // This following is added due to the fact that the navigation
@@ -371,18 +376,16 @@ class CombinatorialKalmanFilter {
       }
 
       // Post-processing after forward filtering
-      if (result.forwardFiltered and not result.finished) {
+      if (result.forwardFiltered) {
         // Return error if forward filtering finds no tracks
         if (result.trackTips.empty()) {
           result.result =
-              Result<void>(CombinatorialKalmanFilterError::NoTracksFound);
+              Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
         } else {
           if (not smoothing) {
-            // Manually set the targetReached to abort the propagation
             ACTS_VERBOSE("Finish forward Kalman filtering");
             // Remember that track finding is done
             result.finished = true;
-            state.navigation.targetReached = true;
           } else {
             // Iterate over the found tracks for smoothing and getting the
             // fitted parameter. This needs to be accomplished in different
@@ -454,9 +457,9 @@ class CombinatorialKalmanFilter {
                result_type& result) const {
       // Remember the propagation state has been reset
       result.reset = true;
-
       auto currentState =
           result.fittedStates.getTrackState(result.activeTips.back().first);
+
       // Reset the navigation state
       state.navigation = typename propagator_t::NavigatorState();
       state.navigation.startSurface = &currentState.referenceSurface();
@@ -471,20 +474,10 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeFiltered(
-                         state.options.geoContext, currentState),
-                     currentState.filteredCovariance());
-      // Reinitialize the stepping jacobian
-      currentState.referenceSurface().initJacobianToGlobal(
-          state.options.geoContext, state.stepping.jacToGlobal,
-          state.stepping.pos, state.stepping.dir, currentState.filtered());
-      state.stepping.jacobian = BoundMatrix::Identity();
-      state.stepping.jacTransport = FreeMatrix::Identity();
-      state.stepping.derivative = FreeVector::Zero();
-      // Reset step size and accumulated path
-      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
-      state.stepping.pathAccumulated = currentState.pathLength();
+      stepper.resetState(state.stepping, currentState.filtered(),
+                         currentState.filteredCovariance(),
+                         currentState.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -506,6 +499,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
+      const auto& logger = state.options.logger;
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
@@ -533,7 +527,7 @@ class CombinatorialKalmanFilter {
         bool isOutlier = false;
         auto sourcelinkSelectionRes = m_sourcelinkSelector(
             m_calibrator, boundParams, sourcelinks, result.sourcelinkChi2,
-            result.sourcelinkCandidateIndices, isOutlier);
+            result.sourcelinkCandidateIndices, isOutlier, logger);
         if (!sourcelinkSelectionRes.ok()) {
           ACTS_ERROR("Selection of source links failed: "
                      << sourcelinkSelectionRes.error());
@@ -587,9 +581,10 @@ class CombinatorialKalmanFilter {
                          : TrackStatePropMask::All);
 
           // Add measurement/outlier track state to the multitrajectory
-          auto addStateRes = addSourcelinkState(
-              stateMask, boundState, sourcelinks.at(index), isOutlier, result,
-              state.geoContext, prevTip, prevTipState, neighborTip, sharedTip);
+          auto addStateRes =
+              addSourcelinkState(stateMask, boundState, sourcelinks.at(index),
+                                 isOutlier, result, state.geoContext, prevTip,
+                                 prevTipState, neighborTip, sharedTip, logger);
           if (addStateRes.ok()) {
             const auto& [currentTip, tipState] = addStateRes.value();
             // Remember the track state tip for this stored source link
@@ -673,15 +668,16 @@ class CombinatorialKalmanFilter {
             // Transport & bind the state to the current surface
             auto boundState = stepper.boundState(state.stepping, *surface);
             // Add a hole track state to the multitrajectory
-            currentTip = addHoleState(stateMask, boundState, result, prevTip);
+            currentTip =
+                addHoleState(stateMask, boundState, result, prevTip, logger);
             // Incremet of number of holes
             tipState.nHoles++;
           } else {
             // Transport & get curvilinear state instead of bound state
             auto curvilinearState = stepper.curvilinearState(state.stepping);
             // Add a passive material track state to the multitrajectory
-            currentTip =
-                addPassiveState(stateMask, curvilinearState, result, prevTip);
+            currentTip = addPassiveState(stateMask, curvilinearState, result,
+                                         prevTip, logger);
           }
 
           // Check the branch
@@ -739,7 +735,8 @@ class CombinatorialKalmanFilter {
         const source_link_t& sourcelink, bool isOutlier, result_type& result,
         std::reference_wrapper<const GeometryContext> geoContext,
         const size_t& prevTip, const TipState& prevTipState,
-        size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX) const {
+        size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX,
+        LoggerWrapper logger = getDummyLogger()) const {
       // Inherit the tip state from the previous and will be updated later
       TipState tipState = prevTipState;
 
@@ -829,7 +826,8 @@ class CombinatorialKalmanFilter {
     /// @return The tip of added state
     size_t addHoleState(const TrackStatePropMask& stateMask,
                         const BoundState& boundState, result_type& result,
-                        size_t prevTip = SIZE_MAX) const {
+                        size_t prevTip = SIZE_MAX,
+                        LoggerWrapper logger = getDummyLogger()) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
@@ -872,8 +870,8 @@ class CombinatorialKalmanFilter {
     /// @return The tip of added state
     size_t addPassiveState(const TrackStatePropMask& stateMask,
                            const CurvilinearState& curvilinearState,
-                           result_type& result,
-                           size_t prevTip = SIZE_MAX) const {
+                           result_type& result, size_t prevTip = SIZE_MAX,
+                           LoggerWrapper logger = getDummyLogger()) const {
       // Add a track state
       auto currentTip = result.fittedStates.addTrackState(stateMask, prevTip);
       ACTS_VERBOSE(
@@ -918,6 +916,7 @@ class CombinatorialKalmanFilter {
     void materialInteractor(
         const Surface* surface, propagator_state_t& state, stepper_t& stepper,
         const MaterialUpdateStage& updateStage = fullUpdate) const {
+      const auto& logger = state.options.logger;
       // Indicator if having material
       bool hasMaterial = false;
 
@@ -969,6 +968,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
+      const auto& logger = state.options.logger;
       // The tip of the track being smoothed
       const auto& currentTip = result.trackTips.at(result.iSmoothed);
 
@@ -1025,18 +1025,9 @@ class CombinatorialKalmanFilter {
       state.stepping.navDir = backward;
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
-      // Not sure if the following line helps anything
-      state.options.direction = backward;
 
       return Result<void>::success();
     }
-
-    /// Pointer to a logger that is owned by the parent,
-    /// CombinatorialKalmanFilter
-    const Logger* m_logger;
-
-    /// Getter for the logger, to support logging macros
-    const Logger& logger() const { return *m_logger; }
 
     /// The CombinatorialKalmanFilter updater
     updater_t m_updater;
@@ -1067,7 +1058,7 @@ class CombinatorialKalmanFilter {
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const result_t& result) const {
-      if (!result.result.ok()) {
+      if (!result.result.ok() or result.finished) {
         return true;
       }
       return false;
@@ -1100,6 +1091,7 @@ class CombinatorialKalmanFilter {
              const start_parameters_t& sParameters,
              const CombinatorialKalmanFilterOptions<source_link_selector_t>&
                  tfOptions) const {
+    const auto& logger = tfOptions.logger;
     using SourceLink = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
@@ -1123,29 +1115,23 @@ class CombinatorialKalmanFilter {
     using Aborters = AbortList<CombinatorialKalmanFilterAborter>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> propOptions(tfOptions.geoContext,
-                                                    tfOptions.magFieldContext);
+    PropagatorOptions<Actors, Aborters> propOptions(
+        tfOptions.geoContext, tfOptions.magFieldContext, tfOptions.logger);
     // Set max steps
     propOptions.maxSteps = 10000;
 
     // Catch the actor and set the measurements
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.m_logger = m_logger.get();
     combKalmanActor.inputMeasurements = std::move(inputMeasurements);
     combKalmanActor.targetSurface = tfOptions.referenceSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
 
-    // Set config and logger for source link selector
+    // Set config for source link selector
     combKalmanActor.m_sourcelinkSelector.m_config =
         tfOptions.sourcelinkSelectorConfig;
-    combKalmanActor.m_sourcelinkSelector.m_logger = m_logger;
-
-    // also set logger on updater and smoother
-    combKalmanActor.m_updater.m_logger = m_logger;
-    combKalmanActor.m_smoother.m_logger = m_logger;
 
     // Run the CombinatorialKalmanFilter
     auto result = m_propagator.template propagate(sParameters, propOptions);

@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/BareService.hpp"
+
 #include <cstddef>
 #include <string>
 
-#include "ACTFW/Framework/BareService.hpp"
-
-namespace FW {
+namespace ActsExamples {
 
 /// A simple service that adds an event block index.
 class HelloService : public BareService {
@@ -35,4 +35,4 @@ class HelloService : public BareService {
   Config m_cfg;
 };
 
-}  // namespace FW
+}  // namespace ActsExamples

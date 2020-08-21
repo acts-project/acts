@@ -8,10 +8,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
-#include <random>
-#include <vector>
-
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -25,6 +21,10 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <cmath>
+#include <random>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 
@@ -134,11 +134,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
 
   // Create some options
   using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-  StepWiseOptions swOptions(tgContext, mfContext);
+  StepWiseOptions swOptions(tgContext, mfContext, getDummyLogger());
 
   using PlainActors = ActionList<>;
   using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-  PlainOptions pOptions(tgContext, mfContext);
+  PlainOptions pOptions(tgContext, mfContext, getDummyLogger());
 
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();

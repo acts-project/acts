@@ -6,11 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
 #include <boost/test/unit_test.hpp>
-#include <cmath>
-#include <random>
-#include <vector>
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -37,6 +33,11 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <random>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 
@@ -68,9 +69,8 @@ GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 
 // A few initialisations and definitionas
 using SourceLink = ExtendedMinimalSourceLink;
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
@@ -92,7 +92,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType =
+    Measurement<SourceLink, BoundParametersIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-      tgContext, mfContext);
+      tgContext, mfContext, getDummyLogger());
   mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
@@ -306,9 +307,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
       // strip volume chi2/nSourceLinks cutoff: 8.0/5
       {makeId(3), {8.0, 5}},
   };
-  CombinatorialKalmanFilter cKF(
-      rPropagator,
-      getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE));
+  CombinatorialKalmanFilter cKF(rPropagator);
 
   // Run the CombinaltorialKamanFitter for track finding from different starting
   // parameter
@@ -331,8 +330,11 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
+    auto logger =
+        getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE);
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, sourcelinkSelectorConfig, rSurface);
+        tgContext, mfContext, calContext, sourcelinkSelectorConfig,
+        LoggerWrapper{*logger}, rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);

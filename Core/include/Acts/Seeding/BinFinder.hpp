@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <vector>
 #include "Acts/Seeding/SpacePointGrid.hpp"
+
+#include <vector>
 
 namespace Acts {
 

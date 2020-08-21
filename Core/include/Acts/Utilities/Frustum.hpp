@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/IVisualization.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <ostream>
 
@@ -71,7 +71,7 @@ class Frustum {
   /// @param far_distance The distance to the virtual "far plane" at which point
   /// the side planes terminate visually.
   template <size_t D = DIM, std::enable_if_t<D == 3, int> = 0>
-  void draw(IVisualization& helper, value_type far_distance = 10) const;
+  void draw(IVisualization3D& helper, value_type far_distance = 10) const;
 
   /// Draw a representation of this frustum as an SVG string to an outstream
   /// @note This is only available for the 2D case.

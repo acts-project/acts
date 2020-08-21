@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
+
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <iomanip>
@@ -19,11 +20,6 @@ Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
 bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
                                  const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, vertices());
-}
-
-double Acts::DiamondBounds::distanceToBoundary(
-    const Acts::Vector2D& lposition) const {
-  return BoundaryCheck(true).distance(lposition, vertices());
 }
 
 std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(

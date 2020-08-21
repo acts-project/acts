@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/BField/BFieldUtils.hpp"
-
-#include <fstream>
+#include "ActsExamples/Plugins/BField/BFieldUtils.hpp"
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <fstream>
+
 #include "TFile.h"
 #include "TROOT.h"
 #include "TTree.h"
@@ -20,7 +21,7 @@
 Acts::InterpolatedBFieldMapper<
     Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-FW::BField::txt::fieldMapperRZ(
+ActsExamples::BField::txt::fieldMapperRZ(
     std::function<size_t(std::array<size_t, 2> binsRZ,
                          std::array<size_t, 2> nBinsRZ)>
         localToGlobalBin,
@@ -61,7 +62,7 @@ FW::BField::txt::fieldMapperRZ(
 Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
     Acts::Vector3D, Acts::detail::EquidistantAxis,
     Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
-FW::BField::txt::fieldMapperXYZ(
+ActsExamples::BField::txt::fieldMapperXYZ(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
                          std::array<size_t, 3> nBinsXYZ)>
         localToGlobalBin,
@@ -105,7 +106,7 @@ FW::BField::txt::fieldMapperXYZ(
 Acts::InterpolatedBFieldMapper<
     Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-FW::BField::root::fieldMapperRZ(
+ActsExamples::BField::root::fieldMapperRZ(
     std::function<size_t(std::array<size_t, 2> binsRZ,
                          std::array<size_t, 2> nBinsRZ)>
         localToGlobalBin,
@@ -151,7 +152,7 @@ FW::BField::root::fieldMapperRZ(
 Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
     Acts::Vector3D, Acts::detail::EquidistantAxis,
     Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
-FW::BField::root::fieldMapperXYZ(
+ActsExamples::BField::root::fieldMapperXYZ(
     std::function<size_t(std::array<size_t, 3> binsXYZ,
                          std::array<size_t, 3> nBinsXYZ)>
         localToGlobalBin,

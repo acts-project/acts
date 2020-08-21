@@ -8,13 +8,16 @@
 
 #pragma once
 
-#include <functional>
+// Workaround for building on clang+libstdc++
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <functional>
 
 namespace Acts {
 
@@ -426,8 +429,9 @@ struct DenseStepperPropagatorOptions
   /// @param mctx The current magnetic fielc context object
   DenseStepperPropagatorOptions(
       std::reference_wrapper<const GeometryContext> gctx,
-      std::reference_wrapper<const MagneticFieldContext> mctx)
-      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
+      std::reference_wrapper<const MagneticFieldContext> mctx,
+      LoggerWrapper logger_)
+      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx, logger_) {}
 
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
@@ -447,7 +451,7 @@ struct DenseStepperPropagatorOptions
   DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(this->geoContext, this->magFieldContext);
+        eoptions(this->geoContext, this->magFieldContext, this->logger);
     // Copy the options over
     eoptions.direction = this->direction;
     eoptions.absPdgCode = this->absPdgCode;

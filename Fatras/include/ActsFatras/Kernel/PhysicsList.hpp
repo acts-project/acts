@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <bitset>
-#include <tuple>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
+
+#include <bitset>
+#include <tuple>
 
 namespace ActsFatras {
 

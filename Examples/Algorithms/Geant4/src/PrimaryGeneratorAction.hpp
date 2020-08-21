@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include <memory>
+
 #include <G4SystemOfUnits.hh>
 #include <G4ThreeVector.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
-#include <memory>
 
 class G4ParticleGun;
 class G4Event;

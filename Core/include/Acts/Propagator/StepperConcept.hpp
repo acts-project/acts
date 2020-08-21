@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,6 +36,7 @@ namespace concept {
   template <typename T>
   using bfield_t = typename T::BField;
 
+  METHOD_TRAIT(reset_state_t, resetState);
   METHOD_TRAIT(get_field_t, getField);
   METHOD_TRAIT(position_t, position);
   METHOD_TRAIT(direction_t, direction);
@@ -90,6 +91,8 @@ namespace concept {
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool bfield_exists = exists<bfield_t, S>;
         static_assert(bfield_exists, "BField type not found");
+        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
+        static_assert(reset_state_exists, "resetState method not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
         static_assert(get_field_exists, "getField method not found");
         constexpr static bool position_exists = has_method<const S, Vector3D, position_t, const state&>;
@@ -114,7 +117,7 @@ namespace concept {
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
-        constexpr static bool update_surface_exists = has_method<const S, Intersection::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
+        constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
         constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
         static_assert(set_step_size_exists, "setStepSize method not found");

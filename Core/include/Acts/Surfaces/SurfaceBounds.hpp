@@ -7,10 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <ostream>
-
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <ostream>
 
 namespace Acts {
 
@@ -67,12 +67,6 @@ class SurfaceBounds {
   /// @return boolean indicator for the success of this operation
   virtual bool inside(const Vector2D& lposition,
                       const BoundaryCheck& bcheck) const = 0;
-
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  virtual double distanceToBoundary(const Vector2D& lposition) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

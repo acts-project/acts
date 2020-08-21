@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <climits>
-
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+
+#include <climits>
 
 namespace Acts {
 

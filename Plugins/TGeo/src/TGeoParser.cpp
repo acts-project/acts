@@ -7,13 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
+
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <iostream>
+
 #include "TGeoBBox.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
-
-#include <iostream>
 
 void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
                               const Acts::TGeoParser::Options& options,
@@ -21,7 +23,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
   // Volume is present
   if (state.volume != nullptr) {
     std::string volumeName = state.volume->GetName();
-    // If we have a match
+    // If you are on branch, you stay on branch
     state.onBranch =
         state.onBranch or
         TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str());
@@ -40,6 +42,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
   } else if (state.node != nullptr) {
     // The node name for checking
     std::string nodeName = state.node->GetName();
+    std::string nodeVolName = state.node->GetVolume()->GetName();
     // Get the matrix of the current node for positioning
     const TGeoMatrix* nmatrix = state.node->GetMatrix();
     TGeoHMatrix transform = TGeoCombiTrans(gmatrix) * TGeoCombiTrans(*nmatrix);
@@ -47,7 +50,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
     transform.SetName((nodeName + suffix).c_str());
     // Check if you had found the target node
     if (state.onBranch and
-        TGeoPrimitivesHelper::match(options.targetNames, nodeName.c_str())) {
+        TGeoPrimitivesHelper::match(options.targetNames, nodeVolName.c_str())) {
       // Get the placement and orientation in respect to its mother
       const Double_t* rotation = transform.GetRotationMatrix();
       const Double_t* translation = transform.GetTranslation();

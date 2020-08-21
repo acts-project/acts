@@ -196,7 +196,6 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       Acts::Material mat = homogeneousAccumulation.average();
       mState.volumeMaterial[recMaterial.first] =
           std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
-      return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 2) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
@@ -209,7 +208,6 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid2D>>>(
           std::move(matMap), mState.materialBin[recMaterial.first]);
-      return;
     } else if (mState.materialBin[recMaterial.first].dimensions() == 3) {
       // Accumulate all the recorded material onto a grid
       ACTS_DEBUG("Grid material volume");
@@ -222,7 +220,6 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       mState.volumeMaterial[recMaterial.first] = std::make_unique<
           InterpolatedMaterialMap<MaterialMapper<MaterialGrid3D>>>(
           std::move(matMap), mState.materialBin[recMaterial.first]);
-      return;
     } else {
       throw std::invalid_argument(
           "Incorrect bin dimension, only 0, 2 and 3 are accepted");
@@ -241,8 +238,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<MaterialVolumeCollector, DebugOutputActor>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
-                                                   mState.magFieldContext);
+  auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
+  PropagatorOptions<ActionList, AbortList> options(
+      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material volume by using the straight line propagator
@@ -278,7 +276,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // onto the mapping volume:
   auto rmIter = rMaterial.begin();
   auto volIter = mappingVolumes.begin();
-  bool encounterVolume = false;
 
   // Use those to minimize the lookup
   GeometryID lastID = GeometryID();
@@ -291,11 +288,15 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   Acts::Vector3D extraDirection = {0, 0, 0};
 
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
-    if (volIter != mappingVolumes.end() && encounterVolume == true &&
+    if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
-      encounterVolume = false;
-      // Switch to next assignment volume
-      ++volIter;
+      double distVol = (volIter->position - mTrack.first.first).norm();
+      double distMat = (rmIter->position - mTrack.first.first).norm();
+      // Material past the entry point to the current volume
+      if (distMat - distVol > s_epsilon) {
+        // Switch to next material volume
+        ++volIter;
+      }
     }
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
@@ -328,7 +329,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
               std::pair(properties, extraPosition));
         }
       }
-      encounterVolume = true;
+      rmIter->volume = volIter->volume;
     }
     ++rmIter;
   }

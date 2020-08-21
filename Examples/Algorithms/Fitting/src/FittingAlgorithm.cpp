@@ -6,17 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Fitting/FittingAlgorithm.hpp"
+#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
+
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 
-#include "ACTFW/EventData/ProtoTrack.hpp"
-#include "ACTFW/EventData/Track.hpp"
-#include "ACTFW/Framework/WhiteBoard.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-
-FW::FittingAlgorithm::FittingAlgorithm(Config cfg, Acts::Logging::Level level)
-    : FW::BareAlgorithm("FittingAlgorithm", level), m_cfg(std::move(cfg)) {
+ActsExamples::FittingAlgorithm::FittingAlgorithm(Config cfg,
+                                                 Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("FittingAlgorithm", level),
+      m_cfg(std::move(cfg)) {
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing input source links collection");
   }
@@ -32,8 +34,8 @@ FW::FittingAlgorithm::FittingAlgorithm(Config cfg, Acts::Logging::Level level)
   }
 }
 
-FW::ProcessCode FW::FittingAlgorithm::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto sourceLinks =
       ctx.eventStore.get<SimSourceLinkContainer>(m_cfg.inputSourceLinks);
@@ -88,7 +90,7 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
     // Set the KalmanFitter options
     Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        Acts::VoidOutlierFinder(), &(*pSurface));
+        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, &(*pSurface));
 
     ACTS_DEBUG("Invoke fitter");
     auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
@@ -123,5 +125,5 @@ FW::ProcessCode FW::FittingAlgorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

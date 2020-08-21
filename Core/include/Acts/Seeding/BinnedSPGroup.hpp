@@ -166,6 +166,10 @@ class BinnedSPGroupIterator {
     return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
   }
 
+  bool operator!=(const BinnedSPGroupIterator& otherState) {
+    return !(this->operator==(otherState));
+  }
+
   Neighborhood<external_spacepoint_t> middle() {
     return Neighborhood<external_spacepoint_t>(currentBin, grid);
   }

@@ -12,8 +12,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include "TGeoManager.h"
 
@@ -24,7 +25,8 @@ namespace Test {
 /// @brief struct to load the global geometry
 struct RootGeometry {
   RootGeometry() {
-    TGeoManager::Import("http://cern.ch/asalzbur/acts/panda.root");
+    auto path = Acts::Test::getDataPath("panda.root");
+    TGeoManager::Import(path.c_str());
   }
 };
 
@@ -38,8 +40,8 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     std::string volumeName = "*";
     TGeoParser::Options tgpOptions;
     tgpOptions.volumeNames = {volumeName};
-    tgpOptions.targetNames = {"PixelActiveo2_1", "PixelActiveo4_1",
-                              "PixelActiveo5_1", "PixelActiveo6_1"};
+    tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
+                              "PixelActiveo6"};
     std::string axes = "XYZ";
     double scale = 10.;
 
@@ -50,16 +52,16 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
     TGeoParser::select(tgpState, tgpOptions);
 
     // This should select 176 PixelActive modules
-    BOOST_TEST(tgpState.selectedNodes.size() == 176u);
+    BOOST_CHECK_EQUAL(tgpState.selectedNodes.size(), 176u);
 
     /// Convert into surfaces using the TGeoSurfaceConverter & Draw them
-    ObjVisualization objVis;
+    ObjVisualization3D objVis;
     for (auto& snode : tgpState.selectedNodes) {
       const auto& shape = *(snode.node->GetVolume()->GetShape());
       const auto& transform = *(snode.transform.get());
       auto surface =
           TGeoSurfaceConverter::toSurface(shape, transform, axes, scale);
-      GeometryView::drawSurface(objVis, *surface, tgContext);
+      GeometryView3D::drawSurface(objVis, *surface, tgContext);
     }
     objVis.write("PixelActive");
   }
@@ -71,8 +73,8 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     std::string volumeName = "*";
     TGeoParser::Options tgpOptions;
     tgpOptions.volumeNames = {volumeName};
-    tgpOptions.targetNames = {"PixelActiveo2_1", "PixelActiveo4_1",
-                              "PixelActiveo5_1", "PixelActiveo6_1"};
+    tgpOptions.targetNames = {"PixelActiveo2", "PixelActiveo4", "PixelActiveo5",
+                              "PixelActiveo6"};
     tgpOptions.parseRanges.push_back({binR, {0., 40.}});
     tgpOptions.parseRanges.push_back({binZ, {-60., 15.}});
     tgpOptions.unit = 10.;
@@ -86,18 +88,18 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
     TGeoParser::select(tgpState, tgpOptions);
 
     // This should select 14 PixelActive modules
-    BOOST_TEST(tgpState.selectedNodes.size() == 14u);
+    BOOST_CHECK_EQUAL(tgpState.selectedNodes.size(), 14u);
 
     /// Convert into surfaces using the TGeoSurfaceConverter & Draw them
-    ObjVisualization objVis;
+    ObjVisualization3D objVis;
     for (auto& snode : tgpState.selectedNodes) {
       const auto& shape = *(snode.node->GetVolume()->GetShape());
       const auto& transform = *(snode.transform.get());
       auto surface = TGeoSurfaceConverter::toSurface(shape, transform, axes,
                                                      tgpOptions.unit);
-      GeometryView::drawSurface(objVis, *surface, tgContext);
+      GeometryView3D::drawSurface(objVis, *surface, tgContext);
     }
-    objVis.write("PixelActive_Innemost");
+    objVis.write("PixelActive_Innermost");
   }
 }
 

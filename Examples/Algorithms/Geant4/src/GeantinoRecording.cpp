@@ -8,13 +8,15 @@
 
 #include "ActsExamples/Geant4/GeantinoRecording.hpp"
 
-#include <FTFP_BERT.hh>
-#include <G4RunManager.hh>
-#include <G4VUserDetectorConstruction.hh>
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+
 #include <iostream>
 #include <stdexcept>
 
-#include "ACTFW/Framework/WhiteBoard.hpp"
+#include <FTFP_BERT.hh>
+#include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
+
 #include "EventAction.hpp"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
@@ -47,8 +49,8 @@ GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
 // needed to allow std::unique_ptr<G4RunManager> with forward-declared class.
 GeantinoRecording::~GeantinoRecording() {}
 
-FW::ProcessCode GeantinoRecording::execute(
-    const FW::AlgorithmContext& ctx) const {
+ActsExamples::ProcessCode GeantinoRecording::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
   // ensure exclusive access to the geant run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
 
@@ -62,5 +64,5 @@ FW::ProcessCode GeantinoRecording::execute(
   // Write the recorded material to the event store
   ctx.eventStore.add(m_cfg.outputMaterialTracks, move(materialTracks));
 
-  return FW::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

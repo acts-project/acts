@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include <sstream>
 #include "Acts/Geometry/TrackingVolume.hpp"
+
+#include <sstream>
 
 namespace Acts {
 
@@ -88,6 +89,7 @@ struct VolumeCollector {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    const auto& logger = state.options.logger;
     // The current volume has been assigned by the navigator
     if (state.navigation.currentVolume &&
         selector(*state.navigation.currentVolume)) {
@@ -96,15 +98,21 @@ struct VolumeCollector {
       volume_hit.volume = state.navigation.currentVolume;
       volume_hit.position = stepper.position(state.stepping);
       volume_hit.direction = stepper.direction(state.stepping);
-      // Save if in the result
-      result.collected.push_back(volume_hit);
-      // Screen output
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Collect volume  "
-                << state.navigation.currentVolume->geoID();
-        return dstream.str();
-      });
+      bool save = true;
+      // Check if the Volume ws already encountered
+      for (auto const& res : result.collected) {
+        if (res.volume == volume_hit.volume) {
+          save = false;
+          break;
+        }
+      }
+      // Save if in the result if it does not already exist
+      if (save) {
+        result.collected.push_back(volume_hit);
+        // Screen output
+        ACTS_VERBOSE("Collect volume  "
+                     << state.navigation.currentVolume->geoID());
+      }
     }
   }
 
@@ -113,31 +121,6 @@ struct VolumeCollector {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& /*state*/,
                   const stepper_t& /*unused*/) const {}
-
- private:
-  /// The private propagation debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the state.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param state the propagator state for the debug flag, prefix and
-  /// length
-  /// @param logAction is a callable function that returns a streamable object
-  template <typename propagator_state_t>
-  void debugLog(propagator_state_t& state,
-                const std::function<std::string()>& logAction) const {
-    if (state.options.debug) {
-      std::stringstream dstream;
-      dstream << "   " << std::setw(state.options.debugPfxWidth);
-      dstream << "volume collector"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
-    }
-  }
 };
 
 }  // namespace Acts

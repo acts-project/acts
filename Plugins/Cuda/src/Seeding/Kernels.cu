@@ -102,6 +102,9 @@ namespace Acts{
 		     int*  TcompIndex,
 		     int*  tmpTcompIndex){
     
+    if (grid.x == 0) {
+      return;
+    }
     //int sharedMemSize = (2*sizeof(int))*block.x + 2*sizeof(int);
     int sharedMemSize = 2*sizeof(int);
     
@@ -145,6 +148,10 @@ namespace Acts{
 			    float* spTcompMatPerSpM,
 			    float* circTcompMatPerSpM
 			    ){
+
+    if (grid.x == 0) {
+      return;
+    }
     int sharedMemSize = sizeof(float)*6;
     cuTransformCoordinate<<< grid, block, sharedMemSize >>>(
 				      nSpM,
@@ -196,6 +203,10 @@ namespace Acts{
 		     Triplet* TripletsPerSpM,
 		     cudaStream_t* stream
 		     ){    
+
+    if (grid.x == 0) {
+      return;
+    }
     int sharedMemSize = sizeof(Triplet)*(*nTrplPerSpBLimit_cpu);
     sharedMemSize += sizeof(float)*(*compatSeedLimit_cpu); 
     sharedMemSize += sizeof(int);
@@ -668,7 +679,8 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
   if (threadIdx.x == 0 && *nTrplPerSpB > *nTrplPerSpBLimit){
     *nTrplPerSpB = *nTrplPerSpBLimit;
   }
-  
+
+  __syncthreads();
   int jj = threadIdx.x;            
   
   // bubble sort tIndex
@@ -687,14 +699,13 @@ __global__ void cuSearchTriplet(const int*   nSpTcompPerSpM,
       if (jj % 2 == 1 && jj<*nTrplPerSpB-1){
 	if (triplets[jj+1].tIndex < triplets[jj].tIndex){
 	  Triplet tempVal = triplets[jj];
-	  triplets[jj] = triplets[jj+1];
-	  triplets[jj+1] = tempVal;
+	    triplets[jj] = triplets[jj+1];
+	    triplets[jj+1] = tempVal;
 	}
       }
     }     
     __syncthreads();
   }
-  
   __syncthreads();
 
   // serial algorithm for seed filtering

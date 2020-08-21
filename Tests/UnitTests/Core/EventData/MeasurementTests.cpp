@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <random>
-
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <random>
 
 namespace Acts {
 namespace Test {
@@ -21,7 +21,8 @@ namespace Test {
 using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType =
+    Measurement<SourceLink, BoundParametersIndices, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto mcCopy(mc);
 
   // The surface should be not null and point to the same
-  const Surface* sfCopy = &mcCopy.referenceSurface();
+  const Surface* sfCopy = &mcCopy.referenceObject();
   BOOST_CHECK_NE(sfCopy, nullptr);
   BOOST_CHECK_EQUAL(sfCopy, cylinder.get());
   // The parameters should be identical though
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto mcAssigned = mc;
 
   // The surface should be not null and point to the same
-  const Surface* sfAssigned = &mcAssigned.referenceSurface();
+  const Surface* sfAssigned = &mcAssigned.referenceObject();
   BOOST_CHECK_NE(sfAssigned, nullptr);
   BOOST_CHECK_EQUAL(sfAssigned, cylinder.get());
   // The parameters should be identical though

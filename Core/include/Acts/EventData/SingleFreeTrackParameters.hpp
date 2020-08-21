@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <iomanip>
 #include <ostream>
-
-#include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -35,9 +36,9 @@ class SingleFreeTrackParameters {
                 "'Acts::NeutralPolicy");
 
  public:
-  /// Public typedefs
-  /// Type of covariance matrix
-  using CovMatrix_t = FreeSymMatrix;
+  using Scalar = FreeParametersScalar;
+  using ParametersVector = FreeVector;
+  using CovarianceMatrix = FreeSymMatrix;
 
   /// Construct track parameters for charged particles.
   ///
@@ -46,8 +47,8 @@ class SingleFreeTrackParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
-                            const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
+                            const ParametersVector& parValues)
       : m_oParameters(std::move(cov), parValues),
         m_oChargePolicy(std::copysign(1., parValues[eFreeQOverP])) {}
 
@@ -58,8 +59,8 @@ class SingleFreeTrackParameters {
   /// @param [in] parValues Vector with parameter values
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleFreeTrackParameters(std::optional<CovMatrix_t> cov,
-                            const FreeVector& parValues)
+  SingleFreeTrackParameters(std::optional<CovarianceMatrix> cov,
+                            const ParametersVector& parValues)
       : m_oParameters(std::move(cov), parValues), m_oChargePolicy() {}
 
   // this class does not have a custom default constructor and thus should not
@@ -68,28 +69,25 @@ class SingleFreeTrackParameters {
   /// @brief Access all parameters
   ///
   /// @return Vector containing the store parameters
-  FreeVector parameters() const { return m_oParameters.getParameters(); }
+  ParametersVector parameters() const { return m_oParameters.getParameters(); }
 
   /// @brief Access to a single parameter
   ///
   /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
-                get() const {
+  template <FreeParametersIndices kIndex>
+  Scalar get() const {
     return m_oParameters.template getParameter<kIndex>();
   }
 
   /// @brief Access track parameter uncertainty
   ///
-  /// @tparam par Identifier of the parameter uncertainty index which will
-  /// be retrieved
+  /// @tparam kIndex Identifier of the uncertainty index which will be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <FreeParametersIndices kIndex,
-            std::enable_if_t<kIndex<eFreeParametersSize, int> = 0> ParValue_t
-                uncertainty() const {
+  template <FreeParametersIndices kIndex>
+  Scalar uncertainty() const {
     return m_oParameters.template getUncertainty<kIndex>();
   }
 
@@ -98,10 +96,8 @@ class SingleFreeTrackParameters {
   /// @note The ownership of the covariance matrix is @b not transferred
   /// with this call.
   ///
-  /// @return Raw pointer to covariance matrix (can be a nullptr)
-  ///
   /// @sa ParameterSet::getCovariance
-  const std::optional<CovMatrix_t>& covariance() const {
+  const std::optional<CovarianceMatrix>& covariance() const {
     return m_oParameters.getCovariance();
   }
 
@@ -123,12 +119,12 @@ class SingleFreeTrackParameters {
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
-  double charge() const { return m_oChargePolicy.getCharge(); }
+  Scalar charge() const { return m_oChargePolicy.getCharge(); }
 
   /// @brief retrieve time
   ///
   /// @return value of time
-  double time() const { return get<eFreeTime>(); }
+  Scalar time() const { return get<eFreeTime>(); }
 
   /// @brief access to the internally stored FreeParameterSet
   ///
@@ -161,56 +157,15 @@ class SingleFreeTrackParameters {
 
   /// @brief Update of the parameterisation
   ///
-  /// @tparam par The parameter index
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
+  /// @tparam kIndex Identifier of the parameter index which will be set
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
-  template <FreeParametersIndices par,
-            std::enable_if_t<par<eFreeParametersSize, int> = 0> void set(
-                const GeometryContext& /*gctx*/, ParValue_t newValue) {
-    m_oParameters.setParameter<par>(newValue);
-  }
-
-  /// @brief Print information to output stream
-  ///
-  /// @param [in, out] sl The output stream
-  ///
-  /// @return The modified output stream object @p sl
-  std::ostream& print(std::ostream& sl) const {
-    // Set stream output format
-    auto old_precision = sl.precision(7);
-    auto old_flags = sl.setf(std::ios::fixed);
-
-    // Fill stream with content
-    sl << " * FreeTrackParameters: ";
-    sl << parameters().transpose() << std::endl;
-    sl << " * charge: " << charge() << std::endl;
-    if (covariance().has_value()) {
-      sl << " * covariance matrix:\n" << *covariance() << std::endl;
-    } else {
-      sl << " * no covariance matrix stored" << std::endl;
-    }
-
-    // Reset stream format
-    sl.precision(old_precision);
-    sl.setf(old_flags);
-
-    return sl;
-  }
-
-  /// @brief Output stream operator
-  ///
-  /// Prints information about this object to the output stream
-  /// @param [in, out] out The output stream
-  /// @param [in] sfp The object that will be printed
-  ///
-  /// @return Modified output stream object
-  friend std::ostream& operator<<(std::ostream& out,
-                                  const SingleFreeTrackParameters& sfp) {
-    sfp.print(out);
-    return out;
+  template <FreeParametersIndices kIndex>
+  void set(const GeometryContext& /*gctx*/, Scalar newValue) {
+    m_oParameters.setParameter<kIndex>(newValue);
   }
 
  private:
@@ -219,5 +174,15 @@ class SingleFreeTrackParameters {
                                  /// parameter values and covariance matrix
   ChargePolicy m_oChargePolicy;  ///< charge policy object distinguishing
                                  /// between charged and neutral tracks
+
+  /// Print information to the output stream.
+  friend std::ostream& operator<<(std::ostream& os,
+                                  const SingleFreeTrackParameters& tp) {
+    detail::printFreeParameters(
+        os, tp.parameters(),
+        tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
+    return os;
+  }
 };
+
 }  // namespace Acts

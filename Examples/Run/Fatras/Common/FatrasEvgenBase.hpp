@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
+
 #include <memory>
 
-#include "ACTFW/Utilities/OptionsFwd.hpp"
-
-namespace FW {
+namespace ActsExamples {
 
 class Sequencer;
 class RandomNumbers;
@@ -20,4 +20,4 @@ class RandomNumbers;
 void setupEvgenInput(const Options::Variables& variables, Sequencer& sequencer,
                      std::shared_ptr<const RandomNumbers> randomNumbers);
 
-}  // namespace FW
+}  // namespace ActsExamples

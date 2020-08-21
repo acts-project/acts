@@ -8,12 +8,13 @@
 
 #pragma once
 
-#include <G4UserSteppingAction.hh>
-#include <globals.hh>
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+
 #include <vector>
 
-#include "ACTFW/EventData/SimHit.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
+#include <G4UserSteppingAction.hh>
+#include <globals.hh>
 
 namespace ActsExamples {
 
@@ -47,7 +48,7 @@ class SteppingAction final : public G4UserSteppingAction {
   }
 
   /// Access the recorded tracking steps.
-  const FW::SimHitContainer::sequence_type& trackSteps() const {
+  const ActsExamples::SimHitContainer::sequence_type& trackSteps() const {
     return m_trackSteps;
   }
 
@@ -57,8 +58,8 @@ class SteppingAction final : public G4UserSteppingAction {
 
   /// The collected Acts::MaterialInteraction entities
   std::vector<Acts::MaterialInteraction> m_materialSteps;
-  /// The collected FW::SimHit entities
-  FW::SimHitContainer::sequence_type m_trackSteps;
+  /// The collected ActsExamples::SimHit entities
+  ActsExamples::SimHitContainer::sequence_type m_trackSteps;
 };
 
 }  // namespace ActsExamples

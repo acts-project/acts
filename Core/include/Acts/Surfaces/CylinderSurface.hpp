@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <cmath>
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -17,6 +15,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
+#include <cmath>
 
 namespace Acts {
 
@@ -164,21 +164,6 @@ class CylinderSurface : public Surface {
   /// @return is a boolean indicating if the transformation succeeded
   bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
                      const Vector3D& momentum, Vector2D& lposition) const final;
-
-  /// Straight line intersection schema - provides closest intersection
-  ///  and (signed) path length
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The global position as a starting point
-  /// @param direction The global direction at starting point
-  ///        (@note expected to be normalised)
-  /// @param bcheck The boundary check presection
-  ///
-  /// @return is the closest intersection (fwd or bwd)
-  Intersection intersectionEstimate(const GeometryContext& gctx,
-                                    const Vector3D& position,
-                                    const Vector3D& direction,
-                                    const BoundaryCheck& bcheck) const final;
 
   /// Straight line intersection schema from position/direction
   ///

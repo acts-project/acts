@@ -10,12 +10,12 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+
+#include <limits>
 
 namespace Acts {
 
@@ -87,11 +87,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   Vector2D origin(0., 0.);
   Vector2D outsideBy10(0., 30.);
   Vector2D inRectangle(15., 0.);
-  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(origin), -10.,
-                  1e-6);  // makes sense
-  CHECK_CLOSE_REL(diamondBoundsObject.distanceToBoundary(outsideBy10), 10.,
-                  1e-6);  // ok
-  //
+
   /// Test dump
   // Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, hlengthY1,
   // hlengthY2 ) = (30.0000000, 10.0000000, 50.0000000, 10.0000000,

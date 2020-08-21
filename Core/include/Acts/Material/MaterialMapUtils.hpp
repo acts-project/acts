@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include <vector>
-
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <vector>
 
 /// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
 /// and to avoid code duplication. Currently implemented for the two most common

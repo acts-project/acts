@@ -8,18 +8,18 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <chrono>
-#include <fstream>
-#include <iostream>
-#include <memory>
-
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Visualization/PlyVisualization.hpp"
+#include "Acts/Visualization/PlyVisualization3D.hpp"
+
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <memory>
 
 namespace Acts {
 namespace Test {
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
                {2, 1, 1},
                {0, 1, 1}}};
   GenericCuboidVolumeBounds cubo(vertices);
-  PlyVisualization<double> ply;
+  PlyVisualization3D<double> ply;
   cubo.draw(ply);
 
   std::ofstream os("cuboid.ply");
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   GenericCuboidVolumeBounds cubo(vertices);
 
   auto gcvbOrientedSurfaces = cubo.orientedSurfaces(nullptr);
-  BOOST_TEST(gcvbOrientedSurfaces.size(), 6);
+  BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();

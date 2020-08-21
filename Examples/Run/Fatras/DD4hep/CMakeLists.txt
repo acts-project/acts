@@ -1,10 +1,10 @@
 add_executable(
-  ActsSimFatrasDD4hep
+  ActsExampleFatrasDD4hep
   DD4hepFatrasExample.cpp)
 target_link_libraries(
-  ActsSimFatrasDD4hep
+  ActsExampleFatrasDD4hep
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorDD4hep)
 
 install(
-  TARGETS ActsSimFatrasDD4hep
+  TARGETS ActsExampleFatrasDD4hep
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

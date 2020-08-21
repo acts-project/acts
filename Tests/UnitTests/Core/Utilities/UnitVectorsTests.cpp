@@ -8,10 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <limits>
 
 using Acts::Vector3D;
 

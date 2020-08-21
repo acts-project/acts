@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include <array>
-
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Utilities/LandauDistribution.hpp"
+
+#include <array>
 
 namespace ActsFatras {
 

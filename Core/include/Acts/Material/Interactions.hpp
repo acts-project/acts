@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <utility>
-
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <utility>
 
 namespace Acts {
 

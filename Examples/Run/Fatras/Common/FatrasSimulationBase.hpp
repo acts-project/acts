@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <memory>
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
-#include "ACTFW/Utilities/OptionsFwd.hpp"
+#include <memory>
 
 namespace Acts {
 class TrackingGeometry;
 }
 
-namespace FW {
+namespace ActsExamples {
 
 class Sequencer;
 class RandomNumbers;
@@ -32,4 +32,4 @@ void setupSimulation(
     std::shared_ptr<const RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
 
-}  // namespace FW
+}  // namespace ActsExamples

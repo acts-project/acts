@@ -15,8 +15,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/GeometryView.hpp"
-#include "Acts/Visualization/ObjVisualization.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
+
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -42,7 +43,7 @@ ViewConfig blue({0, 0, 200});
 ///
 /// * The TGeoTrd2 has x/z orientation
 BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
-  ObjVisualization objVis;
+  ObjVisualization3D objVis;
 
   new TGeoManager("arb8", "poza12");
   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
@@ -70,24 +71,24 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   for (const auto &axes : allowedAxes) {
     auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
-    BOOST_TEST(plane != nullptr);
-    BOOST_TEST(plane->type() == Surface::Plane);
+    BOOST_CHECK_NE(plane, nullptr);
+    BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
 
     auto bounds =
         dynamic_cast<const ConvexPolygonBounds<4> *>(&(plane->bounds()));
-    BOOST_TEST(bounds != nullptr);
+    BOOST_CHECK_NE(bounds, nullptr);
 
     // Check if the surface is the (negative) identity
     auto transform = plane->transform(tgContext);
     auto rotation = transform.rotation();
-    GeometryView::drawSurface(objVis, *plane, tgContext);
+    GeometryView3D::drawSurface(objVis, *plane, tgContext);
     const Vector3D center = plane->center(tgContext);
-    GeometryView::drawArrowForward(objVis, center,
-                                   center + 30 * rotation.col(0), 4., 2.5, red);
-    GeometryView::drawArrowForward(
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 30 * rotation.col(0), 4., 2.5, red);
+    GeometryView3D::drawArrowForward(
         objVis, center, center + 30 * rotation.col(1), 4., 2.5, green);
-    GeometryView::drawArrowForward(objVis, center, center + 2 * rotation.col(2),
-                                   4., 2.5, blue);
+    GeometryView3D::drawArrowForward(
+        objVis, center, center + 2 * rotation.col(2), 4., 2.5, blue);
 
     objVis.write("TGeoConversion_TGeoArb8_PlaneSurface_" +
                  std::to_string(iarb8++));

@@ -25,26 +25,26 @@ inline double PlaneSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
-inline Intersection PlaneSurface::intersectionEstimate(
+inline SurfaceIntersection PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const BoundaryCheck& bcheck) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersectionEstimate(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction);
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection::Status::unreachable and bcheck) {
+  if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
     const Vector3D vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
     if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                          bcheck)) {
-      intersection.status = Intersection::Status::missed;
+      intersection.status = Intersection3D::Status::missed;
     }
   }
-  return intersection;
+  return {intersection, this};
 }
 
 inline const LocalCartesianToBoundLocalMatrix

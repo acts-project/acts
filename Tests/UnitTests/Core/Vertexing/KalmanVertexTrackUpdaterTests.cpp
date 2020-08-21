@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    BoundParameters::ParVector_t paramVec;
+    BoundParameters::ParametersVector paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
@@ -129,13 +129,12 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(geoContext, std::move(covMat), paramVec,
-                           perigeeSurface);
+    BoundParameters params(perigeeSurface, paramVec, std::move(covMat));
 
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, SpacePointVector::Zero(), geoContext,
+            .linearizeTrack(params, Vector4D::Zero(), geoContext,
                             magFieldContext, linState)
             .value();
 
@@ -153,8 +152,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     Vertex<BoundParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundParameters>(geoContext, trkAtVtx,
-                                                      vtx);
+    KalmanVertexTrackUpdater::update<BoundParameters>(trkAtVtx, vtx);
 
     // The old distance
     double oldDistance =

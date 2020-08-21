@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
-
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <cmath>
 
 namespace Acts {
 
@@ -110,12 +110,6 @@ class TrapezoidBounds : public PlanarBounds {
   /// @return boolean indicator for the success of this operation
   bool inside(const Vector2D& lposition,
               const BoundaryCheck& bcheck) const final;
-
-  /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
-  ///
-  /// @param lposition is the local position to check for the distance
-  /// @return is a signed distance parameter
-  double distanceToBoundary(const Vector2D& lposition) const final;
 
   /// Return the vertices
   ///

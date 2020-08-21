@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <memory>
-#include <variant>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -20,20 +18,14 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <memory>
+#include <variant>
+
 namespace Acts {
 
 /// @brief Update step of Kalman Filter using gain matrix formalism
 class GainMatrixUpdater {
  public:
-  /// Explicit constructor
-  ///
-  /// @param calibrator is the calibration struct/class that converts
-  /// uncalibrated measurements into calibrated ones
-  /// @param logger a logger instance
-  GainMatrixUpdater(
-      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("GainMatrixUpdater", Logging::INFO).release()));
-
   /// @brief Public call operator for the boost visitor pattern
   ///
   /// @tparam track_state_t Type of the track state for the update
@@ -46,9 +38,10 @@ class GainMatrixUpdater {
   /// @note Non-'successful' updates could be holes or outliers,
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  Result<void> operator()(
-      const GeometryContext& /*gctx*/, track_state_t trackState,
-      const NavigationDirection& direction = forward) const {
+  Result<void> operator()(const GeometryContext& /*gctx*/,
+                          track_state_t trackState,
+                          const NavigationDirection& direction = forward,
+                          LoggerWrapper logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
     // let's make sure the types are consistent
     using SourceLink = typename track_state_t::SourceLink;
@@ -115,16 +108,12 @@ class GainMatrixUpdater {
 
           filtered = predicted + K * (calibrated - H * predicted);
           filtered_covariance =
-              (ActsSymMatrixD<
-                   MultiTrajectory<SourceLink>::ParametersSize>::Identity() -
-               K * H) *
-              predicted_covariance;
+              (BoundSymMatrix::Identity() - K * H) * predicted_covariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
           ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
           // calculate filtered residual
-          par_t residual(trackState.calibratedSize());
-          residual = (calibrated - H * filtered);
+          const par_t residual = (calibrated - H * filtered);
           ACTS_VERBOSE("Residual: " << residual.transpose());
 
           trackState.chi2() =
@@ -145,12 +134,6 @@ class GainMatrixUpdater {
     // always succeed, no outlier logic yet
     return Result<void>::success();
   }
-
-  /// Pointer to a logger that is owned by the parent, KalmanFilter
-  std::shared_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger, to support logging macros
-  const Logger& logger() const;
 };
 
 }  // namespace Acts

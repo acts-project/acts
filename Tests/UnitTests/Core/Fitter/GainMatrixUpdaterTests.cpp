@@ -6,10 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/optional/optional_io.hpp>
 #include <boost/test/unit_test.hpp>
-
-#include <memory>
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -19,16 +16,19 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
+#include <memory>
+
+#include <boost/optional/optional_io.hpp>
+
 namespace Acts {
 namespace Test {
 
-using Jacobian = BoundParameters::CovMatrix_t;
+using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-
 using SourceLink = MinimalSourceLink;
-
 template <ParID_t... params>
-using MeasurementType = Measurement<SourceLink, params...>;
+using MeasurementType =
+    Measurement<SourceLink, BoundParametersIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -88,8 +88,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   Vector3D expMomentum;
   expMomentum << 0.0000000, 80.9016994, 58.7785252;
 
-  BoundParameters filtered(tgContext, ts.filteredCovariance(), ts.filtered(),
-                           cylinder);
+  BoundParameters filtered(cylinder, ts.filtered(), ts.filteredCovariance());
 
   double expChi2 = 1.33958;
 

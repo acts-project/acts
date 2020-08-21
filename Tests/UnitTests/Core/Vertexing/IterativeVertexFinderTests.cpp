@@ -15,6 +15,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -25,6 +26,8 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+
+#include "VertexingDataHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -39,6 +42,8 @@ using Linearizer = HelicalTrackLinearizer<Propagator>;
 // Create a test context
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
+
+const std::string toolString = "IVF";
 
 // Vertex x/y position distribution
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
@@ -203,8 +208,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto params = BoundParameters(geoContext, std::move(covMat), paramVec,
-                                      perigeeSurface);
+        auto params =
+            BoundParameters(perigeeSurface, paramVec, std::move(covMat));
 
         tracks.push_back(std::make_unique<BoundParameters>(params));
 
@@ -276,10 +281,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Check if all vertices have been found with close z-values
     bool allVerticesFound = true;
     for (const auto& trueVertex : trueVertices) {
-      SpacePointVector truePos = trueVertex.fullPosition();
+      Vector4D truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
       for (const auto& recoVertex : vertexCollection) {
-        SpacePointVector recoPos = recoVertex.fullPosition();
+        Vector4D recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
         if (zDistance < 2_mm) {
@@ -292,7 +297,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     }
 
     // check if found vertices have compatible z values
-    BOOST_TEST(allVerticesFound);
+    BOOST_CHECK(allVerticesFound);
   }
 }
 
@@ -419,8 +424,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
-        auto paramsUT = InputTrack(BoundParameters(
-            geoContext, std::move(covMat), paramVec, perigeeSurface));
+        auto paramsUT = InputTrack(
+            BoundParameters(perigeeSurface, paramVec, std::move(covMat)));
 
         tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 
@@ -494,10 +499,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Check if all vertices have been found with close z-values
     bool allVerticesFound = true;
     for (const auto& trueVertex : trueVertices) {
-      SpacePointVector truePos = trueVertex.fullPosition();
+      Vector4D truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
       for (const auto& recoVertex : vertexCollectionUT) {
-        SpacePointVector recoPos = recoVertex.fullPosition();
+        Vector4D recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
         if (zDistance < 2_mm) {
@@ -510,8 +515,108 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     }
 
     // check if found vertices have compatible z values
-    BOOST_TEST(allVerticesFound);
+    BOOST_CHECK(allVerticesFound);
   }
+}
+
+///
+/// @brief Unit test for IterativeVertexFinder with Athena reference data
+///
+BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
+  // Set up constant B-Field
+  ConstantBField bField(0.0, 0.0, 2_T);
+
+  // Set up Eigenstepper
+  EigenStepper<ConstantBField> stepper(bField);
+
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Linearizer for BoundParameters type test
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linearizer(ltConfig);
+
+  using BilloirFitter = FullBilloirVertexFitter<BoundParameters, Linearizer>;
+
+  // Set up Billoir Vertex Fitter
+  BilloirFitter::Config vertexFitterCfg;
+
+  BilloirFitter bFitter(vertexFitterCfg);
+
+  // Impact point estimator
+  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+
+  IPEstimator::Config ipEstimatorCfg(bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg);
+
+  using ZScanSeedFinder = ZScanVertexFinder<BilloirFitter>;
+
+  static_assert(VertexFinderConcept<ZScanSeedFinder>,
+                "Vertex finder does not fulfill vertex finder concept.");
+
+  ZScanSeedFinder::Config seedFinderCfg(ipEstimator);
+
+  ZScanSeedFinder sFinder(seedFinderCfg);
+
+  // Vertex Finder
+  using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
+
+  static_assert(VertexFinderConcept<VertexFinder>,
+                "Vertex finder does not fulfill vertex finder concept.");
+
+  VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+                           ipEstimator);
+
+  cfg.useBeamConstraint = true;
+  cfg.maxVertices = 200;
+  cfg.maximumChi2cutForSeeding = 49;
+  cfg.significanceCutSeeding = 12;
+
+  VertexFinder finder(cfg);
+  VertexFinder::State state(magFieldContext);
+
+  auto csvData = readTracksAndVertexCSV(toolString);
+  auto tracks = std::get<TracksData>(csvData);
+
+  std::vector<const BoundParameters*> tracksPtr;
+  for (const auto& trk : tracks) {
+    tracksPtr.push_back(&trk);
+  }
+
+  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
+                                                     magFieldContext);
+
+  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+
+  // find vertices
+  auto findResult = finder.find(tracksPtr, vertexingOptions, state);
+
+  // BOOST_CHECK(findResult.ok());
+
+  if (!findResult.ok()) {
+    std::cout << findResult.error().message() << std::endl;
+  }
+
+  // Retrieve vertices found by vertex finder
+  // std::vector<Vertex<BoundParameters>> allVertices = *findResult;
+
+  // Test expected outcomes from athena implementation
+  // Number of reconstructed vertices
+  // auto verticesInfo = std::get<VerticesData>(csvData);
+  // const int expNRecoVertices = verticesInfo.size();
+
+  // BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
+  // for (int i = 0; i < expNRecoVertices; i++) {
+  //   auto recoVtx = allVertices[i];
+  //   auto expVtx = verticesInfo[i];
+  //   CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
+  //   CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
+  //   BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
+  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+  //   0.003); CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility,
+  //   expVtx.trk1Comp,
+  //                   0.003);
+  // }
 }
 
 }  // namespace Test

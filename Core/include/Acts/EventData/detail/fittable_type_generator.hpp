@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <variant>
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <type_traits>
+#include <variant>
 
 // clang-format off
 #include <boost/hana/append.hpp>
@@ -84,20 +84,22 @@ constexpr auto unique_ordered_sublists() {
 
 /**
  * Generates a tuple of types using `unique_ordered_sublists` from above.
+ * @tparam parameter_indices_t Parameter indices enum
  * @tparam meas_meta Metafunction which will create a type given a parameter
  *                   list
- * @tparam W The size of the parameter pack to generate the sublists over.
  */
-template <template <ParID_t...> class meas_meta, size_t W>
+template <typename parameter_indices_t,
+          template <parameter_indices_t...> class meas_meta>
 constexpr auto type_generator() {
   // generate sublists
+  constexpr size_t W = detail::ParametersSize<parameter_indices_t>::size;
   constexpr auto sublists = unique_ordered_sublists<W>();
   // map each sublist (tuple of paramater indices) into a measurement using
   // the provided `meas_meta` metafunction.
   constexpr auto measurements_h = hana::transform(sublists, [](auto s) {
     return hana::unpack(s, [](auto... i) {
       return hana::type_c<
-          typename meas_meta<ParID_t(decltype(i)::value)...>::type>;
+          typename meas_meta<parameter_indices_t(decltype(i)::value)...>::type>;
     });
   });
   // return tuple of measurements
@@ -107,12 +109,14 @@ constexpr auto type_generator() {
 /**
  * Type alias which unpacks the hana tuple generated in `type_generator`
  * into an `std::variant`.
+ * @tparam parameter_indices_t Parameter indices enum
  * @tparam meas_meta Factory meta function for measurements.
- * @tparam W max number of parameters.
  */
-template <template <ParID_t...> class meas_meta, size_t W>
-using type_generator_t = typename decltype(hana::unpack(
-    type_generator<meas_meta, W>(), hana::template_<std::variant>))::type;
+template <typename parameter_indices_t,
+          template <parameter_indices_t...> class meas_meta>
+using type_generator_t = typename decltype(
+    hana::unpack(type_generator<parameter_indices_t, meas_meta>(),
+                 hana::template_<std::variant>))::type;
 
 /// @endcond
 }  // namespace detail

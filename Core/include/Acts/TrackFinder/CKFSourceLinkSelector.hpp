@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <limits>
-#include <map>
-
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -18,6 +15,9 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+
+#include <limits>
+#include <map>
 
 namespace Acts {
 
@@ -57,11 +57,7 @@ struct CKFSourceLinkSelector {
   ///
   /// @param config a config instance
   /// @param logger a logger instance
-  CKFSourceLinkSelector(
-      Config cfg,
-      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("CKFSourceLinkSelector", Logging::INFO).release()))
-      : m_config(std::move(cfg)), m_logger(std::move(logger)) {}
+  CKFSourceLinkSelector(Config cfg) : m_config(std::move(cfg)) {}
 
   /// @brief Operater that select the source links compatible with
   /// the given track parameter on a surface
@@ -83,10 +79,9 @@ struct CKFSourceLinkSelector {
       const calibrator_t& calibrator, const BoundParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks,
       std::vector<std::pair<size_t, double>>& sourcelinkChi2,
-      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier) const {
+      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier,
+      LoggerWrapper logger) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
-
-    using CovMatrix_t = typename BoundParameters::CovMatrix_t;
 
     // Return error if no source link
     if (sourcelinks.empty()) {
@@ -121,24 +116,14 @@ struct CKFSourceLinkSelector {
       std::visit(
           [&](const auto& calibrated) {
             // The measurement surface should be the same as parameter surface
-            assert(&calibrated.referenceSurface() == surface);
-
-            // type of measurement
-            using meas_t =
-                typename std::remove_const<typename std::remove_reference<
-                    decltype(calibrated)>::type>::type;
-            // measurement (local) parameter vector
-            using meas_par_t = typename meas_t::ParameterVector;
-            // type of projection
-            using projection_t = typename meas_t::Projection;
+            assert(&calibrated.referenceObject() == surface);
 
             // Take the projector (measurement mapping function)
-            const projection_t& H = calibrated.projector();
+            const auto& H = calibrated.projector();
             // Take the parameter covariance
-            const CovMatrix_t& predicted_covariance =
-                *predictedParams.covariance();
+            const auto& predicted_covariance = *predictedParams.covariance();
             // Get the residual
-            meas_par_t residual = calibrated.residual(predictedParams);
+            const auto& residual = calibrated.residual(predictedParams);
             // Get the chi2
             double chi2 = (residual.transpose() *
                            ((calibrated.covariance() +
@@ -203,15 +188,6 @@ struct CKFSourceLinkSelector {
 
   /// The config
   Config m_config;
-
-  /// Pointer to a logger that is owned by the parent, track finder
-  std::shared_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger, to support logging macros
-  const Logger& logger() const {
-    assert(m_logger);
-    return *m_logger;
-  }
 };
 
 }  // namespace Acts

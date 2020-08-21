@@ -6,17 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Root/RootVertexAndTracksReader.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/Io/Root/RootVertexAndTracksReader.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
-#include "ACTFW/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include <memory>
 
-using namespace FW;
+#include <boost/program_options.hpp>
+
+using namespace ActsExamples;
 
 /// Main executable
 ///
@@ -53,7 +54,7 @@ int main(int argc, char* argv[]) {
   Acts::Vector3D bField(0., 0., 2. * Acts::units::_T);
 
   // Add the finding algorithm
-  FWE::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
+  ActsExamples::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;
   vertexFindingCfg.trackCollection = vtxAndTracksReaderCfg.outputCollection;
   vertexFindingCfg.bField = bField;
 
@@ -63,8 +64,9 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(std::make_shared<RootVertexAndTracksReader>(
       vtxAndTracksReaderCfg, logLevel));
 
-  sequencer.addAlgorithm(std::make_shared<FWE::IterativeVertexFinderAlgorithm>(
-      vertexFindingCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<ActsExamples::IterativeVertexFinderAlgorithm>(
+          vertexFindingCfg, logLevel));
 
   return sequencer.run();
 }

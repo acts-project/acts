@@ -8,14 +8,16 @@
 
 #pragma once
 
-#include <boost/range/adaptors.hpp>
-#include <memory>
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Fitter/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <memory>
+
+#include <boost/range/adaptors.hpp>
 
 namespace Acts {
 
@@ -25,15 +27,6 @@ namespace Acts {
 /// @tparam jacobian_t Type of the Jacobian
 class GainMatrixSmoother {
  public:
-  /// @brief Gain Matrix smoother implementation
-  ///
-
-  /// Constructor with (non-owning) logger
-  /// @param logger a logger instance
-  GainMatrixSmoother(
-      std::shared_ptr<const Logger> logger = std::shared_ptr<const Logger>(
-          getDefaultLogger("GainMatrixSmoother", Logging::INFO).release()));
-
   /// Operater for Kalman smoothing
   ///
   /// @tparam source_link_t The type of source link
@@ -48,12 +41,10 @@ class GainMatrixSmoother {
   template <typename source_link_t>
   Result<void> operator()(const GeometryContext& /* gctx */,
                           MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex) const {
+                          size_t entryIndex,
+                          LoggerWrapper logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
     using namespace boost::adaptors;
-
-    using Matrix =
-        ActsSymMatrixD<MultiTrajectory<source_link_t>::ParametersSize>;
 
     // For the last state: smoothed is filtered - also: switch to next
     ACTS_VERBOSE("Getting previous track state");
@@ -63,7 +54,7 @@ class GainMatrixSmoother {
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
     // Smoothing gain matrix
-    Matrix G;
+    BoundSymMatrix G;
 
     // make sure there is more than one track state
     std::optional<std::error_code> error{std::nullopt};  // assume ok
@@ -74,7 +65,7 @@ class GainMatrixSmoother {
                    << prev_ts.previous());
 
       trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &G, &error,
-                                                     this](auto ts) {
+                                                     &logger](auto ts) {
         // should have filtered and predicted, this should also include the
         // covariances.
         assert(ts.hasFiltered());
@@ -132,8 +123,9 @@ class GainMatrixSmoother {
         // If not, make one (could do more) attempt to replace it with the
         // nearest semi-positive def matrix,
         // but it could still be non semi-positive
-        Matrix smoothedCov = ts.smoothedCovariance();
-        if (not detail::covariance_helper<Matrix>::validate(smoothedCov)) {
+        BoundSymMatrix smoothedCov = ts.smoothedCovariance();
+        if (not detail::covariance_helper<BoundSymMatrix>::validate(
+                smoothedCov)) {
           ACTS_DEBUG(
               "Smoothed covariance is not positive definite. Could result in "
               "negative covariance!");
@@ -154,11 +146,5 @@ class GainMatrixSmoother {
     // construct parameters from last track state
     return Result<void>::success();
   }
-
-  /// Pointer to a logger that is owned by the parent, KalmanFilter
-  std::shared_ptr<const Logger> m_logger{nullptr};
-
-  /// Getter for the logger, to support logging macros
-  const Logger& logger() const;
 };
 }  // namespace Acts

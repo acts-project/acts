@@ -10,13 +10,13 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
-#include <iostream>
-#include <limits>
-
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <iostream>
+#include <limits>
 
 namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
@@ -99,11 +99,8 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   const auto& rectVertices = rect.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(), coords.cend(),
                                 rectVertices.cbegin(), rectVertices.cend());
-  const Vector2D pointA{1.0, 1.0}, pointB{9.0, 1.0}, outside{10.1, 5.1};
+  const Vector2D pointA{1.0, 1.0};
   // distance is signed, from boundary to point. (doesn't seem right, given
-  // the name of the method)
-  CHECK_CLOSE_REL(rect.distanceToBoundary(pointA), -4.0, 1e-6);
-  CHECK_CLOSE_REL(rect.distanceToBoundary(pointB), -1.0, 1e-6);
   BoundaryCheck bcheck(true, true);
   BOOST_CHECK(rect.inside(pointA, bcheck));
 }

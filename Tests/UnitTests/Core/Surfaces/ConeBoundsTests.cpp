@@ -10,11 +10,11 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <limits>
-
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <limits>
 
 /* Note on nomenclature:
   alpha = cone opening half angle
@@ -106,9 +106,6 @@ BOOST_AUTO_TEST_CASE(ConeBoundsProperties) {
   //
   /// test for inside
   BOOST_CHECK(!coneBoundsObject.inside(origin));
-  //
-  /// test for distanceToBoundary
-  // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
   //
   /// test for r
   CHECK_CLOSE_REL(coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);

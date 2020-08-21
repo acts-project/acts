@@ -85,10 +85,9 @@ struct SurfaceObserver {
       // calculate the distance to the surface
       const double distance =
           surface
-              ->intersectionEstimate(state.geoContext,
-                                     stepper.position(state.stepping),
-                                     stepper.direction(state.stepping), true)
-              .pathLength;
+              ->intersect(state.geoContext, stepper.position(state.stepping),
+                          stepper.direction(state.stepping), true)
+              .intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::actor);
       // return true if you fall below tolerance
@@ -129,7 +128,7 @@ const int ntests = 5;
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using null_optionsType = PropagatorOptions<>;
-  null_optionsType null_options(tgContext, mfContext);
+  null_optionsType null_options(tgContext, mfContext, getDummyLogger());
   // todo write null options test
 
   using ActionListType = ActionList<PerpendicularMeasure>;
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 
   using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
 
-  optionsType options(tgContext, mfContext);
+  optionsType options(tgContext, mfContext, getDummyLogger());
 }
 
 BOOST_DATA_TEST_CASE(
@@ -167,8 +166,8 @@ BOOST_DATA_TEST_CASE(
   using AbortConditionsType = AbortList<>;
 
   // setup propagation options
-  PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
-                                                                 mfContext);
+  PropagatorOptions<ActionListType, AbortConditionsType> options(
+      tgContext, mfContext, getDummyLogger());
 
   options.pathLimit = 20_m;
   options.maxStepSize = 1_cm;
@@ -220,7 +219,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - the tow step options
-  PropagatorOptions<> options_2s(tgContext, mfContext);
+  PropagatorOptions<> options_2s(tgContext, mfContext, getDummyLogger());
   options_2s.pathLimit = 50_cm;
   options_2s.maxStepSize = 1_cm;
 
@@ -248,7 +247,7 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(*mid_parameters, options_2s).value().endParameters;
 
   // setup propagation options - the one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext);
+  PropagatorOptions<> options_1s(tgContext, mfContext, getDummyLogger());
   options_1s.pathLimit = 100_cm;
   options_1s.maxStepSize = 1_cm;
   // propagate to a path length of 100 in one step
@@ -293,7 +292,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - 2 setp options
-  PropagatorOptions<> options_2s(tgContext, mfContext);
+  PropagatorOptions<> options_2s(tgContext, mfContext, getDummyLogger());
   options_2s.pathLimit = 10_m;
   options_2s.maxStepSize = 1_cm;
 
@@ -324,7 +323,7 @@ BOOST_DATA_TEST_CASE(
           .endParameters;
 
   // setup propagation options - one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext);
+  PropagatorOptions<> options_1s(tgContext, mfContext, getDummyLogger());
   options_1s.pathLimit = 10_m;
   options_1s.maxStepSize = 1_cm;
   // propagate to a final surface in one stop

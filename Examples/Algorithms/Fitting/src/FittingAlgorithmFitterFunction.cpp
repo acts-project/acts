@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/program_options.hpp>
-#include <iostream>
-#include <map>
-#include <random>
-#include <stdexcept>
-
-#include "ACTFW/Fitting/FittingAlgorithm.hpp"
-#include "ACTFW/Plugins/BField/ScalableBField.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
@@ -26,6 +18,15 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
+#include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+
+#include <iostream>
+#include <map>
+#include <random>
+#include <stdexcept>
+
+#include <boost/program_options.hpp>
 
 namespace {
 template <typename Fitter>
@@ -34,24 +35,25 @@ struct FitterFunctionImpl {
 
   FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
-  FW::FittingAlgorithm::FitterResult operator()(
-      const std::vector<FW::SimSourceLink>& sourceLinks,
-      const FW::TrackParameters& initialParameters,
+  ActsExamples::FittingAlgorithm::FitterResult operator()(
+      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
       const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
     return fitter.fit(sourceLinks, initialParameters, options);
   };
 };
 }  // namespace
 
-FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
+ActsExamples::FittingAlgorithm::FitterFunction
+ActsExamples::FittingAlgorithm::makeFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    Options::BFieldVariant magneticField, Acts::Logging::Level lvl) {
+    Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
-      [trackingGeometry, lvl](auto&& inputField) -> FitterFunction {
+      [trackingGeometry](auto&& inputField) -> FitterFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -70,8 +72,7 @@ FW::FittingAlgorithm::FitterFunction FW::FittingAlgorithm::makeFitterFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter fitter(std::move(propagator),
-                      Acts::getDefaultLogger("KalmanFitter", lvl));
+        Fitter fitter(std::move(propagator));
 
         // build the fitter functions. owns the fitter object.
         return FitterFunctionImpl<Fitter>(std::move(fitter));

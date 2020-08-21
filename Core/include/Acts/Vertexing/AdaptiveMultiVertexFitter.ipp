@@ -34,8 +34,6 @@ Acts::Result<void>
 Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
     State& state, const linearizer_t& linearizer,
     const VertexingOptions<input_track_t>& vertexingOptions) const {
-  auto& geoContext = vertexingOptions.geoContext;
-
   // Reset annealing tool
   state.annealingState = AnnealingUtility::State();
 
@@ -63,8 +61,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       // in previous iteration afterwards
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
-      SpacePointVector dist =
-          currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
+      Vector4D dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
       double perpDist = std::sqrt(dist[0] * dist[0] + dist[1] * dist[1]);
       // Determine if relinearization is needed
       if (perpDist > m_cfg.maxDistToLinPoint) {
@@ -75,7 +72,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
-          SpacePointSymMatrix::Zero()) {
+          SymMatrix4D::Zero()) {
         currentVtx->setFullPosition(
             state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
         currentVtx->setFitQuality(
@@ -84,7 +81,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
             state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
       }
 
-      else if (currentVtx->fullCovariance() == SpacePointSymMatrix::Zero()) {
+      else if (currentVtx->fullCovariance() == SymMatrix4D::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =
@@ -112,7 +109,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
 
   // Check if smoothing is required
   if (m_cfg.doSmoothing) {
-    doVertexSmoothing(state, geoContext);
+    doVertexSmoothing(state);
   }
 
   return {};
@@ -339,13 +336,12 @@ bool Acts::AdaptiveMultiVertexFitter<
 }
 
 template <typename input_track_t, typename linearizer_t>
-void Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    doVertexSmoothing(State& state, const GeometryContext& geoContext) const {
+void Acts::AdaptiveMultiVertexFitter<
+    input_track_t, linearizer_t>::doVertexSmoothing(State& state) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       KalmanVertexTrackUpdater::update<input_track_t>(
-          geoContext, state.tracksAtVerticesMap.at(std::make_pair(trk, vtx)),
-          *vtx);
+          state.tracksAtVerticesMap.at(std::make_pair(trk, vtx)), *vtx);
     }
   }
 }

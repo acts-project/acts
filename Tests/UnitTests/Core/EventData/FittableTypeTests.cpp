@@ -8,17 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/detail/fittable_type_generator.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
 #include <cmath>
 #include <memory>
 #include <random>
 #include <variant>
-
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-
-#include "Acts/EventData/detail/fittable_type_generator.hpp"
 
 #include <boost/hana/equal.hpp>
 #include <boost/hana/integral_constant.hpp>
@@ -38,7 +37,7 @@ BOOST_AUTO_TEST_CASE(index_combination_generation_test) {
     constexpr auto result = detail::unique_ordered_sublists<1>();
     constexpr auto expected = hana::make_tuple(_T(0));
     static_assert(result == expected, "At size 1 is not equal");
-  }
+  }  // namespace Test
   {
     constexpr auto result = detail::unique_ordered_sublists<2>();
     constexpr auto expected = hana::make_tuple(_T(0), _T(1), _T(0, 1));
@@ -69,89 +68,366 @@ BOOST_AUTO_TEST_CASE(index_combination_generation_test) {
         _T(1, 2, 3, 4), _T(0, 1, 2, 3, 4));
     static_assert(result == expected, "At size 5 is not equal");
   }
-}
+}  // namespace Acts
 
 using par_t = ParID_t;
-using SourceLink = MinimalSourceLink;
+using Source = MinimalSourceLink;
 
 template <par_t... pars>
 struct meas_factory {
-  using type = Measurement<SourceLink, pars...>;
+  using type = Measurement<Source, par_t, pars...>;
 };
 
 constexpr par_t operator"" _p(unsigned long long i) {
   return par_t(i);
 }
 
-BOOST_AUTO_TEST_CASE(variant_measurement_generation_test) {
+BOOST_AUTO_TEST_CASE(variant_bound_measurement_generation_test) {
   {
-    using actual = detail::type_generator_t<meas_factory, 1>;
-    using expected = std::variant<Measurement<SourceLink, 0_p>>;
-    static_assert(std::is_same<actual, expected>::value,
-                  "Variant is not identical");
-  }
-  {
-    using actual = detail::type_generator_t<meas_factory, 2>;
-    using expected =
-        std::variant<Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-                     Measurement<SourceLink, 0_p, 1_p>>;
-    static_assert(std::is_same<actual, expected>::value,
-                  "Variant is not identical");
-  }
-  {
-    using actual = detail::type_generator_t<meas_factory, 3>;
+    using actual = detail::type_generator_t<par_t, meas_factory>;
     using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>>;
+        Measurement<Source, par_t, 0_p>, Measurement<Source, par_t, 1_p>,
+        Measurement<Source, par_t, 0_p, 1_p>, Measurement<Source, par_t, 2_p>,
+        Measurement<Source, par_t, 0_p, 2_p>,
+        Measurement<Source, par_t, 1_p, 2_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p>,
+        Measurement<Source, par_t, 3_p>, Measurement<Source, par_t, 0_p, 3_p>,
+        Measurement<Source, par_t, 1_p, 3_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 3_p>,
+        Measurement<Source, par_t, 2_p, 3_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 3_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 3_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 3_p>,
+        Measurement<Source, par_t, 4_p>, Measurement<Source, par_t, 0_p, 4_p>,
+        Measurement<Source, par_t, 1_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 4_p>,
+        Measurement<Source, par_t, 2_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 4_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 4_p>,
+        Measurement<Source, par_t, 3_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 1_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 2_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 3_p, 4_p>,
+        Measurement<Source, par_t, 5_p>, Measurement<Source, par_t, 0_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 5_p>,
+        Measurement<Source, par_t, 2_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 5_p>,
+        Measurement<Source, par_t, 3_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 2_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 3_p, 5_p>,
+        Measurement<Source, par_t, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 2_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 2_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 2_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 1_p, 2_p, 3_p, 4_p, 5_p>,
+        Measurement<Source, par_t, 0_p, 1_p, 2_p, 3_p, 4_p, 5_p>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }
+}
+
+using freePar_t = FreeParametersIndices;
+
+template <freePar_t... pars>
+struct meas_factory2 {
+  using type = Measurement<Source, freePar_t, pars...>;
+};
+
+constexpr freePar_t operator"" _fp(unsigned long long i) {
+  return freePar_t(i);
+}
+
+BOOST_AUTO_TEST_CASE(variant_free_measurement_generation_test) {
   {
-    using actual = detail::type_generator_t<meas_factory, 4>;
+    using actual = detail::type_generator_t<freePar_t, meas_factory2>;
     using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
-        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p>,
-        Measurement<SourceLink, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>>;
-    static_assert(std::is_same<actual, expected>::value,
-                  "Variant is not identical");
-  }
-  {
-    using actual = detail::type_generator_t<meas_factory, 5>;
-    using expected = std::variant<
-        Measurement<SourceLink, 0_p>, Measurement<SourceLink, 1_p>,
-        Measurement<SourceLink, 0_p, 1_p>, Measurement<SourceLink, 2_p>,
-        Measurement<SourceLink, 0_p, 2_p>, Measurement<SourceLink, 1_p, 2_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p>, Measurement<SourceLink, 3_p>,
-        Measurement<SourceLink, 0_p, 3_p>, Measurement<SourceLink, 1_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p>,
-        Measurement<SourceLink, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p>,
-        Measurement<SourceLink, 4_p>, Measurement<SourceLink, 0_p, 4_p>,
-        Measurement<SourceLink, 1_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 4_p>,
-        Measurement<SourceLink, 2_p, 4_p>,
-        Measurement<SourceLink, 0_p, 2_p, 4_p>,
-        Measurement<SourceLink, 1_p, 2_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 4_p>,
-        Measurement<SourceLink, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 3_p, 4_p>,
-        Measurement<SourceLink, 1_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 3_p, 4_p>,
-        Measurement<SourceLink, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 1_p, 2_p, 3_p, 4_p>,
-        Measurement<SourceLink, 0_p, 1_p, 2_p, 3_p, 4_p>>;
+        Measurement<Source, freePar_t, 0_fp>,
+        Measurement<Source, freePar_t, 1_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp>,
+        Measurement<Source, freePar_t, 2_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp>,
+        Measurement<Source, freePar_t, 3_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp>,
+        Measurement<Source, freePar_t, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp>,
+        Measurement<Source, freePar_t, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 5_fp>,
+        Measurement<Source, freePar_t, 2_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 5_fp>,
+        Measurement<Source, freePar_t, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 5_fp>,
+        Measurement<Source, freePar_t, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp>,
+        Measurement<Source, freePar_t, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 6_fp>,
+        Measurement<Source, freePar_t, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 6_fp>,
+        Measurement<Source, freePar_t, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 6_fp>,
+        Measurement<Source, freePar_t, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp,
+                    6_fp>,
+        Measurement<Source, freePar_t, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 7_fp>,
+        Measurement<Source, freePar_t, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 7_fp>,
+        Measurement<Source, freePar_t, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 5_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 4_fp, 5_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 3_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 3_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 3_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 3_fp, 4_fp, 5_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp, 7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp,
+                    7_fp>,
+        Measurement<Source, freePar_t, 0_fp, 1_fp, 2_fp, 3_fp, 4_fp, 5_fp, 6_fp,
+                    7_fp>>;
     static_assert(std::is_same<actual, expected>::value,
                   "Variant is not identical");
   }

@@ -6,11 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Fatras/FatrasOptions.hpp"
+#include "ActsExamples/Fatras/FatrasOptions.hpp"
 
 #include <string>
 
-void FW::Options::addFatrasOptions(FW::Options::Description& desc) {
+void ActsExamples::Options::addFatrasOptions(
+    ActsExamples::Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
 
