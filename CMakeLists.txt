@@ -115,8 +115,12 @@ set(_root_version 6.10)
 # plugin dependencies
 if(ACTS_BUILD_CUDA_PLUGIN)
   enable_language(CUDA)
-  set(CMAKE_CUDA_STANDARD 14)
-  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+  set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
+    "Force the C++ standard requirement")
+  set(CMAKE_CUDA_ARCHITECTURES "35;52;75" CACHE STRING
+    "CUDA architectures to generate code for")
+  set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
 if(ACTS_BUILD_DD4HEP_PLUGIN)
   find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)

@@ -4,7 +4,7 @@ add_custom_target(integrationtests)
 # add an integrationtest exectuable w/ default dependencies and register it.
 #
 # the common libraries which are linked to every integrationtest can be
-# extended by setting the `unittest_extra_libraries` variables before
+# extended by setting the `integrationtest_extra_libraries` variables before
 # calling the macro.
 macro(add_integrationtest _name)
   # automatically prefix the target name
@@ -25,15 +25,20 @@ macro(add_integrationtest _name)
       Boost::unit_test_framework
       ${integrationtest_extra_libraries})
   # register as integration test executable
-  set(_test "integrationtests-${_name}")
-  add_custom_target(${_test} COMMAND ${_target})
-  add_dependencies(integrationtests ${_test})
+  set(_run "RunIntegrationTest${_name}")
+  add_custom_target(${_run} COMMAND ${_target})
+  add_dependencies(integrationtests ${_run})
 endmacro()
 
 add_integrationtest(BVHNavigation BVHNavigationTest.cpp)
 add_integrationtest(InterpolatedSolenoidBField InterpolatedSolenoidBFieldTest.cpp)
 add_integrationtest(PrintDataDirectory PrintDataDirectory.cpp)
-add_integrationtest(Propagation PropagationTests.cpp)
+add_integrationtest(PropagationAtlasConstant PropagationAtlasConstant.cpp)
+add_integrationtest(PropagationDenseConstant PropagationDenseConstant.cpp)
+add_integrationtest(PropagationEigenConstant PropagationEigenConstant.cpp)
+add_integrationtest(PropagationStraightLine PropagationStraightLine.cpp)
+add_integrationtest(PropagationCompareAtlasEigenConstant PropagationCompareAtlasEigenConstant.cpp)
+add_integrationtest(PropagationCompareEigenStraightLine PropagationCompareEigenStraightLine.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
 add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)

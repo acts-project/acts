@@ -10,9 +10,11 @@
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <limits>
 
 namespace tt = boost::test_tools;
 
@@ -33,6 +35,8 @@ struct PropState {
     double mass = 42.;
   } options;
 };
+
+static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
@@ -59,11 +63,11 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
   BOOST_CHECK(!slsState.covTransport);
   BOOST_CHECK_EQUAL(slsState.cov, Covariance::Zero());
-  BOOST_CHECK_EQUAL(slsState.pos, pos);
-  BOOST_CHECK_EQUAL(slsState.dir, mom.normalized());
-  BOOST_CHECK_EQUAL(slsState.p, mom.norm());
+  CHECK_CLOSE_OR_SMALL(slsState.pos, pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(slsState.dir, mom.normalized(), eps, eps);
+  CHECK_CLOSE_REL(slsState.p, mom.norm(), eps);
   BOOST_CHECK_EQUAL(slsState.q, charge);
-  BOOST_CHECK_EQUAL(slsState.t, time);
+  CHECK_CLOSE_OR_SMALL(slsState.t, time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, ndir);
   BOOST_CHECK_EQUAL(slsState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(slsState.stepSize, ndir * stepSize);
@@ -199,9 +203,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams =
-      detail::coordinate_transformation::boundParameters2freeParameters(
-          tgContext, cp2.parameters(), cp2.referenceSurface());
+  FreeVector freeParams = detail::transformBoundToFreeParameters(
+      cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
 
@@ -322,24 +325,19 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
   // Update in context of a surface
-  BoundParameters bpTarget(tgContext, 2. * cov, 2. * pos, 2. * mom,
-                           -1. * charge, 2. * time, targetSurface);
-  Vector3D dir = bpTarget.momentum().normalized();
-  freeParams[eFreePos0] = bpTarget.position()[eX];
-  freeParams[eFreePos1] = bpTarget.position()[eY];
-  freeParams[eFreePos2] = bpTarget.position()[eZ];
-  freeParams[eFreeTime] = bpTarget.time();
-  freeParams[eFreeDir0] = dir[eMom0];
-  freeParams[eFreeDir1] = dir[eMom1];
-  freeParams[eFreeDir2] = dir[eMom2];
-  freeParams[eFreeQOverP] = bpTarget.charge() / bpTarget.momentum().norm();
+  freeParams = detail::transformBoundToFreeParameters(
+      bp.referenceSurface(), tgContext, bp.parameters());
+  freeParams.segment<3>(eFreePos0) *= 2;
+  freeParams[eFreeTime] *= 2;
+  freeParams.segment<3>(eFreeDir0) *= 2;
+  freeParams[eFreeQOverP] *= -0.5;
 
-  sls.update(slsState, freeParams, *bpTarget.covariance());
-  BOOST_CHECK_EQUAL(slsState.pos, 2. * pos);
-  CHECK_CLOSE_ABS(slsState.dir, mom.normalized(), 1e-6);
-  BOOST_CHECK_EQUAL(slsState.p, 2. * mom.norm());
+  sls.update(slsState, freeParams, 2 * (*bp.covariance()));
+  CHECK_CLOSE_OR_SMALL(slsState.pos, 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(slsState.dir, mom.normalized(), eps, eps);
+  CHECK_CLOSE_REL(slsState.p, 2. * mom.norm(), eps);
   BOOST_CHECK_EQUAL(slsState.q, 1. * charge);
-  BOOST_CHECK_EQUAL(slsState.t, 2. * time);
+  CHECK_CLOSE_OR_SMALL(slsState.t, 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 
   // Transport the covariance in the context of a surface

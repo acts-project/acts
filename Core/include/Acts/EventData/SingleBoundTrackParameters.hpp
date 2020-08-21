@@ -8,224 +8,212 @@
 
 #pragma once
 
-#include "Acts/EventData/SingleTrackParameters.hpp"
+#include <cassert>
+#include <cmath>
+
+#include "Acts/EventData/ChargePolicy.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 namespace Acts {
 
-/// @brief Charged and Neutrial Track Parameterisation classes bound to
-/// to a reference surface. This is a single-component representation
+/// Single track parameters bound to a reference surface.
 ///
+/// @tparam charge_policy_t Selection type for the particle charge
 ///
-/// Bound track parameters are delegating the transformation of local to global
-/// coordinate transformations to the reference surface Surface and thus need
-/// at contruction a Context object
+/// This is a base class for bound parameters. All parameters and their
+/// corresponding covariance matrix are stored in bound parametrization. The
+/// specific definition of the local spatial parameters is defined by the
+/// associated surface.
 ///
-/// @note This class holds shared ownership on the surface it is associated
-///       to.
-template <class ChargePolicy>
-class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy> {
+/// @note This class holds shared ownership on its reference surface.
+template <class charge_policy_t>
+class SingleBoundTrackParameters {
  public:
   using Scalar = BoundParametersScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 
-  /// @brief Constructor of track parameters bound to a surface
-  /// This is the constructor from global parameters, enabled only
-  /// for charged representations.
+  /// Construct charged bound parameters from parameters vector on the surface.
   ///
-  /// The transformations declared in the coordinate_transformation
-  /// yield the global parameters and momentum representation
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
-  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame
-  /// @param[in] parValues The parameter vector
-  /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = ChargePolicy,
+  /// @param[in] surface The reference surface the parameters are defined on
+  /// @param[in] params The parameter vector
+  /// @param[in] cov Optional covariance in the reference frame
+  template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovarianceMatrix> cov,
-                             const ParametersVector& parValues,
-                             std::shared_ptr<const Surface> surface)
-      : SingleTrackParameters<ChargePolicy>(
-            std::move(cov), parValues,
-            detail::coordinate_transformation::parameters2globalPosition(
-                gctx, parValues, *surface),
-            detail::coordinate_transformation::parameters2globalMomentum(
-                parValues)),
-        m_pSurface(std::move(surface)) {
-    assert(m_pSurface);
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                             const ParametersVector& params,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
+      : m_paramSet(std::move(cov), params),
+        m_chargePolicy(std::copysign(1., params[eBoundQOverP])),
+        m_surface(std::move(surface)) {
+    assert(m_surface);
   }
 
-  /// @brief Constructor of track parameters bound to a surface
-  /// This is the constructor from global parameters, enabled only
-  /// for charged representations.
+  /// Construct neutral bound parameters from parameters vector on the surface.
   ///
-  /// The transformations declared in the coordinate_transformation
-  /// yield the local parameters
+  /// @param[in] surface The reference surface the parameters are defined on
+  /// @param[in] params The parameter vector
+  /// @param[in] cov Optional covariance in the reference frame
+  template <typename T = charge_policy_t,
+            std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
+  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
+                             const ParametersVector& params,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
+      : m_paramSet(std::move(cov), params), m_surface(std::move(surface)) {
+    assert(m_surface);
+  }
+
+  /// Construct charged bound parameters from global position and momentum.
   ///
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
-  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the curvilinear frame
-  /// @param[in] position The global position of the track parameterisation
-  /// @param[in] momentum The global momentum of the track parameterisation
-  /// @param[in] dCharge The charge of the particle track parameterisation
-  /// @param[in] dTime The time component of the parameters
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  /// @param[in] cov Optional covariance in the reference frame
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
+  /// @param[in] charge The particle charge
+  /// @param[in] time The time coordinate
   /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = ChargePolicy,
+  template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx,
+  SingleBoundTrackParameters(const GeometryContext& geoCtx,
                              std::optional<CovarianceMatrix> cov,
-                             const Vector3D& position, const Vector3D& momentum,
-                             Scalar dCharge, Scalar dTime,
+                             const Vector3D& pos, const Vector3D& mom,
+                             Scalar charge, Scalar time,
                              std::shared_ptr<const Surface> surface)
-      : SingleTrackParameters<ChargePolicy>(
-            std::move(cov),
-            detail::coordinate_transformation::global2parameters(
-                gctx, position, momentum, dCharge, dTime, *surface),
-            position, momentum),
-        m_pSurface(std::move(surface)) {
-    assert(m_pSurface);
+      : m_paramSet(std::move(cov),
+                   detail::transformFreeToBoundParameters(
+                       pos, time, mom, charge / mom.norm(), *surface, geoCtx)),
+        m_chargePolicy(charge),
+        m_surface(std::move(surface)) {
+    assert(m_surface);
   }
 
-  /// @brief Constructor of track parameters bound to a surface
-  /// This is the constructor from global parameters, enabled only
-  /// for neutral representations.
+  /// Construct neutral bound parameters from global position and momentum.
   ///
-  /// The transformations declared in the coordinate_transformation
-  /// yield the global parameters and momentum representation
-  ///
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
-  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the measurement frame
-  /// @param[in] parValues The parameter vector
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  /// @param[in] cov Optional covariance in the reference frame
+  /// @param[in] pos The global track three-position vector
+  /// @param[in] mom The global track three-momentum vector
+  /// @param[in] time The time coordinate
   /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = ChargePolicy,
+  template <typename T = charge_policy_t,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx,
+  SingleBoundTrackParameters(const GeometryContext& geoCtx,
                              std::optional<CovarianceMatrix> cov,
-                             const ParametersVector& parValues,
+                             const Vector3D& pos, const Vector3D& mom,
+                             Scalar time,
                              std::shared_ptr<const Surface> surface)
-      : SingleTrackParameters<ChargePolicy>(
-            std::move(cov), parValues,
-            detail::coordinate_transformation::parameters2globalPosition(
-                gctx, parValues, *surface),
-            detail::coordinate_transformation::parameters2globalMomentum(
-                parValues)),
-        m_pSurface(std::move(surface)) {
-    assert(m_pSurface);
+      : m_paramSet(std::move(cov),
+                   detail::transformFreeToBoundParameters(
+                       pos, time, mom, 1 / mom.norm(), *surface, geoCtx)),
+        m_surface(std::move(surface)) {
+    assert(m_surface);
   }
 
-  /// @brief Constructor of track parameters bound to a surface
-  /// This is the constructor from global parameters, enabled only
-  /// for neutral representations.
-  ///
-  /// The transformations declared in the coordinate_transformation
-  /// yield the local parameters
-  ///
-  ///
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
-  /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
-  ///            it is given in the curvilinear frame
-  /// @param[in] position The global position of the track parameterisation
-  /// @param[in] momentum The global momentum of the track parameterisation
-  /// @param[in] dCharge The charge of the particle track parameterisation
-  /// @param[in] surface The reference surface the parameters are bound to
-  template <typename T = ChargePolicy,
-            std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(const GeometryContext& gctx,
-                             std::optional<CovarianceMatrix> cov,
-                             const Vector3D& position, const Vector3D& momentum,
-                             Scalar dTime,
-                             std::shared_ptr<const Surface> surface)
-      : SingleTrackParameters<ChargePolicy>(
-            std::move(cov),
-            detail::coordinate_transformation::global2parameters(
-                gctx, position, momentum, 0, dTime, *surface),
-            position, momentum),
-        m_pSurface(std::move(surface)) {}
+  // this class does not have a custom default constructor and thus should not
+  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
-  /// @brief copy constructor  - charged/neutral
-  /// @param[in] copy The source parameters
-  SingleBoundTrackParameters(
-      const SingleBoundTrackParameters<ChargePolicy>& copy)
-      : SingleTrackParameters<ChargePolicy>(copy) {
-    m_pSurface = copy.m_pSurface;
+  /// Access the parameter set holding the parameters vector and covariance.
+  const FullParameterSet& getParameterSet() const { return m_paramSet; }
+  /// Access the bound parameters vector.
+  ParametersVector parameters() const { return m_paramSet.getParameters(); }
+  /// Access the optional covariance matrix.
+  const std::optional<CovarianceMatrix>& covariance() const {
+    return m_paramSet.getCovariance();
   }
 
-  /// @brief move constructor - charged/neutral
-  /// @param[in] other The source parameters
-  SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& other)
-      : SingleTrackParameters<ChargePolicy>(std::move(other)),
-        m_pSurface(std::move(other.m_pSurface)) {}
-
-  /// @brief desctructor - charged/neutral
-  /// checks if the surface is free and in such a case deletes it
-  ~SingleBoundTrackParameters() = default;
-
-  /// @brief copy assignment operator - charged/neutral
-  SingleBoundTrackParameters<ChargePolicy>& operator=(
-      const SingleBoundTrackParameters<ChargePolicy>& rhs) {
-    // check for self-assignment
-    if (this != &rhs) {
-      SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_pSurface = rhs.m_pSurface;
-    }
-    return *this;
-  }
-
-  /// @brief move assignment operator - charged/neutral
-  /// checks if the surface is free and in such a case delete-clones it
-  SingleBoundTrackParameters<ChargePolicy>& operator=(
-      SingleBoundTrackParameters<ChargePolicy>&& rhs) {
-    // check for self-assignment
-    if (this != &rhs) {
-      SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
-      m_pSurface = std::move(rhs.m_pSurface);
-    }
-
-    return *this;
-  }
-
-  /// @brief set method for parameter updates
-  /// obviously only allowed on non-const objects
-  //
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
-  template <ParID_t par>
-  void set(const GeometryContext& gctx, Scalar newValue) {
-    this->getParameterSet().template setParameter<par>(newValue);
-    this->updateGlobalCoordinates(gctx, BoundParameterType<par>());
-  }
-
-  /// @brief access method to the reference surface
-  const Surface& referenceSurface() const final { return *m_pSurface; }
-
-  /// @brief access to the measurement frame, i.e. the rotation matrix with
-  /// respect to the global coordinate system, in which the local error
-  /// is described.
+  /// Access a single parameter value indentified by its index.
   ///
-  /// @param[in] gctx is the Context object that is forwarded to the surface
-  ///            for local to global coordinate transformation
+  /// @tparam kIndex Track parameter index
+  template <BoundParametersIndices kIndex>
+  Scalar get() const {
+    return m_paramSet.template getParameter<kIndex>();
+  }
+  /// Access a single parameter uncertainty identified by its index.
   ///
-  /// For planar surface, this is identical to the rotation matrix of the
-  /// surface frame, for measurements with respect to a line this has to be
-  /// constructed by the point of clostest approach to the line, for
-  /// cylindrical surfaces this is (by convention) the tangential plane.
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const {
-    return std::move(
-        m_pSurface->referenceFrame(gctx, this->position(), this->momentum()));
+  /// @tparam kIndex Track parameter index
+  /// @retval zero if the track parameters have no associated covariance
+  /// @retval parameter standard deviation if the covariance is available
+  template <BoundParametersIndices kIndex>
+  Scalar uncertainty() const {
+    return m_paramSet.getUncertainty<kIndex>();
+  }
+
+  /// Access the spatial position vector.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  ///
+  /// This uses the associated surface to transform the local position to global
+  /// coordinates. This requires a geometry context to select the appropriate
+  /// transformation and might be a computationally expensive operation.
+  Vector3D position(const GeometryContext& geoCtx) const {
+    const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
+    const Vector3D dir =
+        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
+    Vector3D pos;
+    m_surface->localToGlobal(geoCtx, loc, dir, pos);
+    return pos;
+  }
+  /// Access the spatial position vector with the default geometry context.
+  ///
+  /// @see position(const GeometryContext&)
+  Vector3D position() const { return this->position(GeometryContext()); }
+  /// Access the time coordinate.
+  Scalar time() const { return get<eBoundTime>(); }
+
+  /// Access the direction pseudo-rapidity.
+  Scalar eta() const { return -std::log(std::tan(get<eBoundTheta>() / 2)); }
+  /// Access the absolute transverse momentum.
+  Scalar pT() const {
+    return std::sin(get<eBoundTheta>()) / std::abs(get<eBoundQOverP>());
+  }
+  /// Access the momentum three-vector.
+  Vector3D momentum() const {
+    auto mom =
+        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
+    mom *= std::abs(1 / get<eBoundQOverP>());
+    return mom;
+  }
+
+  /// Access the particle electric charge.
+  Scalar charge() const { return m_chargePolicy.getCharge(); }
+
+  /// Access the reference surface onto which the parameters are bound.
+  const Surface& referenceSurface() const { return *m_surface; }
+  /// Access the reference frame in which the local error is defined.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  ///
+  /// For planar surfaces, this is the transformation local-to-global rotation
+  /// matrix. For non-planar surfaces, it is the local-to-global rotation matrix
+  /// of the tangential plane at the track position.
+  RotationMatrix3D referenceFrame(const GeometryContext& geoCtx) const {
+    return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 
  private:
-  std::shared_ptr<const Surface> m_pSurface;
+  /// parameter set holding parameters vector and covariance.
+  FullParameterSet m_paramSet;
+  /// charge policy to distinguish differently charged particles
+  charge_policy_t m_chargePolicy;
+  /// reference surface
+  std::shared_ptr<const Surface> m_surface;
 
+  /// Compare two bound parameters for equality.
+  friend bool operator==(const SingleBoundTrackParameters& lhs,
+                         const SingleBoundTrackParameters& rhs) {
+    return (lhs.m_paramSet == rhs.m_paramSet) and
+           (lhs.m_chargePolicy == rhs.m_chargePolicy) and
+           (lhs.m_surface == rhs.m_surface);
+  }
+  /// Compare two bound parameters for inequality.
+  friend bool operator!=(const SingleBoundTrackParameters& lhs,
+                         const SingleBoundTrackParameters& rhs) {
+    return !(lhs == rhs);
+  }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleBoundTrackParameters& tp) {

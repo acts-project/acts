@@ -8,7 +8,7 @@
 
 #include "Acts/Propagator/StraightLineStepper.hpp"
 
-#include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 namespace Acts {
@@ -74,11 +74,10 @@ void StraightLineStepper::resetState(State& state,
                                      const Surface& surface,
                                      const NavigationDirection navDir,
                                      const double stepSize) const {
-  using transformation = detail::coordinate_transformation;
   // Update the stepping state
   update(state,
-         transformation::boundParameters2freeParameters(state.geoContext,
-                                                        boundParams, surface),
+         detail::transformBoundToFreeParameters(surface, state.geoContext,
+                                                boundParams),
          cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);

@@ -12,8 +12,7 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t>
-void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
-                                            TrackAtVertex<input_track_t>& track,
+void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                                             const Vertex<input_track_t>& vtx) {
   const Vector3D vtxPos = vtx.fullPosition().template head<3>();
 
@@ -102,8 +101,8 @@ void Acts::KalmanVertexTrackUpdater::update(const GeometryContext& gctx,
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
-  BoundParameters refittedPerigee = BoundParameters(
-      gctx, std::move(fullPerTrackCov), newTrkParams, perigeeSurface);
+  BoundParameters refittedPerigee =
+      BoundParameters(perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
 
   // Set new properties
   track.fittedParams = refittedPerigee;
