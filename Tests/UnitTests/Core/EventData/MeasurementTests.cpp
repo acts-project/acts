@@ -37,6 +37,11 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m_vec(cylinder, {}, cov,
                                                         {-0.1, 0.45});
 
+  // Check access to the members
+  auto pSet = m_vec.parameterSet();
+  BOOST_CHECK(pSet.contains<Acts::eLOC_0>());
+  BOOST_CHECK(pSet.contains<Acts::eLOC_1>());
+
   std::default_random_engine generator(42);
 
   // Create a measurement on a cylinder
@@ -55,7 +60,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   // The parameters should be identical though
   BOOST_CHECK_EQUAL(mc.parameters(), mcCopy.parameters());
 
-  // check the assignment operator
+  // Check the assignment operator
   auto mcAssigned = mc;
 
   // The surface should be not null and point to the same
