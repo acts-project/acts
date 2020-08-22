@@ -409,48 +409,79 @@ namespace Acts::Sycl {
       //************************************************//
 
       seeds.resize(M);
-      const float MIN = -100000.f;
-      cl::sycl::buffer<TripletData,2> curvImpactBuf ((cl::sycl::range<2>(maxBotCompMid, maxTopCompMid)));
-      
-      // Start kernels and load data to memory separately for each middle space point.
-      // This way we don't run out of memory. (yay)
-      for(uint32_t MID = 0; MID < M; ++MID) {
-        if(numTopCompMid[MID] == 0 || numBotCompMid[MID] == 0) continue;
+      unsigned long max_glob_size = q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
+      const uint32_t parts = 512;
+      const size_t memory_allocation = std::min(edgesComb, max_glob_size / parts);
 
-        // Count number of triplets for middle space point
-        uint32_t maxTriplets = 0;
-        cl::sycl::buffer<uint32_t,1> maxTripletBuf(&maxTriplets, 1);
+      cl::sycl::buffer<uint64_t,1> sumCombinedBuf(sumBotTopCombined.data(), cl::sycl::range<1>(M+1));
+      cl::sycl::buffer<TripletData,1> curvImpactBuf ((cl::sycl::range<1>(memory_allocation)));
+
+      const float MIN = -100000.f;
+      uint32_t first_middle = 0, last_middle = 0;
+      for(;first_middle < M; first_middle = last_middle){
+        last_middle = first_middle;
+        for(;last_middle < M + 1 &&
+          sumBotTopCombined[last_middle] - sumBotTopCombined[first_middle] < memory_allocation;
+          ++last_middle){}
+          --last_middle;
+
+        const uint64_t num_combinations = sumBotTopCombined[last_middle] - sumBotTopCombined[first_middle];
+
+        if(num_combinations == 0) continue;
+
+        const uint32_t num_bottoms = sumBotCompUptoMid[last_middle] - sumBotCompUptoMid[first_middle];
+        const uint32_t num_tops = sumTopCompUptoMid[last_middle] - sumTopCompUptoMid[first_middle];
+        const uint32_t num_middle = last_middle - first_middle;
+
+        uint32_t countTriplets = 0;
+        cl::sycl::buffer<uint32_t,1> countTripletsBuf(&countTriplets, 1);
 
         q->submit([&](cl::sycl::handler &h) {
-          auto numTopAcc =      numTopCompBuf.get_access<   am::read,         at::global_buffer> (h, 1, MID);
-          auto numBotAcc =      numBotCompBuf.get_access<   am::read,         at::global_buffer> (h, 1, MID);
-          auto midSPAcc =       midSPBuf.get_access<        am::read,         at::global_buffer> (h, 1, MID);
-          auto indBotAcc =      indBotCompBuf.get_access<   am::read,         at::global_buffer>
-            (h, numBotCompMid[MID], sumBotCompUptoMid[MID]);
-          auto indTopAcc =      indTopCompBuf.get_access<   am::read,         at::global_buffer>
-            (h, numTopCompMid[MID], sumTopCompUptoMid[MID]);
-          auto linBotAcc =      linBotBuf.get_access<       am::read,         at::global_buffer>
-            (h, numBotCompMid[MID], sumBotCompUptoMid[MID]);
-          auto linTopAcc =      linTopBuf.get_access<       am::read,         at::global_buffer>
-            (h, numTopCompMid[MID], sumTopCompUptoMid[MID]);
-          auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(h);
+          auto numTopAcc =      numTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto numBotAcc =      numBotCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumTopAcc =      sumTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumBotAcc =      sumBotCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumCombAcc =     sumCombinedBuf.get_access<  am::read,   at::global_buffer> (h);
+          auto midSPAcc =       midSPBuf.get_access<        am::read,   at::global_buffer> (h);
+          auto offsetComb =     sumCombinedBuf.get_access<  am::read,   at::constant_buffer> (h, 1, first_middle);
+          auto offsetBot =      sumBotCompBuf.get_access<   am::read,   at::constant_buffer> (h, 1, first_middle);
+          auto offsetTop =      sumTopCompBuf.get_access<   am::read,   at::constant_buffer> (h, 1, first_middle);
+          auto configAcc =      configBuf.get_access<       am::read,   at::constant_buffer> (h);
 
-          auto curvImpactAcc =  curvImpactBuf.get_access<   am::discard_write,at::global_buffer>(h);
-          auto maxTripletsAcc = maxTripletBuf.get_access<   am::atomic,       at::global_buffer>(h);
+          auto indBotAcc =      indBotCompBuf.get_access<   am::read,   at::global_buffer>
+            (h, num_bottoms, sumBotCompUptoMid[first_middle]);
+          auto indTopAcc =      indTopCompBuf.get_access<   am::read,   at::global_buffer>
+            (h, num_tops, sumTopCompUptoMid[first_middle]);
+          auto linBotAcc =      linBotBuf.get_access<       am::read,   at::global_buffer>
+            (h, num_bottoms, sumBotCompUptoMid[first_middle]);
+          auto linTopAcc =      linTopBuf.get_access<       am::read,   at::global_buffer>
+            (h, num_tops, sumTopCompUptoMid[first_middle]);
+
+          auto curvImpactAcc =  curvImpactBuf.get_access<   am::discard_write,at::global_buffer>
+            (h, num_combinations, 0);
+          auto countTripletsAcc=countTripletsBuf.get_access<am::atomic,       at::global_buffer>(h);
 
           h.parallel_for<triplet_search_kernel>
-            (cl::sycl::range<2>{uint32_t(numBotCompMid[MID]), uint32_t(numTopCompMid[MID])}, // number of threads
-            [=](cl::sycl::id<2> idx){
-            // SYCL may start more threads than necessary (usually a power of 2)
-            // which may cause us to find more triplets than what we should.
-            // Check whether we are within bounds:
-            // this costs us extra computing power, but gives better results.
-            if(idx[0] < numBotAcc[0] && idx[1] < numTopAcc[0]) {
-              TripletData T = {MIN, MIN};
-              curvImpactAcc[idx[0]][idx[1]] = T;
+            (cl::sycl::range<1>{num_combinations}, [=](cl::sycl::id<1> idx){
 
-              uint32_t ib = idx[0];
-              uint32_t it = idx[1];
+            // We don't want to store indices for middle sp, so we do this to retrieve them
+            if(idx < num_combinations){
+            
+              uint32_t L = first_middle;
+              uint32_t R = last_middle;
+              uint32_t mid = L;
+              while(L < R - 1) {
+                mid = (L + R) / 2;
+                if(idx + offsetComb[0] < sumCombAcc[mid]) R = mid;
+                else L = mid;
+              }
+              mid = L;
+
+              TripletData T = {MIN, MIN};
+              curvImpactAcc[idx] = T;
+
+              uint32_t ib = sumBotAcc[mid] - offsetBot[0] + ((idx - sumCombAcc[mid] + offsetComb[0]) / numTopAcc[mid]);
+              uint32_t it = sumTopAcc[mid] - offsetTop[0] + ((idx - sumCombAcc[mid] + offsetComb[0]) % numTopAcc[mid]);
 
               uint32_t bot = indBotAcc[ib];
               uint32_t top = indTopAcc[it];
@@ -458,16 +489,14 @@ namespace Acts::Sycl {
 
               offloadLinEqCircle linBotEq = linBotAcc[ib];
               offloadLinEqCircle linTopEq = linTopAcc[it];
-              offloadSpacePoint midSP = midSPAcc[0];
+              offloadSpacePoint midSP = midSPAcc[mid];
 
-              // const float Zob =         linBotEq.zo;
               const float Vb =          linBotEq.v;
               const float Ub =          linBotEq.u;
               const float Erb =         linBotEq.er;
               const float cotThetab =   linBotEq.cotTheta;
               const float iDeltaRb =    linBotEq.iDeltaR;
 
-              // const float Zot =         linTopEq.zo;
               const float Vt =          linTopEq.v;
               const float Ut =          linTopEq.u;
               const float Ert =         linTopEq.er;
@@ -508,58 +537,68 @@ namespace Acts::Sycl {
                     !((deltaCotTheta2 - error2 > 0) &&
                     (dCotThetaMinusError2 > p2scatter * config.sigmaScattering * config.sigmaScattering)) &&
                     !(Im > config.impactMax)) {
-                  maxTripletsAcc[0].fetch_add(1);
+                  uint32_t c = countTripletsAcc[0].fetch_add(1);
                   T.curvature = B / std::sqrt(S2);
                   T.impact = Im;
-                  curvImpactAcc[idx[0]][idx[1]] = T;
+                  curvImpactAcc[idx] = T;
                 }
               }
             }
           });
         }).wait();
-        maxTriplets = (maxTripletBuf.get_access<am::read>())[0];
 
-        if(maxTriplets == 0) continue;
+        auto sumTriplets = (countTripletsBuf.get_access<am::read>())[0];
+        if(sumTriplets == 0) continue;
+        cl::sycl::buffer<SeedData,1> seedBuf((cl::sycl::range<1>(sumTriplets+1))); 
 
-        // Reserve memory for triplet/seed indices and weights.
-        // We could reserve these buffers outside the loop, and it would provide a performance
-        // boost, if sub-buffers or sub-accessors had a correct implementation.
-        // However, they don't.
-        cl::sycl::buffer<SeedData,1> seedBuf((cl::sycl::range<1>(maxTriplets)));       
-
-        // Experiment specific cuts may reduce the number of triplets/seeds,
-        // so we count them again. We only copy back to the host that many values.
-        uint32_t countTriplets = 0;
-        cl::sycl::buffer<uint32_t,1>    countTripletsBuf(&countTriplets, 1);
+        uint32_t countSeeds = 0;
+        cl::sycl::buffer<uint32_t,1>    countSeedsBuf(&countSeeds, 1);
 
         q->submit([&](cl::sycl::handler &h) {
           // Since we only use part of the buffers, we can use sub-accessors.
-          auto numTopAcc = numTopCompBuf.get_access<  am::read, at::global_buffer> (h, 1, MID);
-          auto numBotAcc = numBotCompBuf.get_access<  am::read, at::global_buffer> (h, 1, MID);
-          auto indBotAcc = indBotCompBuf.get_access<  am::read, at::global_buffer> (h, numBotCompMid[MID], sumBotCompUptoMid[MID]);
-          auto indTopAcc = indTopCompBuf.get_access<  am::read, at::global_buffer> (h, numTopCompMid[MID], sumTopCompUptoMid[MID]);
-          auto curvImpactAcc =  curvImpactBuf.get_access<   am::read,         at::global_buffer>(h);
-          auto topSPAcc =       topSPBuf.get_access<        am::read,         at::global_buffer>(h);
-          auto botSPAcc =       botSPBuf.get_access<        am::read,         at::global_buffer>(h);
-          auto configAcc =      configBuf.get_access<       am::read,         at::constant_buffer>(h);
+          auto numTopAcc =      numTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto numBotAcc =      numBotCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumTopAcc =      sumTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumBotAcc =      sumBotCompBuf.get_access<   am::read,   at::global_buffer> (h);
+          auto sumCombAcc =     sumCombinedBuf.get_access<  am::read,   at::global_buffer> (h);
+          auto configAcc =      configBuf.get_access<       am::read,   at::constant_buffer> (h);
+          auto offsetComb =     sumCombinedBuf.get_access<  am::read,   at::constant_buffer> (h, 1, first_middle);
 
-          // Use sub-accessors, so maybe with a future implementation this would
-          // provide a benefit, currently it is no overhead
-          auto seedAcc =  seedBuf.get_access<   am::write,        at::global_buffer>
-            (h,maxTriplets,0);
-          auto countTripletsAcc=countTripletsBuf.get_access<am::atomic,       at::global_buffer>(h);
+          auto indBotAcc =      indBotCompBuf.get_access<   am::read,   at::global_buffer>(h);
+          auto indTopAcc =      indTopCompBuf.get_access<   am::read,   at::global_buffer>(h);
+          auto topSPAcc =       topSPBuf.get_access<        am::read,   at::global_buffer>(h);
+          auto botSPAcc =       botSPBuf.get_access<        am::read,   at::global_buffer>(h);
+          auto curvImpactAcc =  curvImpactBuf.get_access<   am::read,   at::global_buffer>(h, num_combinations, 0);
+
+          auto seedAcc =        seedBuf.get_access<         am::write,  at::global_buffer>(h);
+          auto countSeedsAcc=   countSeedsBuf.get_access<   am::atomic, at::global_buffer>(h);
 
           h.parallel_for<filter_2sp_fixed_kernel>
-            (cl::sycl::range<2>{uint32_t(numBotCompMid[MID]), uint32_t(numTopCompMid[MID])}, // number of threads
-            [=](cl::sycl::id<2> idx){
-            
-            if(idx[0] < numBotAcc[0] && idx[1] < numTopAcc[0] 
-                && curvImpactAcc[idx[0]][idx[1]].curvature != MIN) {
+            (num_combinations, [=](cl::sycl::id<1> idx){
+            if(idx < num_combinations && curvImpactAcc[idx].curvature != MIN){
 
-              uint32_t bot = indBotAcc[idx[0]];
-              uint32_t top = indTopAcc[idx[1]];
+              uint32_t L = first_middle;
+              uint32_t R = last_middle;
+              uint32_t mid = L;
+              while(L < R - 1) {
+                mid = (L + R) / 2;
+                if(idx + offsetComb[0] < sumCombAcc[mid]) R = mid;
+                else L = mid;
+              }
+              mid = L;
+
+              uint32_t sumMidComb = sumCombAcc[mid] - offsetComb[0];
+              uint32_t idxOffset = idx - sumMidComb;
+              uint32_t numTopMid = numTopAcc[mid];
+
+              uint32_t ib = sumBotAcc[mid] + ((idxOffset) / numTopMid);
+              uint32_t it = sumTopAcc[mid] + ((idxOffset) % numTopMid);
+
+              uint32_t bot = indBotAcc[ib];
+              uint32_t top = indTopAcc[it];
               offloadSeedfinderConfig config = configAcc[0];
-              TripletData current = curvImpactAcc[idx[0]][idx[1]];
+
+              TripletData current = curvImpactAcc[idx];
 
               float invHelixDiameter = current.curvature;
               float lowerLimitCurv = invHelixDiameter - config.deltaInvHelixDiameter;
@@ -570,10 +609,14 @@ namespace Acts::Sycl {
               float lastCompatibleSeedR = currentTop_r;
               uint32_t compatCounter = 0;
 
-              for(uint32_t j = 0; j < numTopAcc[0]; ++j){
-                float otherCurv = curvImpactAcc[idx[0]][j].curvature;
-                if(otherCurv != MIN && j != idx[1]) {
-                  float otherTop_r = topSPAcc[indTopAcc[j]].r;
+              uint32_t bottomOffset = ((idxOffset) / numTopMid) * numTopMid;
+
+              for(uint32_t j = 0; j < numTopMid; ++j){
+                uint32_t other_idx = sumMidComb + bottomOffset + j;
+                float otherCurv = curvImpactAcc[other_idx].curvature;
+                if(otherCurv != MIN && other_idx != idx) {
+                  uint32_t other_it = sumTopAcc[mid] + j;
+                  float otherTop_r = topSPAcc[indTopAcc[other_it]].r;
                   float deltaR = cl::sycl::abs(currentTop_r - otherTop_r);
                   if(compatCounter < config.compatSeedLimit &&
                     deltaR >= config.filterDeltaRMin &&
@@ -599,26 +642,24 @@ namespace Acts::Sycl {
               weight += w;
 
               if(!(botSPAcc[bot].r > 150. && weight < 380)) {
-                uint32_t i = countTripletsAcc[0].fetch_add(1);
+                uint32_t i = countSeedsAcc[0].fetch_add(1);
                 SeedData D;
                 D.bottom = bot;
                 D.top = top;
+                D.middle = mid;
                 D.weight = weight;
                 seedAcc[i] = D;
               }
             }
           });
         }).wait();
-        countTriplets = (countTripletsBuf.get_access<am::read>())[0];
 
-        // Sub-accessor to seed indices and weights.
-        // Unfortunately this currently copies all data back.
-        // Hopefully, a future implementation would provide performance benefits.
-        auto seedAcc = seedBuf.get_access<am::read>(cl::sycl::range<1>{countTriplets},cl::sycl::id<1>{0});
+        auto countSeedsAcc = (countSeedsBuf.get_access<am::read>());
+        auto seedAcc = seedBuf.get_access<am::read>();
 
-        seeds[MID].reserve(countTriplets);
-        for(uint32_t j = 0; j < countTriplets; ++j) {
-          seeds[MID].push_back(seedAcc[j]);
+        for(uint32_t t = 0; t < countSeedsAcc[0]; ++t) {
+          auto m = seedAcc[t].middle;
+          seeds[m].push_back(seedAcc[t]);
         }
       }
 

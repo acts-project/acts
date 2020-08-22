@@ -118,7 +118,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       auto& topSP =    *(topSPvec[seeds[mi][j].top]);
       float weight =   seeds[mi][j].weight;
 
-      std::cout << mi << " " << weight << "\n";
+      // std::cout << mi << " " << weight << "\n";
 
       seedsPerSPM.emplace_back(std::make_pair(weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));
