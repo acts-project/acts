@@ -17,7 +17,6 @@
 #include <exception>
 #include <algorithm>
 
-
 namespace Acts::Sycl {
   class triplet_search_kernel;
   class filter_2sp_fixed_kernel;
@@ -51,6 +50,7 @@ namespace Acts::Sycl {
 
   void offloadComputations(cl::sycl::queue* q,
                           const offloadSeedfinderConfig& configData,
+                          const DeviceExperimentCuts& deviceCuts,
                           const std::vector<offloadSpacePoint>& bottomSPs,
                           const std::vector<offloadSpacePoint>& middleSPs,
                           const std::vector<offloadSpacePoint>& topSPs,
@@ -410,7 +410,7 @@ namespace Acts::Sycl {
 
       seeds.resize(M);
       unsigned long max_glob_size = q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
-      const uint32_t parts = 512;
+      const uint32_t parts = 64;
       const size_t memory_allocation = std::min(edgesComb, max_glob_size / parts);
 
       cl::sycl::buffer<uint64_t,1> sumCombinedBuf(sumBotTopCombined.data(), cl::sycl::range<1>(M+1));
@@ -567,6 +567,7 @@ namespace Acts::Sycl {
           auto indBotAcc =      indBotCompBuf.get_access<   am::read,   at::global_buffer>(h);
           auto indTopAcc =      indTopCompBuf.get_access<   am::read,   at::global_buffer>(h);
           auto topSPAcc =       topSPBuf.get_access<        am::read,   at::global_buffer>(h);
+          auto midSPAcc =       midSPBuf.get_access<        am::read,   at::global_buffer>(h);
           auto botSPAcc =       botSPBuf.get_access<        am::read,   at::global_buffer>(h);
           auto curvImpactAcc =  curvImpactBuf.get_access<   am::read,   at::global_buffer>(h, num_combinations, 0);
 
@@ -631,17 +632,13 @@ namespace Acts::Sycl {
 
               weight += compatCounter * config.compatSeedWeight;
 
-              // ATLAS experiment specific cuts
-              float w = 0;
-              if(botSPAcc[bot].r > 150){
-                w = 400;
-              }
-              if(topSPAcc[top].r < 150){
-                w = 200;
-              }
-              weight += w;
+              offloadSpacePoint bottomSP = botSPAcc[bot];
+              offloadSpacePoint middleSP = midSPAcc[mid];
+              offloadSpacePoint topSP = topSPAcc[top];
 
-              if(!(botSPAcc[bot].r > 150. && weight < 380)) {
+              weight += deviceCuts.seedWeight(bottomSP, middleSP, topSP);
+
+              if(deviceCuts.singleSeedCut(weight, bottomSP, middleSP, topSP)){
                 uint32_t i = countSeedsAcc[0].fetch_add(1);
                 SeedData D;
                 D.bottom = bot;

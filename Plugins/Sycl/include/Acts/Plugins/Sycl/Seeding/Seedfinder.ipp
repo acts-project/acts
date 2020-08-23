@@ -8,7 +8,6 @@
 
 #include <cmath>
 #include <numeric>
-#include <iostream>
 #include <algorithm>
 #include <type_traits>
 #include <exception>
@@ -18,8 +17,10 @@
 namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config)
-    : m_config(std::move(config)) {
+    Acts::SeedfinderConfig<external_spacepoint_t> config,
+    Acts::Sycl::DeviceExperimentCuts cuts)
+    : m_config(config), m_deviceCuts(cuts)
+     {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
@@ -94,20 +95,18 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     m_config.seedFilter->getSeedFilterConfig().compatSeedWeight,
     m_config.impactMax,
     m_config.seedFilter->getSeedFilterConfig().compatSeedLimit,
-    // m_config.maxSeedsPerSpM,
   };
 
   std::vector<std::vector<SeedData>> seeds;
 
   offloadComputations(m_queue,
                       offloadConfigData,
+                      m_deviceCuts,
                       offloadBottomSPs,
                       offloadMiddleSPs,
                       offloadTopSPs,
                       seeds
   );
-
-  auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
 
   for(int mi = 0; mi < numMiddleSPs && mi < seeds.size(); ++mi) {
     std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
@@ -117,8 +116,6 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP =    *(topSPvec[seeds[mi][j].top]);
       float weight =   seeds[mi][j].weight;
-
-      // std::cout << mi << " " << weight << "\n";
 
       seedsPerSPM.emplace_back(std::make_pair(weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                       bottomSP, middleSP, topSP, 0)));

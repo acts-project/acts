@@ -13,7 +13,8 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Plugins/Sycl/Utilities/Helpers.h"
+#include "Acts/Plugins/Sycl/Utilities/Types.h"
+#include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 
 inline namespace cl{
   namespace sycl{
@@ -25,6 +26,7 @@ namespace Acts::Sycl {
 
 void offloadComputations( cl::sycl::queue* q,
                           const offloadSeedfinderConfig& configData,
+                          const DeviceExperimentCuts& deviceCuts,
                           const std::vector<offloadSpacePoint>& bottomSPs,
                           const std::vector<offloadSpacePoint>& middleSPs,
                           const std::vector<offloadSpacePoint>& topSPs,
@@ -35,7 +37,8 @@ cl::sycl::queue* createQueue();
 template <typename external_spacepoint_t>
 class Seedfinder {
   public:
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
+  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
+            Acts::Sycl::DeviceExperimentCuts device_filter);
 
   ~Seedfinder() = default;
   Seedfinder() = delete;
@@ -50,6 +53,7 @@ class Seedfinder {
  private:
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
   cl::sycl::queue* m_queue;
 };
 
