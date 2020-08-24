@@ -202,6 +202,21 @@ inline auto position(const FreeVector& params) {
   return params.segment<3>(eFreePos0);
 }
 
+/// Construct a four-vector from a three-vector and scalar fourth component.
+template <typename vector3_t>
+inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
+                        typename vector3_t::Scalar w)
+    -> Eigen::Matrix<typename vector3_t::Scalar, 4, 1> {
+  EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(vector3_t, 3);
+
+  Eigen::Matrix<typename vector3_t::Scalar, 4, 1> vec4;
+  vec4[ePos0] = vec3[ePos0];
+  vec4[ePos1] = vec3[ePos1];
+  vec4[ePos2] = vec3[ePos2];
+  vec4[eTime] = w;
+  return vec4;
+}
+
 }  // namespace VectorHelpers
 
 namespace detail {
