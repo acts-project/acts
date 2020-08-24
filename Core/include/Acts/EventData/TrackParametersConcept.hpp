@@ -77,14 +77,14 @@ struct BoundTrackParametersConceptImpl {
   static_assert(hasTypeParametersVector, "Parameters vector type is missing");
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
   static_assert(hasMethodReferenceSurface,
-                "Missing/ invalid 'referenceSurface' method");
-  static_assert(hasMethodParameters, "Missing/ invvalid 'parameters' method");
-  static_assert(hasMethodCovariance, "Missing/ invvalid 'covariance' method");
+                "Missing or invalid 'referenceSurface' method");
+  static_assert(hasMethodParameters, "Missing or invalid 'parameters' method");
+  static_assert(hasMethodCovariance, "Missing or invalid 'covariance' method");
   static_assert(hasMethodPositionFromContext,
-                "Missing/ invvalid 'position' method");
-  static_assert(hasMethodTime, "Missing/ invvalid 'time' method");
-  static_assert(hasMethodMomentum, "Missing/ invvalid 'momentum' method");
-  static_assert(hasMethodCharge, "Missing/ invvalid 'charge' method");
+                "Missing or invalid 'position' method");
+  static_assert(hasMethodTime, "Missing or invalid 'time' method");
+  static_assert(hasMethodMomentum, "Missing or invalid 'momentum' method");
+  static_assert(hasMethodCharge, "Missing or invalid 'charge' method");
 
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
@@ -121,12 +121,12 @@ struct FreeTrackParametersConceptImpl {
   static_assert(hasTypeScalar, "Scalar type is missing");
   static_assert(hasTypeParametersVector, "Parameters vector type is missing");
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
-  static_assert(hasMethodParameters, "Missing/ invvalid 'parameters' method");
-  static_assert(hasMethodCovariance, "Missing/ invvalid 'covariance' method");
-  static_assert(hasMethodPosition, "Missing/ invvalid 'position' method");
-  static_assert(hasMethodTime, "Missing/ invvalid 'time' method");
-  static_assert(hasMethodMomentum, "Missing/ invvalid 'momentum' method");
-  static_assert(hasMethodCharge, "Missing/ invvalid 'charge' method");
+  static_assert(hasMethodParameters, "Missing or invalid 'parameters' method");
+  static_assert(hasMethodCovariance, "Missing or invalid 'covariance' method");
+  static_assert(hasMethodPosition, "Missing or invalid 'position' method");
+  static_assert(hasMethodTime, "Missing or invalid 'time' method");
+  static_assert(hasMethodMomentum, "Missing or invalid 'momentum' method");
+  static_assert(hasMethodCharge, "Missing or invalid 'charge' method");
 
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
