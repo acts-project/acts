@@ -95,16 +95,6 @@ class Measurement {
   ///
   /// Concrete class for all possible measurements.
   ///
-  /// @note Only a reference to the given surface/volume is stored. The user
-  /// must ensure that the lifetime of the @c Surface / @c Volume object
-  /// surpasses the lifetime of this Measurement object. The given parameter
-  /// values are interpreted as values to the parameters as defined in the class
-  /// template argument @c params.
-  ///
-  /// @attention The current design will fail if the in-memory location of
-  /// the @c Surface / @c Volume object is changed (e.g. if it is stored in a
-  /// container and this gets relocated).
-  ///
   /// @param referenceObject surface/volume origin of the measurement
   /// @param source object for this measurement
   /// @param cov covariance matrix of the measurement.
@@ -122,7 +112,24 @@ class Measurement {
     assert(m_pReferenceObject);
   }
 
-  /// @brief virtual destructor
+  /// @brief standard constructor for surface/volume measurements
+  ///
+  /// Concrete class for all possible measurements, built from properly
+  /// formatted covariance matrix and parameter vector
+  ///
+  /// @param referenceObject surface/volume origin of the measurement
+  /// @param source object for this measurement
+  /// @param cov covariance matrix of the measurement
+  /// @param vec parameter vector of the measurement
+  Measurement(std::shared_ptr<const RefObject> referenceObject,
+              const source_link_t& source, CovarianceMatrix cov,
+              ParameterVector vec)
+      : m_oParameters(std::move(cov), std::move(vec)),
+        m_pReferenceObject(std::move(referenceObject)),
+        m_sourceLink(source) {
+    assert(m_pReferenceObject);
+  }
+
   virtual ~Measurement() = default;
 
   /// @brief copy constructor
