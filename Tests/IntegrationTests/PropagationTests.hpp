@@ -37,10 +37,7 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
     phi = 0;
   }
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return CurvilinearParameters(std::nullopt, pos, absMom * dir, charge, time);
+  return CurvilinearParameters(pos4, phi, theta, absMom, charge);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
@@ -73,10 +70,8 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return CurvilinearParameters(std::move(cov), pos, absMom * dir, charge, time);
+  Vector4D pos4 = Vector4D::Zero();
+  return CurvilinearParameters(pos4, phi, theta, absMom, charge, cov);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -91,11 +86,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
     phi = 0;
   }
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return NeutralCurvilinearTrackParameters(std::nullopt, pos, absMom * dir,
-                                           time);
+  Vector4D pos4 = Vector4D::Zero();
+  return NeutralCurvilinearTrackParameters(pos4, phi, theta, 1 / absMom);
 }
 
 // helpers to compare track parameters
