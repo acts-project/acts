@@ -101,7 +101,6 @@ struct PropagatorOptions {
     eoptions.absPdgCode = absPdgCode;
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
-    eoptions.errorOnStepCountLimit = errorOnStepCountLimit;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
     eoptions.maxStepSize = direction * std::abs(maxStepSize);
     eoptions.targetTolerance = targetTolerance;
@@ -130,11 +129,6 @@ struct PropagatorOptions {
 
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
-
-  /// If true reaching the step count limit results in an error. If false, this
-  /// will be silently ignored, and the step information thus far will be
-  /// returned.
-  bool errorOnStepCountLimit = true;
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;

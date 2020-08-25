@@ -457,7 +457,6 @@ struct DenseStepperPropagatorOptions
     eoptions.absPdgCode = this->absPdgCode;
     eoptions.mass = this->mass;
     eoptions.maxSteps = this->maxSteps;
-    eoptions.errorOnStepCountLimit = this->errorOnStepCountLimit;
     eoptions.maxStepSize = this->maxStepSize;
     eoptions.targetTolerance = this->targetTolerance;
     eoptions.pathLimit = this->pathLimit;
