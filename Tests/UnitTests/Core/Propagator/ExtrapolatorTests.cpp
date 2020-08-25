@@ -16,7 +16,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -61,7 +60,6 @@ EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
 const int ntests = 100;
-bool debugMode = false;
 
 // A plane selector for the SurfaceCollector
 struct PlaneSelector {
@@ -172,7 +170,6 @@ BOOST_DATA_TEST_CASE(
 
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
-  options.debug = debugMode;
 
   const auto& result = epropagator.propagate(start, options).value();
   auto collector_result = result.get<PlaneCollector::result_type>();
@@ -181,7 +178,6 @@ BOOST_DATA_TEST_CASE(
   PropagatorOptions<> optionsEmpty(tgContext, mfContext, getDummyLogger());
 
   optionsEmpty.maxStepSize = 25_cm;
-  optionsEmpty.debug = true;
   // Try propagation from start to each surface
   for (const auto& colsf : collector_result.collected) {
     const auto& csurface = colsf.surface;
@@ -240,11 +236,8 @@ BOOST_DATA_TEST_CASE(
       0, 0;
   CurvilinearParameters start(cov, pos, mom, q, time);
 
-  using DebugOutput = DebugOutputActor;
-
-  PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
+  PropagatorOptions<ActionList<MaterialInteractor>> options(
       tgContext, mfContext, getDummyLogger());
-  options.debug = debugMode;
   options.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
@@ -253,12 +246,6 @@ BOOST_DATA_TEST_CASE(
     // test that you actually lost some energy
     BOOST_CHECK_LT(result.endParameters->momentum().norm(),
                    start.momentum().norm());
-  }
-
-  if (debugMode) {
-    const auto& output = result.get<DebugOutput::result_type>();
-    std::cout << ">>> Extrapolation output " << std::endl;
-    std::cout << output.debugString << std::endl;
   }
 }
 
@@ -305,9 +292,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearParameters start(cov, pos, mom, q, time);
 
   // Action list and abort list
-  using DebugOutput = DebugOutputActor;
-
-  PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
+  PropagatorOptions<ActionList<MaterialInteractor>> options(
       tgContext, mfContext, getDummyLogger());
   options.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;

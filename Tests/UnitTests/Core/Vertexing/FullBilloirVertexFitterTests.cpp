@@ -120,7 +120,6 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// with default input track type (= BoundParameters)
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
-  bool debugMode = false;
   // Set up RNG
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -223,13 +222,11 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
-    if (debugMode) {
-      std::cout << "Fitting nTracks: " << nTracks << std::endl;
-      std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
-      std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
-      std::cout << "Fitted constraint Vertex: "
-                << fittedVertexConstraint.position() << std::endl;
-    }
+    std::cout << "Fitting nTracks: " << nTracks << std::endl;
+    std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
+    std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
+    std::cout << "Fitted constraint Vertex: "
+              << fittedVertexConstraint.position() << std::endl;
   }
 }
 
@@ -250,8 +247,6 @@ struct InputTrack {
 /// type
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
-  bool debugMode = false;
-
   // Set up RNG
   int mySeed = 31415;
   std::mt19937 gen(mySeed);
@@ -364,13 +359,11 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
-    if (debugMode) {
-      std::cout << "Fitting nTracks: " << nTracks << std::endl;
-      std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
-      std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
-      std::cout << "Fitted constraint Vertex: "
-                << fittedVertexConstraint.position() << std::endl;
-    }
+    std::cout << "Fitting nTracks: " << nTracks << std::endl;
+    std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
+    std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
+    std::cout << "Fitted constraint Vertex: "
+              << fittedVertexConstraint.position() << std::endl;
   }
 }
 

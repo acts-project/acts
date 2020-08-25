@@ -101,17 +101,14 @@ struct PropagatorOptions {
     eoptions.absPdgCode = absPdgCode;
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
+    eoptions.errorOnStepCountLimit = errorOnStepCountLimit;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
     eoptions.maxStepSize = direction * std::abs(maxStepSize);
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
     eoptions.loopFraction = loopFraction;
-    // Output option
-    eoptions.debug = debug;
-    eoptions.debugString = debugString;
-    eoptions.debugPfxWidth = debugPfxWidth;
-    eoptions.debugMsgWidth = debugMsgWidth;
+
     // Stepper options
     eoptions.tolerance = tolerance;
     eoptions.stepSizeCutOff = stepSizeCutOff;
@@ -134,6 +131,11 @@ struct PropagatorOptions {
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
+  /// If true reaching the step count limit results in an error. If false, this
+  /// will be silently ignored, and the step information thus far will be
+  /// returned.
+  bool errorOnStepCountLimit = true;
+
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;
 
@@ -149,15 +151,6 @@ struct PropagatorOptions {
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
   double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-  /// Debug output steering:
-  //  -> @todo: move to a debug struct
-  // - the string where debug messages are stored (optionally)
-  // - it also has some formatting options
-  bool debug = false;            ///< switch debug on
-  std::string debugString = "";  ///< the string to collect msgs
-  size_t debugPfxWidth = 30;     ///< the prefix width
-  size_t debugMsgWidth = 50;     ///< the mesage width
 
   // Configurations for Stepper
   /// Tolerance for the error of the integration

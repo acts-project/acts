@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -78,7 +77,7 @@ struct ParticleSimulator {
     using Interactor =
         detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
     using InteractorResult = typename Interactor::result_type;
-    using Actions = Acts::ActionList<Interactor, Acts::DebugOutputActor>;
+    using Actions = Acts::ActionList<Interactor>;
     using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
                                   Acts::EndOfWorldReached>;
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
@@ -88,7 +87,6 @@ struct ParticleSimulator {
                               Acts::LoggerWrapper{*localLogger});
     options.absPdgCode = particle.pdg();
     options.mass = particle.mass();
-    options.debug = localLogger->doPrint(Acts::Logging::Level::DEBUG);
     // setup the interactor as part of the propagator options
     auto &interactor = options.actionList.template get<Interactor>();
     interactor.generator = &generator;

@@ -457,16 +457,13 @@ struct DenseStepperPropagatorOptions
     eoptions.absPdgCode = this->absPdgCode;
     eoptions.mass = this->mass;
     eoptions.maxSteps = this->maxSteps;
+    eoptions.errorOnStepCountLimit = this->errorOnStepCountLimit;
     eoptions.maxStepSize = this->maxStepSize;
     eoptions.targetTolerance = this->targetTolerance;
     eoptions.pathLimit = this->pathLimit;
     eoptions.loopProtection = this->loopProtection;
     eoptions.loopFraction = this->loopFraction;
-    // Output option
-    eoptions.debug = this->debug;
-    eoptions.debugString = this->debugString;
-    eoptions.debugPfxWidth = this->debugPfxWidth;
-    eoptions.debugMsgWidth = this->debugMsgWidth;
+
     // Stepper options
     eoptions.tolerance = this->tolerance;
     eoptions.stepSizeCutOff = this->stepSizeCutOff;
