@@ -17,7 +17,7 @@
 #include <cmath>
 #include <limits>
 
-#include "TrackParametersTestData.hpp"
+#include "TrackParametersDatasets.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -30,10 +30,11 @@ BOOST_AUTO_TEST_SUITE(TransformFreeToBound)
 
 BOOST_DATA_TEST_CASE(
     GlobalToBoundParameters,
-    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* qOverPs, surface,
-    l0, l1, time, phiInput, theta, qOverP) {
+    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
+    surface, l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
-  auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto qOverP = q / p;
 
   GeometryContext geoCtx;
   Vector2D loc(l0, l1);
@@ -80,10 +81,12 @@ BOOST_DATA_TEST_CASE(
   }
 }
 
-BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters, ts* phis* thetas* qOverPs,
-                     time, phiInput, theta, qOverP) {
+BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
+                     ts* phis* thetas* ps* qsNonZero, time, phiInput, theta, p,
+                     q) {
   // phi is ill-defined in forward/backward tracks
-  auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
+  const auto qOverP = q / p;
 
   GeometryContext geoCtx;
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
