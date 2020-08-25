@@ -31,14 +31,14 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cylinder) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
 
-  BOOST_CHECK_EQUAL(bu.binningData()[0].min, 10);
-  BOOST_CHECK_EQUAL(bu.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].min, -M_PI / 2);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].max, M_PI / 2);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].min, -150);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].max, 150);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float(-M_PI / 2));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float(M_PI / 2));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -150);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 150);
 }
 
 // Test Cutout Cylinder
@@ -49,14 +49,14 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_CutoutCylinder) {
   bu += BinUtility(1, 0, 1, Acts::closed, Acts::binPhi);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
 
-  BOOST_CHECK_EQUAL(bu.binningData()[0].min, 10);
-  BOOST_CHECK_EQUAL(bu.binningData()[0].max, 50);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].min, -M_PI);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].max, M_PI);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].min, -100);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].max, 100);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, 10);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 50);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, float(-M_PI));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, float(M_PI));
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -100);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 100);
 }
 
 // Test Cuboid
@@ -67,14 +67,14 @@ BOOST_AUTO_TEST_CASE(BinAdjustmentVolume_Cuboid) {
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
   bu += BinUtility(1, 0, 1, Acts::open, Acts::binZ);
 
-  adjustBinUtility(bu, bound, Transform3D::Identity());
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3D::Identity());
 
-  BOOST_CHECK_EQUAL(bu.binningData()[0].min, -13);
-  BOOST_CHECK_EQUAL(bu.binningData()[0].max, 13);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].min, -23);
-  BOOST_CHECK_EQUAL(bu.binningData()[1].max, 23);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].min, -42);
-  BOOST_CHECK_EQUAL(bu.binningData()[2].max, 42);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, -13);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 13);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -23);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 23);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].min, -42);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[2].max, 42);
 }
 
 }  // namespace Test
