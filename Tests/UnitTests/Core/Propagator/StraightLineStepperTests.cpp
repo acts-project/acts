@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsStateCopy.pos,
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(slsStateCopy.dir,
-                    freeParams.template segment<3>(eFreeDir0).normalized());
+                    freeParams.template segment<3>(eFreeDir0));
   BOOST_CHECK_EQUAL(slsStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(slsStateCopy.q, ps.stepping.q);
   BOOST_CHECK_EQUAL(slsStateCopy.t, freeParams[eFreeTime]);

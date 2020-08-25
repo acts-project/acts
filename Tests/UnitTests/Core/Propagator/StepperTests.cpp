@@ -905,8 +905,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  CurvilinearTrackParameters sbtpPiecewise(endParams.first, endParams.second,
-                                           1);
+  CurvilinearTrackParameters sbtpPiecewise(makeVector4(endParams.first, 0),
+                                           endParams.second,
+                                           1 / endParams.second.norm());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
