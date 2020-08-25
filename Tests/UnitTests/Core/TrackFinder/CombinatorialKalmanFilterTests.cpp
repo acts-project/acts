@@ -41,6 +41,7 @@
 #include <vector>
 
 using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
@@ -237,10 +238,10 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Run the propagation for a few times such that multiple measurements exist
   // on one surface
   // Set the starting momentum for propagation
-  Vector3D mMom(1_GeV, 0., 0);
   for (const auto& [trackID, mPos] : startingPos) {
-    Vector4D pos4 = VectorHelpers::makeVector4(mPos, 42_ns);
-    NeutralCurvilinearTrackParameters mStart(pos4, mMom, 1 / mMom.norm());
+    Vector4D pos4 = makeVector4(mPos, 42_ns);
+    NeutralCurvilinearTrackParameters mStart(pos4, 0_degree, 90_degree,
+                                             1 / 1_GeV);
     // Launch and collect - the measurements
     auto mResult = mPropagator.propagate(mStart, mOptions).value();
 
@@ -306,15 +307,12 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     cov << pow(10_um, 2), 0., 0., 0., 0., 0., 0., pow(10_um, 2), 0., 0., 0., 0.,
         0., 0., pow(0.0002, 2), 0., 0., 0., 0., 0., 0., pow(0.0002, 2), 0., 0.,
         0., 0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
-
     Vector3D rPos =
         pos + Vector3D{0, 10_um * gauss(generator), 10_um * gauss(generator)};
-    double rTheta = 0.0002 * gauss(generator);
     double rPhi = 0.0002 * gauss(generator);
-    Vector3D rMom(1_GeV * cos(rTheta) * cos(rPhi),
-                  1_GeV * cos(rTheta) * sin(rPhi), 1_GeV * sin(rTheta));
-
-    CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
+    double rTheta = 0.0002 * gauss(generator);
+    CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rPhi, rTheta,
+                                      1_GeV, 1_e, cov);
 
     const Surface* rSurface = &rStart.referenceSurface();
 
