@@ -10,6 +10,8 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+
 namespace Acts {
 namespace {
 /// Some type defs
@@ -236,16 +238,12 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
     cov = covarianceMatrix;
   }
   // Create the bound parameters
-  const Vector3D& position = parameters.segment<3>(eFreePos0);
-  const Vector3D momentum =
-      std::abs(1. / parameters[eFreeQOverP]) * parameters.segment<3>(eFreeDir0);
-  const double charge = std::copysign(1., parameters[eFreeQOverP]);
-  const double time = parameters[eFreeTime];
-  BoundParameters boundParameters(geoContext, cov, position, momentum, charge,
-                                  time, surface.getSharedPtr());
+  BoundVector bv =
+      detail::transformFreeToBoundParameters(parameters, surface, geoContext);
   // Create the bound state
-  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
-  ;
+  return std::make_tuple(
+      BoundParameters(surface.getSharedPtr(), bv, std::move(cov)), jacobian,
+      accumulatedPath);
 }
 
 CurvilinearState curvilinearState(Covariance& covarianceMatrix,
@@ -265,12 +263,13 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
     cov = covarianceMatrix;
   }
   // Create the curvilinear parameters
-  const Vector3D& position = parameters.segment<3>(eFreePos0);
-  const Vector3D momentum = std::abs(1. / parameters[eFreeQOverP]) * direction;
-  const double charge = std::copysign(1., parameters[eFreeQOverP]);
-  const double time = parameters[eFreeTime];
-  CurvilinearParameters curvilinearParameters(cov, position, momentum, charge,
-                                              time);
+  Vector4D pos4 = Vector4D::Zero();
+  pos4[ePos0] = parameters[eFreePos0];
+  pos4[ePos1] = parameters[eFreePos1];
+  pos4[ePos2] = parameters[eFreePos2];
+  pos4[eTime] = parameters[eFreeTime];
+  CurvilinearParameters curvilinearParameters(
+      pos4, direction, parameters[eFreeQOverP], std::move(cov));
   // Create the curvilinear state
   return std::make_tuple(std::move(curvilinearParameters), jacobian,
                          accumulatedPath);
@@ -319,5 +318,6 @@ void covarianceTransport(
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull;
 }
+
 }  // namespace detail
 }  // namespace Acts
