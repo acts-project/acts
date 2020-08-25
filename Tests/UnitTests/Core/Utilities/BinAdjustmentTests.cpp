@@ -20,6 +20,8 @@
 namespace Acts {
 namespace Test {
 
+namespace tt = boost::test_tools;
+
 // Test Radial
 BOOST_AUTO_TEST_CASE(BinAdjustment_Radial) {
   RadialBounds bound(50, 75, M_PI, 0);
@@ -45,7 +47,7 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Cylinder) {
   adjustBinUtility(bu, bound, Transform3D::Identity());
 
   BOOST_CHECK_EQUAL(bu.binningData()[0].min, -M_PI / 4);
-  BOOST_CHECK_EQUAL(bu.binningData()[0].max, M_PI) / 4;
+  BOOST_CHECK_EQUAL(bu.binningData()[0].max, M_PI / 4);
   BOOST_CHECK_EQUAL(bu.binningData()[1].min, -50);
   BOOST_CHECK_EQUAL(bu.binningData()[1].max, 50);
 }
