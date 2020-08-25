@@ -323,6 +323,33 @@ void free_random_residual_tests() {
  * -# ParameterSet::getUncertainty
  */
 BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
+  // One-dimensional constructions
+  ActsSymMatrixD<1> cov1D;
+  cov1D << 0.5;
+
+  ActsVectorD<1> vec1D;
+  vec1D << 0.1;
+
+  ParameterSet<BoundParametersIndices, eBoundLoc0> parSet_with_cov1D_real(cov1D,
+                                                                          0.1);
+
+  // This line does not compile
+  ParameterSet<BoundParametersIndices, eBoundLoc0> parSet_with_cov1D_vec1D(
+      cov1D, vec1D);
+
+  // Two-dimensional constructions
+  ActsSymMatrixD<2> cov2D;
+  cov2D << 0.5, 0., 0.8, 0.;
+
+  ActsVectorD<2> vec2D;
+  vec2D << 0.1, 0.3;
+
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1>
+      parSet_with_cov2D_real(cov2D, 0.1, 0.3);
+
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1>
+      parSet_with_cov2D_vec2D(cov2D, vec2D);
+
   // check template parameter based information
   BOOST_CHECK(
       (ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1>::size() ==
@@ -339,9 +366,15 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
                             // failed tests due to angle range corrections
   Vector3D parValues(loc0, loc1, phi);
 
-  // parameter set with covariance matrix
+  // parameter set with covariance matrix, and three parameters as pack
   ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>
       parSet_with_cov(cov, loc0, loc1, phi);
+
+  // parameter set with covariance matrix, and a vector
+  ActsVectorD<3> vec;
+  vec << loc0, loc1, phi;
+  ParameterSet<BoundParametersIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>
+      parSet_with_cov_vec(cov, vec);
 
   // check number and type of stored parameters
   BOOST_CHECK(parSet_with_cov.size() == 3);
