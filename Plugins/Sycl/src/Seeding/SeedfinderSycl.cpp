@@ -18,42 +18,24 @@
 #include <algorithm>
 
 namespace Acts::Sycl {
+  /// Kernel classes in order of execution.
+  class duplet_search_bottom_kernel;
+  class duplet_search_top_kernel;
+  class ind_copy_bottom_kernel;
+  class ind_copy_top_kernel;
+  class transform_coord_bottom_kernel;
+  class transform_coord_top_kernel;
   class triplet_search_kernel;
   class filter_2sp_fixed_kernel;
 
-  struct nvidia_selector : public cl::sycl::device_selector {
-    int operator()(const cl::sycl::device& d) const override {
-      if(d.get_info<cl::sycl::info::device::vendor>().find("NVIDIA") != std::string::npos) {
-        return 1;
-      }
-      else {
-        return -1;
-      }
-    }; 
-  };
-
-  cl::sycl::queue* createQueue(){
-    // catch asynchronous exceptions
-    auto exception_handler = [] (cl::sycl::exception_list exceptions) {
-    for (std::exception_ptr const& e : exceptions) {
-        try {
-          std::rethrow_exception(e);
-        } catch(cl::sycl::exception const& e) {
-          std::cout << "Caught asynchronous SYCL exception:\n" << e.what() << std::endl;
-        }
-      }
-    };
-
-    // create queue with costum device selector
-    return (new cl::sycl::queue(nvidia_selector(), exception_handler));
-  };
+  using namespace Acts::Sycl::detail;
 
   void offloadComputations(cl::sycl::queue* q,
-                          const offloadSeedfinderConfig& configData,
+                          const deviceSeedfinderConfig& configData,
                           const DeviceExperimentCuts& deviceCuts,
-                          const std::vector<offloadSpacePoint>& bottomSPs,
-                          const std::vector<offloadSpacePoint>& middleSPs,
-                          const std::vector<offloadSpacePoint>& topSPs,
+                          const std::vector<deviceSpacePoint>& bottomSPs,
+                          const std::vector<deviceSpacePoint>& middleSPs,
+                          const std::vector<deviceSpacePoint>& topSPs,
                           std::vector<std::vector<SeedData>>& seeds)
   {
 
@@ -103,13 +85,13 @@ namespace Acts::Sycl {
       using at = cl::sycl::access::target;
 
       // Reserve buffers:
-      //  - configBuf: offloaded data of the SeedfinderConfig class instance m_config
+      //  - configBuf: deviceed data of the SeedfinderConfig class instance m_config
       //  - botSPBuf, midSPBuf, topSPBuf: space point data
       //  - numBotCompBuf, numTopCompBuf: number of compatible bottom/top space points per middle sp
-      cl::sycl::buffer<offloadSeedfinderConfig,1>     configBuf (&configData,1);
-      cl::sycl::buffer<offloadSpacePoint,1>   botSPBuf  (bottomSPs.data(),  cl::sycl::range<1>(bottomSPs.size()));
-      cl::sycl::buffer<offloadSpacePoint,1>   midSPBuf  (middleSPs.data(),  cl::sycl::range<1>(middleSPs.size()));
-      cl::sycl::buffer<offloadSpacePoint,1>   topSPBuf  (topSPs.data(),     cl::sycl::range<1>(topSPs.size()));
+      cl::sycl::buffer<deviceSeedfinderConfig,1>     configBuf (&configData,1);
+      cl::sycl::buffer<deviceSpacePoint,1>   botSPBuf  (bottomSPs.data(),  cl::sycl::range<1>(bottomSPs.size()));
+      cl::sycl::buffer<deviceSpacePoint,1>   midSPBuf  (middleSPs.data(),  cl::sycl::range<1>(middleSPs.size()));
+      cl::sycl::buffer<deviceSpacePoint,1>   topSPBuf  (topSPs.data(),     cl::sycl::range<1>(topSPs.size()));
       cl::sycl::buffer<uint32_t,1>     numBotCompBuf(numBotCompMid.data(), (cl::sycl::range<1>(M)));
       cl::sycl::buffer<uint32_t,1>     numTopCompBuf(numTopCompMid.data(), (cl::sycl::range<1>(M)));
 
@@ -128,7 +110,7 @@ namespace Acts::Sycl {
       // If it would be possible, we would only allocate memory for these buffers on the GPU side.
       // However, the current SYCL implementation reserves these on the host, and 
 
-      auto bottom_duplet_search = q->submit([&](cl::sycl::handler &h) {
+      q->submit([&](cl::sycl::handler &h) {
         // Add accessors to buffers:
         auto configAcc =        configBuf.get_access<       am::read,           at::constant_buffer>(h);
         auto indBotCompatAcc =  tmpIndBotCompBuf.get_access<am::discard_write,  at::global_buffer>(h);
@@ -136,14 +118,14 @@ namespace Acts::Sycl {
         auto botSPAcc =         botSPBuf.get_access<        am::read,           at::global_buffer>(h);
         auto midSPAcc =         midSPBuf.get_access<        am::read,           at::global_buffer>(h);
 
-        h.parallel_for<class duplet_search_bottom>
+        h.parallel_for<duplet_search_bottom_kernel>
           (cl::sycl::range<2>{M,B}, [=](cl::sycl::id<2> idx) {
           const int mid = idx[0];
           const int bot = idx[1];
 
-          offloadSpacePoint midSP = midSPAcc[mid];
-          offloadSpacePoint botSP = botSPAcc[bot];
-          offloadSeedfinderConfig config = configAcc[0];
+          deviceSpacePoint midSP = midSPAcc[mid];
+          deviceSpacePoint botSP = botSPAcc[bot];
+          deviceSeedfinderConfig config = configAcc[0];
 
           const float deltaR = midSP.r - botSP.r;
           const float cotTheta = (midSP.z - botSP.z) / deltaR;
@@ -163,9 +145,8 @@ namespace Acts::Sycl {
           }
         });
       });
-      bottom_duplet_search.wait();
   
-      auto top_duplet_search = q->submit([&](cl::sycl::handler &h) {
+      q->submit([&](cl::sycl::handler &h) {
         // Add accessors to buffers:
         auto configAcc =        configBuf.get_access<       am::read,           at::constant_buffer>(h);
         auto indTopCompatAcc =  tmpIndTopCompBuf.get_access<am::discard_write,  at::global_buffer>(h);
@@ -174,14 +155,14 @@ namespace Acts::Sycl {
         auto topSPAcc =         topSPBuf.get_access<        am::read,           at::global_buffer>(h);
         auto midSPAcc =         midSPBuf.get_access<        am::read,           at::global_buffer>(h);
         
-        h.parallel_for<class duplet_search_top>
+        h.parallel_for<duplet_search_top_kernel>
           (cl::sycl::range<2>{M,B}, [=](cl::sycl::id<2> idx) {
           const int mid = idx[0];
           const int top = idx[1];
 
-          offloadSpacePoint midSP = midSPAcc[mid];
-          offloadSpacePoint topSP = topSPAcc[top];
-          offloadSeedfinderConfig config = configAcc[0];
+          deviceSpacePoint midSP = midSPAcc[mid];
+          deviceSpacePoint topSP = topSPAcc[top];
+          deviceSeedfinderConfig config = configAcc[0];
 
           if(numBotCompAcc[mid] != 0) {
             const float deltaR = topSP.r - midSP.r;
@@ -203,8 +184,6 @@ namespace Acts::Sycl {
           }
         });
       });
-      // bottom_duplet_search.wait();
-      top_duplet_search.wait();
 
       //*********************************************//
       // *********** DUPLET SEARCH - END *********** //
@@ -245,7 +224,6 @@ namespace Acts::Sycl {
       std::vector<uint32_t> indTopCompMid(edgesTop);
 
       cl::sycl::buffer<uint32_t,1> indBotCompBuf ((cl::sycl::range<1>(edgesBottom)));
-      // cl::sycl::buffer<uint32_t,1> indTopCompBuf ((cl::sycl::range<1>(edgesTop)));
 
       cl::sycl::buffer<uint32_t,1> indMidBotCompBuf (indMidBotComp.data(), cl::sycl::range<1>(edgesBottom));
       cl::sycl::buffer<uint32_t,1> indMidTopCompBuf (indMidTopComp.data(), cl::sycl::range<1>(edgesTop));
@@ -262,7 +240,7 @@ namespace Acts::Sycl {
           auto sumBotAcc = sumBotCompBuf.get_access<            am::read,   at::global_buffer>(h);
           auto tmpBotIndices = tmpIndBotCompBuf.get_access<     am::read,   at::global_buffer>(h);
 
-          h.parallel_for<class ind_copy_bottom>(edgesBottom, [=](cl::sycl::id<1> idx){
+          h.parallel_for<ind_copy_bottom_kernel>(edgesBottom, [=](cl::sycl::id<1> idx){
             uint32_t mid = indMidBotCompAcc[idx];
             uint32_t ind = tmpBotIndices[mid*B + idx - sumBotAcc[mid]];
             indBotAcc[idx] = ind;         
@@ -275,7 +253,7 @@ namespace Acts::Sycl {
           auto sumTopAcc =          sumTopCompBuf.get_access<     am::read,   at::global_buffer>(h);
           auto tmpTopIndices =      tmpIndTopCompBuf.get_access<  am::read,   at::global_buffer>(h);
 
-          h.parallel_for<class ind_copy_top>(edgesTop, [=](cl::sycl::id<1> idx){
+          h.parallel_for<ind_copy_top_kernel>(edgesTop, [=](cl::sycl::id<1> idx){
             uint32_t mid = indMidTopCompAcc[idx];
             uint32_t ind = tmpTopIndices[mid*T + idx - sumTopAcc[mid]];
             
@@ -305,8 +283,8 @@ namespace Acts::Sycl {
       // 1 - 2x_0*u - 2y_0*v = 0
 
       cl::sycl::buffer<uint32_t,1> indTopCompBuf (indTopCompMid.data(), cl::sycl::range<1>(edgesTop));
-      cl::sycl::buffer<offloadLinEqCircle,1> linBotBuf((cl::sycl::range<1>(edgesBottom)));
-      cl::sycl::buffer<offloadLinEqCircle,1> linTopBuf((cl::sycl::range<1>(edgesTop)));
+      cl::sycl::buffer<deviceLinEqCircle,1> linBotBuf((cl::sycl::range<1>(edgesBottom)));
+      cl::sycl::buffer<deviceLinEqCircle,1> linTopBuf((cl::sycl::range<1>(edgesTop)));
 
       // coordinate transformation middle-bottom pairs
       q->submit([&](cl::sycl::handler &h) {
@@ -318,9 +296,9 @@ namespace Acts::Sycl {
         auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto linBotAcc =        linBotBuf.get_access<       am::discard_write,at::global_buffer>(h);
 
-        h.parallel_for<class transform_coord_bottom>(edgesBottom, [=](cl::sycl::id<1> idx) {
-          offloadSpacePoint midSP = midSPAcc[indMidBotCompAcc[idx]];
-          offloadSpacePoint botSP = botSPAcc[indBotAcc[idx]];
+        h.parallel_for<transform_coord_bottom_kernel>(edgesBottom, [=](cl::sycl::id<1> idx) {
+          deviceSpacePoint midSP = midSPAcc[indMidBotCompAcc[idx]];
+          deviceSpacePoint botSP = botSPAcc[indBotAcc[idx]];
 
           float xM =          midSP.x;
           float yM =          midSP.y;
@@ -341,7 +319,7 @@ namespace Acts::Sycl {
           float iDeltaR = cl::sycl::sqrt(iDeltaR2);
           float cot_theta = -(deltaZ * iDeltaR);
 
-          offloadLinEqCircle L;
+          deviceLinEqCircle L;
           L.cotTheta = cot_theta;
           L.zo = zM - rM * cot_theta;
           L.iDeltaR = iDeltaR;
@@ -364,9 +342,9 @@ namespace Acts::Sycl {
         auto midSPAcc =         midSPBuf.get_access<        am::read,         at::global_buffer>(h);
         auto linTopAcc =        linTopBuf.get_access<       am::discard_write,at::global_buffer>(h);
 
-        h.parallel_for<class transform_coord_top>(edgesTop, [=](cl::sycl::id<1> idx) {
-          offloadSpacePoint midSP = midSPAcc[indMidTopCompAcc[idx]];
-          offloadSpacePoint topSP = topSPAcc[indTopAcc[idx]];
+        h.parallel_for<transform_coord_top_kernel>(edgesTop, [=](cl::sycl::id<1> idx) {
+          deviceSpacePoint midSP = midSPAcc[indMidTopCompAcc[idx]];
+          deviceSpacePoint topSP = topSPAcc[indTopAcc[idx]];
 
           float xM =          midSP.x;
           float yM =          midSP.y;
@@ -387,7 +365,7 @@ namespace Acts::Sycl {
           float iDeltaR = cl::sycl::sqrt(iDeltaR2);
           float cot_theta = deltaZ * iDeltaR;
 
-          offloadLinEqCircle L;
+          deviceLinEqCircle L;
           L.cotTheta = cot_theta;
           L.zo = zM - rM * cot_theta;
           L.iDeltaR = iDeltaR;
@@ -411,19 +389,19 @@ namespace Acts::Sycl {
       seeds.resize(M);
       unsigned long max_glob_size = q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
       const uint32_t parts = 64;
-      const size_t memory_allocation = std::min(edgesComb, max_glob_size / parts);
+      const size_t maxMemoryAllocation = std::min(edgesComb, max_glob_size / parts);
 
       cl::sycl::buffer<uint64_t,1> sumCombinedBuf(sumBotTopCombined.data(), cl::sycl::range<1>(M+1));
-      cl::sycl::buffer<TripletData,1> curvImpactBuf ((cl::sycl::range<1>(memory_allocation)));
+      cl::sycl::buffer<TripletData,1> curvImpactBuf ((cl::sycl::range<1>(maxMemoryAllocation)));
 
       const float MIN = -100000.f;
       uint32_t first_middle = 0, last_middle = 0;
       for(;first_middle < M; first_middle = last_middle){
-        last_middle = first_middle;
-        for(;last_middle < M + 1 &&
-          sumBotTopCombined[last_middle] - sumBotTopCombined[first_middle] < memory_allocation;
-          ++last_middle){}
-          --last_middle;
+
+        while(last_middle + 1 <= M &&
+          (sumBotTopCombined[last_middle+1] - sumBotTopCombined[first_middle] < maxMemoryAllocation)){
+            ++last_middle;
+          }
 
         const uint64_t num_combinations = sumBotTopCombined[last_middle] - sumBotTopCombined[first_middle];
 
@@ -485,11 +463,11 @@ namespace Acts::Sycl {
 
               uint32_t bot = indBotAcc[ib];
               uint32_t top = indTopAcc[it];
-              offloadSeedfinderConfig config = configAcc[0];
+              deviceSeedfinderConfig config = configAcc[0];
 
-              offloadLinEqCircle linBotEq = linBotAcc[ib];
-              offloadLinEqCircle linTopEq = linTopAcc[it];
-              offloadSpacePoint midSP = midSPAcc[mid];
+              deviceLinEqCircle linBotEq = linBotAcc[ib];
+              deviceLinEqCircle linTopEq = linTopAcc[it];
+              deviceSpacePoint midSP = midSPAcc[mid];
 
               const float Vb =          linBotEq.v;
               const float Ub =          linBotEq.u;
@@ -545,7 +523,7 @@ namespace Acts::Sycl {
               }
             }
           });
-        }).wait();
+        });
 
         auto sumTriplets = (countTripletsBuf.get_access<am::read>())[0];
         if(sumTriplets == 0) continue;
@@ -597,7 +575,7 @@ namespace Acts::Sycl {
 
               uint32_t bot = indBotAcc[ib];
               uint32_t top = indTopAcc[it];
-              offloadSeedfinderConfig config = configAcc[0];
+              deviceSeedfinderConfig config = configAcc[0];
 
               TripletData current = curvImpactAcc[idx];
 
@@ -632,9 +610,9 @@ namespace Acts::Sycl {
 
               weight += compatCounter * config.compatSeedWeight;
 
-              offloadSpacePoint bottomSP = botSPAcc[bot];
-              offloadSpacePoint middleSP = midSPAcc[mid];
-              offloadSpacePoint topSP = topSPAcc[top];
+              deviceSpacePoint bottomSP = botSPAcc[bot];
+              deviceSpacePoint middleSP = midSPAcc[mid];
+              deviceSpacePoint topSP = topSPAcc[top];
 
               weight += deviceCuts.seedWeight(bottomSP, middleSP, topSP);
 
@@ -649,12 +627,12 @@ namespace Acts::Sycl {
               }
             }
           });
-        }).wait();
+        });
 
-        auto countSeedsAcc = (countSeedsBuf.get_access<am::read>());
-        auto seedAcc = seedBuf.get_access<am::read>();
+        countSeeds = (countSeedsBuf.get_access<am::read>())[0];
+        auto seedAcc = seedBuf.get_access<am::read>(countSeeds);
 
-        for(uint32_t t = 0; t < countSeedsAcc[0]; ++t) {
+        for(uint32_t t = 0; t < countSeeds; ++t) {
           auto m = seedAcc[t].middle;
           seeds[m].push_back(seedAcc[t]);
         }

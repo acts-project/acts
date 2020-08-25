@@ -15,10 +15,12 @@
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
 namespace Acts::Sycl {
+  using namespace Acts::Sycl::detail;
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
-    Acts::Sycl::DeviceExperimentCuts cuts)
+    Acts::Sycl::DeviceExperimentCuts cuts,
+    const std::string &device_name_substring)
     : m_config(config), m_deviceCuts(cuts)
      {
   // calculation of scattering using the highland formula
@@ -36,7 +38,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 
-  m_queue = createQueue();  
+  m_queue = createQueue(device_name_substring);  
 }
 
 template <typename external_spacepoint_t>
@@ -46,9 +48,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  std::vector<offloadSpacePoint> offloadBottomSPs;
-  std::vector<offloadSpacePoint> offloadMiddleSPs;
-  std::vector<offloadSpacePoint> offloadTopSPs;
+  std::vector<deviceSpacePoint> deviceBottomSPs;
+  std::vector<deviceSpacePoint> deviceMiddleSPs;
+  std::vector<deviceSpacePoint> deviceTopSPs;
 
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPvec;
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
@@ -56,22 +58,22 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   for(auto SP: bottomSPs) {
     bottomSPvec.push_back(SP);
-    offloadBottomSPs.insert(offloadBottomSPs.end(),
-                            offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+    deviceBottomSPs.insert(deviceBottomSPs.end(),
+                            deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                              SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: middleSPs) {
     middleSPvec.push_back(SP);
-    offloadMiddleSPs.insert(offloadMiddleSPs.end(),
-                            offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+    deviceMiddleSPs.insert(deviceMiddleSPs.end(),
+                            deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                              SP->varianceR(), SP->varianceZ()});
   }
 
   for(auto SP: topSPs) {
     topSPvec.push_back(SP);
-    offloadTopSPs.insert(offloadTopSPs.end(),
-                         offloadSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+    deviceTopSPs.insert(deviceTopSPs.end(),
+                         deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                           SP->varianceR(), SP->varianceZ()});
   }
 
@@ -79,7 +81,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   const int numMiddleSPs = middleSPvec.size();
   const int numTopSPs = topSPvec.size();
 
-  offloadSeedfinderConfig offloadConfigData = {
+  deviceSeedfinderConfig deviceConfigData = {
     m_config.deltaRMin,
     m_config.deltaRMax,
     m_config.cotThetaMax,
@@ -100,11 +102,11 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<std::vector<SeedData>> seeds;
 
   offloadComputations(m_queue,
-                      offloadConfigData,
+                      deviceConfigData,
                       m_deviceCuts,
-                      offloadBottomSPs,
-                      offloadMiddleSPs,
-                      offloadTopSPs,
+                      deviceBottomSPs,
+                      deviceMiddleSPs,
+                      deviceTopSPs,
                       seeds
   );
 

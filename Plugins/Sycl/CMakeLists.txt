@@ -15,6 +15,9 @@ find_package(SYCL REQUIRED)
 add_library(
   ActsSyclPlugin SHARED
   src/Seeding/SeedfinderSycl.cpp
+  src/Utilities/CreateQueueSycl.cpp
+  src/Utilities/ListSyclPlatforms.cpp
+  src/Utilities/DeviceSelector.cpp
 )
 
 target_include_directories(

@@ -14,11 +14,19 @@
 
 namespace po = boost::program_options;
 
+namespace Acts{
+  namespace Sycl{
+    extern void listPlatforms();
+  }
+}
+
 void CommandLineArguments::parse(int argc, char** argv) {
     po::options_description optionsDescription("Allowed options");
     optionsDescription.add_options()
       ("help,h","Print usage message.")
-      ("inputfile,f", po::value<std::string>(), "Provide path for input file.")
+      ("list_platforms,l", "List available SYCL platforms and devices. Useful for specifying which exact device we want to run on.")
+      ("device,d", po::value<std::string>()->default_value(""), "Provide a substring of the preferred device.")
+      ("inputfile,f", po::value<std::string>()->default_value(""), "Provide path for input file.")
       ("only_gpu,g",po::bool_switch(),"Execute code only on gpu.")
       ("all_groups,a", po::bool_switch(), "Execute on all groups.")
       ("groups,c",po::value<unsigned int>()->default_value(500),"Add number of groups to execute on.")
@@ -34,9 +42,15 @@ void CommandLineArguments::parse(int argc, char** argv) {
       exit(0);
     }
 
-    only_gpu = vm["only_gpu"].as<bool>();
+    if(vm.count("list_platforms") != 0 ) {
+      Acts::Sycl::listPlatforms();
+      exit(0);
+    }
+
+    onlyGpu = vm["only_gpu"].as<bool>();
     matches = vm["matches"].as<bool>();
     groups = vm["groups"].as<unsigned int>();
+    deviceName = vm["device"].as<std::string>();
     allgroup = vm["all_groups"].as<bool>();
     filename = vm["inputfile"].as<std::string>();
     std::ifstream s(filename);

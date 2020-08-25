@@ -137,7 +137,7 @@ auto main(int argc, char** argv) -> int {
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
     Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
 
-  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config, deviceAtlasCuts);
+  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config, deviceAtlasCuts, cmdlTool.deviceName);
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto covarianceTool = [=](const SpacePoint& sp, float, float, float_t) -> Acts::Vector2D {
     return {sp.varianceR, sp.varianceZ};
@@ -156,7 +156,7 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   auto start_cpu = std::chrono::system_clock::now();
-  if(!cmdlTool.only_gpu) {
+  if(!cmdlTool.onlyGpu) {
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
           groupIt.bottom(), groupIt.middle(), groupIt.top()));
@@ -255,7 +255,7 @@ auto main(int argc, char** argv) -> int {
       }
     }
 
-    if (!cmdlTool.only_gpu) {
+    if (!cmdlTool.onlyGpu) {
       std::cout << nMatch << " seeds are matched" << std::endl;
       std::cout << "Matching rate: " << float(nMatch) / float(nSeed_cpu) * 100 << "%"
                 << std::endl;

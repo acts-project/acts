@@ -13,7 +13,7 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Plugins/Sycl/Utilities/Types.h"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 
 inline namespace cl{
@@ -24,21 +24,32 @@ inline namespace cl{
 
 namespace Acts::Sycl {
 
-void offloadComputations( cl::sycl::queue* q,
-                          const offloadSeedfinderConfig& configData,
-                          const DeviceExperimentCuts& deviceCuts,
-                          const std::vector<offloadSpacePoint>& bottomSPs,
-                          const std::vector<offloadSpacePoint>& middleSPs,
-                          const std::vector<offloadSpacePoint>& topSPs,
-                          std::vector<std::vector<SeedData>>& seeds);
+/// @brief Seedfinding algorithm implemented with SYCL to offload computations
+/// to GPUs.
 
-cl::sycl::queue* createQueue();
+void offloadComputations( cl::sycl::queue* q,
+                          const detail::deviceSeedfinderConfig& configData,
+                          const DeviceExperimentCuts& deviceCuts,
+                          const std::vector<detail::deviceSpacePoint>& bottomSPs,
+                          const std::vector<detail::deviceSpacePoint>& middleSPs,
+                          const std::vector<detail::deviceSpacePoint>& topSPs,
+                          std::vector<std::vector<detail::SeedData>>& seeds);
+
+/// @brief This function creates the SYCL queue object.
+///
+/// SYCL implementation details are hidden from this class, SYCL is only
+/// linked to the one translation unit containing the actual implementation.
+/// Because creating a queue is expensive, we only do it once.
+///
+/// @return A pointer to the queue.
+cl::sycl::queue* createQueue(const std::string &);
 
 template <typename external_spacepoint_t>
 class Seedfinder {
   public:
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
-            Acts::Sycl::DeviceExperimentCuts device_filter);
+            Acts::Sycl::DeviceExperimentCuts cuts,
+            const std::string &device_name_substring = "");
 
   ~Seedfinder() = default;
   Seedfinder() = delete;
@@ -46,6 +57,14 @@ class Seedfinder {
   Seedfinder<external_spacepoint_t>& operator=(
     const Seedfinder<external_spacepoint_t>&) = delete;
 
+  /// Create all seeds from the space points in the three iterators.
+  /// Can be used to parallelize the seed creation
+  /// @param bottom group of space points to be used as innermost SP in a seed.
+  /// @param middle group of space points to be used as middle SP in a seed.
+  /// @param top group of space points to be used as outermost SP in a seed.
+  /// Ranges must return pointers.
+  /// Ranges must be separate objects for each parallel call.
+  /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;

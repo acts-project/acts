@@ -7,15 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
 
-#include "Acts/Plugins/Sycl/Utilities/Types.h"
 namespace Acts::Sycl {
 /// @class DeviceExperimentCuts can be used to increase or decrease seed weights
 ///  based on the space points used in a seed. Seed weights are also
 /// influenced by the SeedFilter default implementation. This tool is also used
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
 /// seeds, there are two distinct methods.
-
 class DeviceExperimentCuts {
  public:
   /// Returns seed weight bonus/malus depending on detector considerations.
@@ -23,9 +22,9 @@ class DeviceExperimentCuts {
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  float seedWeight( offloadSpacePoint& bottom,
-                    offloadSpacePoint& middle,
-                    offloadSpacePoint& top) const {
+  float seedWeight( detail::deviceSpacePoint& bottom,
+                    detail::deviceSpacePoint& middle,
+                    detail::deviceSpacePoint& top) const {
         float weight = 0;
         if (bottom.r > 150) {
             weight = 400;
@@ -42,9 +41,9 @@ class DeviceExperimentCuts {
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
   bool singleSeedCut(float weight,
-                    offloadSpacePoint& bottom,
-                    offloadSpacePoint& middle,
-                    offloadSpacePoint& top) const {
+                    detail::deviceSpacePoint& bottom,
+                    detail::deviceSpacePoint& middle,
+                    detail::deviceSpacePoint& top) const {
         return !(bottom.r > 150. && weight < 380.);
     };
 };
