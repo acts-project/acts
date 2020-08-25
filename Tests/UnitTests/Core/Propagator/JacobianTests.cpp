@@ -137,17 +137,12 @@ void testJacobianToGlobal(const Parameters& pars) {
 
 /// This tests the jacobian of local curvilinear -> global
 BOOST_AUTO_TEST_CASE(JacobianCurvilinearToGlobalTest) {
+  // Create curvilinear parameters
   Covariance cov;
   cov << 10_mm, 0, 0, 0, 0, 0, 0, 10_mm, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0,
       0, 0.1, 0, 0, 0, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0, 0, 0;
-
-  // Let's create a surface somewhere in space
-  Vector3D pos(341., 412., 93.);
-  Vector3D mom(1.2, 8.3, 0.45);
-  const double q = 1;
-
-  // Create curvilinear parameters
-  CurvilinearTrackParameters curvilinear(cov, pos, mom, q, 0.);
+  CurvilinearTrackParameters curvilinear(
+      Vector4D(341., 412., 93., 0.), Vector3D(1.2, 8.3, 0.45), 10.0, 1, cov);
 
   // run the test
   testJacobianToGlobal(curvilinear);

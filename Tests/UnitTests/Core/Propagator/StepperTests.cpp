@@ -32,11 +32,13 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <fstream>
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
@@ -135,12 +137,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   ConstantBField bField(Vector3D(1., 2.5, 33.33));
 
   Vector3D pos(1., 2., 3.);
-  Vector3D mom(4., 5., 6.);
+  Vector3D dir(4., 5., 6.);
   double time = 7.;
+  double absMom = 8.;
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(std::nullopt, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
                                               stepSize, tolerance);
 
@@ -151,8 +154,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   CHECK_CLOSE_OR_SMALL(esState.pos, pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(esState.dir, mom.normalized(), eps, eps);
-  CHECK_CLOSE_REL(esState.p, mom.norm(), eps);
+  CHECK_CLOSE_OR_SMALL(esState.dir, dir.normalized(), eps, eps);
+  CHECK_CLOSE_REL(esState.p, absMom, eps);
   BOOST_CHECK_EQUAL(esState.q, charge);
   CHECK_CLOSE_OR_SMALL(esState.t, time, eps, eps);
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
@@ -162,14 +165,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, 0, time);
+  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
+                                        1 / absMom);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_EQUAL(esState.q, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, 0, time);
+  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
+                                          1 / absMom);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -188,11 +193,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Construct the parameters
   Vector3D pos(1., 2., 3.);
-  Vector3D mom(4., 5., 6.);
+  Vector3D dir(4., 5., 6.);
   double time = 7.;
+  double absMom = 8.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearTrackParameters cp(cov, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
+                                cov);
 
   // Build the state and the stepper
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
@@ -280,11 +287,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   /// Test the state reset
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
-  Vector3D mom2(4.5, -5.5, 6.5);
+  Vector3D dir2(4.5, -5.5, 6.5);
   double time2 = 7.5;
+  double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(cov2, pos2, mom2, charge2, time2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
@@ -361,14 +370,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   /// Repeat with surface related methods
-  auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
-  BoundTrackParameters bp(tgContext, cov, pos, mom, charge, time, plane);
+  auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
+  BoundTrackParameters bp(plane, tgContext, makeVector4(pos, time), dir,
+                          charge / absMom, cov);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
                                                 stepSize, tolerance);
 
   // Test the intersection in the context of a surface
-  auto targetSurface = Surface::makeShared<PlaneSurface>(
-      pos + ndir * 2. * mom.normalized(), mom.normalized());
+  auto targetSurface =
+      Surface::makeShared<PlaneSurface>(pos + ndir * 2. * dir, dir);
   es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
   BOOST_CHECK_EQUAL(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
 
@@ -417,8 +427,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   es.update(esState, freeParams, 2 * (*bp.covariance()));
   CHECK_CLOSE_OR_SMALL(esState.pos, 2. * pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(esState.dir, mom.normalized(), eps, eps);
-  CHECK_CLOSE_REL(esState.p, 2 * mom.norm(), eps);
+  CHECK_CLOSE_OR_SMALL(esState.dir, dir, eps, eps);
+  CHECK_CLOSE_REL(esState.p, 2 * absMom, eps);
   // update does not change the particle hypothesis
   BOOST_CHECK_EQUAL(esState.q, 1. * charge);
   CHECK_CLOSE_OR_SMALL(esState.t, 2. * time, eps, eps);
@@ -491,8 +501,10 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
+  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3D startMom = 1_GeV * startDir;
+  const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 1_GeV, 1_e,
+                                        cov);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -603,8 +615,10 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
+  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3D startMom = 5_GeV * startDir;
+  const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 5_GeV, 1_e,
+                                        cov);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -773,9 +787,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   naviDet.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  Covariance cov = Covariance::Identity();
-  Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(Vector4D::Zero(), 0_degree, 90_degree, 5_GeV,
+                                  1_e, Covariance::Identity());
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -892,9 +905,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  startParams = endParams.first;
-  startMom = endParams.second;
-  CurvilinearTrackParameters sbtpPiecewise(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtpPiecewise(endParams.first, endParams.second,
+                                           1);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -1027,9 +1039,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  Covariance cov = Covariance::Identity();
-  Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(Vector4D::Zero(), 0_degree, 90_degree,
+                                  1_e / 1_GeV, Covariance::Identity());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
