@@ -25,14 +25,19 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
   state.options.actionList(state, m_stepper, result);
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
-  // This is needed for correct error logging
-  bool terminatedNormally = false;
+
+  // start at true, if we don't begin the stepping loop we're fine.
+  bool terminatedNormally = true;
+
   // Pre-Stepping: abort condition check
   if (!state.options.abortList(result, state, m_stepper)) {
     // Pre-Stepping: target setting
     m_navigator.target(state, m_stepper);
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
+
+    terminatedNormally = false;  // priming error condition
+
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it takes the propagation state
@@ -57,13 +62,18 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
       }
       m_navigator.target(state, m_stepper);
     }
+  } else {
+    ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
   }
 
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
-    ACTS_ERROR("Terminated with failure.");
     state.navigation.navigationBreak = true;
+    ACTS_ERROR("Propagation reached the step count limit of "
+               << state.options.maxSteps << "(did " << result.steps
+               << " steps)");
+    return PropagatorError::StepCountLimitReached;
   }
 
   // Post-stepping call to the action list
