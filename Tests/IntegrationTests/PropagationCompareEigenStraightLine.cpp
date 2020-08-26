@@ -38,7 +38,6 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
-constexpr bool showDebug = false;
 
 constexpr auto bz = 2_T;
 
@@ -64,7 +63,7 @@ BOOST_AUTO_TEST_SUITE(PropagationCompareEigenStraightLine)
 //   runFreePropagationComparisonTest(
 //       eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
 //       makeParametersCurvilinearNeutral(phi, theta, p), s, epsPos, epsDir,
-//       epsMom, epsCov, showDebug);
+//       epsMom, epsCov);
 // }
 
 // BOOST_DATA_TEST_CASE(NeutralNonZeroMagneticField,
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(PropagationCompareEigenStraightLine)
 //   runFreePropagationComparisonTest(
 //       eigenPropagatorNonZero, straightPropagator, geoCtx, magCtx,
 //       makeParametersCurvilinearNeutral(phi, theta, p), s, epsPos, epsDir,
-//       epsMom, epsCov, showDebug);
+//       epsMom, epsCov);
 // }
 
 BOOST_DATA_TEST_CASE(
@@ -82,7 +81,7 @@ BOOST_DATA_TEST_CASE(
     theta, p, q, s) {
   runForwardComparisonTest(eigenPropagatorZero, straightPropagator, geoCtx,
                            magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov, showDebug);
+                           s, epsPos, epsDir, epsMom, epsCov);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for

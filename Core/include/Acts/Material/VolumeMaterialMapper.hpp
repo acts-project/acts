@@ -73,8 +73,6 @@ class VolumeMaterialMapper {
   struct Config {
     /// Size of the step for the step extrapolation
     float mappingStep = 1.;
-    /// Mapping output to debug stream
-    bool mapperDebugOutput = false;
   };
 
   /// @struct State
