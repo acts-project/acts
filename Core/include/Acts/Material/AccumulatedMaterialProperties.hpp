@@ -12,138 +12,66 @@
 
 namespace Acts {
 
-/// @brief AccumulatedMaterialProperties
+/// Accumulate material properties from multiple hits/track and multiple tracks.
 ///
-/// This class uses the  MaterialProperties class and adds
-/// the necessary information for the SurfaceMaterial
-/// Mapper.
+/// This is a helper class for the `SurfaceMaterialMapper` to handle material
+/// accumulating and averaging for one surface bin. The accumulation procedure
+/// is done in two steps:
 ///
-/// There are two stores for material averaging:
-///
-/// - the event store collects material steps accumulated
-///   during an event. Material can be assigned to the same bin
-///   multiple time by one particle, e.g. if the simulation had created
-///   more than one step in the material, or if several components are
-///   compressed into one description
-///
-/// - the total store collects accumulated material properties
-///   of the run, at the end of a run, an average over the material
-///   information from all mapped events per bin is taken.
-///
-/// The averaging is always done to unit thickness
+/// 1.  The per-track store accumulates material steps from one track/particle.
+///     Multiple material steps can be assigned to the same bin time by
+///     one particle, e.g. if the simulation has created more than one step in
+///     the material or if several components are compressed into one
+///     description. Multiple steps are treated as if they are passed one after
+///     the other.
+/// 2.  The total store averages the accumulated material properties over all
+///     tracks. Each track contributes equally.
 class AccumulatedMaterialProperties {
  public:
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
-  /// Accumulation operator
-  /// @brief this adds the material properties to event store
+  /// Add the material to the current per-track store.
   ///
-  /// MaterialProperties accumulation is done as follows:
-  ///   * t/X0 and l/X0 are additive
-  ///   * rho is averaged by the total thickness per event
-  ///   * A,Z is averaged by the sum(rho*thickness) per event
+  /// Vacuum steps with a non-zero thickness can be added to account for holes
+  /// in material structures.
   ///
-  /// Vacuum steps with step length different from zero are
-  /// also used in order to count for holes in material structures
-  ///
-  /// @param amp the source Accumulated properties
-  /// @param pathCorreciton is the correction to nominal incident
-  void accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
+  /// @param slab Equivalent material slab for this step
+  /// @param pathCorreciton Correction factor due to non-perpendicular incident
+  void accumulate(MaterialProperties slab, float pathCorrection = 1);
 
-  /// Average the information accumulated for one track
-  /// - in case of an empty hit this will just increase the event counter
-  /// @param emtpyHit indicate an empty hit
-  void trackAverage(bool emptyHit = false);
+  /// Add the accumulated material for the current track to the total average.
+  ///
+  /// This finishes the material accumulation for the current track and resets
+  /// the per-track store. Subsequent calls to `.accumulate(...)` will start
+  /// accumulating material for a new track.
+  ///
+  /// Each track contributes equally to the total average regardless of its
+  /// measured path within the material. An empty per-track store, i.e.
+  /// vanishing per-track material thickness, does not contribute to the total
+  /// unless explicitely requested.
+  ///
+  /// @param useEmptyTrack indicate whether to consider an empty track store
+  void trackAverage(bool useEmptyTrack = false);
 
-  /// Average the information accumulated during the entire
-  /// mapping process
+  /// Return the average material properties from all accumulated tracks.
   ///
-  /// The total average takesthe full run into account
+  /// Only contains the information up to the last `.trackAverag(...)` call. If
+  /// there have been additional calls to `.accumulate(...)` afterwards, the
+  /// information is not yet part of the total average.
   ///
-  /// @returns the  total avarage material properties and the
-  /// total events used for mapping these properties
-  /// The latter can be used when parallelising the mapping
-  /// to several jobs
-  ///
-  std::pair<MaterialProperties, unsigned int> totalAverage();
+  /// @returns Average material properties and the number of contributing tracks
+  /// @note The averaged material properties are **always** given for unit
+  ///   thickness.
+  std::pair<MaterialProperties, unsigned int> totalAverage() const;
 
  private:
-  double m_eventPathInX0{0.};  //!< event: accumulate the thickness in X0
-  double m_eventPathInL0{0.};  //!< event: accumulate the thickness in L0
-  double m_eventAr{0.};        //!< event: accumulate the contribution to A
-  double m_eventZ{0.};         //!< event: accumulate the contribution to Z
-  double m_eventRho{0.};       //!< event: accumulate the contribution to rho
-  double m_eventPath{0.};      //!< event: the event path for normalisation
-  double m_eventPathCorrection{0.};  //!< event: remember the path correction
-
-  double m_totalPathInX0{0.};  //!< total: accumulate the thickness in X0
-  double m_totalPathInL0{0.};  //!< total: accumulate the thickness in L0
-  double m_totalAr{0.};        //!< total: accumulate the contribution to A
-  double m_totalZ{0.};         //!< total: accumulate the contribution to Z
-  double m_totalRho{0.};       //!< total: accumulate the contribution to rho
-
-  unsigned int m_totalEvents{0};  //!< the number of events
+  /// Averaged properties for a single track.
+  MaterialProperties m_trackAverage;
+  /// Averaged properties over multiple tracks.
+  MaterialProperties m_totalAverage;
+  // Number of tracks contributing to the total average.
+  unsigned int m_totalCount = 0u;
 };
-
-inline void AccumulatedMaterialProperties::accumulate(
-    const MaterialProperties& amp, double pathCorrection) {
-  m_eventPathInX0 += amp.thicknessInX0();
-  m_eventPathInL0 += amp.thicknessInL0();
-  double t = amp.thickness();
-  double r = amp.material().massDensity();
-  m_eventPath += t;
-  m_eventRho += r * t;
-
-  m_eventAr += amp.material().Ar() * r * t;
-  m_eventZ += amp.material().Z() * r * t;
-
-  m_eventPathCorrection += pathCorrection * t;
-}
-
-inline void AccumulatedMaterialProperties::trackAverage(bool emptyHit) {
-  // Increase the total event count either for empty hit or by touched hit
-  if (emptyHit || m_eventPath > 0.) {
-    ++m_totalEvents;
-  }
-
-  // Average the event quantities
-  if (m_eventPath > 0. && m_eventRho > 0.) {
-    m_eventPathCorrection /= m_eventPath;
-    m_totalPathInX0 += m_eventPathInX0 / m_eventPathCorrection;
-    m_totalPathInL0 += m_eventPathInL0 / m_eventPathCorrection;
-    m_totalAr += (m_eventAr / m_eventRho);
-    m_totalZ += (m_eventZ / m_eventRho);
-    m_totalRho += (m_eventRho);
-  }
-  m_eventPathInX0 = 0.;
-  m_eventPathInL0 = 0.;
-  m_eventAr = 0.;
-  m_eventZ = 0.;
-  m_eventRho = 0.;
-  m_eventPath = 0.;
-  m_eventPathCorrection = 0.;
-}
-
-inline std::pair<MaterialProperties, unsigned int>
-AccumulatedMaterialProperties::totalAverage() {
-  if ((m_totalEvents == 0) or (m_totalPathInX0 <= 0.0)) {
-    // return vacuum
-    return {MaterialProperties(), m_totalEvents};
-  }
-  double eventScalor = 1. / m_totalEvents;
-  m_totalPathInX0 *= eventScalor;
-  m_totalPathInL0 *= eventScalor;
-  m_totalRho *= eventScalor;
-  m_totalAr *= eventScalor;
-  m_totalZ *= eventScalor;
-  // Create the material
-  double X0 = 1. / m_totalPathInX0;
-  double L0 = 1. / m_totalPathInL0;
-  auto averageMat =
-      Material::fromMassDensity(X0, L0, m_totalAr, m_totalZ, m_totalRho);
-  // Create the material properties - fixed to unit path length
-  return {MaterialProperties(averageMat, 1.0), m_totalEvents};
-}
 
 }  // namespace Acts
