@@ -40,7 +40,7 @@ class MaterialProperties {
   MaterialProperties(const std::vector<MaterialProperties>& layers);
   ~MaterialProperties() = default;
 
-  MaterialProperties(MaterialProperties&& mprop) = default;
+  MaterialProperties(MaterialProperties&&) = default;
   MaterialProperties(const MaterialProperties&) = default;
   MaterialProperties& operator=(MaterialProperties&&) = default;
   MaterialProperties& operator=(const MaterialProperties&) = default;
