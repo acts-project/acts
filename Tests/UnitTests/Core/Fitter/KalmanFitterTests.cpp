@@ -103,7 +103,7 @@ struct MeasurementCreator {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
-      auto geoID = surface->geoID();
+      auto geoID = surface->geometryId();
       auto volumeID = geoID.volume();
       auto layerID = geoID.layer();
       // find volume and layer information for this

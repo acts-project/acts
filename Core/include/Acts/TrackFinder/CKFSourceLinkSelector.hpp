@@ -90,7 +90,7 @@ struct CKFSourceLinkSelector {
 
     // Get geoID of this surface
     auto surface = &predictedParams.referenceSurface();
-    auto geoID = surface->geoID();
+    auto geoID = surface->geometryId();
 
     // Find the appropriate cuts
     auto cuts = m_config.find(geoID);

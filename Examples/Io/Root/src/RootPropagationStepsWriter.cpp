@@ -123,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       Acts::GeometryID::Value sensitiveID = 0;
       // get the identification from the surface first
       if (step.surface) {
-        auto geoID = step.surface->geoID();
+        auto geoID = step.surface->geometryId();
         volumeID = geoID.volume();
         boundaryID = geoID.boundary();
         layerID = geoID.layer();
@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       }
       // a current volume overwrites the surface tagged one
       if (step.volume) {
-        volumeID = step.volume->geoID().volume();
+        volumeID = step.volume->geometryId().volume();
       }
       // now fill
       m_sensitiveID.push_back(sensitiveID);

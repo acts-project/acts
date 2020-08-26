@@ -456,7 +456,7 @@ class KalmanFitter {
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geoID()
+        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
         // Update state and stepper with pre material effects
@@ -560,7 +560,7 @@ class KalmanFitter {
           typeFlags.set(TrackStateFlag::ParameterFlag);
 
           if (surface->associatedDetectorElement() != nullptr) {
-            ACTS_VERBOSE("Detected hole on " << surface->geoID());
+            ACTS_VERBOSE("Detected hole on " << surface->geometryId());
             // If the surface is sensitive, set the hole type flag
             typeFlags.set(TrackStateFlag::HoleFlag);
 
@@ -577,7 +577,8 @@ class KalmanFitter {
             trackStateProxy.jacobian() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           } else {
-            ACTS_VERBOSE("Detected in-sensitive surface " << surface->geoID());
+            ACTS_VERBOSE("Detected in-sensitive surface "
+                         << surface->geometryId());
 
             // Transport & get curvilinear state instead of bound state
             auto [curvilinearParams, jacobian, pathLength] =
@@ -625,7 +626,7 @@ class KalmanFitter {
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface "
-                     << surface->geoID()
+                     << surface->geometryId()
                      << " detected in backward propagation.");
 
         // No backward filtering for last measurement state, but still update
@@ -709,14 +710,14 @@ class KalmanFitter {
       } else if (surface->surfaceMaterial() != nullptr) {
         // Transport covariance
         if (surface->associatedDetectorElement() != nullptr) {
-          ACTS_VERBOSE("Detected hole on " << surface->geoID()
+          ACTS_VERBOSE("Detected hole on " << surface->geometryId()
                                            << " in backward filtering");
           if (state.stepping.covTransport) {
             stepper.covarianceTransport(state.stepping, *surface);
           }
         } else {
           ACTS_VERBOSE("Detected in-sensitive surface "
-                       << surface->geoID() << " in backward filtering");
+                       << surface->geometryId() << " in backward filtering");
           if (state.stepping.covTransport) {
             stepper.covarianceTransport(state.stepping);
           }
@@ -766,7 +767,7 @@ class KalmanFitter {
 
           // Screen out material effects info
           ACTS_VERBOSE("Material effects on surface: "
-                       << surface->geoID()
+                       << surface->geometryId()
                        << " at update stage: " << updateStage << " are :");
           ACTS_VERBOSE("eLoss = "
                        << interaction.Eloss << ", "
@@ -782,7 +783,7 @@ class KalmanFitter {
 
       if (not hasMaterial) {
         // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
+        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
                                                         << updateStage);
       }

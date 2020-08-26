@@ -178,7 +178,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     Acts::DetectorMaterialMaps& detMatMap) {
   // If the volume has volume material, write that
   if (tVolume.volumeMaterialSharedPtr() != nullptr and m_cfg.processVolumes) {
-    detMatMap.second[tVolume.geoID()] = tVolume.volumeMaterialSharedPtr();
+    detMatMap.second[tVolume.geometryId()] = tVolume.volumeMaterialSharedPtr();
   }
 
   // If confined layers exist, loop over them and collect the layer material
@@ -193,7 +193,8 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     for (auto& bou : tVolume.boundarySurfaces()) {
       const auto& bSurface = bou->surfaceRepresentation();
       if (bSurface.surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[bSurface.geoID()] = bSurface.surfaceMaterialSharedPtr();
+        detMatMap.first[bSurface.geometryId()] =
+            bSurface.surfaceMaterialSharedPtr();
       }
     }
   }
@@ -212,14 +213,15 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   const auto& rSurface = tLayer.surfaceRepresentation();
   if (rSurface.surfaceMaterialSharedPtr() != nullptr and
       m_cfg.processRepresenting) {
-    detMatMap.first[rSurface.geoID()] = rSurface.surfaceMaterialSharedPtr();
+    detMatMap.first[rSurface.geometryId()] =
+        rSurface.surfaceMaterialSharedPtr();
   }
 
   // Check the approach surfaces
   if (tLayer.approachDescriptor() != nullptr and m_cfg.processApproaches) {
     for (auto& aSurface : tLayer.approachDescriptor()->containedSurfaces()) {
       if (aSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[aSurface->geoID()] =
+        detMatMap.first[aSurface->geometryId()] =
             aSurface->surfaceMaterialSharedPtr();
       }
     }
@@ -230,7 +232,7 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     // sensitive surface loop
     for (auto& sSurface : tLayer.surfaceArray()->surfaces()) {
       if (sSurface->surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[sSurface->geoID()] =
+        detMatMap.first[sSurface->geometryId()] =
             sSurface->surfaceMaterialSharedPtr();
       }
     }
