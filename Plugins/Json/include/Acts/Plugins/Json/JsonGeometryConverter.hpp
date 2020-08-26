@@ -123,9 +123,9 @@ class JsonGeometryConverter {
     /// The data key
     std::string datakey = "data";
     /// The geoid key
-    std::string geoidkey = "Geoid";
+    std::string geometryidkey = "Geoid";
     /// The surface geoid key
-    std::string surfacegeoidkey = "SGeoid";
+    std::string surfacegeometryidkey = "SGeoid";
     /// The mapping key, add surface to map if true
     std::string mapkey = "mapMaterial";
     /// The surface type key

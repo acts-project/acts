@@ -120,7 +120,7 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<ActsExamples::HitData> readHitsByGeoId(const std::string& inputDir,
+std::vector<ActsExamples::HitData> readHitsByGeometryId(const std::string& inputDir,
                                                    size_t event) {
   // geometry_id and t are optional columns
   auto hits = readEverything<ActsExamples::HitData>(
@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.
-  auto hits = readHitsByGeoId(m_cfg.inputDir, ctx.eventNumber);
+  auto hits = readHitsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
   auto cells = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
   auto truths = readTruthHitsByHitId(m_cfg.inputDir, ctx.eventNumber);
 

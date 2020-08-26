@@ -236,7 +236,7 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
     volj[m_cfg.namekey] = value.volumeName;
     std::ostringstream svolumeID;
     svolumeID << value.volumeID;
-    volj[m_cfg.geoidkey] = svolumeID.str();
+    volj[m_cfg.geometryidkey] = svolumeID.str();
     if (m_cfg.processVolumes && value.material) {
       volj[m_cfg.matkey] = volumeMaterialToJson(*value.material);
     }
@@ -249,7 +249,7 @@ json Acts::JsonGeometryConverter::detectorRepToJson(const DetectorRep& detRep) {
         json layj;
         std::ostringstream slayerID;
         slayerID << lvalue.layerID;
-        layj[m_cfg.geoidkey] = slayerID.str();
+        layj[m_cfg.geometryidkey] = slayerID.str();
         // First check for approaches
         if (not lvalue.approaches.empty() and m_cfg.processApproaches) {
           ACTS_VERBOSE("a2j: -----> Found " << lvalue.approaches.size()
@@ -848,7 +848,7 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
   // Get the ID of the surface (redundant but help readability)
   std::ostringstream SurfaceID;
   SurfaceID << surface->geometryId();
-  sjson[m_cfg.surfacegeoidkey] = SurfaceID.str();
+  sjson[m_cfg.surfacegeometryidkey] = SurfaceID.str();
 
   // Cast the surface bound to both disk and cylinder
   const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
