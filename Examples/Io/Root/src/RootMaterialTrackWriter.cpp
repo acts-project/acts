@@ -226,7 +226,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
         if (surface) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
-          slayerID = surface->geoID();
+          slayerID = surface->geometryId();
           m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(surface->type());
           m_sur_x.push_back(sfIntersection.intersection.position.x());
@@ -273,7 +273,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
         const Acts::Volume* volume = mint.volume;
         Acts::GeometryID vlayerID;
         if (volume) {
-          vlayerID = volume->geoID();
+          vlayerID = volume->geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
           vlayerID.setVolume(0);

@@ -111,7 +111,7 @@ struct VolumeCollector {
         result.collected.push_back(volume_hit);
         // Screen output
         ACTS_VERBOSE("Collect volume  "
-                     << state.navigation.currentVolume->geoID());
+                     << state.navigation.currentVolume->geometryId());
       }
     }
   }

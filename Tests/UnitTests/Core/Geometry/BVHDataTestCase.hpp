@@ -163,7 +163,7 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
 
-    auto sensitiveID = step.surface->geoID().sensitive();
+    auto sensitiveID = step.surface->geometryId().sensitive();
     if (sensitiveID != 0) {
       actHits.push_back(step.surface.get());
     }
@@ -175,6 +175,6 @@ BOOST_DATA_TEST_CASE(
     const Surface* act = actHits[i];
 
     BOOST_CHECK_EQUAL(exp, act);
-    BOOST_CHECK_EQUAL(exp->geoID(), act->geoID());
+    BOOST_CHECK_EQUAL(exp->geometryId(), act->geometryId());
   }
 }
