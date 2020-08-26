@@ -577,7 +577,8 @@ class KalmanFitter {
             trackStateProxy.jacobian() = jacobian;
             trackStateProxy.pathLength() = pathLength;
           } else {
-            ACTS_VERBOSE("Detected in-sensitive surface " << surface->geometryId());
+            ACTS_VERBOSE("Detected in-sensitive surface "
+                         << surface->geometryId());
 
             // Transport & get curvilinear state instead of bound state
             auto [curvilinearParams, jacobian, pathLength] =

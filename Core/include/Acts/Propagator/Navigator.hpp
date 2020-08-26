@@ -433,8 +433,9 @@ class Navigator {
     // an extrapolation process
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
-      ACTS_VERBOSE(volInfo(state) << "Current surface set to start surface "
-                                  << state.navigation.currentSurface->geometryId());
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
     }
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
@@ -597,8 +598,8 @@ class Navigator {
       // Take the surface
       auto surface = state.navigation.navSurfaceIter->object;
       // Screen output which surface you are on
-      ACTS_VERBOSE(volInfo(state)
-                   << "Next surface candidate will be " << surface->geometryId());
+      ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
+                                  << surface->geometryId());
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
@@ -956,8 +957,9 @@ class Navigator {
         !state.navigation.targetVolume) {
       ACTS_VERBOSE(volInfo(state)
                    << "Fast target initialization through association.");
-      ACTS_VERBOSE(volInfo(state) << "Target surface set to "
-                                  << state.navigation.targetSurface->geometryId());
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target surface set to "
+                   << state.navigation.targetSurface->geometryId());
       state.navigation.targetLayer =
           state.navigation.targetSurface->associatedLayer();
       state.navigation.targetVolume =

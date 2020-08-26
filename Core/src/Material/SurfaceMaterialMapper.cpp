@@ -145,7 +145,8 @@ void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
                                    << "' for material surfaces.")
   ACTS_VERBOSE("- Insert Volume ...");
   if (tVolume.volumeMaterial() != nullptr) {
-    mState.volumeMaterial[tVolume.geometryId()] = tVolume.volumeMaterialSharedPtr();
+    mState.volumeMaterial[tVolume.geometryId()] =
+        tVolume.volumeMaterialSharedPtr();
   }
 
   // Step down into the sub volume

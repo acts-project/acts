@@ -193,7 +193,8 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
     for (auto& bou : tVolume.boundarySurfaces()) {
       const auto& bSurface = bou->surfaceRepresentation();
       if (bSurface.surfaceMaterialSharedPtr() != nullptr) {
-        detMatMap.first[bSurface.geometryId()] = bSurface.surfaceMaterialSharedPtr();
+        detMatMap.first[bSurface.geometryId()] =
+            bSurface.surfaceMaterialSharedPtr();
       }
     }
   }
@@ -212,7 +213,8 @@ void ActsExamples::RootMaterialWriter::collectMaterial(
   const auto& rSurface = tLayer.surfaceRepresentation();
   if (rSurface.surfaceMaterialSharedPtr() != nullptr and
       m_cfg.processRepresenting) {
-    detMatMap.first[rSurface.geometryId()] = rSurface.surfaceMaterialSharedPtr();
+    detMatMap.first[rSurface.geometryId()] =
+        rSurface.surfaceMaterialSharedPtr();
   }
 
   // Check the approach surfaces

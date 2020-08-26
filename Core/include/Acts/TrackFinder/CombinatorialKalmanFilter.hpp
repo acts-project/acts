@@ -641,7 +641,8 @@ class CombinatorialKalmanFilter {
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
-        ACTS_VERBOSE("Detected " << type << " surface: " << surface->geometryId());
+        ACTS_VERBOSE("Detected " << type
+                                 << " surface: " << surface->geometryId());
         if (isSensitive) {
           // Increment of number of passed sensitive surfaces
           tipState.nSensitiveSurfaces++;
@@ -700,7 +701,8 @@ class CombinatorialKalmanFilter {
 
       // Reset current tip if there is no branch on current surface
       if (nBranchesOnSurface == 0) {
-        ACTS_DEBUG("Branch on surface " << surface->geometryId() << " is stopped");
+        ACTS_DEBUG("Branch on surface " << surface->geometryId()
+                                        << " is stopped");
         if (not result.activeTips.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
