@@ -8,15 +8,15 @@
 
 #pragma once
 
-#include <cassert>
-#include <cmath>
-
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <cassert>
+#include <cmath>
 
 namespace Acts {
 
@@ -157,10 +157,6 @@ class SingleBoundTrackParameters {
     m_surface->localToGlobal(geoCtx, loc, dir, pos);
     return pos;
   }
-  /// Access the spatial position vector with the default geometry context.
-  ///
-  /// @see position(const GeometryContext&)
-  Vector3D position() const { return this->position(GeometryContext()); }
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }
 

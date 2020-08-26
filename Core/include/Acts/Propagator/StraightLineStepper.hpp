@@ -62,7 +62,7 @@ class StraightLineStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position()),
+        : pos(par.position(gctx)),
           dir(par.momentum().normalized()),
           p(par.momentum().norm()),
           q(par.charge()),
