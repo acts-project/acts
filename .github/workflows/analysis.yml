@@ -55,7 +55,7 @@ jobs:
       - name: Install clang-tidy
         run: >
           apt-get install -y clang-tidy-10
-          update-alternatives /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-10
+          ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
       - name: Configure
         run: >
           cmake -B build -S .
