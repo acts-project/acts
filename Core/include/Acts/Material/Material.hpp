@@ -101,7 +101,7 @@ class Material {
   float meanExcitationEnergy() const;
 
   /// Encode the properties into an opaque parameters vector.
-  ParametersVector classificationNumbers() const;
+  ParametersVector parameters() const;
 
  private:
   float m_x0 = std::numeric_limits<float>::infinity();

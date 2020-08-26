@@ -612,7 +612,7 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
   // lemma 0 : accept the surface
   auto encodeMaterialProperties =
       [](const Acts::MaterialProperties& mp) -> std::vector<float> {
-    const auto cn = mp.material().classificationNumbers();
+    const auto cn = mp.material().parameters();
     return {cn[0], cn[1], cn[2], cn[3], cn[4], mp.thickness()};
   };
 
@@ -740,7 +740,7 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       if (m_cfg.writeData) {
         std::vector<std::vector<float>> mmat = {
             encodeMaterialParameters(
-                hvMaterial->material({0, 0, 0}).classificationNumbers()),
+                hvMaterial->material({0, 0, 0}).parameters()),
         };
         smj[m_cfg.datakey] = mmat;
       }

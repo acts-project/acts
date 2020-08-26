@@ -85,7 +85,7 @@ float Acts::Material::meanExcitationEnergy() const {
   return 16_eV * std::pow(m_z, 0.9f);
 }
 
-Acts::Material::ParametersVector Acts::Material::classificationNumbers() const {
+Acts::Material::ParametersVector Acts::Material::parameters() const {
   ParametersVector parameters;
   parameters[eRadiationLength] = m_x0;
   parameters[eInteractionLength] = m_l0;

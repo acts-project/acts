@@ -31,7 +31,7 @@ auto Acts::materialMapperRZ(
   materialVector.reserve(material.size());
 
   for (Material& mat : material) {
-    materialVector.push_back(mat.classificationNumbers());
+    materialVector.push_back(mat.parameters());
   }
 
   // [2] Create Grid
@@ -114,7 +114,7 @@ auto Acts::materialMapperXYZ(
   materialVector.reserve(material.size());
 
   for (Material& mat : material) {
-    materialVector.push_back(mat.classificationNumbers());
+    materialVector.push_back(mat.parameters());
   }
 
   // [2] Create Grid
