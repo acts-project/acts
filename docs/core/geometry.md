@@ -66,7 +66,7 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
      ///
      /// @param geometryId the geometry identifier to be assigned
      void
-     assigngeometryId(const GeometryID& geometryId);
+     assignGeometryId(const GeometryID& geometryId);
     
     protected:
      GeometryID m_geometryId;

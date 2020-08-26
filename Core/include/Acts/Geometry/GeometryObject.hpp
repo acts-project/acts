@@ -72,7 +72,7 @@ class GeometryObject {
   /// Set the value
   ///
   /// @param geometryId the geometry identifier to be assigned
-  void assigngeometryId(const GeometryID& geometryId);
+  void assignGeometryId(const GeometryID& geometryId);
 
  protected:
   GeometryID m_geometryId;
@@ -82,7 +82,7 @@ inline const GeometryID& GeometryObject::geometryId() const {
   return m_geometryId;
 }
 
-inline void GeometryObject::assigngeometryId(const GeometryID& geometryId) {
+inline void GeometryObject::assignGeometryId(const GeometryID& geometryId) {
   m_geometryId = geometryId;
 }
 
