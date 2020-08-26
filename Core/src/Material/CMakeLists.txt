@@ -3,6 +3,7 @@ target_sources_local(
   PRIVATE
     AccumulatedSurfaceMaterial.cpp
     AccumulatedVolumeMaterial.cpp
+    AverageMaterials.cpp
     BinnedSurfaceMaterial.cpp
     HomogeneousSurfaceMaterial.cpp
     HomogeneousVolumeMaterial.cpp
