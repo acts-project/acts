@@ -16,7 +16,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -116,10 +115,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   std::cout << cov.determinant() << std::endl;
   CurvilinearParameters start(cov, pos, mom, q, time);
 
-  using DebugOutput = DebugOutputActor;
-
   // Action list and abort list
-  using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
+  using ActionListType = ActionList<MaterialInteractor>;
   using AbortListType = AbortList<>;
 
   using Options = PropagatorOptions<ActionListType, AbortListType>;
@@ -127,7 +124,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
-  fwdOptions.debug = debugModeFwd;
 
   // get the material collector and configure it
   auto& fwdMaterialInteractor =
@@ -158,9 +154,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // get the forward output to the screen
   if (debugModeFwd) {
-    const auto& fwdOutput = fwdResult.template get<DebugOutput::result_type>();
-    std::cout << ">>> Forward Propagation & Navigation output " << std::endl;
-    std::cout << fwdOutput.debugString << std::endl;
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
@@ -174,7 +167,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   bwdOptions.maxStepSize = -25_cm;
   bwdOptions.pathLimit = -25_cm;
   bwdOptions.direction = backward;
-  bwdOptions.debug = debugModeBwd;
 
   // get the material collector and configure it
   auto& bwdMaterialInteractor =
@@ -216,9 +208,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // get the backward output to the screen
   if (debugModeBwd) {
-    const auto& bwd_output = bwdResult.template get<DebugOutput::result_type>();
-    std::cout << ">>> Backward Propagation & Navigation output " << std::endl;
-    std::cout << bwd_output.debugString << std::endl;
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
@@ -239,7 +228,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   Options fwdStepOptions(tgContext, mfContext, getDummyLogger());
   fwdStepOptions.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
-  fwdStepOptions.debug = debugModeFwdStep;
 
   // get the material collector and configure it
   auto& fwdStepMaterialInteractor =
@@ -275,12 +263,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     const auto& fwdStep =
         prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions)
             .value();
-    // get the backward output to the screen
-    if (debugModeFwdStep) {
-      const auto& fwdStepOutput =
-          fwdStep.template get<DebugOutput::result_type>();
-      std::cout << fwdStepOutput.debugString << std::endl;
-    }
 
     auto& fwdStepMaterial =
         fwdStep.template get<typename MaterialInteractor::result_type>();
@@ -315,15 +297,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   CHECK_CLOSE_REL(fwdStepStepMaterialInX0, fwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(fwdStepStepMaterialInL0, fwdStepMaterialInL0, 1e-3);
 
-  // get the backward output to the screen
-  if (debugModeFwdStep) {
-    const auto& fwdStepOutput =
-        fwdStepFinal.template get<DebugOutput::result_type>();
-    std::cout << ">>> Forward final step propgation & navigation output "
-              << std::endl;
-    std::cout << fwdStepOutput.debugString << std::endl;
-  }
-
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
   Options bwdStepOptions(tgContext, mfContext, getDummyLogger());
@@ -331,7 +304,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   bwdStepOptions.maxStepSize = -25_cm;
   bwdStepOptions.pathLimit = -25_cm;
   bwdStepOptions.direction = backward;
-  bwdStepOptions.debug = debugModeBwdStep;
 
   // get the material collector and configure it
   auto& bwdStepMaterialInteractor =
@@ -365,12 +337,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     const auto& bwdStep =
         prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions)
             .value();
-    // get the backward output to the screen
-    if (debugModeBwdStep) {
-      const auto& bwdStepOutput =
-          bwdStep.template get<DebugOutput::result_type>();
-      std::cout << bwdStepOutput.debugString << std::endl;
-    }
 
     auto& bwdStepMaterial =
         bwdStep.template get<typename MaterialInteractor::result_type>();
@@ -404,15 +370,6 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // forward-forward step compatibility test
   CHECK_CLOSE_REL(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-3);
-
-  // get the backward output to the screen
-  if (debugModeBwdStep) {
-    const auto& bwdStepOutput =
-        bwdStepFinal.template get<DebugOutput::result_type>();
-    std::cout << ">>> Backward final step propgation & navigation output "
-              << std::endl;
-    std::cout << bwdStepOutput.debugString << std::endl;
-  }
 
   // Test the material affects the covariance into the right direction
   // get the material collector and configure it

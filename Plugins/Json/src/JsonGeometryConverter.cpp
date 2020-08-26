@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -949,24 +950,31 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
       dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
 
   if (radialBounds != nullptr) {
-    bUtility += BinUtility(1,
-                           radialBounds->get(RadialBounds::eAveragePhi) -
-                               radialBounds->get(RadialBounds::eHalfPhiSector),
-                           radialBounds->get(RadialBounds::eAveragePhi) +
-                               radialBounds->get(RadialBounds::eHalfPhiSector),
-                           Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(
+        1,
+        radialBounds->get(RadialBounds::eAveragePhi) -
+            radialBounds->get(RadialBounds::eHalfPhiSector),
+        radialBounds->get(RadialBounds::eAveragePhi) +
+            radialBounds->get(RadialBounds::eHalfPhiSector),
+        (radialBounds->get(RadialBounds::eHalfPhiSector) - M_PI) < s_epsilon
+            ? Acts::closed
+            : Acts::open,
+        Acts::binPhi);
     bUtility += BinUtility(1, radialBounds->rMin(), radialBounds->rMax(),
                            Acts::open, Acts::binR);
     return bUtility;
   }
   if (cylinderBounds != nullptr) {
-    bUtility +=
-        BinUtility(1,
-                   cylinderBounds->get(CylinderBounds::eAveragePhi) -
-                       cylinderBounds->get(CylinderBounds::eHalfPhiSector),
-                   cylinderBounds->get(CylinderBounds::eAveragePhi) +
-                       cylinderBounds->get(CylinderBounds::eHalfPhiSector),
-                   Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(
+        1,
+        cylinderBounds->get(CylinderBounds::eAveragePhi) -
+            cylinderBounds->get(CylinderBounds::eHalfPhiSector),
+        cylinderBounds->get(CylinderBounds::eAveragePhi) +
+            cylinderBounds->get(CylinderBounds::eHalfPhiSector),
+        (cylinderBounds->get(CylinderBounds::eHalfPhiSector) - M_PI) < s_epsilon
+            ? Acts::closed
+            : Acts::open,
+        Acts::binPhi);
     bUtility +=
         BinUtility(1, -1 * cylinderBounds->get(CylinderBounds::eHalfLengthZ),
                    cylinderBounds->get(CylinderBounds::eHalfLengthZ),
@@ -976,7 +984,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
   if (annulusBounds != nullptr) {
     bUtility += BinUtility(1, annulusBounds->get(AnnulusBounds::eMinPhiRel),
                            annulusBounds->get(AnnulusBounds::eMaxPhiRel),
-                           Acts::closed, Acts::binPhi);
+                           Acts::open, Acts::binPhi);
     bUtility += BinUtility(1, annulusBounds->rMin(), annulusBounds->rMax(),
                            Acts::open, Acts::binR);
     return bUtility;
@@ -1001,6 +1009,8 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
 
   auto cyBounds =
       dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
+  auto cutcylBounds =
+      dynamic_cast<const CutoutCylinderVolumeBounds*>(&(volume.volumeBounds()));
   auto cuBounds =
       dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
 
@@ -1008,14 +1018,29 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
     bUtility += BinUtility(1, cyBounds->get(CylinderVolumeBounds::eMinR),
                            cyBounds->get(CylinderVolumeBounds::eMaxR),
                            Acts::open, Acts::binR);
-    bUtility +=
-        BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
-                   cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
-                   Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(
+        1, -cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+        cyBounds->get(CylinderVolumeBounds::eHalfPhiSector),
+        (cyBounds->get(CylinderVolumeBounds::eHalfPhiSector) - M_PI) < s_epsilon
+            ? Acts::closed
+            : Acts::open,
+        Acts::binPhi);
     bUtility +=
         BinUtility(1, -cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                    cyBounds->get(CylinderVolumeBounds::eHalfLengthZ),
                    Acts::open, Acts::binZ);
+    return bUtility;
+  }
+  if (cutcylBounds != nullptr) {
+    bUtility +=
+        BinUtility(1, cutcylBounds->get(CutoutCylinderVolumeBounds::eMinR),
+                   cutcylBounds->get(CutoutCylinderVolumeBounds::eMaxR),
+                   Acts::open, Acts::binR);
+    bUtility += BinUtility(1, -M_PI, M_PI, Acts::closed, Acts::binPhi);
+    bUtility += BinUtility(
+        1, -cutcylBounds->get(CutoutCylinderVolumeBounds::eHalfLengthZ),
+        cutcylBounds->get(CutoutCylinderVolumeBounds::eHalfLengthZ), Acts::open,
+        Acts::binZ);
     return bUtility;
   } else if (cuBounds != nullptr) {
     bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthX),
@@ -1023,7 +1048,7 @@ Acts::BinUtility Acts::JsonGeometryConverter::DefaultBin(
                            Acts::open, Acts::binX);
     bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthY),
-                           Acts::closed, Acts::binY);
+                           Acts::open, Acts::binY);
     bUtility += BinUtility(1, -cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            cuBounds->get(CuboidVolumeBounds::eHalfLengthZ),
                            Acts::open, Acts::binZ);
