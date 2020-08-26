@@ -64,7 +64,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
           "Unable to compute IP significance. "
           "Setting IP weight to 1.");
 
-      z0AndWeight.first = params.position()[eZ];
+      z0AndWeight.first = params.position(vertexingOptions.geoContext)[eZ];
       z0AndWeight.second = 1.;
     }
 

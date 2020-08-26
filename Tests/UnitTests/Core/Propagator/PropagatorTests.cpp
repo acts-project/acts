@@ -331,8 +331,8 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(start, *cSurface, options_1s).value().endParameters;
 
   // test that the propagation is additive
-  CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
-                  0.001);
+  CHECK_CLOSE_REL(end_parameters_1s->position(tgContext),
+                  end_parameters_2s->position(tgContext), 0.001);
 
   const auto& cov_1s = (*(end_parameters_1s->covariance()));
   const auto& cov_2s = (*(end_parameters_2s->covariance()));
