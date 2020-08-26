@@ -15,6 +15,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 namespace Cuda {
@@ -26,9 +27,19 @@ class SeedFinder {
   ///////////////////////////////////////////////////////////////////
 
  public:
+  /// Create a CUDA backed seed finder object
+  ///
+  /// @param commonConfig Configuration shared with @c Acts::Seedfinder
+  /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
+  /// @param tripletFilterConfig Configuration for the GPU based triplet
+  ///        filtering
+  /// @param device The identifier of the CUDA device to run on
+  /// @param loggerLevel Output level of messages coming from the object
+  ///
   SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
              const SeedFilterConfig& seedFilterConfig,
-             const TripletFilterConfig& tripletFilterConfig);
+             const TripletFilterConfig& tripletFilterConfig, int device = 0,
+             Acts::Logging::Level loggerLevel = Acts::Logging::INFO);
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
@@ -49,6 +60,8 @@ class SeedFinder {
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter
   TripletFilterConfig m_tripletFilterConfig;
+  /// CUDA device identifier
+  int m_device;
 };
 
 }  // namespace Cuda

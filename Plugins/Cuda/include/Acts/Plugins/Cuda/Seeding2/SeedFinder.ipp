@@ -14,6 +14,8 @@
 #include "Acts/Plugins/Cuda/Seeding2/Details/FindTriplets.hpp"
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
+#include "Acts/Plugins/Cuda/Utilities/Info.hpp"
+#include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -30,10 +32,12 @@ template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedfinderConfig<external_spacepoint_t> commonConfig,
     const SeedFilterConfig& seedFilterConfig,
-    const TripletFilterConfig& tripletFilterConfig)
+    const TripletFilterConfig& tripletFilterConfig, int device,
+    Acts::Logging::Level loggerLevel)
     : m_commonConfig(std::move(commonConfig)),
       m_seedFilterConfig(seedFilterConfig),
-      m_tripletFilterConfig(tripletFilterConfig) {
+      m_tripletFilterConfig(tripletFilterConfig),
+      m_device(device) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_commonConfig.highland =
@@ -50,6 +54,17 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       std::pow(m_commonConfig.minPt * 2 / m_commonConfig.pTPerHelixRadius, 2);
   m_commonConfig.pT2perRadius =
       std::pow(m_commonConfig.highland / m_commonConfig.pTPerHelixRadius, 2);
+
+  // Tell the user what CUDA device will be used by the object.
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("Acts::Cuda::SeedFinder", loggerLevel));
+  if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
+    ACTS_DEBUG("Will be using device:\n"
+               << Info::instance().devices()[m_device]);
+  } else {
+    ACTS_FATAL("Invalid CUDA device requested");
+    throw std::runtime_error("Invalid CUDA device requested");
+  }
 }
 
 template <typename external_spacepoint_t>
@@ -161,11 +176,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Launch the triplet finding code on all of the previously found dublets.
   auto tripletCandidates = Details::findTriplets(
-      m_commonConfig.maxBlockSize, dubletCounts, m_seedFilterConfig,
-      m_tripletFilterConfig, bottomSPVec.size(), bottomSPDeviceArray,
-      middleSPVec.size(), middleSPDeviceArray, topSPVec.size(),
-      topSPDeviceArray, middleBottomCounts, middleBottomDublets,
-      middleTopCounts, middleTopDublets, m_commonConfig.maxScatteringAngle2,
+      Info::instance().devices()[m_device], m_commonConfig.maxBlockSize,
+      dubletCounts, m_seedFilterConfig, m_tripletFilterConfig,
+      bottomSPVec.size(), bottomSPDeviceArray, middleSPVec.size(),
+      middleSPDeviceArray, topSPVec.size(), topSPDeviceArray,
+      middleBottomCounts, middleBottomDublets, middleTopCounts,
+      middleTopDublets, m_commonConfig.maxScatteringAngle2,
       m_commonConfig.sigmaScattering, m_commonConfig.minHelixDiameter2,
       m_commonConfig.pT2perRadius, m_commonConfig.impactMax);
   assert(tripletCandidates.size() == middleSPVec.size());
@@ -191,6 +207,9 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, outputVec);
   }
+
+  // Free up all allocated device memory.
+  MemoryManager::instance().reset(m_device);
 
   // Return the collected spacepoints.
   return outputVec;
