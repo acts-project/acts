@@ -33,30 +33,8 @@ namespace Acts {
 /// The averaging is always done to unit thickness
 class AccumulatedMaterialProperties {
  public:
-  /// Default constructor sets everything to zero
-  AccumulatedMaterialProperties() = default;
-
-  /// Default destructor sets
-  ~AccumulatedMaterialProperties() = default;
-
-  /// Default copy constructor
-  /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties(const AccumulatedMaterialProperties& amp) =
-      default;
-
-  /// Default copy move constructor
-  /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties(AccumulatedMaterialProperties&& amp) = default;
-
-  /// Default assignment operator
-  /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties& operator=(
-      const AccumulatedMaterialProperties& amp) = default;
-
-  /// Default move assignment operator
-  /// @param amp the source Accumulated properties
-  AccumulatedMaterialProperties& operator=(
-      AccumulatedMaterialProperties&& amp) = default;
+  // this class does not have a custom default constructor and thus should not
+  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /// Accumulation operator
   /// @brief this adds the material properties to event store
