@@ -360,7 +360,8 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
 
   // check that the to-surface propagation matches the defining free parameters
-  CHECK_CLOSE_ABS(surfParams.position(), freeParams.position(), epsPos);
+  CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
+                  epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
   CHECK_CLOSE_ABS(surfParams.momentum().normalized(),
                   freeParams.momentum().normalized(), epsDir);

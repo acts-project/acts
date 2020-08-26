@@ -80,7 +80,7 @@ class AtlasStepper {
       // this is a nasty but working solution for the stepper state without
       // functions
 
-      const Vector3D pos = pars.position();
+      const auto pos = pars.position(gctx);
       const auto Vp = pars.parameters();
 
       double Sf, Cf, Ce, Se;
@@ -89,9 +89,9 @@ class AtlasStepper {
       Se = sin(Vp[eBoundTheta]);
       Ce = cos(Vp[eBoundTheta]);
 
-      pVector[0] = pos(0);
-      pVector[1] = pos(1);
-      pVector[2] = pos(2);
+      pVector[0] = pos[ePos0];
+      pVector[1] = pos[ePos1];
+      pVector[2] = pos[ePos2];
       pVector[3] = pars.time();
       pVector[4] = Cf * Se;
       pVector[5] = Sf * Se;

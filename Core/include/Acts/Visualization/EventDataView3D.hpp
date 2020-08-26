@@ -140,7 +140,7 @@ struct EventDataView3D {
     }
 
     // Draw the parameter shaft and cone
-    auto position = parameters.position();
+    auto position = parameters.position(gctx);
     auto direction = parameters.momentum().normalized();
     double p = parameters.momentum().norm();
 
@@ -166,9 +166,8 @@ struct EventDataView3D {
                               locErrorScale, covConfig);
 
       drawCovarianceAngular(
-          helper, parameters.position(), parameters.momentum().normalized(),
-          covariance.template block<2, 2>(2, 2), 0.9 * p * momentumScale,
-          angularErrorScale, covConfig);
+          helper, position, direction, covariance.template block<2, 2>(2, 2),
+          0.9 * p * momentumScale, angularErrorScale, covConfig);
     }
   }
 

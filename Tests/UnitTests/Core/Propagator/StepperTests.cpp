@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane);
   auto boundPars = std::get<0>(boundState);
-  CHECK_CLOSE_ABS(boundPars.position(), bp.position(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
