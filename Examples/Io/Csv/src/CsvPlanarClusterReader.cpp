@@ -49,7 +49,7 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   }
   // fill the geo id to surface map once to speed up lookups later on
   m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    this->m_surfaces[surface->geoID()] = surface;
+    this->m_surfaces[surface->geometryId()] = surface;
   });
 }
 
@@ -120,8 +120,8 @@ inline std::vector<Data> readEverything(
   return everything;
 }
 
-std::vector<ActsExamples::HitData> readHitsByGeoId(const std::string& inputDir,
-                                                   size_t event) {
+std::vector<ActsExamples::HitData> readHitsByGeometryId(
+    const std::string& inputDir, size_t event) {
   // geometry_id and t are optional columns
   auto hits = readEverything<ActsExamples::HitData>(
       inputDir, "hits.csv", {"geometry_id", "t"}, event);
@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.
-  auto hits = readHitsByGeoId(m_cfg.inputDir, ctx.eventNumber);
+  auto hits = readHitsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
   auto cells = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
   auto truths = readTruthHitsByHitId(m_cfg.inputDir, ctx.eventNumber);
 

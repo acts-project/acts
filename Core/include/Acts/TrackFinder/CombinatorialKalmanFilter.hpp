@@ -507,7 +507,7 @@ class CombinatorialKalmanFilter {
       auto sourcelink_it = inputMeasurements.find(surface);
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
-        ACTS_VERBOSE("Measurement surface " << surface->geoID()
+        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
         // Update state and stepper with pre material effects
@@ -641,7 +641,8 @@ class CombinatorialKalmanFilter {
         // The surface could be either sensitive or passive
         bool isSensitive = (surface->associatedDetectorElement() != nullptr);
         std::string type = isSensitive ? "sensitive" : "passive";
-        ACTS_VERBOSE("Detected " << type << " surface: " << surface->geoID());
+        ACTS_VERBOSE("Detected " << type
+                                 << " surface: " << surface->geometryId());
         if (isSensitive) {
           // Increment of number of passed sensitive surfaces
           tipState.nSensitiveSurfaces++;
@@ -700,7 +701,8 @@ class CombinatorialKalmanFilter {
 
       // Reset current tip if there is no branch on current surface
       if (nBranchesOnSurface == 0) {
-        ACTS_DEBUG("Branch on surface " << surface->geoID() << " is stopped");
+        ACTS_DEBUG("Branch on surface " << surface->geometryId()
+                                        << " is stopped");
         if (not result.activeTips.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
@@ -935,7 +937,7 @@ class CombinatorialKalmanFilter {
 
           // Screen out material effects info
           ACTS_VERBOSE("Material effects on surface: "
-                       << surface->geoID()
+                       << surface->geometryId()
                        << " at update stage: " << updateStage << " are :");
           ACTS_VERBOSE("eLoss = "
                        << interaction.Eloss << ", "
@@ -951,7 +953,7 @@ class CombinatorialKalmanFilter {
 
       if (not hasMaterial) {
         // Screen out message
-        ACTS_VERBOSE("No material effects on surface: " << surface->geoID()
+        ACTS_VERBOSE("No material effects on surface: " << surface->geometryId()
                                                         << " at update stage: "
                                                         << updateStage);
       }

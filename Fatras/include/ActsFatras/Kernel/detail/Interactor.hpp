@@ -136,7 +136,7 @@ struct Interactor {
     result.particle = after;
     if (selectHitSurface(surface)) {
       result.hits.emplace_back(
-          surface.geoID(), before.particleId(),
+          surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
           Hit::Scalar(0.5) * (before.position4() + after.position4()),
           before.momentum4(), after.momentum4(), result.hits.size());

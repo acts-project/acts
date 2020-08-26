@@ -55,10 +55,10 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
   SurfaceData data;
 
   // encoded and partially decoded geometry identifier
-  data.geometry_id = surface.geoID().value();
-  data.volume_id = surface.geoID().volume();
-  data.layer_id = surface.geoID().layer();
-  data.module_id = surface.geoID().sensitive();
+  data.geometry_id = surface.geometryId().value();
+  data.volume_id = surface.geometryId().volume();
+  data.layer_id = surface.geometryId().layer();
+  data.module_id = surface.geometryId().sensitive();
   // center position
   auto center = surface.center(geoCtx);
   data.cx = center.x() / Acts::UnitConstants::mm;

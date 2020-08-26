@@ -363,7 +363,7 @@ void Acts::TrackingVolume::closeGeometry(
   auto volumeID = GeometryID().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
-  thisVolume->assignGeoID(volumeID);
+  thisVolume->assignGeometryId(volumeID);
 
   // assign the material if you have a decorator
   if (materialDecorator != nullptr) {
@@ -379,7 +379,7 @@ void Acts::TrackingVolume::closeGeometry(
     }
   }
 
-  this->assignGeoID(volumeID);
+  this->assignGeometryId(volumeID);
   // loop over the boundary surfaces
   GeometryID::Value iboundary = 0;
   // loop over the boundary surfaces
@@ -390,7 +390,7 @@ void Acts::TrackingVolume::closeGeometry(
     auto boundaryID = GeometryID(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
-    mutableBSurface.assignGeoID(boundaryID);
+    mutableBSurface.assignGeometryId(boundaryID);
     // assign the material if you have a decorator
     if (materialDecorator != nullptr) {
       materialDecorator->decorate(mutableBSurface);
@@ -422,7 +422,7 @@ void Acts::TrackingVolume::closeGeometry(
             const auto& srf = bnd->surfaceRepresentation();
             Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
             auto geoID = GeometryID(volumeID).setSensitive(++isurface);
-            mutableSurfcePtr->assignGeoID(geoID);
+            mutableSurfcePtr->assignGeometryId(geoID);
           }
         }
       }
