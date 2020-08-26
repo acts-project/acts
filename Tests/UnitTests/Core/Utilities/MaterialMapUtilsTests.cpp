@@ -110,12 +110,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
 
   // Check the value
   // in rz case material is phi symmetric (check radius)
-  CHECK_CLOSE_ABS(value0_rz.parameters(),
-                  mat0_rz.parameters(), 1e-9);
-  CHECK_CLOSE_ABS(value1_rz.parameters(),
-                  mat1_rz.parameters(), 1e-9);
-  CHECK_CLOSE_ABS(value2_rz.parameters(),
-                  mat2_rz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value0_rz.parameters(), mat0_rz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value1_rz.parameters(), mat1_rz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value2_rz.parameters(), mat2_rz.parameters(), 1e-9);
 
   // Check if filled value is expected value in xyz
   Vector3D pos0_xyz(0., 0., 0.);
@@ -134,12 +131,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
 
   // Check the value
   // in xyz case material is phi symmetric (check radius)
-  CHECK_CLOSE_ABS(value0_xyz.parameters(),
-                  mat0_xyz.parameters(), 1e-9);
-  CHECK_CLOSE_ABS(value1_xyz.parameters(),
-                  mat1_xyz.parameters(), 1e-9);
-  CHECK_CLOSE_ABS(value2_xyz.parameters(),
-                  mat2_xyz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value0_xyz.parameters(), mat0_xyz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value1_xyz.parameters(), mat1_xyz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value2_xyz.parameters(), mat2_xyz.parameters(), 1e-9);
 }
 }  // namespace Test
 }  // namespace Acts
