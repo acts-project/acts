@@ -37,6 +37,7 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
     phi = 0;
   }
 
+  Vector4 pos4 = Vector4D::Zero();
   return CurvilinearParameters(pos4, phi, theta, absMom, charge);
 }
 
@@ -135,8 +136,15 @@ inline void checkCovarianceConsistency(
     const Acts::SingleBoundTrackParameters<charge_t>& cmp,
     const Acts::SingleBoundTrackParameters<charge_t>& ref,
     double relativeTolerance) {
-  BOOST_CHECK(
-      not(cmp.covariance().has_value() xor ref.covariance().has_value()));
+  // either both or none have covariance set
+  if (cmp.covariance().has_value()) {
+    // comparison parameters have covariance but the reference does not
+    BOOST_CHECK(ref.covariance().has_value());
+  }
+  if (ref.covariance().has_value()) {
+    // reference parameters have covariance but the comparison does not
+    BOOST_CHECK(cmp.covariance().has_value());
+  }
   if (cmp.covariance().has_value() and ref.covariance().has_value()) {
     CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
                            relativeTolerance);
