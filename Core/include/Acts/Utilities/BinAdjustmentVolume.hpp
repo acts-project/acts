@@ -80,10 +80,11 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   return uBinUtil;
 }
 
-/// @brief adjust the BinUtility bu to the dimensions of cylinder volume bounds
+/// @brief adjust the BinUtility bu to the dimensions of cutout cylinder volume
+/// bounds
 ///
 /// @param bu BinUtility at source
-/// @param cBounds the Cylinder volume bounds to adjust to
+/// @param cBounds the Cutout Cylinder volume bounds to adjust to
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
@@ -94,7 +95,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   if (!transform.isApprox(Transform3D::Identity())) {
     uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
   }
-  // The parameters from the cylinder bounds
+  // The parameters from the cutout cylinder bounds
   double minR = cBounds.get(CutoutCylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CutoutCylinderVolumeBounds::eMaxR);
   double minPhi = -M_PI;
@@ -113,7 +114,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     if (bd.type == arbitrary) {
       throw std::invalid_argument("Arbirary binning can not be adjusted.");
     } else if (bval != binR and bval != binPhi and bval != binZ) {
-      throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
+      throw std::invalid_argument(
+          "Cutout cylinder volume binning must be: phi, r, z");
     }
     float min = 0;
     float max = 0;
