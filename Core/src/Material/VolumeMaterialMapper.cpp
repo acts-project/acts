@@ -14,7 +14,6 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 
@@ -235,23 +234,16 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
 
   // Prepare Action list and abort list
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList = ActionList<MaterialVolumeCollector, DebugOutputActor>;
+  using ActionList = ActionList<MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
   auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
   PropagatorOptions<ActionList, AbortList> options(
       mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
-  options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
   auto mcResult = result.get<MaterialVolumeCollector::result_type>();
-  // Massive screen output
-  if (m_cfg.mapperDebugOutput) {
-    auto debugOutput = result.get<DebugOutputActor::result_type>();
-    ACTS_VERBOSE("Debug propagation output.");
-    ACTS_VERBOSE(debugOutput.debugString);
-  }
 
   auto mappingVolumes = mcResult.collected;
 
