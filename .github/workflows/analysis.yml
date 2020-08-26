@@ -56,16 +56,29 @@ jobs:
         run: >
           apt-get install -y clang-tidy-10
           && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
-      - name: Configure
-        run: >
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS="-Werror"
-          -DACTS_BUILD_EVERYTHING=on
-          -DACTS_RUN_CLANG_TIDY=on
-      - name: Build
-        run: cmake --build build --
+      # - name: Configure
+      #   run: >
+      #     cmake -B build -S .
+      #     -GNinja
+      #     -DCMAKE_BUILD_TYPE=Release
+      #     -DCMAKE_CXX_FLAGS="-Werror"
+      #     -DACTS_BUILD_EVERYTHING=on
+      #     -DACTS_RUN_CLANG_TIDY=on
+      # - name: Build
+      #   run: cmake --build build --
+      - name: 'Run CMake with Ninja'
+        uses: lukka/run-cmake@v2
+        with:
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
+          cmakeListsTxtPath: 'CMakeLists.txt'
+          buildDirectory: build
+          cmakeAppendedArgs: >
+            -GNinja
+            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_CXX_FLAGS="-Werror"
+            -DACTS_BUILD_EVERYTHING=on
+            -DACTS_RUN_CLANG_TIDY=on
+
 
   build_performance:
     runs-on: ubuntu-latest
