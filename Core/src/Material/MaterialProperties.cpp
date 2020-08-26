@@ -12,7 +12,6 @@
 
 #include <climits>
 #include <limits>
-#include <numeric>
 #include <ostream>
 
 static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
@@ -30,15 +29,18 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 
 Acts::MaterialProperties::MaterialProperties(
     const std::vector<MaterialProperties>& layers)
-    : MaterialProperties(std::reduce(layers.begin(), layers.end(),
-                                     MaterialProperties(),
-                                     detail::averageMaterials)) {
+    : MaterialProperties() {
   // NOTE 2020-08-26 msmk
-  // the reduce work best (in the numerical stability sense) if the input
-  // layers are sorted by by thickness/mass density. then, the late terms
-  // of the averaging are only small corrections to the large average of
-  // the initial layers. this could be enforce by sorting the layers first, but
-  // i am not sure if this is actually a problem.
+  //   the reduce work best (in the numerical stability sense) if the input
+  //   layers are sorted by by thickness/mass density. then, the late terms
+  //   of the averaging are only small corrections to the large average of
+  //   the initial layers. this could be enforce by sorting the layers first,
+  //   but i am not sure if this is actually a problem.
+  // NOTE yes, this loop is exactly like std::reduce which apparently does not
+  //   exist on gcc 8 although it is required by C++17.
+  for (const auto& layer : layers) {
+    *this = detail::averageMaterials(*this, layer);
+  }
 }
 
 void Acts::MaterialProperties::scaleThickness(float scale) {
