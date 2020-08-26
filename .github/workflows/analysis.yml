@@ -59,6 +59,7 @@ jobs:
       - name: Configure and build
         uses: lukka/run-cmake@v2
         with:
+          cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           buildDirectory: build
           cmakeAppendedArgs: >
             -GNinja
