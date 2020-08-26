@@ -12,7 +12,6 @@
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
@@ -181,28 +180,20 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
                                           mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
-  using DebugOutput = DebugOutputActor;
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList = ActionList<MaterialSurfaceCollector,
-                                MaterialVolumeCollector, DebugOutput>;
+  using ActionList =
+      ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
   auto propLogger = getDefaultLogger("SufMatMapProp", Logging::INFO);
   PropagatorOptions<ActionList, AbortList> options(
       mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
-  options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
   auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
   auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
-  // Massive screen output
-  if (m_cfg.mapperDebugOutput) {
-    auto debugOutput = result.get<DebugOutput::result_type>();
-    ACTS_VERBOSE("Debug propagation output.");
-    ACTS_VERBOSE(debugOutput.debugString);
-  }
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;

@@ -12,7 +12,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
