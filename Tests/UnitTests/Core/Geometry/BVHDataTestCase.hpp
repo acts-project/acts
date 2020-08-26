@@ -138,14 +138,12 @@ BOOST_DATA_TEST_CASE(
   Navigator navigator(tg);
   PropagatorType propagator(std::move(stepper), navigator);
 
-  using DebugOutput = Acts::DebugOutputActor;
-  using ActionList = Acts::ActionList<SteppingLogger, DebugOutput>;
+  using ActionList = Acts::ActionList<SteppingLogger>;
   using AbortConditions = Acts::AbortList<>;
 
   Acts::PropagatorOptions<ActionList, AbortConditions> options(
       tgContext, mfContext, Acts::getDummyLogger());
 
-  options.debug = false;
   options.pathLimit = 20_m;
 
   // this should be irrelevant.
@@ -155,13 +153,6 @@ BOOST_DATA_TEST_CASE(
                                        ray.dir() * mom, +1, 0.);
 
   const auto result = propagator.propagate(startPar, options).value();
-
-  const auto debugString =
-      result.template get<DebugOutput::result_type>().debugString;
-
-  if (options.debug) {
-    std::cout << debugString << std::endl;
-  }
 
   // collect surfaces
   std::vector<const Surface*> actHits;

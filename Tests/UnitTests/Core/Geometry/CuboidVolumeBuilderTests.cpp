@@ -17,7 +17,6 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -419,10 +418,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   std::shared_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
 
-  using DebugOutput = Acts::DebugOutputActor;
-
   // Set propagator and navigator
-  PropagatorOptions<ActionList<StepVolumeCollector,DebugOutput>>
+  PropagatorOptions<ActionList<StepVolumeCollector>>
 propOpts(tgContext, mfContext);
 
   propOpts.debug = true;
