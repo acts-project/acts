@@ -28,16 +28,24 @@ namespace Acts {
 ///
 /// The parameters can be effective or average parameters e.g. when a mixture
 /// of materials is described.
+///
+/// @note Always use the opaque parameters vector to serialize/deserialize the
+///   material information. Since the internal storage might be different from
+///   the external accessors, this ensures that always the numerically optimal
+///   parameters are stored. Use the `ParametersVector` type and do not assume
+///   any particular size since we might consider to store more parameters in
+///   the future.
 class Material {
  public:
   using ParametersVector = Acts::ActsVectorF<5>;
 
   // Both mass and molar density are stored as a float and can thus not be
-  // distinguish by their types. Just changing the last element in the
-  // previously existing constructor to represent molar density instead of mass
-  // density could have lead to significant confusion compared to the previous
-  // behaviour. To avoid any ambiguity, construction from parameters must happen
-  // through the following named constructors.
+  // distinguished by their types. Just changing the last element in the
+  // previously existing constructor that took five floats as input to represent
+  // molar density instead of mass density could have lead to significant
+  // confusion compared to the previous behaviour. To avoid any ambiguity,
+  // construction from separate material parameters must happen through the
+  // following named constructors.
 
   /// Construct from material parameters using the molar density.
   ///
