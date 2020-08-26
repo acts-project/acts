@@ -68,7 +68,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
       return;
     }
     // record all valid surfaces
-    this->m_digitizables.insert_or_assign(surface->geoID(), dg);
+    this->m_digitizables.insert_or_assign(surface->geometryId(), dg);
   });
 }
 

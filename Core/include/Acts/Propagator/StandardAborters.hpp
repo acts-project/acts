@@ -140,7 +140,7 @@ struct SurfaceReached {
       state.navigation.currentSurface = &targetSurface;
       ACTS_VERBOSE("Target: x | "
                    << "Current surface set to target surface  "
-                   << state.navigation.currentSurface->geoID());
+                   << state.navigation.currentSurface->geometryId());
 
       // reaching the target calls a navigation break
       state.navigation.targetReached = true;

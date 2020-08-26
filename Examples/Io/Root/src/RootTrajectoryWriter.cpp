@@ -359,7 +359,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       auto& surface = meas.referenceObject();
 
       // get the geometry ID
-      auto geoID = surface.geoID();
+      auto geoID = surface.geometryId();
       m_volumeID.push_back(geoID.volume());
       m_layerID.push_back(geoID.layer());
       m_moduleID.push_back(geoID.sensitive());

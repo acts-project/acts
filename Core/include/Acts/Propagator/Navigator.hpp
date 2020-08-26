@@ -434,7 +434,7 @@ class Navigator {
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
       ACTS_VERBOSE(volInfo(state) << "Current surface set to start surface "
-                                  << state.navigation.currentSurface->geoID());
+                                  << state.navigation.currentSurface->geometryId());
     }
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
@@ -530,7 +530,7 @@ class Navigator {
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
                      << "Current surface set to surface "
-                     << state.navigation.currentSurface->geoID());
+                     << state.navigation.currentSurface->geometryId());
       }
     }
     // Return a positive status: either on it, or on the way
@@ -598,7 +598,7 @@ class Navigator {
       auto surface = state.navigation.navSurfaceIter->object;
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state)
-                   << "Next surface candidate will be " << surface->geoID());
+                   << "Next surface candidate will be " << surface->geometryId());
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
@@ -957,7 +957,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state)
                    << "Fast target initialization through association.");
       ACTS_VERBOSE(volInfo(state) << "Target surface set to "
-                                  << state.navigation.targetSurface->geoID());
+                                  << state.navigation.targetSurface->geometryId());
       state.navigation.targetLayer =
           state.navigation.targetSurface->associatedLayer();
       state.navigation.targetVolume =
@@ -1180,7 +1180,7 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state)
                      << volInfo(state)
                      << "Current surface set to target surface "
-                     << state.navigation.currentSurface->geoID());
+                     << state.navigation.currentSurface->geometryId());
         return true;
       }
     }

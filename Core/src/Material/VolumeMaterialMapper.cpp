@@ -79,7 +79,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
   auto volumeMaterial = volume.volumeMaterial();
   // Check if the volume has a proxy
   if (volumeMaterial != nullptr) {
-    auto geoID = volume.geoID();
+    auto geoID = volume.geometryId();
     size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
@@ -130,7 +130,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
   // Check the boundary surfaces
   for (auto& bSurface : tVolume.boundarySurfaces()) {
     if (bSurface->surfaceRepresentation().surfaceMaterial() != nullptr) {
-      mState.surfaceMaterial[bSurface->surfaceRepresentation().geoID()] =
+      mState.surfaceMaterial[bSurface->surfaceRepresentation().geometryId()] =
           bSurface->surfaceRepresentation().surfaceMaterialSharedPtr();
     }
   }
@@ -143,7 +143,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
       if (cLayer->layerType() != navigation) {
         // Check the representing surface
         if (cLayer->surfaceRepresentation().surfaceMaterial() != nullptr) {
-          mState.surfaceMaterial[cLayer->surfaceRepresentation().geoID()] =
+          mState.surfaceMaterial[cLayer->surfaceRepresentation().geometryId()] =
               cLayer->surfaceRepresentation().surfaceMaterialSharedPtr();
         }
         // Get the approach surfaces if present
@@ -152,7 +152,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
                cLayer->approachDescriptor()->containedSurfaces()) {
             if (aSurface != nullptr) {
               if (aSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[aSurface->geoID()] =
+                mState.surfaceMaterial[aSurface->geometryId()] =
                     aSurface->surfaceMaterialSharedPtr();
               }
             }
@@ -164,7 +164,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
           for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
             if (sSurface != nullptr) {
               if (sSurface->surfaceMaterial() != nullptr) {
-                mState.surfaceMaterial[sSurface->geoID()] =
+                mState.surfaceMaterial[sSurface->geometryId()] =
                     sSurface->surfaceMaterialSharedPtr();
               }
             }
@@ -265,7 +265,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                             << " mapping volumes for this track.");
   ACTS_VERBOSE("Mapping volumes are :")
   for (auto& mVolumes : mappingVolumes) {
-    ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geoID()
+    ACTS_VERBOSE(" - Volume : " << mVolumes.volume->geometryId()
                                 << " at position = (" << mVolumes.position.x()
                                 << ", " << mVolumes.position.y() << ", "
                                 << mVolumes.position.z() << ")");
@@ -300,7 +300,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
     }
     if (volIter != mappingVolumes.end() &&
         volIter->volume->inside(rmIter->position)) {
-      currentID = volIter->volume->geoID();
+      currentID = volIter->volume->geometryId();
       if (not(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
@@ -325,7 +325,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
             // adjust the thickness of the last extrapolated step
             properties.scaleThickness(remainder / properties.thickness());
           }
-          mState.recordedMaterial[volIter->volume->geoID()].push_back(
+          mState.recordedMaterial[volIter->volume->geometryId()].push_back(
               std::pair(properties, extraPosition));
         }
       }

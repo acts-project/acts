@@ -108,7 +108,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
       surface.assignSurfaceMaterial(nullptr);
     }
     // Try to find the surface in the map
-    auto sMaterial = m_surfaceMaterialMap.find(surface.geoID());
+    auto sMaterial = m_surfaceMaterialMap.find(surface.geometryId());
     if (sMaterial != m_surfaceMaterialMap.end()) {
       surface.assignSurfaceMaterial(sMaterial->second);
     }
@@ -123,7 +123,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
       volume.assignVolumeMaterial(nullptr);
     }
     // Try to find the surface in the map
-    auto vMaterial = m_volumeMaterialMap.find(volume.geoID());
+    auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
       volume.assignVolumeMaterial(vMaterial->second);
     }

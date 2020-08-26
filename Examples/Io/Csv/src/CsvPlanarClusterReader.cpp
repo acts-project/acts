@@ -49,7 +49,7 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   }
   // fill the geo id to surface map once to speed up lookups later on
   m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    this->m_surfaces[surface->geoID()] = surface;
+    this->m_surfaces[surface->geometryId()] = surface;
   });
 }
 
