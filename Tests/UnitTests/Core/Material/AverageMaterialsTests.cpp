@@ -15,6 +15,8 @@ namespace {
 using Acts::detail::averageMaterials;
 
 const Acts::MaterialProperties vacuum = Acts::MaterialProperties();
+// same material corresponding to 0%, 1% and 100% radiation/interaction length
+const Acts::MaterialProperties zero(Acts::Test::makeSilicon(), 0);
 const Acts::MaterialProperties percent = Acts::Test::makePercentSlab();
 const Acts::MaterialProperties unit = Acts::Test::makeUnitSlab();
 
@@ -54,7 +56,7 @@ BOOST_AUTO_TEST_CASE(UnitSlabs) {
   BOOST_CHECK_EQUAL(slab.thicknessInL0(), 2 * unit.thicknessInL0());
 }
 
-// average a non-vacuum and an infinitely thin vacuum slab
+// average a material slab and an infinitely thin vacuum slab
 
 BOOST_AUTO_TEST_CASE(PercentVacuumSlabs) {
   {
@@ -88,6 +90,52 @@ BOOST_AUTO_TEST_CASE(UnitVacuumSlabs) {
   // reverse input order
   {
     auto slab = averageMaterials(vacuum, unit);
+    BOOST_CHECK(slab.material());
+    BOOST_CHECK_EQUAL(slab.material(), unit);
+    BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
+  }
+}
+
+// average two slabs with the same material but different thickness
+
+BOOST_AUTO_TEST_CASE(PercentUnitSlabs) {
+  // the two slabs have the same material -> average should be identical
+  {
+    auto slab = averageMaterials(percent, unit);
+    BOOST_CHECK(slab.material());
+    BOOST_CHECK_EQUAL(slab.material(), percent);
+    BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness() + unit.thickness());
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.01f);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.01f);
+  }
+  // reverse input order
+  {
+    auto slab = averageMaterials(unit, percent);
+    BOOST_CHECK(slab.material());
+    BOOST_CHECK_EQUAL(slab.material(), unit);
+    BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness() + percent.thickness());
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.01f);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.01f);
+  }
+}
+
+// average two slabs where one has zero thickness
+
+BOOST_AUTO_TEST_CASE(UnitZeroSlabs) {
+  // the two slabs have the same material -> average should be identical
+  {
+    auto slab = averageMaterials(unit, zero);
+    BOOST_CHECK(slab.material());
+    BOOST_CHECK_EQUAL(slab.material(), unit);
+    BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), unit.thicknessInX0());
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), unit.thicknessInL0());
+  }
+  // reverse input order
+  {
+    auto slab = averageMaterials(zero, unit);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
