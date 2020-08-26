@@ -46,6 +46,25 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           file: ./build/coverage/cov.xml
+
+  clang-tidy:
+    runs-on: ubuntu-latest
+    container: gitlab-registry.cern.ch/acts/machines/ubuntu2004:v4
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install clang-tidy
+        run: apt-get install -y clang-tidy-10
+      - name: Configure
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS="-Werror"
+          -DACTS_BUILD_EVERYTHING=on
+          -DACTS_RUN_CLANG_TIDY=on
+      - name: Build
+        run: cmake --build build --
+
   build_performance:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v5
