@@ -27,3 +27,17 @@ set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ACTS_S
 
 # silence warning about missing RPATH on Mac OSX
 set(CMAKE_MACOSX_RPATH 1)
+
+if(ACTS_RUN_CLANG_TIDY)
+  find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+  if(NOT CLANG_TIDY_COMMAND)
+    message(WARNING "CMake_RUN_CLANG_TIDY is ON but clang-tidy is not found!")
+    set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE)
+  else()
+    message(STATUS "Setting up clang-tidy run")
+    set(CLANG_TIDY_CHECKS "-*,readability-*,-readability-redundant-member-init,misc-*,-misc-unused-parameters,bugprone-*,performance-*,modernize-*,-modernize-use-auto,clang-analyzer-deadcode.*,clang-analyzer-*,-clang-analyzer-osx.*,-clang-analyzer-unix.*,cppcoreguidelines-*,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-constant-array")
+    # performance-move-const-arg
+    set(CLANG_TIDY_ERRORS "readability-inconsistent-declaration-parameter-name,readability-named-parameter,readability-container-size-empty,modernize-use-using,readability-braces-around-statements,modernize-use-override,modernize-use-equals-default,readability-implicit-bool-cast,modernize-use-default-member-init,performance-unnecessary-value-param,performance-move-const-arg,modernize-use-equals-default,modernize-use-nullptr")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-checks=${CLANG_TIDY_CHECKS};-header-filter='.*';-warnings-as-errors=${CLANG_TIDY_ERRORS}")
+  endif()
+endif()
