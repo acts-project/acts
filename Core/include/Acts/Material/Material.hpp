@@ -62,13 +62,13 @@ class Material {
   /// @param L0 is the nuclear interaction length
   /// @param Ar is the relative atomic mass
   /// @param Z is the nuclear charge number
-  /// @param rho is the mass density
+  /// @param massRho is the mass density
   ///
   /// @warning Due to the choice of native mass units, using the mass density
   ///   can lead to numerical problems. Typical mass densities lead to
   ///   computations with values differing by 20+ orders of magnitude.
   static Material fromMassDensity(float x0, float l0, float ar, float z,
-                                  float rho);
+                                  float massRho);
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.

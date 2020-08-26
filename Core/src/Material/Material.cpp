@@ -27,7 +27,7 @@ constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 }  // namespace
 
 Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
-                                               float z, float rho) {
+                                               float z, float massRho) {
   using namespace Acts::UnitLiterals;
 
   Material mat;
@@ -47,7 +47,7 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   //
   // perform computations in double precision to avoid loss of precision
   const double atomicMass = static_cast<double>(ar) * 1_u;
-  mat.m_molarRho = static_cast<double>(rho) / (atomicMass * kAvogadro);
+  mat.m_molarRho = static_cast<double>(massRho) / (atomicMass * kAvogadro);
   return mat;
 }
 
