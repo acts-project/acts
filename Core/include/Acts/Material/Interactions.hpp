@@ -21,7 +21,7 @@ namespace Acts {
 /// @param pdg       Particle type PDG identifier
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
-/// @param q         Particle charge
+/// @param q         Particle charge, only the magnitude is considered
 ///
 /// This computes the mean energy loss -dE(x) through a material with
 /// the given properties, i.e. it computes
@@ -79,7 +79,7 @@ float computeEnergyLossLandauSigmaQOverP(const MaterialProperties& slab,
 /// @param pdg       Particle type PDG identifier
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
-/// @param q         Particle charge
+/// @param q         Particle charge, only the magnitude is considered
 ///
 /// This computes the mean energy loss -dE(x) using an approximative formula.
 /// Bremsstrahlung is always included; direct e+e- pair production and
@@ -100,7 +100,7 @@ float deriveEnergyLossRadiativeQOverP(const MaterialProperties& slab, int pdg,
 /// @param pdg       Particle type PDG identifier
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
-/// @param q         Particle charge
+/// @param q         Particle charge, only the magnitude is considered
 ///
 /// This computes the combined mean energy loss -dE(x) including ionisation and
 /// radiative effects. The computations are valid over a wide range of particle
@@ -132,7 +132,7 @@ float deriveEnergyLossModeQOverP(const MaterialProperties& slab, int pdg,
 /// @param pdg       Particle type PDG identifier
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
-/// @param q         Particle charge
+/// @param q         Particle charge, only the magnitude is considered
 float computeMultipleScatteringTheta0(const MaterialProperties& slab, int pdg,
                                       float m, float qOverP,
                                       float q = UnitConstants::e);
