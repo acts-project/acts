@@ -39,7 +39,7 @@ Acts::MaterialProperties::MaterialProperties(
   // NOTE yes, this loop is exactly like std::reduce which apparently does not
   //   exist on gcc 8 although it is required by C++17.
   for (const auto& layer : layers) {
-    *this = detail::averageMaterials(*this, layer);
+    *this = detail::combineSlabs(*this, layer);
   }
 }
 

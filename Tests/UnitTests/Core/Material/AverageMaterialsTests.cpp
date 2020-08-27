@@ -12,7 +12,8 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 namespace {
-using Acts::detail::averageMaterials;
+
+using Acts::detail::combineSlabs;
 
 const Acts::MaterialProperties vacuum = Acts::MaterialProperties();
 // same material corresponding to 0%, 1% and 100% radiation/interaction length
@@ -26,16 +27,16 @@ BOOST_AUTO_TEST_SUITE(AverageMaterials)
 
 // average two identical slabs
 
-BOOST_AUTO_TEST_CASE(VacuumSlabs) {
-  auto slab = averageMaterials(vacuum, vacuum);
+BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
+  auto slab = combineSlabs(vacuum, vacuum);
   BOOST_CHECK(not slab.material());
   BOOST_CHECK_EQUAL(slab.thickness(), 0);
   BOOST_CHECK_EQUAL(slab.thicknessInX0(), 0);
   BOOST_CHECK_EQUAL(slab.thicknessInL0(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(PercentSlabs) {
-  auto slab = averageMaterials(percent, percent);
+BOOST_AUTO_TEST_CASE(CombineSlabsPercent) {
+  auto slab = combineSlabs(percent, percent);
   // combining two identical slabs must give the same average material
   BOOST_CHECK(slab.material());
   BOOST_CHECK_EQUAL(slab.material(), percent);
@@ -45,8 +46,8 @@ BOOST_AUTO_TEST_CASE(PercentSlabs) {
   BOOST_CHECK_EQUAL(slab.thicknessInL0(), 2 * percent.thicknessInL0());
 }
 
-BOOST_AUTO_TEST_CASE(UnitSlabs) {
-  auto slab = averageMaterials(unit, unit);
+BOOST_AUTO_TEST_CASE(CombineSlabsVacuum) {
+  auto slab = combineSlabs(unit, unit);
   // combining two identical slabs must give the same average material
   BOOST_CHECK(slab.material());
   BOOST_CHECK_EQUAL(slab.material(), unit);
@@ -58,9 +59,9 @@ BOOST_AUTO_TEST_CASE(UnitSlabs) {
 
 // average a material slab and an infinitely thin vacuum slab
 
-BOOST_AUTO_TEST_CASE(PercentVacuumSlabs) {
+BOOST_AUTO_TEST_CASE(CombineSlabsPercentVacuum) {
   {
-    auto slab = averageMaterials(percent, vacuum);
+    auto slab = combineSlabs(percent, vacuum);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), percent);
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(PercentVacuumSlabs) {
   }
   // reverse input order
   {
-    auto slab = averageMaterials(vacuum, percent);
+    auto slab = combineSlabs(vacuum, percent);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), percent);
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness());
@@ -78,9 +79,9 @@ BOOST_AUTO_TEST_CASE(PercentVacuumSlabs) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(UnitVacuumSlabs) {
+BOOST_AUTO_TEST_CASE(CombineSlabsUnitVacuum) {
   {
-    auto slab = averageMaterials(unit, vacuum);
+    auto slab = combineSlabs(unit, vacuum);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
@@ -89,7 +90,7 @@ BOOST_AUTO_TEST_CASE(UnitVacuumSlabs) {
   }
   // reverse input order
   {
-    auto slab = averageMaterials(vacuum, unit);
+    auto slab = combineSlabs(vacuum, unit);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
@@ -98,12 +99,12 @@ BOOST_AUTO_TEST_CASE(UnitVacuumSlabs) {
   }
 }
 
-// average two slabs with the same material but different thickness
+// average two non-vacuum slabs with the same material but different thickness
 
-BOOST_AUTO_TEST_CASE(PercentUnitSlabs) {
+BOOST_AUTO_TEST_CASE(CombineSlabsPercentUnit) {
   // the two slabs have the same material -> average should be identical
   {
-    auto slab = averageMaterials(percent, unit);
+    auto slab = combineSlabs(percent, unit);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), percent);
     BOOST_CHECK_EQUAL(slab.thickness(), percent.thickness() + unit.thickness());
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(PercentUnitSlabs) {
   }
   // reverse input order
   {
-    auto slab = averageMaterials(unit, percent);
+    auto slab = combineSlabs(unit, percent);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness() + percent.thickness());
@@ -121,12 +122,12 @@ BOOST_AUTO_TEST_CASE(PercentUnitSlabs) {
   }
 }
 
-// average two slabs where one has zero thickness
+// average two non-vacuum slabs where one has zero thickness
 
-BOOST_AUTO_TEST_CASE(UnitZeroSlabs) {
+BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
   // the two slabs have the same material -> average should be identical
   {
-    auto slab = averageMaterials(unit, zero);
+    auto slab = combineSlabs(unit, zero);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());
@@ -135,7 +136,7 @@ BOOST_AUTO_TEST_CASE(UnitZeroSlabs) {
   }
   // reverse input order
   {
-    auto slab = averageMaterials(zero, unit);
+    auto slab = combineSlabs(zero, unit);
     BOOST_CHECK(slab.material());
     BOOST_CHECK_EQUAL(slab.material(), unit);
     BOOST_CHECK_EQUAL(slab.thickness(), unit.thickness());

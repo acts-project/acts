@@ -12,5 +12,5 @@
 
 void Acts::AccumulatedVolumeMaterial::accumulate(
     const MaterialProperties& mat) {
-  m_average = detail::averageMaterials(m_average, mat);
+  m_average = detail::combineSlabs(m_average, mat);
 }

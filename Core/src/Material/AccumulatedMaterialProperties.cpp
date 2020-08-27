@@ -17,7 +17,7 @@ void Acts::AccumulatedMaterialProperties::accumulate(MaterialProperties slab,
   //   normalization. this is inconsistent and i am not sure what the right
   //   approach is here?
   slab.scaleThickness(pathCorrection);
-  m_trackAverage = detail::averageMaterials(m_trackAverage, slab);
+  m_trackAverage = detail::combineSlabs(m_trackAverage, slab);
 }
 
 void Acts::AccumulatedMaterialProperties::trackAverage(bool useEmptyTrack) {
@@ -26,7 +26,7 @@ void Acts::AccumulatedMaterialProperties::trackAverage(bool useEmptyTrack) {
     // average such that each track contributes equally.
     MaterialProperties weightedTotal(m_totalAverage.material(), m_totalCount);
     MaterialProperties weightedTrack(m_trackAverage.material(), 1);
-    m_totalAverage = detail::averageMaterials(weightedTotal, weightedTrack);
+    m_totalAverage = detail::combineSlabs(weightedTotal, weightedTrack);
     m_totalCount += 1;
   }
   // reset track average

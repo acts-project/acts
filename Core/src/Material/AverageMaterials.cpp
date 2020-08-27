@@ -8,7 +8,7 @@
 
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
-Acts::MaterialProperties Acts::detail::averageMaterials(
+Acts::MaterialProperties Acts::detail::combineSlabs(
     const MaterialProperties& slab1, const MaterialProperties& slab2) {
   const auto& mat1 = slab1.material();
   const auto& mat2 = slab2.material();
