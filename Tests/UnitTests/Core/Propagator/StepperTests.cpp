@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
-  propOpts.maxSteps = 100;
+  propOpts.maxSteps = 10000;
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       propOptsDense(tgContext, mfContext, getDummyLogger());
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
-  propOptsDense.maxSteps = 100;
+  propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -789,7 +789,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.abortList = abortList;
-  propOpts.maxSteps = 100;
+  propOpts.maxSteps = 1000;
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       propOptsDef(tgContext, mfContext, getDummyLogger());
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
-  propOptsDef.maxSteps = 100;
+  propOptsDef.maxSteps = 1000;
   propOptsDef.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -908,7 +908,6 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
-  propOptsDense.tolerance = 1e-8;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
@@ -1042,6 +1041,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
+  propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
