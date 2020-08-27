@@ -21,6 +21,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <memory>
 
@@ -260,24 +261,6 @@ class Surface : public virtual GeometryObject,
                    const Vector3D& momentum,
                    const BoundaryCheck& bcheck = true) const;
 
-  /// The derivative of bound track parameters w.r.t. alignment
-  /// parameters of its reference surface (i.e. local frame origin in
-  /// global 3D Cartesian coordinates and its rotation represented with
-  /// extrinsic Euler angles)
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param derivatives Path length derivatives of the free, nominal
-  /// parameters to help evaluate change of free track parameters caused by
-  /// change of alignment parameters
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
-  ///
-  /// @return Derivative of bound track parameters w.r.t. local frame
-  /// alignment parameters
-  const AlignmentToBoundMatrix alignmentToBoundDerivative(
-      const GeometryContext& gctx, const FreeVector& derivatives,
-      const Vector3D& position, const Vector3D& direction) const;
-
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check
@@ -294,12 +277,9 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param position global 3D position to be filled (given by reference for
-  /// method symmetry)
-  virtual void localToGlobal(const GeometryContext& gctx,
-                             const Vector2D& lposition,
-                             const Vector3D& momentum,
-                             Vector3D& position) const = 0;
+  virtual const Vector3D localToGlobal(const GeometryContext& gctx,
+                                       const Vector2D& lposition,
+                                       const Vector3D& momentumn) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -310,14 +290,11 @@ class Surface : public virtual GeometryObject,
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param lposition local 2D position to be filled (given by reference for
-  /// method symmetry)
   ///
-  /// @return boolean indication if operation was successful (fail means global
-  /// position was not on surface)
-  virtual bool globalToLocal(const GeometryContext& gctx,
-                             const Vector3D& position, const Vector3D& momentum,
-                             Vector2D& lposition) const = 0;
+  /// @return a Result<Vector2D> which can be !ok() if the operation fails
+  virtual Result<Vector2D> globalToLocal(const GeometryContext& gctx,
+                                         const Vector3D& position,
+                                         const Vector3D& momentum) const = 0;
 
   /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
@@ -443,6 +420,24 @@ class Surface : public virtual GeometryObject,
   /// @return A list of vertices and a face/facett description of it
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                               size_t lseg) const = 0;
+
+  /// The derivative of bound track parameters w.r.t. alignment
+  /// parameters of its reference surface (i.e. local frame origin in
+  /// global 3D Cartesian coordinates and its rotation represented with
+  /// extrinsic Euler angles)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param derivatives Path length derivatives of the free, nominal
+  /// parameters to help evaluate change of free track parameters caused by
+  /// change of alignment parameters
+  /// @param position The position of the paramters in global
+  /// @param direction The direction of the track
+  ///
+  /// @return Derivative of bound track parameters w.r.t. local frame
+  /// alignment parameters
+  const AlignmentToBoundMatrix alignmentToBoundDerivative(
+      const GeometryContext& gctx, const FreeVector& derivatives,
+      const Vector3D& position, const Vector3D& direction) const;
 
   /// Calculate the derivative of path length w.r.t. alignment parameters of the
   /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
