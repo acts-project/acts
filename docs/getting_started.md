@@ -225,7 +225,7 @@ $ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
 Multiple options can be given. `cmake` caches the options so that only changed
 options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
-components. q
+components.
 
 | Option                                | Description |
 |---------------------------------------|-------------|
