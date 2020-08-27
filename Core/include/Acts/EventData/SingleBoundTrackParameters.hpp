@@ -153,9 +153,7 @@ class SingleBoundTrackParameters {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =
         makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
-    Vector3D pos;
-    m_surface->localToGlobal(geoCtx, loc, dir, pos);
-    return pos;
+    return m_surface->localToGlobal(geoCtx, loc, dir);
   }
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }

@@ -53,16 +53,17 @@ class SurfaceStub : public Surface {
   }
 
   /// Local to global transformation
-  void localToGlobal(const GeometryContext& /*gctx*/, const Vector2D& /*lpos*/,
-                     const Vector3D& /*gmom*/, Vector3D& /*gpos*/) const final {
-    // nop
+  Vector3D localToGlobal(const GeometryContext& /*gctx*/,
+                         const Vector2D& /*lpos*/, const Vector3D& /*gmom*/,
+                         Vector3D& /*gpos*/) const final {
+    return Vector3D(0., 0., 0.);
   }
 
   /// Global to local transformation
-  bool globalToLocal(const GeometryContext& /*cxt*/, const Vector3D& /*gpos*/,
-                     const Vector3D& /*gmom*/, Vector2D& lpos) const final {
-    lpos = Vector2D{20., 20.};
-    return true;
+  Result<Vector2D> globalToLocal(const GeometryContext& /*cxt*/,
+                                 const Vector3D& /*gpos*/,
+                                 const Vector3D& /*gmom*/) const final {
+    return Result<Vector2D>::success(Vector2D{20., 20.});
   }
 
   /// Calculation of the path correction for incident

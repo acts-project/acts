@@ -157,13 +157,12 @@ void reinitializeJacobians(
   jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
   // Reset the jacobian from local to global
-  Vector2D loc{0., 0.};
   const Vector3D position = parameters.segment<3>(eFreePos0);
   const Vector3D direction = parameters.segment<3>(eFreeDir0);
-  surface.globalToLocal(geoContext, position, direction, loc);
+  auto loc = surface.globalToLocal(geoContext, position, direction);
   BoundVector pars;
-  pars << loc[eLOC_0], loc[eLOC_1], phi(direction), theta(direction),
-      parameters[eFreeQOverP], parameters[eFreeTime];
+  pars << loc.value()[eLOC_0], loc.value()[eLOC_1], phi(direction),
+      theta(direction), parameters[eFreeQOverP], parameters[eFreeTime];
   surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, position,
                                direction, pars);
 }

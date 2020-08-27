@@ -39,8 +39,7 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
 
   // convert local-to-global
   Vector3D sentinel = Vector3D::Random();
-  Vector3D pos = sentinel;
-  surface.localToGlobal(geoCtx, Vector2D(l0, l1), dir, pos);
+  Vector3D pos = surface.localToGlobal(geoCtx, Vector2D(l0, l1), dir);
   BOOST_CHECK_MESSAGE(pos != sentinel, "Position was not changed");
   BOOST_CHECK_MESSAGE(
       std::isfinite(pos[0]),
@@ -57,10 +56,10 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
 
   // convert global-to-local
   Vector2D loc = Vector2D::Zero();
-  bool validTransform = surface.globalToLocal(geoCtx, pos, dir, loc);
-  BOOST_CHECK(validTransform);
-  CHECK_CLOSE_OR_SMALL(loc[ePos0], l0, eps, eps);
-  CHECK_CLOSE_OR_SMALL(loc[ePos1], l1, eps, eps);
+  auto lpResult = surface.globalToLocal(geoCtx, pos, dir);
+  BOOST_CHECK(lpResult.ok());
+  CHECK_CLOSE_OR_SMALL(lpResult.value()[ePos0], l0, eps, eps);
+  CHECK_CLOSE_OR_SMALL(lpResult.value()[ePos1], l1, eps, eps);
 }
 
 std::shared_ptr<Transform3D> makeTransformIdentity() {

@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2D localPosition{1.5, 1.7};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  globalPosition =
+      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum, );
   //
   // expected position is the translated one
   Vector3D expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
@@ -121,8 +121,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
   /// Testing globalToLocal
-  planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum,
-                                    localPosition);
+  localPosition =
+      planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
+          .value();
   Vector2D expectedLocalPosition{1.5, 1.7};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
@@ -268,9 +269,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
   /// Get the global position
-  Vector3D globalPosition{0, 0, 0};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  Vector3D globalPosition =
+      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
 
   // Call the function to calculate the derivative of local frame axes w.r.t its
   // rotation

@@ -20,8 +20,7 @@ Acts::FreeVector Acts::detail::transformBoundToFreeParameters(
 
   // convert local position to global position vector
   Vector2D loc(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
-  Vector3D pos = Vector3D::Zero();
-  surface.localToGlobal(geoCtx, loc, dir, pos);
+  Vector3D pos = surface.localToGlobal(geoCtx, loc, dir);
 
   // construct full free-vector. time and q/p stay as-is.
   FreeVector freeParams = FreeVector::Zero();
