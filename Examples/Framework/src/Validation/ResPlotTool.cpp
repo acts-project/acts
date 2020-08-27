@@ -153,11 +153,16 @@ void ActsExamples::ResPlotTool::fill(
   ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
-  Acts::Vector2D local(0., 0.);
-  pSurface->globalToLocal(gctx, truthParticle.position(),
-                          truthParticle.unitDirection(), local);
-  truthParameter[Acts::ParDef::eLOC_D0] = local[Acts::ParDef::eLOC_D0];
-  truthParameter[Acts::ParDef::eLOC_Z0] = local[Acts::ParDef::eLOC_Z0];
+  auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
+                                          truthParticle.unitDirection());
+  if (lpResult.ok()) {
+    truthParameter[Acts::ParDef::eLOC_D0] =
+        lpResult.value()[Acts::ParDef::eLOC_D0];
+    truthParameter[Acts::ParDef::eLOC_Z0] =
+        lpResult.value()[Acts::ParDef::eLOC_Z0];
+  } else {
+    ACTS_WARNING("Global to local transformation did not succeed.");
+  }
   truthParameter[Acts::ParDef::ePHI] = phi(truthParticle.unitDirection());
   truthParameter[Acts::ParDef::eTHETA] = theta(truthParticle.unitDirection());
   truthParameter[Acts::ParDef::eQOP] =

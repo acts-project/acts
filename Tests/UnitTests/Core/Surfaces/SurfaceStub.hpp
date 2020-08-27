@@ -54,8 +54,8 @@ class SurfaceStub : public Surface {
 
   /// Local to global transformation
   Vector3D localToGlobal(const GeometryContext& /*gctx*/,
-                         const Vector2D& /*lpos*/, const Vector3D& /*gmom*/,
-                         Vector3D& /*gpos*/) const final {
+                         const Vector2D& /*lpos*/,
+                         const Vector3D& /*gmom*/) const final {
     return Vector3D(0., 0., 0.);
   }
 

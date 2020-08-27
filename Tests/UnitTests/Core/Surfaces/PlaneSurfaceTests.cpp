@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   /// Test localToGlobal
   Vector2D localPosition{1.5, 1.7};
   globalPosition =
-      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum, );
+      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
   Vector3D expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),

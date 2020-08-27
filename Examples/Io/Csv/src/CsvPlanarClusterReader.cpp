@@ -251,7 +251,12 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     double time = hit.t * Acts::UnitConstants::ns;
     Acts::Vector3D mom(1, 1, 1);  // fake momentum
     Acts::Vector2D local(0, 0);
-    surface.globalToLocal(ctx.geoContext, pos, mom, local);
+    auto lpResult = surface.globalToLocal(ctx.geoContext, pos, mom);
+    if (not lpResult.ok()) {
+      ACTS_WARNING("Global to local transformation did not succeed.");
+    } else {
+      local = lpResult.value();
+    }
     // TODO what to use as cluster uncertainty?
     Acts::ActsSymMatrixD<3> cov = Acts::ActsSymMatrixD<3>::Identity();
     // create the planar cluster

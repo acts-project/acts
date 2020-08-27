@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test localToGlobal
   Vector2D localPosition{1.0, M_PI / 2.0};
   globalPosition =
-      coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum, );
+      coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   // std::cout<<globalPosition<<std::endl;
   Vector3D expectedPosition{0.0220268, 1.65027, 3.5708};
 
