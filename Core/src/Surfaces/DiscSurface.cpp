@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -88,7 +89,7 @@ Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   if (loc3Dframe.z() * loc3Dframe.z() >
       s_onSurfaceTolerance * s_onSurfaceTolerance) {
-    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Acts::Vector2D>::success({perp(loc3Dframe), phi(loc3Dframe)});
 }

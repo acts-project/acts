@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -122,7 +123,7 @@ Acts::Result<Acts::Vector2D> Acts::CylinderSurface::globalToLocal(
   Transform3D inverseTrans(sfTransform.inverse());
   Vector3D loc3Dframe(inverseTrans * position);
   if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
-    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2D>::success(
       {bounds().get(CylinderBounds::eR) * phi(loc3Dframe), loc3Dframe.z()});

@@ -55,7 +55,6 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
       "Position " << pos.transpose() << " is not on the surface");
 
   // convert global-to-local
-  Vector2D loc = Vector2D::Zero();
   auto lpResult = surface.globalToLocal(geoCtx, pos, dir);
   BOOST_CHECK(lpResult.ok());
   CHECK_CLOSE_OR_SMALL(lpResult.value()[ePos0], l0, eps, eps);

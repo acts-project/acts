@@ -7,7 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/ConeSurface.hpp"
-#include "Acts/Surfaces/SurfacesError.hpp"
+
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -118,7 +119,7 @@ Acts::Result<Acts::Vector2D> Acts::ConeSurface::globalToLocal(
       m_transform ? (transform(gctx).inverse() * position) : position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > s_onSurfaceTolerance) {
-    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2D>::success(
       {r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()});

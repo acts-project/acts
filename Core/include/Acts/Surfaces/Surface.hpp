@@ -15,7 +15,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Surfaces/SurfacesError.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Utilities/AlignmentDefinitions.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
