@@ -81,7 +81,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
   const int numMiddleSPs = middleSPvec.size();
   const int numTopSPs = topSPvec.size();
 
-  deviceSeedfinderConfig deviceConfigData = {
+  const deviceSeedfinderConfig deviceConfigData = {
     m_config.deltaRMin,
     m_config.deltaRMax,
     m_config.cotThetaMax,

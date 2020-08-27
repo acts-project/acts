@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <chrono>
+#include <ctime>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -116,6 +117,8 @@ auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_
 
 auto main(int argc, char** argv) -> int {
 
+  auto start_prep = std::chrono::system_clock::now();
+
   CommandLineArguments cmdlTool;
   cmdlTool.parse(argc, argv);
 
@@ -148,16 +151,18 @@ auto main(int argc, char** argv) -> int {
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), covarianceTool,
                                             bottomBinFinder, topBinFinder, std::move(grid), config);
   std::cout << "read " << spVec.size() << " SP from file " << cmdlTool.filename << std::endl;
+  auto end_prep = std::chrono::system_clock::now();
 
+  // -------------------------------------- //
   // ----------- EXECUTE ON CPU ----------- //
-
-  int group_count = 0;
-  auto groupIt = spGroup.begin();
-  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+  // -------------------------------------- //
 
   auto start_cpu = std::chrono::system_clock::now();
+  int group_count = 0;
+  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
+
   if(!cmdlTool.onlyGpu) {
-    for (; !(groupIt == spGroup.end()); ++groupIt) {
+    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
       seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
           groupIt.bottom(), groupIt.middle(), groupIt.top()));
       group_count++;
@@ -168,20 +173,19 @@ auto main(int argc, char** argv) -> int {
   }
 
   auto end_cpu = std::chrono::system_clock::now();
+
   std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
 
-  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
-  double cpuTime = elapsec_cpu.count();
+  // -------------------------------------- //
+  // -------- EXECUTE ON GPU - SYCL ------- //
+  // -------------------------------------- //
 
-  //----------- EXECUTE ON GPU - SYCL ----------//
+  auto start_sycl = std::chrono::system_clock::now();
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
-  groupIt = spGroup.begin();
-
-  auto start_sycl = std::chrono::system_clock::now();
-  // int s = 0;
-  for (; !(groupIt == spGroup.end()); ++groupIt) {
+  
+  for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
       seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
           groupIt.bottom(), groupIt.middle(), groupIt.top()));
       group_count++;
@@ -190,10 +194,19 @@ auto main(int argc, char** argv) -> int {
       }
   }
   auto end_sycl = std::chrono::system_clock::now();
+  
+  std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
+
+  std::chrono::duration<double> elapsec_prep = end_prep- start_prep;
+  double prepTime = elapsec_prep.count();
+
+  std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
+  double cpuTime = elapsec_cpu.count();
+
   std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
   double syclTime = elapsec_sycl.count();
 
-  std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
+  std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
 
   std::cout << std::endl;
   std::cout << "----------------------- Time Metric -----------------------" << std::endl;

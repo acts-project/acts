@@ -24,13 +24,13 @@ void CommandLineArguments::parse(int argc, char** argv) {
     po::options_description optionsDescription("Allowed options");
     optionsDescription.add_options()
       ("help,h","Print usage message.")
-      ("list_platforms,l", "List available SYCL platforms and devices. Useful for specifying which exact device we want to run on.")
-      ("device,d", po::value<std::string>()->default_value(""), "Provide a substring of the preferred device.")
-      ("inputfile,f", po::value<std::string>()->default_value(""), "Provide path for input file.")
-      ("only_gpu,g",po::bool_switch(),"Execute code only on gpu.")
-      ("all_groups,a", po::bool_switch(), "Execute on all groups.")
-      ("groups,c",po::value<unsigned int>()->default_value(500),"Add number of groups to execute on.")
-      ("matches,m",po::bool_switch(),"Count seed matches.")
+      ("FILE,f", po::value<std::string>()->default_value(""), "Provide path for input file.")
+      ("NUM,n",po::value<unsigned int>()->default_value(500),"Number of groups to iterate in seed finding.")
+      ("DEVICE,d", po::value<std::string>()->default_value(""), "Provide a substring of the preferred device.")
+      ("LIST,l", "List available SYCL platforms and devices.")
+      ("GPU,G",po::bool_switch(),"Execute code only on gpu. Default is 0.")
+      ("ALL,a", po::bool_switch(), "Analyze all groups. Default is 0.")
+      ("MATCH,m",po::bool_switch(),"Count seed matches. Default is 0.")
     ;
 
     po::variables_map vm;
@@ -42,17 +42,17 @@ void CommandLineArguments::parse(int argc, char** argv) {
       exit(0);
     }
 
-    if(vm.count("list_platforms") != 0 ) {
+    if(vm.count("LIST") != 0 ) {
       Acts::Sycl::listPlatforms();
       exit(0);
     }
 
-    onlyGpu = vm["only_gpu"].as<bool>();
-    matches = vm["matches"].as<bool>();
-    groups = vm["groups"].as<unsigned int>();
-    deviceName = vm["device"].as<std::string>();
-    allgroup = vm["all_groups"].as<bool>();
-    filename = vm["inputfile"].as<std::string>();
+    onlyGpu = vm["GPU"].as<bool>();
+    matches = vm["MATCH"].as<bool>();
+    groups = vm["NUM"].as<unsigned int>();
+    deviceName = vm["DEVICE"].as<std::string>();
+    allgroup = vm["ALL"].as<bool>();
+    filename = vm["FILE"].as<std::string>();
     std::ifstream s(filename);
     fileExists = s.good();
 }

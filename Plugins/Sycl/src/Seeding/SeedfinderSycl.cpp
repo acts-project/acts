@@ -38,7 +38,6 @@ namespace Acts::Sycl {
                           const std::vector<deviceSpacePoint>& topSPs,
                           std::vector<std::vector<SeedData>>& seeds)
   {
-
     // Each vector stores data of space points in simplified 
     // structures of float variables
     // M: number of middle space points
@@ -57,13 +56,6 @@ namespace Acts::Sycl {
     std::vector<uint32_t> sumBotCompUptoMid(M+1,0);
     std::vector<uint32_t> sumTopCompUptoMid(M+1,0);
     std::vector<uint64_t> sumBotTopCombined(M+1,0);
-
-    // After completing the duplet search, we'll have successfully contructed two
-    // bipartite graphs for bottom-middle and top-middle space points.
-    // We store the indices of the bottom/top space points of the edges of the graphs.
-    // They index the bottomSPs and topSPs vectors.
-    // std::vector<uint32_t> indBotCompMid;
-    // std::vector<uint32_t> indTopCompMid;
 
     // Similarly to indBotCompMid and indTopCompMid, we store the indices of the 
     // middle space points of the corresponding edges.
@@ -85,7 +77,7 @@ namespace Acts::Sycl {
       using at = cl::sycl::access::target;
 
       // Reserve buffers:
-      //  - configBuf: deviceed data of the SeedfinderConfig class instance m_config
+      //  - configBuf: device data of the SeedfinderConfig class instance m_config
       //  - botSPBuf, midSPBuf, topSPBuf: space point data
       //  - numBotCompBuf, numTopCompBuf: number of compatible bottom/top space points per middle sp
       cl::sycl::buffer<deviceSeedfinderConfig,1>     configBuf (&configData,1);
@@ -102,13 +94,15 @@ namespace Acts::Sycl {
       // The limit of compatible bottom [top] space points per middle space point is B [T].
       // Temporarily we reserve buffers of this size (M*B and M*T).
       // We store the indices of bottom [top] space points in bottomSPs [topSPs].
-      // We move the indices to optimal size vectors for algorithmic and performance reasons.
+      // We move the indices to optimal size vectors for easier indexing.
+
+      // After completing the duplet search, we'll have successfully contructed two
+      // bipartite graphs for bottom-middle and top-middle space points.
+      // We store the indices of the bottom/top space points of the edges of the graphs.
+      // They index the bottomSPs and topSPs vectors.
 
       cl::sycl::buffer<uint32_t,1> tmpIndBotCompBuf((cl::sycl::range<1>(M*B)));
       cl::sycl::buffer<uint32_t,1> tmpIndTopCompBuf((cl::sycl::range<1>(M*T)));
-
-      // If it would be possible, we would only allocate memory for these buffers on the GPU side.
-      // However, the current SYCL implementation reserves these on the host, and 
 
       q->submit([&](cl::sycl::handler &h) {
         // Add accessors to buffers:
@@ -221,19 +215,18 @@ namespace Acts::Sycl {
         }
       }
 
-      std::vector<uint32_t> indTopCompMid(edgesTop);
+      // Copy indices from temporary matrices to final, optimal size vectors.
+      // It will be simpler to index these buffers later on.
 
+      cl::sycl::buffer<uint32_t,1> indTopCompBuf ((cl::sycl::range<1>(edgesTop)));
       cl::sycl::buffer<uint32_t,1> indBotCompBuf ((cl::sycl::range<1>(edgesBottom)));
 
       cl::sycl::buffer<uint32_t,1> indMidBotCompBuf (indMidBotComp.data(), cl::sycl::range<1>(edgesBottom));
       cl::sycl::buffer<uint32_t,1> indMidTopCompBuf (indMidTopComp.data(), cl::sycl::range<1>(edgesTop));
 
       cl::sycl::buffer<uint32_t,1> sumBotCompBuf (sumBotCompUptoMid.data(), cl::sycl::range<1>(M+1));
-      cl::sycl::buffer<uint32_t,1> sumTopCompBuf (sumTopCompUptoMid.data(), cl::sycl::range<1>(M+1));
-
-      // Copy indices from temporary matrices to final, optimal size vectors.
+      cl::sycl::buffer<uint32_t,1> sumTopCompBuf (sumTopCompUptoMid.data(), cl::sycl::range<1>(M+1));      
       {
-        cl::sycl::buffer<uint32_t,1> indTopCompBuf (indTopCompMid.data(), cl::sycl::range<1>(edgesTop));
         q->submit([&](cl::sycl::handler &h){
           auto indBotAcc = indBotCompBuf.get_access<            am::write,  at::global_buffer>(h);
           auto indMidBotCompAcc = indMidBotCompBuf.get_access<  am::read,   at::global_buffer>(h);
@@ -261,17 +254,6 @@ namespace Acts::Sycl {
           });
         });
       }    
-
-      // Sort by top indices for later filter algorithm. -> see filter_2sp_fixed_kernel
-      // (ascending indices correspond to ascending radius because top space points are
-      // already sorted by radius)
-      for(uint32_t mid = 0; mid < M; ++mid){
-        uint32_t sort_begin = sumTopCompUptoMid[mid];
-        uint32_t sort_end = sumTopCompUptoMid[mid+1];
-        if(sort_begin != sort_end) {
-          std::sort(indTopCompMid.begin() + sort_begin, indTopCompMid.begin() + sort_end);
-        }
-      }
     
       //************************************************//
       // *** LINEAR EQUATION TRANSFORMATION - BEGIN *** //
@@ -282,7 +264,6 @@ namespace Acts::Sycl {
       // is transformed into
       // 1 - 2x_0*u - 2y_0*v = 0
 
-      cl::sycl::buffer<uint32_t,1> indTopCompBuf (indTopCompMid.data(), cl::sycl::range<1>(edgesTop));
       cl::sycl::buffer<deviceLinEqCircle,1> linBotBuf((cl::sycl::range<1>(edgesBottom)));
       cl::sycl::buffer<deviceLinEqCircle,1> linTopBuf((cl::sycl::range<1>(edgesTop)));
 
@@ -386,17 +367,17 @@ namespace Acts::Sycl {
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-      seeds.resize(M);
-      unsigned long max_glob_size = q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
-      const uint32_t parts = 64;
-      const size_t maxMemoryAllocation = std::min(edgesComb, max_glob_size / parts);
+      unsigned long globalBufferSize = q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
+      const uint32_t divide = 8;
+      const size_t maxMemoryAllocation = std::min(edgesComb, globalBufferSize / (sizeof(TripletData)*divide));
 
       cl::sycl::buffer<uint64_t,1> sumCombinedBuf(sumBotTopCombined.data(), cl::sycl::range<1>(M+1));
       cl::sycl::buffer<TripletData,1> curvImpactBuf ((cl::sycl::range<1>(maxMemoryAllocation)));
 
+      seeds.resize(M);
       const float MIN = -100000.f;
-      uint32_t first_middle = 0, last_middle = 0;
-      for(;first_middle < M; first_middle = last_middle){
+      uint32_t last_middle = 0;
+      for(uint32_t first_middle = 0; first_middle < M; first_middle = last_middle){
 
         while(last_middle + 1 <= M &&
           (sumBotTopCombined[last_middle+1] - sumBotTopCombined[first_middle] < maxMemoryAllocation)){
@@ -441,8 +422,6 @@ namespace Acts::Sycl {
 
           h.parallel_for<triplet_search_kernel>
             (cl::sycl::range<1>{num_combinations}, [=](cl::sycl::id<1> idx){
-
-            // We don't want to store indices for middle sp, so we do this to retrieve them
             if(idx < num_combinations){
             
               uint32_t L = first_middle;
@@ -527,13 +506,12 @@ namespace Acts::Sycl {
 
         auto sumTriplets = (countTripletsBuf.get_access<am::read>())[0];
         if(sumTriplets == 0) continue;
-        cl::sycl::buffer<SeedData,1> seedBuf((cl::sycl::range<1>(sumTriplets+1))); 
+        cl::sycl::buffer<SeedData,1> seedBuf((cl::sycl::range<1>(sumTriplets))); 
 
         uint32_t countSeeds = 0;
         cl::sycl::buffer<uint32_t,1>    countSeedsBuf(&countSeeds, 1);
 
         q->submit([&](cl::sycl::handler &h) {
-          // Since we only use part of the buffers, we can use sub-accessors.
           auto numTopAcc =      numTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
           auto numBotAcc =      numBotCompBuf.get_access<   am::read,   at::global_buffer> (h);
           auto sumTopAcc =      sumTopCompBuf.get_access<   am::read,   at::global_buffer> (h);
@@ -579,32 +557,40 @@ namespace Acts::Sycl {
 
               TripletData current = curvImpactAcc[idx];
 
+              // by default compatSeedLimit is 2 -> 2 is hard coded
+              // Variable length arrays are not supported in SYCL kernels.
+              float compatibleSeedR[2];
+
               float invHelixDiameter = current.curvature;
               float lowerLimitCurv = invHelixDiameter - config.deltaInvHelixDiameter;
               float upperLimitCurv = invHelixDiameter + config.deltaInvHelixDiameter;
               float currentTop_r = topSPAcc[top].r;
               float weight = -(current.impact * config.impactWeightFactor);
 
-              float lastCompatibleSeedR = currentTop_r;
               uint32_t compatCounter = 0;
 
               uint32_t bottomOffset = ((idxOffset) / numTopMid) * numTopMid;
 
-              for(uint32_t j = 0; j < numTopMid; ++j){
+              for(uint32_t j = 0; j < numTopMid && compatCounter < config.compatSeedLimit; ++j){
                 uint32_t other_idx = sumMidComb + bottomOffset + j;
                 float otherCurv = curvImpactAcc[other_idx].curvature;
                 if(otherCurv != MIN && other_idx != idx) {
                   uint32_t other_it = sumTopAcc[mid] + j;
                   float otherTop_r = topSPAcc[indTopAcc[other_it]].r;
                   float deltaR = cl::sycl::abs(currentTop_r - otherTop_r);
-                  if(compatCounter < config.compatSeedLimit &&
-                    deltaR >= config.filterDeltaRMin &&
+                  if(deltaR >= config.filterDeltaRMin &&
                     otherCurv >= lowerLimitCurv &&
-                    otherCurv <= upperLimitCurv &&
-                    cl::sycl::abs(lastCompatibleSeedR - otherTop_r) >= config.filterDeltaRMin){
-                      lastCompatibleSeedR = otherTop_r;
-                      ++compatCounter;
-                  }
+                    otherCurv <= upperLimitCurv)
+                    {
+                      uint32_t c = 0;
+                      for(; c < compatCounter &&
+                          cl::sycl::abs(compatibleSeedR[c] - otherTop_r) >= config.filterDeltaRMin; ++c){
+                      }
+                      if(c == compatCounter) {
+                        compatibleSeedR[c] = otherTop_r;
+                        ++compatCounter;
+                      }
+                    }
                 }
               }
 
@@ -644,6 +630,7 @@ namespace Acts::Sycl {
     }
     catch (cl::sycl::exception const& e) {
       std::cout << "Caught synchronous SYCL exception:\n" << e.what() << std::endl;
+      exit(0);
     }
   };
 } // namespace Acts::Sycl
