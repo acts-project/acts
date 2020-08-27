@@ -118,8 +118,8 @@ class PlaneSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return the global position by value
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum) const override;
+  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                         const Vector3D& momentum) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local

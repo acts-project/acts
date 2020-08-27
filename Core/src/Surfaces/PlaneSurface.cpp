@@ -79,18 +79,18 @@ Acts::Vector3D Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*unused*/) const {
   return transform(gctx) *
-         Vector3D(position[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+         Vector3D(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
 }
 
-Acts::Result<Vector2D> Acts::PlaneSurface::globalToLocal(
+Acts::Result<Acts::Vector2D> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   if (loc3Dframe.z() * loc3Dframe.z() >
       s_onSurfaceTolerance * s_onSurfaceTolerance) {
-    return std::error_code();
+    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
   }
-  return Vector2D(loc3Dframe.x(), loc3Dframe.y());
+  return Result<Vector2D>::success({loc3Dframe.x(), loc3Dframe.y()});
 }
 
 std::string Acts::PlaneSurface::name() const {

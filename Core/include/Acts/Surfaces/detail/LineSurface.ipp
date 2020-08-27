@@ -21,9 +21,9 @@ inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
                   lposition[eLOC_R] * radiusAxisGlobal.normalized());
 }
 
-inline Acts::Result<Vector2D> LineSurface::globalToLocal(
+inline Result<Vector2D> LineSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& momentum, ) const {
+    const Vector3D& momentum) const {
   using VectorHelpers::perp;
 
   const auto& sTransform = transform(gctx);
@@ -38,7 +38,7 @@ inline Acts::Result<Vector2D> LineSurface::globalToLocal(
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eLOC_R] *= sign;
-  return lposition;
+  return Result<Vector2D>::success(lposition);
 }
 
 inline std::string LineSurface::name() const {

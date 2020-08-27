@@ -118,9 +118,10 @@ Acts::Result<Acts::Vector2D> Acts::ConeSurface::globalToLocal(
       m_transform ? (transform(gctx).inverse() * position) : position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > s_onSurfaceTolerance) {
-    return SurfacesError::LocalToGlobalFailed;
+    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
   }
-  return Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z());
+  return Result<Vector2D>::success(
+      {r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()});
 }
 
 double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,

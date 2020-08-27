@@ -88,9 +88,9 @@ Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
   if (loc3Dframe.z() * loc3Dframe.z() >
       s_onSurfaceTolerance * s_onSurfaceTolerance) {
-    return std::error_code();
+    return Result<Vector2D>::failure(SurfacesError::GlobalToLocalFailed);
   }
-  return Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
+  return Result<Acts::Vector2D>::success({perp(loc3Dframe), phi(loc3Dframe)});
 }
 
 const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(

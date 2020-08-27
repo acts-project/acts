@@ -14,9 +14,7 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class SurfacesError {
-  LocalToGlobalFailed = 1
-};
+enum class SurfacesError { GlobalToLocalFailed = 1 };
 
 namespace detail {
 // Define a custom error code category derived from std::error_category
@@ -27,8 +25,8 @@ class SurfacesErrorCategory : public std::error_category {
   // Return what each enum means in text
   std::string message(int c) const final {
     switch (static_cast<SurfacesError>(c)) {
-      case SurfacesError::LocalToGlobalFailed:
-        return "Local to global transformation failed";
+      case SurfacesError::GlobalToLocalFailed:
+        return "Global to local transformation failed";
       default:
         return "unknown";
     }
@@ -37,8 +35,7 @@ class SurfacesErrorCategory : public std::error_category {
 }  // namespace detail
 
 // Declare a global function returning a static instance of the custom category
-extern inline const detail::SurfacesErrorCategory&
-SurfacesErrorCategory() {
+extern inline const detail::SurfacesErrorCategory& SurfacesErrorCategory() {
   static detail::SurfacesErrorCategory c;
   return c;
 }
