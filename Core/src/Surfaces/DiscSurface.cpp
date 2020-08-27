@@ -15,12 +15,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
-#include <utility>
+#include <system_error>
 #include <vector>
 
 using Acts::VectorHelpers::perp;
@@ -74,26 +70,27 @@ Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
   return Surface::Disc;
 }
 
-void Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                      const Vector2D& lposition,
-                                      const Vector3D& /*gmom*/,
-                                      Vector3D& position) const {
+Acts::Vector3D Acts::DiscSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2D& lposition,
+    const Vector3D& /*gmom*/) const {
   // create the position in the local 3d frame
   Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
                       lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
                       0.);
-  // transport it to the globalframe (very unlikely that this is not needed)
-  position = transform(gctx) * loc3Dframe;
+  // transform to globalframe
+  return transform(gctx) * loc3Dframe;
 }
 
-bool Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
-                                      const Vector3D& position,
-                                      const Vector3D& /*gmom*/,
-                                      Vector2D& lposition) const {
-  // transport it to the globalframe (very unlikely that this is not needed)
+Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& /*gmom*/) const {
+  // transport it to the globalframe
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
-  lposition = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
-  return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
+  if (loc3Dframe.z() * loc3Dframe.z() >
+      s_onSurfaceTolerance * s_onSurfaceTolerance) {
+    return std::error_code();
+  }
+  return Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
 }
 
 const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(

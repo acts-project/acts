@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -101,10 +102,7 @@ class DiscSurface : public Surface {
               const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~DiscSurface() override = default;
-
-  /// Default Constructor - deleted
   DiscSurface() = delete;
 
   /// Assignement operator
@@ -147,12 +145,10 @@ class DiscSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param position global 3D position to be filled (given by reference for
-  /// method symmetry)
   ///
-  /// @note the momentum is ignored for Disc surfaces in this calculateion
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum, Vector3D& position) const final;
+  /// @return global position by value
+  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                         const Vector3D& momentum) const final;
 
   /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
@@ -161,13 +157,11 @@ class DiscSurface : public Surface {
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param lposition local 2D position to be filled (given by reference for
-  /// method symmetry)
   ///
-  /// @return boolean indication if operation was successful (fail means global
-  /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum, Vector2D& lposition) const final;
+  /// @return a Result<Vector2D> which can be !ok() if the operation fails
+  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D& position,
+                                 const Vector3D& momentum) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian

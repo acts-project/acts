@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 namespace Acts {
@@ -72,10 +73,7 @@ class ConeSurface : public Surface {
               const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~ConeSurface() override = default;
-
-  /// Default Constructor - deleted
   ConeSurface() = delete;
 
   /// Assignment operator
@@ -143,19 +141,21 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
-  /// @param position is the global position which is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum, Vector3D& position) const final;
+  ///
+  /// @return The global position by value
+  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                         const Vector3D& momentum) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
-  /// @param lposition is the local position to be filled
-  /// @return is a boolean indicating if the transformation succeeded
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum, Vector2D& lposition) const final;
+  ///
+  /// @return a Result<Vector2D> which can be !ok() if the operation fails
+  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D& position,
+                                 const Vector3D& momentum) const final;
 
   /// Straight line intersection schema from position/direction
   ///

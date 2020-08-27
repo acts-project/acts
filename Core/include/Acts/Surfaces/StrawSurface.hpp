@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 
@@ -69,10 +70,7 @@ class StrawSurface : public LineSurface {
                const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~StrawSurface() override = default;
-
-  /// Default Constructor - deleted
   StrawSurface() = delete;
 
   /// Assignment operator

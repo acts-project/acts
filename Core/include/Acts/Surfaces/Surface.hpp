@@ -277,9 +277,11 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
-  virtual const Vector3D localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lposition,
-                                       const Vector3D& momentumn) const = 0;
+  ///
+  /// @return The global position by value
+  virtual Vector3D localToGlobal(const GeometryContext& gctx,
+                                 const Vector2D& lposition,
+                                 const Vector3D& momentumn) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
