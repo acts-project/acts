@@ -134,10 +134,10 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
 
 }  // namespace
 
-#define ASSERT_INPUTS(mass, qOverP, q)                              \
-  assert((0 < mass) and "Mass must be positive");                   \
-  assert((qOverP < 0) and (0 < qOverP) and "q/p must be non-zero"); \
-  assert((q < 0) and (0 < q) and "Charge must be non-zero");
+#define ASSERT_INPUTS(mass, qOverP, q)              \
+  assert((0 < mass) and "Mass must be positive");   \
+  assert((qOverP != 0) and "q/p must be non-zero"); \
+  assert((q != 0) and "Charge must be non-zero");
 
 float Acts::computeEnergyLossBethe(const MaterialProperties& slab,
                                    int /* unused */, float m, float qOverP,
