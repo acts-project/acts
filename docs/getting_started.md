@@ -231,14 +231,14 @@ components. q
 |---------------------------------------|-------------|
 | ACTS_BUILD_EVERYTHING                 | Build with most options enabled (except HepMC3 and documentation) |
 | ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
-| ACTS_BUILD_CUDA_PLUGIN                | Build CUDA plugin |
-| ACTS_BUILD_DD4HEP_PLUGIN              | Build DD4hep geometry plugin |
-| ACTS_BUILD_DIGITIZATION_PLUGIN        | Build Digitization plugin |
-| ACTS_BUILD_IDENTIFICATION_PLUGIN      | Build Identification plugin |
-| ACTS_BUILD_JSON_PLUGIN                | Build Json plugin |
+| ACTS_BUILD_PLUGIN_CUDA                | Build CUDA plugin |
+| ACTS_BUILD_PLUGIN_DD4HEP              | Build DD4hep geometry plugin |
+| ACTS_BUILD_PLUGIN_DIGITIZATION        | Build Digitization plugin |
+| ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
+| ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
 | ACTS_USE_BUNDLED_NLOHMANN_JSON        | Use external nlohmann::json installation (on by default) |
-| ACTS_BUILD_TGEO_PLUGIN                | Build TGeo plugin |
-| ACTS_BUILD_LEGACY                     | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
+| ACTS_BUILD_PLUGIN_LEGACY                     | Build legacy plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
 | ACTS_BUILD_EXAMPLES                   | Build standalone examples |
 | ACTS_BUILD_EXAMPLES_DD4HEP            | Build DD4hep-based code in the examples |
