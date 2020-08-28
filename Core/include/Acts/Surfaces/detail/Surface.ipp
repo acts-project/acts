@@ -19,13 +19,10 @@ inline Vector3D Surface::normal(const GeometryContext& gctx,
 
 inline const Transform3D& Surface::transform(
     const GeometryContext& gctx) const {
-  if (m_transform != nullptr) {
-    return (*(m_transform.get()));
-  }
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
   }
-  return s_idTransform;
+  return m_transform;
 }
 
 inline bool Surface::insideBounds(const Vector2D& lposition,

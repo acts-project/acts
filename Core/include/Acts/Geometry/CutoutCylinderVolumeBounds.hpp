@@ -104,7 +104,7 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+      const Transform3D& transform = Transform3D::Identity()) const override;
 
   /// Construct bounding box for this shape
   ///

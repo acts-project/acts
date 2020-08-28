@@ -14,13 +14,11 @@
 #include <iostream>
 #include <utility>
 
-Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
-    : GeometryObject(), m_transform(std::move(tform)) {}
+Acts::Surface::Surface(const Transform3D& transform)
+    : GeometryObject(), m_transform(transform) {}
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-    : GeometryObject(),
-      m_transform(nullptr),
-      m_associatedDetElement(&detelement) {}
+    : GeometryObject(), m_associatedDetElement(&detelement) {}
 
 Acts::Surface::Surface(const Surface& other)
     : GeometryObject(other),
@@ -31,8 +29,7 @@ Acts::Surface::Surface(const Surface& other)
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3D& shift)
     : GeometryObject(),
-      m_transform(std::make_shared<const Transform3D>(
-          Transform3D(shift * other.transform(gctx)))),
+      m_transform(Transform3D(shift * other.transform(gctx))),
       m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
@@ -170,10 +167,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
     return false;
   }
   // (e) compare transform values
-  if (m_transform != nullptr && other.m_transform != nullptr) {
-    if (!m_transform->isApprox(*other.m_transform, 1e-9)) {
-      return false;
-    }
+  if (!m_transform.isApprox(other.m_transform, 1e-9)) {
+    return false;
   }
   // (f) compare material
   if (m_surfaceMaterial != other.m_surfaceMaterial) {
