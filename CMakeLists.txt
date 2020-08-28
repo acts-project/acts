@@ -17,6 +17,10 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # all options and compile-time parameters must be defined here for clear
 # visibility and to make them available everywhere
+#
+# NOTE if you are adding a new option make sure that is defined in such a way
+#   that it is off/empty by default. if you think that is not possible, then
+#   it should probably be not an optional component.
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
