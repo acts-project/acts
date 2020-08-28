@@ -12,21 +12,27 @@
 
 void Acts::AccumulatedMaterialProperties::accumulate(MaterialProperties slab,
                                                      float pathCorrection) {
-  // TODO the previous manual calculations used the regular thickness as the
-  //   per-slab weight but then used the corrected total path as the
-  //   normalization. this is inconsistent and i am not sure what the right
-  //   approach is here?
-  slab.scaleThickness(pathCorrection);
+  // scale the recorded material to the equivalence contribution along the
+  // surface normal
+  slab.scaleThickness(1 / pathCorrection);
   m_trackAverage = detail::combineSlabs(m_trackAverage, slab);
 }
 
 void Acts::AccumulatedMaterialProperties::trackAverage(bool useEmptyTrack) {
   // average only real tracks or if empty tracks are allowed.
   if (useEmptyTrack or (0 < m_trackAverage.thickness())) {
-    // average such that each track contributes equally.
-    MaterialProperties weightedTotal(m_totalAverage.material(), m_totalCount);
-    MaterialProperties weightedTrack(m_trackAverage.material(), 1);
-    m_totalAverage = detail::combineSlabs(weightedTotal, weightedTrack);
+    if (m_totalCount == 0u) {
+      m_totalAverage = m_trackAverage;
+    } else {
+      double weightTotal = m_totalCount / (m_totalCount + 1.0);
+      double weightTrack = 1 / (m_totalCount + 1.0);
+      // average such that each track contributes equally.
+      MaterialProperties fromTotal(m_totalAverage.material(),
+                                   weightTotal * m_totalAverage.thickness());
+      MaterialProperties fromTrack(m_trackAverage.material(),
+                                   weightTrack * m_trackAverage.thickness());
+      m_totalAverage = detail::combineSlabs(fromTotal, fromTrack);
+    }
     m_totalCount += 1;
   }
   // reset track average
@@ -35,6 +41,5 @@ void Acts::AccumulatedMaterialProperties::trackAverage(bool useEmptyTrack) {
 
 std::pair<Acts::MaterialProperties, unsigned int>
 Acts::AccumulatedMaterialProperties::totalAverage() const {
-  // use averaged material properties but for unit thickness
-  return {MaterialProperties(m_totalAverage.material(), 1), m_totalCount};
+  return {m_totalAverage, m_totalCount};
 }

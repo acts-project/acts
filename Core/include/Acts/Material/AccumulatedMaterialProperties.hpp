@@ -15,7 +15,7 @@ namespace Acts {
 /// Accumulate material properties from multiple hits/track and multiple tracks.
 ///
 /// This is a helper class for the `SurfaceMaterialMapper` to handle material
-/// accumulating and averaging for one surface bin. The accumulation procedure
+/// accumulation and averaging for one surface bin. The accumulation procedure
 /// is done in two steps:
 ///
 /// 1.  The per-track store accumulates material steps from one track/particle.
@@ -33,14 +33,22 @@ class AccumulatedMaterialProperties {
 
   /// Add the material to the current per-track store.
   ///
-  /// Vacuum steps with a non-zero thickness can be added to account for holes
-  /// in material structures.
+  /// @param slabAlongTrack Recorded equivalent material slab for this step
+  /// @param pathCorrection Correction factor due to non-perpendicular incident
   ///
-  /// @param slab Equivalent material slab for this step
-  /// @param pathCorreciton Correction factor due to non-perpendicular incident
-  void accumulate(MaterialProperties slab, float pathCorrection = 1);
+  /// The recoded material slab is assumed to be defined along the track
+  /// direction. The track can have non-perpendicular incidence on the surface
+  /// and the recorded slab has to be projected along the surface normal. The
+  /// path correction gives the scaling factor from normal incidence to the
+  /// recorded incidence as provided by the `Surface` interface.
+  ///
+  ///  Vacuum steps with a non-zero thickness can be added to account for holes
+  ///  in material structures.
+  void accumulate(MaterialProperties slabAlongTrack, float pathCorrection = 1);
 
   /// Add the accumulated material for the current track to the total average.
+  ///
+  /// @param useEmptyTrack indicate whether to consider an empty track store
   ///
   /// This finishes the material accumulation for the current track and resets
   /// the per-track store. Subsequent calls to `.accumulate(...)` will start
@@ -50,19 +58,16 @@ class AccumulatedMaterialProperties {
   /// measured path within the material. An empty per-track store, i.e.
   /// vanishing per-track material thickness, does not contribute to the total
   /// unless explicitely requested.
-  ///
-  /// @param useEmptyTrack indicate whether to consider an empty track store
   void trackAverage(bool useEmptyTrack = false);
 
   /// Return the average material properties from all accumulated tracks.
   ///
-  /// Only contains the information up to the last `.trackAverag(...)` call. If
-  /// there have been additional calls to `.accumulate(...)` afterwards, the
-  /// information is not yet part of the total average.
-  ///
   /// @returns Average material properties and the number of contributing tracks
-  /// @note The averaged material properties are **always** given for unit
-  ///   thickness.
+  ///
+  /// Only contains the information up to the last `.trackAverage(...)` call. If
+  /// there have been additional calls to `.accumulate(...)` afterwards, the
+  /// information is not part of the total average. The thickness corresponds to
+  /// the average thickness seen by the tracks.
   std::pair<MaterialProperties, unsigned int> totalAverage() const;
 
  private:
