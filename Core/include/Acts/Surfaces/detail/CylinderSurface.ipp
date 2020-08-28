@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector3D CylinderSurface::rotSymmetryAxis(
+inline Vector3D CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
@@ -112,7 +112,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
   return cIntersection;
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;

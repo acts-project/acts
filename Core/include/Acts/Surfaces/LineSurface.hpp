@@ -69,10 +69,7 @@ class LineSurface : public Surface {
               const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~LineSurface() override = default;
-
-  /// Default Constructor - deleted
   LineSurface() = delete;
 
   /// Assignment operator
@@ -86,8 +83,8 @@ class LineSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// @return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -99,8 +96,8 @@ class LineSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -114,9 +111,9 @@ class LineSurface : public Surface {
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
-  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& momentum) const final;
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& momentum) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -145,7 +142,7 @@ class LineSurface : public Surface {
   /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
-  const BoundRowVector derivativeFactors(
+  BoundRowVector derivativeFactors(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const RotationMatrix3D& rft,
       const BoundToFreeMatrix& jacobian) const final;
@@ -267,7 +264,7 @@ class LineSurface : public Surface {
   /// @param direction The direction of the track
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  const AlignmentRowVector alignmentToPathDerivative(
+  AlignmentRowVector alignmentToPathDerivative(
       const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
       const Vector3D& position, const Vector3D& direction) const final;
 
@@ -279,7 +276,7 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

@@ -33,17 +33,16 @@ class SurfaceStub : public Surface {
   SurfaceType type() const final { return Surface::Other; }
 
   /// Return method for the normal vector of the surface
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& /*lpos*/) const final {
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& /*lpos*/) const final {
     return normal(gctx);
   }
 
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D&) const final {
+  Vector3D normal(const GeometryContext& gctx, const Vector3D&) const final {
     return normal(gctx);
   }
 
-  const Vector3D normal(const GeometryContext& /*gctx*/) const final {
+  Vector3D normal(const GeometryContext& /*gctx*/) const final {
     return Vector3D{0., 0., 0.};
   }
 
@@ -74,8 +73,8 @@ class SurfaceStub : public Surface {
   }
 
   /// Inherited from GeometryObject base
-  const Vector3D binningPosition(const GeometryContext& /*txt*/,
-                                 BinningValue /*bValue*/) const final {
+  Vector3D binningPosition(const GeometryContext& /*txt*/,
+                           BinningValue /*bValue*/) const final {
     const Vector3D v{0.0, 0.0, 0.0};
     return v;
   }
@@ -107,7 +106,7 @@ class SurfaceStub : public Surface {
   }
 
   // Cartesian 3D to local bound derivative
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& /*unused*/,
       const Vector3D& /*unused*/) const final {
     return LocalCartesianToBoundLocalMatrix::Identity();

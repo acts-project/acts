@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector3D Surface::center(const GeometryContext& gctx) const {
+inline Vector3D Surface::center(const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-inline const Acts::Vector3D Surface::normal(const GeometryContext& gctx,
-                                            const Vector3D& /*unused*/) const {
+inline Vector3D Surface::normal(const GeometryContext& gctx,
+                                const Vector3D& /*unused*/) const {
   return normal(gctx, s_origin2D);
 }
 
@@ -33,7 +33,7 @@ inline bool Surface::insideBounds(const Vector2D& lposition,
   return bounds().inside(lposition, bcheck);
 }
 
-inline const RotationMatrix3D Surface::referenceFrame(
+inline RotationMatrix3D Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& /*unused*/,
     const Vector3D& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
@@ -75,7 +75,7 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eQOP) = 1;
 }
 
-inline const RotationMatrix3D Surface::initJacobianToLocal(
+inline RotationMatrix3D Surface::initJacobianToLocal(
     const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
     const Vector3D& position, const Vector3D& direction) const {
   // Optimized trigonometry on the propagation direction
@@ -106,7 +106,7 @@ inline const RotationMatrix3D Surface::initJacobianToLocal(
   return rframeT;
 }
 
-inline const BoundRowVector Surface::derivativeFactors(
+inline BoundRowVector Surface::derivativeFactors(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
     const Vector3D& direction, const RotationMatrix3D& rft,
     const BoundToFreeMatrix& jacobian) const {
