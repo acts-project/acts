@@ -28,7 +28,7 @@ namespace Acts::Sycl {
     auto queue = new cl::sycl::queue(DeviceSelector(device_name_substring), exception_handler);
 
     // See which device we are running on.
-    std::cerr << queue->get_device().get_info<cl::sycl::info::device::name>()
+    std::cerr << "Running on: " << queue->get_device().get_info<cl::sycl::info::device::name>()
                 << std::endl;
 
     return queue;

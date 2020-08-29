@@ -7,11 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cmath>
-#include <numeric>
 #include <algorithm>
-#include <type_traits>
-#include <exception>
-#include <boost/range/adaptors.hpp>
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
 namespace Acts::Sycl {

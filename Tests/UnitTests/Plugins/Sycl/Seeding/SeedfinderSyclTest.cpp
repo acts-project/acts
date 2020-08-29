@@ -206,21 +206,21 @@ auto main(int argc, char** argv) -> int {
   std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
   double syclTime = elapsec_sycl.count();
 
-  std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
+  // std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
 
   std::cout << std::endl;
-  std::cout << "----------------------- Time Metric -----------------------" << std::endl;
-  std::cout << std::setw(20) << " Device:" << std::setw(11) << "CPU";
-  std::cout << std::setw(11) << "SYCL";
-  std::cout << std::setw(11) << "speedup" << std::endl;
-  std::cout << std::setw(20) << " Seedfinding_Time:";
+  std::cout << "------------------------- Time Metric -------------------------" << std::endl;
+  std::cout << std::setw(20) << " Device:";
+  std::cout << std::setw(11) << "CPU";
+  std::cout << std::setw(12) << "GPU (SYCL)";
+  std::cout << std::setw(20) << "Speedup/ Agreement" << std::endl;
+  std::cout << std::setw(20) << " Time (s):";
   std::cout << std::setw(11) << std::to_string(cpuTime) << " ";
   std::cout << std::setw(11) << std::to_string(syclTime);
-  std::cout << std::setw(11) << std::to_string(cpuTime/syclTime);
+  std::cout << std::setw(20) << std::to_string(cpuTime/syclTime);
   std::cout << std::endl;
-  std::cout << "-----------------------------------------------------------" << std::endl;
 
-  if(cmdlTool.matches) {
+  if(cmdlTool.matches && !cmdlTool.onlyGpu) {
     int nSeed_cpu = 0;
     for (auto& outVec : seedVector_cpu) {
       nSeed_cpu += outVec.size();
@@ -230,9 +230,6 @@ auto main(int argc, char** argv) -> int {
     for (auto& outVec : seedVector_sycl) {
       nSeed_sycl += outVec.size();
     }
-
-    std::cout << "Number of Seeds (CPU | SYCL): " << nSeed_cpu << " | "
-              << nSeed_sycl << std::endl;
 
     int nMatch = 0;
 
@@ -268,12 +265,14 @@ auto main(int argc, char** argv) -> int {
       }
     }
 
-    if (!cmdlTool.onlyGpu) {
-      std::cout << nMatch << " seeds are matched" << std::endl;
-      std::cout << "Matching rate: " << float(nMatch) / float(nSeed_cpu) * 100 << "%"
-                << std::endl;
-    }
+    std::cout << std::setw(20) << " Seeds found:";
+    std::cout << std::setw(11) << std::to_string(nSeed_cpu) << " ";
+    std::cout << std::setw(11) << std::to_string(nSeed_sycl);
+    std::cout << std::setw(20) << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
+    std::cout << std::endl;
   }
+
+  std::cout << "---------------------------------------------------------------\n" << std::endl;
 
   for(const auto *S: spVec) {
     delete[] S;

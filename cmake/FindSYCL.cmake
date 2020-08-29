@@ -79,6 +79,7 @@ if( SYCL_builtin_FOUND )
    set( SYCL_FOUND TRUE )
    # Figure out which SYCL target platforms are available.
    set( SYCL_POSSIBLE_TARGETS "nvptx64-nvidia-cuda-sycldevice"
+   # set( SYCL_POSSIBLE_TARGETS "spir64-unknown-unknown-sycldevice" "nvptx64-nvidia-cuda-sycldevice"
       CACHE STRING "List of targets to check the availability of" )
    mark_as_advanced( SYCL_POSSIBLE_TARGETS )
    set( SYCL_builtin_TARGETS )
