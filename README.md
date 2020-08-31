@@ -32,6 +32,14 @@ look at the [getting started guide](docs/getting_started.md). If you find a bug,
 have a feature request, or want to contribute to Acts, have a look at the
 [contribution guide](CONTRIBUTING.md).
 
+## Versioning and public API
+
+Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.html)
+to indicate whether a new version contains breaking changes within the public API.
+Which parts of the code are part of the public API and are subject to the
+semantic versioning rules is outlined in the
+[versioning and public API documentation](docs/versioning.rst).
+
 ## Repository organization
 
 The repository contains all code of the Acts projects, not just the core library
