@@ -1,20 +1,20 @@
 add_library(
-  ActsLegacy INTERFACE)
+  ActsPluginLegacy INTERFACE)
 target_compile_features(
-  ActsLegacy
+  ActsPluginLegacy
   INTERFACE cxx_std_17)
 target_include_directories(
-  ActsLegacy
+  ActsPluginLegacy
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
-  ActsLegacy
+  ActsPluginLegacy
   INTERFACE Boost::boost Eigen3::Eigen)
 
 install(
-  TARGETS ActsLegacy
-  EXPORT ActsLegacyTargets
+  TARGETS ActsPluginLegacy
+  EXPORT ActsPluginLegacyTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY include/Acts
