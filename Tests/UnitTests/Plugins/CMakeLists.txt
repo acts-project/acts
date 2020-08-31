@@ -1,4 +1,4 @@
-add_subdirectory_if(Digitization ACTS_BUILD_DIGITIZATION_PLUGIN)
-add_subdirectory_if(Json ACTS_BUILD_JSON_PLUGIN)
-add_subdirectory_if(Cuda ACTS_BUILD_CUDA_PLUGIN)
-add_subdirectory_if(TGeo ACTS_BUILD_TGEO_PLUGIN)
+add_subdirectory_if(Digitization ACTS_BUILD_PLUGIN_DIGITIZATION)
+add_subdirectory_if(Json ACTS_BUILD_PLUGIN_JSON)
+add_subdirectory_if(Cuda ACTS_BUILD_PLUGIN_CUDA)
+add_subdirectory_if(TGeo ACTS_BUILD_PLUGIN_TGEO)

@@ -62,8 +62,8 @@ Build
 
 The DD4hepPlugin is only build on demand. The DD4hepPlugin depends on the
 TGeoPlugin therefore both plugins need to be installed. During the cmake
-configuration the flags ``ACTS_BUILD_DD4HEP_PLUGIN=on`` and
-``ACTS_BUILD_TGEO_PLUGIN=on`` need to be set. In addition ROOT and DD4hep
+configuration the flags ``ACTS_BUILD_PLUGIN_DD4HEP=on`` and
+``ACTS_BUILD_PLUGIN_TGEO=on`` need to be set. In addition ROOT and DD4hep
 installations need to be available to cmake.
 
 Prerequisites
