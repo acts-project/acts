@@ -113,11 +113,12 @@ struct MeasurementCreator {
         auto lResolution = vResolution->second.find(layerID);
         if (lResolution != vResolution->second.end()) {
           // Apply global to local
-          Acts::Vector2D lPos surface
-              ->globalToLocal(state.geoContext,
-                              stepper.position(state.stepping),
-                              stepper.direction(state.stepping))
-              .value();
+          Acts::Vector2D lPos =
+              surface
+                  ->globalToLocal(state.geoContext,
+                                  stepper.position(state.stepping),
+                                  stepper.direction(state.stepping))
+                  .value();
 
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
