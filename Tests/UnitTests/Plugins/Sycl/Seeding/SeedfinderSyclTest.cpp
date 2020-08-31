@@ -6,16 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <chrono>
-#include <ctime>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <memory>
-#include <cmath>
-
-#include <boost/type_erasure/any_cast.hpp>
+#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -26,14 +17,22 @@
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
-#include "ATLASCuts.hpp"
-#include "SpacePoint.hpp"
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
-#include "CommandLineArguments.h"
-
-#include <string>
+#include <chrono>
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <limits>
+#include <memory>
+#include <sstream>
+#include <string>
 
+#include <boost/type_erasure/any_cast.hpp>
+
+#include "ATLASCuts.hpp"
+#include "CommandLineArguments.h"
+#include "SpacePoint.hpp"
 
 auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
   std::string line;
@@ -68,7 +67,8 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        readSP.emplace_back(new SpacePoint(x, y, z, r, layer, varianceR, varianceZ, id));
+        readSP.emplace_back(
+            new SpacePoint(x, y, z, r, layer, varianceR, varianceZ, id));
         ++id;
       }
     }
@@ -77,7 +77,8 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
 }
 
 template <typename external_spacepoint_t>
-auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoint_t> {
+auto setupSeedfinderConfiguration()
+    -> Acts::SeedfinderConfig<external_spacepoint_t> {
   Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160.;
@@ -103,7 +104,9 @@ auto setupSeedfinderConfiguration() -> Acts::SeedfinderConfig<external_spacepoin
 }
 
 template <typename external_spacepoint_t>
-auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_t> &config) -> Acts::SpacePointGridConfig {
+auto setupSpacePointGridConfig(
+    const Acts::SeedfinderConfig<external_spacepoint_t>& config)
+    -> Acts::SpacePointGridConfig {
   Acts::SpacePointGridConfig gridConf{};
   gridConf.bFieldInZ = config.bFieldInZ;
   gridConf.minPt = config.minPt;
@@ -116,13 +119,12 @@ auto setupSpacePointGridConfig(const Acts::SeedfinderConfig<external_spacepoint_
 }
 
 auto main(int argc, char** argv) -> int {
-
   auto start_prep = std::chrono::system_clock::now();
 
   CommandLineArguments cmdlTool;
   cmdlTool.parse(argc, argv);
 
-  if(!cmdlTool.fileExists){
+  if (!cmdlTool.fileExists) {
     std::cerr << "File not found\n";
     return -1;
   }
@@ -130,32 +132,37 @@ auto main(int argc, char** argv) -> int {
   auto spVec = readFile(cmdlTool.filename);
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-    Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-    Acts::BinFinder<SpacePoint>());
+      Acts::BinFinder<SpacePoint>());
   auto config = setupSeedfinderConfiguration<SpacePoint>();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   Acts::Sycl::DeviceExperimentCuts deviceAtlasCuts;
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-    Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
+      Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
 
-  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config, deviceAtlasCuts, cmdlTool.deviceName);
+  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config, deviceAtlasCuts,
+                                                    cmdlTool.deviceName);
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
-  auto covarianceTool = [=](const SpacePoint& sp, float, float, float_t) -> Acts::Vector2D {
+  auto covarianceTool = [=](const SpacePoint& sp, float, float,
+                            float_t) -> Acts::Vector2D {
     return {sp.varianceR, sp.varianceZ};
   };
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid = 
-    Acts::SpacePointGridCreator::createGrid<SpacePoint>(setupSpacePointGridConfig(config));
+  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(
+          setupSpacePointGridConfig(config));
 
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), covarianceTool,
-                                            bottomBinFinder, topBinFinder, std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      spVec.begin(), spVec.end(), covarianceTool, bottomBinFinder, topBinFinder,
+      std::move(grid), config);
 
-  std::cout << "read " << spVec.size() << " SP from file " << cmdlTool.filename << std::endl;
-  
+  std::cout << "read " << spVec.size() << " SP from file " << cmdlTool.filename
+            << std::endl;
+
   auto end_prep = std::chrono::system_clock::now();
 
-  std::chrono::duration<double> elapsec_prep = end_prep- start_prep;
+  std::chrono::duration<double> elapsec_prep = end_prep - start_prep;
   double prepTime = elapsec_prep.count();
 
   std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
@@ -168,8 +175,9 @@ auto main(int argc, char** argv) -> int {
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
-  if(!cmdlTool.onlyGpu) {
-    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
+  if (!cmdlTool.onlyGpu) {
+    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
+         ++groupIt) {
       seedVector_cpu.push_back(normalSeedfinder.createSeedsForGroup(
           groupIt.bottom(), groupIt.middle(), groupIt.top()));
       group_count++;
@@ -191,17 +199,17 @@ auto main(int argc, char** argv) -> int {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
-  
+
   for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
-      seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
-          groupIt.bottom(), groupIt.middle(), groupIt.top()));
-      group_count++;
-      if (!cmdlTool.allgroup && group_count >= cmdlTool.groups){
-          break;
-      }
+    seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
+        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+    group_count++;
+    if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
+      break;
+    }
   }
   auto end_sycl = std::chrono::system_clock::now();
-  
+
   std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
 
   std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
@@ -211,7 +219,8 @@ auto main(int argc, char** argv) -> int {
   double syclTime = elapsec_sycl.count();
 
   std::cout << std::endl;
-  std::cout << "------------------------- Time Metric -------------------------" << std::endl;
+  std::cout << "------------------------- Time Metric -------------------------"
+            << std::endl;
   std::cout << std::setw(20) << " Device:";
   std::cout << std::setw(11) << "CPU";
   std::cout << std::setw(12) << "GPU (SYCL)";
@@ -219,10 +228,10 @@ auto main(int argc, char** argv) -> int {
   std::cout << std::setw(20) << " Time (s):";
   std::cout << std::setw(11) << std::to_string(cpuTime) << " ";
   std::cout << std::setw(11) << std::to_string(syclTime);
-  std::cout << std::setw(20) << std::to_string(cpuTime/syclTime);
+  std::cout << std::setw(20) << std::to_string(cpuTime / syclTime);
   std::cout << std::endl;
 
-  if(cmdlTool.matches && !cmdlTool.onlyGpu) {
+  if (cmdlTool.matches && !cmdlTool.onlyGpu) {
     int nSeed_cpu = 0;
     for (auto& outVec : seedVector_cpu) {
       nSeed_cpu += outVec.size();
@@ -259,7 +268,8 @@ auto main(int argc, char** argv) -> int {
 
       for (auto seed : seeds_cpu) {
         for (auto other : seeds_sycl) {
-          if (seed[0] == other[0] && seed[1] == other[1] && seed[2] == other[2]) {
+          if (seed[0] == other[0] && seed[1] == other[1] &&
+              seed[2] == other[2]) {
             nMatch++;
             break;
           }
@@ -270,13 +280,16 @@ auto main(int argc, char** argv) -> int {
     std::cout << std::setw(20) << " Seeds found:";
     std::cout << std::setw(11) << std::to_string(nSeed_cpu) << " ";
     std::cout << std::setw(11) << std::to_string(nSeed_sycl);
-    std::cout << std::setw(20) << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
+    std::cout << std::setw(20)
+              << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
     std::cout << std::endl;
   }
 
-  std::cout << "---------------------------------------------------------------\n" << std::endl;
+  std::cout
+      << "---------------------------------------------------------------\n"
+      << std::endl;
 
-  for(const auto *S: spVec) {
+  for (const auto* S : spVec) {
     delete[] S;
   }
 

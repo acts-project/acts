@@ -10,12 +10,12 @@
 #include <fstream>
 
 struct CommandLineArguments {
-    void parse(int argc, char** argv);
-    bool allgroup = false;
-    bool onlyGpu = false;
-    bool matches = false;
-    uint groups = 500;
-    bool fileExists = false;
-    std::string deviceName = "";
-    std::string filename = "";
+  void parse(int argc, char** argv);
+  bool allgroup = false;
+  bool onlyGpu = false;
+  bool matches = false;
+  uint groups = 500;
+  bool fileExists = false;
+  std::string deviceName = "";
+  std::string filename = "";
 };

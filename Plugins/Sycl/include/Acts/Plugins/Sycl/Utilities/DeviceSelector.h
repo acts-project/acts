@@ -11,16 +11,16 @@
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-    struct DeviceSelector : public cl::sycl::device_selector {
-        DeviceSelector(const std::string& device_name);
+struct DeviceSelector : public cl::sycl::device_selector {
+  DeviceSelector(const std::string& device_name);
 
-        int operator()(const cl::sycl::device& d) const;
+  int operator()(const cl::sycl::device& d) const;
 
-        private:
-        /// Fallback device selector
-        cl::sycl::default_selector m_defaultSelector{};
+ private:
+  /// Fallback device selector
+  cl::sycl::default_selector m_defaultSelector{};
 
-        /// Substring of the preferred device's name
-        std::string m_deviceName;
-    };
-} // namespace Acts::Sycl
+  /// Substring of the preferred device's name
+  std::string m_deviceName;
+};
+}  // namespace Acts::Sycl
