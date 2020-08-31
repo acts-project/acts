@@ -44,7 +44,7 @@ class Volume : public virtual GeometryObject {
   /// Copy Constructor - with optional shift
   ///
   /// @param vol is the source volume for the copy
-  /// @param shift is the optional shift applied after copying
+  /// @param shift is the optional shift applied as : shift * transform
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
   Volume(const Volume& vol, const Transform3D& shift = Transform3D::Identity());

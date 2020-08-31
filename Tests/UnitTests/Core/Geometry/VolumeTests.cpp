@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   shift.translation() = shiftTranslation;
   Volume volumeShift(volume, shift);
   BOOST_CHECK_EQUAL(volumeShift.center(),
-                    (volume.transform() * shift).translation());
+                    (shift * volume.transform()).translation());
   BOOST_CHECK_EQUAL(volumeShift.transform().rotation(),
                     volume.transform().rotation());
 

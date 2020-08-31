@@ -29,7 +29,7 @@ Acts::Surface::Surface(const Surface& other)
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3D& shift)
     : GeometryObject(),
-      m_transform(Transform3D(shift * other.transform(gctx))),
+      m_transform(shift * other.transform(gctx)),
       m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 

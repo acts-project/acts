@@ -94,7 +94,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
-  /// @param shift Additional transform applied after copying from the source
+  /// @param shift Additional transform applied as: shift * transform
   Surface(const GeometryContext& gctx, const Surface& other,
           const Transform3D& shift);
 
