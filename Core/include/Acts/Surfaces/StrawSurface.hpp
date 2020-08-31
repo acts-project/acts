@@ -12,7 +12,6 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 

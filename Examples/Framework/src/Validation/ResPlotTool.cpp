@@ -161,7 +161,7 @@ void ActsExamples::ResPlotTool::fill(
     truthParameter[Acts::ParDef::eLOC_Z0] =
         lpResult.value()[Acts::ParDef::eLOC_Z0];
   } else {
-    ACTS_WARNING("Global to local transformation did not succeed.");
+    ACTS_ERROR("Global to local transformation did not succeed.");
   }
   truthParameter[Acts::ParDef::ePHI] = phi(truthParticle.unitDirection());
   truthParameter[Acts::ParDef::eTHETA] = theta(truthParticle.unitDirection());

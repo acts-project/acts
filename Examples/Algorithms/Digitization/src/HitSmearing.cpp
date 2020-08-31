@@ -76,7 +76,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
                                              hit.unitDirection());
       Acts::Vector2D lp{0., 0.};
       if (not lpResult.ok()) {
-        ACTS_WARNING("Global to local transformation did not succeed.");
+        ACTS_ERROR("Global to local transformation did not succeed.");
+        return ProcessCode::ABORT;
       } else {
         lp = lpResult.value();
       }

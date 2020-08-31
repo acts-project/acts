@@ -390,10 +390,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       auto lpResult = surface.globalToLocal(gctx, truthHit.position(),
                                             truthHit.unitDirection());
       if (not lpResult.ok()) {
-        ACTS_WARNING("Global to local transformation did not succeed.");
-      } else {
-        truthlocal = lpResult.value();
+        ACTS_FATAL("Global to local transformation did not succeed.");
+        return ProcessCode::ABORT;
       }
+      truthlocal = lpResult.value();
 
       // push the truth hit info
       m_t_x.push_back(truthHit.position().x());

@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>

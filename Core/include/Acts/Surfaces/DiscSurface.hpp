@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 

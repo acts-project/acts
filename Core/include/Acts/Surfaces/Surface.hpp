@@ -282,7 +282,7 @@ class Surface : public virtual GeometryObject,
   /// @return The global position by value
   virtual Vector3D localToGlobal(const GeometryContext& gctx,
                                  const Vector2D& lposition,
-                                 const Vector3D& momentumn) const = 0;
+                                 const Vector3D& momentum) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since

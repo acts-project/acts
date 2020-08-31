@@ -97,8 +97,9 @@ struct Interactor {
 
     // interactions only make sense if there is material to interact with.
     if (surface.surfaceMaterial()) {
-      // TODO - is this the right thing to do when globalToLocal fails (should
-      // never)
+      // TODO - is this the right thing to do when globalToLocal fails
+      // it should in principle never happen, so probably it would be best
+      // to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.unitDirection());
       if (lpResult.ok()) {
@@ -129,8 +130,7 @@ struct Interactor {
           //         component that by construction will see all material
           //         contributions (this Interactor) responsible.
           // TODO review this for supporting multiple interactions within the
-          // same
-          //      material slab
+          // same material slab
           after.setMaterialPassed(before.pathInX0() + slab.thicknessInX0(),
                                   before.pathInL0() + slab.thicknessInL0());
         }

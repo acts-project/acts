@@ -253,7 +253,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::Vector2D local(0, 0);
     auto lpResult = surface.globalToLocal(ctx.geoContext, pos, mom);
     if (not lpResult.ok()) {
-      ACTS_WARNING("Global to local transformation did not succeed.");
+      ACTS_FATAL("Global to local transformation did not succeed.");
+      return ProcessCode::ABORT;
     } else {
       local = lpResult.value();
     }

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <iostream>
 #include <string>        // for string printing
 #include <system_error>  // bring in std::error_code et al
 

@@ -170,10 +170,10 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       auto lpResult = clusterSurface.globalToLocal(
           ctx.geoContext, simHit.position(), simHit.unitDirection());
       if (not lpResult.ok()) {
-        ACTS_WARNING("Global to local transformation did not succeed.");
-      } else {
-        lPosition = lpResult.value();
+        ACTS_FATAL("Global to local transformation did not succeed.");
+        return ProcessCode::ABORT;
       }
+      lPosition = lpResult.value();
       // fill the variables
       m_t_gx.push_back(simHit.position().x());
       m_t_gy.push_back(simHit.position().y());
