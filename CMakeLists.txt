@@ -113,7 +113,6 @@ find_package(Filesystem REQUIRED)
 # version variables for external dependencies that are required more than once
 set(_dd4hep_version 1.10)
 set(_root_version 6.10)
-set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libstdc++")
 # plugin dependencies
 if(ACTS_BUILD_CUDA_PLUGIN)
   enable_language(CUDA)

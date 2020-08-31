@@ -11,7 +11,7 @@
 #include <exception>
 
 namespace Acts::Sycl {
-    cl::sycl::queue* createQueue(const std::string &device_name_substring) {
+    std::shared_ptr<cl::sycl::queue> createQueue(const std::string &device_name_substring) {
     // SYCL kernel exceptions are asynchronous
     auto exception_handler = [](cl::sycl::exception_list exceptions) {
         for (std::exception_ptr const& e : exceptions) {
@@ -25,7 +25,7 @@ namespace Acts::Sycl {
     };
 
     // Create queue with custom device selector
-    auto queue = new cl::sycl::queue(DeviceSelector(device_name_substring), exception_handler);
+    auto queue = std::make_shared<cl::sycl::queue>(DeviceSelector(device_name_substring), exception_handler);
 
     // See which device we are running on.
     std::cerr << "Running on: " << queue->get_device().get_info<cl::sycl::info::device::name>()

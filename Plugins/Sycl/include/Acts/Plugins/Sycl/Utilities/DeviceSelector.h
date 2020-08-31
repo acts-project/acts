@@ -12,7 +12,7 @@
 
 namespace Acts::Sycl {
     struct DeviceSelector : public cl::sycl::device_selector {
-        DeviceSelector(const std::string device_name);
+        DeviceSelector(const std::string& device_name);
 
         int operator()(const cl::sycl::device& d) const;
 

@@ -150,15 +150,22 @@ auto main(int argc, char** argv) -> int {
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), covarianceTool,
                                             bottomBinFinder, topBinFinder, std::move(grid), config);
+
   std::cout << "read " << spVec.size() << " SP from file " << cmdlTool.filename << std::endl;
+  
   auto end_prep = std::chrono::system_clock::now();
+
+  std::chrono::duration<double> elapsec_prep = end_prep- start_prep;
+  double prepTime = elapsec_prep.count();
+
+  std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
 
   // -------------------------------------- //
   // ----------- EXECUTE ON CPU ----------- //
   // -------------------------------------- //
 
   auto start_cpu = std::chrono::system_clock::now();
-  int group_count = 0;
+  uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   if(!cmdlTool.onlyGpu) {
@@ -197,16 +204,11 @@ auto main(int argc, char** argv) -> int {
   
   std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
 
-  std::chrono::duration<double> elapsec_prep = end_prep- start_prep;
-  double prepTime = elapsec_prep.count();
-
   std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
   double cpuTime = elapsec_cpu.count();
 
   std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
   double syclTime = elapsec_sycl.count();
-
-  // std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
 
   std::cout << std::endl;
   std::cout << "------------------------- Time Metric -------------------------" << std::endl;

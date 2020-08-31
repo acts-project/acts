@@ -10,7 +10,7 @@
 #include "Acts/Plugins/Sycl/Utilities/DeviceSelector.h"
 
 namespace Acts::Sycl {
-    DeviceSelector::DeviceSelector(const std::string device_name)
+    DeviceSelector::DeviceSelector(const std::string& device_name)
         : m_defaultSelector(cl::sycl::default_selector()),
         m_deviceName(device_name){};
 
@@ -25,7 +25,7 @@ namespace Acts::Sycl {
 
     // If the user provided a substring of the device name, look for that device
     if (!m_deviceName.empty()) {
-        if (d.get_info<cl::sycl::info::device::vendor>().find(m_deviceName) !=
+        if (d.get_info<cl::sycl::info::device::name>().find(m_deviceName) !=
             std::string::npos) {
         return 1;
         } else {

@@ -14,7 +14,7 @@ struct CommandLineArguments {
     bool allgroup = false;
     bool onlyGpu = false;
     bool matches = false;
-    unsigned int groups = 500;
+    uint groups = 500;
     bool fileExists = false;
     std::string deviceName = "";
     std::string filename = "";

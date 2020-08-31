@@ -15,7 +15,7 @@ namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
-    Acts::Sycl::DeviceExperimentCuts cuts,
+    const Acts::Sycl::DeviceExperimentCuts& cuts,
     const std::string &device_name_substring)
     : m_config(config), m_deviceCuts(cuts)
      {
@@ -73,10 +73,6 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                           SP->varianceR(), SP->varianceZ()});
   }
 
-  const int numBottomSPs = bottomSPvec.size();
-  const int numMiddleSPs = middleSPvec.size();
-  const int numTopSPs = topSPvec.size();
-
   const deviceSeedfinderConfig deviceConfigData = {
     m_config.deltaRMin,
     m_config.deltaRMax,
@@ -97,7 +93,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   std::vector<std::vector<SeedData>> seeds;
 
-  offloadComputations(m_queue,
+  createSeedsForGroupSycl(m_queue,
                       deviceConfigData,
                       m_deviceCuts,
                       deviceBottomSPs,
@@ -106,10 +102,10 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                       seeds
   );
 
-  for(int mi = 0; mi < numMiddleSPs && mi < seeds.size(); ++mi) {
+  for(size_t mi = 0; mi < seeds.size(); ++mi) {
     std::vector<std::pair<float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
         seedsPerSPM;
-    for(int j = 0; j < seeds[mi].size(); ++j){
+    for(size_t j = 0; j < seeds[mi].size(); ++j){
       auto& bottomSP = *(bottomSPvec[seeds[mi][j].bottom]);
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP =    *(topSPvec[seeds[mi][j].top]);

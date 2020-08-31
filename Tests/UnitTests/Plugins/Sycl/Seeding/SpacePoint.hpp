@@ -11,7 +11,7 @@
 struct SpacePoint {
   SpacePoint()= default;;
   SpacePoint(float p_x, float p_y, float p_z, float p_r, int p_surface, float p_varianceR, float p_varianceZ, int p_id):
-    m_x(p_x),m_y(p_y),m_z(p_z),m_r(p_r),m_surface(p_surface),varianceR(p_varianceR),varianceZ(p_varianceZ),m_id(p_id){};
+    m_id(p_id),m_x(p_x),m_y(p_y),m_z(p_z),m_r(p_r),varianceR(p_varianceR),varianceZ(p_varianceZ),m_surface(p_surface){};
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }
