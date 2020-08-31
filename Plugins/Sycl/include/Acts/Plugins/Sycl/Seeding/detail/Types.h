@@ -7,57 +7,59 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include <cstddef>
+
 #include <bits/stdint-uintn.h>
 
 namespace Acts::Sycl::detail {
-  struct deviceSpacePoint {
-    float x;
-    float y;
-    float z;
-    float r;
-    float varR;
-    float varZ;
-  };
+struct deviceSpacePoint {
+  float x;
+  float y;
+  float z;
+  float r;
+  float varR;
+  float varZ;
+};
 
-  // Parameters required to calculate circle with linear equation.
-  struct deviceLinEqCircle{
-    float zo;
-    float cotTheta;
-    float iDeltaR;
-    float er;
-    float u;
-    float v;
-  };
+// Parameters required to calculate circle with linear equation.
+struct deviceLinEqCircle {
+  float zo;
+  float cotTheta;
+  float iDeltaR;
+  float er;
+  float u;
+  float v;
+};
 
-  // Predefined parameters for Seedfinder and SeedFilter classes
-  struct deviceSeedfinderConfig {
-    float deltaRMin;
-    float deltaRMax;
-    float cotThetaMax;
-    float collisionRegionMin;
-    float collisionRegionMax;
-    float maxScatteringAngle2;
-    float sigmaScattering;
-    float minHelixDiameter2;
-    float pT2perRadius;
-    float deltaInvHelixDiameter;
-    float impactWeightFactor;
-    float filterDeltaRMin;
-    float compatSeedWeight;
-    float impactMax;
-    size_t compatSeedLimit;
-  };
+// Predefined parameters for Seedfinder and SeedFilter classes
+struct deviceSeedfinderConfig {
+  float deltaRMin;
+  float deltaRMax;
+  float cotThetaMax;
+  float collisionRegionMin;
+  float collisionRegionMax;
+  float maxScatteringAngle2;
+  float sigmaScattering;
+  float minHelixDiameter2;
+  float pT2perRadius;
+  float deltaInvHelixDiameter;
+  float impactWeightFactor;
+  float filterDeltaRMin;
+  float compatSeedWeight;
+  float impactMax;
+  size_t compatSeedLimit;
+};
 
-  // For SYCL
-  struct TripletData{
-    float curvature;
-    float impact;
-  };
+// For SYCL
+struct TripletData {
+  float curvature;
+  float impact;
+};
 
-  struct SeedData{
-    uint32_t bottom;
-    uint32_t top;
-    uint32_t middle;
-    float weight;
-  };
-} // Acts::Sycl::detail
+struct SeedData {
+  uint32_t bottom;
+  uint32_t top;
+  uint32_t middle;
+  float weight;
+};
+}  // namespace Acts::Sycl::detail
