@@ -1,5 +1,3 @@
-# Contributing to Acts
-
 Contributions to the Acts project are very welcome and feedback on the documentation is greatly appreciated.
 
 ## Mailing lists
