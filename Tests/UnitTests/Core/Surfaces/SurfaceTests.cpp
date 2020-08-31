@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   BOOST_CHECK_EQUAL(Surface::Other,
                     SurfaceStub(tgContext, original, transform).type());
   // need some cruft to make the next one work
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(5., 10.);
   DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
       std::make_shared<const RectangleBounds>(5., 10.);
   Vector3D reference{0., 1., 2.};
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(),
                     pNewMaterial.get());  // passes ??
   //
-  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), *pTransform, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
   // type() is pure virtual
 }
 
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Vector3D reference{0., 1., 2.};
   Translation3D translation1{0., 1., 2.};
   Translation3D translation2{1., 1., 2.};
-  auto pTransform1 = std::make_shared<const Transform3D>(translation1);
-  auto pTransform2 = std::make_shared<const Transform3D>(translation2);
+  auto pTransform1 = Transform3D(translation1);
+  auto pTransform2 = Transform3D(translation2);
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);

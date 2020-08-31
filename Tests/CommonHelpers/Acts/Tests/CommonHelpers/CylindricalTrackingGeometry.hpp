@@ -96,13 +96,11 @@ struct CylindricalTrackingGeometry {
     for (int im = 0; im < nPhi; ++im) {
       // Get the moduleTransform
       double phi = -M_PI + im * phiStep;
-      std::shared_ptr<Transform3D> mModuleTransform =
-          std::make_shared<Transform3D>(
-              Translation3D(ringRadius * std::cos(phi),
-                            ringRadius * std::sin(phi),
-                            ringZ + (im % 2) * zStagger) *
-              AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
-              AngleAxis3D(moduleTilt, Vector3D::UnitY()));
+      auto mModuleTransform = Transform3D(
+          Translation3D(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
+                        ringZ + (im % 2) * zStagger) *
+          AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
+          AngleAxis3D(moduleTilt, Vector3D::UnitY()));
 
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
@@ -168,9 +166,8 @@ struct CylindricalTrackingGeometry {
       moduleRotation.col(1) = moduleLocalY;
       moduleRotation.col(2) = moduleLocalZ;
       // Get the moduleTransform
-      std::shared_ptr<Transform3D> mModuleTransform =
-          std::make_shared<Transform3D>(Translation3D(mCenter) *
-                                        moduleRotation);
+      auto mModuleTransform =
+          Transform3D(Translation3D(mCenter) * moduleRotation);
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
@@ -327,9 +324,9 @@ struct CylindricalTrackingGeometry {
     auto pVolumeBounds =
         std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
-    auto pVolume = TrackingVolume::create(nullptr, pVolumeBounds, nullptr,
-                                          std::move(pLayerArray), nullptr, {},
-                                          "Pixel::Barrel");
+    auto pVolume = TrackingVolume::create(
+        Transform3D::Identity(), pVolumeBounds, nullptr, std::move(pLayerArray),
+        nullptr, {}, "Pixel::Barrel");
 
     // The combined volume
     auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(

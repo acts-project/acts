@@ -82,18 +82,15 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   return volumes;
 }
 
-std::shared_ptr<const Acts::Transform3D>
-Acts::DD4hepVolumeBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const {
+Acts::Transform3D Acts::DD4hepVolumeBuilder::convertTransform(
+    const TGeoMatrix* tGeoTrans) const {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
-  auto transform =
-      std::make_shared<const Transform3D>(TGeoPrimitivesHelper::makeTransform(
-          Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-          Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-          Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-          Acts::Vector3D(translation[0] * UnitConstants::cm,
-                         translation[1] * UnitConstants::cm,
-                         translation[2] * UnitConstants::cm)));
-  return (transform);
+  return TGeoPrimitivesHelper::makeTransform(
+      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
+      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
+      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
+      Acts::Vector3D(translation[0] * units::_cm, translation[1] * units::_cm,
+                     translation[2] * units::_cm));
 }

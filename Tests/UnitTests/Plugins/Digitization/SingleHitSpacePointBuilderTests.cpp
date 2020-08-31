@@ -69,7 +69,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
 
   // Build Digitization
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
-  DetectorElementStub detElem(std::make_shared<const Transform3D>(t3d));
+  DetectorElementStub detElem(t3d);
   auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
   ActsSymMatrixD<3> cov;
   cov << 0., 0., 0., 0., 0., 0., 0., 0., 0.;

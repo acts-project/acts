@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
   Vector3D direction{0., 1., 0.};
   BoundaryCheck bcheck{true};
 
-  auto conCyl = Surface::makeShared<CylinderSurface>(
-      std::make_shared<Transform3D>(Transform3D::Identity()), 10., 20.);
+  auto conCyl =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 10., 20.);
 
   std::vector<std::shared_ptr<const Surface>> approachSurface = {conCyl};
 
