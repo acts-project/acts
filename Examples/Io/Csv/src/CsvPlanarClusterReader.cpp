@@ -255,9 +255,9 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     if (not lpResult.ok()) {
       ACTS_FATAL("Global to local transformation did not succeed.");
       return ProcessCode::ABORT;
-    } else {
-      local = lpResult.value();
     }
+    local = lpResult.value();
+
     // TODO what to use as cluster uncertainty?
     Acts::ActsSymMatrixD<3> cov = Acts::ActsSymMatrixD<3>::Identity();
     // create the planar cluster
