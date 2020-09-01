@@ -156,18 +156,18 @@ void ActsExamples::ResPlotTool::fill(
   auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
                                           truthParticle.unitDirection());
   if (lpResult.ok()) {
-    truthParameter[Acts::ParDef::eLOC_D0] =
-        lpResult.value()[Acts::ParDef::eLOC_D0];
-    truthParameter[Acts::ParDef::eLOC_Z0] =
-        lpResult.value()[Acts::ParDef::eLOC_Z0];
+    truthParameter[Acts::BoundIndices::eLOC_D0] =
+        lpResult.value()[Acts::BoundIndices::eLOC_D0];
+    truthParameter[Acts::BoundIndices::eLOC_Z0] =
+        lpResult.value()[Acts::BoundIndices::eLOC_Z0];
   } else {
     ACTS_ERROR("Global to local transformation did not succeed.");
   }
-  truthParameter[Acts::ParDef::ePHI] = phi(truthParticle.unitDirection());
-  truthParameter[Acts::ParDef::eTHETA] = theta(truthParticle.unitDirection());
-  truthParameter[Acts::ParDef::eQOP] =
+  truthParameter[Acts::BoundIndices::ePHI] = phi(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eTHETA] = theta(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eQOP] =
       truthParticle.charge() / truthParticle.absMomentum();
-  truthParameter[Acts::ParDef::eT] = truthParticle.time();
+  truthParameter[Acts::BoundIndices::eT] = truthParticle.time();
 
   // get the truth eta and pT
   const auto truthEta = eta(truthParticle.unitDirection());

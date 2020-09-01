@@ -446,7 +446,7 @@ class TrackStateProxy {
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
-            ParID_t... params>
+            BoundIndices... params>
   void setCalibrated(const Acts::Measurement<SourceLink, BoundIndices,
                                              params...>& meas) {
     IndexData& dataref = data();
@@ -488,7 +488,7 @@ class TrackStateProxy {
   /// @tparam params The parameter tags of the measurement
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
-            ParID_t... params>
+            BoundIndices... params>
   void resetCalibrated(
       const Acts::Measurement<SourceLink, BoundIndices, params...>&
           meas) {

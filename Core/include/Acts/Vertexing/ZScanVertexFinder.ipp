@@ -70,8 +70,8 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     // apply pT weighting as/if configured
     if (!m_cfg.disableAllWeights && (m_cfg.usePt || m_cfg.useLogPt)) {
-      double Pt = std::abs(1. / params.parameters()[ParID_t::eQOP]) *
-                  std::sin(params.parameters()[ParID_t::eTHETA]);
+      double Pt = std::abs(1. / params.parameters()[BoundIndices::eQOP]) *
+                  std::sin(params.parameters()[BoundIndices::eTHETA]);
       if (m_cfg.usePt) {
         z0AndWeight.second *= std::pow(Pt, m_cfg.expPt);
       } else {

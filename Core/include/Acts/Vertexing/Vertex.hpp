@@ -55,7 +55,7 @@ class Vertex {
   Vector3D position() const;
 
   /// @return Returns time
-  ParValue_t time() const;
+  BoundScalar time() const;
 
   /// @return Returns 4-position
   const Vector4D& fullPosition() const;
@@ -76,7 +76,7 @@ class Vertex {
   ///
   /// @param position Vertex position
   /// @param time The time
-  void setPosition(const Vector3D& position, ParValue_t time = 0);
+  void setPosition(const Vector3D& position, BoundScalar time = 0);
 
   /// @brief Set position and time
   ///
@@ -86,7 +86,7 @@ class Vertex {
   /// @brief Sets time
   ///
   /// @param time The time
-  void setTime(ParValue_t time);
+  void setTime(BoundScalar time);
 
   /// @brief Sets 3x3 covariance
   ///

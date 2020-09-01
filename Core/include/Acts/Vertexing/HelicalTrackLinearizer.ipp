@@ -56,17 +56,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   // phiV and functions
-  double phiV = paramsAtPCA(ParID_t::ePHI);
+  double phiV = paramsAtPCA(BoundIndices::ePHI);
   double sinPhiV = std::sin(phiV);
   double cosPhiV = std::cos(phiV);
 
   // theta and functions
-  double th = paramsAtPCA(ParID_t::eTHETA);
+  double th = paramsAtPCA(BoundIndices::eTHETA);
   const double sinTh = std::sin(th);
   const double tanTh = std::tan(th);
 
   // q over p
-  double qOvP = paramsAtPCA(ParID_t::eQOP);
+  double qOvP = paramsAtPCA(BoundIndices::eQOP);
   double sgnH = (qOvP < 0.) ? -1 : 1;
 
   Vector3D momentumAtPCA(phiV, th, qOvP);

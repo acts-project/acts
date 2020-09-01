@@ -20,7 +20,7 @@ GeometryContext tgContext = GeometryContext();
 
 using SourceLink = MinimalSourceLink;
 
-template <ParID_t... params>
+template <BoundIndices... params>
 using MeasurementType =
     Measurement<SourceLink, BoundIndices, params...>;
 using FittableMeasurement = FittableMeasurement<SourceLink>;
@@ -34,14 +34,14 @@ BOOST_AUTO_TEST_CASE(getSurface_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
                                                     std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
 
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder.get());
 
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m2(
       cylinder2, {}, std::move(cov), -0.1, 0.45);
   fm = m2;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder2.get());
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
                                                     std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 
   ActsSymMatrixD<3> cov3;
   cov.setRandom();
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT> m2(
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1, BoundIndices::eT> m2(
       cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
   fm = m2;
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
                                                     std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
   MinimalSourceLink msl2{&fm};
   BOOST_CHECK_EQUAL(msl, msl2);
 
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m2(
       cylinder, {}, std::move(cov), -0.1, 0.45);
   FittableMeasurement fm2 = m2;
   MinimalSourceLink msl3{&fm2};

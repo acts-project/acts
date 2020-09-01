@@ -134,60 +134,60 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     /// Set the covariance transport to true
     pAlgConfig.covarianceTransport = true;
     /// Set the covariance matrix
-    pAlgConfig.covariances(Acts::ParDef::eLOC_D0, Acts::ParDef::eLOC_D0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eLOC_D0) =
         pAlgConfig.d0Sigma * pAlgConfig.d0Sigma;
-    pAlgConfig.covariances(Acts::ParDef::eLOC_Z0, Acts::ParDef::eLOC_Z0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::eLOC_Z0) =
         pAlgConfig.z0Sigma * pAlgConfig.z0Sigma;
-    pAlgConfig.covariances(Acts::ParDef::ePHI, Acts::ParDef::ePHI) =
+    pAlgConfig.covariances(Acts::BoundIndices::ePHI, Acts::BoundIndices::ePHI) =
         pAlgConfig.phiSigma * pAlgConfig.phiSigma;
-    pAlgConfig.covariances(Acts::ParDef::eTHETA, Acts::ParDef::eTHETA) =
+    pAlgConfig.covariances(Acts::BoundIndices::eTHETA, Acts::BoundIndices::eTHETA) =
         pAlgConfig.thetaSigma * pAlgConfig.thetaSigma;
-    pAlgConfig.covariances(Acts::ParDef::eQOP, Acts::ParDef::eQOP) =
+    pAlgConfig.covariances(Acts::BoundIndices::eQOP, Acts::BoundIndices::eQOP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::ParDef::eT, Acts::ParDef::eT) =
+    pAlgConfig.covariances(Acts::BoundIndices::eT, Acts::BoundIndices::eT) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Read if the offdiagonal parameters have been read
     auto readOffd = vm["prop-corr-offd"].template as<read_range>();
     // Only if they are properly defined, assign
     if (readOffd.size() == 15) {
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eLOC_Z0) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eLOC_Z0) =
           readOffd[0];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::ePHI) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::ePHI) =
           readOffd[1];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eTHETA) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eTHETA) =
           readOffd[2];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eQOP) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eQOP) =
           readOffd[3];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eT) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eT) =
           readOffd[4];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::ePHI) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::ePHI) =
           readOffd[5];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eTHETA) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::eTHETA) =
           readOffd[6];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eQOP) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::eQOP) =
           readOffd[7];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eT) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::eT) =
           readOffd[8];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eTHETA) =
+      pAlgConfig.correlations(Acts::BoundIndices::ePHI, Acts::BoundIndices::eTHETA) =
           readOffd[9];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eQOP) =
+      pAlgConfig.correlations(Acts::BoundIndices::ePHI, Acts::BoundIndices::eQOP) =
           readOffd[10];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eT) =
+      pAlgConfig.correlations(Acts::BoundIndices::ePHI, Acts::BoundIndices::eT) =
           readOffd[11];
-      pAlgConfig.correlations(Acts::ParDef::eTHETA, Acts::ParDef::eQOP) =
+      pAlgConfig.correlations(Acts::BoundIndices::eTHETA, Acts::BoundIndices::eQOP) =
           readOffd[12];
-      pAlgConfig.correlations(Acts::ParDef::eTHETA, Acts::ParDef::eT) =
+      pAlgConfig.correlations(Acts::BoundIndices::eTHETA, Acts::BoundIndices::eT) =
           readOffd[13];
-      pAlgConfig.correlations(Acts::ParDef::eQOP, Acts::ParDef::eT) =
+      pAlgConfig.correlations(Acts::BoundIndices::eQOP, Acts::BoundIndices::eT) =
           readOffd[14];
     } else {
       /// Some pre-defined values (non-trivial helical correlations)
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::ePHI) = -0.8;
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eQOP) = -0.3;
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eTHETA) =
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::ePHI) = -0.8;
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_D0, Acts::BoundIndices::eQOP) = -0.3;
+      pAlgConfig.correlations(Acts::BoundIndices::eLOC_Z0, Acts::BoundIndices::eTHETA) =
           -0.8;
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eQOP) = 0.4;
+      pAlgConfig.correlations(Acts::BoundIndices::ePHI, Acts::BoundIndices::eQOP) = 0.4;
     }
   }
 

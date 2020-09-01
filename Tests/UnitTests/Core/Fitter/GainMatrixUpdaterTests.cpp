@@ -26,7 +26,7 @@ namespace Test {
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 using SourceLink = MinimalSourceLink;
-template <ParID_t... params>
+template <BoundIndices... params>
 using MeasurementType =
     Measurement<SourceLink, BoundIndices, params...>;
 
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas(
-      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1>(
           cylinder, {}, std::move(cov), -0.1, 0.45));
 
   // Make dummy track parameter

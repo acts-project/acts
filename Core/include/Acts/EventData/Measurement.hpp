@@ -104,7 +104,7 @@ class Measurement {
   Measurement(std::shared_ptr<const RefObject> referenceObject,
               const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
-                                      ParValue_t>::type head,
+                                      BoundScalar>::type head,
               Tail... values)
       : m_oParameters(std::move(cov), head, values...),
         m_pReferenceObject(std::move(referenceObject)),
@@ -201,7 +201,7 @@ class Measurement {
   ///
   /// @return value of the stored parameter
   template <parameter_indices_t parameter>
-  ParValue_t get() const {
+  BoundScalar get() const {
     return m_oParameters.template getParameter<parameter>();
   }
 
@@ -229,7 +229,7 @@ class Measurement {
   ///
   /// @return uncertainty \f$\sigma \ge 0\f$ for given parameter
   template <parameter_indices_t parameter>
-  ParValue_t uncertainty() const {
+  BoundScalar uncertainty() const {
     return m_oParameters.template getUncertainty<parameter>();
   }
 

@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   random_residual_tests();
 }
 
-template <ParID_t... params>
+template <BoundIndices... params>
 using ParSet = ParameterSet<BoundIndices, params...>;
 
 /**
@@ -780,7 +780,7 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
 
   // consistency of types
   BOOST_CHECK((std::is_same<std::remove_cv<decltype(
-                                at_index<ParID_t, 0, eBoundLoc0>::value)>::type,
+                                at_index<BoundIndices, 0, eBoundLoc0>::value)>::type,
                             decltype(eBoundLoc0)>::value));
   BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
                             decltype(eBoundLoc0)>::value));

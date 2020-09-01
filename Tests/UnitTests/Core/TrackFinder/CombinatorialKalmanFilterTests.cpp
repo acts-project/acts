@@ -70,7 +70,7 @@ GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 using SourceLink = ExtendedMinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using Resolution = std::pair<ParID_t, double>;
+using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
@@ -86,7 +86,7 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
-template <ParID_t... params>
+template <BoundIndices... params>
 using MeasurementType =
     Measurement<SourceLink, BoundIndices, params...>;
 

@@ -309,10 +309,4 @@ using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
 
 using BoundToFreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eBoundSize>;
 
-// For backward compatibility. New code must use the more explicit
-// `Bound{Indices,Scalar,Traits}...` types.
-using ParDef = BoundIndices;
-using ParID_t = BoundIndices;
-using ParValue_t = BoundScalar;
-
 }  // namespace Acts

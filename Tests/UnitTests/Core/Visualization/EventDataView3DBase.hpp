@@ -45,7 +45,7 @@ namespace EventDataView3DTest {
 using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
-template <ParID_t... params>
+template <BoundIndices... params>
 using MeasurementType =
     Measurement<SourceLink, BoundIndices, params...>;
 

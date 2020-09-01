@@ -155,15 +155,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     const auto& trackIP3dParams = trackAtIP3d.parameters();
 
     // d0 and z0 should have changed
-    BOOST_CHECK_NE(myTrackParams[ParID_t::eLOC_D0],
-                   trackIP3dParams[ParID_t::eLOC_D0]);
-    BOOST_CHECK_NE(myTrackParams[ParID_t::eLOC_Z0],
-                   trackIP3dParams[ParID_t::eLOC_Z0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eLOC_D0],
+                   trackIP3dParams[BoundIndices::eLOC_D0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eLOC_Z0],
+                   trackIP3dParams[BoundIndices::eLOC_Z0]);
     // Theta along helix and q/p shoud remain the same
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eTHETA],
-                    trackIP3dParams[ParID_t::eTHETA], 1e-5);
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eQOP],
-                    trackIP3dParams[ParID_t::eQOP], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eTHETA],
+                    trackIP3dParams[BoundIndices::eTHETA], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eQOP],
+                    trackIP3dParams[BoundIndices::eQOP], 1e-5);
 
     if (debugMode) {
       std::cout << std::setprecision(10) << "Old track parameters: \n"

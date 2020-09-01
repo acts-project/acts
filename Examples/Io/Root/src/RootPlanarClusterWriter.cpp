@@ -113,8 +113,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information: position, @todo coveraiance
     auto parameters = cluster.parameters();
-    Acts::Vector2D local(parameters[Acts::ParDef::eLOC_0],
-                         parameters[Acts::ParDef::eLOC_1]);
+    Acts::Vector2D local(parameters[Acts::BoundIndices::eLOC_0],
+                         parameters[Acts::BoundIndices::eLOC_1]);
 
     /// prepare for calculating the
     Acts::Vector3D mom(1, 1, 1);
