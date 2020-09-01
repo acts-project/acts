@@ -43,7 +43,6 @@ constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.05;
-constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -105,8 +104,7 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
   runForwardBackwardTest<Propagator, Acts::ChargedPolicy,
                          Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
-      showDebug);
+      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom);
 }
 
 // check that reachable surfaces are correctly reached
@@ -120,7 +118,7 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
                    Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, ZCylinderSurfaceBuilder(),
-      epsPos, epsDir, epsMom, showDebug);
+      epsPos, epsDir, epsMom);
 }
 
 BOOST_DATA_TEST_CASE(ToDisc,
@@ -131,7 +129,7 @@ BOOST_DATA_TEST_CASE(ToDisc,
                    Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, DiscSurfaceBuilder(),
-      epsPos, epsDir, epsMom, showDebug);
+      epsPos, epsDir, epsMom);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
@@ -142,7 +140,7 @@ BOOST_DATA_TEST_CASE(ToPlane,
                    Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, PlaneSurfaceBuilder(),
-      epsPos, epsDir, epsMom, showDebug);
+      epsPos, epsDir, epsMom);
 }
 
 // True forward/backward tracks do not work with z straws
@@ -154,7 +152,7 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
                    Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, ZStrawSurfaceBuilder(),
-      epsPos, epsDir, epsMom, showDebug);
+      epsPos, epsDir, epsMom);
 }
 
 // check covariance transport using the ridders propagator for comparison
@@ -167,7 +165,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                            Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
-      epsDir, epsMom, epsCov, showDebug);
+      epsDir, epsMom, epsCov);
 }
 
 // limit theta to ignore the covariance missmatches at high theta for now
@@ -180,7 +178,7 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
                              Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+      ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToDisc,
@@ -192,7 +190,7 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
                              Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+      DiscSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
@@ -204,7 +202,7 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
                              Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+      PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 // limit theta to ignore the covariance missmatches at high theta for now
@@ -217,7 +215,7 @@ BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
                              Acts::DenseStepperPropagatorOptions>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
-      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov, showDebug);
+      ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

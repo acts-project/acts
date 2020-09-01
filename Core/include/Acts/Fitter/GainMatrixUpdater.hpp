@@ -113,7 +113,14 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
 
           // calculate filtered residual
-          const par_t residual = (calibrated - H * filtered);
+          //
+          // FIXME: Without separate residual construction and assignment, we
+          //        currently take a +0.7GB build memory consumption hit in the
+          //        EventDataView unit tests. Revisit this once Measurement
+          //        overhead problems (Acts issue #350) are sorted out.
+          //
+          par_t residual;
+          residual = calibrated - H * filtered;
           ACTS_VERBOSE("Residual: " << residual.transpose());
 
           trackState.chi2() =

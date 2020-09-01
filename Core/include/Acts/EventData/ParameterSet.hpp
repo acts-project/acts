@@ -7,13 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
+
 #include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
 
-// Acts includes
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -135,8 +134,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
-                                                                    values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vals(
+        *this, head, values...);
   }
 
   /**
@@ -157,8 +156,8 @@ class ParameterSet {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
   /**
@@ -296,8 +295,8 @@ class ParameterSet {
    * @param values vector of length #kNumberOfParameters
    */
   void setParameters(const ParameterVector& values) {
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
   /**

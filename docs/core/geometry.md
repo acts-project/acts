@@ -22,21 +22,21 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
     {
     public:
      /// default constructor
-     GeometryObject() : m_geoID(0) {}
+     GeometryObject() : m_geometryId(0) {}
     
      /// constructor from a ready-made value
      ///
-     /// @param geoID the geometry identifier of the object
-     GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
+     /// @param geometryId the geometry identifier of the object
+     GeometryObject(const GeometryID& geometryId) : m_geometryId(geometryId) {}
     
      /// assignment operator
      ///
-     /// @param geoID the source geoID
+     /// @param geometryId the source geometryId
      GeometryObject&
-     operator=(const GeometryObject& geoID)
+     operator=(const GeometryObject& geometryId)
      {
-       if (&geoID != this) {
-         m_geoID = geoID.m_geoID;
+       if (&geometryId != this) {
+         m_geometryId = geometryId.m_geometryId;
        }
        return *this;
      }
@@ -44,7 +44,7 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
      /// Return the value
      /// @return the geometry id by reference
      const GeometryID&
-     geoID() const;
+     geometryId() const;
     
      /// Force a binning position method
      ///
@@ -64,12 +64,12 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
     
      /// Set the value
      ///
-     /// @param geoID the geometry identifier to be assigned
+     /// @param geometryId the geometry identifier to be assigned
      void
-     assignGeoID(const GeometryID& geoID);
+     assignGeometryId(const GeometryID& geometryId);
     
     protected:
-     GeometryID m_geoID;
+     GeometryID m_geometryId;
     };
 
 This class ensures that a unique `GeometryID` is assigned to every geometry

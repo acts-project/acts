@@ -7,7 +7,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
-    ActsCore ActsIdentificationPlugin ActsDigitizationPlugin ActsTGeoPlugin
+    ActsCore ActsPluginIdentification ActsPluginDigitization ActsPluginTGeo
     ActsExamplesFramework ActsExamplesDetectorsCommon
     ActsExamplesDetectorGeneric ActsExamplesMagneticField)
 

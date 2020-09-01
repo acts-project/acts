@@ -68,7 +68,7 @@ struct MaterialCollector {
       }
 
       ACTS_VERBOSE("Material check on surface "
-                   << state.navigation.currentSurface->geoID());
+                   << state.navigation.currentSurface->geometryId());
 
       if (state.navigation.currentSurface->surfaceMaterial()) {
         // get the material propertices and only continue

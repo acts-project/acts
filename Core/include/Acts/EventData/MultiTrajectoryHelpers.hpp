@@ -83,7 +83,7 @@ VolumeTrajectoryStateContainer trajectoryState(
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
-    const auto& geoID = state.referenceSurface().geoID();
+    const auto& geoID = state.referenceSurface().geometryId();
     const auto& volume = geoID.volume();
     // Check if the track info for this sub-detector is requested
     auto it = std::find(volumeIds.begin(), volumeIds.end(), volume);

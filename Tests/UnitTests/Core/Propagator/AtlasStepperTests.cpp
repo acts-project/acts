@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
 
   auto&& [pars, jac, pathLength] = stepper.boundState(state, *plane);
   // check parameters
-  CHECK_CLOSE_ABS(pars.position(), pos, eps);
+  CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
   CHECK_CLOSE_ABS(pars.momentum(), mom, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
   // check parameters
-  CHECK_CLOSE_ABS(pars.position(), pos, eps);
+  CHECK_CLOSE_ABS(pars.position(geoCtx), pos, eps);
   CHECK_CLOSE_ABS(pars.time(), time, eps);
   CHECK_CLOSE_ABS(pars.momentum(), mom, eps);
   BOOST_CHECK_EQUAL(pars.charge(), charge);

@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -28,7 +29,7 @@ void consistencyCheck(const Parameter& pars, const Vector3D& position,
   CHECK_CLOSE_REL(pars.parameters()[eQOP], values[4], 1e-6);
   CHECK_CLOSE_ABS(pars.parameters()[eT], values[5], 1e-6);
   // check global parameters
-  CHECK_CLOSE_REL(pars.position(), position, 1e-6);
+  CHECK_CLOSE_REL(pars.position(GeometryContext()), position, 1e-6);
   CHECK_CLOSE_REL(pars.momentum(), momentum, 1e-6);
   BOOST_CHECK_EQUAL(pars.charge(), charge);
   CHECK_CLOSE_REL(pars.time(), time, 1e-6);

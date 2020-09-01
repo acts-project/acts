@@ -20,7 +20,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -55,15 +54,12 @@ using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
-using DebugOutput = DebugOutputActor;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
 ActsSymMatrixD<1> cov1D;
 SymMatrix2D cov2D;
-
-bool debugMode = false;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -107,7 +103,7 @@ struct MeasurementCreator {
     // monitor the current surface
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
-      auto geoID = surface->geoID();
+      auto geoID = surface->geometryId();
       auto volumeID = geoID.volume();
       auto layerID = geoID.layer();
       // find volume and layer information for this
@@ -312,7 +308,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                                                          mMom, 42_ns);
 
   // Create action list for the measurement creation
-  using MeasurementActions = ActionList<MeasurementCreator, DebugOutput>;
+  using MeasurementActions = ActionList<MeasurementCreator>;
   using MeasurementAborters = AbortList<EndOfWorldReached>;
 
   auto pixelResX = Resolution(eLOC_0, 25_um);
@@ -341,18 +337,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Set options for propagator
   PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
       tgContext, mfContext, getDummyLogger());
-  mOptions.debug = debugMode;
   auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
   mCreator.detectorResolution = detRes;
 
   // Launch and collect - the measurements
   auto mResult = mPropagator.propagate(mStart, mOptions).value();
-  if (debugMode) {
-    const auto debugString =
-        mResult.template get<DebugOutput::result_type>().debugString;
-    std::cout << ">>>> Measurement creation: " << std::endl;
-    std::cout << debugString;
-  }
 
   // Extract measurements from result of propagation.
   // This vector owns the measurements

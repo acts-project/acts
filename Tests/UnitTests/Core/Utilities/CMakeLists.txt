@@ -1,6 +1,8 @@
 add_unittest(AnnealingUtility AnnealingUtilityTests.cpp)
 add_unittest(Axes AxesTests.cpp)
 add_unittest(BFieldMapUtils BFieldMapUtilsTests.cpp)
+add_unittest(BinAdjustment BinAdjustmentTests.cpp)
+add_unittest(BinAdjustmentVolume BinAdjustmentVolumeTests.cpp)
 add_unittest(BinningData BinningDataTests.cpp)
 add_unittest(BinUtility BinUtilityTests.cpp)
 add_unittest(BoundingBox BoundingBoxTest.cpp)

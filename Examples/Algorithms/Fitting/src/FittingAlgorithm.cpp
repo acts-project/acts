@@ -106,8 +106,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
-        ACTS_VERBOSE("  position: " << params.position().transpose());
-        ACTS_VERBOSE("  momentum: " << params.momentum().transpose());
+        ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
         indexedParams.emplace(fitOutput.trackTip, std::move(params));
       } else {

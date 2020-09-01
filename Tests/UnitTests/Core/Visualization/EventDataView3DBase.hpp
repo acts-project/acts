@@ -191,7 +191,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   surfaces.reserve(6);
   detector->visitSurfaces([&](const Surface* surface) {
     if (surface and surface->associatedDetectorElement()) {
-      std::cout << "surface " << surface->geoID() << " placed at: ("
+      std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);
     }

@@ -225,20 +225,18 @@ $ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
 Multiple options can be given. `cmake` caches the options so that only changed
 options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
-components. q
+components.
 
 | Option                                | Description |
 |---------------------------------------|-------------|
 | ACTS_BUILD_EVERYTHING                 | Build with most options enabled (except HepMC3 and documentation) |
-| ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
-| ACTS_BUILD_CUDA_PLUGIN                | Build CUDA plugin |
-| ACTS_BUILD_DD4HEP_PLUGIN              | Build DD4hep geometry plugin |
-| ACTS_BUILD_DIGITIZATION_PLUGIN        | Build Digitization plugin |
-| ACTS_BUILD_IDENTIFICATION_PLUGIN      | Build Identification plugin |
-| ACTS_BUILD_JSON_PLUGIN                | Build Json plugin |
-| ACTS_USE_BUNDLED_NLOHMANN_JSON        | Use external nlohmann::json installation (on by default) |
-| ACTS_BUILD_TGEO_PLUGIN                | Build TGeo plugin |
-| ACTS_BUILD_LEGACY                     | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_CUDA                | Build CUDA plugin |
+| ACTS_BUILD_PLUGIN_DD4HEP              | Build DD4hep geometry plugin |
+| ACTS_BUILD_PLUGIN_DIGITIZATION        | Build Digitization plugin |
+| ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
+| ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
+| ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
 | ACTS_BUILD_EXAMPLES                   | Build standalone examples |
 | ACTS_BUILD_EXAMPLES_DD4HEP            | Build DD4hep-based code in the examples |
@@ -249,13 +247,15 @@ components. q
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
+| ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
 
-All Acts-specific options are disabled or empty by default (except for
-`ACTS_USE_BUNDLED_NLOHMANN_JSON`) and must be specifically requested. Some of
-the options have interdependencies that are automatically handled, e.g. enabling
-any of the specific `ACTS_BUILD_EXAMPLES_...` options will also enable the
-overall `ACTS_BUILD_EXAMPLES` option. You only need to tell the build system
-what you want and it will figure out the rest.
+All Acts-specific options are disabled or empty by default and must be
+specifically requested. Some of the options have interdependencies that are
+automatically handled, e.g. enabling any of the specific
+`ACTS_BUILD_EXAMPLES_...` options will also enable the overall
+`ACTS_BUILD_EXAMPLES` option. You only need to tell the build system what you
+want and it will figure out the rest.
 
 In addition to the Acts-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the

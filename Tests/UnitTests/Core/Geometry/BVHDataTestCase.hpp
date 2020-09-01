@@ -138,14 +138,12 @@ BOOST_DATA_TEST_CASE(
   Navigator navigator(tg);
   PropagatorType propagator(std::move(stepper), navigator);
 
-  using DebugOutput = Acts::DebugOutputActor;
-  using ActionList = Acts::ActionList<SteppingLogger, DebugOutput>;
+  using ActionList = Acts::ActionList<SteppingLogger>;
   using AbortConditions = Acts::AbortList<>;
 
   Acts::PropagatorOptions<ActionList, AbortConditions> options(
       tgContext, mfContext, Acts::getDummyLogger());
 
-  options.debug = false;
   options.pathLimit = 20_m;
 
   // this should be irrelevant.
@@ -156,13 +154,6 @@ BOOST_DATA_TEST_CASE(
 
   const auto result = propagator.propagate(startPar, options).value();
 
-  const auto debugString =
-      result.template get<DebugOutput::result_type>().debugString;
-
-  if (options.debug) {
-    std::cout << debugString << std::endl;
-  }
-
   // collect surfaces
   std::vector<const Surface*> actHits;
   auto steppingResults =
@@ -172,7 +163,7 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
 
-    auto sensitiveID = step.surface->geoID().sensitive();
+    auto sensitiveID = step.surface->geometryId().sensitive();
     if (sensitiveID != 0) {
       actHits.push_back(step.surface.get());
     }
@@ -184,6 +175,6 @@ BOOST_DATA_TEST_CASE(
     const Surface* act = actHits[i];
 
     BOOST_CHECK_EQUAL(exp, act);
-    BOOST_CHECK_EQUAL(exp->geoID(), act->geoID());
+    BOOST_CHECK_EQUAL(exp->geometryId(), act->geometryId());
   }
 }

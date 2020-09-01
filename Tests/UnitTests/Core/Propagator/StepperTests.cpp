@@ -21,7 +21,6 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -390,7 +389,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane);
   auto boundPars = std::get<0>(boundState);
-  CHECK_CLOSE_ABS(boundPars.position(), bp.position(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
@@ -620,7 +619,6 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
   propOpts.maxStepSize = 1.5_m;
-  propOpts.debug = true;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));
@@ -670,7 +668,6 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 100;
   propOptsDense.maxStepSize = 1.5_m;
-  propOptsDense.debug = true;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
@@ -786,10 +783,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   AbortList<EndOfWorld> abortList;
   abortList.get<EndOfWorld>().maxX = 3_m;
 
-  using DebugOutput = Acts::DebugOutputActor;
-
   // Set options for propagator
-  DenseStepperPropagatorOptions<ActionList<StepCollector, DebugOutput>,
+  DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.abortList = abortList;
@@ -848,14 +843,12 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through vacuum
   // Set options for propagator
 
-  PropagatorOptions<ActionList<StepCollector, DebugOutput>,
-                    AbortList<EndOfWorld>>
+  PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
       propOptsDef(tgContext, mfContext, getDummyLogger());
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
   propOptsDef.maxStepSize = 1.5_m;
-  propOptsDef.debug = false;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DefaultExtension>> esDef(
@@ -886,12 +879,6 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
           std::make_pair(stepResult.position[i], stepResult.momentum[i]);
       break;
     }
-  }
-
-  if (propOptsDef.debug) {
-    const auto debugString =
-        resultDef.template get<DebugOutput::result_type>().debugString;
-    std::cout << debugString << std::endl;
   }
 
   CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);

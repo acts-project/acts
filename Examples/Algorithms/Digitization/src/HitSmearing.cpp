@@ -39,7 +39,7 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
     if (not surface) {
       return;
     }
-    this->m_surfaces.insert_or_assign(surface->geoID(), surface);
+    this->m_surfaces.insert_or_assign(surface->geometryId(), surface);
   });
 }
 
