@@ -13,7 +13,7 @@ set( CMAKE_REQUIRED_QUIET TRUE )
 find_package(SYCL REQUIRED)
 
 add_library(
-  ActsSyclPlugin SHARED
+  ActsPluginSycl SHARED
   src/Seeding/CreateSeedsForGroupSycl.cpp
   src/Utilities/CreateQueueSycl.cpp
   src/Utilities/ListSyclPlatforms.cpp
@@ -21,20 +21,20 @@ add_library(
 )
 
 target_include_directories(
-  ActsSyclPlugin
+  ActsPluginSycl
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   
 target_link_libraries(
-  ActsSyclPlugin
+  ActsPluginSycl
   PUBLIC ActsCore)
 
-acts_setup_sycl_target(ActsSyclPlugin DEPENDENCY PRIVATE)
+acts_setup_sycl_target(ActsPluginSycl DEPENDENCY PRIVATE)
 
 install(
-  TARGETS ActsSyclPlugin
-  EXPORT ActsSyclPluginTargets
+  TARGETS ActsPluginSycl
+  EXPORT ActsPluginSyclTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
   
 install(
