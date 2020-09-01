@@ -22,7 +22,7 @@ using SourceLink = MinimalSourceLink;
 
 template <ParID_t... params>
 using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+    Measurement<SourceLink, BoundIndices, params...>;
 using FittableMeasurement = FittableMeasurement<SourceLink>;
 
 BOOST_AUTO_TEST_CASE(getSurface_test) {

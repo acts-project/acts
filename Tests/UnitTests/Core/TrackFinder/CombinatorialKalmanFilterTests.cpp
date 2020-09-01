@@ -88,7 +88,7 @@ CalibrationContext calContext = CalibrationContext();
 
 template <ParID_t... params>
 using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+    Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters

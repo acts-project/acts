@@ -27,7 +27,7 @@ using Covariance = BoundSymMatrix;
 using SourceLink = MinimalSourceLink;
 template <ParID_t... params>
 using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+    Measurement<SourceLink, BoundIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

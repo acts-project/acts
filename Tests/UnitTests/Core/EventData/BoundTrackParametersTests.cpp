@@ -30,7 +30,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 static constexpr auto eps =
-    8 * std::numeric_limits<BoundParametersScalar>::epsilon();
+    8 * std::numeric_limits<BoundScalar>::epsilon();
 static const GeometryContext geoCtx;
 
 template <typename charge_t>

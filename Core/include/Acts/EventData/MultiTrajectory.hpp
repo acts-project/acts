@@ -141,9 +141,9 @@ class TrackStateProxy {
  public:
   using SourceLink = source_link_t;
   using Parameters =
-      typename Types<eBoundParametersSize, ReadOnly>::CoefficientsMap;
+      typename Types<eBoundSize, ReadOnly>::CoefficientsMap;
   using Covariance =
-      typename Types<eBoundParametersSize, ReadOnly>::CovarianceMap;
+      typename Types<eBoundSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
 
@@ -153,10 +153,10 @@ class TrackStateProxy {
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector = Eigen::Matrix<typename Covariance::Scalar, M,
-                                  eBoundParametersSize, ProjectorFlags>;
+                                  eBoundSize, ProjectorFlags>;
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
-                    ProjectorFlags, M, eBoundParametersSize>;
+                    ProjectorFlags, M, eBoundSize>;
 
   /// Index within the trajectory.
   /// @return the index
@@ -357,7 +357,7 @@ class TrackStateProxy {
     assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= eBoundParametersSize,
+    static_assert(cols <= eBoundSize,
                   "Given projector has too many columns");
 
     // set up full size projector with only zeros
@@ -447,11 +447,11 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, BoundParametersIndices,
+  void setCalibrated(const Acts::Measurement<SourceLink, BoundIndices,
                                              params...>& meas) {
     IndexData& dataref = data();
     constexpr size_t measdim =
-        Acts::Measurement<SourceLink, BoundParametersIndices,
+        Acts::Measurement<SourceLink, BoundIndices,
                           params...>::size();
 
     dataref.measdim = measdim;
@@ -490,7 +490,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             ParID_t... params>
   void resetCalibrated(
-      const Acts::Measurement<SourceLink, BoundParametersIndices, params...>&
+      const Acts::Measurement<SourceLink, BoundIndices, params...>&
           meas) {
     IndexData& dataref = data();
     auto& traj = *m_traj;
@@ -606,7 +606,7 @@ template <typename source_link_t>
 class MultiTrajectory {
  public:
   enum {
-    MeasurementSizeMax = eBoundParametersSize,
+    MeasurementSizeMax = eBoundSize,
   };
   using SourceLink = source_link_t;
   using ConstTrackStateProxy =
@@ -615,7 +615,7 @@ class MultiTrajectory {
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
 
   using ProjectorBitset =
-      std::bitset<eBoundParametersSize * MeasurementSizeMax>;
+      std::bitset<eBoundSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -661,11 +661,11 @@ class MultiTrajectory {
  private:
   /// index to map track states to the corresponding
   std::vector<detail_lt::IndexData> m_index;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCoefficients m_params;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_cov;
+  typename detail_lt::Types<eBoundSize>::StorageCoefficients m_params;
+  typename detail_lt::Types<eBoundSize>::StorageCovariance m_cov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance m_measCov;
-  typename detail_lt::Types<eBoundParametersSize>::StorageCovariance m_jac;
+  typename detail_lt::Types<eBoundSize>::StorageCovariance m_jac;
   std::vector<SourceLink> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 

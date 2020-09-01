@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(variant_bound_measurement_generation_test) {
   }
 }
 
-using freePar_t = FreeParametersIndices;
+using freePar_t = FreeIndices;
 
 template <freePar_t... pars>
 struct meas_factory2 {

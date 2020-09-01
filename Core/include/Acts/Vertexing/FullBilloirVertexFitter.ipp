@@ -19,8 +19,8 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  using Jacobian = Acts::ActsMatrix<Acts::BoundParametersScalar,
-                                    Acts::eBoundParametersSize, 4>;
+  using Jacobian = Acts::ActsMatrix<Acts::BoundScalar,
+                                    Acts::eBoundSize, 4>;
 
   BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
@@ -31,7 +31,7 @@ struct BilloirTrack {
   Acts::LinearizedTrack linTrack;
   double chi2;
   Jacobian DiMat;                                          // position jacobian
-  Acts::ActsMatrixD<Acts::eBoundParametersSize, 3> EiMat;  // momentum jacobian
+  Acts::ActsMatrixD<Acts::eBoundSize, 3> EiMat;  // momentum jacobian
   Acts::ActsSymMatrixD<3> CiMat;   //  = EtWmat * Emat (see below)
   Acts::ActsMatrixD<4, 3> BiMat;   //  = DiMat^T * Wi * EiMat
   Acts::ActsSymMatrixD<3> CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
@@ -134,15 +134,15 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
             qOverP - fQOvP, 0;
 
         // position jacobian (D matrix)
-        ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4> Dmat;
+        ActsMatrix<BoundScalar, eBoundSize, 4> Dmat;
         Dmat = linTrack.positionJacobian;
 
         // momentum jacobian (E matrix)
-        ActsMatrixD<eBoundParametersSize, 3> Emat;
+        ActsMatrixD<eBoundSize, 3> Emat;
         Emat = linTrack.momentumJacobian;
         // cache some matrix multiplications
-        ActsMatrixD<4, eBoundParametersSize> DtWmat;
-        ActsMatrixD<3, eBoundParametersSize> EtWmat;
+        ActsMatrixD<4, eBoundSize> DtWmat;
+        ActsMatrixD<3, eBoundSize> EtWmat;
         BoundSymMatrix Wi = linTrack.weightAtPCA;
 
         DtWmat = Dmat.transpose() * Wi;
@@ -228,7 +228,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // calculate 5x5 covdelta_P matrix
       // d(d0,z0,phi,theta,qOverP, t)/d(x,y,z,phi,theta,qOverP,
       // t)-transformation matrix
-      ActsMatrixD<eBoundParametersSize, 7> transMat;
+      ActsMatrixD<eBoundSize, 7> transMat;
       transMat.setZero();
       transMat(0, 0) = bTrack.DiMat(0, 0);
       transMat(0, 1) = bTrack.DiMat(0, 1);
