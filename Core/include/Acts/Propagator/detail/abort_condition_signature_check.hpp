@@ -101,6 +101,6 @@ struct Concept {
 /// Meta function for checking if an aborter has a valid interface
 template <typename T, typename propagator_state_t, typename stepper_t>
 constexpr bool abort_condition_signature_check_v =
-    detail_aborter::Concepts<T, propagator_state_t, stepper_t>::value;
+    detail_aborter::Concept<T, propagator_state_t, stepper_t>::value;
 }  // namespace Concepts
 }  // namespace Acts

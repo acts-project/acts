@@ -140,7 +140,7 @@ template <class Default, template <class...> class Op, class... Args>
 using detected_or = detail::detector<Default, void, Op, Args...>;
 
 /**
- * Define some sort of "Domain Specific Languagr" to declare concepts a little
+ * Define some sort of "Domain Specific Language" to declare concepts a little
  * more naturally. These are taken from
  * https://izzys.casa/2016/09/implementing-concepts-in-cxx/
  */
