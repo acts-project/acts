@@ -408,8 +408,6 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
 /// Create the Volume Material
 const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     const json& material) {
-  using ParametersVector = Material::ParametersVector;
-
   Acts::IVolumeMaterial* vMaterial = nullptr;
   // The bin utility for deescribing the data
   Acts::BinUtility bUtility;
@@ -421,7 +419,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     }
   }
   // Convert the material
-  std::vector<Material::ParametersVector> mmat;
+  std::vector<Material> mmat;
   // Structured binding
   for (auto& [key, value] : material.items()) {
     // Check json keys
@@ -434,11 +432,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
     }
     if (key == m_cfg.datakey and not value.empty()) {
       for (const auto& bin : value) {
-        ParametersVector params = ParametersVector::Zero();
-        for (size_t i = 0; i < 5; ++i) {
-          params[i] = bin[i];
-        }
-        mmat.push_back(std::move(params));
+        mmat.push_back(decodeMaterial(bin));
       }
     }
   }
@@ -447,7 +441,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   if (mmat.empty()) {
     vMaterial = new Acts::ProtoVolumeMaterial(bUtility);
   } else if (mmat.size() == 1) {
-    vMaterial = new Acts::HomogeneousVolumeMaterial(Acts::Material(mmat[0]));
+    vMaterial = new Acts::HomogeneousVolumeMaterial(mmat[0]);
   } else {
     if (bUtility.dimensions() == 2) {
       std::function<Acts::Vector2D(Acts::Vector3D)> transfoGlobalToLocal;
@@ -464,7 +458,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
       MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = mmat[bin];
+        mGrid.at(bin) = mmat[bin].parameters();
       }
       MaterialMapper<MaterialGrid2D> matMap(transfoGlobalToLocal, mGrid);
       vMaterial =
@@ -486,7 +480,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
       MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
 
       for (size_t bin = 0; bin < mmat.size(); bin++) {
-        mGrid.at(bin) = mmat[bin];
+        mGrid.at(bin) = mmat[bin].parameters();
       }
       MaterialMapper<MaterialGrid3D> matMap(transfoGlobalToLocal, mGrid);
       vMaterial =
