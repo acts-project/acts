@@ -400,6 +400,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                          BoundMatrix(BoundMatrix::Identity()), 1e-6);
   CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
 
+  // Transport the covariance in the context of a surface
+  es.covarianceTransport(esState, *plane);
+  BOOST_CHECK_NE(esState.cov, cov);
+  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
+  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
+
   // Update in context of a surface
   freeParams = detail::transformBoundToFreeParameters(
       bp.referenceSurface(), tgContext, bp.parameters());
@@ -416,13 +423,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esState.q, 1. * charge);
   CHECK_CLOSE_OR_SMALL(esState.t, 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
-
-  // Transport the covariance in the context of a surface
-  es.covarianceTransport(esState, *plane);
-  BOOST_CHECK_NE(esState.cov, cov);
-  BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
-  BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
-  BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;

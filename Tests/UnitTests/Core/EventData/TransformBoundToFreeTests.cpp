@@ -32,10 +32,9 @@ BOOST_DATA_TEST_CASE(
   GeometryContext geoCtx;
 
   Vector2D loc(l0, l1);
-  Vector3D pos = Vector3D::Zero();
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // transform reference position
-  surface->localToGlobal(geoCtx, loc, dir, pos);
+  Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
 
   // construct bound parameters
   BoundVector bv = BoundVector::Zero();

@@ -88,8 +88,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // globalToLocal()
   Vector3D gpos{0., 1., 0.};
   const Vector3D mom{20., 0., 0.};  // needs more realistic parameters
-  Vector2D localPosition;
-  BOOST_CHECK(line.globalToLocal(tgContext, gpos, mom, localPosition));
+  Vector2D localPosition = line.globalToLocal(tgContext, gpos, mom).value();
   const Vector2D expectedResult{0, -2};
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
@@ -115,8 +114,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   Vector3D returnedGlobalPosition{0., 0., 0.};
   // Vector2D localPosition{0., 0.};
   const Vector3D momentum{300., 200., 0.};  // find better values!
-  line.localToGlobal(tgContext, localPosition, momentum,
-                     returnedGlobalPosition);
+  returnedGlobalPosition =
+      line.localToGlobal(tgContext, localPosition, momentum);
   const Vector3D expectedGlobalPosition{0, 1, 0};
   CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
   //

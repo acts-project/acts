@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 namespace {
@@ -157,10 +159,16 @@ void reinitializeJacobians(
   jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
   // Reset the jacobian from local to global
-  Vector2D loc{0., 0.};
   const Vector3D position = parameters.segment<3>(eFreePos0);
   const Vector3D direction = parameters.segment<3>(eFreeDir0);
-  surface.globalToLocal(geoContext, position, direction, loc);
+  auto lpResult = surface.globalToLocal(geoContext, position, direction);
+  if (not lpResult.ok()) {
+    ACTS_LOCAL_LOGGER(
+        Acts::getDefaultLogger("CovarianceEngine", Logging::INFO));
+    ACTS_FATAL(
+        "Inconsistency in global to local transformation during propagation.")
+  }
+  auto loc = lpResult.value();
   BoundVector pars;
   pars << loc[eLOC_0], loc[eLOC_1], phi(direction), theta(direction),
       parameters[eFreeQOverP], parameters[eFreeTime];
