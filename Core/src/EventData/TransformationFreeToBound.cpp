@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
     const Acts::Vector3D& position, double time,
@@ -19,10 +20,15 @@ Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
   BoundVector bp = BoundVector::Zero();
   // this assumes the position is already on the surface
   auto lpResult = surface.globalToLocal(geoCtx, position, direction);
-  if (lpResult.ok()) {
-    bp[eBoundLoc0] = lpResult.value()[ePos0];
-    bp[eBoundLoc1] = lpResult.value()[ePos1];
+  if (not lpResult.ok()) {
+    ACTS_LOCAL_LOGGER(
+        Acts::getDefaultLogger("ParameterTransformation", Logging::INFO));
+    ACTS_FATAL(
+        "Inconsistency in global to local transformation from free to bound.")
   }
+  auto loc = lpResult.value();
+  bp[eBoundLoc0] = loc[ePos0];
+  bp[eBoundLoc1] = loc[ePos1];
   bp[eBoundTime] = time;
   bp[eBoundPhi] = VectorHelpers::phi(direction);
   bp[eBoundTheta] = VectorHelpers::theta(direction);

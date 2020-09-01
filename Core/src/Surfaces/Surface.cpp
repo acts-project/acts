@@ -43,9 +43,9 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
                                 const Vector3D& momentum,
                                 const BoundaryCheck& bcheck) const {
   // global to local transformation
-  auto lposition = globalToLocal(gctx, position, momentum);
-  if (lposition.ok()) {
-    return bcheck ? bounds().inside(lposition.value(), bcheck) : true;
+  auto lpResult = globalToLocal(gctx, position, momentum);
+  if (lpResult.ok()) {
+    return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
   }
   return false;
 }
