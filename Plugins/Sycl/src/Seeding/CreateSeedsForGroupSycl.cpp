@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <cstring>
 #include <exception>
-#include <iostream>
 #include <iterator>
 #include <numeric>
 #include <vector>
@@ -33,6 +32,8 @@ class transform_coord_top_kernel;
 class triplet_search_kernel;
 class filter_2sp_fixed_kernel;
 
+// Returns the smallest multiple of workGroupSize that is not smaller
+// than numThreads.
 uint32_t numWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
   auto q = numThreads / workGroupSize + (numThreads % workGroupSize != 0);
   return q * workGroupSize;
@@ -61,8 +62,9 @@ void createSeedsForGroupSycl(
   std::vector<uint32_t> sumTopCompUptoMid(M + 1, 0);
   std::vector<uint32_t> sumBotTopCombined(M + 1, 0);
 
-  // Similarly to indBotCompMid and indTopCompMid, we store the indices of the
-  // middle space points of the corresponding edges.
+  // After completing the duplet search, we'll have successfully contructed
+  // two bipartite graphs for bottom-middle and top-middle space points.
+  // We store the indices of the middle space points of the corresponding edges.
   std::vector<uint32_t> indMidBotComp;
   std::vector<uint32_t> indMidTopComp;
 
@@ -88,8 +90,7 @@ void createSeedsForGroupSycl(
     detail::deviceSpacePoint* deviceTopSPs =
         cl::sycl::malloc_device<detail::deviceSpacePoint>(T, *q);
 
-    // Store the number of compatible bottom/top space points per middle space
-    // point.
+    // Count compatible bottom/top space points per middle space point.
     std::atomic_uint32_t* deviceCountBotDuplets =
         cl::sycl::malloc_device<std::atomic_uint32_t>(M, *q);
     std::atomic_uint32_t* deviceCountTopDuplets =
@@ -117,11 +118,6 @@ void createSeedsForGroupSycl(
     //*********************************************//
     // ********** DUPLET SEARCH - BEGIN ********** //
     //*********************************************//
-
-    // After completing the duplet search, we'll have successfully contructed
-    // two bipartite graphs for bottom-middle and top-middle space points. We
-    // store the indices of the bottom/top space points of the edges of the
-    // graphs. They index the bottomSPs and topSPs vectors.
 
     {
       q->submit([&](cl::sycl::handler& h) {
@@ -198,7 +194,8 @@ void createSeedsForGroupSycl(
                 M * sizeof(std::atomic_uint32_t));
       q->wait();
 
-      for (uint32_t i = 1; i < M + 1; ++i) {
+      // use std::parital_sum instead?
+      for (auto i = 1; i < M + 1; ++i) {
         sumBotCompUptoMid[i] +=
             sumBotCompUptoMid[i - 1] + countBotDuplets[i - 1];
         sumTopCompUptoMid[i] +=
@@ -217,7 +214,7 @@ void createSeedsForGroupSycl(
       indMidBotComp.reserve(edgesBottom);
       indMidTopComp.reserve(edgesTop);
 
-      for (uint32_t mid = 0; mid < M; ++mid) {
+      for (auto mid = 0; mid < M; ++mid) {
         std::fill_n(std::back_inserter(indMidBotComp), countBotDuplets[mid],
                     mid);
         std::fill_n(std::back_inserter(indMidTopComp), countTopDuplets[mid],
@@ -225,23 +222,40 @@ void createSeedsForGroupSycl(
       }
     }  // sync
 
+    // Global and local range of execution for edgesBottom number of threads.
+    // Local range corresponds to block size.
     cl::sycl::nd_range<1> edgesBotNdRange{
         cl::sycl::range<1>(numWorkItems(edgesBottom, maxWorkGroupSize)),
         cl::sycl::range<1>(maxWorkGroupSize)};
 
+    // Global and local range of execution for edgesTop number of threads.
     cl::sycl::nd_range<1> edgesTopNdRange{
         cl::sycl::range<1>(numWorkItems(edgesTop, maxWorkGroupSize)),
         cl::sycl::range<1>(maxWorkGroupSize)};
 
+    // We store the indices of the BOTTOM/TOP space points of the edges of the
+    // bottom-middle and top-middle bipartite duplet graphs.
+    // They index the bottomSPs and topSPs vectors.
     uint32_t* deviceIndBot = cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
     uint32_t* deviceIndTop = cl::sycl::malloc_device<uint32_t>(edgesTop, *q);
+
+    // We store the indices of the MIDDLE space points of the edges of the
+    // bottom-middle and top-middle bipartite duplet graphs.
+    // They index the middleSP vector.
     uint32_t* deviceMidIndPerBot =
         cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
     uint32_t* deviceMidIndPerTop =
         cl::sycl::malloc_device<uint32_t>(edgesTop, *q);
+
+    // Partial sum arrays of deviceNumBot and deviceNum
     uint32_t* deviceSumBot = cl::sycl::malloc_device<uint32_t>(M + 1, *q);
     uint32_t* deviceSumTop = cl::sycl::malloc_device<uint32_t>(M + 1, *q);
+
+    // Partial sum array of the combinations of compatible bottom and top
+    // space points per middle space point.
     uint32_t* deviceSumComb = cl::sycl::malloc_device<uint32_t>(M + 1, *q);
+
+    // Allocations for coordinate transformation.
     deviceLinEqCircle* deviceLinBot =
         cl::sycl::malloc_device<deviceLinEqCircle>(edgesBottom, *q);
     deviceLinEqCircle* deviceLinTop =
@@ -397,13 +411,30 @@ void createSeedsForGroupSycl(
 
     TripletData* deviceCurvImpact =
         cl::sycl::malloc_device<TripletData>(maxMemoryAllocation, (*q));
+
+    // Reserve memory in advance for seed indices and weight
+    // Other way around would allocating it inside the loop
+    // -> less memory usage, but more frequent allocation and deallocation
     SeedData* deviceSeedArray =
         cl::sycl::malloc_device<SeedData>(maxMemoryAllocation, *q);
 
+    uint32_t* tripletSearchOffset = cl::sycl::malloc_device<uint32_t>(1, *q);
+
+    // Counting the seeds in the second kernel allows us to copy back the
+    // right number of seeds, and no more.
+    std::atomic_uint32_t* countSeeds =
+        cl::sycl::malloc_device<std::atomic_uint32_t>(1, *q);
+
     seeds.resize(M);
     const float MIN = -100000.f;
+
+    // Do the triplet search and triplet filter for 2 sp fixed for middle space
+    // points in the interval [firstMiddle, lastMiddle).
+
     uint32_t lastMiddle = 0;
     for (uint32_t firstMiddle = 0; firstMiddle < M; firstMiddle = lastMiddle) {
+      // Determine the the interval [firstMiddle, lastMiddle) right end based on
+      // memory requirements.
       while (lastMiddle + 1 <= M && (sumBotTopCombined[lastMiddle + 1] -
                                          sumBotTopCombined[firstMiddle] <
                                      maxMemoryAllocation)) {
@@ -415,21 +446,15 @@ void createSeedsForGroupSycl(
       if (numCombinations == 0)
         continue;
 
-      uint32_t* offset = cl::sycl::malloc_device<uint32_t>(1, *q);
-      std::atomic_uint32_t* countTriplets =
-          cl::sycl::malloc_device<std::atomic_uint32_t>(1, *q);
-      std::atomic_uint32_t* countSeeds =
-          cl::sycl::malloc_device<std::atomic_uint32_t>(1, *q);
-      q->memcpy(offset, &sumBotTopCombined[firstMiddle], sizeof(uint32_t));
-      q->memset(countTriplets, 0, sizeof(std::atomic_uint32_t));
+      q->memcpy(tripletSearchOffset, &sumBotTopCombined[firstMiddle],
+                sizeof(uint32_t));
       q->memset(countSeeds, 0, sizeof(std::atomic_uint32_t));
 
-      const auto tripletSearchWorkItems =
-          numWorkItems(numCombinations, maxWorkGroupSize);
+      // nd_range with maximum block size for triplet search and filter
+      // global and local range is given
       cl::sycl::nd_range<1> tripletSearchNDRange{
-          cl::sycl::range<1>(tripletSearchWorkItems),  // global work items
-          cl::sycl::range<1>(maxWorkGroupSize)         // local work items
-      };
+          cl::sycl::range<1>(numWorkItems(numCombinations, maxWorkGroupSize)),
+          cl::sycl::range<1>(maxWorkGroupSize)};
 
       auto tripletEvent = q->submit([&](cl::sycl::handler& h) {
         h.depends_on({linB, linT});
@@ -437,12 +462,16 @@ void createSeedsForGroupSycl(
             tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
               const uint32_t idx = item.get_global_linear_id();
               if (idx < numCombinations) {
+                // Retrieve the index of the corresponding middle space point
+                // by binomial search
+                // Another option would be to reserve constant space for each
+                // middle space point, but it was slower for small test files.
                 uint32_t L = firstMiddle;
                 uint32_t R = lastMiddle;
                 uint32_t mid = L;
                 while (L < R - 1) {
                   mid = (L + R) / 2;
-                  if (idx + offset[0] < deviceSumComb[mid])
+                  if (idx + tripletSearchOffset[0] < deviceSumComb[mid])
                     R = mid;
                   else
                     L = mid;
@@ -453,10 +482,14 @@ void createSeedsForGroupSycl(
                 deviceCurvImpact[idx] = T;
                 const auto numT = deviceNumTopDuplets[mid];
 
-                const auto ib = deviceSumBot[mid] +
-                                ((idx - deviceSumComb[mid] + offset[0]) / numT);
-                const auto it = deviceSumTop[mid] +
-                                ((idx - deviceSumComb[mid] + offset[0]) % numT);
+                const auto ib =
+                    deviceSumBot[mid] +
+                    ((idx - deviceSumComb[mid] + tripletSearchOffset[0]) /
+                     numT);
+                const auto it =
+                    deviceSumTop[mid] +
+                    ((idx - deviceSumComb[mid] + tripletSearchOffset[0]) %
+                     numT);
 
                 const auto linBotEq = deviceLinBot[ib];
                 const auto linTopEq = deviceLinTop[it];
@@ -516,7 +549,6 @@ void createSeedsForGroupSycl(
                          p2scatter * configData.sigmaScattering *
                              configData.sigmaScattering)) &&
                       !(Im > configData.impactMax)) {
-                    countTriplets[0].fetch_add(1);
                     T.curvature = B / std::sqrt(S2);
                     T.impact = Im;
                     deviceCurvImpact[idx] = T;
@@ -525,15 +557,6 @@ void createSeedsForGroupSycl(
               }
             });
       });
-      tripletEvent.wait();
-
-      uint32_t sumTriplets;
-      auto e0 =
-          q->memcpy(&sumTriplets, countTriplets, sizeof(std::atomic_uint32_t));
-      e0.wait();
-
-      if (sumTriplets == 0)
-        continue;
 
       q->submit([&](cl::sycl::handler& h) {
          h.depends_on(tripletEvent);
@@ -542,22 +565,23 @@ void createSeedsForGroupSycl(
                const uint32_t idx = item.get_global_linear_id();
                if (idx < numCombinations &&
                    deviceCurvImpact[idx].curvature != MIN) {
+                 // Same as in previous kernel
                  uint32_t L = firstMiddle;
                  uint32_t R = lastMiddle;
                  uint32_t mid = L;
                  while (L < R - 1) {
                    mid = (L + R) / 2;
-                   if (idx + offset[0] < deviceSumComb[mid])
+                   if (idx + tripletSearchOffset[0] < deviceSumComb[mid])
                      R = mid;
                    else
                      L = mid;
                  }
                  mid = L;
 
-                 const auto sumMidComb = deviceSumComb[mid] - offset[0];
+                 const auto sumMidComb =
+                     deviceSumComb[mid] - tripletSearchOffset[0];
                  const auto idxOffset = idx - sumMidComb;
                  const auto numTopMid = deviceNumTopDuplets[mid];
-                 // const auto numTopMid = 20;
 
                  const auto ib = deviceSumBot[mid] + ((idxOffset) / numTopMid);
                  const auto it = deviceSumTop[mid] + ((idxOffset) % numTopMid);
@@ -567,8 +591,9 @@ void createSeedsForGroupSycl(
 
                  const auto current = deviceCurvImpact[idx];
 
-                 // by default compatSeedLimit is 2 -> 2 is hard coded
-                 // Variable length arrays are not supported in SYCL kernels.
+                 // By default compatSeedLimit is 2 -> 2 is currently hard
+                 // coded, because variable length arrays are not supported in
+                 // SYCL kernels.
                  float compatibleSeedR[2];
 
                  const auto invHelixDiameter = current.curvature;
@@ -635,13 +660,13 @@ void createSeedsForGroupSycl(
        }).wait();
 
       uint32_t sumSeeds;
-      auto e1 = q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
-      e1.wait();
+      auto e0 = q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
+      e0.wait();
 
       std::vector<SeedData> hostSeedArray(sumSeeds);
-      q->memcpy(&hostSeedArray[0], deviceSeedArray,
-                sumSeeds * sizeof(SeedData));
-      q->wait();
+      auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
+                          sumSeeds * sizeof(SeedData));
+      e1.wait();
 
       for (uint32_t t = 0; t < sumSeeds; ++t) {
         auto m = hostSeedArray[t].middle;
@@ -675,6 +700,9 @@ void createSeedsForGroupSycl(
 
     cl::sycl::free(deviceCurvImpact, *q);
     cl::sycl::free(deviceSeedArray, *q);
+    cl::sycl::free(tripletSearchOffset, *q);
+    cl::sycl::free(countSeeds, *q);
+
   } catch (cl::sycl::exception const& e) {
     std::cout << "Caught synchronous SYCL exception:\n"
               << e.what() << std::endl;

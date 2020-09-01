@@ -13,8 +13,6 @@
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
 
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include <any>
 
 namespace Acts {
