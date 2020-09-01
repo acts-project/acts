@@ -55,9 +55,9 @@ struct VoidMeasurementCalibrator {
     static_assert(SourceLinkConcept<source_link_t>,
                   "Source link does fulfill SourceLinkConcept.");
     static_assert(
-        concept ::converts_to<FittableMeasurement<source_link_t>,
-                              concept ::detail_slc::dereferenceable_t,
-                              source_link_t>,
+        Concepts ::converts_to<FittableMeasurement<source_link_t>,
+                               Concepts ::detail_slc::dereferenceable_t,
+                               source_link_t>,
         "For DefaultMeasurementCalibrator, source link needs to implement "
         "dereference operator");
     return *sourceLink;

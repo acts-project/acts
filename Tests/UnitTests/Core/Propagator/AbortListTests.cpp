@@ -208,7 +208,7 @@ struct AborterWithoutResultInvalid {
 
 template <typename P, typename S, typename... As>
 constexpr bool signature_check =
-    detail::all_of_v<concept ::abort_condition_signature_check_v<As, P, S>...>;
+    detail::all_of_v<Concepts ::abort_condition_signature_check_v<As, P, S>...>;
 
 BOOST_AUTO_TEST_CASE(AbortListSignatureTest) {
   using P = PropagatorState;
