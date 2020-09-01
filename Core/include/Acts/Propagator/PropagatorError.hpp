@@ -33,6 +33,8 @@ class PropagatorErrorCategory : public std::error_category {
         return "Propagation failed";
       case PropagatorError::WrongDirection:
         return "Propagation occurred in the wrong direction";
+      case PropagatorError::StepCountLimitReached:
+        return "Propagation reached the configured maximum number of steps";
       default:
         return "unknown";
     }
