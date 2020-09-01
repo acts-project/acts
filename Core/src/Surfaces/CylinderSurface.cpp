@@ -108,7 +108,7 @@ Acts::Vector3D Acts::CylinderSurface::localToGlobal(
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eLOC_RPHI] / r;
   Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
-  return (transform(gctx) * position);
+  return transform(gctx) * position;
 }
 
 Acts::Result<Acts::Vector2D> Acts::CylinderSurface::globalToLocal(
