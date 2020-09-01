@@ -25,15 +25,15 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 # plugins related options
-option(ACTS_BUILD_CUDA_PLUGIN "Build CUDA plugin" OFF)
-option(ACTS_BUILD_SYCL_PLUGIN "Build SYCL plugin" OFF)
-option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
-option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
-option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
-option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json installation" ON)
-option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
-option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
+option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
+option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
+option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
+option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
+option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
+option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options
