@@ -64,8 +64,7 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
 
   // convert local-to-global for reference
   const Vector2D loc(l0, l1);
-  Vector3D pos = Vector3D::Zero();
-  surface->localToGlobal(geoCtx, loc, dir, pos);
+  Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
 
   // positively charged from local vector
   {

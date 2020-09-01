@@ -69,10 +69,7 @@ class StrawSurface : public LineSurface {
                const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~StrawSurface() override = default;
-
-  /// Default Constructor - deleted
   StrawSurface() = delete;
 
   /// Assignment operator

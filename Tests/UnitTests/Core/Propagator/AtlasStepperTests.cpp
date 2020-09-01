@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   // Reset using different surface shapes
   // 1) Disc surface
   // Setting some parameters
-  pos << 1.5, -2.5, 3.5;
+  pos << 1.5, -2.5, 0.;
   mom << 4.5, -5.5, 6.5;
   time = 7.5;
   charge = 1.;

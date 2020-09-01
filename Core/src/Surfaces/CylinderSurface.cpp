@@ -8,15 +8,14 @@
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cassert>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <utility>
+#include <system_error>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -102,41 +101,32 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
   return Surface::Cylinder;
 }
 
-void Acts::CylinderSurface::localToGlobal(const GeometryContext& gctx,
-                                          const Vector2D& lposition,
-                                          const Vector3D& /*unused*/,
-                                          Vector3D& position) const {
+Acts::Vector3D Acts::CylinderSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2D& lposition,
+    const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eLOC_RPHI] / r;
-  position = Vector3D(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
-  position = transform(gctx) * position;
+  Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  return transform(gctx) * position;
 }
 
-bool Acts::CylinderSurface::globalToLocal(const GeometryContext& gctx,
-                                          const Vector3D& position,
-                                          const Vector3D& /*unused*/,
-                                          Vector2D& lposition) const {
-  // get the transform & transform global position into cylinder frame
-  // @todo clean up intolerance parameters
-  // transform it to the globalframe: CylinderSurfaces are allowed to have 0
-  // pointer transform
-  double radius = 0.;
+Acts::Result<Acts::Vector2D> Acts::CylinderSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& /*unused*/) const {
+  // @todo check if s_onSurfaceTolerance would do here
   double inttol = bounds().get(CylinderBounds::eR) * 0.0001;
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-
   const Transform3D& sfTransform = transform(gctx);
   Transform3D inverseTrans(sfTransform.inverse());
   Vector3D loc3Dframe(inverseTrans * position);
-  lposition = Vector2D(bounds().get(CylinderBounds::eR) * phi(loc3Dframe),
-                       loc3Dframe.z());
-  radius = perp(loc3Dframe);
-  // return true or false
-  return ((std::abs(radius - bounds().get(CylinderBounds::eR)) > inttol)
-              ? false
-              : true);
+  if (std::abs(perp(loc3Dframe) - bounds().get(CylinderBounds::eR)) > inttol) {
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+  return Result<Vector2D>::success(
+      {bounds().get(CylinderBounds::eR) * phi(loc3Dframe), loc3Dframe.z()});
 }
 
 std::string Acts::CylinderSurface::name() const {

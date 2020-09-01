@@ -68,10 +68,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
     const auto& parameters = cluster.parameters();
     Acts::Vector2D localPos(parameters[0], parameters[1]);
     Acts::Vector3D globalFakeMom(1, 1, 1);
-    Acts::Vector3D globalPos(0, 0, 0);
-    // transform local into global position information
-    cluster.referenceObject().localToGlobal(ctx.geoContext, localPos,
-                                            globalFakeMom, globalPos);
+    Acts::Vector3D globalPos = cluster.referenceObject().localToGlobal(
+        ctx.geoContext, localPos, globalFakeMom);
 
     // encoded geometry identifier
     hit.geometry_id = geoId.value();
