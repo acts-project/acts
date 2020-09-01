@@ -45,7 +45,7 @@ inline std::string LineSurface::name() const {
   return "Acts::LineSurface";
 }
 
-inline const RotationMatrix3D LineSurface::referenceFrame(
+inline RotationMatrix3D LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& /*unused*/,
     const Vector3D& momentum) const {
   RotationMatrix3D mFrame;
@@ -67,13 +67,13 @@ inline double LineSurface::pathCorrection(const GeometryContext& /*unused*/,
   return 1.;
 }
 
-inline const Vector3D LineSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+inline Vector3D LineSurface::binningPosition(const GeometryContext& gctx,
+                                             BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline const Vector3D LineSurface::normal(const GeometryContext& gctx,
-                                          const Vector2D& /*lpos*/) const {
+inline Vector3D LineSurface::normal(const GeometryContext& gctx,
+                                    const Vector2D& /*lpos*/) const {
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
@@ -181,7 +181,7 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
 }
 
-inline const BoundRowVector LineSurface::derivativeFactors(
+inline BoundRowVector LineSurface::derivativeFactors(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const RotationMatrix3D& rft,
     const BoundToFreeMatrix& jacobian) const {
@@ -210,7 +210,7 @@ inline const BoundRowVector LineSurface::derivativeFactors(
                          jacobian.block<3, eBoundParametersSize>(4, 0))));
 }
 
-inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
+inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -239,7 +239,7 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::phi;

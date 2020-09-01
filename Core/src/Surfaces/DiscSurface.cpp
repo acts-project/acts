@@ -94,7 +94,7 @@ Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
   return Result<Acts::Vector2D>::success({perp(loc3Dframe), phi(loc3Dframe)});
 }
 
-const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
+Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     const Vector2D& locpol) const {
   const DiscTrapezoidBounds* dtbo =
       dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
@@ -116,13 +116,13 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
                   locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
 }
 
-const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
+Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition) const {
   Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 
-const Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
+Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
     const GeometryContext& gctx, const Vector3D& position,
     double /*unused*/) const {
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;

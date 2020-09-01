@@ -95,8 +95,8 @@ class Volume : public virtual GeometryObject {
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const override;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const override;
 
  protected:
   std::shared_ptr<const Transform3D> m_transform;
