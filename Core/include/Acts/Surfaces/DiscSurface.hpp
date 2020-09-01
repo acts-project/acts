@@ -118,8 +118,8 @@ class DiscSurface : public Surface {
   /// @param lposition The local position is ignored
   ///
   /// @return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -131,8 +131,8 @@ class DiscSurface : public Surface {
   /// @param bValue The binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
@@ -168,7 +168,7 @@ class DiscSurface : public Surface {
   /// @param lpolar is a local position in polar coordinates
   ///
   /// @return values is local 2D position in cartesian coordinates  @todo check
-  const Vector2D localPolarToCartesian(const Vector2D& lpolar) const;
+  Vector2D localPolarToCartesian(const Vector2D& lpolar) const;
 
   /// Special method for Disc surface : local<->local transformations polar <->
   /// cartesian
@@ -176,7 +176,7 @@ class DiscSurface : public Surface {
   /// @param lcart is local 2D position in cartesian coordinates
   ///
   /// @return value is a local position in polar coordinates
-  const Vector2D localCartesianToPolar(const Vector2D& lcart) const;
+  Vector2D localCartesianToPolar(const Vector2D& lcart) const;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
@@ -185,7 +185,7 @@ class DiscSurface : public Surface {
   /// @param locpol is a local position in polar coordinates
   ///
   /// @return values is local 2D position in cartesian coordinates
-  const Vector2D localPolarToLocalCartesian(const Vector2D& locpol) const;
+  Vector2D localPolarToLocalCartesian(const Vector2D& locpol) const;
 
   /// Special method for DiscSurface :  local<->global transformation when
   /// provided cartesian coordinates
@@ -194,8 +194,8 @@ class DiscSurface : public Surface {
   /// @param lposition is local 2D position in cartesian coordinates
   ///
   /// @return value is a global cartesian 3D position
-  const Vector3D localCartesianToGlobal(const GeometryContext& gctx,
-                                        const Vector2D& lposition) const;
+  Vector3D localCartesianToGlobal(const GeometryContext& gctx,
+                                  const Vector2D& lposition) const;
 
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
@@ -204,9 +204,9 @@ class DiscSurface : public Surface {
   /// @param tol The absoltue tolerance parameter
   ///
   /// @return value is a local polar
-  const Vector2D globalToLocalCartesian(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        double tol = 0.) const;
+  Vector2D globalToLocalCartesian(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  double tol = 0.) const;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -235,9 +235,10 @@ class DiscSurface : public Surface {
   /// @param direction The direction at of the parameters
   ///
   /// @return the transposed reference frame (avoids recalculation)
-  const RotationMatrix3D initJacobianToLocal(
-      const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-      const Vector3D& position, const Vector3D& direction) const final;
+  RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
+                                       FreeToBoundMatrix& jacobian,
+                                       const Vector3D& position,
+                                       const Vector3D& direction) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -311,7 +312,7 @@ class DiscSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

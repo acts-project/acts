@@ -173,7 +173,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return center position by value
-  virtual const Vector3D center(const GeometryContext& gctx) const;
+  virtual Vector3D center(const GeometryContext& gctx) const;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
@@ -184,8 +184,8 @@ class Surface : public virtual GeometryObject,
   /// constructed
   ///
   /// @return normal vector by value
-  virtual const Vector3D normal(const GeometryContext& gctx,
-                                const Vector2D& lposition) const = 0;
+  virtual Vector3D normal(const GeometryContext& gctx,
+                          const Vector2D& lposition) const = 0;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
@@ -197,8 +197,8 @@ class Surface : public virtual GeometryObject,
 
   ///
   /// @return normal vector by value
-  virtual const Vector3D normal(const GeometryContext& gctx,
-                                const Vector3D& position) const;
+  virtual Vector3D normal(const GeometryContext& gctx,
+                          const Vector3D& position) const;
 
   /// Return method for the normal vector of the surface
   ///
@@ -207,7 +207,7 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   //
   /// @return normal vector by value
-  virtual const Vector3D normal(const GeometryContext& gctx) const {
+  virtual Vector3D normal(const GeometryContext& gctx) const {
     return normal(gctx, center(gctx));
   }
 
@@ -310,9 +310,9 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
-  virtual const Acts::RotationMatrix3D referenceFrame(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& momentum) const;
+  virtual Acts::RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                                const Vector3D& position,
+                                                const Vector3D& momentum) const;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -349,9 +349,10 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return the transposed reference frame (avoids recalculation)
-  virtual const RotationMatrix3D initJacobianToLocal(
-      const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-      const Vector3D& position, const Vector3D& direction) const;
+  virtual RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
+                                               FreeToBoundMatrix& jacobian,
+                                               const Vector3D& position,
+                                               const Vector3D& direction) const;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -369,7 +370,7 @@ class Surface : public virtual GeometryObject,
   /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
-  virtual const BoundRowVector derivativeFactors(
+  virtual BoundRowVector derivativeFactors(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const RotationMatrix3D& rft,
       const BoundToFreeMatrix& jacobian) const;
@@ -438,7 +439,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
   /// alignment parameters
-  const AlignmentToBoundMatrix alignmentToBoundDerivative(
+  AlignmentToBoundMatrix alignmentToBoundDerivative(
       const GeometryContext& gctx, const FreeVector& derivatives,
       const Vector3D& position, const Vector3D& direction) const;
 
@@ -456,7 +457,7 @@ class Surface : public virtual GeometryObject,
   /// @param direction The direction of the track
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  virtual const AlignmentRowVector alignmentToPathDerivative(
+  virtual AlignmentRowVector alignmentToPathDerivative(
       const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
       const Vector3D& position, const Vector3D& direction) const;
 
@@ -468,9 +469,8 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  virtual const LocalCartesianToBoundLocalMatrix
-  localCartesianToBoundLocalDerivative(const GeometryContext& gctx,
-                                       const Vector3D& position) const = 0;
+  virtual LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+      const GeometryContext& gctx, const Vector3D& position) const = 0;
 
  protected:
   /// Transform3D definition that positions

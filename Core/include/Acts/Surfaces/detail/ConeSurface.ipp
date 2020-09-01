@@ -87,7 +87,7 @@ inline SurfaceIntersection ConeSurface::intersect(
   return cIntersection;
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;
