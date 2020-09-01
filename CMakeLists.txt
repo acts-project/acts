@@ -17,18 +17,22 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 # all options and compile-time parameters must be defined here for clear
 # visibility and to make them available everywhere
+#
+# NOTE if you are adding a new option make sure that is defined in such a way
+#   that it is off/empty by default. if you think that is not possible, then
+#   it should probably be not an optional component.
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 # plugins related options
-option(ACTS_BUILD_CUDA_PLUGIN "Build CUDA plugin" OFF)
-option(ACTS_BUILD_DD4HEP_PLUGIN "Build DD4hep plugin" OFF)
-option(ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
-option(ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
-option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
-option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json installation" ON)
-option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
-option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
+option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
+option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
+option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
+option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
+option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options
@@ -67,24 +71,24 @@ set_option_if(
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
-  ACTS_BUILD_DD4HEP_PLUGIN
+  ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP) # OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_TGEO_PLUGIN
-  ACTS_BUILD_DD4HEP_PLUGIN OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_TGEO
+  ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_IDENTIFICATION_PLUGIN
-  ACTS_BUILD_TGEO_PLUGIN OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_PLUGIN_IDENTIFICATION
+  ACTS_BUILD_PLUGIN_TGEO OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_DIGITIZATION_PLUGIN
+  ACTS_BUILD_PLUGIN_DIGITIZATION
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_JSON_PLUGIN
+  ACTS_BUILD_PLUGIN_JSON
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_FATRAS
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
-set_option_if(ACTS_BUILD_LEGACY ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
@@ -113,7 +117,7 @@ find_package(Filesystem REQUIRED)
 set(_dd4hep_version 1.10)
 set(_root_version 6.10)
 # plugin dependencies
-if(ACTS_BUILD_CUDA_PLUGIN)
+if(ACTS_BUILD_PLUGIN_CUDA)
   enable_language(CUDA)
   set(CMAKE_CUDA_STANDARD 14 CACHE STRING "CUDA C++ standard to use")
   set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE BOOL
@@ -122,20 +126,20 @@ if(ACTS_BUILD_CUDA_PLUGIN)
     "CUDA architectures to generate code for")
   set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
 endif()
-if(ACTS_BUILD_DD4HEP_PLUGIN)
+if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
 endif()
-if(ACTS_BUILD_JSON_PLUGIN)
-  if(ACTS_USE_BUNDLED_NLOHMANN_JSON)
-    message(STATUS "Will build nlohmann::json as part of this build")
+if(ACTS_BUILD_PLUGIN_JSON)
+  if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
+    message(STATUS "Using system installation of nlohmann::json")
+    find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
+  else()
+    message(STATUS "Using bundled nlohmann::json")
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     add_subdirectory(thirdparty/nlohmann_json)
-  else()
-    message(STATUS "Using external install of nlohmann::json")
-    find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
   endif()
 endif()
-if(ACTS_BUILD_TGEO_PLUGIN)
+if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Geom)
 endif()
 # examples dependencies
