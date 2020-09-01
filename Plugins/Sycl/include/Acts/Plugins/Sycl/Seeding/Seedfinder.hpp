@@ -11,38 +11,13 @@
 // Acts include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Utilities/CreateQueue.h"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
-/// Forward declaration of incomplete type cl::sycl::queue
-inline namespace cl {
-namespace sycl {
-class queue;
-}
-};  // namespace cl
-
 namespace Acts::Sycl {
-
-/// @brief Seedfinding algorithm implemented with SYCL to offload computations
-/// to GPUs.
-void createSeedsForGroupSycl(
-    const std::shared_ptr<cl::sycl::queue>& q,
-    const detail::deviceSeedfinderConfig& configData,
-    const DeviceExperimentCuts& deviceCuts,
-    const std::vector<detail::deviceSpacePoint>& bottomSPs,
-    const std::vector<detail::deviceSpacePoint>& middleSPs,
-    const std::vector<detail::deviceSpacePoint>& topSPs,
-    std::vector<std::vector<detail::SeedData>>& seeds);
-
-/// @brief This function creates the SYCL queue object.
-///
-/// SYCL implementation details are hidden from this class, that's why we're
-/// creating the queue in a standalone translation unit.
-///
-/// @return A pointer to the queue.
-std::shared_ptr<cl::sycl::queue> createQueue(const std::string&);
 
 template <typename external_spacepoint_t>
 class Seedfinder {

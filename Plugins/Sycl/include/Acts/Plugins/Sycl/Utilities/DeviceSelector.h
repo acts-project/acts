@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <string>
+
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {

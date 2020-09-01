@@ -8,8 +8,7 @@
 
 #pragma once
 #include <cstddef>
-
-#include <bits/stdint-uintn.h>
+#include <cstdint>
 
 namespace Acts::Sycl::detail {
 struct deviceSpacePoint {

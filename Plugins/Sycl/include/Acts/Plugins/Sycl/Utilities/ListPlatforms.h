@@ -7,16 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <fstream>
-#include <string>
 
-struct CommandLineArguments {
-  void parse(int argc, char** argv);
-  bool allgroup = false;
-  bool onlyGpu = false;
-  bool matches = false;
-  unsigned int groups = 500;
-  bool fileExists = false;
-  std::string deviceName = "";
-  std::string filename = "";
-};
+namespace Acts::Sycl {
+/// @brief This function allows us to list availabe SYCL platforms and devices.
+void listPlatforms();
+
+}  // namespace Acts::Sycl

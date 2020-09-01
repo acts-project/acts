@@ -1,22 +1,23 @@
-#find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})   
-
 # This module needs at least CMake 3.13.
 cmake_minimum_required( VERSION 3.13 )
 
-# We use CMake's built-in modules, used to look for SYCL capabilities.
-include( CheckIncludeFileCXX )
-include( CheckCXXSourceCompiles )
-include( CMakeParseArguments )
-set( CMAKE_REQUIRED_QUIET TRUE )
-
-# set(SYCL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(SYCL REQUIRED)
 
 add_library(
   ActsPluginSycl SHARED
+  # header files
+  include/Acts/Plugins/Sycl/Seeding/detail/Types.h
+  include/Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.h
+  include/Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp
+  include/Acts/Plugins/Sycl/Seeding/Seedfinder.hpp
+  include/Acts/Plugins/Sycl/Seeding/Seedfinder.ipp
+  include/Acts/Plugins/Sycl/Utilities/CreateQueue.h
+  include/Acts/Plugins/Sycl/Utilities/DeviceSelector.h
+  include/Acts/Plugins/Sycl/Utilities/ListPlatforms.h
+  # implementation files
   src/Seeding/CreateSeedsForGroupSycl.cpp
-  src/Utilities/CreateQueueSycl.cpp
-  src/Utilities/ListSyclPlatforms.cpp
+  src/Utilities/CreateQueue.cpp
+  src/Utilities/ListPlatforms.cpp
   src/Utilities/DeviceSelector.cpp
 )
 
@@ -40,3 +41,4 @@ install(
 install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  

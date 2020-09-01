@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.h"
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
 #include <algorithm>
@@ -56,27 +57,26 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   for (auto SP : bottomSPs) {
     bottomSPvec.push_back(SP);
-    deviceBottomSPs.insert(
-        deviceBottomSPs.end(),
-        deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
-                         SP->varianceR(), SP->varianceZ()});
+    deviceBottomSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
+                                               SP->radius(), SP->varianceR(),
+                                               SP->varianceZ()});
   }
 
   for (auto SP : middleSPs) {
     middleSPvec.push_back(SP);
-    deviceMiddleSPs.insert(
-        deviceMiddleSPs.end(),
-        deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
-                         SP->varianceR(), SP->varianceZ()});
+    deviceMiddleSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
+                                               SP->radius(), SP->varianceR(),
+                                               SP->varianceZ()});
   }
 
   for (auto SP : topSPs) {
     topSPvec.push_back(SP);
-    deviceTopSPs.insert(
-        deviceTopSPs.end(),
-        deviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
-                         SP->varianceR(), SP->varianceZ()});
+    deviceTopSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
+                                            SP->radius(), SP->varianceR(),
+                                            SP->varianceZ()});
   }
+
+  auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
 
   const deviceSeedfinderConfig deviceConfigData = {
       m_config.deltaRMin,
@@ -88,12 +88,12 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       m_config.sigmaScattering,
       m_config.minHelixDiameter2,
       m_config.pT2perRadius,
-      m_config.seedFilter->getSeedFilterConfig().deltaInvHelixDiameter,
-      m_config.seedFilter->getSeedFilterConfig().impactWeightFactor,
-      m_config.seedFilter->getSeedFilterConfig().deltaRMin,
-      m_config.seedFilter->getSeedFilterConfig().compatSeedWeight,
+      seedFilterConfig.deltaInvHelixDiameter,
+      seedFilterConfig.impactWeightFactor,
+      seedFilterConfig.deltaRMin,
+      seedFilterConfig.compatSeedWeight,
       m_config.impactMax,
-      m_config.seedFilter->getSeedFilterConfig().compatSeedLimit,
+      seedFilterConfig.compatSeedLimit,
   };
 
   std::vector<std::vector<SeedData>> seeds;
