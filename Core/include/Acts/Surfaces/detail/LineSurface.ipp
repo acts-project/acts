@@ -1,15 +1,14 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline void LineSurface::localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lposition,
-                                       const Vector3D& momentum,
-                                       Vector3D& position) const {
+inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
+                                           const Vector2D& lposition,
+                                           const Vector3D& momentum) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -18,14 +17,13 @@ inline void LineSurface::localToGlobal(const GeometryContext& gctx,
   Vector3D radiusAxisGlobal(lineDirection.cross(momentum));
   Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eLOC_Z]);
   // add eLOC_R * radiusAxis
-  position = Vector3D(locZinGlobal +
-                      lposition[eLOC_R] * radiusAxisGlobal.normalized());
+  return Vector3D(locZinGlobal +
+                  lposition[eLOC_R] * radiusAxisGlobal.normalized());
 }
 
-inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
-                                       const Vector3D& position,
-                                       const Vector3D& momentum,
-                                       Vector2D& lposition) const {
+inline Result<Vector2D> LineSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& momentum) const {
   using VectorHelpers::perp;
 
   const auto& sTransform = transform(gctx);
@@ -34,13 +32,13 @@ inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
   // Bring the global position into the local frame
   Vector3D loc3Dframe = sTransform.inverse() * position;
   // construct localPosition with sign*perp(candidate) and z.()
-  lposition = Vector2D(perp(loc3Dframe), loc3Dframe.z());
+  Vector2D lposition(perp(loc3Dframe), loc3Dframe.z());
   Vector3D sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
   Vector3D decVec(position - sCenter);
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eLOC_R] *= sign;
-  return true;
+  return Result<Vector2D>::success(lposition);
 }
 
 inline std::string LineSurface::name() const {

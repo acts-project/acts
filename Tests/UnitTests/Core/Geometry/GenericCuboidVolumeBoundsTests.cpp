@@ -77,8 +77,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -98,8 +97,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -113,8 +111,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(trf.inverse() * glob, vertices));
     }

@@ -22,10 +22,8 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
   auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
-  Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
-
-  return pos;
+  Acts::Vector3D mom(1., 1., 1.);
+  return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
 }
 
 template <typename Cluster>

@@ -117,12 +117,12 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
                          parameters[Acts::ParDef::eLOC_1]);
 
     /// prepare for calculating the
-    Acts::Vector3D pos(0, 0, 0);
     Acts::Vector3D mom(1, 1, 1);
     // the cluster surface
     const auto& clusterSurface = cluster.referenceObject();
     // transform local into global position information
-    clusterSurface.localToGlobal(ctx.geoContext, local, mom, pos);
+    Acts::Vector3D pos =
+        clusterSurface.localToGlobal(ctx.geoContext, local, mom);
     // identification
     m_volumeID = geoId.volume();
     m_layerID = geoId.layer();
@@ -166,9 +166,14 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       const auto& simHit = *it;
 
       // local position to be calculated
-      Acts::Vector2D lPosition;
-      clusterSurface.globalToLocal(ctx.geoContext, simHit.position(),
-                                   simHit.unitDirection(), lPosition);
+      Acts::Vector2D lPosition{0., 0.};
+      auto lpResult = clusterSurface.globalToLocal(
+          ctx.geoContext, simHit.position(), simHit.unitDirection());
+      if (not lpResult.ok()) {
+        ACTS_FATAL("Global to local transformation did not succeed.");
+        return ProcessCode::ABORT;
+      }
+      lPosition = lpResult.value();
       // fill the variables
       m_t_gx.push_back(simHit.position().x());
       m_t_gy.push_back(simHit.position().y());

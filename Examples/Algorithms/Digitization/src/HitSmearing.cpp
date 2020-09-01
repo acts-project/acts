@@ -72,14 +72,20 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
     const Acts::Surface* surface = is->second;
     for (const auto& hit : moduleHits) {
       // transform global position into local coordinates
-      Acts::Vector2D pos(0, 0);
-      surface->globalToLocal(ctx.geoContext, hit.position(),
-                             hit.unitDirection(), pos);
+      auto lpResult = surface->globalToLocal(ctx.geoContext, hit.position(),
+                                             hit.unitDirection());
+      Acts::Vector2D lp{0., 0.};
+      if (not lpResult.ok()) {
+        ACTS_ERROR("Global to local transformation did not succeed.");
+        return ProcessCode::ABORT;
+      } else {
+        lp = lpResult.value();
+      }
 
       // smear truth to create local measurement
       Acts::BoundVector loc = Acts::BoundVector::Zero();
-      loc[Acts::eLOC_0] = pos[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
-      loc[Acts::eLOC_1] = pos[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
+      loc[Acts::eLOC_0] = lp[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
+      loc[Acts::eLOC_1] = lp[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
 
       // create source link at the end of the container
       auto it = sourceLinks.emplace_hint(sourceLinks.end(), *surface, hit, 2,
