@@ -549,7 +549,7 @@ void createSeedsForGroupSycl(
                          p2scatter * configData.sigmaScattering *
                              configData.sigmaScattering)) &&
                       !(Im > configData.impactMax)) {
-                    T.curvature = B / std::sqrt(S2);
+                    T.curvature = B / cl::sycl::sqrt(S2);
                     T.impact = Im;
                     deviceCurvImpact[idx] = T;
                   }
