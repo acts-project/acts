@@ -68,7 +68,7 @@ class SingleCurvilinearTrackParameters
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
-  /// Access the space-time position four-vector.
+  /// Space-time position four-vector.
   ///
   /// The surface is owned by the parameters object and thus is independent
   /// from the geometry context.

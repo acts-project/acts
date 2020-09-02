@@ -142,7 +142,7 @@ class SingleBoundTrackParameters {
     return m_paramSet.getUncertainty<kIndex>();
   }
 
-  /// Access space-time position four-vector.
+  /// Space-time position four-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   ///
