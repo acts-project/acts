@@ -895,8 +895,9 @@ class CombinatorialKalmanFilter {
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
       // Set the surface
+      // TODO can we just reuse the existing curvilinear surface?
       trackStateProxy.setReferenceSurface(Surface::makeShared<PlaneSurface>(
-          curvilinearParams.position(), curvilinearParams.momentum()));
+          curvilinearParams.position(), curvilinearParams.directionUnit()));
       // Set the filtered parameter index to be the same with predicted
       // parameter
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
