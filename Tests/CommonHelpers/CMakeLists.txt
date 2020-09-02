@@ -6,7 +6,9 @@ add_library(
   Acts/Tests/CommonHelpers/DataDirectory.cpp)
 target_compile_definitions(
   ActsTestsCommonHelpers
-  PRIVATE "ACTS_TEST_DATA_DIR=\"${acts_test_data_dir}\"")
+  PRIVATE
+    "ACTS_TEST_DATA_DIR=\"${acts_test_data_dir}\""
+    BOOST_FILESYSTEM_NO_DEPRECATED)
 target_compile_features(
   ActsTestsCommonHelpers
   PUBLIC cxx_std_17)
