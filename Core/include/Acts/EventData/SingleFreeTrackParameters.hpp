@@ -117,13 +117,26 @@ class SingleFreeTrackParameters {
   /// Access the time coordinate.
   Scalar time() const { return get<eFreeTime>(); }
 
-  /// @brief access momentum in global coordinate system
-  ///
-  /// @return 3D vector with global momentum
-  Vector3D momentum() const {
-    return parameters().template segment<3>(eFreeDir0) /
-           std::abs(get<eFreeQOverP>());
+  /// Direction unit three-vector, i.e. the normalized momentum three-vector.
+  Vector3D directionUnit() const {
+    return parameters().template segment<3>(eFreeDir0).normalized();
   }
+  /// Absolute transverse momentum.
+  Scalar transverseMomentum() const {
+    // direction vector w/ arbitrary normalization can be parametrized as
+    //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
+    // w/ f,sin(theta) positive, the transverse magnitude is then
+    //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
+    Scalar transverseMagnitude = std::hypot(get<eFreeDir0>(), get<eFreeDir1>());
+    // absolute magnitude is f by construction
+    Scalar magnitude = std::hypot(transverseMagnitude, get<eFreeDir2>());
+    // such that we can extract sin(theta) = f*sin(theta) / f
+    return (transverseMagnitude / magnitude) * absMomentum();
+  }
+  /// Absolute momentum.
+  Scalar absMomentum() const { return 1 / std::abs(get<eFreeQOverP>()); }
+  /// Momentum three-vector.
+  Vector3D momentum() const { return absMomentum() * directionUnit(); }
 
   /// @brief retrieve electric charge
   ///
