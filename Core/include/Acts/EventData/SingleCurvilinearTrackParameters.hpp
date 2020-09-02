@@ -45,7 +45,7 @@ class SingleCurvilinearTrackParameters
                                    const Vector3D& pos, const Vector3D& mom,
                                    Scalar charge, Scalar time)
       : Base(Surface::makeShared<PlaneSurface>(pos, mom),
-             detail::transformFreeToCurvilinearTrackParameters(
+             detail::transformFreeToCurvilinearParameters(
                  time, mom, charge / mom.norm()),
              std::move(cov)) {}
 
@@ -61,7 +61,7 @@ class SingleCurvilinearTrackParameters
                                    const Vector3D& pos, const Vector3D& mom,
                                    Scalar time)
       : Base(Surface::makeShared<PlaneSurface>(pos, mom),
-             detail::transformFreeToCurvilinearTrackParameters(time, mom,
+             detail::transformFreeToCurvilinearParameters(time, mom,
                                                                1 / mom.norm()),
              std::move(cov)) {}
 

@@ -33,8 +33,8 @@ void printBoundTrackParameters(std::ostream& os, const Surface& surface,
 /// @param os The output stream
 /// @param params Free parameters vector
 /// @param cov Optional free parameters covariance matrix
-void printFreeParameters(std::ostream& os, const FreeVector& params,
-                         const FreeMatrix* cov = nullptr);
+void printFreeTrackParameters(std::ostream& os, const FreeVector& params,
+                              const FreeMatrix* cov = nullptr);
 
 }  // namespace detail
 }  // namespace Acts

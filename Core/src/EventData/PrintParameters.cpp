@@ -36,9 +36,9 @@ void Acts::detail::printBoundTrackParameters(std::ostream& os,
   os.precision(oldPrecision);
 }
 
-void Acts::detail::printFreeParameters(std::ostream& os,
-                                       const Acts::FreeVector& params,
-                                       const Acts::FreeMatrix* cov) {
+void Acts::detail::printFreeTrackParameters(std::ostream& os,
+                                            const Acts::FreeVector& params,
+                                            const Acts::FreeMatrix* cov) {
   // Set stream output format
   auto oldPrecision = os.precision(7);
   auto oldFlags = os.setf(std::ios::fixed);
