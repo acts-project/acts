@@ -640,6 +640,9 @@ class KalmanFitter {
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface);
+            
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);        
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
