@@ -210,7 +210,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
   jacobian.col(eBoundPhi) = fitLinear(derivatives[eBoundPhi], deviations);
   jacobian.col(eBoundTheta) = fitLinear(derivatives[eBoundTheta], deviations);
   jacobian.col(eBoundQOverP) = fitLinear(derivatives[eBoundQOverP], deviations);
-  jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
+  jacobian.col(eBoundTime) = fitLinear(derivatives[eBoundTime], deviations);
   return jacobian * startCov * jacobian.transpose();
 }
 

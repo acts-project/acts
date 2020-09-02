@@ -29,7 +29,7 @@ void consistencyCheck(const Parameter& pars, const Vector3D& position,
   CHECK_CLOSE_REL(pars.parameters()[eBoundPhi], values[2], 1e-6);
   CHECK_CLOSE_REL(pars.parameters()[eBoundTheta], values[3], 1e-6);
   CHECK_CLOSE_REL(pars.parameters()[eBoundQOverP], values[4], 1e-6);
-  CHECK_CLOSE_ABS(pars.parameters()[eT], values[5], 1e-6);
+  CHECK_CLOSE_ABS(pars.parameters()[eBoundTime], values[5], 1e-6);
   // check global parameters
   CHECK_CLOSE_REL(pars.position(GeometryContext()), position, 1e-6);
   CHECK_CLOSE_REL(pars.momentum(), momentum, 1e-6);
