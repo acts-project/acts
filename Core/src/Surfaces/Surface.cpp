@@ -50,7 +50,7 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   return false;
 }
 
-const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
+Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -109,7 +109,7 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   return alignToBound;
 }
 
-const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
+Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center

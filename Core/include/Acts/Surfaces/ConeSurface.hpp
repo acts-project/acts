@@ -86,8 +86,8 @@ class ConeSurface : public Surface {
   /// @param bValue defines the type of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -102,25 +102,25 @@ class ConeSurface : public Surface {
   /// @param momentum is the momentum used for the measurement frame
   /// construction
   /// @return matrix that indicates the measurement frame
-  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& momentum) const final;
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& momentum) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position at normal vector request
   /// @return Vector3D normal vector in global frame
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Return method for surface normal information
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position as normal vector base
   /// @return Vector3D normal vector in global frame
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D& position) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector3D& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -130,7 +130,7 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   // @return This returns the local z axis
-  virtual const Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
+  virtual Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the ConeBounds by reference
   const ConeBounds& bounds() const final;
@@ -204,7 +204,7 @@ class ConeSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

@@ -87,8 +87,8 @@ class PlaneSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -100,8 +100,8 @@ class PlaneSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -201,7 +201,7 @@ class PlaneSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:
