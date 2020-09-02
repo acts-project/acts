@@ -41,7 +41,7 @@ auto propagator = std::make_shared<Propagator>(stepper);
 Now, set up an impact point estimator...
 ```cpp
 // Set up ImpactPointEstimator
-using IPEstimator = Acts::ImpactPointEstimator<Acts::BoundParameters, Propagator>;
+using IPEstimator = Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
 IPEstimator::Config ipEstimatorCfg(bField, propagator);
 IPEstimator ipEstimator(ipEstimatorCfg);
 ```
@@ -62,7 +62,7 @@ Acts::AnnealingUtility annealingUtility(annealingConfig);
 The AMVF strongly interplays with its dedicated vertex fitter, the *Adaptive Multi-Vertex Fitter*. Let's configure and set it up with the annealing utility defined above:
 ```cpp
 // Set up the vertex fitter with user-defined annealing
-using Fitter = Acts::AdaptiveMultiVertexFitter<Acts::BoundParameters, Linearizer>;
+using Fitter = Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
 Fitter::Config fitterCfg(ipEstimator);
 fitterCfg.annealingTool = annealingUtility;
 Fitter fitter(fitterCfg);
@@ -71,7 +71,7 @@ Fitter fitter(fitterCfg);
 The last tool we need to set up (before finally setting up the AMVF) is a vertex seed finder:
 ```cpp
 // Set up the vertex seed finder
-using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity<Acts::BoundParameters>>;
+using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
 SeedFinder seedFinder;
 ```
 ### Setting up the AMVF tool
@@ -96,7 +96,7 @@ Finder::State state;
 Lastly, we need to provide vertexing options. Here, we could e.g. set a beam spot constraint to the vertexing.
 ```cpp
 // Default vertexing options, this is where e.g. a constraint could be set
-using VertexingOptions = Acts::VertexingOptions<Acts::BoundParameters>;
+using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
  ### Deploying the vertex finder on the track collection

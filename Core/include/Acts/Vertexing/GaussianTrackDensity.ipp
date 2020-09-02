@@ -12,7 +12,7 @@ template <typename input_track_t>
 std::pair<double, double>
 Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
     State& state, const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const std::function<BoundTrackParameters(input_track_t)>& extractParameters)
     const {
   addTracks(state, trackList, extractParameters);
 
@@ -60,7 +60,7 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
 template <typename input_track_t>
 double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(
     State& state, const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const std::function<BoundTrackParameters(input_track_t)>& extractParameters)
     const {
   return globalMaximumWithWidth(state, trackList, extractParameters).first;
 }
@@ -68,10 +68,10 @@ double Acts::GaussianTrackDensity<input_track_t>::globalMaximum(
 template <typename input_track_t>
 void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     State& state, const std::vector<const input_track_t*>& trackList,
-    const std::function<BoundParameters(input_track_t)>& extractParameters)
+    const std::function<BoundTrackParameters(input_track_t)>& extractParameters)
     const {
   for (auto trk : trackList) {
-    const BoundParameters& boundParams = extractParameters(*trk);
+    const BoundTrackParameters& boundParams = extractParameters(*trk);
     // Get required track parameters
     const double d0 = boundParams.parameters()[BoundIndices::eLOC_D0];
     const double z0 = boundParams.parameters()[BoundIndices::eLOC_Z0];

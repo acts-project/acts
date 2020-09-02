@@ -11,7 +11,7 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundParameters& params, const Vector4D& linPoint,
+        const BoundTrackParameters& params, const Vector4D& linPoint,
         const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
@@ -24,7 +24,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
   pOptions.direction = backward;
 
-  const BoundParameters* endParams = nullptr;
+  const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
   if (result.ok()) {

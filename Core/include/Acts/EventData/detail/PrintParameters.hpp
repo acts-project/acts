@@ -24,7 +24,7 @@ namespace detail {
 /// @param surface Bound parameters reference surface
 /// @param params Bound parameters vector
 /// @param cov Optional bound parameters covariance matrix
-void printBoundParameters(std::ostream& os, const Surface& surface,
+void printBoundTrackParameters(std::ostream& os, const Surface& surface,
                           const BoundVector& params,
                           const BoundSymMatrix* cov = nullptr);
 

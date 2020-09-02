@@ -11,10 +11,10 @@ template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        CurvilinearParameters,
+        CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
   using ThisResult = Result<action_list_t_result_t<
-      CurvilinearParameters, typename propagator_options_t::action_list_type>>;
+      CurvilinearTrackParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
   auto nominalRet = m_propagator.propagate(start, options);
@@ -62,9 +62,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundParameters, typename propagator_options_t::action_list_type>> {
+        BoundTrackParameters, typename propagator_options_t::action_list_type>> {
   using ThisResult = Result<action_list_t_result_t<
-      BoundParameters, typename propagator_options_t::action_list_type>>;
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
   auto nominalRet = m_propagator.propagate(start, target, options);
@@ -178,7 +178,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     values[param] += h;
 
     // Propagate with updated start parameters
-    BoundParameters tp(startPars.referenceSurface().getSharedPtr(), values,
+    BoundTrackParameters tp(startPars.referenceSurface().getSharedPtr(), values,
                        startPars.covariance());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope

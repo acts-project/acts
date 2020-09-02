@@ -45,9 +45,9 @@ struct PropagatorState {
     // comply with concept
     using Jacobian = BoundMatrix;
     using Covariance = BoundSymMatrix;
-    using BoundState = std::tuple<BoundParameters, Jacobian, double>;
+    using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     using CurvilinearState =
-        std::tuple<CurvilinearParameters, Jacobian, double>;
+        std::tuple<CurvilinearTrackParameters, Jacobian, double>;
     using BField = int;
 
     template <typename, typename>
@@ -145,7 +145,7 @@ struct PropagatorState {
     }
 
     BoundState boundState(State& state, const Surface& surface) const {
-      BoundParameters parameters(tgContext, std::nullopt, state.pos,
+      BoundTrackParameters parameters(tgContext, std::nullopt, state.pos,
                                  state.p * state.dir, state.q, state.t,
                                  surface.getSharedPtr());
       BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -154,7 +154,7 @@ struct PropagatorState {
     }
 
     CurvilinearState curvilinearState(State& state) const {
-      CurvilinearParameters parameters(std::nullopt, state.pos,
+      CurvilinearTrackParameters parameters(std::nullopt, state.pos,
                                        state.p * state.dir, state.q, state.t);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),

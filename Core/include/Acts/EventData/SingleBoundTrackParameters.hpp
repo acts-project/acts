@@ -84,7 +84,7 @@ class SingleBoundTrackParameters {
                              Scalar charge, Scalar time,
                              std::shared_ptr<const Surface> surface)
       : m_paramSet(std::move(cov),
-                   detail::transformFreeToBoundParameters(
+                   detail::transformFreeToBoundTrackParameters(
                        pos, time, mom, charge / mom.norm(), *surface, geoCtx)),
         m_chargePolicy(charge),
         m_surface(std::move(surface)) {
@@ -107,7 +107,7 @@ class SingleBoundTrackParameters {
                              Scalar time,
                              std::shared_ptr<const Surface> surface)
       : m_paramSet(std::move(cov),
-                   detail::transformFreeToBoundParameters(
+                   detail::transformFreeToBoundTrackParameters(
                        pos, time, mom, 1 / mom.norm(), *surface, geoCtx)),
         m_surface(std::move(surface)) {
     assert(m_surface);
@@ -211,7 +211,7 @@ class SingleBoundTrackParameters {
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleBoundTrackParameters& tp) {
-    detail::printBoundParameters(
+    detail::printBoundTrackParameters(
         os, tp.referenceSurface(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;

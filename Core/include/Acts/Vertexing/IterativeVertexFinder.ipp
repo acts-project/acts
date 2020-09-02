@@ -181,7 +181,7 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
     const std::vector<const InputTrack_t*>& perigeesToFit,
     std::vector<const InputTrack_t*>& seedTracks) const {
   for (const auto& fitPerigee : perigeesToFit) {
-    const BoundParameters& fitPerigeeParams = m_extractParameters(*fitPerigee);
+    const BoundTrackParameters& fitPerigeeParams = m_extractParameters(*fitPerigee);
     // Find track in seedTracks
     auto foundIter =
         std::find_if(seedTracks.begin(), seedTracks.end(),
@@ -200,7 +200,7 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
 template <typename vfitter_t, typename sfinder_t>
 Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
-    const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
+    const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& state) const {
   // Linearize track
@@ -361,7 +361,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
     // still large amount of tracks available, check compatibility
     else {
       // check first that distance is not too large
-      const BoundParameters& sTrackParams = m_extractParameters(*sTrack);
+      const BoundTrackParameters& sTrackParams = m_extractParameters(*sTrack);
       auto distanceRes = m_cfg.ipEst.calculate3dDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
           state.ipState);
@@ -424,7 +424,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
         continue;
       }
       // use original perigee parameter of course
-      BoundParameters trackPerigee =
+      BoundTrackParameters trackPerigee =
           m_extractParameters(*(tracksIter->originalParams));
 
       // compute compatibility

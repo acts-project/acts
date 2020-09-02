@@ -44,9 +44,9 @@ struct VertexInfo {
 };
 
 std::tuple<
-    Vertex<BoundParameters>, std::vector<VertexInfo>,
+    Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
     std::vector<
-        BoundParameters>> inline readTracksAndVertexCSV(std::string toolString,
+        BoundTrackParameters>> inline readTracksAndVertexCSV(std::string toolString,
                                                         std::string fileBase =
                                                             "vertexing_event_"
                                                             "mu20") {
@@ -67,9 +67,9 @@ std::tuple<
   std::string line{};
 
   std::shared_ptr<PerigeeSurface> perigeeSurface;
-  std::vector<BoundParameters> tracks;
+  std::vector<BoundTrackParameters> tracks;
   std::vector<VertexInfo> vertices;
-  Vertex<BoundParameters> beamspotConstraint;
+  Vertex<BoundTrackParameters> beamspotConstraint;
 
   // Read in beamspot data
   std::getline(beamspotData, line);  // skip header

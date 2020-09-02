@@ -65,7 +65,7 @@ class TrackSummaryPlotTool {
   /// @param nOutliers number of outliers
   /// @param nHoles number of holes
   void fill(TrackSummaryPlotCache& trackSummaryPlotCache,
-            const Acts::BoundParameters& fittedParameters, size_t nStates,
+            const Acts::BoundTrackParameters& fittedParameters, size_t nStates,
             size_t nMeasurments, size_t Outliers, size_t nHoles) const;
 
   /// @brief write the track info plots to file

@@ -74,12 +74,12 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
   }
   // positively charged from global information
   {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, 1_e, time, surface);
+    BoundTrackParameters params(geoCtx, std::nullopt, pos, mom, 1_e, time, surface);
     checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
   }
   // negatively charged from local vector
@@ -91,12 +91,12 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
   }
   // negatively charged from global information
   {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, -1_e, time, surface);
+    BoundTrackParameters params(geoCtx, std::nullopt, pos, mom, -1_e, time, surface);
     checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
   }
   // neutral parameters from local vector

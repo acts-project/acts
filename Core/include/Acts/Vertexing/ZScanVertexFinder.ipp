@@ -23,8 +23,8 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   std::vector<std::pair<double, double>> zPositions;
 
   for (const auto& iTrk : trackVector) {
-    // Extract BoundParameters from InputTrack_t object
-    const BoundParameters& params = m_extractParameters(*iTrk);
+    // Extract BoundTrackParameters from InputTrack_t object
+    const BoundTrackParameters& params = m_extractParameters(*iTrk);
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;

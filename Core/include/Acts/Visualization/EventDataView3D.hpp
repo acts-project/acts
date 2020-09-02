@@ -126,7 +126,7 @@ struct EventDataView3D {
   /// @param covConfig The visualization option for the covariance
   /// @param surfConfig The visualization option for the surface
   template <typename parameters_t>
-  static inline void drawBoundParameters(
+  static inline void drawBoundTrackParameters(
       IVisualization3D& helper, const parameters_t& parameters,
       const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
@@ -237,27 +237,27 @@ struct EventDataView3D {
       // Last, if necessary and present, draw the track parameters
       // (a) predicted track parameters
       if (predictedConfig.visible and state.hasPredicted()) {
-        drawBoundParameters(
+        drawBoundTrackParameters(
             helper,
-            BoundParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
                             state.predicted(), state.predictedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));
       }
       // (b) filtered track parameters
       if (filteredConfig.visible and state.hasFiltered()) {
-        drawBoundParameters(
+        drawBoundTrackParameters(
             helper,
-            BoundParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
                             state.filtered(), state.filteredCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
       }
       // (c) smoothed track parameters
       if (smoothedConfig.visible and state.hasSmoothed()) {
-        drawBoundParameters(
+        drawBoundTrackParameters(
             helper,
-            BoundParameters(state.referenceSurface().getSharedPtr(),
+            BoundTrackParameters(state.referenceSurface().getSharedPtr(),
                             state.smoothed(), state.smoothedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));

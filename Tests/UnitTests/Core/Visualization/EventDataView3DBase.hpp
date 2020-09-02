@@ -56,7 +56,7 @@ std::default_random_engine generator(42);
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundParameters(IVisualization3D& helper) {
+static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   std::stringstream ss;
 
   ViewConfig pcolor({20, 120, 20});
@@ -78,8 +78,8 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
-  BoundParameters::ParametersVector pars =
-      BoundParameters::ParametersVector::Zero();
+  BoundTrackParameters::ParametersVector pars =
+      BoundTrackParameters::ParametersVector::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -90,8 +90,8 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  EventDataView3D::drawBoundParameters(
-      helper, BoundParameters(plane, pars, std::move(cov)), gctx, momentumScale,
+  EventDataView3D::drawBoundTrackParameters(
+      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx, momentumScale,
       localErrorScale, directionErrorScale, pcolor, scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");

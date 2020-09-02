@@ -17,8 +17,8 @@ template class SingleCurvilinearTrackParameters<ChargedPolicy>;
 template class SingleFreeTrackParameters<ChargedPolicy>;
 
 // ensure concrete classes satisfy the concepts
-static_assert(Concepts::BoundTrackParametersConcept<BoundParameters>);
-static_assert(Concepts::BoundTrackParametersConcept<CurvilinearParameters>);
+static_assert(Concepts::BoundTrackParametersConcept<BoundTrackParameters>);
+static_assert(Concepts::BoundTrackParametersConcept<CurvilinearTrackParameters>);
 static_assert(Concepts::FreeTrackParametersConcept<FreeTrackParameters>);
 
 }  // namespace Acts

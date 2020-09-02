@@ -36,7 +36,7 @@ BOOST_DATA_TEST_CASE(
   const Vector3D pos(x, y, z);
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  CurvilinearParameters params(std::nullopt, pos, p * dir, q, time);
+  CurvilinearTrackParameters params(std::nullopt, pos, p * dir, q, time);
 
   CHECK_SMALL(params.get<eBoundLoc0>(), eps);
   CHECK_SMALL(params.get<eBoundLoc1>(), eps);

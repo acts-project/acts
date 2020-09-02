@@ -17,7 +17,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
     propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
-                                               const BoundParameters& trkParams,
+                                               const BoundTrackParameters& trkParams,
                                                const Vector3D& vtxPos,
                                                State& state) const {
   Vector3D deltaR;
@@ -36,11 +36,11 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
+Acts::Result<std::unique_ptr<const Acts::BoundTrackParameters>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
-                               const BoundParameters& trkParams,
+                               const BoundTrackParameters& trkParams,
                                const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
@@ -92,7 +92,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     get3dVertexCompatibility(const GeometryContext& gctx,
-                             const BoundParameters* trkParams,
+                             const BoundTrackParameters* trkParams,
                              const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
@@ -190,7 +190,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<void>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
-                           const BoundParameters& trkParams,
+                           const BoundTrackParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
                            Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
@@ -250,7 +250,7 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<Acts::ImpactParametersAndSigma>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    estimateImpactParameters(const BoundParameters& track,
+    estimateImpactParameters(const BoundTrackParameters& track,
                              const Vertex<input_track_t>& vtx,
                              const GeometryContext& gctx,
                              const Acts::MagneticFieldContext& mctx) const {

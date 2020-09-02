@@ -32,7 +32,7 @@ namespace concept {
       struct LinearizerConcept {
 
          constexpr static bool linTrack_exists = has_method<const S, Result<LinearizedTrack>,
-         linTrack_t, const BoundParameters&,
+         linTrack_t, const BoundTrackParameters&,
                      const Vector4D&,
                      const Acts::GeometryContext&,
                      const Acts::MagneticFieldContext&,

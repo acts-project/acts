@@ -75,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::TruthVerticesToTracksAlgorithm::execute(
     vertexAndTracks.vertex = vtx;
 
     // Track objects at current vertex
-    std::vector<Acts::BoundParameters> trackCollection;
+    std::vector<Acts::BoundTrackParameters> trackCollection;
 
     // Iterate over all particle emerging from current vertex
     for (auto const& particle : vtx.outgoing) {
@@ -83,7 +83,7 @@ ActsExamples::ProcessCode ActsExamples::TruthVerticesToTracksAlgorithm::execute(
           particle.absMomentum() * particle.unitDirection();
 
       // Define start track params
-      Acts::CurvilinearParameters start(std::nullopt, particle.position(),
+      Acts::CurvilinearTrackParameters start(std::nullopt, particle.position(),
                                         ptclMom, particle.charge(),
                                         particle.time());
       // Run propagator
@@ -134,10 +134,10 @@ ActsExamples::ProcessCode ActsExamples::TruthVerticesToTracksAlgorithm::execute(
             rn_th * rn_th, rn_qp * rn_qp, 1.;
 
         trackCollection.push_back(
-            Acts::BoundParameters(perigeeSurface, newTrackParams, covMat));
+            Acts::BoundTrackParameters(perigeeSurface, newTrackParams, covMat));
       } else {
         trackCollection.push_back(
-            Acts::BoundParameters(perigeeSurface, newTrackParams));
+            Acts::BoundTrackParameters(perigeeSurface, newTrackParams));
       }
     }  // end iteration over all particle at vertex
 

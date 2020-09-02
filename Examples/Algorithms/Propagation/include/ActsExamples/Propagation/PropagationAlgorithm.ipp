@@ -164,7 +164,7 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
     PropagationOutput pOutput;
     if (charge) {
       // charged extrapolation - with hit recording
-      Acts::BoundParameters startParameters(surface, std::move(pars),
+      Acts::BoundTrackParameters startParameters(surface, std::move(pars),
                                             std::move(cov));
       sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
