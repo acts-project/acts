@@ -728,12 +728,14 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
     }
     std::vector<double> transfo;
     Acts::Transform3D transfo_matrix = bUtility->transform();
-    for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        transfo.push_back(transfo_matrix(j, i));
+    if (not transfo_matrix.isApprox(Acts::Transform3D::Identity())) {
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          transfo.push_back(transfo_matrix(j, i));
+        }
       }
+      smj[m_cfg.transfokeys] = transfo;
     }
-    smj[m_cfg.transfokeys] = transfo;
   }
   return smj;
 }
