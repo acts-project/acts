@@ -37,10 +37,10 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
-  std::array<std::vector<BoundVector>, eBoundParametersSize> derivatives;
+  std::array<std::vector<BoundVector>, eBoundSize> derivatives;
 
   // Wiggle each dimension individually
-  for (unsigned int i = 0; i < eBoundParametersSize; i++) {
+  for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
         wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
   }
@@ -97,10 +97,10 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
-  std::array<std::vector<BoundVector>, eBoundParametersSize> derivatives;
+  std::array<std::vector<BoundVector>, eBoundSize> derivatives;
 
   // Wiggle each dimension individually
-  for (unsigned int i = 0; i < eBoundParametersSize; i++) {
+  for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
         wiggleDimension(opts, start, i, target, nominalParameters, deviations);
   }
@@ -199,8 +199,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
 template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
-    const std::array<std::vector<Acts::BoundVector>,
-                     Acts::eBoundParametersSize>& derivatives,
+    const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
+        derivatives,
     const Acts::BoundSymMatrix& startCov,
     const std::vector<double>& deviations) const -> const Covariance {
   Jacobian jacobian;

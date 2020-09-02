@@ -21,7 +21,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr auto eps = std::numeric_limits<FreeParametersScalar>::epsilon();
+constexpr auto eps = std::numeric_limits<FreeScalar>::epsilon();
 }
 
 BOOST_AUTO_TEST_SUITE(TransformBoundToFree)

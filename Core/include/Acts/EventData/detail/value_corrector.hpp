@@ -29,23 +29,23 @@ namespace detail {
 ///
 /// @post All values in the argument `parVector` are within the valid
 ///       parameter range.
-template <ParID_t... params>
+template <BoundIndices... params>
 struct value_corrector;
 
 /// @cond
-template <typename R, ParID_t... params>
+template <typename R, BoundIndices... params>
 struct value_corrector_impl;
 
-template <ParID_t... params>
+template <BoundIndices... params>
 struct value_corrector {
-  using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
+  using ParVector_t = ActsVector<BoundScalar, sizeof...(params)>;
 
   static void result(ParVector_t& values) {
     value_corrector_impl<ParVector_t, params...>::calculate(values, 0);
   }
 };
 
-template <typename R, ParID_t first, ParID_t... others>
+template <typename R, BoundIndices first, BoundIndices... others>
 struct value_corrector_impl<R, first, others...> {
   static void calculate(R& values, unsigned int pos) {
     using parameter_type = BoundParameterType<first>;
@@ -56,7 +56,7 @@ struct value_corrector_impl<R, first, others...> {
   }
 };
 
-template <typename R, ParID_t last>
+template <typename R, BoundIndices last>
 struct value_corrector_impl<R, last> {
   static void calculate(R& values, unsigned int pos) {
     using parameter_type = BoundParameterType<last>;
