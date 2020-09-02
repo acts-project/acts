@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.h"
+#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
 
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-DeviceSelector::DeviceSelector(const std::string& device_name)
+DeviceSelector::DeviceSelector(const std::string& deviceName)
     : m_defaultSelector(cl::sycl::default_selector()),
-      m_deviceName(device_name){};
+      m_deviceName(deviceName){};
 
 int DeviceSelector::operator()(const cl::sycl::device& d) const {
   // Under no circumstances do we accept any NVidia OpenCL devices.

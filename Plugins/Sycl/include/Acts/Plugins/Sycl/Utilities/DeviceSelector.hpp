@@ -14,13 +14,13 @@
 
 namespace Acts::Sycl {
 struct DeviceSelector : public cl::sycl::device_selector {
-  DeviceSelector(const std::string& device_name);
+  DeviceSelector(const std::string& deviceName = "");
 
   int operator()(const cl::sycl::device& d) const;
 
  private:
   /// Fallback device selector
-  cl::sycl::default_selector m_defaultSelector{};
+  cl::sycl::default_selector m_defaultSelector;
 
   /// Substring of the preferred device's name
   std::string m_deviceName;

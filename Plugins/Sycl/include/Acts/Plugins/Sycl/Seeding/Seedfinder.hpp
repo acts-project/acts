@@ -9,13 +9,15 @@
 #pragma once
 
 // Acts include(s).
-#include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
-#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
-#include "Acts/Plugins/Sycl/Utilities/CreateQueue.h"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+
+// Sycl plugin include(s).
+#include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 
 namespace Acts::Sycl {
 
@@ -23,8 +25,15 @@ template <typename external_spacepoint_t>
 class Seedfinder {
  public:
   Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
+             const Acts::Sycl::DeviceExperimentCuts& cuts);
+
+  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
              const Acts::Sycl::DeviceExperimentCuts& cuts,
-             const std::string& device_name_substring = "");
+             Acts::Sycl::QueueWrapper&& wrappedQueue);
+
+  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
+             const Acts::Sycl::DeviceExperimentCuts& cuts,
+             const Acts::Sycl::QueueWrapper& wrappedQueue);
 
   ~Seedfinder() = default;
   Seedfinder() = delete;
@@ -48,7 +57,9 @@ class Seedfinder {
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
   Acts::SeedFilterConfig m_seedFilterConfig;
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
-  std::shared_ptr<cl::sycl::queue> m_queue;
+  QueueWrapper m_wrappedQueue;
+
+  void init();
 };
 
 }  // namespace Acts::Sycl

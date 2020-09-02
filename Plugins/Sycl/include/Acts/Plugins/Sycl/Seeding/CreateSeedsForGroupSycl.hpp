@@ -10,23 +10,16 @@
 
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 
-#include <memory>
 #include <vector>
-
-/// Forward declaration of incomplete type cl::sycl::queue
-inline namespace cl {
-namespace sycl {
-class queue;
-}
-};  // namespace cl
 
 namespace Acts::Sycl {
 
 /// @brief Seedfinding algorithm implemented with SYCL to offload computations
 /// to GPUs.
 void createSeedsForGroupSycl(
-    const std::shared_ptr<cl::sycl::queue>& q,
+    const QueueWrapper& wrappedQueue,
     const detail::DeviceSeedfinderConfig& configData,
     const DeviceExperimentCuts& deviceCuts,
     const std::vector<detail::DeviceSpacePoint>& bottomSPs,

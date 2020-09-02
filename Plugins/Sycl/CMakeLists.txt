@@ -7,18 +7,18 @@ add_library(
   ActsPluginSycl SHARED
   # header files
   include/Acts/Plugins/Sycl/Seeding/detail/Types.h
-  include/Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.h
+  include/Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp
   include/Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp
   include/Acts/Plugins/Sycl/Seeding/Seedfinder.hpp
   include/Acts/Plugins/Sycl/Seeding/Seedfinder.ipp
-  include/Acts/Plugins/Sycl/Utilities/CreateQueue.h
-  include/Acts/Plugins/Sycl/Utilities/DeviceSelector.h
-  include/Acts/Plugins/Sycl/Utilities/ListPlatforms.h
+  include/Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp
+  include/Acts/Plugins/Sycl/Utilities/ListPlatforms.hpp
+  include/Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp
   # implementation files
   src/Seeding/CreateSeedsForGroupSycl.cpp
-  src/Utilities/CreateQueue.cpp
   src/Utilities/ListPlatforms.cpp
   src/Utilities/DeviceSelector.cpp
+  src/Utilities/QueueWrapper.cpp
 )
 
 target_include_directories(

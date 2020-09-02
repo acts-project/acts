@@ -13,29 +13,53 @@
 #include <cmath>
 
 namespace Acts::Sycl {
+
 template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config,
-    const Acts::Sycl::DeviceExperimentCuts& cuts,
-    const std::string& device_name_substring)
-    : m_config(config), m_deviceCuts(cuts) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
+void Seedfinder<external_spacepoint_t>::init() {
   m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
                       (1 + 0.038 * std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
   m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
   m_config.minHelixDiameter2 =
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+}
 
-  m_seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
-  m_queue = createQueue(device_name_substring);
+template <typename external_spacepoint_t>
+Seedfinder<external_spacepoint_t>::Seedfinder(
+    Acts::SeedfinderConfig<external_spacepoint_t> config,
+    const Acts::Sycl::DeviceExperimentCuts& cuts)
+    : m_config(config),
+      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
+      m_deviceCuts(cuts),
+      m_wrappedQueue() {
+  init();
+}
+
+template <typename external_spacepoint_t>
+Seedfinder<external_spacepoint_t>::Seedfinder(
+    Acts::SeedfinderConfig<external_spacepoint_t> config,
+    const Acts::Sycl::DeviceExperimentCuts& cuts,
+    Acts::Sycl::QueueWrapper&& wrappedQueue)
+    : m_config(config),
+      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
+      m_deviceCuts(cuts),
+      m_wrappedQueue(std::move(wrappedQueue)) {
+  init();
+}
+
+template <typename external_spacepoint_t>
+Seedfinder<external_spacepoint_t>::Seedfinder(
+    Acts::SeedfinderConfig<external_spacepoint_t> config,
+    const Acts::Sycl::DeviceExperimentCuts& cuts,
+    const Acts::Sycl::QueueWrapper& wrappedQueue)
+    : m_config(config),
+      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
+      m_deviceCuts(cuts),
+      m_wrappedQueue(wrappedQueue) {
+  init();
 }
 
 template <typename external_spacepoint_t>
@@ -96,7 +120,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   std::vector<std::vector<detail::SeedData>> seeds;
 
-  createSeedsForGroupSycl(m_queue, deviceConfigData, m_deviceCuts,
+  createSeedsForGroupSycl(m_wrappedQueue, deviceConfigData, m_deviceCuts,
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
                           seeds);
 

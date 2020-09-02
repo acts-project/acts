@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -142,8 +143,8 @@ auto main(int argc, char** argv) -> int {
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(Acts::SeedFilterConfig(), &atlasCuts));
 
-  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(config, deviceAtlasCuts,
-                                                    cmdlTool.deviceName);
+  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
+      config, deviceAtlasCuts, Acts::Sycl::QueueWrapper(cmdlTool.deviceName));
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
   auto covarianceTool = [=](const SpacePoint& sp, float, float,
                             float_t) -> Acts::Vector2D {

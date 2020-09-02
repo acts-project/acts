@@ -41,7 +41,7 @@ uint32_t numWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
 }
 
 void createSeedsForGroupSycl(
-    const std::shared_ptr<cl::sycl::queue>& q,
+    const QueueWrapper& wrappedQueue,
     const detail::DeviceSeedfinderConfig& configData,
     const DeviceExperimentCuts& deviceCuts,
     const std::vector<detail::DeviceSpacePoint>& bottomSPs,
@@ -75,6 +75,7 @@ void createSeedsForGroupSycl(
   uint32_t edgesComb = 0;
 
   try {
+    auto q = wrappedQueue.getQueue();
     uint32_t globalBufferSize =
         q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
     uint32_t maxWorkGroupSize =
@@ -331,7 +332,7 @@ void createSeedsForGroupSycl(
 
                 const auto x = deltaX * cosPhiM + deltaY * sinPhiM;
                 const auto y = deltaY * cosPhiM - deltaX * sinPhiM;
-                const auto iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+                const auto iDeltaR2 = 1.f / (deltaX * deltaX + deltaY * deltaY);
                 const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
                 const auto cot_theta = -(deltaZ * iDeltaR);
 
@@ -374,7 +375,7 @@ void createSeedsForGroupSycl(
 
                 const auto x = deltaX * cosPhiM + deltaY * sinPhiM;
                 const auto y = deltaY * cosPhiM - deltaX * sinPhiM;
-                const auto iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+                const auto iDeltaR2 = 1.f / (deltaX * deltaX + deltaY * deltaY);
                 const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
                 const auto cot_theta = deltaZ * iDeltaR;
 
@@ -510,14 +511,14 @@ void createSeedsForGroupSycl(
                   const auto varianceRM = midSP.varR;
                   const auto varianceZM = midSP.varZ;
 
-                  auto iSinTheta2 = (1. + cotThetab * cotThetab);
+                  auto iSinTheta2 = (1.f + cotThetab * cotThetab);
                   auto scatteringInRegion2 =
                       configData.maxScatteringAngle2 * iSinTheta2;
                   scatteringInRegion2 *=
                       configData.sigmaScattering * configData.sigmaScattering;
                   auto error2 =
                       Ert + Erb +
-                      2 * (cotThetab * cotThetat * varianceRM + varianceZM) *
+                      2.f * (cotThetab * cotThetat * varianceRM + varianceZM) *
                           iDeltaRb * iDeltaRt;
                   auto deltaCotTheta = cotThetab - cotThetat;
                   auto deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -525,25 +526,25 @@ void createSeedsForGroupSycl(
                   deltaCotTheta = cl::sycl::abs(deltaCotTheta);
                   auto error = cl::sycl::sqrt(error2);
                   auto dCotThetaMinusError2 =
-                      deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
+                      deltaCotTheta2 + error2 - 2.f * deltaCotTheta * error;
                   auto dU = Ut - Ub;
 
-                  if ((!(deltaCotTheta2 - error2 > 0) ||
+                  if ((!(deltaCotTheta2 - error2 > 0.f) ||
                        !(dCotThetaMinusError2 > scatteringInRegion2)) &&
-                      !(dU == 0.)) {
+                      !(dU == 0.f)) {
                     auto A = (Vt - Vb) / dU;
-                    auto S2 = 1. + A * A;
+                    auto S2 = 1.f + A * A;
                     auto B = Vb - A * Ub;
                     auto B2 = B * B;
 
                     auto iHelixDiameter2 = B2 / S2;
                     auto pT2scatter =
-                        4 * iHelixDiameter2 * configData.pT2perRadius;
+                        4.f * iHelixDiameter2 * configData.pT2perRadius;
                     auto p2scatter = pT2scatter * iSinTheta2;
                     auto Im = cl::sycl::abs((A - B * rM) * rM);
 
                     if (!(S2 < B2 * configData.minHelixDiameter2) &&
-                        !((deltaCotTheta2 - error2 > 0) &&
+                        !((deltaCotTheta2 - error2 > 0.f) &&
                           (dCotThetaMinusError2 >
                            p2scatter * configData.sigmaScattering *
                                configData.sigmaScattering)) &&
@@ -667,14 +668,16 @@ void createSeedsForGroupSycl(
             q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
         e0.wait();
 
-        std::vector<detail::SeedData> hostSeedArray(sumSeeds);
-        auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
-                            sumSeeds * sizeof(detail::SeedData));
-        e1.wait();
+        if (sumSeeds != 0) {
+          std::vector<detail::SeedData> hostSeedArray(sumSeeds);
+          auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
+                              sumSeeds * sizeof(detail::SeedData));
+          e1.wait();
 
-        for (uint32_t t = 0; t < sumSeeds; ++t) {
-          auto m = hostSeedArray[t].middle;
-          seeds[m].push_back(hostSeedArray[t]);
+          for (uint32_t t = 0; t < sumSeeds; ++t) {
+            auto m = hostSeedArray[t].middle;
+            seeds[m].push_back(hostSeedArray[t]);
+          }
         }
       }
 

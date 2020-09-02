@@ -26,11 +26,11 @@ class DeviceExperimentCuts {
                    const detail::DeviceSpacePoint& /*middle*/,
                    const detail::DeviceSpacePoint& top) const {
     float weight = 0;
-    if (bottom.r > 150) {
-      weight = 400;
+    if (bottom.r > 150.f) {
+      weight = 400.f;
     }
-    if (top.r < 150) {
-      weight = 200;
+    if (top.r < 150.f) {
+      weight = 200.f;
     }
     return weight;
   };
@@ -43,7 +43,7 @@ class DeviceExperimentCuts {
   bool singleSeedCut(float weight, const detail::DeviceSpacePoint& bottom,
                      const detail::DeviceSpacePoint& /*middle*/,
                      const detail::DeviceSpacePoint& /*top*/) const {
-    return !(bottom.r > 150. && weight < 380.);
+    return !(bottom.r > 150.f && weight < 380.f);
   };
 };
 }  // namespace Acts::Sycl
