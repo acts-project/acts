@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(index_combination_generation_test) {
   }
 }  // namespace Acts
 
-using par_t = ParID_t;
+using par_t = BoundIndices;
 using Source = MinimalSourceLink;
 
 template <par_t... pars>
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(variant_bound_measurement_generation_test) {
   }
 }
 
-using freePar_t = FreeParametersIndices;
+using freePar_t = FreeIndices;
 
 template <freePar_t... pars>
 struct meas_factory2 {
