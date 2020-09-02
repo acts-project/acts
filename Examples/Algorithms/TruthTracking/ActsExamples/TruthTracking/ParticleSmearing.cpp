@@ -99,7 +99,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
     cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
     cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
-    cov(Acts::eT, Acts::eT) = sigmaT0 * sigmaT0;
+    cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
 
     parameters.emplace_back(std::make_optional(std::move(cov)), pos, mom,
                             particle.charge(), time);

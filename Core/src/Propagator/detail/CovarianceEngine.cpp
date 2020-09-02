@@ -209,7 +209,7 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   jacobianLocalToGlobal(1, eBoundLoc0) = cosPhi;
   jacobianLocalToGlobal(1, eBoundLoc1) = -sinPhi * cosTheta;
   jacobianLocalToGlobal(2, eBoundLoc1) = sinTheta;
-  jacobianLocalToGlobal(3, eT) = 1;
+  jacobianLocalToGlobal(3, eBoundTime) = 1;
   jacobianLocalToGlobal(4, eBoundPhi) = -sinTheta * sinPhi;
   jacobianLocalToGlobal(4, eBoundTheta) = cosTheta * cosPhi;
   jacobianLocalToGlobal(5, eBoundPhi) = sinTheta * cosPhi;

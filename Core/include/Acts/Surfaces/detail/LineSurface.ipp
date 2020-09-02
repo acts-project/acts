@@ -156,7 +156,7 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   // the local error components - given by the reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
-  jacobian(3, eT) = 1;
+  jacobian(3, eBoundTime) = 1;
   // the momentum components
   jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
   jacobian(4, eBoundTheta) = cos_theta * cos_phi;

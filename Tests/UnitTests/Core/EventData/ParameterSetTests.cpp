@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
                             eBoundTheta, eBoundQOverP>::projector() ==
                loc0_loc1_phi_theta_qop_proj));
   BOOST_CHECK((ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi,
-                            eBoundTheta, eBoundQOverP, eT>::projector() ==
+                            eBoundTheta, eBoundQOverP, eBoundTime>::projector() ==
                loc0_loc1_phi_theta_qop_t_proj));
 }
 

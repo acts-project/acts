@@ -55,7 +55,7 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
       lrad * (lcos_phi * rframe.block<3, 1>(0, 1) -
               lsin_phi * rframe.block<3, 1>(0, 0));
   // the time component
-  jacobian(3, eT) = 1;
+  jacobian(3, eBoundTime) = 1;
   // the momentum components
   jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
   jacobian(4, eBoundTheta) = cos_theta * cos_phi;

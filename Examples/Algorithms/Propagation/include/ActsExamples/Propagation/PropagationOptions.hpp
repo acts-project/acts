@@ -149,7 +149,7 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
                            Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eT, Acts::BoundIndices::eT) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime, Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Read if the offdiagonal parameters have been read
@@ -165,7 +165,7 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
                               Acts::BoundIndices::eBoundQOverP) = readOffd[3];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
-                              Acts::BoundIndices::eT) = readOffd[4];
+                              Acts::BoundIndices::eBoundTime) = readOffd[4];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
                               Acts::BoundIndices::eBoundPhi) = readOffd[5];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
@@ -173,19 +173,19 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
                               Acts::BoundIndices::eBoundQOverP) = readOffd[7];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
-                              Acts::BoundIndices::eT) = readOffd[8];
+                              Acts::BoundIndices::eBoundTime) = readOffd[8];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
                               Acts::BoundIndices::eBoundTheta) = readOffd[9];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
                               Acts::BoundIndices::eBoundQOverP) = readOffd[10];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
-                              Acts::BoundIndices::eT) = readOffd[11];
+                              Acts::BoundIndices::eBoundTime) = readOffd[11];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundTheta,
                               Acts::BoundIndices::eBoundQOverP) = readOffd[12];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundTheta,
-                              Acts::BoundIndices::eT) = readOffd[13];
+                              Acts::BoundIndices::eBoundTime) = readOffd[13];
       pAlgConfig.correlations(Acts::BoundIndices::eBoundQOverP,
-                              Acts::BoundIndices::eT) = readOffd[14];
+                              Acts::BoundIndices::eBoundTime) = readOffd[14];
     } else {
       /// Some pre-defined values (non-trivial helical correlations)
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,

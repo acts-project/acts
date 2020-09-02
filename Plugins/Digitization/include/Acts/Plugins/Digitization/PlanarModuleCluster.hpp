@@ -30,7 +30,7 @@ using Measurement_t = Measurement<Identifier, BoundIndices, params...>;
 
 class PlanarModuleCluster
     : public Measurement_t<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
-                           BoundIndices::eT> {
+                           BoundIndices::eBoundTime> {
  public:
   /// Constructor from DigitizationCells
   ///
@@ -47,7 +47,7 @@ class PlanarModuleCluster
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
       : Measurement_t<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
-                      BoundIndices::eT>(std::move(mSurface),
+                      BoundIndices::eBoundTime>(std::move(mSurface),
                                         identifier,  // original measurement
                                         std::move(cov), loc0, loc1, t),
         m_digitizationCells(std::move(dCells)),
