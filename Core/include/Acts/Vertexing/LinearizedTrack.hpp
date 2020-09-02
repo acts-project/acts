@@ -48,8 +48,7 @@ struct LinearizedTrack {
                   const BoundSymMatrix& parCovarianceAtPCA,
                   const BoundSymMatrix& parWeightAtPCA,
                   const Vector4D& linPoint,
-                  const ActsMatrix<BoundScalar, eBoundSize,
-                                   4>& posJacobian,
+                  const ActsMatrix<BoundScalar, eBoundSize, 4>& posJacobian,
                   const ActsMatrixD<eBoundSize, 3>& momJacobian,
                   const Vector4D& position, const Vector3D& momentum,
                   const BoundVector& constTerm)

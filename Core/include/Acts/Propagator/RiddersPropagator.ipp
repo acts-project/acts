@@ -199,8 +199,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
 template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
-    const std::array<std::vector<Acts::BoundVector>,
-                     Acts::eBoundSize>& derivatives,
+    const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
+        derivatives,
     const Acts::BoundSymMatrix& startCov,
     const std::vector<double>& deviations) const -> const Covariance {
   Jacobian jacobian;

@@ -21,8 +21,7 @@ GeometryContext tgContext = GeometryContext();
 using SourceLink = MinimalSourceLink;
 
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 using FittableMeasurement = FittableMeasurement<SourceLink>;
 
 BOOST_AUTO_TEST_CASE(getSurface_test) {
@@ -34,8 +33,8 @@ BOOST_AUTO_TEST_CASE(getSurface_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
 
@@ -52,16 +51,16 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2u);
 
   ActsSymMatrixD<3> cov3;
   cov.setRandom();
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1, BoundIndices::eT> m2(
-      cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1, BoundIndices::eT>
+      m2(cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
   fm = m2;
 
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 3u);
@@ -72,8 +71,8 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   MinimalSourceLink msl{&fm};

@@ -27,8 +27,7 @@ using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 using SourceLink = MinimalSourceLink;
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

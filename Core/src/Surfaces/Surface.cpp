@@ -98,8 +98,8 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // jacToLocal*derivatives*alignToPath
   alignToBound.block<2, eAlignmentParametersSize>(eLOC_0, eAlignmentCenter0) =
       loc3DToLocBound * alignToLoc3D +
-      jacToLocal.block<2, eFreeSize>(eLOC_0, eFreePos0) *
-          derivatives * alignToPath;
+      jacToLocal.block<2, eFreeSize>(eLOC_0, eFreePos0) * derivatives *
+          alignToPath;
   // -> For bound track parameters ePHI, eTHETA, eQOP, eT, it's
   // jacToLocal*derivatives*alignToPath
   alignToBound.block<4, eAlignmentParametersSize>(ePHI, eAlignmentCenter0) =

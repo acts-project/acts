@@ -77,9 +77,12 @@ void Acts::GaussianTrackDensity<input_track_t>::addTracks(
     const double z0 = boundParams.parameters()[BoundIndices::eLOC_Z0];
     // Get track covariance
     const auto perigeeCov = *(boundParams.covariance());
-    const double covDD = perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0);
-    const double covZZ = perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0);
-    const double covDZ = perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_Z0);
+    const double covDD =
+        perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0);
+    const double covZZ =
+        perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0);
+    const double covDZ =
+        perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_Z0);
     const double covDeterminant = (perigeeCov.block<2, 2>(0, 0)).determinant();
 
     // Do track selection based on track cov matrix and m_cfg.d0SignificanceCut

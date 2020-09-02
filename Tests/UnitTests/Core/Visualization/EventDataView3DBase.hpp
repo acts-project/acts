@@ -46,8 +46,7 @@ using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);

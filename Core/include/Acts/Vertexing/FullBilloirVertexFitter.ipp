@@ -19,8 +19,7 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  using Jacobian = Acts::ActsMatrix<Acts::BoundScalar,
-                                    Acts::eBoundSize, 4>;
+  using Jacobian = Acts::ActsMatrix<Acts::BoundScalar, Acts::eBoundSize, 4>;
 
   BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
@@ -30,13 +29,13 @@ struct BilloirTrack {
   const input_track_t* originalTrack;
   Acts::LinearizedTrack linTrack;
   double chi2;
-  Jacobian DiMat;                                          // position jacobian
+  Jacobian DiMat;                                // position jacobian
   Acts::ActsMatrixD<Acts::eBoundSize, 3> EiMat;  // momentum jacobian
-  Acts::ActsSymMatrixD<3> CiMat;   //  = EtWmat * Emat (see below)
-  Acts::ActsMatrixD<4, 3> BiMat;   //  = DiMat^T * Wi * EiMat
-  Acts::ActsSymMatrixD<3> CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
-  Acts::Vector3D UiVec;            //  = EiMat^T * Wi * dqi
-  Acts::ActsMatrixD<4, 3> BCiMat;  //  = BiMat * Ci^-1
+  Acts::ActsSymMatrixD<3> CiMat;                 //  = EtWmat * Emat (see below)
+  Acts::ActsMatrixD<4, 3> BiMat;                 //  = DiMat^T * Wi * EiMat
+  Acts::ActsSymMatrixD<3> CiInv;                 //  = (EiMat^T * Wi * EiMat)^-1
+  Acts::Vector3D UiVec;                          //  = EiMat^T * Wi * dqi
+  Acts::ActsMatrixD<4, 3> BCiMat;                //  = BiMat * Ci^-1
   Acts::BoundVector deltaQ;
 };
 

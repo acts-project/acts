@@ -140,10 +140,8 @@ template <typename source_link_t, size_t M, bool ReadOnly = true>
 class TrackStateProxy {
  public:
   using SourceLink = source_link_t;
-  using Parameters =
-      typename Types<eBoundSize, ReadOnly>::CoefficientsMap;
-  using Covariance =
-      typename Types<eBoundSize, ReadOnly>::CovarianceMap;
+  using Parameters = typename Types<eBoundSize, ReadOnly>::CoefficientsMap;
+  using Covariance = typename Types<eBoundSize, ReadOnly>::CovarianceMap;
   using Measurement = typename Types<M, ReadOnly>::CoefficientsMap;
   using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
 
@@ -152,8 +150,8 @@ class TrackStateProxy {
   // @TODO: Does not copy flags, because this fails: can't have col major row
   // vector, but that's required for 1xN projection matrices below.
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
-  using Projector = Eigen::Matrix<typename Covariance::Scalar, M,
-                                  eBoundSize, ProjectorFlags>;
+  using Projector =
+      Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
   using EffectiveProjector =
       Eigen::Matrix<typename Projector::Scalar, Eigen::Dynamic, Eigen::Dynamic,
                     ProjectorFlags, M, eBoundSize>;
@@ -357,8 +355,7 @@ class TrackStateProxy {
     assert(dataref.iprojector != IndexData::kInvalid);
 
     static_assert(rows <= M, "Given projector has too many rows");
-    static_assert(cols <= eBoundSize,
-                  "Given projector has too many columns");
+    static_assert(cols <= eBoundSize, "Given projector has too many columns");
 
     // set up full size projector with only zeros
     typename TrackStateProxy::Projector fullProjector =
@@ -447,12 +444,11 @@ class TrackStateProxy {
   /// @param meas The measurement object to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             BoundIndices... params>
-  void setCalibrated(const Acts::Measurement<SourceLink, BoundIndices,
-                                             params...>& meas) {
+  void setCalibrated(
+      const Acts::Measurement<SourceLink, BoundIndices, params...>& meas) {
     IndexData& dataref = data();
     constexpr size_t measdim =
-        Acts::Measurement<SourceLink, BoundIndices,
-                          params...>::size();
+        Acts::Measurement<SourceLink, BoundIndices, params...>::size();
 
     dataref.measdim = measdim;
 
@@ -490,8 +486,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>,
             BoundIndices... params>
   void resetCalibrated(
-      const Acts::Measurement<SourceLink, BoundIndices, params...>&
-          meas) {
+      const Acts::Measurement<SourceLink, BoundIndices, params...>& meas) {
     IndexData& dataref = data();
     auto& traj = *m_traj;
     // force reallocate, whether currently invalid or shared index
@@ -614,8 +609,7 @@ class MultiTrajectory {
   using TrackStateProxy =
       detail_lt::TrackStateProxy<SourceLink, MeasurementSizeMax, false>;
 
-  using ProjectorBitset =
-      std::bitset<eBoundSize * MeasurementSizeMax>;
+  using ProjectorBitset = std::bitset<eBoundSize * MeasurementSizeMax>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;

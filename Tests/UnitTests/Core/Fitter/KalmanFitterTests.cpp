@@ -67,8 +67,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -256,8 +255,7 @@ struct MinimalOutlierFinder {
 
           // Take the projector (measurement mapping function)
           const ActsMatrixD<measdim, eBoundSize> H =
-              state.projector()
-                  .template topLeftCorner<measdim, eBoundSize>();
+              state.projector().template topLeftCorner<measdim, eBoundSize>();
 
           // Calculate the residual
           const par_t residual = calibrated - H * predicted;

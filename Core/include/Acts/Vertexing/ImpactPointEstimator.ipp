@@ -297,8 +297,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   newIPandSigma.IPd0 = d0;
   double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
   if (d0_PVcontrib >= 0) {
-    newIPandSigma.sigmad0 = std::sqrt(
-        d0_PVcontrib + perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0));
+    newIPandSigma.sigmad0 =
+        std::sqrt(d0_PVcontrib +
+                  perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0));
     newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
     newIPandSigma.sigmad0 =
@@ -307,10 +308,14 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   SymMatrix2D covPerigeeZ0Theta;
-  covPerigeeZ0Theta(0, 0) = perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0);
-  covPerigeeZ0Theta(0, 1) = perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eTHETA);
-  covPerigeeZ0Theta(1, 0) = perigeeCov(BoundIndices::eTHETA, BoundIndices::eLOC_Z0);
-  covPerigeeZ0Theta(1, 1) = perigeeCov(BoundIndices::eTHETA, BoundIndices::eTHETA);
+  covPerigeeZ0Theta(0, 0) =
+      perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0);
+  covPerigeeZ0Theta(0, 1) =
+      perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eTHETA);
+  covPerigeeZ0Theta(1, 0) =
+      perigeeCov(BoundIndices::eTHETA, BoundIndices::eLOC_Z0);
+  covPerigeeZ0Theta(1, 1) =
+      perigeeCov(BoundIndices::eTHETA, BoundIndices::eTHETA);
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
@@ -324,8 +329,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
     newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 =
-        std::sqrt(vtxZZCov + perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0));
+    newIPandSigma.sigmaz0 = std::sqrt(
+        vtxZZCov + perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0));
     newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     // Remove contribution from PV

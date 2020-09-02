@@ -48,6 +48,5 @@ using AlingmentMatrix =
 using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
 using AlignmentToBoundMatrix =
-    ActsMatrix<BoundScalar, eBoundSize,
-               eAlignmentParametersSize>;
+    ActsMatrix<BoundScalar, eBoundSize, eAlignmentParametersSize>;
 }  // namespace Acts

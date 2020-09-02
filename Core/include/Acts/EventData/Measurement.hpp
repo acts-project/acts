@@ -358,8 +358,7 @@ struct fittable_measurement_helper {
     using type = Measurement<source_link_t, BoundIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<BoundIndices, meas_factory>;
+  using type = typename detail::type_generator_t<BoundIndices, meas_factory>;
 };
 
 template <typename source_link_t>
@@ -369,8 +368,7 @@ struct fittable_volume_measurement_helper {
     using type = Measurement<source_link_t, FreeIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<FreeIndices, meas_factory>;
+  using type = typename detail::type_generator_t<FreeIndices, meas_factory>;
 };
 
 /**

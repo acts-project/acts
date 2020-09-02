@@ -21,8 +21,7 @@ namespace Test {
 using SourceLink = MinimalSourceLink;
 
 template <BoundIndices... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///
@@ -31,11 +30,11 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(cylinder, {}, cov, -0.1,
-                                                    0.45);
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m(
+      cylinder, {}, cov, -0.1, 0.45);
 
-  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m_vec(cylinder, {}, cov,
-                                                        {-0.1, 0.45});
+  MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1> m_vec(
+      cylinder, {}, cov, {-0.1, 0.45});
 
   std::default_random_engine generator(42);
 
@@ -65,8 +64,8 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   // The parameters should be identical though
   BOOST_CHECK_EQUAL(mc.parameters(), mcAssigned.parameters());
 
-  std::vector<MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1>> caMeasurements{
-      std::move(mcCopy), std::move(mcAssigned)};
+  std::vector<MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1>>
+      caMeasurements{std::move(mcCopy), std::move(mcAssigned)};
 
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),
                                                  Vector3D(1., 0., 0.));

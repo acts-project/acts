@@ -26,11 +26,11 @@ using Identifier = Acts::MinimalSourceLink;
 namespace Acts {
 
 template <BoundIndices... params>
-using Measurement_t =
-    Measurement<Identifier, BoundIndices, params...>;
+using Measurement_t = Measurement<Identifier, BoundIndices, params...>;
 
 class PlanarModuleCluster
-    : public Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1, BoundIndices::eT> {
+    : public Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1,
+                           BoundIndices::eT> {
  public:
   /// Constructor from DigitizationCells
   ///
@@ -46,9 +46,10 @@ class PlanarModuleCluster
                       double loc0, double loc1, double t,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1, BoundIndices::eT>(
-            std::move(mSurface), identifier,  // original measurement
-            std::move(cov), loc0, loc1, t),
+      : Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1,
+                      BoundIndices::eT>(std::move(mSurface),
+                                        identifier,  // original measurement
+                                        std::move(cov), loc0, loc1, t),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {}
 
