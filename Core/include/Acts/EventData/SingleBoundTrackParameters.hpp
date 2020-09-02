@@ -142,13 +142,31 @@ class SingleBoundTrackParameters {
     return m_paramSet.getUncertainty<kIndex>();
   }
 
+  /// Access space-time position four-vector.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  ///
+  /// This uses the associated surface to transform the local position on the
+  /// surface to globalcoordinates. This requires a geometry context to select
+  /// the appropriate transformation and might be a computationally expensive
+  /// operation.
+  Vector4D position4(const GeometryContext& geoCtx) const {
+    const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
+    const Vector3D dir =
+        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
+    Vector4D pos4 = Vector4D::Zero();
+    pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
+    pos4[eTime] = get<eBoundTime>();
+    return pos4;
+  }
   /// Access the spatial position vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   ///
-  /// This uses the associated surface to transform the local position to global
-  /// coordinates. This requires a geometry context to select the appropriate
-  /// transformation and might be a computationally expensive operation.
+  /// This uses the associated surface to transform the local position on the
+  /// surface to globalcoordinates. This requires a geometry context to select
+  /// the appropriate transformation and might be a computationally expensive
+  /// operation.
   Vector3D position(const GeometryContext& geoCtx) const {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =

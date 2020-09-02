@@ -68,14 +68,21 @@ class SingleCurvilinearTrackParameters
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
+  /// Access the space-time position four-vector.
+  ///
+  /// The surface is owned by the parameters object and thus is independent
+  /// from the geometry context.
+  Vector4D position4() const { return Base::position4(GeometryContext()); }
   /// Access the spatial position vector.
   ///
   /// The surface is owned by the parameters object and thus is independent
   /// from the geometry context.
   Vector3D position() const { return Base::position(GeometryContext()); }
-  // Make sure that the position access via geometry context is also available
-  // so that bound and curvilinear parameters can be used interchangeably.
+  // Make sure that the position{4} access via geometry context is also
+  // available so that bound and curvilinear parameters can be used
+  // interchangeably.
   using Base::position;
+  using Base::position4;
 };
 
 }  // namespace Acts

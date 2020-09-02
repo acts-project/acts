@@ -33,6 +33,7 @@ BOOST_DATA_TEST_CASE(
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
 
   const GeometryContext geoCtx;
+  const Vector4D pos4(x, y, z, time);
   const Vector3D pos(x, y, z);
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
@@ -46,6 +47,8 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.get<eBoundQOverP>(), qOverP, eps, eps);
 
+  CHECK_CLOSE_OR_SMALL(params.position4(geoCtx), pos4, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.position4(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
@@ -66,6 +69,7 @@ BOOST_DATA_TEST_CASE(
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
 
   const GeometryContext geoCtx;
+  const Vector4D pos4(x, y, z, time);
   const Vector3D pos(x, y, z);
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
@@ -79,6 +83,8 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.get<eBoundQOverP>(), 1 / p, eps, eps);
 
+  CHECK_CLOSE_OR_SMALL(params.position4(geoCtx), pos4, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.position4(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
