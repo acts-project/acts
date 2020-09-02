@@ -103,9 +103,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 # use only the CMake FindBoost module; avoids issues with the new cmake configs
 # that become available with Boost 1.70
 set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost 1.69 MODULE REQUIRED COMPONENTS program_options unit_test_framework)
+find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 3.2.9 CONFIG REQUIRED)
-find_package(Filesystem REQUIRED)
 
 # optional packages
 #
