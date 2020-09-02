@@ -89,8 +89,8 @@ class CylinderSurface : public Surface {
   /// @param bValue is the type of global binning to be done
   ///
   /// @return is the global position to be used for binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -100,9 +100,9 @@ class CylinderSurface : public Surface {
   /// @param position is the position where the measurement frame is defined
   /// @param momentum is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
-  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& momentum) const final;
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& momentum) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -116,8 +116,8 @@ class CylinderSurface : public Surface {
   /// requested
   ///
   /// @return normal vector at the local position by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
@@ -128,8 +128,8 @@ class CylinderSurface : public Surface {
   /// requested
   ///
   /// @return normal vector at the global position by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector3D& position) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector3D& position) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -139,7 +139,7 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @return  the z-Axis of transform
-  virtual const Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
+  virtual Vector3D rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the CylinderBounds by reference
   const CylinderBounds& bounds() const final;
@@ -212,7 +212,7 @@ class CylinderSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

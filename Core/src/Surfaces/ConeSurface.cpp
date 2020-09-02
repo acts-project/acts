@@ -50,7 +50,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
-const Acts::Vector3D Acts::ConeSurface::binningPosition(
+Acts::Vector3D Acts::ConeSurface::binningPosition(
     const GeometryContext& gctx, Acts::BinningValue bValue) const {
   const Vector3D& sfCenter = center(gctx);
 
@@ -76,12 +76,12 @@ Acts::ConeSurface& Acts::ConeSurface::operator=(const ConeSurface& other) {
   return *this;
 }
 
-const Acts::Vector3D Acts::ConeSurface::rotSymmetryAxis(
+Acts::Vector3D Acts::ConeSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
 }
 
-const Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
+Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   RotationMatrix3D mFrame;
@@ -148,7 +148,7 @@ std::string Acts::ConeSurface::name() const {
   return "Acts::ConeSurface";
 }
 
-const Acts::Vector3D Acts::ConeSurface::normal(
+Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi =
@@ -162,8 +162,8 @@ const Acts::Vector3D Acts::ConeSurface::normal(
                      : localNormal;
 }
 
-const Acts::Vector3D Acts::ConeSurface::normal(
-    const GeometryContext& gctx, const Acts::Vector3D& position) const {
+Acts::Vector3D Acts::ConeSurface::normal(const GeometryContext& gctx,
+                                         const Acts::Vector3D& position) const {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
   Vector3D pos3D = position;

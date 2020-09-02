@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector2D DiscSurface::localPolarToCartesian(
+inline Vector2D DiscSurface::localPolarToCartesian(
     const Vector2D& lpolar) const {
   return Vector2D(lpolar[eLOC_R] * cos(lpolar[eLOC_PHI]),
                   lpolar[eLOC_R] * sin(lpolar[eLOC_PHI]));
 }
 
-inline const Vector2D DiscSurface::localCartesianToPolar(
+inline Vector2D DiscSurface::localCartesianToPolar(
     const Vector2D& lcart) const {
   return Vector2D(
       sqrt(lcart[eLOC_X] * lcart[eLOC_X] + lcart[eLOC_Y] * lcart[eLOC_Y]),
@@ -65,7 +65,7 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eQOP) = 1;
 }
 
-inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
+inline RotationMatrix3D DiscSurface::initJacobianToLocal(
     const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
     const Vector3D& position, const Vector3D& direction) const {
   using VectorHelpers::perp;
@@ -137,7 +137,7 @@ inline SurfaceIntersection DiscSurface::intersect(
   return {intersection, this};
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;
@@ -157,15 +157,15 @@ DiscSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline const Vector3D DiscSurface::normal(const GeometryContext& gctx,
-                                          const Vector2D& /*unused*/) const {
+inline Vector3D DiscSurface::normal(const GeometryContext& gctx,
+                                    const Vector2D& /*unused*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D DiscSurface::binningPosition(const GeometryContext& gctx,
-                                                   BinningValue bValue) const {
+inline Vector3D DiscSurface::binningPosition(const GeometryContext& gctx,
+                                             BinningValue bValue) const {
   if (bValue == binR) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();

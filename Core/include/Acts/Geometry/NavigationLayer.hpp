@@ -47,8 +47,8 @@ class NavigationLayer : public Layer {
   ///  - as default the center is given, but may be overloaded
   ///
   /// @return The return vector can be used for binning in a TrackingVolume
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -115,8 +115,8 @@ inline Surface& NavigationLayer::surfaceRepresentation() {
   return *(const_cast<Surface*>(m_surfaceRepresentation.get()));
 }
 
-inline const Vector3D NavigationLayer::binningPosition(
-    const GeometryContext& gctx, BinningValue bValue) const {
+inline Vector3D NavigationLayer::binningPosition(const GeometryContext& gctx,
+                                                 BinningValue bValue) const {
   return m_surfaceRepresentation->binningPosition(gctx, bValue);
 }
 
