@@ -27,11 +27,11 @@ namespace Acts::Sycl {
 /// to GPUs.
 void createSeedsForGroupSycl(
     const std::shared_ptr<cl::sycl::queue>& q,
-    const detail::deviceSeedfinderConfig& configData,
+    const detail::DeviceSeedfinderConfig& configData,
     const DeviceExperimentCuts& deviceCuts,
-    const std::vector<detail::deviceSpacePoint>& bottomSPs,
-    const std::vector<detail::deviceSpacePoint>& middleSPs,
-    const std::vector<detail::deviceSpacePoint>& topSPs,
+    const std::vector<detail::DeviceSpacePoint>& bottomSPs,
+    const std::vector<detail::DeviceSpacePoint>& middleSPs,
+    const std::vector<detail::DeviceSpacePoint>& topSPs,
     std::vector<std::vector<detail::SeedData>>& seeds);
 
 }  // namespace Acts::Sycl

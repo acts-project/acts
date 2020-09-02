@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace Acts::Sycl::detail {
-struct deviceSpacePoint {
+struct DeviceSpacePoint {
   float x;
   float y;
   float z;
@@ -21,7 +21,7 @@ struct deviceSpacePoint {
 };
 
 // Parameters required to calculate circle with linear equation.
-struct deviceLinEqCircle {
+struct DeviceLinEqCircle {
   float zo;
   float cotTheta;
   float iDeltaR;
@@ -31,7 +31,7 @@ struct deviceLinEqCircle {
 };
 
 // Predefined parameters for Seedfinder and SeedFilter classes
-struct deviceSeedfinderConfig {
+struct DeviceSeedfinderConfig {
   float deltaRMin;
   float deltaRMax;
   float cotThetaMax;

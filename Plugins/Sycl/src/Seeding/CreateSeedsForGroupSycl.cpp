@@ -6,7 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
+
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
 
 #include <algorithm>
@@ -41,12 +42,12 @@ uint32_t numWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
 
 void createSeedsForGroupSycl(
     const std::shared_ptr<cl::sycl::queue>& q,
-    const detail::deviceSeedfinderConfig& configData,
+    const detail::DeviceSeedfinderConfig& configData,
     const DeviceExperimentCuts& deviceCuts,
-    const std::vector<detail::deviceSpacePoint>& bottomSPs,
-    const std::vector<detail::deviceSpacePoint>& middleSPs,
-    const std::vector<detail::deviceSpacePoint>& topSPs,
-    std::vector<std::vector<SeedData>>& seeds) {
+    const std::vector<detail::DeviceSpacePoint>& bottomSPs,
+    const std::vector<detail::DeviceSpacePoint>& middleSPs,
+    const std::vector<detail::DeviceSpacePoint>& topSPs,
+    std::vector<std::vector<detail::SeedData>>& seeds) {
   // Each vector stores data of space points in simplified
   // structures of float variables
   // M: number of middle space points
@@ -74,21 +75,18 @@ void createSeedsForGroupSycl(
   uint32_t edgesComb = 0;
 
   try {
-    using am = cl::sycl::access::mode;
-    using at = cl::sycl::access::target;
-
     uint32_t globalBufferSize =
         q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
     uint32_t maxWorkGroupSize =
         q->get_device().get_info<cl::sycl::info::device::max_work_group_size>();
 
     // Device allocations
-    detail::deviceSpacePoint* deviceBottomSPs =
-        cl::sycl::malloc_device<detail::deviceSpacePoint>(B, *q);
-    detail::deviceSpacePoint* deviceMiddleSPs =
-        cl::sycl::malloc_device<detail::deviceSpacePoint>(M, *q);
-    detail::deviceSpacePoint* deviceTopSPs =
-        cl::sycl::malloc_device<detail::deviceSpacePoint>(T, *q);
+    detail::DeviceSpacePoint* deviceBottomSPs =
+        cl::sycl::malloc_device<detail::DeviceSpacePoint>(B, *q);
+    detail::DeviceSpacePoint* deviceMiddleSPs =
+        cl::sycl::malloc_device<detail::DeviceSpacePoint>(M, *q);
+    detail::DeviceSpacePoint* deviceTopSPs =
+        cl::sycl::malloc_device<detail::DeviceSpacePoint>(T, *q);
 
     // Count compatible bottom/top space points per middle space point.
     std::atomic_uint32_t* deviceCountBotDuplets =
@@ -106,11 +104,11 @@ void createSeedsForGroupSycl(
     uint32_t* deviceTmpIndTop = cl::sycl::malloc_device<uint32_t>(M * T, *q);
 
     q->memcpy(deviceBottomSPs, bottomSPs.data(),
-              sizeof(detail::deviceSpacePoint) * (B));
+              sizeof(detail::DeviceSpacePoint) * (B));
     q->memcpy(deviceMiddleSPs, middleSPs.data(),
-              sizeof(detail::deviceSpacePoint) * (M));
+              sizeof(detail::DeviceSpacePoint) * (M));
     q->memcpy(deviceTopSPs, topSPs.data(),
-              sizeof(detail::deviceSpacePoint) * (T));
+              sizeof(detail::DeviceSpacePoint) * (T));
     q->memset(deviceCountBotDuplets, 0, M * sizeof(std::atomic_uint32_t));
     q->memset(deviceCountTopDuplets, 0, M * sizeof(std::atomic_uint32_t));
 
@@ -254,10 +252,10 @@ void createSeedsForGroupSycl(
       uint32_t* deviceSumComb = cl::sycl::malloc_device<uint32_t>(M + 1, *q);
 
       // Allocations for coordinate transformation.
-      deviceLinEqCircle* deviceLinBot =
-          cl::sycl::malloc_device<deviceLinEqCircle>(edgesBottom, *q);
-      deviceLinEqCircle* deviceLinTop =
-          cl::sycl::malloc_device<deviceLinEqCircle>(edgesTop, *q);
+      detail::DeviceLinEqCircle* deviceLinBot =
+          cl::sycl::malloc_device<detail::DeviceLinEqCircle>(edgesBottom, *q);
+      detail::DeviceLinEqCircle* deviceLinTop =
+          cl::sycl::malloc_device<detail::DeviceLinEqCircle>(edgesTop, *q);
 
       q->memcpy(deviceMidIndPerBot, indMidBotComp.data(),
                 sizeof(uint32_t) * edgesBottom);
@@ -337,7 +335,7 @@ void createSeedsForGroupSycl(
                 const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
                 const auto cot_theta = -(deltaZ * iDeltaR);
 
-                deviceLinEqCircle L;
+                detail::DeviceLinEqCircle L;
                 L.cotTheta = cot_theta;
                 L.zo = zM - rM * cot_theta;
                 L.iDeltaR = iDeltaR;
@@ -380,7 +378,7 @@ void createSeedsForGroupSycl(
                 const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
                 const auto cot_theta = deltaZ * iDeltaR;
 
-                deviceLinEqCircle L;
+                detail::DeviceLinEqCircle L;
                 L.cotTheta = cot_theta;
                 L.zo = zM - rM * cot_theta;
                 L.iDeltaR = iDeltaR;
@@ -403,19 +401,20 @@ void createSeedsForGroupSycl(
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-      const auto maxMemoryAllocation =
-          std::min(edgesComb,
-                   globalBufferSize /
-                       uint32_t((sizeof(TripletData) + sizeof(SeedData)) * 2));
+      const auto maxMemoryAllocation = std::min(
+          edgesComb, globalBufferSize / uint32_t((sizeof(detail::TripletData) +
+                                                  sizeof(detail::SeedData)) *
+                                                 2));
 
-      TripletData* deviceCurvImpact =
-          cl::sycl::malloc_device<TripletData>(maxMemoryAllocation, (*q));
+      detail::TripletData* deviceCurvImpact =
+          cl::sycl::malloc_device<detail::TripletData>(maxMemoryAllocation,
+                                                       (*q));
 
       // Reserve memory in advance for seed indices and weight
       // Other way around would allocating it inside the loop
       // -> less memory usage, but more frequent allocation and deallocation
-      SeedData* deviceSeedArray =
-          cl::sycl::malloc_device<SeedData>(maxMemoryAllocation, *q);
+      detail::SeedData* deviceSeedArray =
+          cl::sycl::malloc_device<detail::SeedData>(maxMemoryAllocation, *q);
 
       uint32_t* tripletSearchOffset = cl::sycl::malloc_device<uint32_t>(1, *q);
 
@@ -478,7 +477,7 @@ void createSeedsForGroupSycl(
                   }
                   mid = L;
 
-                  TripletData T = {MIN, MIN};
+                  detail::TripletData T = {MIN, MIN};
                   deviceCurvImpact[idx] = T;
                   const auto numT = deviceNumTopDuplets[mid];
 
@@ -652,7 +651,7 @@ void createSeedsForGroupSycl(
                    if (deviceCuts.singleSeedCut(weight, bottomSP, middleSP,
                                                 topSP)) {
                      const auto i = countSeeds[0].fetch_add(1);
-                     SeedData D;
+                     detail::SeedData D;
                      D.bottom = bot;
                      D.top = top;
                      D.middle = mid;
@@ -668,9 +667,9 @@ void createSeedsForGroupSycl(
             q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
         e0.wait();
 
-        std::vector<SeedData> hostSeedArray(sumSeeds);
+        std::vector<detail::SeedData> hostSeedArray(sumSeeds);
         auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
-                            sumSeeds * sizeof(SeedData));
+                            sumSeeds * sizeof(detail::SeedData));
         e1.wait();
 
         for (uint32_t t = 0; t < sumSeeds; ++t) {

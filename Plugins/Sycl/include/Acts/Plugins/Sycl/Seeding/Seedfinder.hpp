@@ -46,6 +46,7 @@ class Seedfinder {
 
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFilterConfig m_seedFilterConfig;
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
   std::shared_ptr<cl::sycl::queue> m_queue;
 };

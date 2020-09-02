@@ -6,14 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.h"
+#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace Acts::Sycl {
-using namespace Acts::Sycl::detail;
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
@@ -35,6 +34,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
 
+  m_seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
   m_queue = createQueue(device_name_substring);
 }
 
@@ -45,9 +45,9 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  std::vector<deviceSpacePoint> deviceBottomSPs;
-  std::vector<deviceSpacePoint> deviceMiddleSPs;
-  std::vector<deviceSpacePoint> deviceTopSPs;
+  std::vector<detail::DeviceSpacePoint> deviceBottomSPs;
+  std::vector<detail::DeviceSpacePoint> deviceMiddleSPs;
+  std::vector<detail::DeviceSpacePoint> deviceTopSPs;
 
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*>
       bottomSPvec;
@@ -57,28 +57,26 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   for (auto SP : bottomSPs) {
     bottomSPvec.push_back(SP);
-    deviceBottomSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
-                                               SP->radius(), SP->varianceR(),
-                                               SP->varianceZ()});
+    deviceBottomSPs.push_back(
+        detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+                                 SP->varianceR(), SP->varianceZ()});
   }
 
   for (auto SP : middleSPs) {
     middleSPvec.push_back(SP);
-    deviceMiddleSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
-                                               SP->radius(), SP->varianceR(),
-                                               SP->varianceZ()});
+    deviceMiddleSPs.push_back(
+        detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+                                 SP->varianceR(), SP->varianceZ()});
   }
 
   for (auto SP : topSPs) {
     topSPvec.push_back(SP);
-    deviceTopSPs.push_back(deviceSpacePoint{SP->x(), SP->y(), SP->z(),
-                                            SP->radius(), SP->varianceR(),
-                                            SP->varianceZ()});
+    deviceTopSPs.push_back(
+        detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
+                                 SP->varianceR(), SP->varianceZ()});
   }
 
-  auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
-
-  const deviceSeedfinderConfig deviceConfigData = {
+  const auto deviceConfigData = detail::DeviceSeedfinderConfig{
       m_config.deltaRMin,
       m_config.deltaRMax,
       m_config.cotThetaMax,
@@ -88,15 +86,15 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       m_config.sigmaScattering,
       m_config.minHelixDiameter2,
       m_config.pT2perRadius,
-      seedFilterConfig.deltaInvHelixDiameter,
-      seedFilterConfig.impactWeightFactor,
-      seedFilterConfig.deltaRMin,
-      seedFilterConfig.compatSeedWeight,
+      m_seedFilterConfig.deltaInvHelixDiameter,
+      m_seedFilterConfig.impactWeightFactor,
+      m_seedFilterConfig.deltaRMin,
+      m_seedFilterConfig.compatSeedWeight,
       m_config.impactMax,
-      seedFilterConfig.compatSeedLimit,
+      m_seedFilterConfig.compatSeedLimit,
   };
 
-  std::vector<std::vector<SeedData>> seeds;
+  std::vector<std::vector<detail::SeedData>> seeds;
 
   createSeedsForGroupSycl(m_queue, deviceConfigData, m_deviceCuts,
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
