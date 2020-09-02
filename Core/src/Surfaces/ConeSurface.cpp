@@ -106,9 +106,9 @@ Acts::Vector3D Acts::ConeSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
-  double r = lposition[Acts::eLOC_Z] * bounds().tanAlpha();
-  double phi = lposition[Acts::eLOC_RPHI] / r;
-  Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
+  double phi = lposition[Acts::eBoundLoc0] / r;
+  Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eBoundLoc1]);
   return transform(gctx) * loc3Dframe;
 }
 
@@ -152,8 +152,8 @@ Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi =
-             lposition[Acts::eLOC_RPHI] / (bounds().r(lposition[Acts::eLOC_Z])),
-         sgn = lposition[Acts::eLOC_Z] > 0 ? -1. : +1.;
+             lposition[Acts::eBoundLoc0] / (bounds().r(lposition[Acts::eBoundLoc1])),
+         sgn = lposition[Acts::eBoundLoc1] > 0 ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3D localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha,

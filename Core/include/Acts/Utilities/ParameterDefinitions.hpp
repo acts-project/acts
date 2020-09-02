@@ -55,27 +55,6 @@ enum BoundIndices : unsigned int {
   eBoundTime = 5,
   // Last uninitialized value contains the total number of components
   eBoundSize,
-  // The following aliases without prefix exist for historical reasons
-  // Generic spatial coordinates on the local surface
-  eLOC_0 = eBoundLoc0,
-  eLOC_1 = eBoundLoc1,
-  // Spatial coordinates on a disk in polar coordinates
-  eLOC_R = eLOC_0,
-  eLOC_PHI = eLOC_1,
-  // Spatial coordinates on a disk in Cartesian coordinates
-  eLOC_X = eLOC_0,
-  eLOC_Y = eLOC_1,
-  // Spatial coordinates on a cylinder
-  eLOC_RPHI = eLOC_0,
-  eLOC_Z = eLOC_1,
-  // Closest approach coordinates on a virtual perigee surface
-  eLOC_D0 = eLOC_0,
-  eLOC_Z0 = eLOC_1,
-  // Direction angles
-  ePHI = eBoundPhi,
-  eTHETA = eBoundTheta,
-  eQOP = eBoundQOverP,
-  eT = eBoundTime,
 };
 
 /// Underlying fundamental scalar type for bound track parameters.
@@ -135,26 +114,10 @@ static_assert(6 <= FreeIndices::eFreeSize,
 static_assert(std::is_floating_point_v<FreeScalar>,
               "'FreeScalar' must be a floating point type");
 
-// Ensure bound track parameter components/ indices are consistently defined.
-static_assert(eLOC_0 != eLOC_1, "Local parameters must be differents");
-static_assert(eLOC_R == eLOC_0 or eLOC_R == eLOC_1,
-              "Local radius must be a local parameter");
-static_assert(eLOC_PHI == eLOC_0 or eLOC_PHI == eLOC_1,
-              "Local phi must be a local parameter");
-static_assert(eLOC_RPHI == eLOC_0 or eLOC_RPHI == eLOC_1,
-              "Local r*phi must be a local parameter");
-static_assert(eLOC_Z == eLOC_0 or eLOC_Z == eLOC_1,
-              "Local z must be a local parameter");
-static_assert(eLOC_X == eLOC_0 or eLOC_X == eLOC_1,
-              "Local x must be a local parameter");
-static_assert(eLOC_Y == eLOC_0 or eLOC_Y == eLOC_1,
-              "Local y must be a local parameter");
-static_assert(eLOC_D0 == eLOC_0 or eLOC_D0 == eLOC_1,
-              "D0 must be a local parameter");
-static_assert(eLOC_Z0 == eLOC_0 or eLOC_Z0 == eLOC_1,
-              "Z0 must be a local parameter");
+// Ensure bound track parameter indices are consistently defined.
+static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be differents");
 
-// Ensure free track parameter components/ indices are consistently defined.
+// Ensure free track parameter indices are consistently defined.
 static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
 static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
 static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");

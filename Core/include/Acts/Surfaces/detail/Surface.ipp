@@ -67,12 +67,12 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   // the time component
   jacobian(3, eT) = 1;
   // the momentum components
-  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(4, eTHETA) = cos_theta * cos_phi;
-  jacobian(5, ePHI) = sin_theta * cos_phi;
-  jacobian(5, eTHETA) = cos_theta * sin_phi;
-  jacobian(6, eTHETA) = (-sin_theta);
-  jacobian(7, eQOP) = 1;
+  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
+  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
+  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
+  jacobian(6, eBoundTheta) = (-sin_theta);
+  jacobian(7, eBoundQOverP) = 1;
 }
 
 inline RotationMatrix3D Surface::initJacobianToLocal(
@@ -96,12 +96,12 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
   // Time component
   jacobian(eT, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 4) = -sinPhi * invSinTheta;
-  jacobian(ePHI, 5) = cosPhi * invSinTheta;
-  jacobian(eTHETA, 4) = cosPhi * cosTheta;
-  jacobian(eTHETA, 5) = sinPhi * cosTheta;
-  jacobian(eTHETA, 6) = -sinTheta;
-  jacobian(eQOP, 7) = 1;
+  jacobian(eBoundPhi, 4) = -sinPhi * invSinTheta;
+  jacobian(eBoundPhi, 5) = cosPhi * invSinTheta;
+  jacobian(eBoundTheta, 4) = cosPhi * cosTheta;
+  jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
+  jacobian(eBoundTheta, 6) = -sinTheta;
+  jacobian(eBoundQOverP, 7) = 1;
   // return the frame where this happened
   return rframeT;
 }

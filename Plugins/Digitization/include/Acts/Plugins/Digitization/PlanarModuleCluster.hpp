@@ -29,7 +29,7 @@ template <BoundIndices... params>
 using Measurement_t = Measurement<Identifier, BoundIndices, params...>;
 
 class PlanarModuleCluster
-    : public Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1,
+    : public Measurement_t<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
                            BoundIndices::eT> {
  public:
   /// Constructor from DigitizationCells
@@ -46,7 +46,7 @@ class PlanarModuleCluster
                       double loc0, double loc1, double t,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Measurement_t<BoundIndices::eLOC_0, BoundIndices::eLOC_1,
+      : Measurement_t<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
                       BoundIndices::eT>(std::move(mSurface),
                                         identifier,  // original measurement
                                         std::move(cov), loc0, loc1, t),

@@ -15,10 +15,10 @@ inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
 
   // get the vector perpendicular to the momentum and the straw axis
   Vector3D radiusAxisGlobal(lineDirection.cross(momentum));
-  Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eLOC_Z]);
-  // add eLOC_R * radiusAxis
+  Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eBoundLoc1]);
+  // add eBoundLoc0 * radiusAxis
   return Vector3D(locZinGlobal +
-                  lposition[eLOC_R] * radiusAxisGlobal.normalized());
+                  lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
 }
 
 inline Result<Vector2D> LineSurface::globalToLocal(
@@ -37,7 +37,7 @@ inline Result<Vector2D> LineSurface::globalToLocal(
   Vector3D decVec(position - sCenter);
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
-  lposition[eLOC_R] *= sign;
+  lposition[eBoundLoc0] *= sign;
   return Result<Vector2D>::success(lposition);
 }
 
@@ -158,27 +158,27 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   // the time component
   jacobian(3, eT) = 1;
   // the momentum components
-  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(4, eTHETA) = cos_theta * cos_phi;
-  jacobian(5, ePHI) = sin_theta * cos_phi;
-  jacobian(5, eTHETA) = cos_theta * sin_phi;
-  jacobian(6, eTHETA) = (-sin_theta);
-  jacobian(7, eQOP) = 1;
+  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
+  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
+  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
+  jacobian(6, eBoundTheta) = (-sin_theta);
+  jacobian(7, eBoundQOverP) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
-  // build the cross product of d(D)/d(ePHI) components with y axis
-  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, ePHI));
+  // build the cross product of d(D)/d(eBoundPhi) components with y axis
+  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundPhi));
   // and the same for the d(D)/d(eTheta) components
   auto dDThetaY =
-      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eTHETA));
+      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundTheta));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacobian.block<3, 1>(0, ePHI) = dDPhiY * pars[eLOC_0] * ipdn;
-  jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundPhi) = dDPhiY * pars[eBoundLoc0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundTheta) = dDThetaY * pars[eBoundLoc0] * ipdn;
 }
 
 inline BoundRowVector LineSurface::derivativeFactors(

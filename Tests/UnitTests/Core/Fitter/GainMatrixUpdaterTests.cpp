@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas(
-      MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1>(
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           cylinder, {}, std::move(cov), -0.1, 0.45));
 
   // Make dummy track parameter

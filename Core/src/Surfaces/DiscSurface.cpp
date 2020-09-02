@@ -75,8 +75,8 @@ Acts::Vector3D Acts::DiscSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*gmom*/) const {
   // create the position in the local 3d frame
-  Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
-                      lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
+  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
+                      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]),
                       0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
@@ -108,17 +108,17 @@ Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     Vector2D Pos = cartPos - cartCenter;
 
     Acts::Vector2D locPos(
-        Pos[Acts::eLOC_X] * sin(phi) - Pos[Acts::eLOC_Y] * cos(phi),
-        Pos[Acts::eLOC_Y] * sin(phi) + Pos[Acts::eLOC_X] * cos(phi));
-    return Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
+        Pos[Acts::eBoundLoc0] * sin(phi) - Pos[Acts::eBoundLoc1] * cos(phi),
+        Pos[Acts::eBoundLoc1] * sin(phi) + Pos[Acts::eBoundLoc0] * cos(phi));
+    return Vector2D(locPos[Acts::eBoundLoc0], locPos[Acts::eBoundLoc1]);
   }
-  return Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
-                  locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
+  return Vector2D(locpol[Acts::eBoundLoc0] * cos(locpol[Acts::eBoundLoc1]),
+                  locpol[Acts::eBoundLoc0] * sin(locpol[Acts::eBoundLoc1]));
 }
 
 Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition) const {
-  Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 

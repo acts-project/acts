@@ -39,11 +39,11 @@ bool Acts::EllipseBounds::inside(const Vector2D& lposition,
   bool insidePhi = (-phiHalf <= phi) && (phi < phiHalf);
   bool insideInner =
       (get(eInnerRx) <= tol0) || (get(eOuterRx) <= tol0) ||
-      (1 < (square(lposition[Acts::eLOC_X] / (get(eInnerRx) - tol0)) +
-            square(lposition[Acts::eLOC_Y] / (get(eOuterRx) - tol0))));
+      (1 < (square(lposition[Acts::eBoundLoc0] / (get(eInnerRx) - tol0)) +
+            square(lposition[Acts::eBoundLoc1] / (get(eOuterRx) - tol0))));
   bool insideOuter =
-      ((square(lposition[Acts::eLOC_X] / (get(eInnerRy) + tol0)) +
-        square(lposition[Acts::eLOC_Y] / (get(eOuterRy) + tol0))) < 1);
+      ((square(lposition[Acts::eBoundLoc0] / (get(eInnerRy) + tol0)) +
+        square(lposition[Acts::eBoundLoc1] / (get(eOuterRy) + tol0))) < 1);
   return (insidePhi && insideInner && insideOuter);
 }
 

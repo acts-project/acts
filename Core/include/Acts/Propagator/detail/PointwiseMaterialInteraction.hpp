@@ -139,12 +139,12 @@ struct PointwiseMaterialInteraction {
     stepper.update(state.stepping, pos, dir, nextP, time);
     // Update covariance matrix
     NoiseUpdateMode mode = (nav == forward) ? addNoise : removeNoise;
-    state.stepping.cov(ePHI, ePHI) =
-        updateVariance(state.stepping.cov(ePHI, ePHI), variancePhi, mode);
-    state.stepping.cov(eTHETA, eTHETA) =
-        updateVariance(state.stepping.cov(eTHETA, eTHETA), varianceTheta, mode);
-    state.stepping.cov(eQOP, eQOP) =
-        updateVariance(state.stepping.cov(eQOP, eQOP), varianceQoverP, mode);
+    state.stepping.cov(eBoundPhi, eBoundPhi) =
+        updateVariance(state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, mode);
+    state.stepping.cov(eBoundTheta, eBoundTheta) =
+        updateVariance(state.stepping.cov(eBoundTheta, eBoundTheta), varianceTheta, mode);
+    state.stepping.cov(eBoundQOverP, eBoundQOverP) =
+        updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP), varianceQoverP, mode);
   }
 
  private:

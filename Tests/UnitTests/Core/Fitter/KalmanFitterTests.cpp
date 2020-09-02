@@ -123,41 +123,41 @@ struct MeasurementCreator {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
             double dp = sp * gauss(generator);
-            if (lResolution->second[0].first == eLOC_0) {
+            if (lResolution->second[0].first == eBoundLoc0) {
               // push back & move a LOC_0 measurement
-              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + dp);
+              MeasurementType<eBoundLoc0> m0(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eBoundLoc0] + dp);
               result.measurements.push_back(std::move(m0));
               // push back & move a LOC_0 outlier
-              MeasurementType<eLOC_0> o0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + sp * 10);
+              MeasurementType<eBoundLoc0> o0(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eBoundLoc0] + sp * 10);
               result.outliers.push_back(std::move(o0));
             } else {
               // push back & move a LOC_1 measurement
-              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + dp);
+              MeasurementType<eBoundLoc1> m1(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eBoundLoc1] + dp);
               result.measurements.push_back(std::move(m1));
               // push back & move a LOC_1 outlier
-              MeasurementType<eLOC_1> o1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + sp * 10);
+              MeasurementType<eBoundLoc1> o1(surface->getSharedPtr(), {}, cov1D,
+                                         lPos[eBoundLoc1] + sp * 10);
               result.outliers.push_back(std::move(o1));
             }
           } else if (lResolution->second.size() == 2) {
             // Create the measurment and move it
-            double sx = lResolution->second[eLOC_0].second;
-            double sy = lResolution->second[eLOC_1].second;
+            double sx = lResolution->second[eBoundLoc0].second;
+            double sy = lResolution->second[eBoundLoc1].second;
             cov2D << sx * sx, 0., 0., sy * sy;
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + dx,
-                                                lPos[eLOC_1] + dy);
+            MeasurementType<eBoundLoc0, eBoundLoc1> m01(surface->getSharedPtr(), {},
+                                                cov2D, lPos[eBoundLoc0] + dx,
+                                                lPos[eBoundLoc1] + dy);
             result.measurements.push_back(std::move(m01));
             // push back & move a LOC_0, LOC_1 outlier
-            MeasurementType<eLOC_0, eLOC_1> o01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + sx * 10,
-                                                lPos[eLOC_1] + sy * 10);
+            MeasurementType<eBoundLoc0, eBoundLoc1> o01(surface->getSharedPtr(), {},
+                                                cov2D, lPos[eBoundLoc0] + sx * 10,
+                                                lPos[eBoundLoc1] + sy * 10);
             result.outliers.push_back(std::move(o01));
           }
         }
@@ -198,8 +198,8 @@ struct MaterialScattering {
       double dPhi = scatterAngle(generator), dTheta = scatterAngle(generator);
 
       // Update the covariance
-      state.stepping.cov(ePHI, ePHI) += dPhi * dPhi;
-      state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
+      state.stepping.cov(eBoundPhi, eBoundPhi) += dPhi * dPhi;
+      state.stepping.cov(eBoundTheta, eBoundTheta) += dTheta * dTheta;
 
       // Update the angles
       auto direction = stepper.direction(state.stepping);
@@ -312,10 +312,10 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using MeasurementActions = ActionList<MeasurementCreator>;
   using MeasurementAborters = AbortList<EndOfWorldReached>;
 
-  auto pixelResX = Resolution(eLOC_0, 25_um);
-  auto pixelResY = Resolution(eLOC_1, 50_um);
-  auto stripResX = Resolution(eLOC_0, 100_um);
-  auto stripResY = Resolution(eLOC_1, 150_um);
+  auto pixelResX = Resolution(eBoundLoc0, 25_um);
+  auto pixelResY = Resolution(eBoundLoc1, 50_um);
+  auto stripResX = Resolution(eBoundLoc0, 100_um);
+  auto stripResY = Resolution(eBoundLoc1, 150_um);
 
   ElementResolution pixelElementRes = {pixelResX, pixelResY};
   ElementResolution stripElementResI = {stripResX};
