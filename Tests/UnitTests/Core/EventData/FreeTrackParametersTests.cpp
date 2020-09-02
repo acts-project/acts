@@ -20,13 +20,19 @@ namespace Test {
 /// @brief Unit test for free parameters
 ///
 BOOST_AUTO_TEST_CASE(free_initialization) {
-  Vector3D pos(0., 1., 2.);
-  double t = 3.;
+  Vector4D pos4(0., 1., 2., 4.);
   Vector3D dir(4., 5., 6.);
   double qop = 7.;
 
   FreeVector params;
-  params << pos.x(), pos.y(), pos.z(), t, dir.x(), dir.y(), dir.z(), qop;
+  params[eFreePos0] = pos4[ePos0];
+  params[eFreePos1] = pos4[ePos1];
+  params[eFreePos2] = pos4[ePos2];
+  params[eFreeTime] = pos4[eTime];
+  params[eFreeDir0] = dir[eMom0];
+  params[eFreeDir1] = dir[eMom1];
+  params[eFreeDir2] = dir[eMom2];
+  params[eFreeQOverP] = qop;
 
   std::optional<FreeSymMatrix> cov = std::nullopt;
 
@@ -99,10 +105,10 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   /// Test getters/setters
 
   // Test getter of single elements
-  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), pos.x(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), pos.y(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), pos.z(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), t, 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), pos4[ePos0], 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), pos4[ePos1], 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), pos4[ePos2], 1e-6);
+  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), pos4[eTime], 1e-6);
   CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), dir.x(), 1e-6);
   CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), dir.y(), 1e-6);
   CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), dir.z(), 1e-6);
@@ -119,11 +125,12 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.uncertainty<eFreeQOverP>(), std::sqrt((*cov)(7, 7)), 1e-6);
 
   // Test getter of parts of the parameters by their meaning
-  CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);
+  CHECK_CLOSE_ABS(fp.position4(), pos4, 1e-6);
+  CHECK_CLOSE_ABS(fp.position(), pos4.segment<3>(ePos0), 1e-6);
+  CHECK_CLOSE_ABS(fp.time(), pos4[eTime], 1e-6);
   CHECK_CLOSE_ABS(fp.momentum(), dir / qop, 1e-6);
   CHECK_CLOSE_ABS(fp.charge(), +1., 1e-6);
   BOOST_CHECK_EQUAL(nfp.charge(), 0.);
-  CHECK_CLOSE_ABS(fp.time(), t, 1e-6);
 }
 
 }  // namespace Test

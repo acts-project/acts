@@ -101,12 +101,21 @@ class SingleFreeTrackParameters {
     return m_oParameters.getCovariance();
   }
 
-  /// @brief access position in global coordinate system
-  ///
-  /// @return 3D vector with global position
+  /// Space-time position four-vector.
+  Vector4D position4() const {
+    Vector4D pos4 = Vector4D::Zero();
+    pos4[ePos0] = get<eFreePos0>();
+    pos4[ePos1] = get<eFreePos1>();
+    pos4[ePos2] = get<eFreePos2>();
+    pos4[eTime] = get<eFreeTime>();
+    return pos4;
+  }
+  /// Access the spatial position vector.
   Vector3D position() const {
     return parameters().template segment<3>(eFreePos0);
   }
+  /// Access the time coordinate.
+  Scalar time() const { return get<eFreeTime>(); }
 
   /// @brief access momentum in global coordinate system
   ///
@@ -120,11 +129,6 @@ class SingleFreeTrackParameters {
   ///
   /// @return value of electric charge
   Scalar charge() const { return m_oChargePolicy.getCharge(); }
-
-  /// @brief retrieve time
-  ///
-  /// @return value of time
-  Scalar time() const { return get<eFreeTime>(); }
 
   /// @brief access to the internally stored FreeParameterSet
   ///
