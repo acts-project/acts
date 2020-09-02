@@ -149,7 +149,8 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
                            Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime, Acts::BoundIndices::eBoundTime) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime,
+                           Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Read if the offdiagonal parameters have been read

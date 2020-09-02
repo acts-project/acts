@@ -47,9 +47,10 @@ class PlanarModuleCluster
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
       : Measurement_t<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
-                      BoundIndices::eBoundTime>(std::move(mSurface),
-                                        identifier,  // original measurement
-                                        std::move(cov), loc0, loc1, t),
+                      BoundIndices::eBoundTime>(
+            std::move(mSurface),
+            identifier,  // original measurement
+            std::move(cov), loc0, loc1, t),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {}
 
