@@ -62,7 +62,7 @@ Acts::CylinderSurface& Acts::CylinderSurface::operator=(
 }
 
 // return the binning position for ordering in the BinnedArray
-const Acts::Vector3D Acts::CylinderSurface::binningPosition(
+Acts::Vector3D Acts::CylinderSurface::binningPosition(
     const GeometryContext& gctx, BinningValue bValue) const {
   const Acts::Vector3D& sfCenter = center(gctx);
   // special binning type for R-type methods
@@ -78,7 +78,7 @@ const Acts::Vector3D Acts::CylinderSurface::binningPosition(
 }
 
 // return the measurement frame: it's the tangential plane
-const Acts::RotationMatrix3D Acts::CylinderSurface::referenceFrame(
+Acts::RotationMatrix3D Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   RotationMatrix3D mFrame;
@@ -133,14 +133,14 @@ std::string Acts::CylinderSurface::name() const {
   return "Acts::CylinderSurface";
 }
 
-const Acts::Vector3D Acts::CylinderSurface::normal(
+Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   double phi = lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eR);
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }
 
-const Acts::Vector3D Acts::CylinderSurface::normal(
+Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector3D& position) const {
   const Transform3D& sfTransform = transform(gctx);
   // get it into the cylinder frame
