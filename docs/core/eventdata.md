@@ -63,29 +63,6 @@ namespace detail {
 } // end of namespace Acts
 ```
 
-The default parametrization is chosen to be the ATLAS parameterisation:
-
-```cpp
-namespace Acts {
-enum BoundIndices : unsigned int {
-  eBoundLoc0    = 0,  ///< first coordinate in local surface frame
-  eBoundLoc1    = 1,  ///< second coordinate in local surface frame
-  eBoundLoc0    = eBoundLoc0,
-  eBoundLoc1  = eBoundLoc1,
-  eBoundLoc0 = eBoundLoc0,
-  eBoundLoc1    = eBoundLoc1,
-  eBoundLoc0    = eBoundLoc0,
-  eBoundLoc1    = eBoundLoc1,
-  eBoundLoc0   = eBoundLoc0,
-  eBoundLoc1   = eBoundLoc1,
-  eBoundPhi      = 2,  ///< phi direction of momentum in global frame
-  eBoundTheta    = 3,  ///< theta direction of momentum in global frame
-  eBoundQOverP = 4,  ///< charge/momentum for charged tracks, for neutral tracks it is
-             /// 1/momentum
-  NGlobalPars
-};
-```
-
 Changing the default parameter definition and transformation needs recompilation
 of the Acts Software and redefinition of the relevant plugin:
  
