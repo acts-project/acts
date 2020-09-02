@@ -9,7 +9,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 namespace Acts {
 namespace Test {
@@ -17,7 +16,7 @@ namespace Test {
 /// Get the full path to a file in the test data directory.
 ///
 /// @param relativePath file path relative to the data directory
-std::string getDataPath(std::string_view relativePath);
+std::string getDataPath(const std::string& relativePath);
 
 }  // namespace Test
 }  // namespace Acts
