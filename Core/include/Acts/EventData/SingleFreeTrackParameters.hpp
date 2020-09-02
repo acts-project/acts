@@ -36,7 +36,7 @@ class SingleFreeTrackParameters {
                 "'Acts::NeutralPolicy");
 
  public:
-  using Scalar = FreeParametersScalar;
+  using Scalar = FreeScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
 
@@ -76,7 +76,7 @@ class SingleFreeTrackParameters {
   /// @tparam kIndex Identifier of the parameter index which will be retrieved
   ///
   /// @return Value of the requested parameter
-  template <FreeParametersIndices kIndex>
+  template <FreeIndices kIndex>
   Scalar get() const {
     return m_oParameters.template getParameter<kIndex>();
   }
@@ -86,7 +86,7 @@ class SingleFreeTrackParameters {
   /// @tparam kIndex Identifier of the uncertainty index which will be retrieved
   ///
   /// @return Value of the requested parameter uncertainty
-  template <FreeParametersIndices kIndex>
+  template <FreeIndices kIndex>
   Scalar uncertainty() const {
     return m_oParameters.template getUncertainty<kIndex>();
   }
@@ -163,7 +163,7 @@ class SingleFreeTrackParameters {
   ///
   /// @note The context is not used here but makes the API consistent with
   /// @c SingleCurvilinearTrackParameters and @c SingleBoundTrackParameters
-  template <FreeParametersIndices kIndex>
+  template <FreeIndices kIndex>
   void set(const GeometryContext& /*gctx*/, Scalar newValue) {
     m_oParameters.setParameter<kIndex>(newValue);
   }

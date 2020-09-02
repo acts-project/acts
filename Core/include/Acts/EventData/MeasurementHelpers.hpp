@@ -91,8 +91,8 @@ struct visit_measurement_callable {
 /// @param lambda The lambda to call with the statically sized subsets
 template <typename L, typename A, typename B>
 auto visit_measurement(A&& param, B&& cov, size_t dim, L&& lambda) {
-  return template_switch<detail::visit_measurement_callable, 1,
-                         eBoundParametersSize>(dim, param, cov, lambda);
+  return template_switch<detail::visit_measurement_callable, 1, eBoundSize>(
+      dim, param, cov, lambda);
 }
 
 }  // namespace Acts
