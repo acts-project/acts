@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <memory>
+
 #include "RtypesCore.h"
 
 class TGeoShape;

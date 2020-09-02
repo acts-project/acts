@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <array>
-
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <array>
 
 namespace Acts {
 

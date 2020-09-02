@@ -9,14 +9,15 @@
 #pragma once
 
 #include <boost/test/data/test_case.hpp>
-#include <cmath>
-#include <vector>
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <vector>
 
 namespace {
 

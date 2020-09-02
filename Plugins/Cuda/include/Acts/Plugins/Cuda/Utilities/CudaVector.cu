@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Plugins/Cuda/Utilities/CpuVector.hpp"
+
 #include <iostream>
 #include <memory>
+
 #include "CudaUtils.cu"
 #include "cuda.h"
 #include "cuda_runtime.h"

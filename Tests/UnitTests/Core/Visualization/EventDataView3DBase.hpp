@@ -91,8 +91,8 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
       0, 0, 0, 0, 0, 1;
 
   EventDataView3D::drawBoundTrackParameters(
-      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx, momentumScale,
-      localErrorScale, directionErrorScale, pcolor, scolor);
+      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
+      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);

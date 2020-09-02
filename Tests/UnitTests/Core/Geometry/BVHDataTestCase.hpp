@@ -150,7 +150,7 @@ BOOST_DATA_TEST_CASE(
   double mom = 50_GeV;
 
   Acts::CurvilinearTrackParameters startPar(std::nullopt, ray.origin(),
-                                       ray.dir() * mom, +1, 0.);
+                                            ray.dir() * mom, +1, 0.);
 
   const auto result = propagator.propagate(startPar, options).value();
 

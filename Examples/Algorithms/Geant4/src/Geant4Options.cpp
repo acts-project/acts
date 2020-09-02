@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Geant4/Geant4Options.hpp"
 
-#include <boost/program_options.hpp>
-
 #include <string>
+
+#include <boost/program_options.hpp>
 
 void ActsExamples::Options::addGeant4Options(
     ActsExamples::Options::Description& desc) {

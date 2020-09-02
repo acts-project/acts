@@ -24,10 +24,8 @@
 // parameter construction helpers
 
 /// Construct (initial) curvilinear parameters.
-inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(double phi,
-                                                             double theta,
-                                                             double absMom,
-                                                             double charge) {
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
+    double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
@@ -78,8 +76,8 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
 
   auto withoutCov = makeParametersCurvilinear(phi, theta, absMom, charge);
   return CurvilinearTrackParameters(std::move(cov), withoutCov.position(),
-                               withoutCov.momentum(), withoutCov.charge(),
-                               withoutCov.time());
+                                    withoutCov.momentum(), withoutCov.charge(),
+                                    withoutCov.time());
 }
 
 /// Construct (initial) neutral curvilinear parameters.

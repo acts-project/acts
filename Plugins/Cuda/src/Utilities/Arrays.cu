@@ -9,6 +9,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
+
 #include "../Utilities/ErrorCheck.cuh"
 
 // CUDA include(s).

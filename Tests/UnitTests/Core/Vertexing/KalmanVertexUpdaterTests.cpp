@@ -145,7 +145,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     vtx.setFullCovariance(SymMatrix4D::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx, trkAtVtx);
+    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,
+                                                                     trkAtVtx);
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;

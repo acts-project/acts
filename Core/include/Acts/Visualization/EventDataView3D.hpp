@@ -240,7 +240,8 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                            state.predicted(), state.predictedCovariance()),
+                                 state.predicted(),
+                                 state.predictedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));
       }
@@ -249,7 +250,7 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                            state.filtered(), state.filteredCovariance()),
+                                 state.filtered(), state.filteredCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
       }
@@ -258,7 +259,7 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                            state.smoothed(), state.smoothedCovariance()),
+                                 state.smoothed(), state.smoothedCovariance()),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));
       }
