@@ -176,19 +176,18 @@ class SingleBoundTrackParameters {
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }
 
-  /// Access the direction pseudo-rapidity.
-  Scalar eta() const { return -std::log(std::tan(get<eBoundTheta>() / 2)); }
-  /// Access the absolute transverse momentum.
-  Scalar pT() const {
-    return std::sin(get<eBoundTheta>()) / std::abs(get<eBoundQOverP>());
+  /// Direction unit three-vector, i.e. the normalized momentum three-vector.
+  Vector3D directionUnit() const {
+    return makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
   }
-  /// Access the momentum three-vector.
-  Vector3D momentum() const {
-    auto mom =
-        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
-    mom *= std::abs(1 / get<eBoundQOverP>());
-    return mom;
+  /// Absolute transverse momentum.
+  Scalar transverseMomentum() const {
+    return std::sin(get<eBoundTheta>()) * absMomentum();
   }
+  /// Absolute momentum.
+  Scalar absMomentum() const { return 1 / std::abs(get<eBoundQOverP>()); }
+  /// Momentum three-vector.
+  Vector3D momentum() const { return absMomentum() * directionUnit(); }
 
   /// Access the particle electric charge.
   Scalar charge() const { return m_chargePolicy.getCharge(); }

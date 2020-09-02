@@ -52,6 +52,10 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.directionUnit(), dir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), std::sin(theta) * p, eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.absMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * dir, eps, eps);
   CHECK_CLOSE_REL(params.charge(), q, eps);
 
@@ -88,6 +92,10 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.directionUnit(), dir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), std::sin(theta) * p, eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.absMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * dir, eps, eps);
   CHECK_SMALL(params.charge(), eps);
 
