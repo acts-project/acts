@@ -105,6 +105,8 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 3.2.9 CONFIG REQUIRED)
+# NOTE we use boost::filesystem instead of std::filesystem since the later
+#   is not uniformly supported even on compilers that nominally support C++17 
 
 # optional packages
 #
