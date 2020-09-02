@@ -373,8 +373,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
         return VertexingError::NoCovariance;
       }
 
-      double error = sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
-                          (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
+      double error =
+          sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
+               (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (error == 0.) {
         ACTS_WARNING("Error is zero. Setting to 1.");

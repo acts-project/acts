@@ -126,20 +126,20 @@ struct MeasurementCreator {
             if (lResolution->second[0].first == eBoundLoc0) {
               // push back & move a LOC_0 measurement
               MeasurementType<eBoundLoc0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc0] + dp);
+                                             lPos[eBoundLoc0] + dp);
               result.measurements.push_back(std::move(m0));
               // push back & move a LOC_0 outlier
               MeasurementType<eBoundLoc0> o0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc0] + sp * 10);
+                                             lPos[eBoundLoc0] + sp * 10);
               result.outliers.push_back(std::move(o0));
             } else {
               // push back & move a LOC_1 measurement
               MeasurementType<eBoundLoc1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc1] + dp);
+                                             lPos[eBoundLoc1] + dp);
               result.measurements.push_back(std::move(m1));
               // push back & move a LOC_1 outlier
               MeasurementType<eBoundLoc1> o1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc1] + sp * 10);
+                                             lPos[eBoundLoc1] + sp * 10);
               result.outliers.push_back(std::move(o1));
             }
           } else if (lResolution->second.size() == 2) {
@@ -150,14 +150,14 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eBoundLoc0, eBoundLoc1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eBoundLoc0] + dx,
-                                                lPos[eBoundLoc1] + dy);
+            MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + dx,
+                lPos[eBoundLoc1] + dy);
             result.measurements.push_back(std::move(m01));
             // push back & move a LOC_0, LOC_1 outlier
-            MeasurementType<eBoundLoc0, eBoundLoc1> o01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eBoundLoc0] + sx * 10,
-                                                lPos[eBoundLoc1] + sy * 10);
+            MeasurementType<eBoundLoc0, eBoundLoc1> o01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + sx * 10,
+                lPos[eBoundLoc1] + sy * 10);
             result.outliers.push_back(std::move(o01));
           }
         }

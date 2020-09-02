@@ -63,14 +63,18 @@ Acts::AnnulusBounds::AnnulusBounds(
   };
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
-  m_outLeftStripXY = circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1],
-                            get(eMaxR), get(eMaxPhiRel));
-  m_inLeftStripXY = circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1],
-                           get(eMinR), get(eMaxPhiRel));
-  m_outRightStripXY = circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1],
-                             get(eMaxR), get(eMinPhiRel));
-  m_inRightStripXY = circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1],
-                            get(eMinR), get(eMinPhiRel));
+  m_outLeftStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
+             get(eMaxPhiRel));
+  m_inLeftStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
+             get(eMaxPhiRel));
+  m_outRightStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
+             get(eMinPhiRel));
+  m_inRightStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
+             get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -152,9 +156,9 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
     }
   } else {
     // use R
-    double r_mod =
-        sqrt(m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
-             2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
+    double r_mod = sqrt(
+        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
+        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;

@@ -64,7 +64,8 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   // The parameters should be identical though
   BOOST_CHECK_EQUAL(mc.parameters(), mcAssigned.parameters());
 
-  std::vector<MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>>
+  std::vector<
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>>
       caMeasurements{std::move(mcCopy), std::move(mcAssigned)};
 
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),

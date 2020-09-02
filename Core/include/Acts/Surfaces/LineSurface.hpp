@@ -163,8 +163,8 @@ class LineSurface : public Surface {
   /// memory allocation
   ///
   /// This method is the true global->local transformation.<br>
-  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0 by
-  /// the given momentum
+  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
+  /// by the given momentum
   ///
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>

@@ -140,12 +140,14 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1,
                            Acts::BoundIndices::eBoundLoc1) =
         pAlgConfig.z0Sigma * pAlgConfig.z0Sigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi, Acts::BoundIndices::eBoundPhi) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi,
+                           Acts::BoundIndices::eBoundPhi) =
         pAlgConfig.phiSigma * pAlgConfig.phiSigma;
     pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta,
                            Acts::BoundIndices::eBoundTheta) =
         pAlgConfig.thetaSigma * pAlgConfig.thetaSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundQOverP) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
+                           Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
     pAlgConfig.covariances(Acts::BoundIndices::eT, Acts::BoundIndices::eT) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;

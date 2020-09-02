@@ -135,12 +135,12 @@ struct MeasurementCreator {
             if (lResolution->second[0].first == eBoundLoc0) {
               // push back & move a LOC_0 measurement
               MeasurementType<eBoundLoc0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc0] + dp);
+                                             lPos[eBoundLoc0] + dp);
               result.push_back(std::move(m0));
             } else {
               // push back & move a LOC_1 measurement
               MeasurementType<eBoundLoc1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eBoundLoc1] + dp);
+                                             lPos[eBoundLoc1] + dp);
               result.push_back(std::move(m1));
             }
           } else if (lResolution->second.size() == 2) {
@@ -151,9 +151,9 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eBoundLoc0, eBoundLoc1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eBoundLoc0] + dx,
-                                                lPos[eBoundLoc1] + dy);
+            MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + dx,
+                lPos[eBoundLoc1] + dy);
             result.push_back(std::move(m01));
           }
         }

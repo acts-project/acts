@@ -23,7 +23,8 @@ Acts::Vector2D Acts::RadialBounds::shifted(
     const Acts::Vector2D& lposition) const {
   Vector2D tmp;
   tmp[eBoundLoc0] = lposition[eBoundLoc0];
-  tmp[eBoundLoc1] = detail::radian_sym(lposition[eBoundLoc1] - get(eAveragePhi));
+  tmp[eBoundLoc1] =
+      detail::radian_sym(lposition[eBoundLoc1] - get(eAveragePhi));
   return tmp;
 }
 

@@ -168,7 +168,8 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
   // build the cross product of d(D)/d(eBoundPhi) components with y axis
-  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundPhi));
+  auto dDPhiY =
+      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundPhi));
   // and the same for the d(D)/d(eTheta) components
   auto dDThetaY =
       rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundTheta));

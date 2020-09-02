@@ -59,7 +59,8 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 
   ActsSymMatrixD<3> cov3;
   cov.setRandom();
-  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1, BoundIndices::eT>
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
+                  BoundIndices::eT>
       m2(cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
   fm = m2;
 

@@ -75,9 +75,9 @@ Acts::Vector3D Acts::DiscSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*gmom*/) const {
   // create the position in the local 3d frame
-  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
-                      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]),
-                      0.);
+  Vector3D loc3Dframe(
+      lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
+      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]), 0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
 }
@@ -118,7 +118,8 @@ Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
 
 Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition) const {
-  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
+  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
+                      0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 

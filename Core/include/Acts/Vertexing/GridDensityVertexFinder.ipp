@@ -109,9 +109,12 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
   const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
   // Get track covariance
   const auto perigeeCov = *(trk.covariance());
-  const double covDD = perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
-  const double covZZ = perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
-  const double covDZ = perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
+  const double covDD =
+      perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
+  const double covZZ =
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
+  const double covDZ =
+      perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
   const double covDeterminant = covDD * covZZ - covDZ * covDZ;
 
   // Do track selection based on track cov matrix and d0SignificanceCut

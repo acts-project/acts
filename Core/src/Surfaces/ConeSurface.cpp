@@ -151,8 +151,8 @@ std::string Acts::ConeSurface::name() const {
 Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  double phi =
-             lposition[Acts::eBoundLoc0] / (bounds().r(lposition[Acts::eBoundLoc1])),
+  double phi = lposition[Acts::eBoundLoc0] /
+               (bounds().r(lposition[Acts::eBoundLoc1])),
          sgn = lposition[Acts::eBoundLoc1] > 0 ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));

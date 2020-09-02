@@ -96,13 +96,15 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
   // loc3DToLocBound*alignToLoc3D +
   // jacToLocal*derivatives*alignToPath
-  alignToBound.block<2, eAlignmentParametersSize>(eBoundLoc0, eAlignmentCenter0) =
+  alignToBound.block<2, eAlignmentParametersSize>(eBoundLoc0,
+                                                  eAlignmentCenter0) =
       loc3DToLocBound * alignToLoc3D +
       jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
           alignToPath;
-  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP, eT, it's
-  // jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentParametersSize>(eBoundPhi, eAlignmentCenter0) =
+  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP, eT,
+  // it's jacToLocal*derivatives*alignToPath
+  alignToBound.block<4, eAlignmentParametersSize>(eBoundPhi,
+                                                  eAlignmentCenter0) =
       jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
       alignToPath;
 

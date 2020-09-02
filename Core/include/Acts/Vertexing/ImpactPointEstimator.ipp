@@ -298,12 +298,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
   if (d0_PVcontrib >= 0) {
     newIPandSigma.sigmad0 =
-        std::sqrt(d0_PVcontrib +
-                  perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
+        std::sqrt(d0_PVcontrib + perigeeCov(BoundIndices::eBoundLoc0,
+                                            BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
-    newIPandSigma.sigmad0 =
-        std::sqrt(perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
+    newIPandSigma.sigmad0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = 0;
   }
 
@@ -329,8 +329,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
     newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 = std::sqrt(
-        vtxZZCov + perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
+    newIPandSigma.sigmaz0 =
+        std::sqrt(vtxZZCov + perigeeCov(BoundIndices::eBoundLoc1,
+                                        BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     // Remove contribution from PV
@@ -341,8 +342,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmaz0SinTheta = 0;
 
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 =
-        std::sqrt(perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
+    newIPandSigma.sigmaz0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = 0;
   }
 

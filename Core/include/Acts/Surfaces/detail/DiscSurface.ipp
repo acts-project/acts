@@ -14,9 +14,9 @@ inline Vector2D DiscSurface::localPolarToCartesian(
 
 inline Vector2D DiscSurface::localCartesianToPolar(
     const Vector2D& lcart) const {
-  return Vector2D(
-      sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] + lcart[eBoundLoc1] * lcart[eBoundLoc1]),
-      atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+  return Vector2D(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
+                       lcart[eBoundLoc1] * lcart[eBoundLoc1]),
+                  atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,

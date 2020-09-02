@@ -22,8 +22,10 @@ void consistencyCheck(const Parameter& pars, const Vector3D& position,
                       const Vector3D& momentum, double charge, double time,
                       std::array<double, eBoundSize> values) {
   // check parameter vector
-  CHECK_CLOSE_ABS(pars.parameters()[eBoundLoc0], values[0], s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(pars.parameters()[eBoundLoc1], values[1], s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(pars.parameters()[eBoundLoc0], values[0],
+                  s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(pars.parameters()[eBoundLoc1], values[1],
+                  s_onSurfaceTolerance);
   CHECK_CLOSE_REL(pars.parameters()[eBoundPhi], values[2], 1e-6);
   CHECK_CLOSE_REL(pars.parameters()[eBoundTheta], values[3], 1e-6);
   CHECK_CLOSE_REL(pars.parameters()[eBoundQOverP], values[4], 1e-6);

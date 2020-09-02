@@ -163,7 +163,8 @@ void ActsExamples::ResPlotTool::fill(
   } else {
     ACTS_ERROR("Global to local transformation did not succeed.");
   }
-  truthParameter[Acts::BoundIndices::eBoundPhi] = phi(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eBoundPhi] =
+      phi(truthParticle.unitDirection());
   truthParameter[Acts::BoundIndices::eBoundTheta] =
       theta(truthParticle.unitDirection());
   truthParameter[Acts::BoundIndices::eBoundQOverP] =

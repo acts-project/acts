@@ -211,9 +211,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     // 2D measurements
     double dx = resolution[eBoundLoc0] * gauss(generator);
     double dy = resolution[eBoundLoc1] * gauss(generator);
-    MeasurementType<eBoundLoc0, eBoundLoc1> m01(surface->getSharedPtr(), {}, cov2D,
-                                        lPosCenter[eBoundLoc0] + dx,
-                                        lPosCenter[eBoundLoc1] + dy);
+    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
+        lPosCenter[eBoundLoc1] + dy);
     measurements.push_back(std::move(m01));
   }
 
