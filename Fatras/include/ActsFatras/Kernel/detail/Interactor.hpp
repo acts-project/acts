@@ -106,7 +106,7 @@ struct Interactor {
         Acts::Vector2D local(0., 0.);
 
         Acts::MaterialSlab slab =
-            surface.surfaceMaterial()->MaterialSlab(local);
+            surface.surfaceMaterial()->materialSlab(local);
 
         // again: no valid material -> no interaction
         if (slab) {
