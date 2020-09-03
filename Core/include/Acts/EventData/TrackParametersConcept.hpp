@@ -44,9 +44,10 @@ using ReturnTypePosition = decltype(std::declval<T>().position());
 template <typename T>
 using ReturnTypeTime = decltype(std::declval<T>().time());
 template <typename T>
-using ReturnTypeDirectionUnit = decltype(std::declval<T>().directionUnit());
+using ReturnTypeUnitDirection = decltype(std::declval<T>().unitDirection());
 template <typename T>
-using ReturnTypeAbsMomentum = decltype(std::declval<T>().absMomentum());
+using ReturnTypeAbsoluteMomentum =
+    decltype(std::declval<T>().absoluteMomentum());
 template <typename T>
 using ReturnTypeCharge = decltype(std::declval<T>().charge());
 template <typename T>
@@ -74,10 +75,10 @@ struct BoundTrackParametersConceptImpl {
       identical_to<Vector3D, ReturnTypePositionFromContext, const T>;
   constexpr static bool hasMethodTime =
       identical_to<double, ReturnTypeTime, const T>;
-  constexpr static bool hasMethodDirectionUnit =
-      identical_to<Vector3D, ReturnTypeDirectionUnit, const T>;
-  constexpr static bool hasMethodAbsMomentum =
-      identical_to<double, ReturnTypeAbsMomentum, const T>;
+  constexpr static bool hasMethodUnitDirection =
+      identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
+  constexpr static bool hasMethodAbsoluteMomentum =
+      identical_to<double, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =
       identical_to<double, ReturnTypeCharge, const T>;
   constexpr static bool hasMethodReferenceSurface =
@@ -92,10 +93,10 @@ struct BoundTrackParametersConceptImpl {
   static_assert(hasMethodPositionFromContext,
                 "Missing or invalid 'position' method");
   static_assert(hasMethodTime, "Missing or invalid 'time' method");
-  static_assert(hasMethodDirectionUnit,
-                "Missing or invalid 'directionUnit' method");
-  static_assert(hasMethodAbsMomentum,
-                "Missing or invalid 'absMomentum' method");
+  static_assert(hasMethodUnitDirection,
+                "Missing or invalid 'unitDirection' method");
+  static_assert(hasMethodAbsoluteMomentum,
+                "Missing or invalid 'absoluteMomentum' method");
   static_assert(hasMethodCharge, "Missing or invalid 'charge' method");
   static_assert(hasMethodReferenceSurface,
                 "Missing or invalid 'referenceSurface' method");
@@ -104,7 +105,7 @@ struct BoundTrackParametersConceptImpl {
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
               hasMethodParameters, hasMethodCovariance,
               hasMethodPosition4FromContext, hasMethodPositionFromContext,
-              hasMethodTime, hasMethodDirectionUnit, hasMethodAbsMomentum,
+              hasMethodTime, hasMethodUnitDirection, hasMethodAbsoluteMomentum,
               hasMethodCharge, hasMethodReferenceSurface>;
 };
 
@@ -129,10 +130,10 @@ struct FreeTrackParametersConceptImpl {
       identical_to<Vector3D, ReturnTypePosition, const T>;
   constexpr static bool hasMethodTime =
       identical_to<double, ReturnTypeTime, const T>;
-  constexpr static bool hasMethodDirectionUnit =
-      identical_to<Vector3D, ReturnTypeDirectionUnit, const T>;
-  constexpr static bool hasMethodAbsMomentum =
-      identical_to<double, ReturnTypeAbsMomentum, const T>;
+  constexpr static bool hasMethodUnitDirection =
+      identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
+  constexpr static bool hasMethodAbsoluteMomentum =
+      identical_to<double, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =
       identical_to<double, ReturnTypeCharge, const T>;
 
@@ -145,17 +146,17 @@ struct FreeTrackParametersConceptImpl {
   static_assert(hasMethodPosition4, "Missing or invalid 'position4' method");
   static_assert(hasMethodPosition, "Missing or invalid 'position' method");
   static_assert(hasMethodTime, "Missing or invalid 'time' method");
-  static_assert(hasMethodDirectionUnit,
-                "Missing or invalid 'directionUnit' method");
-  static_assert(hasMethodAbsMomentum,
-                "Missing or invalid 'absMomentum' method");
+  static_assert(hasMethodUnitDirection,
+                "Missing or invalid 'unitDirection' method");
+  static_assert(hasMethodAbsoluteMomentum,
+                "Missing or invalid 'absoluteMomentum' method");
   static_assert(hasMethodCharge, "Missing or invalid 'charge' method");
 
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
               hasMethodParameters, hasMethodCovariance, hasMethodPosition4,
-              hasMethodPosition, hasMethodTime, hasMethodDirectionUnit,
-              hasMethodAbsMomentum, hasMethodCharge>;
+              hasMethodPosition, hasMethodTime, hasMethodUnitDirection,
+              hasMethodAbsoluteMomentum, hasMethodCharge>;
 };
 
 template <typename parameters_t>
