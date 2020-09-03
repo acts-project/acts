@@ -17,8 +17,6 @@
 
 namespace Acts {
 
-/// @class GeometryObject
-///
 /// Base class to provide GeometryID interface:
 /// - simple set and get
 ///
