@@ -13,6 +13,7 @@
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace tt = boost::test_tools;
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   auto htrans =
       std::make_shared<const Transform3D>(Translation3D{-10., -10., 0.});
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
-  Material mat(1., 2., 3., 4., 5.);
+  auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);
   auto volume = (TrackingVolume::create(htrans, bound, volMat)).get();
 

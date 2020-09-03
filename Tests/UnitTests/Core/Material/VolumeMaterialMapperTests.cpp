@@ -31,6 +31,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -164,8 +165,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg2.position = Vector3D(1.5_m, 0., 0.);
   vCfg2.length = Vector3D(1_m, 1_m, 1_m);
   vCfg2.name = "First material volume";
-  vCfg2.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(95.7, 465.2, 28.03, 14., 2.32e-3));
+  vCfg2.volumeMaterial =
+      std::make_shared<HomogeneousVolumeMaterial>(makeSilicon());
 
   // Build another material volume with different material
   CuboidVolumeBuilder::VolumeConfig vCfg3;

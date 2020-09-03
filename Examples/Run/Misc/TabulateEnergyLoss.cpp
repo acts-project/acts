@@ -88,7 +88,8 @@ int main(int argc, char const* argv[]) {
 
   // use fixed material (beryllium) for now
   // TODO make material configurable by command line
-  const Acts::Material material(35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3);
+  const auto material = Acts::Material::fromMassDensity(
+      35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3);
   const Acts::MaterialProperties slab(material, thickness);
 
   printHeader(std::cout, slab, pdg, mass, charge);
