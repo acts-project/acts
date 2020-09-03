@@ -29,10 +29,8 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-using FullParameterSet =
-    typename detail::full_parset<BoundParametersIndices>::type;
-using FullFreeParameterSet =
-    typename detail::full_parset<FreeParametersIndices>::type;
+using FullParameterSet = typename detail::full_parset<BoundIndices>::type;
+using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
 /// @endcond
 
 /**
@@ -47,7 +45,7 @@ using FullFreeParameterSet =
  * integral type used to identify different parameters. This could for example
  * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
  * convertible to an <tt>unsigned int</tt>
- *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
+ *  -# It must contain a <tt>typedef #BoundScalar</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
  *  -# It must contain a definition of an integral constant named @c N which is
@@ -108,11 +106,11 @@ class ParameterSet {
   // public typedefs
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  using Projection = ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>;
+  using Projection = ActsMatrix<BoundScalar, kNumberOfParameters, kSizeMax>;
   /// vector type for stored parameters
-  using ParameterVector = ActsVector<ParValue_t, kNumberOfParameters>;
+  using ParameterVector = ActsVector<BoundScalar, kNumberOfParameters>;
   /// type of covariance matrix
-  using CovarianceMatrix = ActsSymMatrix<ParValue_t, kNumberOfParameters>;
+  using CovarianceMatrix = ActsSymMatrix<BoundScalar, kNumberOfParameters>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -127,7 +125,7 @@ class ParameterSet {
   template <typename... Tail>
   ParameterSet(
       std::optional<CovarianceMatrix> cov,
-      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t>
+      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, BoundScalar>
           head,
       Tail... values)
       : m_vValues(kNumberOfParameters) {
@@ -258,7 +256,7 @@ class ParameterSet {
    * @return value of the stored parameter
    */
   template <parameter_indices_t parameter>
-  ParValue_t getParameter() const {
+  BoundScalar getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
 
@@ -280,7 +278,7 @@ class ParameterSet {
    * @return previously stored value of this parameter
    */
   template <parameter_indices_t parameter>
-  void setParameter(ParValue_t value) {
+  void setParameter(BoundScalar value) {
     m_vValues(getIndex<parameter>()) =
         ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
   }
@@ -341,7 +339,7 @@ class ParameterSet {
    *         covariance matrix is set
    */
   template <parameter_indices_t parameter>
-  ParValue_t getUncertainty() const {
+  BoundScalar getUncertainty() const {
     if (m_optCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_optCovariance)(index, index));
@@ -556,7 +554,7 @@ class ParameterSet {
    * @return constant matrix with @c #kNumberOfParameters rows and @c
    * #kSizeMax columns
    */
-  static const ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>
+  static const ActsMatrix<BoundScalar, kNumberOfParameters, kSizeMax>
   projector() {
     return sProjector;
   }

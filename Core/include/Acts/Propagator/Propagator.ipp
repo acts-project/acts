@@ -71,7 +71,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
   if (!terminatedNormally) {
     state.navigation.navigationBreak = true;
     ACTS_ERROR("Propagation reached the step count limit of "
-               << state.options.maxSteps << "(did " << result.steps
+               << state.options.maxSteps << " (did " << result.steps
                << " steps)");
     return PropagatorError::StepCountLimitReached;
   }

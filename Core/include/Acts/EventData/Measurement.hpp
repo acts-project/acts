@@ -31,11 +31,11 @@ namespace detail {
 template <typename T>
 struct ReferenceObject {};
 template <>
-struct ReferenceObject<BoundParametersIndices> {
+struct ReferenceObject<BoundIndices> {
   using type = Surface;
 };
 template <>
-struct ReferenceObject<FreeParametersIndices> {
+struct ReferenceObject<FreeIndices> {
   using type = Volume;
 };
 }  // namespace detail
@@ -104,7 +104,7 @@ class Measurement {
   Measurement(std::shared_ptr<const RefObject> referenceObject,
               const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
-                                      ParValue_t>::type head,
+                                      BoundScalar>::type head,
               Tail... values)
       : m_oParameters(std::move(cov), head, values...),
         m_pReferenceObject(std::move(referenceObject)),
@@ -201,7 +201,7 @@ class Measurement {
   ///
   /// @return value of the stored parameter
   template <parameter_indices_t parameter>
-  ParValue_t get() const {
+  BoundScalar get() const {
     return m_oParameters.template getParameter<parameter>();
   }
 
@@ -229,7 +229,7 @@ class Measurement {
   ///
   /// @return uncertainty \f$\sigma \ge 0\f$ for given parameter
   template <parameter_indices_t parameter>
-  ParValue_t uncertainty() const {
+  BoundScalar uncertainty() const {
     return m_oParameters.template getUncertainty<parameter>();
   }
 
@@ -353,24 +353,22 @@ class Measurement {
  */
 template <typename source_link_t>
 struct fittable_measurement_helper {
-  template <BoundParametersIndices... pars>
+  template <BoundIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
+    using type = Measurement<source_link_t, BoundIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<BoundParametersIndices, meas_factory>;
+  using type = typename detail::type_generator_t<BoundIndices, meas_factory>;
 };
 
 template <typename source_link_t>
 struct fittable_volume_measurement_helper {
-  template <FreeParametersIndices... pars>
+  template <FreeIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, FreeParametersIndices, pars...>;
+    using type = Measurement<source_link_t, FreeIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<FreeParametersIndices, meas_factory>;
+  using type = typename detail::type_generator_t<FreeIndices, meas_factory>;
 };
 
 /**

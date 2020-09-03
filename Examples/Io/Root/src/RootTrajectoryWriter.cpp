@@ -28,7 +28,7 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 using Measurement =
-    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundParametersIndices,
+    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundIndices,
                       Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
 ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
