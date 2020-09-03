@@ -11,6 +11,8 @@
 #include <limits>
 #include <type_traits>
 
+namespace Acts {
+
 /// Collection of bit masks to enable steering which components of a track state
 /// should be initialized, and which should be left invalid.
 /// These mask values can be combined using binary operators, so
@@ -80,4 +82,6 @@ constexpr TrackStatePropMask& operator^=(TrackStatePropMask& lhs,
       static_cast<std::underlying_type<TrackStatePropMask>::type>(lhs) ^
       static_cast<std::underlying_type<TrackStatePropMask>::type>(rhs));
   return lhs;
+}
+
 }
