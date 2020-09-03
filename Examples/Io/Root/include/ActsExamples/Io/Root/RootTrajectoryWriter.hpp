@@ -132,7 +132,7 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   float m_eTHETA_fit{-99.};      ///< fitted parameter eTHETA
   float m_eQOP_fit{-99.};        ///< fitted parameter eQOP
   float m_eT_fit{-99.};          ///< fitted parameter eT
-  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC_-99.err
+  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC err
   float m_err_eLOC1_fit{-99.};   ///< fitted parameter eBoundLoc1 err
   float m_err_ePHI_fit{-99.};    ///< fitted parameter ePHI err
   float m_err_eTHETA_fit{-99.};  ///< fitted parameter eTHETA err
