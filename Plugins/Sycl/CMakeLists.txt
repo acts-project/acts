@@ -6,7 +6,7 @@ find_package(SYCL REQUIRED)
 add_library(
   ActsPluginSycl SHARED
   # header files
-  include/Acts/Plugins/Sycl/Seeding/detail/Types.h
+  include/Acts/Plugins/Sycl/Seeding/detail/Types.hpp
   include/Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp
   include/Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp
   include/Acts/Plugins/Sycl/Seeding/Seedfinder.hpp

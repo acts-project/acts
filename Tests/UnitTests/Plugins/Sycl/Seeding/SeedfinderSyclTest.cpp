@@ -146,8 +146,9 @@ auto main(int argc, char** argv) -> int {
   Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
       config, deviceAtlasCuts, Acts::Sycl::QueueWrapper(cmdlTool.deviceName));
   Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
-  auto covarianceTool = [=](const SpacePoint& sp, float, float,
-                            float_t) -> Acts::Vector2D {
+  auto covarianceTool = [=](const SpacePoint& sp, float /*unused*/,
+                            float /*unused*/,
+                            float_t /*unused*/) -> Acts::Vector2D {
     return {sp.varianceR, sp.varianceZ};
   };
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
@@ -219,17 +220,21 @@ auto main(int argc, char** argv) -> int {
   std::chrono::duration<double> elapsec_sycl = end_sycl - start_sycl;
   double syclTime = elapsec_sycl.count();
 
+  auto textWidth = 20;
+  auto numWidth = 13;
+
   std::cout << std::endl;
-  std::cout << "------------------------- Time Metric -------------------------"
-            << std::endl;
-  std::cout << std::setw(20) << " Device:";
-  std::cout << std::setw(11) << "CPU";
-  std::cout << std::setw(12) << "GPU (SYCL)";
-  std::cout << std::setw(20) << "Speedup/ Agreement" << std::endl;
-  std::cout << std::setw(20) << " Time (s):";
-  std::cout << std::setw(11) << std::to_string(cpuTime) << " ";
-  std::cout << std::setw(11) << std::to_string(syclTime);
-  std::cout << std::setw(20) << std::to_string(cpuTime / syclTime);
+  std::cout
+      << "--------------------------- Time Metric ---------------------------"
+      << std::endl;
+  std::cout << std::setw(textWidth) << " Device:";
+  std::cout << std::setw(numWidth) << "CPU";
+  std::cout << std::setw(numWidth) << "GPU (SYCL)";
+  std::cout << std::setw(textWidth) << "Speedup/ Agreement" << std::endl;
+  std::cout << std::setw(textWidth) << " Time (s):";
+  std::cout << std::setw(numWidth) << std::to_string(cpuTime);
+  std::cout << std::setw(numWidth) << std::to_string(syclTime);
+  std::cout << std::setw(textWidth) << std::to_string(cpuTime / syclTime);
   std::cout << std::endl;
 
   if (cmdlTool.matches && !cmdlTool.onlyGpu) {
@@ -278,16 +283,16 @@ auto main(int argc, char** argv) -> int {
       }
     }
 
-    std::cout << std::setw(20) << " Seeds found:";
-    std::cout << std::setw(11) << std::to_string(nSeed_cpu) << " ";
-    std::cout << std::setw(11) << std::to_string(nSeed_sycl);
-    std::cout << std::setw(20)
+    std::cout << std::setw(textWidth) << " Seeds found:";
+    std::cout << std::setw(numWidth) << std::to_string(nSeed_cpu);
+    std::cout << std::setw(numWidth) << std::to_string(nSeed_sycl);
+    std::cout << std::setw(textWidth)
               << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
     std::cout << std::endl;
   }
 
   std::cout
-      << "---------------------------------------------------------------\n"
+      << "-------------------------------------------------------------------\n"
       << std::endl;
 
   for (const auto* S : spVec) {

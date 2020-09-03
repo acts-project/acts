@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 
-#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 
 #include <algorithm>
 #include <array>

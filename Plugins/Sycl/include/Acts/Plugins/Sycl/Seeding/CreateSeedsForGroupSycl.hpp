@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
-#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 
 #include <vector>
@@ -26,5 +26,4 @@ void createSeedsForGroupSycl(
     const std::vector<detail::DeviceSpacePoint>& middleSPs,
     const std::vector<detail::DeviceSpacePoint>& topSPs,
     std::vector<std::vector<detail::SeedData>>& seeds);
-
 }  // namespace Acts::Sycl

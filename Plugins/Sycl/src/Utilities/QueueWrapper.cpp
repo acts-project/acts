@@ -21,7 +21,7 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubtring) {
 }
 
 QueueWrapper::QueueWrapper(QueueWrapper&& parent) noexcept
-    : m_queue(parent.m_queue), m_ownsQueue(true) {
+    : m_queue(parent.m_queue), m_ownsQueue(parent.m_ownsQueue) {
   parent.m_queue = nullptr;
   parent.m_ownsQueue = false;
 }

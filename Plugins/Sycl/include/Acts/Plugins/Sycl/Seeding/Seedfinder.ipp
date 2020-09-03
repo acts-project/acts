@@ -11,30 +11,50 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace Acts::Sycl {
 
 template <typename external_spacepoint_t>
 void Seedfinder<external_spacepoint_t>::init() {
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
+  // init m_config
+  m_config.highland = 13.6f * std::sqrt(m_config.radLengthPerSeed) *
+                      (1 + 0.038f * std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
+  m_config.pTPerHelixRadius = 300.f * m_config.bFieldInZ;
   m_config.minHelixDiameter2 =
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
       std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+
+  auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
+
+  // init m_deviceConfig
+  m_deviceConfig = Acts::Sycl::detail::DeviceSeedfinderConfig{
+      m_config.deltaRMin,
+      m_config.deltaRMax,
+      m_config.cotThetaMax,
+      m_config.collisionRegionMin,
+      m_config.collisionRegionMax,
+      m_config.maxScatteringAngle2,
+      m_config.sigmaScattering,
+      m_config.minHelixDiameter2,
+      m_config.pT2perRadius,
+      seedFilterConfig.deltaInvHelixDiameter,
+      seedFilterConfig.impactWeightFactor,
+      seedFilterConfig.deltaRMin,
+      seedFilterConfig.compatSeedWeight,
+      m_config.impactMax,
+      seedFilterConfig.compatSeedLimit,
+  };
 }
 
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
     const Acts::Sycl::DeviceExperimentCuts& cuts)
-    : m_config(config),
-      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
-      m_deviceCuts(cuts),
-      m_wrappedQueue() {
+    : m_config(config), m_deviceCuts(cuts), m_wrappedQueue() {
   init();
 }
 
@@ -42,23 +62,10 @@ template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
-    Acts::Sycl::QueueWrapper&& wrappedQueue)
+    Acts::Sycl::QueueWrapper wrappedQueue)
     : m_config(config),
-      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)) {
-  init();
-}
-
-template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config,
-    const Acts::Sycl::DeviceExperimentCuts& cuts,
-    const Acts::Sycl::QueueWrapper& wrappedQueue)
-    : m_config(config),
-      m_seedFilterConfig(m_config.seedFilter->getSeedFilterConfig()),
-      m_deviceCuts(cuts),
-      m_wrappedQueue(wrappedQueue) {
   init();
 }
 
@@ -100,34 +107,17 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                                  SP->varianceR(), SP->varianceZ()});
   }
 
-  const auto deviceConfigData = detail::DeviceSeedfinderConfig{
-      m_config.deltaRMin,
-      m_config.deltaRMax,
-      m_config.cotThetaMax,
-      m_config.collisionRegionMin,
-      m_config.collisionRegionMax,
-      m_config.maxScatteringAngle2,
-      m_config.sigmaScattering,
-      m_config.minHelixDiameter2,
-      m_config.pT2perRadius,
-      m_seedFilterConfig.deltaInvHelixDiameter,
-      m_seedFilterConfig.impactWeightFactor,
-      m_seedFilterConfig.deltaRMin,
-      m_seedFilterConfig.compatSeedWeight,
-      m_config.impactMax,
-      m_seedFilterConfig.compatSeedLimit,
-  };
-
   std::vector<std::vector<detail::SeedData>> seeds;
 
-  createSeedsForGroupSycl(m_wrappedQueue, deviceConfigData, m_deviceCuts,
+  createSeedsForGroupSycl(m_wrappedQueue, m_deviceConfig, m_deviceCuts,
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
                           seeds);
 
+  std::vector<std::pair<
+      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+      seedsPerSPM;
   for (size_t mi = 0; mi < seeds.size(); ++mi) {
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        seedsPerSPM;
+    seedsPerSPM.clear();
     for (size_t j = 0; j < seeds[mi].size(); ++j) {
       auto& bottomSP = *(bottomSPvec[seeds[mi][j].bottom]);
       auto& middleSP = *(middleSPvec[mi]);

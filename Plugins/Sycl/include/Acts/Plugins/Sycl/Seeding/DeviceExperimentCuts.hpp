@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Plugins/Sycl/Seeding/detail/Types.h"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 
 namespace Acts::Sycl {
 /// @class DeviceExperimentCuts can be used to increase or decrease seed weights
