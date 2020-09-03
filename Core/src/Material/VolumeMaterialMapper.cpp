@@ -83,7 +83,7 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 
-    RecordedMaterialPoint mat;
+    RecordedMaterialVolumePoint mat;
     mState.recordedMaterial[geoID] = mat;
 
     // We need a dynamic_cast to either a volume material proxy or
@@ -181,6 +181,30 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
   }
 }
 
+void Acts::VolumeMaterialMapper::createExtraHits(RecordedMaterialVolumePoint &matPoint, Acts::MaterialProperties properties, Vector3D position, Vector3D direction) const{
+  
+  std::vector<Acts::Vector3D> extraPosition;
+  std::vector<Acts::Vector3D> extraRemainderPositions;
+
+  int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
+  float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
+  properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
+  direction = direction * (m_cfg.mappingStep / direction.norm());
+
+  for (int extraStep = 0; extraStep < volumeStep; extraStep++) {
+    // Create additional extrapolated points for the grid mapping
+    extraPosition.push_back(position + extraStep * direction);
+  }
+  matPoint.push_back(std::pair(properties, extraPosition));
+
+  if(remainder > 0){
+    // adjust the thickness of the last extrapolated step
+    properties.scaleThickness(remainder / properties.thickness());
+    extraRemainderPositions.push_back(position + volumeStep * direction);
+    matPoint.push_back(std::pair(properties, extraPosition));    
+  }  
+}
+
 void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
   // iterate over the volumes
   for (auto& recMaterial : mState.recordedMaterial) {
@@ -233,8 +257,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                                           mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
+  using BoundSurfaceCollector = SurfaceCollector<BoundSurface>;
   using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList = ActionList<MaterialVolumeCollector>;
+  using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
   auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
@@ -243,9 +268,11 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
-  auto mcResult = result.get<MaterialVolumeCollector::result_type>();
+  auto mcResult = result.get<BoundSurfaceCollector::result_type>();
+  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
 
-  auto mappingVolumes = mcResult.collected;
+  auto mappingSurfaces = mcResult.collected;
+  auto mappingVolumes = mvcResult.collected;
 
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
@@ -267,6 +294,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping volume:
   auto rmIter = rMaterial.begin();
+  auto sfIter = mappingSurfaces.begin();
   auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
@@ -274,10 +302,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   GeometryID currentID = GeometryID();
   auto currentRecMaterial = mState.recordedMaterial.end();
 
-  // Use those to create additional extrapolated step
-  int volumeStep = 1;
-  Acts::Vector3D extraPosition = {0, 0, 0};
-  Acts::Vector3D extraDirection = {0, 0, 0};
+  // store end position of the last step for vacuum
+  Acts::Vector3D lastPositionEnd = volIter->position;
+  Acts::Vector3D direction;
 
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
     if (volIter != mappingVolumes.end() &&
@@ -296,29 +323,47 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       if (not(currentID == lastID)) {
         // Let's (re-)assess the information
         lastID = currentID;
+        lastPositionEnd = volIter->position;
         currentRecMaterial = mState.recordedMaterial.find(currentID);
       }
-      if (currentRecMaterial != mState.recordedMaterial.end()) {
-        // If the curent volume has a ProtoVolumeMaterial
-        volumeStep =
-            floor(rmIter->materialProperties.thickness() / m_cfg.mappingStep);
-        auto properties = rmIter->materialProperties;
-        float remainder = rmIter->materialProperties.thickness() -
-                          m_cfg.mappingStep * volumeStep;
-        properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
-        // Get the direction of the Geantino in the volume
-        extraDirection = rmIter->direction;
-        extraDirection =
-            extraDirection * (m_cfg.mappingStep / extraDirection.norm());
-        for (int extraStep = 0; extraStep <= volumeStep; extraStep++) {
-          // Create additional extrapolated points for the grid mapping
-          extraPosition = rmIter->position + extraStep * extraDirection;
-          if (extraStep == volumeStep) {
-            // adjust the thickness of the last extrapolated step
-            properties.scaleThickness(remainder / properties.thickness());
+      // If the curent volume has a ProtoVolumeMaterial
+      // and the material hit has a non 0 thickness
+      if (currentRecMaterial != mState.recordedMaterial.end() && rmIter->materialProperties.thickness() > 0) {
+        // Check that the last point + thickness
+          float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
+          if(vacuumThickness>s_epsilon){
+            auto properties = Acts::MaterialProperties(vacuumThickness);
+            createExtraHits(
+                currentRecMaterial->second,
+                properties, lastPositionEnd, direction);
+          } 
+        direction = rmIter->direction;
+        direction = direction * (rmIter->materialProperties.thickness() / direction.norm());
+        lastPositionEnd = rmIter->position + direction;
+        createExtraHits(currentRecMaterial->second,
+                       rmIter->materialProperties, rmIter->position, direction);
+      }
+
+      if ((rmIter + 1) == rMaterial.end() ||
+          !volIter->volume->inside((rmIter + 1)->position)) {
+        while (sfIter != mappingSurfaces.end()) {
+          if(sfIter->surface->geometryId().volume() == volIter->volume->geometryId().volume() || ( (volIter+1) != mappingVolumes.end()  && sfIter->surface->geometryId().volume() == (volIter+1)->volume->geometryId().volume()) ){
+            double distVol = (volIter->position - mTrack.first.first).norm();
+            double distSur = (sfIter->position - mTrack.first.first).norm();
+            if (distSur - distVol > s_epsilon) {
+              float vacuumThickness =
+                  (sfIter->position - lastPositionEnd).norm();
+              if(vacuumThickness>s_epsilon){
+                auto properties = Acts::MaterialProperties(vacuumThickness);
+                createExtraHits(
+                    currentRecMaterial->second,
+                    properties, lastPositionEnd, direction);
+                lastPositionEnd = sfIter->position;
+              }
+              break;
+            }
           }
-          mState.recordedMaterial[volIter->volume->geometryId()].push_back(
-              std::pair(properties, extraPosition));
+          sfIter++;
         }
       }
       rmIter->volume = volIter->volume;
