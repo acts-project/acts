@@ -20,8 +20,6 @@
 #include <type_traits>
 
 namespace Acts {
-/// @class AdaptiveMultiVertexFinder
-///
 /// @brief Implements an iterative vertex finder
 ///
 ////////////////////////////////////////////////////////////
