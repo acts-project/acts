@@ -100,7 +100,7 @@ class Particle {
     return *this;
   }
   /// Set the absolute momentum.
-  Particle &setAbsMomentum(Scalar absMomentum) {
+  Particle &setAbsoluteMomentum(Scalar absMomentum) {
     m_absMomentum = absMomentum;
     return *this;
   }
@@ -153,7 +153,7 @@ class Particle {
     return m_absMomentum * m_unitDirection.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
-  constexpr Scalar absMomentum() const { return m_absMomentum; }
+  constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 

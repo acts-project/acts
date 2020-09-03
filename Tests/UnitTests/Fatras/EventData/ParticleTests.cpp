@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(Construct) {
   // particle direction is undefined, but must be normalized
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), Particle::Scalar(0));
-  BOOST_CHECK_EQUAL(particle.absMomentum(), Particle::Scalar(0));
+  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), Particle::Scalar(0));
   // particle is created at rest and thus not alive
   BOOST_CHECK(not particle);
 }
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   const auto pid = Barcode().setVertexPrimary(1).setParticle(42);
   auto particle = Particle(pid, PdgParticle::eProton, 1_GeV, 1_e)
                       .setDirection(Particle::Vector3::UnitX())
-                      .setAbsMomentum(2_GeV);
+                      .setAbsoluteMomentum(2_GeV);
 
   BOOST_CHECK_EQUAL(particle.mass(), 1_GeV);
   // check that the particle has some input energy
@@ -60,14 +60,14 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   BOOST_CHECK_EQUAL(particle.momentum4().z(), 0_GeV);
   BOOST_CHECK_EQUAL(particle.momentum4().w(), std::hypot(1_GeV, 2_GeV));
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.absMomentum(), 2_GeV);
+  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV));
   // particle direction must be normalized
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // loose some energy
   particle.correctEnergy(-100_MeV);
   BOOST_CHECK_LT(particle.transverseMomentum(), 2_GeV);
-  BOOST_CHECK_LT(particle.absMomentum(), 2_GeV);
+  BOOST_CHECK_LT(particle.absoluteMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.energy(),
                     Particle::Scalar(std::hypot(1_GeV, 2_GeV) - 100_MeV));
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
@@ -76,13 +76,13 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
   // loose a lot of energy
   particle.correctEnergy(-3_GeV);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), Particle::Scalar(0));
-  BOOST_CHECK_EQUAL(particle.absMomentum(), Particle::Scalar(0));
+  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), Particle::Scalar(0));
   BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // lossing even more energy does nothing
   particle.correctEnergy(-10_GeV);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), Particle::Scalar(0));
-  BOOST_CHECK_EQUAL(particle.absMomentum(), Particle::Scalar(0));
+  BOOST_CHECK_EQUAL(particle.absoluteMomentum(), Particle::Scalar(0));
   BOOST_CHECK_EQUAL(particle.energy(), particle.mass());
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   // particle is not alive anymore

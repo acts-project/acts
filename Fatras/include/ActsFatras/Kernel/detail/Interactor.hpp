@@ -90,7 +90,7 @@ struct Interactor {
             .setPosition4(stepper.position(state.stepping),
                           stepper.time(state.stepping))
             .setDirection(stepper.direction(state.stepping))
-            .setAbsMomentum(stepper.momentum(state.stepping));
+            .setAbsoluteMomentum(stepper.momentum(state.stepping));
     // we want to keep the particle state before and after the interaction.
     // since the particle is modified in-place we need a copy.
     Particle after = before;
@@ -148,7 +148,7 @@ struct Interactor {
 
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absMomentum(), after.time());
+                   after.absoluteMomentum(), after.time());
   }
 
   /// Pure observer interface. Does not apply to the Fatras simulator.

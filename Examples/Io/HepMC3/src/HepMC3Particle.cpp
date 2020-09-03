@@ -19,7 +19,7 @@ ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
                  HepPID::charge(particle->pid()), particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
-  fw.setAbsMomentum(particle->momentum().p3mod());
+  fw.setAbsoluteMomentum(particle->momentum().p3mod());
   return fw;
 }
 

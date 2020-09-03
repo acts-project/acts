@@ -44,7 +44,7 @@ struct GaussianMixture {
     /// Calculate the highland formula first
     double sigma = Acts::computeMultipleScatteringTheta0(
         slab, particle.pdg(), particle.mass(),
-        particle.charge() / particle.absMomentum(), particle.charge());
+        particle.charge() / particle.absoluteMomentum(), particle.charge());
     double sigma2 = sigma * sigma;
 
     // Gauss distribution, will be sampled with generator
@@ -56,7 +56,7 @@ struct GaussianMixture {
     // d_0'
     // beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
     // 1/beta² = 1 + (m/p)²
-    double mOverP = particle.mass() / particle.absMomentum();
+    double mOverP = particle.mass() / particle.absoluteMomentum();
     double beta2inv = 1 + mOverP * mOverP;
     double dprime = slab.thicknessInX0() * beta2inv;
     double log_dprime = std::log(dprime);
@@ -78,8 +78,8 @@ struct GaussianMixture {
 
     // G4 optimised / native double Gaussian model
     if (optGaussianMixtureG4) {
-      sigma2 =
-          225. * dprime / (particle.absMomentum() * particle.absMomentum());
+      sigma2 = 225. * dprime /
+               (particle.absoluteMomentum() * particle.absoluteMomentum());
     }
     // throw the random number core/tail
     if (uniformDist(generator) < epsilon) {

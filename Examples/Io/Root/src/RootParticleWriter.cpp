@@ -101,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_vz = particle.position4().z() / Acts::UnitConstants::mm;
     m_vt = particle.position4().w() / Acts::UnitConstants::ns;
     // momentum
-    const auto p = particle.absMomentum() / Acts::UnitConstants::GeV;
+    const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_px = p * particle.unitDirection().x();
     m_py = p * particle.unitDirection().y();
     m_pz = p * particle.unitDirection().z();
