@@ -27,8 +27,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   ///
   /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
-  HomogeneousSurfaceMaterial(const MaterialSlab& full,
-                             double splitFactor = 1.);
+  HomogeneousSurfaceMaterial(const MaterialSlab& full, double splitFactor = 1.);
 
   /// Copy Constructor
   ///
@@ -82,8 +81,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param ib1 The bin at local 1 for retrieving the material
   ///
   /// @note the input parameter is ignored
-  const MaterialSlab& materialSlab(size_t ib0,
-                                               size_t ib1) const final;
+  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
 
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;

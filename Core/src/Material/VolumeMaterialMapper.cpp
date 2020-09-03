@@ -303,8 +303,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         volumeStep =
             floor(rmIter->MaterialSlab.thickness() / m_cfg.mappingStep);
         auto properties = rmIter->MaterialSlab;
-        float remainder = rmIter->MaterialSlab.thickness() -
-                          m_cfg.mappingStep * volumeStep;
+        float remainder =
+            rmIter->MaterialSlab.thickness() - m_cfg.mappingStep * volumeStep;
         properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
         // Get the direction of the Geantino in the volume
         extraDirection = rmIter->direction;

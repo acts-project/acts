@@ -133,8 +133,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 
       // The material matrix
       Acts::MaterialSlabMatrix materialMatrix(
-          nbins1,
-          Acts::MaterialSlabVector(nbins0, Acts::MaterialSlab()));
+          nbins1, Acts::MaterialSlabVector(nbins0, Acts::MaterialSlab()));
 
       // We need binned material properties
       if (nbins0 * nbins1 > 1) {

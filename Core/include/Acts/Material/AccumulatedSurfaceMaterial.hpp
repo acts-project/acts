@@ -83,8 +83,7 @@ class AccumulatedSurfaceMaterial {
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector2D& lp,
-                                   const MaterialSlab& mp,
+  std::array<size_t, 3> accumulate(const Vector2D& lp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
   /// Assign a material properites object
@@ -93,8 +92,7 @@ class AccumulatedSurfaceMaterial {
   /// @param mp material properties to be assigned
   ///
   /// @return the bin triple to which the material was assigned
-  std::array<size_t, 3> accumulate(const Vector3D& gp,
-                                   const MaterialSlab& mp,
+  std::array<size_t, 3> accumulate(const Vector3D& gp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
   /// Average the information accumulated from one mapped track

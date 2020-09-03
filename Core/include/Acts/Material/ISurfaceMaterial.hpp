@@ -47,8 +47,7 @@ class ISurfaceMaterial {
   /// @param lp is the local position used for the (eventual) lookup
   ///
   /// @return const MaterialSlab
-  virtual const MaterialSlab& materialSlab(
-      const Vector2D& lp) const = 0;
+  virtual const MaterialSlab& materialSlab(const Vector2D& lp) const = 0;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -56,15 +55,13 @@ class ISurfaceMaterial {
   /// @param gp is the global position used for the (eventual) lookup
   ///
   /// @return const MaterialSlab
-  virtual const MaterialSlab& materialSlab(
-      const Vector3D& gp) const = 0;
+  virtual const MaterialSlab& materialSlab(const Vector3D& gp) const = 0;
 
   /// Direct access via bins to the MaterialSlab
   ///
   /// @param ib0 is the material bin in dimension 0
   /// @param ib1 is the material bin in dimension 1
-  virtual const MaterialSlab& materialSlab(size_t ib0,
-                                                       size_t ib1) const = 0;
+  virtual const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const = 0;
 
   /// Update pre factor
   ///
@@ -80,9 +77,8 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector2D& lp,
-                                        NavigationDirection pDir,
-                                        MaterialUpdateStage mStage) const;
+  MaterialSlab materialSlab(const Vector2D& lp, NavigationDirection pDir,
+                            MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -92,9 +88,8 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector3D& gp,
-                                        NavigationDirection pDir,
-                                        MaterialUpdateStage mStage) const;
+  MaterialSlab materialSlab(const Vector3D& gp, NavigationDirection pDir,
+                            MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
   ///

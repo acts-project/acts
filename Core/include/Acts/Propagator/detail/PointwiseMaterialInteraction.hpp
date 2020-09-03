@@ -88,9 +88,8 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialSlab(
-      const propagator_state_t& state,
-      MaterialUpdateStage updateStage = fullUpdate) {
+  bool evaluateMaterialSlab(const propagator_state_t& state,
+                            MaterialUpdateStage updateStage = fullUpdate) {
     // We are at the start surface
     if (surface == state.navigation.startSurface) {
       updateStage = postUpdate;
@@ -100,9 +99,8 @@ struct PointwiseMaterialInteraction {
     }
 
     // Retrieve the material properties
-    slab =
-        state.navigation.currentSurface->surfaceMaterial()->materialSlab(
-            pos, nav, updateStage);
+    slab = state.navigation.currentSurface->surfaceMaterial()->materialSlab(
+        pos, nav, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);

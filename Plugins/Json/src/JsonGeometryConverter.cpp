@@ -87,7 +87,7 @@ json encodeMaterialSlab(const Acts::MaterialSlab& slab) {
 
 Acts::MaterialSlab decodeMaterialSlab(const json& encoded) {
   return Acts::MaterialSlab(decodeMaterial(encoded.at("material")),
-                                  encoded.at("thickness").get<float>());
+                            encoded.at("thickness").get<float>());
 }
 
 }  // namespace
@@ -894,8 +894,8 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
 }
 
 /// Create the Material Matrix
-Acts::MaterialSlabMatrix
-Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
+Acts::MaterialSlabMatrix Acts::JsonGeometryConverter::jsonToMaterialMatrix(
+    const json& data) {
   Acts::MaterialSlabMatrix mpMatrix;
   // the input data must be array[array[object]]
   for (auto& outer : data) {

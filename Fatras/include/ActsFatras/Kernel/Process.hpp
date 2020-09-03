@@ -29,8 +29,7 @@ struct EveryInput {
 /// Enable usage of a particle selector as an input selector.
 template <typename ParticleSelector>
 struct AsInputSelector : public ParticleSelector {
-  bool operator()(const Particle &particle,
-                  const Acts::MaterialSlab &) const {
+  bool operator()(const Particle &particle, const Acts::MaterialSlab &) const {
     return ParticleSelector::operator()(particle);
   }
 };

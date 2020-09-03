@@ -88,8 +88,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param ib1 indicates the seconf bin
   ///
   /// @return will return dummy material
-  const MaterialSlab& materialSlab(size_t ib0,
-                                               size_t ib1) const final;
+  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
@@ -105,19 +104,18 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
 };
 }  // namespace Acts
 
-inline const Acts::MaterialSlab&
-Acts::ProtoSurfaceMaterial::materialSlab(const Vector2D& /*lp*/) const {
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    const Vector2D& /*lp*/) const {
   return (m_MaterialSlab);
 }
 
-inline const Acts::MaterialSlab&
-Acts::ProtoSurfaceMaterial::materialSlab(const Vector3D& /*gp*/) const {
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    const Vector3D& /*gp*/) const {
   return (m_MaterialSlab);
 }
 
-inline const Acts::MaterialSlab&
-Acts::ProtoSurfaceMaterial::materialSlab(size_t /*ib0*/,
-                                               size_t /*ib1*/) const {
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    size_t /*ib0*/, size_t /*ib1*/) const {
   return (m_MaterialSlab);
 }
 

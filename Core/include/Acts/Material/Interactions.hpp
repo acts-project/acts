@@ -35,9 +35,8 @@ float computeEnergyLossBethe(const MaterialSlab& slab, int pdg, float m,
 /// Derivative of the Bethe energy loss with respect to q/p.
 ///
 /// @see computeEnergyLossBethe for parameters description
-float deriveEnergyLossBetheQOverP(const MaterialSlab& slab, int pdg,
-                                  float m, float qOverP,
-                                  float q = UnitConstants::e);
+float deriveEnergyLossBetheQOverP(const MaterialSlab& slab, int pdg, float m,
+                                  float qOverP, float q = UnitConstants::e);
 
 /// Compute the most propable energy loss due to ionisation and excitation.
 ///
@@ -52,9 +51,8 @@ float computeEnergyLossLandau(const MaterialSlab& slab, int pdg, float m,
 /// Derivative of the most probable ionisation energy loss with respect to q/p.
 ///
 /// @see computeEnergyLossBethe for parameters description
-float deriveEnergyLossLandauQOverP(const MaterialSlab& slab, int pdg,
-                                   float m, float qOverP,
-                                   float q = UnitConstants::e);
+float deriveEnergyLossLandauQOverP(const MaterialSlab& slab, int pdg, float m,
+                                   float qOverP, float q = UnitConstants::e);
 
 /// Compute the Gaussian-equivalent sigma for the ionisation loss fluctuations.
 ///
@@ -63,14 +61,13 @@ float deriveEnergyLossLandauQOverP(const MaterialSlab& slab, int pdg,
 /// This is the sigma paramter of a Gaussian distribution with the same
 /// full-width-half-maximum as the Landau-Vavilov-Bichsel distribution. The
 /// computations are valid for intermediate particle energies.
-float computeEnergyLossLandauSigma(const MaterialSlab& slab, int pdg,
-                                   float m, float qOverP,
-                                   float q = UnitConstants::e);
+float computeEnergyLossLandauSigma(const MaterialSlab& slab, int pdg, float m,
+                                   float qOverP, float q = UnitConstants::e);
 /// Compute q/p Gaussian-equivalent sigma due to ionisation loss fluctuations.
 ///
 /// @see computeEnergyLossBethe for parameters description
-float computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
-                                         int pdg, float m, float qOverP,
+float computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab, int pdg,
+                                         float m, float qOverP,
                                          float q = UnitConstants::e);
 
 /// Compute the mean energy loss due to radiative effects at high energies.
@@ -84,9 +81,8 @@ float computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
 /// This computes the mean energy loss -dE(x) using an approximative formula.
 /// Bremsstrahlung is always included; direct e+e- pair production and
 /// photo-nuclear interactions only for muons.
-float computeEnergyLossRadiative(const MaterialSlab& slab, int pdg,
-                                 float m, float qOverP,
-                                 float q = UnitConstants::e);
+float computeEnergyLossRadiative(const MaterialSlab& slab, int pdg, float m,
+                                 float qOverP, float q = UnitConstants::e);
 /// Derivative of the mean radiative energy loss with respect to q/p.
 ///
 /// @see computeEnergyLossRadiative for parameters description
@@ -110,9 +106,8 @@ float computeEnergyLossMean(const MaterialSlab& slab, int pdg, float m,
 /// Derivative of the combined mean energy loss with respect to q/p.
 ///
 /// @see computeEnergyLossMean for parameters description.
-float deriveEnergyLossMeanQOverP(const MaterialSlab& slab, int pdg,
-                                 float m, float qOverP,
-                                 float q = UnitConstants::e);
+float deriveEnergyLossMeanQOverP(const MaterialSlab& slab, int pdg, float m,
+                                 float qOverP, float q = UnitConstants::e);
 
 /// Compute the combined most probably energy loss.
 ///
@@ -122,9 +117,8 @@ float computeEnergyLossMode(const MaterialSlab& slab, int pdg, float m,
 /// Derivative of the combined most probable energy loss with respect to q/p.
 ///
 /// @see computeEnergyLossMean for parameters description.
-float deriveEnergyLossModeQOverP(const MaterialSlab& slab, int pdg,
-                                 float m, float qOverP,
-                                 float q = UnitConstants::e);
+float deriveEnergyLossModeQOverP(const MaterialSlab& slab, int pdg, float m,
+                                 float qOverP, float q = UnitConstants::e);
 
 /// Compute the core width of the projected planar scattering distribution.
 ///

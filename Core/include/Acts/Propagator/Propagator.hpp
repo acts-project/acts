@@ -128,7 +128,7 @@ struct PropagatorOptions {
   double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
-  unsigned int maxSteps = 10000000;
+  unsigned int maxSteps = 1000;
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
   unsigned int maxRungeKuttaStepTrials = 10000;

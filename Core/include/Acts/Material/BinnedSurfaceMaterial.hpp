@@ -92,8 +92,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   const MaterialSlab& materialSlab(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
-  const MaterialSlab& materialSlab(size_t bin0,
-                                               size_t bin1) const final;
+  const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
@@ -110,8 +109,7 @@ inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
-inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial()
-    const {
+inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {
   return m_fullMaterial;
 }
 

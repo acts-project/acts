@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
   std::vector<MaterialSlab> l2 = {std::move(a02), std::move(a12)};
 
   // Build the matrix
-  std::vector<std::vector<MaterialSlab>> m = {
-      std::move(l0), std::move(l1), std::move(l2)};
+  std::vector<std::vector<MaterialSlab>> m = {std::move(l0), std::move(l1),
+                                              std::move(l2)};
 
   // Create the material
   BinnedSurfaceMaterial bsm(xyBinning, std::move(m));

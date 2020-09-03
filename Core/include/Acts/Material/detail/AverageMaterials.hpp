@@ -22,8 +22,7 @@ namespace detail {
 /// The averaged material slab has the combined thickness of the two input slabs
 /// and assumes the two input materials are homogeneously and continously mixed
 /// throughout the slab.
-MaterialSlab combineSlabs(const MaterialSlab& slab1,
-                                const MaterialSlab& slab2);
+MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
 
 }  // namespace detail
 }  // namespace Acts
