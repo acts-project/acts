@@ -181,8 +181,9 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
   }
 }
 
-void Acts::VolumeMaterialMapper::createExtraHits(RecordedMaterialVolumePoint &matPoint, Acts::MaterialProperties properties, Vector3D position, Vector3D direction) const{
-  
+void Acts::VolumeMaterialMapper::createExtraHits(
+    RecordedMaterialVolumePoint& matPoint, Acts::MaterialProperties properties,
+    Vector3D position, Vector3D direction) const {
   std::vector<Acts::Vector3D> extraPosition;
   std::vector<Acts::Vector3D> extraRemainderPositions;
 
@@ -197,12 +198,12 @@ void Acts::VolumeMaterialMapper::createExtraHits(RecordedMaterialVolumePoint &ma
   }
   matPoint.push_back(std::pair(properties, extraPosition));
 
-  if(remainder > 0){
+  if (remainder > 0) {
     // adjust the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     extraRemainderPositions.push_back(position + volumeStep * direction);
-    matPoint.push_back(std::pair(properties, extraPosition));    
-  }  
+    matPoint.push_back(std::pair(properties, extraPosition));
+  }
 }
 
 void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
@@ -328,36 +329,40 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       }
       // If the curent volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
-      if (currentRecMaterial != mState.recordedMaterial.end() && rmIter->materialProperties.thickness() > 0) {
+      if (currentRecMaterial != mState.recordedMaterial.end() &&
+          rmIter->materialProperties.thickness() > 0) {
         // Check that the last point + thickness
-          float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
-          if(vacuumThickness>s_epsilon){
-            auto properties = Acts::MaterialProperties(vacuumThickness);
-            createExtraHits(
-                currentRecMaterial->second,
-                properties, lastPositionEnd, direction);
-          } 
+        float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
+        if (vacuumThickness > s_epsilon) {
+          auto properties = Acts::MaterialProperties(vacuumThickness);
+          createExtraHits(currentRecMaterial->second, properties,
+                          lastPositionEnd, direction);
+        }
         direction = rmIter->direction;
-        direction = direction * (rmIter->materialProperties.thickness() / direction.norm());
+        direction = direction *
+                    (rmIter->materialProperties.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
-        createExtraHits(currentRecMaterial->second,
-                       rmIter->materialProperties, rmIter->position, direction);
+        createExtraHits(currentRecMaterial->second, rmIter->materialProperties,
+                        rmIter->position, direction);
       }
 
       if ((rmIter + 1) == rMaterial.end() ||
           !volIter->volume->inside((rmIter + 1)->position)) {
         while (sfIter != mappingSurfaces.end()) {
-          if(sfIter->surface->geometryId().volume() == volIter->volume->geometryId().volume() || ( (volIter+1) != mappingVolumes.end()  && sfIter->surface->geometryId().volume() == (volIter+1)->volume->geometryId().volume()) ){
+          if (sfIter->surface->geometryId().volume() ==
+                  volIter->volume->geometryId().volume() ||
+              ((volIter + 1) != mappingVolumes.end() &&
+               sfIter->surface->geometryId().volume() ==
+                   (volIter + 1)->volume->geometryId().volume())) {
             double distVol = (volIter->position - mTrack.first.first).norm();
             double distSur = (sfIter->position - mTrack.first.first).norm();
             if (distSur - distVol > s_epsilon) {
               float vacuumThickness =
                   (sfIter->position - lastPositionEnd).norm();
-              if(vacuumThickness>s_epsilon){
+              if (vacuumThickness > s_epsilon) {
                 auto properties = Acts::MaterialProperties(vacuumThickness);
-                createExtraHits(
-                    currentRecMaterial->second,
-                    properties, lastPositionEnd, direction);
+                createExtraHits(currentRecMaterial->second, properties,
+                                lastPositionEnd, direction);
                 lastPositionEnd = sfIter->position;
               }
               break;

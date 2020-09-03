@@ -30,8 +30,8 @@
 namespace Acts {
 
 /// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
+using RecordedMaterialVolumePoint = std::vector<
+    std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
 
 //
 /// @brief VolumeMaterialMapper
@@ -181,7 +181,8 @@ class VolumeMaterialMapper {
   /// @param position position of the original hit
   /// @param direction direction of the track
   void createExtraHits(RecordedMaterialVolumePoint& matPoint,
-                       Acts::MaterialProperties properties, Vector3D position, Vector3D direction) const;
+                       Acts::MaterialProperties properties, Vector3D position,
+                       Vector3D direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

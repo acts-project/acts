@@ -20,8 +20,8 @@
 namespace Acts {
 
 /// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
+using RecordedMaterialVolumePoint = std::vector<
+    std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
