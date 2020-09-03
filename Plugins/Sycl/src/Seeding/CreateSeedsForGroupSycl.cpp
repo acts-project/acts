@@ -59,6 +59,7 @@ void createSeedsForGroupSycl(
 
   // Up to the Nth space point, the sum of compatible bottom/top space points.
   // We need these for indexing other vectors later in the algorithm.
+  // These are prefix sum arrays, with a leading zero.
   std::vector<uint32_t> sumBotCompUptoMid(M + 1, 0);
   std::vector<uint32_t> sumTopCompUptoMid(M + 1, 0);
   std::vector<uint32_t> sumBotTopCombined(M + 1, 0);
@@ -277,9 +278,8 @@ void createSeedsForGroupSycl(
               edgesBotNdRange, [=](cl::sycl::nd_item<1> item) {
                 auto idx = item.get_global_linear_id();
                 if (idx < edgesBottom) {
-                  uint32_t mid = deviceMidIndPerBot[idx];
-                  uint32_t ind =
-                      deviceTmpIndBot[mid * B + idx - deviceSumBot[mid]];
+                  auto mid = deviceMidIndPerBot[idx];
+                  auto ind = deviceTmpIndBot[mid * B + idx - deviceSumBot[mid]];
                   deviceIndBot[idx] = ind;
                 }
               });
@@ -290,9 +290,8 @@ void createSeedsForGroupSycl(
               edgesTopNdRange, [=](cl::sycl::nd_item<1> item) {
                 auto idx = item.get_global_linear_id();
                 if (idx < edgesTop) {
-                  uint32_t mid = deviceMidIndPerTop[idx];
-                  uint32_t ind =
-                      deviceTmpIndTop[mid * T + idx - deviceSumTop[mid]];
+                  auto mid = deviceMidIndPerTop[idx];
+                  auto ind = deviceTmpIndTop[mid * T + idx - deviceSumTop[mid]];
                   deviceIndTop[idx] = ind;
                 }
               });
@@ -433,7 +432,7 @@ void createSeedsForGroupSycl(
       uint32_t lastMiddle = 0;
       for (uint32_t firstMiddle = 0; firstMiddle < M;
            firstMiddle = lastMiddle) {
-        // Determine the the interval [firstMiddle, lastMiddle) right end based
+        // Determine the interval [firstMiddle, lastMiddle) right end based
         // on memory requirements.
         while (lastMiddle + 1 <= M && (sumBotTopCombined[lastMiddle + 1] -
                                            sumBotTopCombined[firstMiddle] <
@@ -464,17 +463,16 @@ void createSeedsForGroupSycl(
                 if (idx < numCombinations) {
                   // Retrieve the index of the corresponding middle space point
                   // by binomial search
-                  // Another option would be to reserve constant space for each
-                  // middle space point, but it was slower for small test files.
-                  uint32_t L = firstMiddle;
-                  uint32_t R = lastMiddle;
-                  uint32_t mid = L;
+                  auto L = firstMiddle;
+                  auto R = lastMiddle;
+                  auto mid = L;
                   while (L < R - 1) {
                     mid = (L + R) / 2;
-                    if (idx + tripletSearchOffset[0] < deviceSumComb[mid])
+                    if (idx + tripletSearchOffset[0] < deviceSumComb[mid]) {
                       R = mid;
-                    else
+                    } else {
                       L = mid;
+                    }
                   }
                   mid = L;
 
@@ -566,15 +564,16 @@ void createSeedsForGroupSycl(
                  if (idx < numCombinations &&
                      deviceCurvImpact[idx].curvature != MIN) {
                    // Same as in previous kernel
-                   uint32_t L = firstMiddle;
-                   uint32_t R = lastMiddle;
-                   uint32_t mid = L;
+                   auto L = firstMiddle;
+                   auto R = lastMiddle;
+                   auto mid = L;
                    while (L < R - 1) {
                      mid = (L + R) / 2;
-                     if (idx + tripletSearchOffset[0] < deviceSumComb[mid])
+                     if (idx + tripletSearchOffset[0] < deviceSumComb[mid]) {
                        R = mid;
-                     else
+                     } else {
                        L = mid;
+                     }
                    }
                    mid = L;
 
