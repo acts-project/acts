@@ -28,7 +28,7 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 using Measurement =
-    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundParametersIndices,
+    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundIndices,
                       Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
 ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
@@ -368,9 +368,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
                            meas.parameters()[Acts::eBoundLoc1]);
       // get global position
-      Acts::Vector3D global(0, 0, 0);
       Acts::Vector3D mom(1, 1, 1);
-      surface.localToGlobal(ctx.geoContext, local, mom, global);
+      Acts::Vector3D global = surface.localToGlobal(ctx.geoContext, local, mom);
 
       // get measurement covariance
       auto cov = meas.covariance();
@@ -387,9 +386,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       // get the truth hit corresponding to this trackState
       const auto& truthHit = state.uncalibrated().truthHit();
       // get local truth position
-      Acts::Vector2D truthlocal;
-      surface.globalToLocal(gctx, truthHit.position(), truthHit.unitDirection(),
-                            truthlocal);
+      Acts::Vector2D truthlocal{0., 0.};
+      auto lpResult = surface.globalToLocal(gctx, truthHit.position(),
+                                            truthHit.unitDirection());
+      if (not lpResult.ok()) {
+        ACTS_FATAL("Global to local transformation did not succeed.");
+      }
+      truthlocal = lpResult.value();
 
       // push the truth hit info
       m_t_x.push_back(truthHit.position().x());

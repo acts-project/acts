@@ -1,8 +1,10 @@
 target_sources_local(
   ActsCore
   PRIVATE
+    AccumulatedMaterialProperties.cpp
     AccumulatedSurfaceMaterial.cpp
     AccumulatedVolumeMaterial.cpp
+    AverageMaterials.cpp
     BinnedSurfaceMaterial.cpp
     HomogeneousSurfaceMaterial.cpp
     HomogeneousVolumeMaterial.cpp

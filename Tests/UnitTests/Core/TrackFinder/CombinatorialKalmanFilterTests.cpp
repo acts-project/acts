@@ -70,7 +70,7 @@ GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 using SourceLink = ExtendedMinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using Resolution = std::pair<ParID_t, double>;
+using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
@@ -86,9 +86,8 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -125,10 +124,10 @@ struct MeasurementCreator {
         auto lResolution = vResolution->second.find(layerID);
         if (lResolution != vResolution->second.end()) {
           // Apply global to local
-          Acts::Vector2D lPos;
-          surface->globalToLocal(state.geoContext,
-                                 stepper.position(state.stepping),
-                                 stepper.direction(state.stepping), lPos);
+          auto lpResult = surface->globalToLocal(
+              state.geoContext, stepper.position(state.stepping),
+              stepper.direction(state.stepping));
+          Acts::Vector2D lPos = lpResult.value();
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;

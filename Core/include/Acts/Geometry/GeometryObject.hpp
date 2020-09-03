@@ -17,8 +17,6 @@
 
 namespace Acts {
 
-/// @class GeometryObject
-///
 /// Base class to provide GeometryID interface:
 /// - simple set and get
 ///
@@ -57,8 +55,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual const Vector3D binningPosition(const GeometryContext& gctx,
-                                         BinningValue bValue) const = 0;
+  virtual Vector3D binningPosition(const GeometryContext& gctx,
+                                   BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///

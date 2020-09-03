@@ -22,7 +22,8 @@ namespace Test {
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
   // construct the material properties from arguments
-  MaterialProperties mp(1., 2., 3., 4., 5., 0.1);
+  Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  MaterialProperties mp(mat, 0.1);
 
   // Constructor from arguments
   HomogeneousSurfaceMaterial hsm(mp, 1.);
@@ -46,8 +47,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
 
 // Test the Scaling
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
-  // Construct the material properties from arguments
-  MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
+  MaterialProperties mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
   MaterialProperties matHalf = mat;
   matHalf.scaleThickness(0.5);
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
 // Test the Access
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   // construct the material properties from arguments
-  MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
+  MaterialProperties mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
   MaterialProperties matHalf = mat;
   matHalf.scaleThickness(0.5);
 

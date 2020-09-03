@@ -666,8 +666,8 @@ std::vector<Acts::Vector3D> Acts::SurfaceArrayCreator::makeGlobalVertices(
     const std::vector<Acts::Vector2D>& locVertices) const {
   std::vector<Acts::Vector3D> globVertices;
   for (auto& vertex : locVertices) {
-    Acts::Vector3D globVertex(0., 0., 0.);
-    surface.localToGlobal(gctx, vertex, Acts::Vector3D(), globVertex);
+    Acts::Vector3D globVertex =
+        surface.localToGlobal(gctx, vertex, Acts::Vector3D());
     globVertices.push_back(globVertex);
   }
   return globVertices;

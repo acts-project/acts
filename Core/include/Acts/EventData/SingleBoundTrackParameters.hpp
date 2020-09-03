@@ -33,7 +33,7 @@ namespace Acts {
 template <class charge_policy_t>
 class SingleBoundTrackParameters {
  public:
-  using Scalar = BoundParametersScalar;
+  using Scalar = BoundScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 
@@ -128,7 +128,7 @@ class SingleBoundTrackParameters {
   /// Access a single parameter value indentified by its index.
   ///
   /// @tparam kIndex Track parameter index
-  template <BoundParametersIndices kIndex>
+  template <BoundIndices kIndex>
   Scalar get() const {
     return m_paramSet.template getParameter<kIndex>();
   }
@@ -137,7 +137,7 @@ class SingleBoundTrackParameters {
   /// @tparam kIndex Track parameter index
   /// @retval zero if the track parameters have no associated covariance
   /// @retval parameter standard deviation if the covariance is available
-  template <BoundParametersIndices kIndex>
+  template <BoundIndices kIndex>
   Scalar uncertainty() const {
     return m_paramSet.getUncertainty<kIndex>();
   }
@@ -153,9 +153,7 @@ class SingleBoundTrackParameters {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =
         makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
-    Vector3D pos;
-    m_surface->localToGlobal(geoCtx, loc, dir, pos);
-    return pos;
+    return m_surface->localToGlobal(geoCtx, loc, dir);
   }
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }

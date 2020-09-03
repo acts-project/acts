@@ -24,16 +24,13 @@ namespace detail {
    */
   struct coordinate_transformation
   {
-    typedef ActsVector<ParValue_t, Acts::NGlobalPars> ParVector_t;
+    typedef ActsVector<BoundScalar, Acts::NGlobalPars> ParVector_t;
 
     static Vector3D
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)
     {
-      Vector3D globalPosition;
-      s.localToGlobal(Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
-                      parameters2globalMomentum(pars),
-                      globalPosition);
-      return globalPosition;
+      return s.localToGlobal(Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+                             parameters2globalMomentum(pars));
     }
 
     static Vector3D
@@ -70,7 +67,7 @@ The default parametrization is chosen to be the ATLAS parameterisation:
 
 ```cpp
 namespace Acts {
-enum ParDef : unsigned int {
+enum BoundIndices : unsigned int {
   eLOC_0    = 0,  ///< first coordinate in local surface frame
   eLOC_1    = 1,  ///< second coordinate in local surface frame
   eLOC_R    = eLOC_0,
@@ -142,7 +139,7 @@ Measurements in a detector can be one to many-dimensional (covering the full
 range up to the full track parametrization).
 
 ```cpp
-template <typename Identifier, ParID_t... params>
+template <typename Identifier, BoundIndices... params>
 class Measurement
 {
   // check type conditions

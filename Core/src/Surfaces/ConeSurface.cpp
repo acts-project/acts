@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/ConeSurface.hpp"
 
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
@@ -15,9 +16,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <utility>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -52,7 +50,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
-const Acts::Vector3D Acts::ConeSurface::binningPosition(
+Acts::Vector3D Acts::ConeSurface::binningPosition(
     const GeometryContext& gctx, Acts::BinningValue bValue) const {
   const Vector3D& sfCenter = center(gctx);
 
@@ -78,12 +76,12 @@ Acts::ConeSurface& Acts::ConeSurface::operator=(const ConeSurface& other) {
   return *this;
 }
 
-const Acts::Vector3D Acts::ConeSurface::rotSymmetryAxis(
+Acts::Vector3D Acts::ConeSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
 }
 
-const Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
+Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
   RotationMatrix3D mFrame;
@@ -104,33 +102,27 @@ const Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
   return mFrame;
 }
 
-void Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
-                                      const Vector2D& lposition,
-                                      const Vector3D& /*unused*/,
-                                      Vector3D& position) const {
+Acts::Vector3D Acts::ConeSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2D& lposition,
+    const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eLOC_Z] * bounds().tanAlpha();
   double phi = lposition[Acts::eLOC_RPHI] / r;
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
-  // transport it to the globalframe
-  if (m_transform) {
-    position = transform(gctx) * loc3Dframe;
-  }
+  return transform(gctx) * loc3Dframe;
 }
 
-bool Acts::ConeSurface::globalToLocal(const GeometryContext& gctx,
-                                      const Vector3D& position,
-                                      const Vector3D& /*unused*/,
-                                      Vector2D& lposition) const {
+Acts::Result<Acts::Vector2D> Acts::ConeSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& /*unused*/) const {
   Vector3D loc3Dframe =
       m_transform ? (transform(gctx).inverse() * position) : position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
-  lposition =
-      Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z());
-  // now decide on the quility of the transformation
-  double inttol = r * 0.0001;
-  inttol = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return ((std::abs(perp(loc3Dframe) - r) > inttol) ? false : true);
+  if (std::abs(perp(loc3Dframe) - r) > s_onSurfaceTolerance) {
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+  return Result<Vector2D>::success(
+      {r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z()});
 }
 
 double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
@@ -156,7 +148,7 @@ std::string Acts::ConeSurface::name() const {
   return "Acts::ConeSurface";
 }
 
-const Acts::Vector3D Acts::ConeSurface::normal(
+Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi =
@@ -170,8 +162,8 @@ const Acts::Vector3D Acts::ConeSurface::normal(
                      : localNormal;
 }
 
-const Acts::Vector3D Acts::ConeSurface::normal(
-    const GeometryContext& gctx, const Acts::Vector3D& position) const {
+Acts::Vector3D Acts::ConeSurface::normal(const GeometryContext& gctx,
+                                         const Acts::Vector3D& position) const {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
   Vector3D pos3D = position;

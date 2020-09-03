@@ -50,7 +50,7 @@ using SourceLink = MinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
-using Resolution = std::pair<ParID_t, double>;
+using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
@@ -66,9 +66,8 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -113,10 +112,13 @@ struct MeasurementCreator {
         auto lResolution = vResolution->second.find(layerID);
         if (lResolution != vResolution->second.end()) {
           // Apply global to local
-          Acts::Vector2D lPos;
-          surface->globalToLocal(state.geoContext,
-                                 stepper.position(state.stepping),
-                                 stepper.direction(state.stepping), lPos);
+          Acts::Vector2D lPos =
+              surface
+                  ->globalToLocal(state.geoContext,
+                                  stepper.position(state.stepping),
+                                  stepper.direction(state.stepping))
+                  .value();
+
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
@@ -252,9 +254,8 @@ struct MinimalOutlierFinder {
           using par_t = ActsVectorD<measdim>;
 
           // Take the projector (measurement mapping function)
-          const ActsMatrixD<measdim, eBoundParametersSize> H =
-              state.projector()
-                  .template topLeftCorner<measdim, eBoundParametersSize>();
+          const ActsMatrixD<measdim, eBoundSize> H =
+              state.projector().template topLeftCorner<measdim, eBoundSize>();
 
           // Calculate the residual
           const par_t residual = calibrated - H * predicted;
@@ -413,7 +414,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Check the size of the global track parameters size
   BOOST_CHECK_EQUAL(stateRowIndices.size(), 6);
   BOOST_CHECK_EQUAL(stateRowIndices.at(fittedTrack.trackTip), 30);
-  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundParametersSize);
+  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundSize);
 
   // Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
@@ -475,7 +476,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(holeTrackStateRowIndices.size(), 6);
   BOOST_CHECK_EQUAL(holeTrackStateRowIndices.at(fittedWithHoleTrack.trackTip),
                     30);
-  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundParametersSize);
+  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);

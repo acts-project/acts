@@ -42,18 +42,15 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
                                 const Vector3D& position,
                                 const Vector3D& momentum,
                                 const BoundaryCheck& bcheck) const {
-  // create the local position
-  Vector2D lposition{0., 0.};
   // global to local transformation
-  bool gtlSuccess = globalToLocal(gctx, position, momentum, lposition);
-  if (gtlSuccess) {
-    return bcheck ? bounds().inside(lposition, bcheck) : true;
+  auto lpResult = globalToLocal(gctx, position, momentum);
+  if (lpResult.ok()) {
+    return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
   }
-  // did not succeed
   return false;
 }
 
-const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
+Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -99,20 +96,20 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // -> For bound track parameters eLOC_0, eLOC_1, it's
   // loc3DToLocBound*alignToLoc3D +
   // jacToLocal*derivatives*alignToPath
-  alignToBound.block<2, eAlignmentParametersSize>(eLOC_0, eAlignmentCenter0) =
+  alignToBound.block<2, eAlignmentSize>(eLOC_0, eAlignmentCenter0) =
       loc3DToLocBound * alignToLoc3D +
-      jacToLocal.block<2, eFreeParametersSize>(eLOC_0, eFreePos0) *
-          derivatives * alignToPath;
+      jacToLocal.block<2, eFreeSize>(eLOC_0, eFreePos0) * derivatives *
+          alignToPath;
   // -> For bound track parameters ePHI, eTHETA, eQOP, eT, it's
   // jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentParametersSize>(ePHI, eAlignmentCenter0) =
-      jacToLocal.block<4, eFreeParametersSize>(ePHI, eFreePos0) * derivatives *
+  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
+      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
       alignToPath;
 
   return alignToBound;
 }
 
-const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
+Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center

@@ -24,8 +24,6 @@ namespace Acts {
 class TrackingGeometry;
 class IMaterialDecorator;
 
-/// @class GeometryBuilder
-///
 /// The Acts::TrackingGeometry Builder for volumes that wrap around another
 ///
 /// It retrieves an array of ITrackingVolumeBuilder tools that are configured

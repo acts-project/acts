@@ -115,30 +115,35 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3D expectedPosition{1.2, 0, 0};
   Vector2D rPhiOnDisc{1.2, 0.0};
   Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
-  discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum,
-                                   returnedPosition);
+  returnedPosition =
+      discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
   //
-  discSurfaceObject->localToGlobal(tgContext, rPhiNotInSector, ignoredMomentum,
-                                   returnedPosition);
+  returnedPosition = discSurfaceObject->localToGlobal(
+      tgContext, rPhiNotInSector, ignoredMomentum);
   Vector3D expectedNonPosition{-1.2, 0, 0};
   CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
   //
   /// Test globalToLocal
   Vector2D returnedLocalPosition{33., 44.};
   Vector2D expectedLocalPosition{1.2, 0.0};
-  BOOST_CHECK(discSurfaceObject->globalToLocal(tgContext, point3DOnSurface,
-                                               ignoredMomentum,
-                                               returnedLocalPosition));  // pass
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, point3DOnSurface, ignoredMomentum)
+          .value();
   CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
 
   // Global to local does not check inside bounds
-  BOOST_CHECK(discSurfaceObject->globalToLocal(
-      tgContext, point3DNotInSector, ignoredMomentum, returnedLocalPosition));
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, point3DNotInSector, ignoredMomentum)
+          .value();
   //
   Vector3D pointOutsideR{0.0, 100., 0};
-  BOOST_CHECK(discSurfaceObject->globalToLocal(
-      tgContext, pointOutsideR, ignoredMomentum, returnedLocalPosition));
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, pointOutsideR, ignoredMomentum)
+          .value();
   //
   /// Test localPolarToCartesian
   Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
