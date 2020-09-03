@@ -154,7 +154,7 @@ class SingleBoundTrackParameters {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =
         makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
-    Vector4D pos4 = Vector4D::Zero();
+    Vector4D pos4;
     pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
     pos4[eTime] = get<eBoundTime>();
     return pos4;
