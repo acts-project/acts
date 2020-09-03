@@ -188,7 +188,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
   bpvConfig.volumeName = "BeamPipe";
   bpvConfig.layerBuilder = beamPipeBuilder;
-  bpvConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
+  bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm};
   bpvConfig.buildToRadiusZero = true;
   bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder =
@@ -286,14 +286,14 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.posnegLayerBinMultipliers = {1, 1};
 
   pplConfig.posnegLayerPositionsZ = {
-      600. * Acts::units::_mm, 700. * Acts::units::_mm, 820. * Acts::units::_mm,
-      960. * Acts::units::_mm, 1100 * Acts::units::_mm, 1300 * Acts::units::_mm,
-      1500 * Acts::units::_mm};
+      600. * Acts::UnitConstants::mm, 700. * Acts::UnitConstants::mm, 820. * Acts::UnitConstants::mm,
+      960. * Acts::UnitConstants::mm, 1100 * Acts::UnitConstants::mm, 1300 * Acts::UnitConstants::mm,
+      1500 * Acts::UnitConstants::mm};
 
   pplConfig.posnegLayerEnvelopeR = {
-      1. * Acts::units::_mm, 1. * Acts::units::_mm, 1. * Acts::units::_mm,
-      1. * Acts::units::_mm, 1. * Acts::units::_mm, 1. * Acts::units::_mm,
-      1. * Acts::units::_mm};
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm};
   std::vector<double> perHX = {8.4, 8.4};  // half length x
   std::vector<double> perHY = {36., 36.};  // half length y
   std::vector<size_t> perBP = {40, 68};    // bins in phi
@@ -373,7 +373,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName = "Pixel";
   pvbConfig.buildToRadiusZero = false;
-  pvbConfig.layerEnvelopeR = {1. * Acts::units::_mm, 5. * Acts::units::_mm};
+  pvbConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm, 5. * Acts::UnitConstants::mm};
   pvbConfig.layerBuilder = pixelLayerBuilder;
   pvbConfig.volumeSignature = 0;
   auto pixelVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
