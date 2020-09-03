@@ -220,7 +220,7 @@ struct MaterialInteractor {
     double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().katerialSlab.scaleThickness(
+    result.materialInteractions.back().materialSlab.scaleThickness(
         shift.norm());
     result.materialInteractions.back().updatedVolumeStep = true;
     result.materialInX0 +=
