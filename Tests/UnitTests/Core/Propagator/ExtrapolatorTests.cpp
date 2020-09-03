@@ -244,7 +244,8 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
   if (result.endParameters) {
     // test that you actually lost some energy
-    BOOST_CHECK_LT(result.endParameters->absMomentum(), start.absMomentum());
+    BOOST_CHECK_LT(result.endParameters->absoluteMomentum(),
+                   start.absoluteMomentum());
   }
 }
 

@@ -63,8 +63,8 @@ class StraightLineStepper {
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : pos(par.position(gctx)),
-          dir(par.directionUnit()),
-          p(par.absMomentum()),
+          dir(par.unitDirection()),
+          p(par.absoluteMomentum()),
           q(par.charge()),
           t(par.time()),
           navDir(ndir),

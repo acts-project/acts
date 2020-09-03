@@ -129,10 +129,10 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.position4(), pos4, 1e-6);
   CHECK_CLOSE_ABS(fp.position(), pos4.segment<3>(ePos0), 1e-6);
   CHECK_CLOSE_ABS(fp.time(), pos4[eTime], 1e-6);
-  CHECK_CLOSE_ABS(fp.directionUnit(), dir.normalized(), 1e-6);
+  CHECK_CLOSE_ABS(fp.unitDirection(), dir.normalized(), 1e-6);
   CHECK_CLOSE_ABS(fp.transverseMomentum(),
                   dir.normalized().head<2>().norm() * p, 1e-6);
-  CHECK_CLOSE_ABS(fp.absMomentum(), p, 1e-6);
+  CHECK_CLOSE_ABS(fp.absoluteMomentum(), p, 1e-6);
   CHECK_CLOSE_ABS(fp.momentum(), dir.normalized() * p, 1e-6);
   CHECK_CLOSE_ABS(fp.charge(), q, 1e-6);
   BOOST_CHECK_EQUAL(nfp.charge(), 0.);

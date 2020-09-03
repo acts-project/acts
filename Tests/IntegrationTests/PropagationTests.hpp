@@ -45,8 +45,8 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
   // ensure initial parameters are valid
   CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
   CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.directionUnit(), dir, 0.1_mrad);
-  CHECK_CLOSE_ABS(params.absMomentum(), absMom, 0.125_eV);
+  CHECK_CLOSE_ABS(params.unitDirection(), dir, 0.1_mrad);
+  CHECK_CLOSE_ABS(params.absoluteMomentum(), absMom, 0.125_eV);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(params.charge(), charge);
 
@@ -103,8 +103,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
   // ensure initial parameters are valid
   CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
   CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.directionUnit(), dir, 0.1_mrad);
-  CHECK_CLOSE_ABS(params.absMomentum(), absMom, 0.125_eV);
+  CHECK_CLOSE_ABS(params.unitDirection(), dir, 0.1_mrad);
+  CHECK_CLOSE_ABS(params.absoluteMomentum(), absMom, 0.125_eV);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(params.charge(), 0);
 
@@ -142,8 +142,8 @@ inline void checkParametersConsistency(
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
-  CHECK_CLOSE_ABS(cmp.directionUnit(), ref.directionUnit(), epsDir);
-  CHECK_CLOSE_ABS(cmp.absMomentum(), ref.absMomentum(), epsMom);
+  CHECK_CLOSE_ABS(cmp.unitDirection(), ref.unitDirection(), epsDir);
+  CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
@@ -171,7 +171,7 @@ template <typename charge_t>
 inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3D unitW = params.directionUnit();
+  Acts::Vector3D unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
   Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
@@ -366,7 +366,7 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
-  CHECK_CLOSE_ABS(surfParams.directionUnit(), freeParams.directionUnit(),
+  CHECK_CLOSE_ABS(surfParams.unitDirection(), freeParams.unitDirection(),
                   epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);

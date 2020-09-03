@@ -52,10 +52,10 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.position4(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.directionUnit(), mom.normalized(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), mom.normalized(), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), mom.head<2>().norm(), eps,
                        eps);
-  CHECK_CLOSE_OR_SMALL(params.absMomentum(), mom.norm(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), mom.norm(), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), mom, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
 }

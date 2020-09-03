@@ -41,7 +41,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   };
   auto isValidTrack = [&](const auto& trk) {
     auto pos = trk.position(ctx.geoContext);
-    auto dir = trk.directionUnit();
+    auto dir = trk.unitDirection();
     auto rho = std::hypot(pos[Acts::eX], pos[Acts::eY]);
     auto phi = std::atan2(dir[Acts::eY], dir[Acts::eX]);
     auto eta = std::atanh(dir[Acts::eZ]);

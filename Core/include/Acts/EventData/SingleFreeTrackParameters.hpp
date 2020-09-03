@@ -118,9 +118,11 @@ class SingleFreeTrackParameters {
   Scalar time() const { return get<eFreeTime>(); }
 
   /// Direction unit three-vector, i.e. the normalized momentum three-vector.
-  Vector3D directionUnit() const {
+  Vector3D unitDirection() const {
     return parameters().template segment<3>(eFreeDir0).normalized();
   }
+  /// Absolute momentum.
+  Scalar absoluteMomentum() const { return 1 / std::abs(get<eFreeQOverP>()); }
   /// Absolute transverse momentum.
   Scalar transverseMomentum() const {
     // direction vector w/ arbitrary normalization can be parametrized as
@@ -131,12 +133,10 @@ class SingleFreeTrackParameters {
     // absolute magnitude is f by construction
     Scalar magnitude = std::hypot(transverseMagnitude, get<eFreeDir2>());
     // such that we can extract sin(theta) = f*sin(theta) / f
-    return (transverseMagnitude / magnitude) * absMomentum();
+    return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
-  /// Absolute momentum.
-  Scalar absMomentum() const { return 1 / std::abs(get<eFreeQOverP>()); }
   /// Momentum three-vector.
-  Vector3D momentum() const { return absMomentum() * directionUnit(); }
+  Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// @brief retrieve electric charge
   ///

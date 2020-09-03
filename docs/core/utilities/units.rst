@@ -114,4 +114,4 @@ Examples:
    doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
    // convert output values (via unit user literals)
    double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
-   double p_in_TeV = trackPars.absMomentum() / 1_TeV;
+   double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
