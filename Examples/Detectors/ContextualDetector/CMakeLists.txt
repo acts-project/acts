@@ -10,7 +10,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDetectorContextual
   PUBLIC
-    ActsCore ActsPluginIdentification ActsPluginDigitization
+    ActsCore ActsIdentificationPlugin ActsDigitizationPlugin
     ActsExamplesFramework ActsExamplesDetectorsCommon ActsExamplesDetectorGeneric ActsExamplesMagneticField)
 
 install(

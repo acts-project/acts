@@ -8,7 +8,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDigitization
   PRIVATE
-    ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsCore ActsDigitizationPlugin ActsIdentificationPlugin
     ActsExamplesFramework
     Boost::program_options)
 

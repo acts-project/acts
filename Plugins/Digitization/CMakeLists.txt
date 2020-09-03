@@ -1,20 +1,20 @@
 add_library(
-  ActsPluginDigitization SHARED
+  ActsDigitizationPlugin SHARED
   src/CartesianSegmentation.cpp
   src/DigitizationModule.cpp
   src/PlanarModuleStepper.cpp)
 target_include_directories(
-  ActsPluginDigitization
+  ActsDigitizationPlugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
-  ActsPluginDigitization
+  ActsDigitizationPlugin
   PUBLIC ActsCore)
 
 install(
-  TARGETS ActsPluginDigitization
-  EXPORT ActsPluginDigitizationTargets
+  TARGETS ActsDigitizationPlugin
+  EXPORT ActsDigitizationPluginTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY include/Acts

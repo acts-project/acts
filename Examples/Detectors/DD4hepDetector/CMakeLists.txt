@@ -31,7 +31,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesDetectorDD4hep
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginDD4hep
+    ActsCore ActsDigitizationPlugin ActsDD4hepPlugin
     ActsExamplesFramework ActsExamplesDetectorsCommon
     ROOT::Geom ROOT::GenVector)
 

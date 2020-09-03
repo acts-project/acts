@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsPluginDigitization)
+set(unittest_extra_libraries ActsDigitizationPlugin)
 
 add_unittest(Clusterization ClusterizationTests.cpp)
 add_unittest(CartesianSegmentation CartesianSegmentationTests.cpp)

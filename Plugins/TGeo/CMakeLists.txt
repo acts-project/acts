@@ -1,22 +1,22 @@
 add_library(
-  ActsPluginTGeo SHARED
+  ActsTGeoPlugin SHARED
   src/TGeoDetectorElement.cpp
   src/TGeoLayerBuilder.cpp
   src/TGeoParser.cpp
   src/TGeoPrimitivesHelper.cpp
   src/TGeoSurfaceConverter.cpp)
 target_include_directories(
-  ActsPluginTGeo
+  ActsTGeoPlugin
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
-  ActsPluginTGeo
-  PUBLIC ActsCore ActsPluginIdentification ROOT::Geom)
+  ActsTGeoPlugin
+  PUBLIC ActsCore ActsIdentificationPlugin ROOT::Geom)
 
 install(
-  TARGETS ActsPluginTGeo
-  EXPORT ActsPluginTGeoTargets
+  TARGETS ActsTGeoPlugin
+  EXPORT ActsTGeoPluginTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY include/Acts

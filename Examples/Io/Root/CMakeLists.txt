@@ -18,7 +18,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsCore ActsDigitizationPlugin ActsIdentificationPlugin
     ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
