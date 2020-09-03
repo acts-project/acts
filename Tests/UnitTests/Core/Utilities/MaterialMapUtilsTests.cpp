@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create material association in rz
   std::vector<Material> material_rz;
   for (int i = 0; i < 9; i++) {
-    material_rz.push_back(Material(i, i, i, i, i));
+    material_rz.push_back(Material::fromMolarDensity(i, i, i, i, i));
   }
 
   auto localToGlobalBin_rz = [](std::array<size_t, 2> binsRZ,
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   // Create map in xyz
   std::vector<Material> material_xyz;
   for (int i = 0; i < 27; i++) {
-    material_xyz.push_back(Material(i, i, i, i, i));
+    material_xyz.push_back(Material::fromMolarDensity(i, i, i, i, i));
   }
 
   auto localToGlobalBin_xyz = [](std::array<size_t, 3> binsXYZ,
@@ -110,12 +110,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
 
   // Check the value
   // in rz case material is phi symmetric (check radius)
-  CHECK_CLOSE_ABS(value0_rz.classificationNumbers(),
-                  mat0_rz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value1_rz.classificationNumbers(),
-                  mat1_rz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value2_rz.classificationNumbers(),
-                  mat2_rz.classificationNumbers(), 1e-9);
+  CHECK_CLOSE_ABS(value0_rz.parameters(), mat0_rz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value1_rz.parameters(), mat1_rz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value2_rz.parameters(), mat2_rz.parameters(), 1e-9);
 
   // Check if filled value is expected value in xyz
   Vector3D pos0_xyz(0., 0., 0.);
@@ -134,12 +131,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
 
   // Check the value
   // in xyz case material is phi symmetric (check radius)
-  CHECK_CLOSE_ABS(value0_xyz.classificationNumbers(),
-                  mat0_xyz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value1_xyz.classificationNumbers(),
-                  mat1_xyz.classificationNumbers(), 1e-9);
-  CHECK_CLOSE_ABS(value2_xyz.classificationNumbers(),
-                  mat2_xyz.classificationNumbers(), 1e-9);
+  CHECK_CLOSE_ABS(value0_xyz.parameters(), mat0_xyz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value1_xyz.parameters(), mat1_xyz.parameters(), 1e-9);
+  CHECK_CLOSE_ABS(value2_xyz.parameters(), mat2_xyz.parameters(), 1e-9);
 }
 }  // namespace Test
 }  // namespace Acts

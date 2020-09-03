@@ -18,22 +18,23 @@ namespace data = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
 
 // fixed material
-static constexpr Acts::Material material = Acts::Test::makeSilicon();
+static const Acts::Material material = Acts::Test::makeSilicon();
 // variable values for other parameters
 // thickness
-static double valuesThickness[] = {200_um, 1_mm};
+static const double valuesThickness[] = {200_um, 1_mm};
 static auto thickness = data::make(valuesThickness);
 // particle type, mass, and charge
-static int pdg[] = {Acts::eElectron, Acts::eMuon, Acts::ePionPlus,
-                    Acts::eProton};
-static double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
-static double charge[] = {-1_e, -1_e, 1_e, 1_e};
-static auto particle = data::make(pdg) ^ data::make(mass) ^ data::make(charge);
+static const int pdg[] = {Acts::eElectron, Acts::eMuon, Acts::ePionPlus,
+                          Acts::eProton};
+static const double mass[] = {511_keV, 105.7_MeV, 139.6_MeV, 938.3_MeV};
+static const double charge[] = {-1_e, -1_e, 1_e, 1_e};
+static const auto particle =
+    data::make(pdg) ^ data::make(mass) ^ data::make(charge);
 // momentum range
-static auto momentum_low = data::xrange(100_MeV, 10_GeV, 100_MeV);
-static auto momentum_med = data::xrange(10_GeV, 100_GeV, 10_GeV);
-static auto momentum_high = data::xrange(100_GeV, 10_TeV, 100_GeV);
-static auto momentum = momentum_low + momentum_med + momentum_high;
+static const auto momentum_low = data::xrange(100_MeV, 10_GeV, 100_MeV);
+static const auto momentum_med = data::xrange(10_GeV, 100_GeV, 10_GeV);
+static const auto momentum_high = data::xrange(100_GeV, 10_TeV, 100_GeV);
+static const auto momentum = momentum_low + momentum_med + momentum_high;
 
 BOOST_AUTO_TEST_SUITE(interactions)
 

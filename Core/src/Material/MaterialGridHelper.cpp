@@ -246,7 +246,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   // Build the grid and fill it with data
   Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
   for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
+    mGrid.at(index) = grid.at(index).average().parameters();
   }
 
   return mGrid;
@@ -276,7 +276,7 @@ Acts::MaterialGrid3D Acts::mapMaterialPoints(
   // Build the grid and fill it with data
   Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
   for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
+    mGrid.at(index) = grid.at(index).average().parameters();
   }
   return mGrid;
 }

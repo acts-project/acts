@@ -10,8 +10,6 @@
 
 #include "Acts/Material/MaterialProperties.hpp"
 
-#include <limits>
-
 namespace Acts {
 
 /// Accumulate and average volume-based material properties.
@@ -25,16 +23,10 @@ class AccumulatedVolumeMaterial {
   /// Compute the average material collected so far.
   ///
   /// @returns Vacuum properties if no matter has been accumulated yet.
-  Material average();
+  const Material& average() { return m_average.material(); }
 
  private:
-  double m_totalX0{std::numeric_limits<double>::infinity()};
-  double m_totalL0{std::numeric_limits<double>::infinity()};
-  double m_totalAr{0.};
-  double m_totalZ{0.};
-  double m_totalRho{0.};
-  double m_thickness{1.};
-  unsigned int m_materialEntries{0};
+  MaterialProperties m_average;
 };
 
 }  // namespace Acts
