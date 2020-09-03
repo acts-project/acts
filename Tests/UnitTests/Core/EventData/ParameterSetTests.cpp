@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
                       eBoundTime>::getParID<3>() == eBoundQOverP));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<4>() == eT));
+                      eBoundTime>::getParID<4>() == eBoundTime));
 
   // check consistency
   using FullSet = FullParameterSet;
@@ -765,7 +765,8 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
       (FullSet::getParID<FullSet::getIndex<eBoundTheta>()>() == eBoundTheta));
   BOOST_CHECK(
       (FullSet::getParID<FullSet::getIndex<eBoundQOverP>()>() == eBoundQOverP));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eBoundTime>()>() == eT));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundTime>()>() == eBoundTime));
 
   // consistency of types
   BOOST_CHECK(
