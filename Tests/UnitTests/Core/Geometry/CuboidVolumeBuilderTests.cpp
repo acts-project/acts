@@ -264,27 +264,26 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
   // Build a volume that confines another volume
   CuboidVolumeBuilder::VolumeConfig vCfg;
   vCfg.position = {1. * UnitConstants::m, 0., 0.};
-  vCfg.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. * UnitConstants::m};
-  vCfg.name = "Test volume";
+  vCfg.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
+UnitConstants::m}; vCfg.name = "Test volume";
   // Build and add 2 confined volumes
   CuboidVolumeBuilder::VolumeConfig cvCfg1;
   cvCfg1.position = {1.1 * UnitConstants::m, 0., 0.};
-  cvCfg1.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg1.name = "Confined volume1";
-  cvCfg1.volumeMaterial =
+  cvCfg1.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
+UnitConstants::cm}; cvCfg1.name = "Confined volume1"; cvCfg1.volumeMaterial =
       std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
           Material(352.8, 407., 9.012, 4., 1.848e-3)));
   CuboidVolumeBuilder::VolumeConfig cvCfg2;
   cvCfg2.position = {0.9 * UnitConstants::m, 0., 0.};
-  cvCfg2.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg2.name = "Confined volume2";
-  vCfg.volumeCfg = {cvCfg1, cvCfg2};
+  cvCfg2.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
+UnitConstants::cm}; cvCfg2.name = "Confined volume2"; vCfg.volumeCfg = {cvCfg1,
+cvCfg2};
 
   // Build detector
   CuboidVolumeBuilder::Config config;
   config.position = {1. * UnitConstants::m, 0., 0.};
-  config.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. * UnitConstants::m};
-  config.volumeCfg = {vCfg};
+  config.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
+UnitConstants::m}; config.volumeCfg = {vCfg};
 
   cvb.setConfig(config);
   TrackingGeometryBuilder::Config tgbCfg;
@@ -297,14 +296,14 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes) {
       tgb.trackingGeometry(tgContext);
 
   // Test that the right volume is selected
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1. * UnitConstants::m,
-0., 0.})
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1. *
+UnitConstants::m, 0., 0.})
                  ->volumeName(), vCfg.name);
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1.1 * UnitConstants::m,
-0., 0.})
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {1.1 *
+UnitConstants::m, 0., 0.})
           ->volumeName(), cvCfg1.name);
-  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {0.9 * UnitConstants::m,
-0., 0.})
+  BOOST_CHECK_EQUAL(detector->lowestTrackingVolume(tgContext, {0.9 *
+UnitConstants::m, 0., 0.})
           ->volumeName(), cvCfg2.name);
 
   // Set propagator and navigator
@@ -365,48 +364,48 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases) {
   // Build a volume that confines another volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;
   vCfg1.position = {1. * UnitConstants::m, 0., 0.};
-  vCfg1.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. * UnitConstants::m};
-  vCfg1.name = "Test volume1";
+  vCfg1.length = {2. * UnitConstants::m, 1. * UnitConstants::m, 1. *
+UnitConstants::m}; vCfg1.name = "Test volume1";
   // Build and add 4 confined volumes
   // Volume that is missed and quite orthogonal to the starting position
   CuboidVolumeBuilder::VolumeConfig cvCfg1;
-  cvCfg1.position = {0.1 * UnitConstants::m, 0.4 * UnitConstants::m, 0.4 * UnitConstants::m};
-  cvCfg1.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg1.name = "Confined volume1";
+  cvCfg1.position = {0.1 * UnitConstants::m, 0.4 * UnitConstants::m, 0.4 *
+UnitConstants::m}; cvCfg1.length = {10. * UnitConstants::cm, 10. *
+UnitConstants::cm, 10. * UnitConstants::cm}; cvCfg1.name = "Confined volume1";
   cvCfg1.volumeMaterial =
       std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
           Material(352.8, 407., 9.012, 4., 1.848e-3)));
   // Volume that is missed but far away such that it may be hit
   CuboidVolumeBuilder::VolumeConfig cvCfg2;
-  cvCfg2.position = {1.9 * UnitConstants::m, -0.4 * UnitConstants::m, -0.4 * UnitConstants::m};
-  cvCfg2.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg2.name = "Confined volume2";
+  cvCfg2.position = {1.9 * UnitConstants::m, -0.4 * UnitConstants::m, -0.4 *
+UnitConstants::m}; cvCfg2.length = {10. * UnitConstants::cm, 10. *
+UnitConstants::cm, 10. * UnitConstants::cm}; cvCfg2.name = "Confined volume2";
   // Volume that is hit but with identical boundary as its mother
   // TODO: Moved slightly inside the volume since otherwise the navigation
   // breaks due to overlapping boundary surfaces. The corresponding test below
   // is changed accordingly.
   CuboidVolumeBuilder::VolumeConfig cvCfg3;
   cvCfg3.position = {1.9 * UnitConstants::m, 0., 0.};
-  cvCfg3.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg3.name = "Confined volume3";
+  cvCfg3.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
+UnitConstants::cm}; cvCfg3.name = "Confined volume3";
   // Volume to grind along the boundary
   CuboidVolumeBuilder::VolumeConfig cvCfg4;
   cvCfg4.position = {1. * UnitConstants::m, 5. * UnitConstants::cm, 0.};
-  cvCfg4.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. * UnitConstants::cm};
-  cvCfg4.name = "Confined volume4";
-  vCfg1.volumeCfg = {cvCfg1, cvCfg2, cvCfg3, cvCfg4};
+  cvCfg4.length = {10. * UnitConstants::cm, 10. * UnitConstants::cm, 10. *
+UnitConstants::cm}; cvCfg4.name = "Confined volume4"; vCfg1.volumeCfg = {cvCfg1,
+cvCfg2, cvCfg3, cvCfg4};
 
   // Build a volume that confines another volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
   vCfg2.position = {2.5 * UnitConstants::m, 0., 0.};
-  vCfg2.length = {1. * UnitConstants::m, 1. * UnitConstants::m, 1. * UnitConstants::m};
-  vCfg2.name = "Test volume2";
+  vCfg2.length = {1. * UnitConstants::m, 1. * UnitConstants::m, 1. *
+UnitConstants::m}; vCfg2.name = "Test volume2";
 
   // Build detector
   CuboidVolumeBuilder::Config config;
   config.position = {1.5 * UnitConstants::m, 0., 0.};
-  config.length = {3. * UnitConstants::m, 1. * UnitConstants::m, 1. * UnitConstants::m};
-  config.volumeCfg = {vCfg1, vCfg2};
+  config.length = {3. * UnitConstants::m, 1. * UnitConstants::m, 1. *
+UnitConstants::m}; config.volumeCfg = {vCfg1, vCfg2};
 
   cvb.setConfig(config);
   TrackingGeometryBuilder::Config tgbCfg;

@@ -73,9 +73,10 @@ void addDD4hepOptions(aopt_t& opt) {
            "OpenDataDetector.xml"}),
       "The locations of the input DD4hep files, use 'file:foo.xml'. In case "
       "you want to read in multiple files, just seperate the strings by "
-      "space.")("dd4hep-envelopeR",
-                po::value<double>()->default_value(1. * Acts::UnitConstants::mm),
-                "The envelop cover in R for DD4hep volumes.")(
+      "space.")(
+      "dd4hep-envelopeR",
+      po::value<double>()->default_value(1. * Acts::UnitConstants::mm),
+      "The envelop cover in R for DD4hep volumes.")(
       "dd4hep-envelopeR",
       po::value<double>()->default_value(1. * Acts::UnitConstants::mm),
       "The tolerance added to the geometrical extension in r of the "

@@ -119,8 +119,8 @@ fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                    localToGlobalBin,
                std::string fieldMapFile = "",
                double lengthUnit = Acts::UnitConstants::mm,
-               double BFieldUnit = Acts::UnitConstants::T, size_t nPoints = 1000,
-               bool firstOctant = false);
+               double BFieldUnit = Acts::UnitConstants::T,
+               size_t nPoints = 1000, bool firstOctant = false);
 }  // namespace txt
 
 namespace root {
@@ -166,7 +166,8 @@ fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
                   localToGlobalBin,
               std::string fieldMapFile = "", std::string treeName = "",
               double lengthUnit = Acts::UnitConstants::mm,
-              double BFieldUnit = Acts::UnitConstants::T, bool firstOctant = false);
+              double BFieldUnit = Acts::UnitConstants::T,
+              bool firstOctant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -215,7 +216,8 @@ fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                    localToGlobalBin,
                std::string fieldMapFile = "", std::string treeName = "",
                double lengthUnit = Acts::UnitConstants::mm,
-               double BFieldUnit = Acts::UnitConstants::T, bool firstOctant = false);
+               double BFieldUnit = Acts::UnitConstants::T,
+               bool firstOctant = false);
 }  // namespace root
 
 }  // namespace BField
