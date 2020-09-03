@@ -97,8 +97,9 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
-  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
-  NeutralCurvilinearTrackParameters params(std::nullopt, pos, mom, time);
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  NeutralCurvilinearTrackParameters params(std::nullopt, pos, absMom * dir,
+                                           time);
 
   // ensure initial parameters are valid
   CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
