@@ -16,21 +16,21 @@
 
 namespace Acts {
 
-namespace concept {
-  namespace VertexFitter {
+namespace Concepts {
+namespace VertexFitter {
 
-  template <typename T>
-  using track_t = typename T::InputTrack_t;
-  template <typename T>
-  using propagator_t = typename T::Propagator_t;
-  template <typename T>
-  using linearizer_t = typename T::Linearizer_t;
-  template <typename T>
-  using state_t = typename T::State;
+template <typename T>
+using track_t = typename T::InputTrack_t;
+template <typename T>
+using propagator_t = typename T::Propagator_t;
+template <typename T>
+using linearizer_t = typename T::Linearizer_t;
+template <typename T>
+using state_t = typename T::State;
 
-  METHOD_TRAIT(fit_t, fit);
+METHOD_TRAIT(fit_t, fit);
 
-  // clang-format off
+// clang-format off
     template <typename S>
       struct VertexFitterConcept {
         constexpr static bool fit_exists = has_method<const S, Result<Vertex<typename S::InputTrack_t>>,
@@ -56,12 +56,12 @@ namespace concept {
                                               linearizer_exists,
                                               state_exists>;
       };
-  // clang-format on
-  }  // namespace VertexFitter
-}  // namespace concept
+// clang-format on
+}  // namespace VertexFitter
+}  // namespace Concepts
 
 template <typename fitter>
 constexpr bool VertexFitterConcept =
-    Acts::concept ::VertexFitter::VertexFitterConcept<fitter>::value;
+    Acts::Concepts ::VertexFitter::VertexFitterConcept<fitter>::value;
 
 }  // namespace Acts

@@ -394,7 +394,7 @@ using call_without_input_t = decltype(std::declval<T>()());
 template <typename Callable, typename Input = void>
 struct MicroBenchmarkIter {
   constexpr static bool is_callable =
-      concept ::exists<call_with_input_t, Callable, Input>;
+      Concepts ::exists<call_with_input_t, Callable, Input>;
   static inline void iter(const Callable& iteration, const Input* input) {
     static_assert(is_callable, "Gave callable that is not callable with input");
     if constexpr (is_callable) {
@@ -409,7 +409,7 @@ struct MicroBenchmarkIter {
 template <typename Callable>
 struct MicroBenchmarkIter<Callable, void> {
   constexpr static bool is_callable =
-      concept ::exists<call_without_input_t, Callable>;
+      Concepts ::exists<call_without_input_t, Callable>;
 
   static inline void iter(const Callable& iteration, const void* = nullptr) {
     static_assert(is_callable,
