@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,188 +9,189 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/AccumulatedMaterialProperties.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <climits>
+#include <limits>
 
-namespace Acts {
-namespace Test {
+namespace {
 
-/// Test the constructors
-BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_construction_test) {
-  // Default constructor
+using Acts::AccumulatedMaterialProperties;
+using Acts::Material;
+using Acts::MaterialProperties;
+using Acts::Test::makeSilicon;
+using Acts::Test::makeUnitSlab;
+
+constexpr auto eps = std::numeric_limits<float>::epsilon();
+
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(MaterialAccumulatedMaterialProperties)
+
+BOOST_AUTO_TEST_CASE(Nothing) {
   AccumulatedMaterialProperties a;
-
-  // Default copy constructor
-  AccumulatedMaterialProperties b(a);
-
-  // Default assignment
-  AccumulatedMaterialProperties c = a;
-
-  /// Check the move construction
-  AccumulatedMaterialProperties bMoved(std::move(b));
-
-  /// Check the move assignment
-  AccumulatedMaterialProperties cMovedAssigned = std::move(c);
-
-  /// All of the material should be invalid (the accessible ones)
-  auto averageA = a.totalAverage();
-  BOOST_CHECK_EQUAL(bool(averageA.first), false);
-  BOOST_CHECK_EQUAL(averageA.second, 0u);
-
-  /// All of the material should be invalid (the accessible ones)
-  auto averageB = bMoved.totalAverage();
-  BOOST_CHECK_EQUAL(bool(averageB.first), false);
-  BOOST_CHECK_EQUAL(averageB.second, 0u);
-
-  /// All of the material should be invalid (the accessible ones)
-  auto averageC = cMovedAssigned.totalAverage();
-  BOOST_CHECK_EQUAL(bool(averageC.first), false);
-  BOOST_CHECK_EQUAL(averageC.second, 0u);
+  auto [average, trackCount] = a.totalAverage();
+  // material is vaccum
+  BOOST_CHECK(not(average));
+  BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
-/// Test the event averaging behavior
-BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_trackaverage_test) {
-  // These are our material properties
-  MaterialProperties a(1., 2., 6., 3., 5., 1.);
-  MaterialProperties b(2., 4., 12., 6., 10., 2.);
-  MaterialProperties c(4., 8., 16., 8., 20., 3.);
-
-  // Collect per event
-  AccumulatedMaterialProperties abc;
-  abc.accumulate(a);
-  abc.accumulate(b);
-  abc.accumulate(c);
-  abc.trackAverage();
-
-  // Now get back the total average - without unit thickness
-  auto averageAbc = abc.totalAverage();
-
-  // Both should have one event
-  BOOST_CHECK_EQUAL(averageAbc.second, 1u);
-  auto mpAbc = averageAbc.first;
-
-  // Thickness must be one for mapping
-  // Thickness in X0 is additive
-  CHECK_CLOSE_REL(mpAbc.thickness(), 1., 0.0001);
-  // A/Z should be 0.5 roughly for both
-  CHECK_CLOSE_REL(mpAbc.material().Z() / mpAbc.material().Ar(), 0.5, 0.0001);
-  // Thickness in X0 is additive
-  CHECK_CLOSE_REL(mpAbc.thicknessInX0(),
-                  a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
-                  0.0001);
-  // Consistency check : X0
-  CHECK_CLOSE_REL(mpAbc.thickness() / mpAbc.material().X0(),
-                  mpAbc.thicknessInX0(), 0.0001);
-  // Consistency check : L0
-  CHECK_CLOSE_REL(mpAbc.thicknessInL0(),
-                  a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
-                  0.0001);
-  // The density scales with the thickness then
-  double rhoTmapped = mpAbc.material().massDensity() * mpAbc.thickness();
-  double rhoTadded = (a.thickness() * a.material().massDensity() +
-                      b.thickness() * b.material().massDensity() +
-                      c.thickness() * c.material().massDensity());
-  CHECK_CLOSE_REL(rhoTmapped, rhoTadded, 0.0001);
+// average three empty tracks which are ignored by default
+BOOST_AUTO_TEST_CASE(EmptyTracksIgnored) {
+  AccumulatedMaterialProperties a;
+  a.trackAverage();
+  a.trackAverage();
+  a.trackAverage();
+  auto [average, trackCount] = a.totalAverage();
+  BOOST_CHECK(not(average));
+  BOOST_CHECK_EQUAL(trackCount, 0u);
 }
 
-/// Test the total averaging behavior
-BOOST_AUTO_TEST_CASE(AccumulatedMaterialProperties_totalaverage_test) {
-  MaterialProperties a(1., 2., 6., 3., 5., 1.);
-  MaterialProperties a3(1., 2., 6., 3., 5., 3.);
-
-  MaterialProperties v(1.);
-
-  // Test is the average of a and a is a
-  AccumulatedMaterialProperties aa;
-  aa.accumulate(a);
-  aa.trackAverage();
-  aa.accumulate(a);
-  aa.trackAverage();
-  auto averageAA = aa.totalAverage();
-
-  BOOST_CHECK_EQUAL(a, averageAA.first);
-  BOOST_CHECK_EQUAL(averageAA.second, 2u);
-
-  // Test:
-  // that the average of a and a vacuum
-  // step of same length is half a
-  MaterialProperties halfA(a.material(), a.thickness() / 2);
-  AccumulatedMaterialProperties av;
-  av.accumulate(a);
-  av.trackAverage();
-  av.accumulate(v);
-  av.trackAverage();
-  auto averageAV = av.totalAverage();
-  auto matAV = averageAV.first;
-
-  BOOST_CHECK_EQUAL(halfA.thicknessInX0(), matAV.thicknessInX0());
-  BOOST_CHECK_EQUAL(halfA.thicknessInL0(), matAV.thicknessInL0());
-  CHECK_CLOSE_REL(halfA.material().massDensity() * halfA.thickness(),
-                  matAV.material().massDensity() * matAV.thickness(), 0.0001);
-  BOOST_CHECK_EQUAL(averageAV.second, 2u);
-
-  // Test:
-  // average of a + 3*a -> 2*a
-  MaterialProperties doubleA(a.material(), 2 * a.thickness());
-  AccumulatedMaterialProperties aa3;
-  aa3.accumulate(a);
-  aa3.trackAverage();
-  aa3.accumulate(a3);
-  aa3.trackAverage();
-  auto averageAA3 = aa3.totalAverage();
-  auto matAA3 = averageAA3.first;
-
-  BOOST_CHECK_EQUAL(doubleA.thicknessInX0(), matAA3.thicknessInX0());
-  BOOST_CHECK_EQUAL(doubleA.thicknessInL0(), matAA3.thicknessInL0());
-  CHECK_CLOSE_REL(doubleA.material().massDensity() * doubleA.thickness(),
-                  matAA3.material().massDensity() * matAA3.thickness(), 0.0001);
-  BOOST_CHECK_EQUAL(averageAA3.second, 2u);
-
-  /// Test:
-  /// average a + 3a + v
-  AccumulatedMaterialProperties aa3v;
-  aa3v.accumulate(a);
-  aa3v.trackAverage();
-  aa3v.accumulate(a3);
-  aa3v.trackAverage();
-  aa3v.accumulate(v);
-  aa3v.trackAverage();
-  auto averageAA3V = aa3v.totalAverage();
-  auto matAA3V = averageAA3V.first;
-
-  CHECK_CLOSE_REL(4. / 3., matAA3V.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(averageAA3V.second, 3u);
-
-  /// Test:
-  /// average 4a + v
-  AccumulatedMaterialProperties a4v;
-  a4v.accumulate(a);
-  a4v.accumulate(a3);
-  a4v.trackAverage();
-  a4v.accumulate(v);
-  a4v.trackAverage();
-  auto averageA4V = a4v.totalAverage();
-  auto matA4V = averageA4V.first;
-
-  CHECK_CLOSE_REL(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(averageA4V.second, 2u);
-
-  /// Test:
-  /// average: a + 3a + emptyhit
-  AccumulatedMaterialProperties aa3e;
-  aa3e.accumulate(a);
-  aa3e.trackAverage();
-  aa3e.accumulate(a3);
-  aa3e.trackAverage();
-  aa3e.trackAverage(true);
-  auto averageAA3E = aa3e.totalAverage();
-  auto matAA3E = averageAA3E.first;
-
-  CHECK_CLOSE_REL(4. / 3., matAA3E.thicknessInX0(), 0.00001);
-  BOOST_CHECK_EQUAL(averageAA3E.second, 3u);
+// average three empty tracks and do not ignore them
+BOOST_AUTO_TEST_CASE(EmptyTracks) {
+  AccumulatedMaterialProperties a;
+  a.trackAverage(true);
+  a.trackAverage(true);
+  a.trackAverage(true);
+  auto [average, trackCount] = a.totalAverage();
+  BOOST_CHECK(not(average));
+  BOOST_CHECK_EQUAL(trackCount, 3u);
 }
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_CASE(MultipleIdenticalThicknessTrackSteps) {
+  MaterialProperties unit = makeUnitSlab();
+  AccumulatedMaterialProperties a;
+  // accumulate three identical steps for one track
+  {
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 1u);
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+  }
+  // accumulate three identical steps for one additional track
+  {
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 2u);
+    // averages must stay the same since we added the same material again
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+  }
+}
+
+// accumulate and average three tracks.
+// each track contributes the same material but each in different steps.
+BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
+  MaterialProperties unit = makeUnitSlab();
+  AccumulatedMaterialProperties a;
+  // accumulate three identical steps
+  {
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.accumulate(unit);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 1u);
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+  }
+  // accumulate one step with thickness 1, one with thickness 2
+  {
+    MaterialProperties twice = unit;
+    twice.scaleThickness(2);
+    a.accumulate(unit);
+    a.accumulate(twice);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 2u);
+    // averages must stay the same
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+  }
+  // accumulate one step with thickness 3
+  {
+    MaterialProperties thrice = unit;
+    thrice.scaleThickness(3);
+    a.accumulate(thrice);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 3u);
+    // averages must stay the same
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 3 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 3.0f);
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 3.0f);
+  }
+}
+
+// average multiple tracks w/ one step each but different materials
+BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
+  MaterialProperties unit = makeUnitSlab();
+  AccumulatedMaterialProperties a;
+  // add material w/ given thickness
+  {
+    a.accumulate(unit);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 1u);
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), unit.thicknessInX0());
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), unit.thicknessInL0());
+  }
+  // add material w/ given three times the initial thickness
+  {
+    MaterialProperties three = unit;
+    three.scaleThickness(3);
+    a.accumulate(three);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 2);
+    // average thickness should now be 2*initial, average material unchanged
+    BOOST_CHECK_EQUAL(average.material(), unit.material());
+    BOOST_CHECK_EQUAL(average.thickness(), 2 * unit.thickness());
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 2 * unit.thicknessInX0());
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 2 * unit.thicknessInL0());
+  }
+  // add vacuum w/ given the same thickness as the current average
+  {
+    MaterialProperties vac(2 * unit.thickness());
+    // add vacuum twice to counteract the existing two tracks stored
+    a.accumulate(vac);
+    a.trackAverage();
+    a.accumulate(vac);
+    a.trackAverage();
+    auto [average, trackCount] = a.totalAverage();
+    BOOST_CHECK_EQUAL(trackCount, 4u);
+    // average material density halved
+    CHECK_CLOSE_REL(average.material().X0(), 2 * unit.material().X0(), eps);
+    CHECK_CLOSE_REL(average.material().L0(), 2 * unit.material().L0(), eps);
+    CHECK_CLOSE_REL(average.material().molarDensity(),
+                    0.5f * unit.material().molarDensity(), eps);
+    // averag atom is still the same species
+    CHECK_CLOSE_REL(average.material().Ar(), unit.material().Ar(), eps);
+    CHECK_CLOSE_REL(average.material().Z(), unit.material().Z(), eps);
+    // thickness in x0/l0 depends on density and thus halved as well
+    BOOST_CHECK_EQUAL(average.thicknessInX0(), 1 * unit.thicknessInX0());
+    BOOST_CHECK_EQUAL(average.thicknessInL0(), 1 * unit.thicknessInL0());
+    // average real thickness stays the same
+    BOOST_CHECK_EQUAL(average.thickness(), 2 * unit.thickness());
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   // Test material mapping
 
   std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
   MaterialProperties matprop1(mat1, 1);
@@ -99,11 +99,9 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
-  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
+  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
+  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
+  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
 /// @brief Various test for the Material in the case of a Cylindrical volume
@@ -163,8 +161,8 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   // Test material mapping
 
   std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
   MaterialProperties matprop1(mat1, 1);
@@ -177,11 +175,9 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
-  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
+  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
+  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
+  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
 /// @brief Various test for the Material in the case of a Cuboid volume
@@ -243,8 +239,8 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   // Test material mapping
 
   std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
   MaterialProperties matprop1(mat1, 1);
@@ -257,11 +253,9 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
-  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
+  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
+  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
+  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
 /// @brief Various test for the Material in the case of a Cylindrical volume
@@ -327,8 +321,8 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   // Test material mapping
 
   std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
-  Material mat1(1., 2., 3., 4., 5.);
-  Material mat2(6., 7., 8., 9., 10.);
+  Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
+  Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
   MaterialProperties matprop1(mat1, 1);
@@ -341,11 +335,9 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
 
-  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.classificationNumbers(),
-                  1e-4);
-  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.classificationNumbers(),
-                  1e-4);
-  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.classificationNumbers());
+  CHECK_CLOSE_REL(matMap.atLocalBins(index1), mat1.parameters(), 1e-4);
+  CHECK_CLOSE_REL(matMap.atLocalBins(index2), mat2.parameters(), 1e-4);
+  BOOST_CHECK_EQUAL(matMap.atLocalBins(index3), vacuum.parameters());
 }
 
 }  // namespace Test

@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <limits>
@@ -79,9 +80,8 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   Translation3D translation{0., 1., 2.};
   auto pTransform = std::make_shared<const Transform3D>(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
-  MaterialProperties properties{0.2, 0.2, 0.2, 20., 10, 5.};
   auto pMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(properties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
   SurfaceStub surface(detElement);
   // associatedDetectorElement
@@ -119,9 +119,8 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
   // surfaceMaterial()
-  MaterialProperties newProperties{0.5, 0.5, 0.5, 20., 10., 5.};
   auto pNewMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(newProperties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   surface.assignSurfaceMaterial(pNewMaterial);
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(),
                     pNewMaterial.get());  // passes ??
@@ -143,9 +142,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
   auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
-  MaterialProperties properties{1., 1., 1., 20., 10, 5.};
   auto pMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(properties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
   DetectorElementStub detElement2{pTransform1, pPlanarBound, 0.3, pMaterial};
   DetectorElementStub detElement3{pTransform2, pPlanarBound, 0.3, pMaterial};

@@ -30,6 +30,7 @@
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <fstream>
@@ -577,8 +578,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   CuboidVolumeBuilder::VolumeConfig vConf;
   vConf.position = {0.5_m, 0., 0.};
   vConf.length = {1_m, 1_m, 1_m};
-  vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+  vConf.volumeMaterial =
+      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
   CuboidVolumeBuilder::Config conf;
   conf.volumeCfg.push_back(vConf);
   conf.position = {0.5_m, 0., 0.};
@@ -617,7 +618,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
-  propOpts.maxSteps = 100;
+  propOpts.maxSteps = 10000;
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -666,7 +667,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
       propOptsDense(tgContext, mfContext, getDummyLogger());
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
-  propOptsDense.maxSteps = 100;
+  propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -722,7 +723,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
     } else {
       BOOST_CHECK_GT(std::abs(pos.x()), 1_um);
       CHECK_SMALL(pos.y(), 1_um);
-      BOOST_CHECK_GT(std::abs(pos.z()), 1_um);
+      BOOST_CHECK_GT(std::abs(pos.z()), 0.125_um);
     }
   }
   for (const auto& mom : stepResultB.momentum) {
@@ -745,8 +746,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   CuboidVolumeBuilder::VolumeConfig vConfMat;
   vConfMat.position = {1.5_m, 0., 0.};
   vConfMat.length = {1_m, 1_m, 1_m};
-  vConfMat.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+  vConfMat.volumeMaterial =
+      std::make_shared<const HomogeneousVolumeMaterial>(makeBeryllium());
   vConfMat.name = "Material volume";
   CuboidVolumeBuilder::VolumeConfig vConfVac2;
   vConfVac2.position = {2.5_m, 0., 0.};
@@ -788,7 +789,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.abortList = abortList;
-  propOpts.maxSteps = 100;
+  propOpts.maxSteps = 1000;
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -847,7 +848,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       propOptsDef(tgContext, mfContext, getDummyLogger());
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
-  propOptsDef.maxSteps = 100;
+  propOptsDef.maxSteps = 1000;
   propOptsDef.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
@@ -907,7 +908,6 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
   propOptsDense.maxStepSize = 1.5_m;
-  propOptsDense.tolerance = 1e-8;
 
   // Build stepper and propagator
   EigenStepper<ConstantBField, StepperExtensionList<DenseEnvironmentExtension>>
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3D yPos(0., 1., 0.);
   Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-  MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5_mm);
+  MaterialProperties matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::SurfaceConfig sConf1;
@@ -983,15 +983,13 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   muConf1.position = {2.3_m, 0., 0.};
   muConf1.length = {20._cm, 20._cm, 20._cm};
   muConf1.volumeMaterial =
-      std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
-          Material(352.8, 407., 9.012, 4., 1.848e-3)));
+      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
   muConf1.name = "MDT1";
   CuboidVolumeBuilder::VolumeConfig muConf2;
   muConf2.position = {2.7_m, 0., 0.};
   muConf2.length = {20._cm, 20._cm, 20._cm};
   muConf2.volumeMaterial =
-      std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
-          Material(352.8, 407., 9.012, 4., 1.848e-3)));
+      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
   muConf2.name = "MDT2";
 
   CuboidVolumeBuilder::VolumeConfig vConf1;
@@ -1003,8 +1001,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   vConf2.position = {1.5_m, 0., 0.};
   vConf2.length = {1._m, 1._m, 1._m};
   vConf2.volumeMaterial =
-      std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
-          Material(352.8, 407., 9.012, 4., 1.848e-3)));
+      std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
   vConf2.name = "Calorimeter";
   CuboidVolumeBuilder::VolumeConfig vConf3;
   vConf3.position = {2.5_m, 0., 0.};
@@ -1044,6 +1041,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
                                 AbortList<EndOfWorld>>
       propOpts(tgContext, mfContext, getDummyLogger());
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
+  propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
   ConstantBField bField(Vector3D(0., 0., 0.));

@@ -1,6 +1,7 @@
 add_unittest(AccumulatedMaterialProperties AccumulatedMaterialPropertiesTests.cpp)
 add_unittest(AccumulatedSurfaceMaterial AccumulatedSurfaceMaterialTests.cpp)
 add_unittest(AccumulatedVolumeMaterial AccumulatedVolumeMaterialTests.cpp)
+add_unittest(AverageMaterials AverageMaterialsTests.cpp)
 add_unittest(BinnedSurfaceMaterial BinnedSurfaceMaterialTests.cpp)
 add_unittest(HomogeneousSurfaceMaterial HomogeneousSurfaceMaterialTests.cpp)
 add_unittest(HomogeneousVolumeMaterial HomogeneousVolumeMaterialTests.cpp)
