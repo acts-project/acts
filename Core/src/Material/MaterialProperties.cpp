@@ -8,6 +8,8 @@
 
 #include "Acts/Material/MaterialProperties.hpp"
 
+#include "Acts/Material/detail/AverageMaterials.hpp"
+
 #include <climits>
 #include <limits>
 #include <ostream>
@@ -17,58 +19,28 @@ static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
 Acts::MaterialProperties::MaterialProperties(float thickness)
     : m_thickness(thickness) {}
 
-Acts::MaterialProperties::MaterialProperties(float X0, float L0, float Ar,
-                                             float Z, float rho,
-                                             float thickness)
-    : m_material(X0, L0, Ar, Z, rho),
-      m_thickness(thickness),
-      m_thicknessInX0((X0 > eps) ? (thickness / X0) : 0),
-      m_thicknessInL0((L0 > eps) ? (thickness / L0) : 0) {}
-
 Acts::MaterialProperties::MaterialProperties(const Material& material,
                                              float thickness)
     : m_material(material),
       m_thickness(thickness),
-      m_thicknessInX0((material.X0() > eps) ? (thickness / material.X0()) : 0),
-      m_thicknessInL0((material.L0() > eps) ? (thickness / material.L0()) : 0) {
+      m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0),
+      m_thicknessInL0((eps < material.L0()) ? (thickness / material.L0()) : 0) {
 }
 
 Acts::MaterialProperties::MaterialProperties(
     const std::vector<MaterialProperties>& layers)
     : MaterialProperties() {
-  // use double for computations to avoid precision loss
-  double Ar = 0.0;
-  double Z = 0.0;
-  double weight = 0.0;
-  double thickness = 0.0;
-  double thicknessInX0 = 0.0;
-  double thicknessInL0 = 0.0;
-  // sum-up contributions from each layer
+  // NOTE 2020-08-26 msmk
+  //   the reduce work best (in the numerical stability sense) if the input
+  //   layers are sorted by thickness/mass density. then, the later terms
+  //   of the averaging are only small corrections to the large average of
+  //   the initial layers. this could be enforced by sorting the layers first,
+  //   but i am not sure if this is actually a problem.
+  // NOTE yes, this loop is exactly like std::reduce which apparently does not
+  //   exist on gcc 8 although it is required by C++17.
   for (const auto& layer : layers) {
-    const auto& mat = layer.material();
-    // weight of the layer assuming a unit area, i.e. volume = thickness*1*1
-    const auto layerWeight = mat.massDensity() * layer.thickness();
-    // Ar,Z are weighted by mass
-    Ar += mat.Ar() * layerWeight;
-    Z += mat.Z() * layerWeight;
-    weight += layerWeight;
-    // thickness and relative thickness in X0,L0 are strictly additive
-    thickness += layer.thickness();
-    thicknessInX0 += layer.thicknessInX0();
-    thicknessInL0 += layer.thicknessInL0();
+    *this = detail::combineSlabs(*this, layer);
   }
-  // store averaged material constants
-  Ar /= weight;
-  Z /= weight;
-  // this is weight/volume w/ volume = thickness*unitArea = thickness*1*1
-  const auto density = weight / thickness;
-  const auto X0 = thickness / thicknessInX0;
-  const auto L0 = thickness / thicknessInL0;
-  m_material = Material(X0, L0, Ar, Z, density);
-  // thickness properties do not need to be averaged
-  m_thickness = thickness;
-  m_thicknessInX0 = thicknessInX0;
-  m_thicknessInL0 = thicknessInL0;
 }
 
 void Acts::MaterialProperties::scaleThickness(float scale) {

@@ -20,7 +20,7 @@ Here, the following native units are used:
 - Energy, mass, and momentum are all expressed in GeV (consistent with
   speed-of-light == 1).
 - Electric charge is expressed in e, i.e. units of the elementary charge.
--  The magnetic field is expressed in GeV/(e*mm). The magnetic field
+- The magnetic field is expressed in GeV/(e*mm). The magnetic field
   connects momentum to length, e.g. in SI units the radius of a charged
   particle trajectory in a constant magnetic field is given by
 
@@ -30,6 +30,7 @@ Here, the following native units are used:
 
   With the chosen magnetic field unit the expression above stays the
   same and no additional conversion factors are necessary.
+- Amount of substance is expressed in mol.
 
 Depending on the context a physical quantity might not be given in the native
 units. In this case we need to convert to the native unit first before the value
