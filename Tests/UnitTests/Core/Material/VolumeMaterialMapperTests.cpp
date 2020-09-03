@@ -205,16 +205,18 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
-  RecordedMaterialPoint matRecord;
+  RecordedMaterialVolumePoint matRecord;
   for (unsigned int i = 0; i < 1e4; i++) {
     Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
+    std::vector<Vector3D> volPos;
+    volPos.push_back(pos);
     Material tv =
         (detector->lowestTrackingVolume(gc, pos)->volumeMaterial() != nullptr)
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
     MaterialProperties matProp(tv, 1);
-    matRecord.push_back(std::make_pair(matProp, pos));
+    matRecord.push_back(std::make_pair(matProp, volPos));
   }
 
   // Build the material grid
