@@ -303,16 +303,19 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   GeometryID currentID = GeometryID();
   auto currentRecMaterial = mState.recordedMaterial.end();
 
-  // store end position of the last step for vacuum
+  // store end position of the last material slab
   Acts::Vector3D lastPositionEnd = volIter->position;
   Acts::Vector3D direction;
 
+  // loop over all the material hit in the track or until there no more volume
+  // to map onto
   while (rmIter != rMaterial.end() && volIter != mappingVolumes.end()) {
     if (volIter != mappingVolumes.end() &&
         !volIter->volume->inside(rmIter->position)) {
+      // Check if the material point is past the entry point to the current
+      // volume
       double distVol = (volIter->position - mTrack.first.first).norm();
       double distMat = (rmIter->position - mTrack.first.first).norm();
-      // Material past the entry point to the current volume
       if (distMat - distVol > s_epsilon) {
         // Switch to next material volume
         ++volIter;
@@ -331,26 +334,32 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       // and the material hit has a non 0 thickness
       if (currentRecMaterial != mState.recordedMaterial.end() &&
           rmIter->materialProperties.thickness() > 0) {
-        // Check that the last point + thickness
+        // check if there is vacuum between this material point and the last one
         float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
         if (vacuumThickness > s_epsilon) {
           auto properties = Acts::MaterialProperties(vacuumThickness);
+          // creat vacuum hits
           createExtraHits(currentRecMaterial->second, properties,
                           lastPositionEnd, direction);
         }
+        // determine the position of the last material slab using the track
+        // direction
         direction = rmIter->direction;
         direction = direction *
                     (rmIter->materialProperties.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
+        // create additional material point
         createExtraHits(currentRecMaterial->second, rmIter->materialProperties,
                         rmIter->position, direction);
       }
 
+      // check if we have reached the end of the volume or the last hit of the
+      // track.
       if ((rmIter + 1) == rMaterial.end() ||
           !volIter->volume->inside((rmIter + 1)->position)) {
+        // find the boundary surface corresponding to the end of the volume
         while (sfIter != mappingSurfaces.end()) {
-          if (sfIter->surface->geometryId().volume() ==
-                  volIter->volume->geometryId().volume() ||
+          if (sfIter->surface->geometryId().volume() == lastID.volume() ||
               ((volIter + 1) != mappingVolumes.end() &&
                sfIter->surface->geometryId().volume() ==
                    (volIter + 1)->volume->geometryId().volume())) {
@@ -359,6 +368,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
             if (distSur - distVol > s_epsilon) {
               float vacuumThickness =
                   (sfIter->position - lastPositionEnd).norm();
+              // if the last material slab stop before the boundary surface
+              // create vacuum hits
               if (vacuumThickness > s_epsilon) {
                 auto properties = Acts::MaterialProperties(vacuumThickness);
                 createExtraHits(currentRecMaterial->second, properties,
