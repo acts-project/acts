@@ -36,6 +36,7 @@ namespace Acts {
 ///
 ///     With the chosen magnetic field unit the expression above stays the
 ///     same and no additional conversion factors are necessary.
+/// *   Amount of substance is expressed in mol.
 ///
 /// To ensure consistent computations and results the following guidelines
 /// **must** be followed when handling physical quantities with units:
@@ -74,6 +75,7 @@ namespace Acts {
 ///     double mass     = 511_keV;
 ///     double velocity = 345_m / 1_s;
 ///     double bfield   = 3.9_T;
+///     double density  = 1_mol / 1_cm3;
 ///
 ///     // convert output values (via unit constants)
 ///     doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
@@ -138,6 +140,8 @@ constexpr double C = 1.602176634e19;
 constexpr double T = 0.000299792458;  // equivalent to c in appropriate SI units
 constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
+// Amount of substance, native unit mol
+constexpr double mol = 1.0;
 }  // namespace UnitConstants
 
 namespace UnitLiterals {
@@ -187,6 +191,7 @@ ACTS_DEFINE_UNIT_LITERAL(C)
 ACTS_DEFINE_UNIT_LITERAL(T)
 ACTS_DEFINE_UNIT_LITERAL(Gauss)
 ACTS_DEFINE_UNIT_LITERAL(kGauss)
+ACTS_DEFINE_UNIT_LITERAL(mol)
 // not needed anymore. undef to prevent littering the namespace
 #undef ACTS_DEFINE_UNIT_LITERAL
 }  // namespace UnitLiterals

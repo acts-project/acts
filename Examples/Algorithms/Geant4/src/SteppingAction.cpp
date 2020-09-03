@@ -42,25 +42,33 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
 
   if (material && material->GetName() != "Vacuum" &&
       material->GetName() != "Air") {
-    // go through the elements of the material & weigh it with its fraction
+    // Quantities valid for elemental materials and mixtures
+    double X0 = (material->GetRadlen() / CLHEP::mm) * Acts::UnitConstants::mm;
+    double L0 = (material->GetNuclearInterLength() / CLHEP::mm) *
+                Acts::UnitConstants::mm;
+    double rho = (material->GetDensity() / (CLHEP::gram / CLHEP::mm3)) *
+                 (Acts::UnitConstants::g / Acts::UnitConstants::mm3);
+    // Get{A,Z} is only meaningful for single-element materials (according to
+    // the Geant4 docs). Need to compute average manually.
     const G4ElementVector* elements = material->GetElementVector();
     const G4double* fraction = material->GetFractionVector();
     size_t nElements = material->GetNumberOfElements();
-    double A = 0.;
+    double Ar = 0.;
     double Z = 0.;
-    double X0 = material->GetRadlen();
-    double L0 = material->GetNuclearInterLength();
-    double rho = material->GetDensity() * CLHEP::mm3 / CLHEP::gram;
-    double steplength = step->GetStepLength() / CLHEP::mm;
     if (nElements == 1) {
-      A = material->GetA() * CLHEP::mole / CLHEP::gram;
+      Ar = material->GetA() / (CLHEP::gram / CLHEP::mole);
       Z = material->GetZ();
     } else {
       for (size_t i = 0; i < nElements; i++) {
-        A += elements->at(i)->GetA() * fraction[i] * CLHEP::mole / CLHEP::gram;
+        Ar +=
+            elements->at(i)->GetA() * fraction[i] / (CLHEP::gram / CLHEP::mole);
         Z += elements->at(i)->GetZ() * fraction[i];
       }
     }
+    // construct passed material slab for the step
+    const auto slab = Acts::MaterialProperties(
+        Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
+        (step->GetStepLength() / CLHEP::mm) * Acts::UnitConstants::mm);
 
     /*   G4cout << *material << G4endl;
        G4cout << "----G4StepMaterial----" << G4endl;
@@ -80,8 +88,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     mInteraction.position = Acts::Vector3D(rawPos.x(), rawPos.y(), rawPos.z());
     mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
     mInteraction.direction.normalized();
-    mInteraction.materialProperties =
-        Acts::MaterialProperties(X0, L0, A, Z, rho, steplength);
+    mInteraction.materialProperties = slab;
     m_materialSteps.push_back(mInteraction);
 
     //   // Get the track associated to the step
