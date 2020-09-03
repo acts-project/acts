@@ -301,10 +301,10 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       if (currentRecMaterial != mState.recordedMaterial.end()) {
         // If the curent volume has a ProtoVolumeMaterial
         volumeStep =
-            floor(rmIter->MaterialSlab.thickness() / m_cfg.mappingStep);
-        auto properties = rmIter->MaterialSlab;
+            floor(rmIter->materialSlab.thickness() / m_cfg.mappingStep);
+        auto properties = rmIter->materialSlab;
         float remainder =
-            rmIter->MaterialSlab.thickness() - m_cfg.mappingStep * volumeStep;
+            rmIter->materialSlab.thickness() - m_cfg.mappingStep * volumeStep;
         properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
         // Get the direction of the Geantino in the volume
         extraDirection = rmIter->direction;

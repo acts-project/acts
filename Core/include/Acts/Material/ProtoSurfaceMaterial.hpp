@@ -100,23 +100,23 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   BinUtility m_binUtility;
 
   /// Dummy material properties
-  MaterialSlab m_MaterialSlab;
+  MaterialSlab m_materialSlab;
 };
 }  // namespace Acts
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
     const Vector2D& /*lp*/) const {
-  return (m_MaterialSlab);
+  return (m_materialSlab);
 }
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
     const Vector3D& /*gp*/) const {
-  return (m_MaterialSlab);
+  return (m_materialSlab);
 }
 
 inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
     size_t /*ib0*/, size_t /*ib1*/) const {
-  return (m_MaterialSlab);
+  return (m_materialSlab);
 }
 
 inline const Acts::BinUtility& Acts::ProtoSurfaceMaterial::binUtility() const {

@@ -46,7 +46,7 @@ struct MaterialInteraction {
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
-  MaterialSlab MaterialSlab;
+  MaterialSlab materialSlab;
 };
 
 /// Material interactor propagator action.
@@ -184,7 +184,7 @@ struct MaterialInteractor {
       mi.surface = d.surface;
       mi.volume = nullptr;
       mi.pathCorrection = d.pathCorrection;
-      mi.MaterialSlab = d.slab;
+      mi.materialSlab = d.slab;
       result.materialInteractions.push_back(std::move(mi));
     }
   }
@@ -203,7 +203,7 @@ struct MaterialInteractor {
     mi.surface = nullptr;
     mi.volume = d.volume;
     mi.pathCorrection = d.pathCorrection;
-    mi.MaterialSlab = d.slab;
+    mi.materialSlab = d.slab;
     result.materialInteractions.push_back(std::move(mi));
   }
 
@@ -220,13 +220,13 @@ struct MaterialInteractor {
     double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().MaterialSlab.scaleThickness(
+    result.materialInteractions.back().katerialSlab.scaleThickness(
         shift.norm());
     result.materialInteractions.back().updatedVolumeStep = true;
     result.materialInX0 +=
-        result.materialInteractions.back().MaterialSlab.thicknessInX0();
+        result.materialInteractions.back().materialSlab.thicknessInX0();
     result.materialInL0 +=
-        result.materialInteractions.back().MaterialSlab.thicknessInL0();
+        result.materialInteractions.back().materialSlab.thicknessInL0();
   }
 };  // namespace Acts
 
