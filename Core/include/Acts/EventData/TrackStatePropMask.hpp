@@ -84,4 +84,4 @@ constexpr TrackStatePropMask& operator^=(TrackStatePropMask& lhs,
   return lhs;
 }
 
-}
+}  // namespace Acts
