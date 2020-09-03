@@ -20,7 +20,7 @@
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -927,7 +927,7 @@ class CombinatorialKalmanFilter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 

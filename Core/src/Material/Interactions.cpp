@@ -139,7 +139,7 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   assert((qOverP != 0) and "q/p must be non-zero"); \
   assert((q != 0) and "Charge must be non-zero");
 
-float Acts::computeEnergyLossBethe(const MaterialProperties& slab,
+float Acts::computeEnergyLossBethe(const MaterialSlab& slab,
                                    int /* unused */, float m, float qOverP,
                                    float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -167,7 +167,7 @@ float Acts::computeEnergyLossBethe(const MaterialProperties& slab,
   return eps * running;
 }
 
-float Acts::deriveEnergyLossBetheQOverP(const MaterialProperties& slab,
+float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab,
                                         int /* unused */, float m, float qOverP,
                                         float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -207,7 +207,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialProperties& slab,
   return eps * rel;
 }
 
-float Acts::computeEnergyLossLandau(const MaterialProperties& slab,
+float Acts::computeEnergyLossLandau(const MaterialSlab& slab,
                                     int /* unused */, float m, float qOverP,
                                     float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -230,7 +230,7 @@ float Acts::computeEnergyLossLandau(const MaterialProperties& slab,
   return eps * running;
 }
 
-float Acts::deriveEnergyLossLandauQOverP(const MaterialProperties& slab,
+float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab,
                                          int /* unused */, float m,
                                          float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -283,7 +283,7 @@ inline float convertLandauFwhmToGaussianSigma(float fwhm) {
 
 }  // namespace
 
-float Acts::computeEnergyLossLandauSigma(const MaterialProperties& slab,
+float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab,
                                          int /* unused */, float m,
                                          float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -301,7 +301,7 @@ float Acts::computeEnergyLossLandauSigma(const MaterialProperties& slab,
   return convertLandauFwhmToGaussianSigma(fwhm);
 }
 
-float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialProperties& slab,
+float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
                                                int /* unused */, float m,
                                                float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -383,7 +383,7 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
 
 }  // namespace
 
-float Acts::computeEnergyLossRadiative(const MaterialProperties& slab, int pdg,
+float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int pdg,
                                        float m, float qOverP, float q) {
   ASSERT_INPUTS(m, qOverP, q)
 
@@ -408,7 +408,7 @@ float Acts::computeEnergyLossRadiative(const MaterialProperties& slab, int pdg,
   return dEdx * x;
 }
 
-float Acts::deriveEnergyLossRadiativeQOverP(const MaterialProperties& slab,
+float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
                                             int pdg, float m, float qOverP,
                                             float q) {
   ASSERT_INPUTS(m, qOverP, q)
@@ -441,19 +441,19 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialProperties& slab,
   return derE * derQOverP * x;
 }
 
-float Acts::computeEnergyLossMean(const MaterialProperties& slab, int pdg,
+float Acts::computeEnergyLossMean(const MaterialSlab& slab, int pdg,
                                   float m, float qOverP, float q) {
   return computeEnergyLossBethe(slab, pdg, m, qOverP, q) +
          computeEnergyLossRadiative(slab, pdg, m, qOverP, q);
 }
 
-float Acts::deriveEnergyLossMeanQOverP(const MaterialProperties& slab, int pdg,
+float Acts::deriveEnergyLossMeanQOverP(const MaterialSlab& slab, int pdg,
                                        float m, float qOverP, float q) {
   return deriveEnergyLossBetheQOverP(slab, pdg, m, qOverP, q) +
          deriveEnergyLossRadiativeQOverP(slab, pdg, m, qOverP, q);
 }
 
-float Acts::computeEnergyLossMode(const MaterialProperties& slab, int pdg,
+float Acts::computeEnergyLossMode(const MaterialSlab& slab, int pdg,
                                   float m, float qOverP, float q) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
@@ -461,7 +461,7 @@ float Acts::computeEnergyLossMode(const MaterialProperties& slab, int pdg,
          0.15f * computeEnergyLossRadiative(slab, pdg, m, qOverP, q);
 }
 
-float Acts::deriveEnergyLossModeQOverP(const MaterialProperties& slab, int pdg,
+float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab, int pdg,
                                        float m, float qOverP, float q) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
@@ -492,7 +492,7 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 
 }  // namespace
 
-float Acts::computeMultipleScatteringTheta0(const MaterialProperties& slab,
+float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
                                             int pdg, float m, float qOverP,
                                             float q) {
   ASSERT_INPUTS(m, qOverP, q)

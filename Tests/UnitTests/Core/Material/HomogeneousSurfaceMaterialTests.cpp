@@ -10,7 +10,7 @@
 
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <climits>
@@ -23,7 +23,7 @@ namespace Test {
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
   // construct the material properties from arguments
   Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
-  MaterialProperties mp(mat, 0.1);
+  MaterialSlab mp(mat, 0.1);
 
   // Constructor from arguments
   HomogeneousSurfaceMaterial hsm(mp, 1.);
@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
 
 // Test the Scaling
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
-  MaterialProperties mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
-  MaterialProperties matHalf = mat;
+  MaterialSlab mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+  MaterialSlab matHalf = mat;
   matHalf.scaleThickness(0.5);
 
   HomogeneousSurfaceMaterial hsm(mat, 1.);
   hsm *= 0.5;
 
-  auto matBin = hsm.materialProperties(0, 0);
+  auto matBin = hsm.MaterialSlab(0, 0);
 
   BOOST_CHECK_EQUAL(matBin, matHalf);
   BOOST_CHECK_NE(matBin, mat);
@@ -63,20 +63,20 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test) {
 // Test the Access
 BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   // construct the material properties from arguments
-  MaterialProperties mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
-  MaterialProperties matHalf = mat;
+  MaterialSlab mat(Material::fromMolarDensity(1., 2., 3., 4., 5.), 0.1);
+  MaterialSlab matHalf = mat;
   matHalf.scaleThickness(0.5);
 
-  MaterialProperties vacuum = MaterialProperties();
+  MaterialSlab vacuum = MaterialSlab();
 
   // Constructor from arguments
   HomogeneousSurfaceMaterial hsmfwd(mat, 1.);
   HomogeneousSurfaceMaterial hsmhalf(mat, 0.5);
   HomogeneousSurfaceMaterial hsmbwd(mat, 0.);
 
-  auto mat2d = hsmfwd.materialProperties(Vector2D{0., 0.});
-  auto mat3d = hsmfwd.materialProperties(Vector3D{0., 0., 0.});
-  auto matbin = hsmfwd.materialProperties(0, 0);
+  auto mat2d = hsmfwd.MaterialSlab(Vector2D{0., 0.});
+  auto mat3d = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.});
+  auto matbin = hsmfwd.MaterialSlab(0, 0);
 
   // Test equality of the copy
   BOOST_CHECK_EQUAL(mat, mat2d);
@@ -99,14 +99,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, pre), 1.);
   BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, post), 0.);
 
-  auto matFwdFull = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
-  auto matBwdFull = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, bDir, full);
+  auto matFwdFull = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, full);
+  auto matBwdFull = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, full);
 
-  auto matFwdPost = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, fDir, post);
-  auto matBwdPost = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, bDir, post);
+  auto matFwdPost = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, post);
+  auto matBwdPost = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, post);
 
-  auto matFwdPre = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
-  auto matBwdPre = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
+  auto matFwdPre = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, pre);
+  auto matBwdPre = hsmfwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, pre);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);
@@ -126,14 +126,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   CHECK_CLOSE_REL(hsmhalf.factor(bDir, pre), 0.5, 1e-6);
   CHECK_CLOSE_REL(hsmhalf.factor(bDir, post), 0.5, 1e-6);
 
-  matFwdFull = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, bDir, full);
+  matFwdFull = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, fDir, full);
+  matBwdFull = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, bDir, full);
 
-  matFwdPost = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, bDir, post);
+  matFwdPost = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, fDir, post);
+  matBwdPost = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, bDir, post);
 
-  matFwdPre = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
-  matBwdPre = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
+  matFwdPre = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, fDir, pre);
+  matBwdPre = hsmhalf.MaterialSlab(Vector3D{0., 0., 0.}, bDir, pre);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);
@@ -153,14 +153,14 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, pre), 0.);
   BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, post), 1.);
 
-  matFwdFull = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
-  matBwdFull = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, bDir, full);
+  matFwdFull = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, full);
+  matBwdFull = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, full);
 
-  matFwdPost = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, fDir, post);
-  matBwdPost = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, bDir, post);
+  matFwdPost = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, post);
+  matBwdPost = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, post);
 
-  matFwdPre = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
-  matBwdPre = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
+  matFwdPre = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, fDir, pre);
+  matBwdPre = hsmbwd.MaterialSlab(Vector3D{0., 0., 0.}, bDir, pre);
 
   BOOST_CHECK_EQUAL(mat, matFwdFull);
   BOOST_CHECK_EQUAL(mat, matBwdFull);

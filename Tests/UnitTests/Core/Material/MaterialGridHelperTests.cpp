@@ -84,13 +84,13 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   }
   // Test material mapping
 
-  std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
-  MaterialProperties matprop1(mat1, 1);
-  MaterialProperties matprop2(mat2, 1);
+  MaterialSlab matprop1(mat1, 1);
+  MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
   matRecord.push_back(std::make_pair(matprop1, pos1));
@@ -160,13 +160,13 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
 
   // Test material mapping
 
-  std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
-  MaterialProperties matprop1(mat1, 1);
-  MaterialProperties matprop2(mat2, 1);
+  MaterialSlab matprop1(mat1, 1);
+  MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
   matRecord.push_back(std::make_pair(matprop1, pos1));
@@ -238,13 +238,13 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   }
   // Test material mapping
 
-  std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
-  MaterialProperties matprop1(mat1, 1);
-  MaterialProperties matprop2(mat2, 1);
+  MaterialSlab matprop1(mat1, 1);
+  MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
   matRecord.push_back(std::make_pair(matprop1, pos1));
@@ -320,13 +320,13 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
 
   // Test material mapping
 
-  std::vector<std::pair<MaterialProperties, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
 
-  MaterialProperties matprop1(mat1, 1);
-  MaterialProperties matprop2(mat2, 1);
+  MaterialSlab matprop1(mat1, 1);
+  MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
   matRecord.push_back(std::make_pair(matprop1, pos1));

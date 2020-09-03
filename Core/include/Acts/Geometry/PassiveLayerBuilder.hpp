@@ -11,7 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {

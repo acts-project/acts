@@ -29,7 +29,7 @@ struct MockPhysicsList {
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool operator()(generator_t &, const Acts::MaterialProperties &,
+  bool operator()(generator_t &, const Acts::MaterialSlab &,
                   Particle &particle, std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);

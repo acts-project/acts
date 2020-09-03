@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -41,7 +41,7 @@ struct VolumeMaterialInteraction {
   const NavigationDirection nav;
 
   /// Data evaluated within this struct
-  MaterialProperties slab;
+  MaterialSlab slab;
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
 
@@ -78,15 +78,15 @@ struct VolumeMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialProperties(const propagator_state_t& state) {
+  bool evaluateMaterialSlab(const propagator_state_t& state) {
     pathCorrection = 0;
     if (state.navigation.currentVolume != nullptr &&
         state.navigation.currentVolume->volumeMaterial() != nullptr) {
-      slab = MaterialProperties(
+      slab = MaterialSlab(
           state.navigation.currentVolume->volumeMaterial()->material(pos),
           1);  // state.stepping.StepSize
     } else
-      slab = MaterialProperties();
+      slab = MaterialSlab();
     return slab;
   }
 };

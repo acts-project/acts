@@ -16,7 +16,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element

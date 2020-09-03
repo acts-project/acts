@@ -11,6 +11,6 @@
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
 void Acts::AccumulatedVolumeMaterial::accumulate(
-    const MaterialProperties& mat) {
+    const MaterialSlab& mat) {
   m_average = detail::combineSlabs(m_average, mat);
 }

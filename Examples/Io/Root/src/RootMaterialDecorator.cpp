@@ -132,9 +132,9 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       int nbins1 = t->GetNbinsY();
 
       // The material matrix
-      Acts::MaterialPropertiesMatrix materialMatrix(
+      Acts::MaterialSlabMatrix materialMatrix(
           nbins1,
-          Acts::MaterialPropertiesVector(nbins0, Acts::MaterialProperties()));
+          Acts::MaterialSlabVector(nbins0, Acts::MaterialSlab()));
 
       // We need binned material properties
       if (nbins0 * nbins1 > 1) {
@@ -152,7 +152,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
               const auto material =
                   Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
               materialMatrix[ib1 - 1][ib0 - 1] =
-                  Acts::MaterialProperties(material, dt);
+                  Acts::MaterialSlab(material, dt);
             }
           }
         }
@@ -185,7 +185,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
         const auto material =
             Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
         sMaterial = std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-            Acts::MaterialProperties(material, dt));
+            Acts::MaterialSlab(material, dt));
       }
     }
     ACTS_VERBOSE("Successfully read Material for : " << geoID);

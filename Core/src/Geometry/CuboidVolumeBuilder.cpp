@@ -17,7 +17,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
