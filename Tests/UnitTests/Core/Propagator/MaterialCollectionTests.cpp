@@ -146,8 +146,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
   // check that the sum of all steps is the total material
   for (auto& mInteraction : fwdMaterial.materialInteractions) {
-    fwdStepMaterialInX0 += mInteraction.MaterialSlab.thicknessInX0();
-    fwdStepMaterialInL0 += mInteraction.MaterialSlab.thicknessInL0();
+    fwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
+    fwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
   CHECK_CLOSE_REL(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-3);
@@ -199,8 +199,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
   // check that the sum of all steps is the total material
   for (auto& mInteraction : bwdMaterial.materialInteractions) {
-    bwdStepMaterialInX0 += mInteraction.MaterialSlab.thicknessInX0();
-    bwdStepMaterialInL0 += mInteraction.MaterialSlab.thicknessInL0();
+    bwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
+    bwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
 
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
