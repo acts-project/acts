@@ -142,7 +142,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
   // example surface and bound parameters at the updated position
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
-  BoundTrackParameters params(geoCtx, cov, newPos, newMom, charge, newTime, plane);
+  BoundTrackParameters params(geoCtx, cov, newPos, newMom, charge, newTime,
+                              plane);
   FreeVector freeParams;
   freeParams[eFreePos0] = newPos[eX];
   freeParams[eFreePos1] = newPos[eY];
@@ -415,7 +416,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   cov = 8.5 * Covariance::Identity();
   auto perigee = Surface::makeShared<PerigeeSurface>(
       std::make_shared<const Transform3D>(trafo));
-  BoundTrackParameters boundPerigee(geoCtx, cov, pos, mom, charge, time, perigee);
+  BoundTrackParameters boundPerigee(geoCtx, cov, pos, mom, charge, time,
+                                    perigee);
 
   // Reset the state and test
   Stepper::State statePerigee = state.stepping;

@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     VertexFinder finder(cfg);
 
     VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                       magFieldContext);
+                                                            magFieldContext);
 
     VertexFinder::State state;
     auto res = finder.find(tracksPtr, vertexingOptions, state);

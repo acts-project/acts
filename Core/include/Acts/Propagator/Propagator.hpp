@@ -197,7 +197,8 @@ template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -338,8 +339,9 @@ class Propagator final {
   ///
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      CurvilinearTrackParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 

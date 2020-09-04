@@ -139,8 +139,9 @@ class AdaptiveMultiVertexFitter {
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <typename T = InputTrack_t,
-            std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
+  template <
+      typename T = InputTrack_t,
+      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   AdaptiveMultiVertexFitter(Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFitter",
@@ -149,16 +150,17 @@ class AdaptiveMultiVertexFitter {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type != BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack_t type !=
+  /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t object
+  /// @param func Function extracting BoundTrackParameters from InputTrack_t
+  /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFitter(Config& cfg,
-                            std::function<BoundTrackParameters(InputTrack_t)> func,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::INFO))
+  AdaptiveMultiVertexFitter(
+      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("AdaptiveMultiVertexFitter", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
         m_logger(std::move(logger)) {}

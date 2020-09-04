@@ -37,7 +37,8 @@ class StraightLineStepper {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
 
   /// State for track parameter propagation

@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                     magFieldContext);
+                                                          magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
         &(allTracks[iTrack]));
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-                       TrackAtVertex<BoundTrackParameters>(1., allTracks[iTrack],
-                                                      &(allTracks[iTrack]))));
+                       TrackAtVertex<BoundTrackParameters>(
+                           1., allTracks[iTrack], &(allTracks[iTrack]))));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
@@ -197,8 +197,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
           &(allTracks[iTrack]));
       state.tracksAtVerticesMap.insert(
           std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
-                         TrackAtVertex<BoundTrackParameters>(1., allTracks[iTrack],
-                                                        &(allTracks[iTrack]))));
+                         TrackAtVertex<BoundTrackParameters>(
+                             1., allTracks[iTrack], &(allTracks[iTrack]))));
     }
   }
 
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                     magFieldContext);
+                                                          magFieldContext);
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
@@ -375,22 +375,22 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   std::vector<BoundTrackParameters> params1;
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1a, mom1a, 1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1a)));
+                           Surface::makeShared<PerigeeSurface>(pos1a)));
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1b, mom1b, -1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1b)));
+                           Surface::makeShared<PerigeeSurface>(pos1b)));
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1c, mom1c, 1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1c)));
+                           Surface::makeShared<PerigeeSurface>(pos1c)));
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1d, mom1d, -1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1d)));
+                           Surface::makeShared<PerigeeSurface>(pos1d)));
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1e, mom1e, 1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1e)));
+                           Surface::makeShared<PerigeeSurface>(pos1e)));
   params1.push_back(
       BoundTrackParameters(geoContext, covMat1, pos1f, mom1f, -1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos1f)));
+                           Surface::makeShared<PerigeeSurface>(pos1f)));
 
   // Create second vector of tracks
   Vector3D pos2a(0.2_mm, 0_mm, -4.9_mm);
@@ -406,13 +406,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   std::vector<BoundTrackParameters> params2;
   params2.push_back(
       BoundTrackParameters(geoContext, covMat2, pos2a, mom2a, 1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos2a)));
+                           Surface::makeShared<PerigeeSurface>(pos2a)));
   params2.push_back(
       BoundTrackParameters(geoContext, covMat2, pos2b, mom2b, -1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos2b)));
+                           Surface::makeShared<PerigeeSurface>(pos2b)));
   params2.push_back(
       BoundTrackParameters(geoContext, covMat2, pos2c, mom2c, -1, 0,
-                      Surface::makeShared<PerigeeSurface>(pos2c)));
+                           Surface::makeShared<PerigeeSurface>(pos2c)));
 
   std::vector<Vertex<BoundTrackParameters>*> vtxList;
 

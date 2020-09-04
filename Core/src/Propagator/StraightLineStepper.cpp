@@ -77,7 +77,7 @@ void StraightLineStepper::resetState(State& state,
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeTrackParameters(surface, state.geoContext,
-                                                boundParams),
+                                                     boundParams),
          cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);

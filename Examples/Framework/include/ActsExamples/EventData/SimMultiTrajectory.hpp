@@ -121,7 +121,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return The fitted track parameters of the trajectory
-  const Acts::BoundTrackParameters& trackParameters(const size_t& entryIndex) const {
+  const Acts::BoundTrackParameters& trackParameters(
+      const size_t& entryIndex) const {
     auto it = m_trackParameters.find(entryIndex);
     if (it != m_trackParameters.end()) {
       return it->second;

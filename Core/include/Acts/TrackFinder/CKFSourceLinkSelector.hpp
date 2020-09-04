@@ -76,7 +76,8 @@ struct CKFSourceLinkSelector {
   ///
   template <typename calibrator_t, typename source_link_t>
   Result<void> operator()(
-      const calibrator_t& calibrator, const BoundTrackParameters& predictedParams,
+      const calibrator_t& calibrator,
+      const BoundTrackParameters& predictedParams,
       const std::vector<source_link_t>& sourcelinks,
       std::vector<std::pair<size_t, double>>& sourcelinkChi2,
       std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier,
