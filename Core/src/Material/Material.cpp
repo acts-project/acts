@@ -19,38 +19,63 @@ enum MaterialClassificationNumberIndices {
   eInteractionLength = 1,
   eRelativeAtomicMass = 2,
   eNuclearCharge = 3,
-  eMassDensity = 4,
+  eMolarDensity = 4,
 };
-}
 
-Acts::Material::Material(const ActsVectorF<5>& parameters)
-    : Material(parameters[eRadiationLength], parameters[eInteractionLength],
-               parameters[eRelativeAtomicMass], parameters[eNuclearCharge],
-               parameters[eMassDensity]) {}
+// Avogadro constant
+constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
+}  // namespace
 
-float Acts::Material::molarElectronDensity() const {
+Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
+                                               float z, float massRho) {
   using namespace Acts::UnitLiterals;
 
-  // no material, no electron density
-  if (!(*this)) {
-    return 0.0f;
-  }
+  Material mat;
+  mat.m_x0 = x0;
+  mat.m_l0 = l0;
+  mat.m_ar = ar;
+  mat.m_z = z;
+  // mass density is defined as
+  //
+  //     mass-density = atomic-mass * number-of-atoms / volume
+  //                  = atomic-mass * molar-density * avogadro-constant
+  // -> molar-density = mass-density / (atomic-mass * avogadro-constant)
+  //
+  // with the atomic mass given by
+  //
+  //      atomic-mass = relative-atomic-mass * atomic-mass-unit
+  //
+  // perform computations in double precision to avoid loss of precision
+  const double atomicMass = static_cast<double>(ar) * 1_u;
+  mat.m_molarRho = static_cast<double>(massRho) / (atomicMass * kAvogadro);
+  return mat;
+}
 
-  // Avogadro constant
-  constexpr double Na = 6.02214076e23;
-  // perform computations in double precision. due to the native units we might
-  // and up with ratios of large numbers and need to keep precision.
-  // convert relativ atomic mass Ar to atom mass in native units
-  const double atomicMass = m_ar * 1_u;
-  // compute molar atomic density
-  //   [mass density / atom mass / Avogadro constant]
-  //   [mass density / (atom mass * Avogadro constant)]
-  // = (mass / volume) / (mass * (1/mol))
-  // = (mass * mol) / (mass * volume)
-  const double molarAtomicDensity =
-      static_cast<double>(m_rho) / atomicMass / Na;
-  // each atom has Z electrons
-  return static_cast<float>(m_z * molarAtomicDensity);
+Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
+                                                float z, float molarRho) {
+  Material mat;
+  mat.m_x0 = x0;
+  mat.m_l0 = l0;
+  mat.m_ar = ar;
+  mat.m_z = z;
+  mat.m_molarRho = molarRho;
+  return mat;
+}
+
+Acts::Material::Material(const ParametersVector& parameters)
+    : m_x0(parameters[eRadiationLength]),
+      m_l0(parameters[eInteractionLength]),
+      m_ar(parameters[eRelativeAtomicMass]),
+      m_z(parameters[eNuclearCharge]),
+      m_molarRho(parameters[eMolarDensity]) {}
+
+float Acts::Material::massDensity() const {
+  using namespace Acts::UnitLiterals;
+
+  // perform computations in double precision to avoid loss of precision
+  const double atomicMass = static_cast<double>(m_ar) * 1_u;
+  const double numberDensity = static_cast<double>(m_molarRho) * kAvogadro;
+  return atomicMass * numberDensity;
 }
 
 float Acts::Material::meanExcitationEnergy() const {
@@ -60,13 +85,13 @@ float Acts::Material::meanExcitationEnergy() const {
   return 16_eV * std::pow(m_z, 0.9f);
 }
 
-Acts::ActsVectorF<5> Acts::Material::classificationNumbers() const {
-  ActsVectorF<5> parameters;
+Acts::Material::ParametersVector Acts::Material::parameters() const {
+  ParametersVector parameters;
   parameters[eRadiationLength] = m_x0;
   parameters[eInteractionLength] = m_l0;
   parameters[eRelativeAtomicMass] = m_ar;
   parameters[eNuclearCharge] = m_z;
-  parameters[eMassDensity] = m_rho;
+  parameters[eMolarDensity] = m_molarRho;
   return parameters;
 }
 
@@ -78,7 +103,7 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
     os << "|L0=" << material.L0();
     os << "|Ar=" << material.Ar();
     os << "|Z=" << material.Z();
-    os << "|rho=" << material.massDensity();
+    os << "|MolarRho=" << material.molarDensity();
   }
   return os;
 }

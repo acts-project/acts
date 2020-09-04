@@ -26,17 +26,21 @@ Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
 
 Acts::Vector2D Acts::DiscTrapezoidBounds::toLocalCartesian(
     const Acts::Vector2D& lposition) const {
-  return {lposition[eLOC_R] * std::sin(lposition[eLOC_PHI] - get(eAveragePhi)),
-          lposition[eLOC_R] * std::cos(lposition[eLOC_PHI] - get(eAveragePhi))};
+  return {lposition[eBoundLoc0] *
+              std::sin(lposition[eBoundLoc1] - get(eAveragePhi)),
+          lposition[eBoundLoc0] *
+              std::cos(lposition[eBoundLoc1] - get(eAveragePhi))};
 }
 
 Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
     const Acts::Vector2D& lposition) const {
   ActsMatrixD<2, 2> jacobian;
-  jacobian(0, eLOC_R) = std::sin(lposition[eLOC_PHI] - get(eAveragePhi));
-  jacobian(1, eLOC_R) = std::cos(lposition[eLOC_PHI] - get(eAveragePhi));
-  jacobian(0, eLOC_PHI) = lposition[eLOC_R] * std::cos(lposition[eLOC_PHI]);
-  jacobian(1, eLOC_PHI) = lposition[eLOC_R] * -std::sin(lposition[eLOC_PHI]);
+  jacobian(0, eBoundLoc0) = std::sin(lposition[eBoundLoc1] - get(eAveragePhi));
+  jacobian(1, eBoundLoc0) = std::cos(lposition[eBoundLoc1] - get(eAveragePhi));
+  jacobian(0, eBoundLoc1) =
+      lposition[eBoundLoc0] * std::cos(lposition[eBoundLoc1]);
+  jacobian(1, eBoundLoc1) =
+      lposition[eBoundLoc0] * -std::sin(lposition[eBoundLoc1]);
   return jacobian;
 }
 

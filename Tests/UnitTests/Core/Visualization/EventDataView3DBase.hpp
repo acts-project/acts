@@ -28,6 +28,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
@@ -123,7 +124,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.1_m));
 
   // Material of the surfaces
-  MaterialProperties matProp(95.7, 465.2, 28.03, 14., 2.32e-3, 0.5_mm);
+  MaterialProperties matProp(Acts::Test::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
@@ -205,15 +206,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Vector2D lPosCenter{10_mm, 10_mm};
   std::array<double, 2> resolution = {30_um, 50_um};
   SymMatrix2D cov2D;
-  cov2D << resolution[eLOC_0] * resolution[eLOC_0], 0., 0.,
-      resolution[eLOC_1] * resolution[eLOC_1];
+  cov2D << resolution[eBoundLoc0] * resolution[eBoundLoc0], 0., 0.,
+      resolution[eBoundLoc1] * resolution[eBoundLoc1];
   for (const auto& surface : surfaces) {
     // 2D measurements
-    double dx = resolution[eLOC_0] * gauss(generator);
-    double dy = resolution[eLOC_1] * gauss(generator);
-    MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {}, cov2D,
-                                        lPosCenter[eLOC_0] + dx,
-                                        lPosCenter[eLOC_1] + dy);
+    double dx = resolution[eBoundLoc0] * gauss(generator);
+    double dy = resolution[eBoundLoc1] * gauss(generator);
+    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
+        lPosCenter[eBoundLoc1] + dy);
     measurements.push_back(std::move(m01));
   }
 
