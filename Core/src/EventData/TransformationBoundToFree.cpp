@@ -11,7 +11,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-Acts::FreeVector Acts::detail::transformBoundToFreeParameters(
+Acts::FreeVector Acts::detail::transformBoundToFreeTrackParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
   // convert angles to global unit direction vector

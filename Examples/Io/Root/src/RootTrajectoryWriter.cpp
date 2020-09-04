@@ -497,7 +497,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
 
         // further predicted parameter info
         Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
+            Acts::detail::transformBoundToFreeTrackParameters(surface, gctx,
                                                          parameters);
         m_x_prt.push_back(freeParams[Acts::eFreePos0]);
         m_y_prt.push_back(freeParams[Acts::eFreePos1]);
@@ -612,7 +612,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
 
         // more filtered parameter info
         const Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
+            Acts::detail::transformBoundToFreeTrackParameters(surface, gctx,
                                                          parameters);
         m_x_flt.push_back(freeParams[Acts::eFreePos0]);
         m_y_flt.push_back(freeParams[Acts::eFreePos1]);
@@ -722,7 +722,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
 
         // further smoothed parameter info
         const Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
+            Acts::detail::transformBoundToFreeTrackParameters(surface, gctx,
                                                          parameters);
         m_x_smt.push_back(freeParams[Acts::eFreePos0]);
         m_y_smt.push_back(freeParams[Acts::eFreePos1]);

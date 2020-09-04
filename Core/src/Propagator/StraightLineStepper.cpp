@@ -76,7 +76,7 @@ void StraightLineStepper::resetState(State& state,
                                      const double stepSize) const {
   // Update the stepping state
   update(state,
-         detail::transformBoundToFreeParameters(surface, state.geoContext,
+         detail::transformBoundToFreeTrackParameters(surface, state.geoContext,
                                                 boundParams),
          cov);
   state.navDir = navDir;

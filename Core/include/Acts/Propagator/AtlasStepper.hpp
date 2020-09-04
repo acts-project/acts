@@ -317,7 +317,7 @@ class AtlasStepper {
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
-           detail::transformBoundToFreeParameters(surface, state.geoContext,
+           detail::transformBoundToFreeTrackParameters(surface, state.geoContext,
                                                   boundParams),
            cov);
     state.navDir = navDir;

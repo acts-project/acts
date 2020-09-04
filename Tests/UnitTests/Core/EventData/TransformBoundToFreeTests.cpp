@@ -46,7 +46,7 @@ BOOST_DATA_TEST_CASE(
   bv[eBoundQOverP] = qOverP;
 
   // convert to free parameters
-  FreeVector fv = detail::transformBoundToFreeParameters(*surface, geoCtx, bv);
+  FreeVector fv = detail::transformBoundToFreeTrackParameters(*surface, geoCtx, bv);
 
   CHECK_CLOSE_OR_SMALL(fv.segment<3>(eFreePos0), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(fv[eFreeTime], bv[eBoundTime], eps, eps);

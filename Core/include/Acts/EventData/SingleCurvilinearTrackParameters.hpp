@@ -45,8 +45,8 @@ class SingleCurvilinearTrackParameters
                                    const Vector3D& pos, const Vector3D& mom,
                                    Scalar charge, Scalar time)
       : Base(Surface::makeShared<PlaneSurface>(pos, mom),
-             detail::transformFreeToCurvilinearParameters(time, mom,
-                                                          charge / mom.norm()),
+             detail::transformFreeToCurvilinearTrackParameters(
+                 time, mom, charge / mom.norm()),
              std::move(cov)) {}
 
   /// Construct neutral curvilinear parameters from global position, momentum.
@@ -61,8 +61,8 @@ class SingleCurvilinearTrackParameters
                                    const Vector3D& pos, const Vector3D& mom,
                                    Scalar time)
       : Base(Surface::makeShared<PlaneSurface>(pos, mom),
-             detail::transformFreeToCurvilinearParameters(time, mom,
-                                                          1 / mom.norm()),
+             detail::transformFreeToCurvilinearTrackParameters(time, mom,
+                                                               1 / mom.norm()),
              std::move(cov)) {}
 
   // this class does not have a custom default constructor and thus should not

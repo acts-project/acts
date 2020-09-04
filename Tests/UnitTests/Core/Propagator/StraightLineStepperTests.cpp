@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp2(cov2, pos2, mom2, charge2, time2);
-  FreeVector freeParams = detail::transformBoundToFreeParameters(
+  FreeVector freeParams = detail::transformBoundToFreeTrackParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
   double stepSize2 = -2. * stepSize;
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(slsState.derivative, FreeVector::Zero());
 
   // Update in context of a surface
-  freeParams = detail::transformBoundToFreeParameters(
+  freeParams = detail::transformBoundToFreeTrackParameters(
       bp.referenceSurface(), tgContext, bp.parameters());
   freeParams.segment<3>(eFreePos0) *= 2;
   freeParams[eFreeTime] *= 2;
