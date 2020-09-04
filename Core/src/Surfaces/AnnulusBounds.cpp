@@ -63,14 +63,18 @@ Acts::AnnulusBounds::AnnulusBounds(
   };
 
   // calculate corners in STRIP XY, keep them we need them for minDistance()
-  m_outLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                            get(eMaxR), get(eMaxPhiRel));
-  m_inLeftStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                           get(eMinR), get(eMaxPhiRel));
-  m_outRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                             get(eMaxR), get(eMinPhiRel));
-  m_inRightStripXY = circIx(m_moduleOrigin[eLOC_X], m_moduleOrigin[eLOC_Y],
-                            get(eMinR), get(eMinPhiRel));
+  m_outLeftStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
+             get(eMaxPhiRel));
+  m_inLeftStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
+             get(eMaxPhiRel));
+  m_outRightStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMaxR),
+             get(eMinPhiRel));
+  m_inRightStripXY =
+      circIx(m_moduleOrigin[eBoundLoc0], m_moduleOrigin[eBoundLoc1], get(eMinR),
+             get(eMinPhiRel));
 
   m_outLeftStripPC = {m_outLeftStripXY.norm(),
                       VectorHelpers::phi(m_outLeftStripXY)};
@@ -132,8 +136,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
   // locpo is PC in STRIP SYSTEM
   // need to perform internal rotation induced by m_phiAvg
   Vector2D locpo_rotated = m_rotationStripPC * lposition;
-  double phiLoc = locpo_rotated[eLOC_PHI];
-  double rLoc = locpo_rotated[eLOC_R];
+  double phiLoc = locpo_rotated[eBoundLoc1];
+  double rLoc = locpo_rotated[eBoundLoc0];
 
   if (phiLoc < (get(eMinPhiRel) - tolPhi) ||
       phiLoc > (get(eMaxPhiRel) + tolPhi)) {
@@ -144,17 +148,17 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
   if (tolR == 0.) {
     // don't need R, can use R^2
     double r_mod2 =
-        m_shiftPC[eLOC_R] * m_shiftPC[eLOC_R] + rLoc * rLoc +
-        2 * m_shiftPC[eLOC_R] * rLoc * cos(phiLoc - m_shiftPC[eLOC_PHI]);
+        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
+        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]);
 
     if (r_mod2 < get(eMinR) * get(eMinR) || r_mod2 > get(eMaxR) * get(eMaxR)) {
       return false;
     }
   } else {
     // use R
-    double r_mod =
-        sqrt(m_shiftPC[eLOC_R] * m_shiftPC[eLOC_R] + rLoc * rLoc +
-             2 * m_shiftPC[eLOC_R] * rLoc * cos(phiLoc - m_shiftPC[eLOC_PHI]));
+    double r_mod = sqrt(
+        m_shiftPC[eBoundLoc0] * m_shiftPC[eBoundLoc0] + rLoc * rLoc +
+        2 * m_shiftPC[eBoundLoc0] * rLoc * cos(phiLoc - m_shiftPC[eBoundLoc1]));
 
     if (r_mod < (get(eMinR) - tolR) || r_mod > (get(eMaxR) + tolR)) {
       return false;
@@ -167,8 +171,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
                                  const BoundaryCheck& bcheck) const {
   // locpo is PC in STRIP SYSTEM
   if (bcheck.type() == BoundaryCheck::Type::eAbsolute) {
-    return inside(lposition, bcheck.tolerance()[eLOC_R],
-                  bcheck.tolerance()[eLOC_PHI]);
+    return inside(lposition, bcheck.tolerance()[eBoundLoc0],
+                  bcheck.tolerance()[eBoundLoc1]);
   } else {
     // first check if inside. We don't need to look into the covariance if
     // inside
@@ -185,10 +189,10 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // The following transforms into STRIP XY, does the shift into MODULE XY,
     // and then transforms into MODULE PC
     double dphi = m_phiAvg;
-    double phi_strip = locpo_rotated[eLOC_PHI];
-    double r_strip = locpo_rotated[eLOC_R];
-    double O_x = m_shiftXY[eLOC_X];
-    double O_y = m_shiftXY[eLOC_Y];
+    double phi_strip = locpo_rotated[eBoundLoc1];
+    double r_strip = locpo_rotated[eBoundLoc0];
+    double O_x = m_shiftXY[eBoundLoc0];
+    double O_y = m_shiftXY[eBoundLoc1];
 
     // For a transformation from cartesian into polar coordinates
     //
@@ -295,8 +299,8 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // now: MODULE system. Need to transform locpo to MODULE PC
     //  transform is STRIP PC -> STRIP XY -> MODULE XY -> MODULE PC
     Vector2D locpoStripXY(
-        locpo_rotated[eLOC_R] * std::cos(locpo_rotated[eLOC_PHI]),
-        locpo_rotated[eLOC_R] * std::sin(locpo_rotated[eLOC_PHI]));
+        locpo_rotated[eBoundLoc0] * std::cos(locpo_rotated[eBoundLoc1]),
+        locpo_rotated[eBoundLoc0] * std::sin(locpo_rotated[eBoundLoc1]));
     Vector2D locpoModulePC = stripXYToModulePC(locpoStripXY);
 
     // now check edges in MODULE PC (inner and outer circle)

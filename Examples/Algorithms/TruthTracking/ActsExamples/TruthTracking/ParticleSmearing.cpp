@@ -94,12 +94,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
     // build the track covariance matrix using the smearing sigmas
     Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
-    cov(Acts::eLOC_0, Acts::eLOC_0) = sigmaU * sigmaU;
-    cov(Acts::eLOC_1, Acts::eLOC_1) = sigmaV * sigmaV;
-    cov(Acts::ePHI, Acts::ePHI) = sigmaPhi * sigmaPhi;
-    cov(Acts::eTHETA, Acts::eTHETA) = sigmaTheta * sigmaTheta;
-    cov(Acts::eQOP, Acts::eQOP) = sigmaQOverP * sigmaQOverP;
-    cov(Acts::eT, Acts::eT) = sigmaT0 * sigmaT0;
+    cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaU * sigmaU;
+    cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaV * sigmaV;
+    cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
+    cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
+    cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
+    cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
 
     parameters.emplace_back(std::make_optional(std::move(cov)), pos, mom,
                             particle.charge(), time);

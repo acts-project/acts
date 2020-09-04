@@ -565,38 +565,38 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   phi_proj << 0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<2, eBoundSize> loc0_qop_proj;
-  loc0_qop_proj << 1, 0, 0, 0, 0, 0, 
+  loc0_qop_proj << 1, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<2, eBoundSize> loc1_theta_proj;
-  loc1_theta_proj << 0, 1, 0, 0, 0, 0, 
+  loc1_theta_proj << 0, 1, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0;
 
   ActsMatrixD<3, eBoundSize> loc0_loc1_phi_proj;
-  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0, 
-                        0, 1, 0, 0, 0, 0, 
+  loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0,
+                        0, 1, 0, 0, 0, 0,
                         0, 0, 1, 0, 0, 0;
 
   ActsMatrixD<4, eBoundSize> loc0_phi_theta_qop_proj;
-  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 
-                             0, 0, 1, 0, 0, 0, 
-                             0, 0, 0, 1, 0, 0, 
+  loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0,
+                             0, 0, 1, 0, 0, 0,
+                             0, 0, 0, 1, 0, 0,
                              0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<5, eBoundSize> loc0_loc1_phi_theta_qop_proj;
-  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0, 
-                                  0, 1, 0, 0, 0, 0, 
-                                  0, 0, 1, 0, 0, 0, 
-                                  0, 0, 0, 1, 0, 0, 
+  loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0,
+                                  0, 1, 0, 0, 0, 0,
+                                  0, 0, 1, 0, 0, 0,
+                                  0, 0, 0, 1, 0, 0,
                                   0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<eBoundSize, eBoundSize>
       loc0_loc1_phi_theta_qop_t_proj;
-  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0, 
-                                    0, 1, 0, 0, 0, 0, 
-                                    0, 0, 1, 0, 0, 0, 
-                                    0, 0, 0, 1, 0, 0, 
-                                    0, 0, 0, 0, 1, 0, 
+  loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0,
+                                    0, 1, 0, 0, 0, 0,
+                                    0, 0, 1, 0, 0, 0,
+                                    0, 0, 0, 1, 0, 0,
+                                    0, 0, 0, 0, 1, 0,
                                     0, 0, 0, 0, 0, 1;
   // clang-format on
 
@@ -615,9 +615,10 @@ BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   BOOST_CHECK((ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi,
                             eBoundTheta, eBoundQOverP>::projector() ==
                loc0_loc1_phi_theta_qop_proj));
-  BOOST_CHECK((ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi,
-                            eBoundTheta, eBoundQOverP, eT>::projector() ==
-               loc0_loc1_phi_theta_qop_t_proj));
+  BOOST_CHECK(
+      (ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi,
+                    eBoundTheta, eBoundQOverP, eBoundTime>::projector() ==
+       loc0_loc1_phi_theta_qop_t_proj));
 }
 
 /**
@@ -723,27 +724,27 @@ using ParSet = ParameterSet<BoundIndices, params...>;
 BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   // check logic for type-based access
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getIndex<eBoundLoc0>() == 0));
+                      eBoundTime>::getIndex<eBoundLoc0>() == 0));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getIndex<eBoundLoc1>() == 1));
+                      eBoundTime>::getIndex<eBoundLoc1>() == 1));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getIndex<eBoundPhi>() == 2));
+                      eBoundTime>::getIndex<eBoundPhi>() == 2));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getIndex<eBoundQOverP>() == 3));
+                      eBoundTime>::getIndex<eBoundQOverP>() == 3));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getIndex<eT>() == 4));
+                      eBoundTime>::getIndex<eBoundTime>() == 4));
 
   // check logic for index-based access
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getParID<0>() == eBoundLoc0));
+                      eBoundTime>::getParID<0>() == eBoundLoc0));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getParID<1>() == eBoundLoc1));
+                      eBoundTime>::getParID<1>() == eBoundLoc1));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getParID<2>() == eBoundPhi));
+                      eBoundTime>::getParID<2>() == eBoundPhi));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getParID<3>() == eBoundQOverP));
+                      eBoundTime>::getParID<3>() == eBoundQOverP));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eT>::getParID<4>() == eT));
+                      eBoundTime>::getParID<4>() == eBoundTime));
 
   // check consistency
   using FullSet = FullParameterSet;
@@ -764,7 +765,8 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
       (FullSet::getParID<FullSet::getIndex<eBoundTheta>()>() == eBoundTheta));
   BOOST_CHECK(
       (FullSet::getParID<FullSet::getIndex<eBoundQOverP>()>() == eBoundQOverP));
-  BOOST_CHECK((FullSet::getParID<FullSet::getIndex<eT>()>() == eT));
+  BOOST_CHECK(
+      (FullSet::getParID<FullSet::getIndex<eBoundTime>()>() == eBoundTime));
 
   // consistency of types
   BOOST_CHECK(
@@ -997,57 +999,57 @@ BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
   z_proj << 0, 0, 1, 0, 0, 0, 0, 0;
 
   ActsMatrixD<2, eFreeSize> x_qop_proj;
-  x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+  x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<2, eFreeSize> y_tz_proj;
-  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0, 
+  y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, 1, 0;
 
   ActsMatrixD<3, eFreeSize> x_y_z_proj;
-  x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
-                0, 1, 0, 0, 0, 0, 0, 0, 
+  x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                0, 1, 0, 0, 0, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0;
 
   ActsMatrixD<4, eFreeSize> x_z_tz_qop_proj;
-  x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
-                     0, 0, 1, 0, 0, 0, 0, 0, 
-                     0, 0, 0, 0, 0, 0, 1, 0, 
+  x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 1, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<5, eFreeSize> x_y_z_tz_qop_proj;
-  x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
-                       0, 1, 0, 0, 0, 0, 0, 0, 
-                       0, 0, 1, 0, 0, 0, 0, 0, 
-                       0, 0, 0, 0, 0, 0, 1, 0, 
+  x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                       0, 1, 0, 0, 0, 0, 0, 0,
+                       0, 0, 1, 0, 0, 0, 0, 0,
+                       0, 0, 0, 0, 0, 0, 1, 0,
                        0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<6, eFreeSize> x_y_z_t_tz_qop_proj;
-  x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
-                         0, 1, 0, 0, 0, 0, 0, 0, 
-                         0, 0, 1, 0, 0, 0, 0, 0, 
-                         0, 0, 0, 1, 0, 0, 0, 0, 
-                         0, 0, 0, 0, 0, 0, 1, 0, 
+  x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                         0, 1, 0, 0, 0, 0, 0, 0,
+                         0, 0, 1, 0, 0, 0, 0, 0,
+                         0, 0, 0, 1, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 1, 0,
                          0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<7, eFreeSize> x_y_z_t_ty_tz_qop_proj;
-  x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
-                            0, 1, 0, 0, 0, 0, 0, 0, 
-                            0, 0, 1, 0, 0, 0, 0, 0, 
-                            0, 0, 0, 1, 0, 0, 0, 0, 
-                            0, 0, 0, 0, 0, 1, 0, 0, 
-                            0, 0, 0, 0, 0, 0, 1, 0, 
+  x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
+                            0, 1, 0, 0, 0, 0, 0, 0,
+                            0, 0, 1, 0, 0, 0, 0, 0,
+                            0, 0, 0, 1, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 1, 0, 0,
+                            0, 0, 0, 0, 0, 0, 1, 0,
                             0, 0, 0, 0, 0, 0, 0, 1;
 
   ActsMatrixD<eFreeSize, eFreeSize>
       x_y_z_t_tx_ty_tz_qop_proj;
-  x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0, 
+  x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                                0, 1, 0, 0, 0, 0, 0, 0,
-                               0, 0, 1, 0, 0, 0, 0, 0, 
-                               0, 0, 0, 1, 0, 0, 0, 0, 
-                               0, 0, 0, 0, 1, 0, 0, 0, 
-                               0, 0, 0, 0, 0, 1, 0, 0, 
-                               0, 0, 0, 0, 0, 0, 1, 0, 
+                               0, 0, 1, 0, 0, 0, 0, 0,
+                               0, 0, 0, 1, 0, 0, 0, 0,
+                               0, 0, 0, 0, 1, 0, 0, 0,
+                               0, 0, 0, 0, 0, 1, 0, 0,
+                               0, 0, 0, 0, 0, 0, 1, 0,
                                0, 0, 0, 0, 0, 0, 0, 1;
   // clang-format on
 

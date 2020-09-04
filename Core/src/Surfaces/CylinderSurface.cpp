@@ -106,8 +106,8 @@ Acts::Vector3D Acts::CylinderSurface::localToGlobal(
     const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
-  double phi = lposition[Acts::eLOC_RPHI] / r;
-  Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  double phi = lposition[Acts::eBoundLoc0] / r;
+  Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eBoundLoc1]);
   return transform(gctx) * position;
 }
 
@@ -135,7 +135,7 @@ std::string Acts::CylinderSurface::name() const {
 
 Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
-  double phi = lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eR);
+  double phi = lposition[Acts::eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }

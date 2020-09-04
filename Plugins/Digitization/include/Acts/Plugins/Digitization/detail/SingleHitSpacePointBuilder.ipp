@@ -11,8 +11,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::BoundIndices::eLOC_0],
-                       par[Acts::BoundIndices::eLOC_1]);
+  Acts::Vector2D local(par[Acts::BoundIndices::eBoundLoc0],
+                       par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 

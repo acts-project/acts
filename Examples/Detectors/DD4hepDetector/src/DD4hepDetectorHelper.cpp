@@ -22,7 +22,7 @@ DD4hepDetectorHelper::rectangleDigiModule(
     double halflengthX, double halflengthY, double thickness,
     const dd4hep::Segmentation& segmentation) {
   // convert to Acts units
-  double scalor = Acts::units::_cm;
+  double scalor = Acts::UnitConstants::cm;
   halflengthX *= scalor;
   halflengthY *= scalor;
   thickness *= scalor;
@@ -55,7 +55,7 @@ DD4hepDetectorHelper::trapezoidalDigiModule(
     double minHalflengthX, double maxHalflengthX, double halflengthY,
     double thickness, const dd4hep::Segmentation& segmentation) {
   // convert to Acts units
-  double scalor = Acts::units::_cm;
+  double scalor = Acts::UnitConstants::cm;
   minHalflengthX *= scalor;
   maxHalflengthX *= scalor;
   halflengthY *= scalor;
