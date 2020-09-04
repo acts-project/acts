@@ -104,9 +104,9 @@ auto AlignedDetector::finalize(
   double sigmaOp = vm["align-sigma-oplane"].template as<double>();
   double sigmaIr = vm["align-sigma-irot"].template as<double>();
   double sigmaOr = vm["align-sigma-orot"].template as<double>();
-  agcsConfig.gSigmaX = sigmaIp * Acts::units::_um;
-  agcsConfig.gSigmaY = sigmaIp * Acts::units::_um;
-  agcsConfig.gSigmaZ = sigmaOp * Acts::units::_um;
+  agcsConfig.gSigmaX = sigmaIp * Acts::UnitConstants::um;
+  agcsConfig.gSigmaY = sigmaIp * Acts::UnitConstants::um;
+  agcsConfig.gSigmaZ = sigmaOp * Acts::UnitConstants::um;
   agcsConfig.aSigmaX = sigmaOr * 0.001;  // millirad
   agcsConfig.aSigmaY = sigmaOr * 0.001;  // millirad
   agcsConfig.aSigmaZ = sigmaIr * 0.001;  // millirad

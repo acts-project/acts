@@ -6,15 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector3D PlaneSurface::normal(const GeometryContext& gctx,
-                                           const Vector2D& /*lpos*/) const {
+inline Vector3D PlaneSurface::normal(const GeometryContext& gctx,
+                                     const Vector2D& /*lpos*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D PlaneSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+inline Vector3D PlaneSurface::binningPosition(const GeometryContext& gctx,
+                                              BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
@@ -47,7 +47,7 @@ inline SurfaceIntersection PlaneSurface::intersect(
   return {intersection, this};
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
   const LocalCartesianToBoundLocalMatrix loc3DToLocBound =

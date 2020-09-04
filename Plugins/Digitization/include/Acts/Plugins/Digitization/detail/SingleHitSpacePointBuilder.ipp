@@ -11,7 +11,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
+  Acts::Vector2D local(par[Acts::BoundIndices::eBoundLoc0],
+                       par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
@@ -22,10 +23,8 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
   auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
-  Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
-
-  return pos;
+  Acts::Vector3D mom(1., 1., 1.);
+  return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
 }
 
 template <typename Cluster>

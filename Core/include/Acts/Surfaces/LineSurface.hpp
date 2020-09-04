@@ -69,10 +69,7 @@ class LineSurface : public Surface {
               const Transform3D& transf);
 
  public:
-  /// Destructor - defaulted
   ~LineSurface() override = default;
-
-  /// Default Constructor - deleted
   LineSurface() = delete;
 
   /// Assignment operator
@@ -86,8 +83,8 @@ class LineSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// @return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -99,8 +96,8 @@ class LineSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -114,9 +111,9 @@ class LineSurface : public Surface {
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
-  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                        const Vector3D& position,
-                                        const Vector3D& momentum) const final;
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                  const Vector3D& position,
+                                  const Vector3D& momentum) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -145,7 +142,7 @@ class LineSurface : public Surface {
   /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
-  const BoundRowVector derivativeFactors(
+  BoundRowVector derivativeFactors(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const RotationMatrix3D& rft,
       const BoundToFreeMatrix& jacobian) const final;
@@ -157,16 +154,17 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
   /// @param momentum is the global momentum (used to sign the closest approach)
-  /// @param position is the global position which is filled
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum, Vector3D& position) const final;
+  ///
+  /// @return global position by value
+  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                         const Vector3D& momentum) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
   ///
   /// This method is the true global->local transformation.<br>
-  /// makes use of globalToLocal and indicates the sign of the Acts::eLOC_R by
-  /// the given momentum
+  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
+  /// by the given momentum
   ///
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>
@@ -178,7 +176,7 @@ class LineSurface : public Surface {
   /// lies within the so
   /// called measurement plane.
   /// The measurement plane is determined by the two orthogonal vectors \f$
-  /// \vec{measY}= \vec{Acts::eLOC_Z} \f$
+  /// \vec{measY}= \vec{Acts::eBoundLoc1} \f$
   /// and \f$ \vec{measX} = \vec{measY} \times \frac{\vec{p}}{|\vec{p}|}
   /// \f$.<br>
   ///
@@ -194,13 +192,11 @@ class LineSurface : public Surface {
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param lposition local 2D position to be filled (given by reference for
-  /// method symmetry)
   ///
-  /// @return boolean indication if operation was successful (fail means global
-  /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum, Vector2D& lposition) const final;
+  /// @return a Result<Vector2D> which can be !ok() if the operation fails
+  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D& position,
+                                 const Vector3D& momentum) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -268,7 +264,7 @@ class LineSurface : public Surface {
   /// @param direction The direction of the track
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  const AlignmentRowVector alignmentToPathDerivative(
+  AlignmentRowVector alignmentToPathDerivative(
       const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
       const Vector3D& position, const Vector3D& direction) const final;
 
@@ -280,7 +276,7 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

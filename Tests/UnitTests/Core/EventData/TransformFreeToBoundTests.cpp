@@ -21,7 +21,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 namespace {
-constexpr auto eps = std::numeric_limits<BoundParametersScalar>::epsilon();
+constexpr auto eps = std::numeric_limits<BoundScalar>::epsilon();
 }
 
 BOOST_AUTO_TEST_SUITE(TransformFreeToBound)
@@ -35,10 +35,9 @@ BOOST_DATA_TEST_CASE(
 
   GeometryContext geoCtx;
   Vector2D loc(l0, l1);
-  Vector3D pos = Vector3D::Zero();
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // transform reference position
-  surface->localToGlobal(geoCtx, loc, dir, pos);
+  Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
 
   // convert to free parameters
   BoundVector bv = detail::transformFreeToBoundParameters(

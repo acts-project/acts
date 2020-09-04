@@ -105,13 +105,16 @@ template <int mainGridSize, int trkGridSize, typename vfitter_t>
 auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::
     doesPassTrackSelection(const BoundParameters& trk) const -> bool {
   // Get required track parameters
-  const double d0 = trk.parameters()[ParID_t::eLOC_D0];
-  const double z0 = trk.parameters()[ParID_t::eLOC_Z0];
+  const double d0 = trk.parameters()[BoundIndices::eBoundLoc0];
+  const double z0 = trk.parameters()[BoundIndices::eBoundLoc1];
   // Get track covariance
   const auto perigeeCov = *(trk.covariance());
-  const double covDD = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0);
-  const double covZZ = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
-  const double covDZ = perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_Z0);
+  const double covDD =
+      perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0);
+  const double covZZ =
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
+  const double covDZ =
+      perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1);
   const double covDeterminant = covDD * covZZ - covDZ * covDZ;
 
   // Do track selection based on track cov matrix and d0SignificanceCut

@@ -74,7 +74,6 @@ class PlaneSurface : public Surface {
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
-  /// Destructor - defaulted
   ~PlaneSurface() override = default;
 
   /// Assignment operator
@@ -88,8 +87,8 @@ class PlaneSurface : public Surface {
   /// @param lposition is the local position is ignored
   ///
   /// return a Vector3D by value
-  const Vector3D normal(const GeometryContext& gctx,
-                        const Vector2D& lposition) const final;
+  Vector3D normal(const GeometryContext& gctx,
+                  const Vector2D& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -101,8 +100,8 @@ class PlaneSurface : public Surface {
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const final;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -117,11 +116,10 @@ class PlaneSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param position global 3D position to be filled (given by reference for
-  /// method symmetry)
-  void localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
-                     const Vector3D& momentum,
-                     Vector3D& position) const override;
+  ///
+  /// @return the global position by value
+  Vector3D localToGlobal(const GeometryContext& gctx, const Vector2D& lposition,
+                         const Vector3D& momentum) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
@@ -134,11 +132,10 @@ class PlaneSurface : public Surface {
   /// @param lposition local 2D position to be filled (given by reference for
   /// method symmetry)
   ///
-  /// @return boolean indication if operation was successful (fail means global
-  /// position was not on surface)
-  bool globalToLocal(const GeometryContext& gctx, const Vector3D& position,
-                     const Vector3D& momentum,
-                     Vector2D& lposition) const override;
+  /// @return a Result<Vector2D> which can be !ok() if the operation fails
+  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D& position,
+                                 const Vector3D& momentum) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
@@ -204,7 +201,7 @@ class PlaneSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  const LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

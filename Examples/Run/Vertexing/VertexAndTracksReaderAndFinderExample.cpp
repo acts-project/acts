@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
   vtxAndTracksReaderCfg.fileList.push_back(fileString);
 
   // Set magnetic field
-  Acts::Vector3D bField(0., 0., 2. * Acts::units::_T);
+  Acts::Vector3D bField(0., 0., 2. * Acts::UnitConstants::T);
 
   // Add the finding algorithm
   ActsExamples::IterativeVertexFinderAlgorithm::Config vertexFindingCfg;

@@ -71,7 +71,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
   if (!terminatedNormally) {
     state.navigation.navigationBreak = true;
     ACTS_ERROR("Propagation reached the step count limit of "
-               << state.options.maxSteps << "(did " << result.steps
+               << state.options.maxSteps << " (did " << result.steps
                << " steps)");
     return PropagatorError::StepCountLimitReached;
   }
@@ -120,8 +120,8 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state(start, eOptions);
 
   static_assert(
-      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
-                           StateType&>,
+      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
+                            StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -187,8 +187,8 @@ auto Acts::Propagator<S, N>::propagate(
   state.navigation.targetSurface = &target;
 
   static_assert(
-      concept ::has_method<const S, Result<double>, concept ::Stepper::step_t,
-                           StateType&>,
+      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
+                            StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

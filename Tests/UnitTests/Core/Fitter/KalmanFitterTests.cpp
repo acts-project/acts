@@ -50,7 +50,7 @@ using SourceLink = MinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 
-using Resolution = std::pair<ParID_t, double>;
+using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
 using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
@@ -66,9 +66,8 @@ GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -113,49 +112,52 @@ struct MeasurementCreator {
         auto lResolution = vResolution->second.find(layerID);
         if (lResolution != vResolution->second.end()) {
           // Apply global to local
-          Acts::Vector2D lPos;
-          surface->globalToLocal(state.geoContext,
-                                 stepper.position(state.stepping),
-                                 stepper.direction(state.stepping), lPos);
+          Acts::Vector2D lPos =
+              surface
+                  ->globalToLocal(state.geoContext,
+                                  stepper.position(state.stepping),
+                                  stepper.direction(state.stepping))
+                  .value();
+
           if (lResolution->second.size() == 1) {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
             double dp = sp * gauss(generator);
-            if (lResolution->second[0].first == eLOC_0) {
+            if (lResolution->second[0].first == eBoundLoc0) {
               // push back & move a LOC_0 measurement
-              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + dp);
+              MeasurementType<eBoundLoc0> m0(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc0] + dp);
               result.measurements.push_back(std::move(m0));
               // push back & move a LOC_0 outlier
-              MeasurementType<eLOC_0> o0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + sp * 10);
+              MeasurementType<eBoundLoc0> o0(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc0] + sp * 10);
               result.outliers.push_back(std::move(o0));
             } else {
               // push back & move a LOC_1 measurement
-              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + dp);
+              MeasurementType<eBoundLoc1> m1(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc1] + dp);
               result.measurements.push_back(std::move(m1));
               // push back & move a LOC_1 outlier
-              MeasurementType<eLOC_1> o1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + sp * 10);
+              MeasurementType<eBoundLoc1> o1(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc1] + sp * 10);
               result.outliers.push_back(std::move(o1));
             }
           } else if (lResolution->second.size() == 2) {
             // Create the measurment and move it
-            double sx = lResolution->second[eLOC_0].second;
-            double sy = lResolution->second[eLOC_1].second;
+            double sx = lResolution->second[eBoundLoc0].second;
+            double sy = lResolution->second[eBoundLoc1].second;
             cov2D << sx * sx, 0., 0., sy * sy;
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + dx,
-                                                lPos[eLOC_1] + dy);
+            MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + dx,
+                lPos[eBoundLoc1] + dy);
             result.measurements.push_back(std::move(m01));
             // push back & move a LOC_0, LOC_1 outlier
-            MeasurementType<eLOC_0, eLOC_1> o01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + sx * 10,
-                                                lPos[eLOC_1] + sy * 10);
+            MeasurementType<eBoundLoc0, eBoundLoc1> o01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + sx * 10,
+                lPos[eBoundLoc1] + sy * 10);
             result.outliers.push_back(std::move(o01));
           }
         }
@@ -196,8 +198,8 @@ struct MaterialScattering {
       double dPhi = scatterAngle(generator), dTheta = scatterAngle(generator);
 
       // Update the covariance
-      state.stepping.cov(ePHI, ePHI) += dPhi * dPhi;
-      state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
+      state.stepping.cov(eBoundPhi, eBoundPhi) += dPhi * dPhi;
+      state.stepping.cov(eBoundTheta, eBoundTheta) += dTheta * dTheta;
 
       // Update the angles
       auto direction = stepper.direction(state.stepping);
@@ -252,9 +254,8 @@ struct MinimalOutlierFinder {
           using par_t = ActsVectorD<measdim>;
 
           // Take the projector (measurement mapping function)
-          const ActsMatrixD<measdim, eBoundParametersSize> H =
-              state.projector()
-                  .template topLeftCorner<measdim, eBoundParametersSize>();
+          const ActsMatrixD<measdim, eBoundSize> H =
+              state.projector().template topLeftCorner<measdim, eBoundSize>();
 
           // Calculate the residual
           const par_t residual = calibrated - H * predicted;
@@ -311,10 +312,10 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using MeasurementActions = ActionList<MeasurementCreator>;
   using MeasurementAborters = AbortList<EndOfWorldReached>;
 
-  auto pixelResX = Resolution(eLOC_0, 25_um);
-  auto pixelResY = Resolution(eLOC_1, 50_um);
-  auto stripResX = Resolution(eLOC_0, 100_um);
-  auto stripResY = Resolution(eLOC_1, 150_um);
+  auto pixelResX = Resolution(eBoundLoc0, 25_um);
+  auto pixelResY = Resolution(eBoundLoc1, 50_um);
+  auto stripResX = Resolution(eBoundLoc0, 100_um);
+  auto stripResY = Resolution(eBoundLoc1, 150_um);
 
   ElementResolution pixelElementRes = {pixelResX, pixelResY};
   ElementResolution stripElementResI = {stripResX};
@@ -413,7 +414,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   // Check the size of the global track parameters size
   BOOST_CHECK_EQUAL(stateRowIndices.size(), 6);
   BOOST_CHECK_EQUAL(stateRowIndices.at(fittedTrack.trackTip), 30);
-  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundParametersSize);
+  BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundSize);
 
   // Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
@@ -475,7 +476,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(holeTrackStateRowIndices.size(), 6);
   BOOST_CHECK_EQUAL(holeTrackStateRowIndices.at(fittedWithHoleTrack.trackTip),
                     30);
-  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundParametersSize);
+  BOOST_CHECK_EQUAL(holeTrackTrackParamsCov.rows(), 6 * eBoundSize);
 
   // Count one hole
   BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1u);

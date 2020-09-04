@@ -149,14 +149,15 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   //
   /// Test localToGlobal
   Vector2D localPosition{0., 0.};
-  cylinderSurfaceObject->localToGlobal(testContext, localPosition, momentum,
-                                       globalPosition);
+  globalPosition = cylinderSurfaceObject->localToGlobal(
+      testContext, localPosition, momentum);
   Vector3D expectedPosition{1, 1, 2};
   BOOST_CHECK_EQUAL(globalPosition, expectedPosition);
   //
   /// Testing globalToLocal
-  cylinderSurfaceObject->globalToLocal(testContext, globalPosition, momentum,
-                                       localPosition);
+  localPosition = cylinderSurfaceObject
+                      ->globalToLocal(testContext, globalPosition, momentum)
+                      .value();
   Vector2D expectedLocalPosition{0., 0.};
   BOOST_CHECK_EQUAL(localPosition, expectedLocalPosition);
   //
