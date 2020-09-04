@@ -644,9 +644,6 @@ class KalmanFitter {
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
-
         // Create a detached track state proxy
         auto tempTrackTip =
             result.fittedStates.addTrackState(TrackStatePropMask::All);
