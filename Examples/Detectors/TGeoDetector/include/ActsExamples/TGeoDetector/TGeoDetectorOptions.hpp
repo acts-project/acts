@@ -21,8 +21,6 @@
 
 namespace po = boost::program_options;
 
-namespace au = Acts::units;
-
 namespace ActsExamples {
 
 namespace Options {
