@@ -1,8 +1,3 @@
-# This module needs at least CMake 3.13.
-cmake_minimum_required( VERSION 3.13 )
-
-find_package(SYCL REQUIRED)
-
 add_library(
   ActsPluginSycl SHARED
   # header files
@@ -31,7 +26,7 @@ target_link_libraries(
   ActsPluginSycl
   PUBLIC ActsCore)
 
-acts_setup_sycl_target(ActsPluginSycl DEPENDENCY PRIVATE)
+acts_target_setup_sycl(ActsPluginSycl DEPENDENCY PRIVATE)
 
 install(
   TARGETS ActsPluginSycl

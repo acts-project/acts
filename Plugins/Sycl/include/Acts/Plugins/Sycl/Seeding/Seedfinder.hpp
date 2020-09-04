@@ -24,12 +24,10 @@ namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 class Seedfinder {
  public:
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
-             const Acts::Sycl::DeviceExperimentCuts& cuts);
-
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
-             const Acts::Sycl::DeviceExperimentCuts& cuts,
-             Acts::Sycl::QueueWrapper wrappedQueue);
+  Seedfinder(
+      Acts::SeedfinderConfig<external_spacepoint_t> config,
+      const Acts::Sycl::DeviceExperimentCuts& cuts,
+      Acts::Sycl::QueueWrapper wrappedQueue = Acts::Sycl::QueueWrapper());
 
   ~Seedfinder() = default;
   Seedfinder() = delete;
@@ -56,8 +54,6 @@ class Seedfinder {
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
   Acts::Sycl::detail::DeviceSeedfinderConfig m_deviceConfig;
   QueueWrapper m_wrappedQueue;
-
-  void init();
 };
 
 }  // namespace Acts::Sycl

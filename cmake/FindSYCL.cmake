@@ -13,7 +13,7 @@
 #
 # Variable(s) set up by the module:
 #  - SYCL_FOUND: Boolean, set to TRUE when SYCL compilation is available.
-#  - acts_setup_sycl_target( <target> [DEPENDENCY PUBLIC|PRIVATE|INTERFACE] ):
+#  - acts_target_setup_sycl( <target> [DEPENDENCY PUBLIC|PRIVATE|INTERFACE] ):
 #       Helper function for setting up a target (library or executable) for
 #       "SYCL compilation". Provides an optional argument for specifying
 #       how/whether the target exposes this SYCL dependency.
@@ -40,7 +40,7 @@
 #  find_package( SYCL )
 #  if( SYCL_FOUND )
 #     atlas_add_library( SYCLAidedLibrary ... )
-#     acts_setup_sycl_target( SYCLAidedLibrary DEPENDENCY PRIVATE )
+#     acts_target_setup_sycl( SYCLAidedLibrary DEPENDENCY PRIVATE )
 #  endif()
 #
 
@@ -131,9 +131,9 @@ if( SYCL_builtin_FOUND )
       endif()
    endforeach()
    unset( _compilerDir )
-   # Set up the acts_setup_sycl_target function.
-   if( NOT COMMAND acts_setup_sycl_target )
-      function( acts_setup_sycl_target targetName )
+   # Set up the acts_target_setup_sycl function.
+   if( NOT COMMAND acts_target_setup_sycl )
+      function( acts_target_setup_sycl targetName )
          cmake_parse_arguments( ARG "" "DEPENDENCY" "" ${ARGN} )
          if( NOT ARG_DEPENDENCY )
             set( ARG_DEPENDENCY "PRIVATE" )
@@ -142,7 +142,7 @@ if( SYCL_builtin_FOUND )
          target_link_options( ${targetName} ${ARG_DEPENDENCY} ${SYCL_FLAGS} )
          target_sources( ${targetName} ${ARG_DEPENDENCY}
             ${SYCL_SUPPORT_LIBRARIES} )
-      endfunction( acts_setup_sycl_target )
+      endfunction( acts_target_setup_sycl )
    endif()
 else()
    if( NOT SYCL_FIND_QUIETLY )
@@ -170,9 +170,9 @@ else()
          message( STATUS "Found (tri)SYCL headers: ${SYCL_INCLUDE_DIR}" )
       endif()
       set( SYCL_FOUND TRUE )
-      # Set up the acts_setup_sycl_target function.
-      if( NOT COMMAND acts_setup_sycl_target )
-         function( acts_setup_sycl_target targetName )
+      # Set up the acts_target_setup_sycl function.
+      if( NOT COMMAND acts_target_setup_sycl )
+         function( acts_target_setup_sycl targetName )
             cmake_parse_arguments( ARG "" "DEPENDENCY" "" ${ARGN} )
             if( NOT ARG_DEPENDENCY )
                set( ARG_DEPENDENCY "PRIVATE" )
@@ -181,7 +181,7 @@ else()
                ${Boost_INCLUDE_DIRS} ${SYCL_INCLUDE_DIR} )
             target_link_libraries( ${targetName} ${ARG_DEPENDENCY}
                ${Boost_LIBRARIES} )
-         endfunction( acts_setup_sycl_target )
+         endfunction( acts_target_setup_sycl )
       endif()
    else()
       # We did not find a viable SYCL version.

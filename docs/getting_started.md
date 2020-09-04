@@ -236,6 +236,7 @@ components.
 | ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
 | ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
 | ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
 | ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
 | ACTS_BUILD_EXAMPLES                   | Build standalone examples |

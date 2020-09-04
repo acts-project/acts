@@ -16,7 +16,13 @@
 namespace Acts::Sycl {
 
 template <typename external_spacepoint_t>
-void Seedfinder<external_spacepoint_t>::init() {
+Seedfinder<external_spacepoint_t>::Seedfinder(
+    Acts::SeedfinderConfig<external_spacepoint_t> config,
+    const Acts::Sycl::DeviceExperimentCuts& cuts,
+    Acts::Sycl::QueueWrapper wrappedQueue)
+    : m_config(config),
+      m_deviceCuts(cuts),
+      m_wrappedQueue(std::move(wrappedQueue)) {
   // init m_config
   m_config.highland = 13.6f * std::sqrt(m_config.radLengthPerSeed) *
                       (1 + 0.038f * std::log(m_config.radLengthPerSeed));
@@ -48,25 +54,6 @@ void Seedfinder<external_spacepoint_t>::init() {
       m_config.impactMax,
       seedFilterConfig.compatSeedLimit,
   };
-}
-
-template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config,
-    const Acts::Sycl::DeviceExperimentCuts& cuts)
-    : m_config(config), m_deviceCuts(cuts), m_wrappedQueue() {
-  init();
-}
-
-template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config,
-    const Acts::Sycl::DeviceExperimentCuts& cuts,
-    Acts::Sycl::QueueWrapper wrappedQueue)
-    : m_config(config),
-      m_deviceCuts(cuts),
-      m_wrappedQueue(std::move(wrappedQueue)) {
-  init();
 }
 
 template <typename external_spacepoint_t>
