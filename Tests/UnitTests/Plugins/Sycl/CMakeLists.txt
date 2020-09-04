@@ -1,0 +1,2 @@
+set(unittest_extra_libraries ActsPluginSycl)
+add_subdirectory(Seeding)
