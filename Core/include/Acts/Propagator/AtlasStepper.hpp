@@ -113,22 +113,22 @@ class AtlasStepper {
         const auto transform = pars.referenceSurface().referenceFrame(
             geoContext, pos, pars.momentum());
 
-        pVector[8] = transform(0, eLOC_0);
-        pVector[16] = transform(0, eLOC_1);
+        pVector[8] = transform(0, eBoundLoc0);
+        pVector[16] = transform(0, eBoundLoc1);
         pVector[24] = 0.;
         pVector[32] = 0.;
         pVector[40] = 0.;
         pVector[48] = 0.;  // dX /
 
-        pVector[9] = transform(1, eLOC_0);
-        pVector[17] = transform(1, eLOC_1);
+        pVector[9] = transform(1, eBoundLoc0);
+        pVector[17] = transform(1, eBoundLoc1);
         pVector[25] = 0.;
         pVector[33] = 0.;
         pVector[41] = 0.;
         pVector[49] = 0.;  // dY /
 
-        pVector[10] = transform(2, eLOC_0);
-        pVector[18] = transform(2, eLOC_1);
+        pVector[10] = transform(2, eBoundLoc0);
+        pVector[18] = transform(2, eBoundLoc1);
         pVector[26] = 0.;
         pVector[34] = 0.;
         pVector[42] = 0.;
@@ -335,22 +335,22 @@ class AtlasStepper {
     Se = sin(boundParams[eBoundTheta]);
     Ce = cos(boundParams[eBoundTheta]);
 
-    state.pVector[8] = transform(0, eLOC_0);
-    state.pVector[16] = transform(0, eLOC_1);
+    state.pVector[8] = transform(0, eBoundLoc0);
+    state.pVector[16] = transform(0, eBoundLoc1);
     state.pVector[24] = 0.;
     state.pVector[32] = 0.;
     state.pVector[40] = 0.;
     state.pVector[48] = 0.;  // dX /
 
-    state.pVector[9] = transform(1, eLOC_0);
-    state.pVector[17] = transform(1, eLOC_1);
+    state.pVector[9] = transform(1, eBoundLoc0);
+    state.pVector[17] = transform(1, eBoundLoc1);
     state.pVector[25] = 0.;
     state.pVector[33] = 0.;
     state.pVector[41] = 0.;
     state.pVector[49] = 0.;  // dY /
 
-    state.pVector[10] = transform(2, eLOC_0);
-    state.pVector[18] = transform(2, eLOC_1);
+    state.pVector[10] = transform(2, eBoundLoc0);
+    state.pVector[18] = transform(2, eBoundLoc1);
     state.pVector[26] = 0.;
     state.pVector[34] = 0.;
     state.pVector[42] = 0.;

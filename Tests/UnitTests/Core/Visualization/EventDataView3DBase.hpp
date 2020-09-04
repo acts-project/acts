@@ -206,15 +206,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Vector2D lPosCenter{10_mm, 10_mm};
   std::array<double, 2> resolution = {30_um, 50_um};
   SymMatrix2D cov2D;
-  cov2D << resolution[eLOC_0] * resolution[eLOC_0], 0., 0.,
-      resolution[eLOC_1] * resolution[eLOC_1];
+  cov2D << resolution[eBoundLoc0] * resolution[eBoundLoc0], 0., 0.,
+      resolution[eBoundLoc1] * resolution[eBoundLoc1];
   for (const auto& surface : surfaces) {
     // 2D measurements
-    double dx = resolution[eLOC_0] * gauss(generator);
-    double dy = resolution[eLOC_1] * gauss(generator);
-    MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {}, cov2D,
-                                        lPosCenter[eLOC_0] + dx,
-                                        lPosCenter[eLOC_1] + dy);
+    double dx = resolution[eBoundLoc0] * gauss(generator);
+    double dy = resolution[eBoundLoc1] * gauss(generator);
+    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
+        lPosCenter[eBoundLoc1] + dy);
     measurements.push_back(std::move(m01));
   }
 

@@ -114,7 +114,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
     bpvConfig.volumeName = "BeamPipe";
     bpvConfig.layerBuilder = beamPipeBuilder;
-    bpvConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
+    bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
+                                1. * Acts::UnitConstants::mm};
     bpvConfig.buildToRadiusZero = true;
     auto beamPipeVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -179,8 +180,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
     volumeConfig.buildToRadiusZero = (volumeBuilders.size() == 0);
-    volumeConfig.layerEnvelopeR = {1. * Acts::units::_mm,
-                                   5. * Acts::units::_mm};
+    volumeConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
+                                   5. * Acts::UnitConstants::mm};
     auto ringLayoutConfiguration =
         [&](const std::vector<Acts::TGeoLayerBuilder::LayerConfig>& lConfigs)
         -> void {

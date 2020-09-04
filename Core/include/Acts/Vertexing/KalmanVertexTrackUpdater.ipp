@@ -49,9 +49,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   auto correctedPhiTheta =
       Acts::detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
 
-  newTrkParams(BoundIndices::ePHI) = correctedPhiTheta.first;     // phi
-  newTrkParams(BoundIndices::eTHETA) = correctedPhiTheta.second;  // theta
-  newTrkParams(BoundIndices::eQOP) = newTrkMomentum(2);           // qOverP
+  newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
+  newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
+  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
   // Vertex covariance and weight matrices
   const ActsSymMatrixD<3> vtxCov =

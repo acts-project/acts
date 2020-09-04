@@ -16,45 +16,43 @@ namespace Acts {
 
 class Surface;
 
-namespace concept {
-  namespace detail_slc {
-  template <typename T>
-  using comparable_t = decltype(std::declval<T>() == std::declval<T>());
+namespace Concepts {
+namespace detail_slc {
+template <typename T>
+using comparable_t = decltype(std::declval<T>() == std::declval<T>());
 
-  template <typename T>
-  using dereferenceable_t = decltype(*std::declval<T>());
+template <typename T>
+using dereferenceable_t = decltype(*std::declval<T>());
 
-  template <typename T>
-  using surface_method_t = decltype(std::declval<T>().referenceSurface());
+template <typename T>
+using surface_method_t = decltype(std::declval<T>().referenceSurface());
 
-  template <typename T>
-  struct SourceLinkConcept {
-    constexpr static bool comparison_works =
-        identical_to<bool, comparable_t, T>;
-    static_assert(comparison_works,
-                  "Source link does not implement equality operator");
+template <typename T>
+struct SourceLinkConcept {
+  constexpr static bool comparison_works = identical_to<bool, comparable_t, T>;
+  static_assert(comparison_works,
+                "Source link does not implement equality operator");
 
-    constexpr static bool surface_method_exists =
-        converts_to<const Surface&, surface_method_t, T>;
-    static_assert(
-        surface_method_exists,
-        "Source link does not have compliant referenceSurface method");
+  constexpr static bool surface_method_exists =
+      converts_to<const Surface&, surface_method_t, T>;
+  static_assert(surface_method_exists,
+                "Source link does not have compliant referenceSurface method");
 
-    constexpr static bool copyable = std::is_copy_constructible_v<T>;
-    static_assert(copyable, "Source link must be copy constructible");
+  constexpr static bool copyable = std::is_copy_constructible_v<T>;
+  static_assert(copyable, "Source link must be copy constructible");
 
-    constexpr static bool default_constructible =
-        std::is_default_constructible_v<T>;
-    static_assert(default_constructible,
-                  "Source link must be default-constructible");
+  constexpr static bool default_constructible =
+      std::is_default_constructible_v<T>;
+  static_assert(default_constructible,
+                "Source link must be default-constructible");
 
-    constexpr static bool value =
-        concept ::require<comparison_works, surface_method_exists, copyable,
-                          default_constructible>;
-  };
-  }  // namespace detail_slc
-}  // namespace concept
+  constexpr static bool value =
+      Concepts ::require<comparison_works, surface_method_exists, copyable,
+                         default_constructible>;
+};
+}  // namespace detail_slc
+}  // namespace Concepts
 template <typename T>
 constexpr bool SourceLinkConcept =
-    concept ::detail_slc::SourceLinkConcept<T>::value;
+    Concepts ::detail_slc::SourceLinkConcept<T>::value;
 }  // namespace Acts

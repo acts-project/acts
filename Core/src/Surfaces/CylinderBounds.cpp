@@ -23,17 +23,17 @@ Acts::SurfaceBounds::BoundsType Acts::CylinderBounds::type() const {
 
 Acts::Vector2D Acts::CylinderBounds::shifted(
     const Acts::Vector2D& lposition) const {
-  return {Acts::detail::radian_sym((lposition[Acts::eLOC_RPHI] / get(eR)) -
+  return {Acts::detail::radian_sym((lposition[Acts::eBoundLoc0] / get(eR)) -
                                    get(eAveragePhi)),
-          lposition[Acts::eLOC_Z]};
+          lposition[Acts::eBoundLoc1]};
 }
 
 Acts::ActsMatrixD<2, 2> Acts::CylinderBounds::jacobian() const {
   ActsMatrixD<2, 2> j;
-  j(0, eLOC_RPHI) = 1 / get(eR);
-  j(0, eLOC_Z) = 0;
-  j(1, eLOC_RPHI) = 0;
-  j(1, eLOC_Z) = 1;
+  j(0, eBoundLoc0) = 1 / get(eR);
+  j(0, eBoundLoc1) = 0;
+  j(1, eBoundLoc0) = 0;
+  j(1, eBoundLoc1) = 1;
   return j;
 }
 
