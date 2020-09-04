@@ -490,11 +490,11 @@ class ParameterSet {
    * vector of parameter values of this ParameterSet object and \f$\vec{v}^0\f$
    * is the full parameter value vector.
    *
-   * @param BoundTrackParameters Vector of bound parameters
-   * @note Constraint and cyclic parameter value ranges of @p BoundTrackParameters
-   * are not tested.
-   * @note It is not tested whether @p BoundTrackParameters is at the same reference
-   * object
+   * @param boundParams Vector of bound parameters
+   * @note Constraint and cyclic parameter value ranges of @p
+   * BoundTrackParameters are not tested.
+   * @note It is not tested whether @p BoundTrackParameters is at the same
+   * reference object
    *
    * @return vector containing the residual parameter values of this
    * ParameterSet object
@@ -502,9 +502,9 @@ class ParameterSet {
    *
    * @sa ParameterSet::projector
    */
-  ParameterVector residual(const ActsVectorD<kSizeMax>& BoundTrackParameters) const {
+  ParameterVector residual(const ActsVectorD<kSizeMax>& boundParams) const {
     return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, projector() * BoundTrackParameters);
+        m_vValues, projector() * boundParams);
   }
 
   /**

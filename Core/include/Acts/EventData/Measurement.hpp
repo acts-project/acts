@@ -283,17 +283,17 @@ class Measurement {
   ///
   /// @todo Implement validity check for residuals of local parameters.
   ///
-  /// @param BoundTrackParameters reference bound parameters
-  /// @note The parameter ranges and the reference object of @p BoundTrackParameters
-  /// are not tested
+  /// @param trackPars reference bound parameters
+  /// @note The parameter ranges and the reference object of @p
+  /// BoundTrackParameters are not tested
   ///
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
   ParameterVector residual(
       const ActsVectorD<detail::ParametersSize<parameter_indices_t>::size>&
-          BoundTrackParameters) const {
-    return m_oParameters.residual(BoundTrackParameters);
+          trackPars) const {
+    return m_oParameters.residual(trackPars);
   }
 
   /// @brief equality operator
