@@ -43,19 +43,19 @@ Acts::Vector2D Acts::ConeBounds::shifted(
     const Acts::Vector2D& lposition) const {
   using Acts::detail::radian_sym;
 
-  auto x = r(lposition[eLOC_Z]);  // cone radius at the local position
+  auto x = r(lposition[eBoundLoc1]);  // cone radius at the local position
   Vector2D shifted;
-  shifted[eLOC_Z] = lposition[eLOC_Z];
-  shifted[eLOC_RPHI] =
+  shifted[eBoundLoc1] = lposition[eBoundLoc1];
+  shifted[eBoundLoc0] =
       std::isnormal(x)
-          ? (x * radian_sym((lposition[eLOC_RPHI] / x) - get(eAveragePhi)))
-          : lposition[eLOC_RPHI];
+          ? (x * radian_sym((lposition[eBoundLoc0] / x) - get(eAveragePhi)))
+          : lposition[eBoundLoc0];
   return shifted;
 }
 
 bool Acts::ConeBounds::inside(const Acts::Vector2D& lposition,
                               const Acts::BoundaryCheck& bcheck) const {
-  auto rphiHalf = r(lposition[eLOC_Z]) * get(eHalfPhiSector);
+  auto rphiHalf = r(lposition[eBoundLoc1]) * get(eHalfPhiSector);
   return bcheck.isInside(shifted(lposition), Vector2D(-rphiHalf, get(eMinZ)),
                          Vector2D(rphiHalf, get(eMaxZ)));
 }

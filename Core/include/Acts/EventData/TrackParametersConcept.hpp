@@ -17,7 +17,6 @@ namespace Acts {
 class Surface;
 
 namespace Concepts {
-using namespace Acts::concept;
 
 // nested types that must be available
 template <typename T>

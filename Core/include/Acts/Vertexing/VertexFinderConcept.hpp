@@ -16,15 +16,15 @@
 
 namespace Acts {
 
-namespace concept {
-  namespace VertexFinder {
+namespace Concepts {
+namespace VertexFinder {
 
-  template <typename T>
-  using state_t = typename T::State;
+template <typename T>
+using state_t = typename T::State;
 
-  METHOD_TRAIT(find_t, find);
+METHOD_TRAIT(find_t, find);
 
-  // clang-format off
+// clang-format off
     template <typename S>
       struct VertexFinderConcept {
         constexpr static bool state_exists = exists<state_t, S>;
@@ -37,12 +37,12 @@ namespace concept {
 
         constexpr static bool value = require<state_exists, find_exists>;
       };
-  // clang-format on
-  }  // namespace VertexFinder
-}  // namespace concept
+// clang-format on
+}  // namespace VertexFinder
+}  // namespace Concepts
 
 template <typename finder>
 constexpr bool VertexFinderConcept =
-    Acts::concept ::VertexFinder::VertexFinderConcept<finder>::value;
+    Acts::Concepts ::VertexFinder::VertexFinderConcept<finder>::value;
 
 }  // namespace Acts
