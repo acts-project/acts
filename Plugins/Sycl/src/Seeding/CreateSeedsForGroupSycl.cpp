@@ -149,7 +149,7 @@ void createSeedsForGroupSycl(
 
       q->submit([&](cl::sycl::handler& h) {
         h.parallel_for<duplet_search_top_kernel>(
-            cl::sycl::range<2>{M, B}, [=](cl::sycl::id<2> idx) {
+            cl::sycl::range<2>{M, T}, [=](cl::sycl::id<2> idx) {
               const auto mid = idx[0];
               const auto top = idx[1];
               // We check whether this thread actually makes sense (within
