@@ -83,8 +83,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Fitter fitter(fitterCfg);
 
   using SeedFinder =
-      TrackDensityVertexFinder<Fitter,
-                               GaussianTrackDensity<BoundTrackParameters>>;
+      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<BoundTrackParameters>>;
 
   SeedFinder seedFinder;
 
@@ -122,7 +121,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   }
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
@@ -416,7 +415,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 

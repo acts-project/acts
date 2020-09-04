@@ -84,8 +84,8 @@ ActsExamples::ProcessCode ActsExamples::TruthVerticesToTracksAlgorithm::execute(
 
       // Define start track params
       Acts::CurvilinearTrackParameters start(std::nullopt, particle.position(),
-                                             ptclMom, particle.charge(),
-                                             particle.time());
+                                        ptclMom, particle.charge(),
+                                        particle.time());
       // Run propagator
       auto result = propagator.propagate(start, *perigeeSurface, pOptions);
       if (!result.ok()) {

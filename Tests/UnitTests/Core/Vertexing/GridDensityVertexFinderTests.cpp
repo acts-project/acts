@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
   Finder::Config cfg;
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
@@ -178,8 +178,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
   constraintVtx.setCovariance(ActsSymMatrixD<3>::Identity());
   vertexingOptions.vertexConstraint = constraintVtx;
@@ -278,8 +278,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;

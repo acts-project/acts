@@ -68,8 +68,7 @@ class FakeRatePlotTool {
   /// @param fittedParameters fitted track parameters of this track
   /// @param status the reconstructed track is fake or not
   void fill(FakeRatePlotCache& fakeRatePlotCache,
-            const Acts::BoundTrackParameters& fittedParameters,
-            bool status) const;
+            const Acts::BoundTrackParameters& fittedParameters, bool status) const;
 
   /// @brief fill number of reco/truth-matched/fake tracks for a truth particle
   /// seed

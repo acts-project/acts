@@ -90,8 +90,7 @@ class GaussianGridTrackDensity {
   /// the track was added (int) and the 1-dim density contribution
   /// of the track itself
   std::pair<int, ActsVectorF<trkGridSize>> addTrack(
-      const BoundTrackParameters& trk,
-      ActsVectorF<mainGridSize>& mainGrid) const;
+      const BoundTrackParameters& trk, ActsVectorF<mainGridSize>& mainGrid) const;
 
   /// @brief Removes a track from the overall grid density
   ///

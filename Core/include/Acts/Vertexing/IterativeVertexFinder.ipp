@@ -181,8 +181,7 @@ void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeAllTracks(
     const std::vector<const InputTrack_t*>& perigeesToFit,
     std::vector<const InputTrack_t*>& seedTracks) const {
   for (const auto& fitPerigee : perigeesToFit) {
-    const BoundTrackParameters& fitPerigeeParams =
-        m_extractParameters(*fitPerigee);
+    const BoundTrackParameters& fitPerigeeParams = m_extractParameters(*fitPerigee);
     // Find track in seedTracks
     auto foundIter =
         std::find_if(seedTracks.begin(), seedTracks.end(),

@@ -271,8 +271,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (fwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
-          (*fwdStep.endParameters.get())));
+      stepParameters.push_back(
+          std::make_unique<BoundTrackParameters>((*fwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }
@@ -345,8 +345,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (bwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
-          *(bwdStep.endParameters.get())));
+      stepParameters.push_back(
+          std::make_unique<BoundTrackParameters>(*(bwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }

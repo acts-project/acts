@@ -330,8 +330,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
       Surface::makeShared<PerigeeSurface>(pos1);
 
   // Some fixed track parameter values
-  BoundTrackParameters params1(geoContext, covMat, pos1, mom1, 1, 0,
-                               perigeeSurface);
+  BoundTrackParameters params1(geoContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
 
   auto res1 =
       ipEstimator.calculate3dDistance(geoContext, params1, vtxPos, state);

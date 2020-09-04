@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Ray.hpp"
-#include "Acts/Utilities/Units.hpp"
-
 #include <algorithm>
 #include <chrono>
 #include <functional>
@@ -21,6 +13,14 @@
 #include <map>
 #include <random>
 #include <vector>
+
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Ray.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 using namespace Acts;
 

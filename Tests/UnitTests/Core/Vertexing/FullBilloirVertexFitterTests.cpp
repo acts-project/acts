@@ -53,8 +53,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Linearizer linearizer(ltConfig);
 
   // Set up Billoir Vertex Fitter
-  using VertexFitter =
-      FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+  using VertexFitter = FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
   VertexFitter::Config vertexFitterCfg;
   VertexFitter billoirFitter(vertexFitterCfg);
   VertexFitter::State state(magFieldContext);
@@ -73,7 +72,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   const std::vector<const BoundTrackParameters*> emptyVector;
 
   VertexingOptions<BoundTrackParameters> vfOptions(geoContext, magFieldContext,
-                                                   myConstraint);
+                                              myConstraint);
 
   Vertex<BoundTrackParameters> fittedVertex =
       billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
@@ -143,8 +142,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     unsigned int nTracks = nTracksDist(gen);
 
     // Set up Billoir Vertex Fitter
-    using VertexFitter =
-        FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+    using VertexFitter = FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
     VertexFitter::Config vertexFitterCfg;
     VertexFitter billoirFitter(vertexFitterCfg);
     VertexFitter::State state(magFieldContext);
@@ -158,8 +156,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
     myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
-    VertexingOptions<BoundTrackParameters> vfOptions(geoContext,
-                                                     magFieldContext);
+    VertexingOptions<BoundTrackParameters> vfOptions(geoContext, magFieldContext);
 
     VertexingOptions<BoundTrackParameters> vfOptionsConstr(
         geoContext, magFieldContext, myConstraint);

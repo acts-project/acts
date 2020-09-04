@@ -69,36 +69,30 @@ class TrackDensityVertexFinder {
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
+  template <typename T = InputTrack_t,
+            std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   TrackDensityVertexFinder(const Config& cfg)
       : m_cfg(cfg), m_extractParameters([](T params) { return params; }) {}
 
-  /// @brief Default constructor used if InputTrack_t type ==
-  /// BoundTrackParameters
-  template <
-      typename T = InputTrack_t,
-      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
+  /// @brief Default constructor used if InputTrack_t type == BoundTrackParameters
+  template <typename T = InputTrack_t,
+            std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   TrackDensityVertexFinder()
       : m_extractParameters([](T params) { return params; }) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters
+  /// @brief Constructor for user-defined InputTrack_t type =! BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
+  /// @param func Function extracting BoundTrackParameters from InputTrack_t object
   TrackDensityVertexFinder(
       const Config& cfg,
       const std::function<BoundTrackParameters(InputTrack_t)>& func)
       : m_cfg(cfg), m_extractParameters(func) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type =!
-  /// BoundTrackParameters with default Config object
+  /// @brief Constructor for user-defined InputTrack_t type =! BoundTrackParameters
+  /// with default Config object
   ///
-  /// @param func Function extracting BoundTrackParameters from InputTrack_t
-  /// object
+  /// @param func Function extracting BoundTrackParameters from InputTrack_t object
   TrackDensityVertexFinder(
       const std::function<BoundTrackParameters(InputTrack_t)>& func)
       : m_extractParameters(func) {}

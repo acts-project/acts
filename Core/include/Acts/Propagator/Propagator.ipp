@@ -159,8 +159,7 @@ auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+        BoundTrackParameters, typename propagator_options_t::action_list_type>> {
   static_assert(Concepts::BoundTrackParametersConcept<parameters_t>,
                 "Parameters do not fulfill bound parameters concept.");
 
@@ -206,8 +205,8 @@ auto Acts::Propagator<S, N>::propagate(
     auto bs = m_stepper.boundState(state.stepping, target);
     auto& BoundTrackParameters = std::get<BoundTrackParameters>(bs);
     // Fill the end parameters
-    propRes.endParameters = std::make_unique<const BoundTrackParameters>(
-        std::move(BoundTrackParameters));
+    propRes.endParameters =
+        std::make_unique<const BoundTrackParameters>(std::move(BoundTrackParameters));
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       auto& tJacobian = std::get<Jacobian>(bs);

@@ -13,12 +13,11 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
 #include <string>
-
-#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 

@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <memory>
-
 #include "CudaUtils.cu"
 #include "cuda.h"
 #include "cuda_runtime.h"

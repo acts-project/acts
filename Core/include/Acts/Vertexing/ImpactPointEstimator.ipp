@@ -14,11 +14,12 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculate3dDistance(const GeometryContext& gctx,
-                        const BoundTrackParameters& trkParams,
-                        const Vector3D& vtxPos, State& state) const {
+Acts::Result<double> Acts::ImpactPointEstimator<
+    input_track_t, propagator_t,
+    propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
+                                               const BoundTrackParameters& trkParams,
+                                               const Vector3D& vtxPos,
+                                               State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 

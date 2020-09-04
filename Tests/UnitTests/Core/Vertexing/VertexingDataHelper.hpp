@@ -46,13 +46,10 @@ struct VertexInfo {
 std::tuple<
     Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
     std::vector<
-        BoundTrackParameters>> inline readTracksAndVertexCSV(std::string
-                                                                 toolString,
-                                                             std::string
-                                                                 fileBase =
-                                                                     "vertexing"
-                                                                     "_event_"
-                                                                     "mu20") {
+        BoundTrackParameters>> inline readTracksAndVertexCSV(std::string toolString,
+                                                        std::string fileBase =
+                                                            "vertexing_event_"
+                                                            "mu20") {
   const auto beamspotDataPath =
       Acts::Test::getDataPath(fileBase + "_beamspot.csv");
   const auto tracksDataPath = Acts::Test::getDataPath(fileBase + "_tracks.csv");

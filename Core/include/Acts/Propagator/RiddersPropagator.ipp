@@ -13,9 +13,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
-  using ThisResult = Result<
-      action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>>;
+  using ThisResult = Result<action_list_t_result_t<
+      CurvilinearTrackParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
   auto nominalRet = m_propagator.propagate(start, options);
@@ -63,8 +62,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     const parameters_t& start, const Surface& target,
     const propagator_options_t& options) const
     -> Result<action_list_t_result_t<
-        BoundTrackParameters,
-        typename propagator_options_t::action_list_type>> {
+        BoundTrackParameters, typename propagator_options_t::action_list_type>> {
   using ThisResult = Result<action_list_t_result_t<
       BoundTrackParameters, typename propagator_options_t::action_list_type>>;
 
@@ -181,7 +179,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
     // Propagate with updated start parameters
     BoundTrackParameters tp(startPars.referenceSurface().getSharedPtr(), values,
-                            startPars.covariance());
+                       startPars.covariance());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);

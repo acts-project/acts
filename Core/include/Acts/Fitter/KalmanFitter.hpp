@@ -697,8 +697,8 @@ class KalmanFitter {
               });
 
           // update stepping state using filtered parameters after kalman
-          // update We need to (re-)construct a BoundTrackParameters instance
-          // here, which is a bit awkward.
+          // update We need to (re-)construct a BoundTrackParameters instance here,
+          // which is a bit awkward.
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),

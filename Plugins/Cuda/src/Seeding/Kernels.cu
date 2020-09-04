@@ -8,9 +8,7 @@
 
 #include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-
 #include <iostream>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 

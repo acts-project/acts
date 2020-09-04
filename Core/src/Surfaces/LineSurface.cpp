@@ -9,7 +9,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 
 #include "Acts/Utilities/ThrowAssert.hpp"
-
 #include <cmath>
 #include <utility>
 

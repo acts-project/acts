@@ -8,15 +8,13 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
+#include <cmath>
+#include <limits>
 
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Units.hpp"
-
-#include <cmath>
-#include <limits>
-
 #include "TrackParametersTestData.hpp"
 
 using namespace Acts;
@@ -54,8 +52,8 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
 }
 
-BOOST_DATA_TEST_CASE(GlobalToCurvilinearTrackParameters,
-                     ts* phis* thetas* qOverPs, time, phiInput, theta, qOverP) {
+BOOST_DATA_TEST_CASE(GlobalToCurvilinearTrackParameters, ts* phis* thetas* qOverPs,
+                     time, phiInput, theta, qOverP) {
   // phi is ill-defined in forward/backward tracks
   auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
 

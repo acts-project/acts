@@ -284,8 +284,8 @@ class Measurement {
   /// @todo Implement validity check for residuals of local parameters.
   ///
   /// @param BoundTrackParameters reference bound parameters
-  /// @note The parameter ranges and the reference object of @p
-  /// BoundTrackParameters are not tested
+  /// @note The parameter ranges and the reference object of @p BoundTrackParameters
+  /// are not tested
   ///
   /// @return vector with the residual parameter values (in valid range)
   ///

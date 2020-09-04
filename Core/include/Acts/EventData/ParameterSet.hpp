@@ -8,6 +8,11 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
+
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -20,11 +25,6 @@
 #include "Acts/Utilities/detail/MPL/at_index.hpp"
 #include "Acts/Utilities/detail/MPL/get_position.hpp"
 #include "Acts/Utilities/detail/MPL/is_contained.hpp"
-
-#include <memory>
-#include <optional>
-#include <type_traits>
-#include <utility>
 
 namespace Acts {
 /// @cond
@@ -491,10 +491,10 @@ class ParameterSet {
    * is the full parameter value vector.
    *
    * @param BoundTrackParameters Vector of bound parameters
-   * @note Constraint and cyclic parameter value ranges of @p
-   * BoundTrackParameters are not tested.
-   * @note It is not tested whether @p BoundTrackParameters is at the same
-   * reference object
+   * @note Constraint and cyclic parameter value ranges of @p BoundTrackParameters
+   * are not tested.
+   * @note It is not tested whether @p BoundTrackParameters is at the same reference
+   * object
    *
    * @return vector containing the residual parameter values of this
    * ParameterSet object
@@ -502,8 +502,7 @@ class ParameterSet {
    *
    * @sa ParameterSet::projector
    */
-  ParameterVector residual(
-      const ActsVectorD<kSizeMax>& BoundTrackParameters) const {
+  ParameterVector residual(const ActsVectorD<kSizeMax>& BoundTrackParameters) const {
     return detail::residual_calculator<parameter_indices_t, params...>::result(
         m_vValues, projector() * BoundTrackParameters);
   }

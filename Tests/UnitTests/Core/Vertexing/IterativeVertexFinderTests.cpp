@@ -111,8 +111,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     Linearizer::Config ltConfig(bField, propagator);
     Linearizer linearizer(ltConfig);
 
-    using BilloirFitter =
-        FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+    using BilloirFitter = FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
@@ -214,8 +213,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
-        TrackAtVertex<BoundTrackParameters> trAtVt(0., params,
-                                                   tracks.back().get());
+        TrackAtVertex<BoundTrackParameters> trAtVt(0., params, tracks.back().get());
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -232,7 +230,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     }
 
     VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                            magFieldContext);
+                                                       magFieldContext);
 
     // find vertices
     auto res = finder.find(tracksPtr, vertexingOptions, state);
@@ -538,8 +536,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
-  using BilloirFitter =
-      FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
+  using BilloirFitter = FullBilloirVertexFitter<BoundTrackParameters, Linearizer>;
 
   // Set up Billoir Vertex Fitter
   BilloirFitter::Config vertexFitterCfg;
@@ -587,7 +584,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   }
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 

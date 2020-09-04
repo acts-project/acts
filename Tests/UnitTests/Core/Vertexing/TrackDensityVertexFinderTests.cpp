@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   Vector3D mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -62,17 +62,15 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 
   // Test finder for some fixed track parameter values
   BoundTrackParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
   BoundTrackParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
   BoundTrackParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
 
   // Vectors of track parameters in different orders
-  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
-                                                   &params1c};
-  std::vector<const BoundTrackParameters*> vec2 = {&params1c, &params1a,
-                                                   &params1b};
+  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b, &params1c};
+  std::vector<const BoundTrackParameters*> vec2 = {&params1c, &params1a, &params1b};
 
   auto res1 = finder.find(vec1, vertexingOptions, state);
   auto res2 = finder.find(vec2, vertexingOptions, state);
@@ -113,7 +111,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Finder options
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
 
   // Create constraint for seed finding
   Vector3D constraintPos{1.7_mm, 1.3_mm, -6_mm};
@@ -136,15 +134,14 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Test finder for some fixed track parameter values
   BoundTrackParameters params1a(geoContext, covMat, pos1a, mom1a, 1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
   BoundTrackParameters params1b(geoContext, covMat, pos1b, mom1b, -1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
   BoundTrackParameters params1c(geoContext, covMat, pos1c, mom1c, -1, 0,
-                                perigeeSurface);
+                           perigeeSurface);
 
   // Vector of track parameters
-  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b,
-                                                   &params1c};
+  std::vector<const BoundTrackParameters*> vec1 = {&params1a, &params1b, &params1c};
 
   auto res = finder.find(vec1, vertexingOptions, state);
 
@@ -191,7 +188,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
+                                                     magFieldContext);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -224,8 +221,8 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom, charge, 0,
+                                       perigeeSurface));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -301,12 +298,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
       Surface::makeShared<PerigeeSurface>(pos0);
 
   // Test finder for some fixed track parameter values
-  InputTrack params1a(BoundTrackParameters(geoContext, covMat, pos1a, mom1a, 1,
-                                           0, perigeeSurface));
-  InputTrack params1b(BoundTrackParameters(geoContext, covMat, pos1b, mom1b, -1,
-                                           0, perigeeSurface));
-  InputTrack params1c(BoundTrackParameters(geoContext, covMat, pos1c, mom1c, -1,
-                                           0, perigeeSurface));
+  InputTrack params1a(
+      BoundTrackParameters(geoContext, covMat, pos1a, mom1a, 1, 0, perigeeSurface));
+  InputTrack params1b(
+      BoundTrackParameters(geoContext, covMat, pos1b, mom1b, -1, 0, perigeeSurface));
+  InputTrack params1c(
+      BoundTrackParameters(geoContext, covMat, pos1c, mom1c, -1, 0, perigeeSurface));
 
   // Vector of track parameters
   std::vector<const InputTrack*> vec1 = {&params1a, &params1b, &params1c};
