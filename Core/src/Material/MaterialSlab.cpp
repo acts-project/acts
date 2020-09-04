@@ -47,7 +47,7 @@ void Acts::MaterialSlab::scaleThickness(float scale) {
 }
 
 std::ostream& Acts::operator<<(std::ostream& os,
-                               const MaterialSlab& MaterialSlab) {
-  os << MaterialSlab.material() << "|t=" << MaterialSlab.thickness();
+                               const MaterialSlab& materialSlab) {
+  os << materialSlab.material() << "|t=" << materialSlab.thickness();
   return os;
 }

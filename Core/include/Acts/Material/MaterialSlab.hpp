@@ -80,7 +80,7 @@ class MaterialSlab {
   }
 };
 
-std::ostream& operator<<(std::ostream& os, const MaterialSlab& MaterialSlab);
+std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
 
 // Useful typedefs
 using MaterialSlabVector = std::vector<MaterialSlab>;
