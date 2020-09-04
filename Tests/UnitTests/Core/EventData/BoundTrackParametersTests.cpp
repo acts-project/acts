@@ -155,7 +155,7 @@ const auto straws = bdata::make({
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(BoundTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataBoundTrackParameters)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
                      cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,

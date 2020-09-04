@@ -22,7 +22,7 @@ using namespace Acts;
 
 static constexpr auto eps = 8 * std::numeric_limits<BoundScalar>::epsilon();
 
-BOOST_AUTO_TEST_SUITE(CurvilinearTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataCurvilinearTrackParameters)
 
 BOOST_DATA_TEST_CASE(
     ConstructCharged,
