@@ -138,8 +138,8 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
   }
 
   // Declare the mapper
-  double lengthUnit = lscalor * Acts::units::_mm;
-  double BFieldUnit = bscalor * Acts::units::_T;
+  double lengthUnit = lscalor * Acts::UnitConstants::mm;
+  double BFieldUnit = bscalor * Acts::UnitConstants::T;
 
   // set the mapper - foort
   if (bfieldmaptype == root) {
@@ -220,15 +220,15 @@ BFieldVariant readBField(const boost::program_options::variables_map& vm) {
     if (vm["bf-context-scalable"].template as<bool>()) {
       // Create the scalable magnetic field
       return std::make_shared<ActsExamples::BField::ScalableBField>(
-          bFieldValues.at(0) * Acts::units::_T,
-          bFieldValues.at(1) * Acts::units::_T,
-          bFieldValues.at(2) * Acts::units::_T);
+          bFieldValues.at(0) * Acts::UnitConstants::T,
+          bFieldValues.at(1) * Acts::UnitConstants::T,
+          bFieldValues.at(2) * Acts::UnitConstants::T);
     } else {
       // Create the constant magnetic field
       return std::make_shared<Acts::ConstantBField>(
-          bFieldValues.at(0) * Acts::units::_T,
-          bFieldValues.at(1) * Acts::units::_T,
-          bFieldValues.at(2) * Acts::units::_T);
+          bFieldValues.at(0) * Acts::UnitConstants::T,
+          bFieldValues.at(1) * Acts::UnitConstants::T,
+          bFieldValues.at(2) * Acts::UnitConstants::T);
     }
   }
 }
