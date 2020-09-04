@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * UnitConstants::T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);

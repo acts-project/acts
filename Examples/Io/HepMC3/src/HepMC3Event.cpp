@@ -17,11 +17,11 @@
 
 void ActsExamples::HepMC3Event::momentumUnit(
     std::shared_ptr<HepMC3::GenEvent> event, const double momentumUnit) {
-  // Check, if the momentum unit fits Acts::units::_MeV or _GeV
+  // Check, if the momentum unit fits Acts::UnitConstants::MeV or _GeV
   HepMC3::Units::MomentumUnit mom;
-  if (momentumUnit == Acts::units::_MeV)
+  if (momentumUnit == Acts::UnitConstants::MeV)
     mom = HepMC3::Units::MomentumUnit::MEV;
-  else if (momentumUnit == Acts::units::_GeV)
+  else if (momentumUnit == Acts::UnitConstants::GeV)
     mom = HepMC3::Units::MomentumUnit::GEV;
   else {
     // Report invalid momentum unit and set GeV
@@ -35,11 +35,11 @@ void ActsExamples::HepMC3Event::momentumUnit(
 
 void ActsExamples::HepMC3Event::lengthUnit(
     std::shared_ptr<HepMC3::GenEvent> event, const double lengthUnit) {
-  // Check, if the length unit fits Acts::units::_mm or _cm
+  // Check, if the length unit fits Acts::UnitConstants::mm or _cm
   HepMC3::Units::LengthUnit len;
-  if (lengthUnit == Acts::units::_mm)
+  if (lengthUnit == Acts::UnitConstants::mm)
     len = HepMC3::Units::LengthUnit::MM;
-  else if (lengthUnit == Acts::units::_cm)
+  else if (lengthUnit == Acts::UnitConstants::cm)
     len = HepMC3::Units::LengthUnit::CM;
   else {
     // Report invalid length unit and set mm
@@ -199,16 +199,16 @@ double ActsExamples::HepMC3Event::momentumUnit(
     const std::shared_ptr<HepMC3::GenEvent> event) {
   // HepMC allows only MEV and GEV. This allows an easy identification.
   return (event->momentum_unit() == HepMC3::Units::MomentumUnit::MEV
-              ? Acts::units::_MeV
-              : Acts::units::_GeV);
+              ? Acts::UnitConstants::MeV
+              : Acts::UnitConstants::GeV);
 }
 
 double ActsExamples::HepMC3Event::lengthUnit(
     const std::shared_ptr<HepMC3::GenEvent> event) {
   // HepMC allows only MM and CM. This allows an easy identification.
   return (event->length_unit() == HepMC3::Units::LengthUnit::MM
-              ? Acts::units::_mm
-              : Acts::units::_cm);
+              ? Acts::UnitConstants::mm
+              : Acts::UnitConstants::cm);
 }
 
 Acts::Vector3D ActsExamples::HepMC3Event::eventPos(

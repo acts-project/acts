@@ -459,12 +459,12 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
-
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface);
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -637,12 +637,12 @@ class KalmanFitter {
           return Result<void>::success();
         }
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
-
         // Transport & bind the state to the current surface
         auto [boundParams, jacobian, pathLength] =
             stepper.boundState(state.stepping, *surface);
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
 
         // Create a detached track state proxy
         auto tempTrackTip =

@@ -510,12 +510,12 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
-
         // Transport & bind the state to the current surface
         auto boundState = stepper.boundState(state.stepping, *surface);
         auto boundParams = std::get<BoundTrackParameters>(boundState);
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
 
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
