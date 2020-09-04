@@ -58,8 +58,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
   // setup local covariance
   // TODO add support for per volume/layer/module settings
   Acts::BoundMatrix cov = Acts::BoundMatrix::Zero();
-  cov(Acts::eLOC_0, Acts::eLOC_0) = m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
-  cov(Acts::eLOC_1, Acts::eLOC_1) = m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
+  cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
+  cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
 
   for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
     // check if we should create hits for this surface
@@ -84,8 +84,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
 
       // smear truth to create local measurement
       Acts::BoundVector loc = Acts::BoundVector::Zero();
-      loc[Acts::eLOC_0] = lp[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
-      loc[Acts::eLOC_1] = lp[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
+      loc[Acts::eBoundLoc0] = lp[0] + m_cfg.sigmaLoc0 * stdNormal(rng);
+      loc[Acts::eBoundLoc1] = lp[1] + m_cfg.sigmaLoc1 * stdNormal(rng);
 
       // create source link at the end of the container
       auto it = sourceLinks.emplace_hint(sourceLinks.end(), *surface, hit, 2,

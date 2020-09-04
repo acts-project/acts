@@ -22,8 +22,9 @@ Acts::SurfaceBounds::BoundsType Acts::RadialBounds::type() const {
 Acts::Vector2D Acts::RadialBounds::shifted(
     const Acts::Vector2D& lposition) const {
   Vector2D tmp;
-  tmp[eLOC_R] = lposition[eLOC_R];
-  tmp[eLOC_PHI] = detail::radian_sym(lposition[eLOC_PHI] - get(eAveragePhi));
+  tmp[eBoundLoc0] = lposition[eBoundLoc0];
+  tmp[eBoundLoc1] =
+      detail::radian_sym(lposition[eBoundLoc1] - get(eAveragePhi));
   return tmp;
 }
 
