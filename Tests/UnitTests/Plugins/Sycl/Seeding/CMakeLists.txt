@@ -6,3 +6,4 @@ add_executable(ActsUnitTestSeedfinderSycl
   SpacePoint.hpp)
 target_link_libraries(ActsUnitTestSeedfinderSycl
   PRIVATE Boost::program_options ActsCore ActsPluginSycl)
+  
