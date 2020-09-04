@@ -44,13 +44,13 @@ int main(int /*argc*/, char** /*argv*/) {
 
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
-  if (simEvent.momentumUnit(genevt) == Acts::units::_GeV)
+  if (simEvent.momentumUnit(genevt) == Acts::UnitConstants::GeV)
     std::cout << "[GEV], ";
-  else if (simEvent.momentumUnit(genevt) == Acts::units::_MeV)
+  else if (simEvent.momentumUnit(genevt) == Acts::UnitConstants::MeV)
     std::cout << "[MeV], ";
-  if (simEvent.lengthUnit(genevt) == Acts::units::_mm)
+  if (simEvent.lengthUnit(genevt) == Acts::UnitConstants::mm)
     std::cout << "[mm]" << std::endl;
-  else if (simEvent.lengthUnit(genevt) == Acts::units::_cm)
+  else if (simEvent.lengthUnit(genevt) == Acts::UnitConstants::cm)
     std::cout << "[cm]" << std::endl;
   Acts::Vector3D evtPos = simEvent.eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
