@@ -155,15 +155,15 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     const auto& trackIP3dParams = trackAtIP3d.parameters();
 
     // d0 and z0 should have changed
-    BOOST_CHECK_NE(myTrackParams[ParID_t::eLOC_D0],
-                   trackIP3dParams[ParID_t::eLOC_D0]);
-    BOOST_CHECK_NE(myTrackParams[ParID_t::eLOC_Z0],
-                   trackIP3dParams[ParID_t::eLOC_Z0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc0],
+                   trackIP3dParams[BoundIndices::eBoundLoc0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc1],
+                   trackIP3dParams[BoundIndices::eBoundLoc1]);
     // Theta along helix and q/p shoud remain the same
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eTHETA],
-                    trackIP3dParams[ParID_t::eTHETA], 1e-5);
-    CHECK_CLOSE_REL(myTrackParams[ParID_t::eQOP],
-                    trackIP3dParams[ParID_t::eQOP], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundTheta],
+                    trackIP3dParams[BoundIndices::eBoundTheta], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundQOverP],
+                    trackIP3dParams[BoundIndices::eBoundQOverP], 1e-5);
 
     if (debugMode) {
       std::cout << std::setprecision(10) << "Old track parameters: \n"
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * UnitConstants::T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);

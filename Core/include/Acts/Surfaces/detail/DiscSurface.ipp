@@ -6,17 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline const Vector2D DiscSurface::localPolarToCartesian(
+inline Vector2D DiscSurface::localPolarToCartesian(
     const Vector2D& lpolar) const {
-  return Vector2D(lpolar[eLOC_R] * cos(lpolar[eLOC_PHI]),
-                  lpolar[eLOC_R] * sin(lpolar[eLOC_PHI]));
+  return Vector2D(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
+                  lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
 }
 
-inline const Vector2D DiscSurface::localCartesianToPolar(
+inline Vector2D DiscSurface::localCartesianToPolar(
     const Vector2D& lcart) const {
-  return Vector2D(
-      sqrt(lcart[eLOC_X] * lcart[eLOC_X] + lcart[eLOC_Y] * lcart[eLOC_Y]),
-      atan2(lcart[eLOC_Y], lcart[eLOC_X]));
+  return Vector2D(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
+                       lcart[eBoundLoc1] * lcart[eBoundLoc1]),
+                  atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
@@ -44,28 +44,28 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   const auto rframe = referenceFrame(gctx, position, direction);
 
   // special polar coordinates for the Disc
-  double lrad = pars[eLOC_0];
-  double lphi = pars[eLOC_1];
+  double lrad = pars[eBoundLoc0];
+  double lphi = pars[eBoundLoc1];
   double lcos_phi = cos(lphi);
   double lsin_phi = sin(lphi);
   // the local error components - rotated from reference frame
-  jacobian.block<3, 1>(0, eLOC_0) =
+  jacobian.block<3, 1>(0, eBoundLoc0) =
       lcos_phi * rframe.block<3, 1>(0, 0) + lsin_phi * rframe.block<3, 1>(0, 1);
-  jacobian.block<3, 1>(0, eLOC_1) =
+  jacobian.block<3, 1>(0, eBoundLoc1) =
       lrad * (lcos_phi * rframe.block<3, 1>(0, 1) -
               lsin_phi * rframe.block<3, 1>(0, 0));
   // the time component
-  jacobian(3, eT) = 1;
+  jacobian(3, eBoundTime) = 1;
   // the momentum components
-  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(4, eTHETA) = cos_theta * cos_phi;
-  jacobian(5, ePHI) = sin_theta * cos_phi;
-  jacobian(5, eTHETA) = cos_theta * sin_phi;
-  jacobian(6, eTHETA) = (-sin_theta);
-  jacobian(7, eQOP) = 1;
+  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
+  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
+  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
+  jacobian(6, eBoundTheta) = (-sin_theta);
+  jacobian(7, eBoundQOverP) = 1;
 }
 
-inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
+inline RotationMatrix3D DiscSurface::initJacobianToLocal(
     const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
     const Vector3D& position, const Vector3D& direction) const {
   using VectorHelpers::perp;
@@ -95,14 +95,14 @@ inline const RotationMatrix3D DiscSurface::initJacobianToLocal(
   jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
   jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
   // Time element
-  jacobian(eT, 3) = 1;
+  jacobian(eBoundTime, 3) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 4) = -sinPhi * invSinTheta;
-  jacobian(ePHI, 5) = cosPhi * invSinTheta;
-  jacobian(eTHETA, 4) = cosPhi * cosTheta;
-  jacobian(eTHETA, 5) = sinPhi * cosTheta;
-  jacobian(eTHETA, 6) = -sinTheta;
-  jacobian(eQOP, 7) = 1;
+  jacobian(eBoundPhi, 4) = -sinPhi * invSinTheta;
+  jacobian(eBoundPhi, 5) = cosPhi * invSinTheta;
+  jacobian(eBoundTheta, 4) = cosPhi * cosTheta;
+  jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
+  jacobian(eBoundTheta, 6) = -sinTheta;
+  jacobian(eBoundQOverP, 7) = 1;
   // return the transposed reference frame
   return rframeT;
 }
@@ -125,7 +125,7 @@ inline SurfaceIntersection DiscSurface::intersect(
         tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
         m_bounds->coversFullAzimuth()) {
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eLOC_R];
+      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc0];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                            tolerance)) {
         intersection.status = Intersection3D::Status::missed;
@@ -137,7 +137,7 @@ inline SurfaceIntersection DiscSurface::intersect(
   return {intersection, this};
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 DiscSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;
@@ -157,15 +157,15 @@ DiscSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline const Vector3D DiscSurface::normal(const GeometryContext& gctx,
-                                          const Vector2D& /*unused*/) const {
+inline Vector3D DiscSurface::normal(const GeometryContext& gctx,
+                                    const Vector2D& /*unused*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D DiscSurface::binningPosition(const GeometryContext& gctx,
-                                                   BinningValue bValue) const {
+inline Vector3D DiscSurface::binningPosition(const GeometryContext& gctx,
+                                             BinningValue bValue) const {
   if (bValue == binR) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();

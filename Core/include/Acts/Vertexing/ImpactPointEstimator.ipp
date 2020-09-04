@@ -195,11 +195,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
                            Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
-  double d0 = trkParams.parameters()[ParID_t::eLOC_D0];
-  double z0 = trkParams.parameters()[ParID_t::eLOC_Z0];
-  double phi = trkParams.parameters()[ParID_t::ePHI];
-  double theta = trkParams.parameters()[ParID_t::eTHETA];
-  double qOvP = trkParams.parameters()[ParID_t::eQOP];
+  double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
+  double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
+  double phi = trkParams.parameters()[BoundIndices::eBoundPhi];
+  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
 
   double sinTheta = std::sin(theta);
 
@@ -275,10 +275,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   const auto& propRes = *result;
   const auto& params = propRes.endParameters->parameters();
-  const double d0 = params[ParID_t::eLOC_D0];
-  const double z0 = params[ParID_t::eLOC_Z0];
-  const double phi = params[ParID_t::ePHI];
-  const double theta = params[ParID_t::eTHETA];
+  const double d0 = params[BoundIndices::eBoundLoc0];
+  const double z0 = params[BoundIndices::eBoundLoc1];
+  const double phi = params[BoundIndices::eBoundPhi];
+  const double theta = params[BoundIndices::eBoundTheta];
 
   const double sinPhi = std::sin(phi);
   const double sinTheta = std::sin(theta);
@@ -297,20 +297,25 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   newIPandSigma.IPd0 = d0;
   double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
   if (d0_PVcontrib >= 0) {
-    newIPandSigma.sigmad0 = std::sqrt(
-        d0_PVcontrib + perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
+    newIPandSigma.sigmad0 =
+        std::sqrt(d0_PVcontrib + perigeeCov(BoundIndices::eBoundLoc0,
+                                            BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
-    newIPandSigma.sigmad0 =
-        std::sqrt(perigeeCov(ParID_t::eLOC_D0, ParID_t::eLOC_D0));
+    newIPandSigma.sigmad0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = 0;
   }
 
   SymMatrix2D covPerigeeZ0Theta;
-  covPerigeeZ0Theta(0, 0) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0);
-  covPerigeeZ0Theta(0, 1) = perigeeCov(ParID_t::eLOC_Z0, ParID_t::eTHETA);
-  covPerigeeZ0Theta(1, 0) = perigeeCov(ParID_t::eTHETA, ParID_t::eLOC_Z0);
-  covPerigeeZ0Theta(1, 1) = perigeeCov(ParID_t::eTHETA, ParID_t::eTHETA);
+  covPerigeeZ0Theta(0, 0) =
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
+  covPerigeeZ0Theta(0, 1) =
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTheta);
+  covPerigeeZ0Theta(1, 0) =
+      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundLoc1);
+  covPerigeeZ0Theta(1, 1) =
+      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundTheta);
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
@@ -325,7 +330,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
     newIPandSigma.IPz0 = z0;
     newIPandSigma.sigmaz0 =
-        std::sqrt(vtxZZCov + perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+        std::sqrt(vtxZZCov + perigeeCov(BoundIndices::eBoundLoc1,
+                                        BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     // Remove contribution from PV
@@ -336,8 +342,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmaz0SinTheta = 0;
 
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 =
-        std::sqrt(perigeeCov(ParID_t::eLOC_Z0, ParID_t::eLOC_Z0));
+    newIPandSigma.sigmaz0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = 0;
   }
 

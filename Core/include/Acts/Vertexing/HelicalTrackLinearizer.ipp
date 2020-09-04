@@ -56,17 +56,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   // phiV and functions
-  double phiV = paramsAtPCA(ParID_t::ePHI);
+  double phiV = paramsAtPCA(BoundIndices::eBoundPhi);
   double sinPhiV = std::sin(phiV);
   double cosPhiV = std::cos(phiV);
 
   // theta and functions
-  double th = paramsAtPCA(ParID_t::eTHETA);
+  double th = paramsAtPCA(BoundIndices::eBoundTheta);
   const double sinTh = std::sin(th);
   const double tanTh = std::tan(th);
 
   // q over p
-  double qOvP = paramsAtPCA(ParID_t::eQOP);
+  double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
   double sgnH = (qOvP < 0.) ? -1 : 1;
 
   Vector3D momentumAtPCA(phiV, th, qOvP);
@@ -116,7 +116,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  ActsMatrix<BoundParametersScalar, eBoundParametersSize, 4> positionJacobian;
+  ActsMatrix<BoundScalar, eBoundSize, 4> positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;
@@ -138,7 +138,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(5, 3) = 1;
 
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  ActsMatrixD<eBoundParametersSize, 3> momentumJacobian;
+  ActsMatrixD<eBoundSize, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;

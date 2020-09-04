@@ -107,29 +107,28 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance =
-            new ActsSymMatrixD<eBoundParametersSize>(*pars.covariance());
+        covariance = new ActsSymMatrixD<eBoundSize>(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
             geoContext, pos, pars.momentum());
 
-        pVector[8] = transform(0, eLOC_0);
-        pVector[16] = transform(0, eLOC_1);
+        pVector[8] = transform(0, eBoundLoc0);
+        pVector[16] = transform(0, eBoundLoc1);
         pVector[24] = 0.;
         pVector[32] = 0.;
         pVector[40] = 0.;
         pVector[48] = 0.;  // dX /
 
-        pVector[9] = transform(1, eLOC_0);
-        pVector[17] = transform(1, eLOC_1);
+        pVector[9] = transform(1, eBoundLoc0);
+        pVector[17] = transform(1, eBoundLoc1);
         pVector[25] = 0.;
         pVector[33] = 0.;
         pVector[41] = 0.;
         pVector[49] = 0.;  // dY /
 
-        pVector[10] = transform(2, eLOC_0);
-        pVector[18] = transform(2, eLOC_1);
+        pVector[10] = transform(2, eBoundLoc0);
+        pVector[18] = transform(2, eBoundLoc1);
         pVector[26] = 0.;
         pVector[34] = 0.;
         pVector[42] = 0.;
@@ -268,11 +267,11 @@ class AtlasStepper {
     /// Cache: P[56] - P[59]
 
     // result
-    double parameters[eBoundParametersSize] = {0., 0., 0., 0., 0., 0.};
+    double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
-    double jacobian[eBoundParametersSize * eBoundParametersSize];
+    double jacobian[eBoundSize * eBoundSize];
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -336,22 +335,22 @@ class AtlasStepper {
     Se = sin(boundParams[eBoundTheta]);
     Ce = cos(boundParams[eBoundTheta]);
 
-    state.pVector[8] = transform(0, eLOC_0);
-    state.pVector[16] = transform(0, eLOC_1);
+    state.pVector[8] = transform(0, eBoundLoc0);
+    state.pVector[16] = transform(0, eBoundLoc1);
     state.pVector[24] = 0.;
     state.pVector[32] = 0.;
     state.pVector[40] = 0.;
     state.pVector[48] = 0.;  // dX /
 
-    state.pVector[9] = transform(1, eLOC_0);
-    state.pVector[17] = transform(1, eLOC_1);
+    state.pVector[9] = transform(1, eBoundLoc0);
+    state.pVector[17] = transform(1, eBoundLoc1);
     state.pVector[25] = 0.;
     state.pVector[33] = 0.;
     state.pVector[41] = 0.;
     state.pVector[49] = 0.;  // dY /
 
-    state.pVector[10] = transform(2, eLOC_0);
-    state.pVector[18] = transform(2, eLOC_1);
+    state.pVector[10] = transform(2, eBoundLoc0);
+    state.pVector[18] = transform(2, eBoundLoc1);
     state.pVector[26] = 0.;
     state.pVector[34] = 0.;
     state.pVector[42] = 0.;
@@ -643,7 +642,7 @@ class AtlasStepper {
 
     // prepare the jacobian if we have a covariance
     // copy the covariance matrix
-    state.covariance = new ActsSymMatrixD<eBoundParametersSize>(covariance);
+    state.covariance = new ActsSymMatrixD<eBoundSize>(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -815,8 +814,7 @@ class AtlasStepper {
     state.jacobian[34] = P[43];  // dT/dCM
     state.jacobian[35] = P[51];  // dT/dT
 
-    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
-                             Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }
@@ -1073,8 +1071,7 @@ class AtlasStepper {
     state.jacobian[34] = state.pVector[43];  // dT/dCM
     state.jacobian[35] = state.pVector[51];  // dT/dT
 
-    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
-                             Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }

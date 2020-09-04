@@ -50,7 +50,6 @@ class ImpactPointEstimator {
     typename BField_t::Cache fieldCache;
   };
 
-  /// @struct Configuration struct
   struct Config {
     /// @brief Config constructor if magnetic field is present
     ///

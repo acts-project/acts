@@ -672,8 +672,7 @@ class Navigator {
 
         /*
         Vector3D pos = stepper.position(state.stepping);
-        double mom =
-            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+        double mom = stepper.momentum(state.stepping) / UnitConstants::GeV;
         double q = stepper.charge(state.stepping);
         Vector3D dir = stepper.direction(state.stepping);
         Vector3D B = stepper.getField(state.stepping, pos);

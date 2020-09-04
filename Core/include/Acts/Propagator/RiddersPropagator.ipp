@@ -37,10 +37,10 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
-  std::array<std::vector<BoundVector>, eBoundParametersSize> derivatives;
+  std::array<std::vector<BoundVector>, eBoundSize> derivatives;
 
   // Wiggle each dimension individually
-  for (unsigned int i = 0; i < eBoundParametersSize; i++) {
+  for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
         wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
   }
@@ -97,10 +97,10 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   opts.pathLimit *= 2.;
 
   // Derivations of each parameter around the nominal parameters
-  std::array<std::vector<BoundVector>, eBoundParametersSize> derivatives;
+  std::array<std::vector<BoundVector>, eBoundSize> derivatives;
 
   // Wiggle each dimension individually
-  for (unsigned int i = 0; i < eBoundParametersSize; i++) {
+  for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
         wiggleDimension(opts, start, i, target, nominalParameters, deviations);
   }
@@ -163,8 +163,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
     // Treatment for theta
-    if (param == eTHETA) {
-      const double current_theta = startPars.template get<eTHETA>();
+    if (param == eBoundTheta) {
+      const double current_theta = startPars.template get<eBoundTheta>();
       if (current_theta + h > M_PI) {
         h = M_PI - current_theta;
       }
@@ -186,12 +186,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
     // Correct for a possible variation of phi around
     if (param == 2) {
-      double phi0 = nominal(Acts::ePHI);
-      double phi1 = r.endParameters->parameters()(Acts::ePHI);
+      double phi0 = nominal(Acts::eBoundPhi);
+      double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
       if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-        derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+        derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
       else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-        derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+        derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
     }
   }
   return derivatives;
@@ -199,18 +199,18 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
 template <typename propagator_t>
 auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
-    const std::array<std::vector<Acts::BoundVector>,
-                     Acts::eBoundParametersSize>& derivatives,
+    const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
+        derivatives,
     const Acts::BoundSymMatrix& startCov,
     const std::vector<double>& deviations) const -> const Covariance {
   Jacobian jacobian;
   jacobian.setIdentity();
-  jacobian.col(eLOC_0) = fitLinear(derivatives[eLOC_0], deviations);
-  jacobian.col(eLOC_1) = fitLinear(derivatives[eLOC_1], deviations);
-  jacobian.col(ePHI) = fitLinear(derivatives[ePHI], deviations);
-  jacobian.col(eTHETA) = fitLinear(derivatives[eTHETA], deviations);
-  jacobian.col(eQOP) = fitLinear(derivatives[eQOP], deviations);
-  jacobian.col(eT) = fitLinear(derivatives[eT], deviations);
+  jacobian.col(eBoundLoc0) = fitLinear(derivatives[eBoundLoc0], deviations);
+  jacobian.col(eBoundLoc1) = fitLinear(derivatives[eBoundLoc1], deviations);
+  jacobian.col(eBoundPhi) = fitLinear(derivatives[eBoundPhi], deviations);
+  jacobian.col(eBoundTheta) = fitLinear(derivatives[eBoundTheta], deviations);
+  jacobian.col(eBoundQOverP) = fitLinear(derivatives[eBoundQOverP], deviations);
+  jacobian.col(eBoundTime) = fitLinear(derivatives[eBoundTime], deviations);
   return jacobian * startCov * jacobian.transpose();
 }
 

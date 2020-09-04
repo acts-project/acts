@@ -35,7 +35,7 @@ struct residual_calculator_impl;
 
 template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator {
-  using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
+  using ParVector_t = ActsVector<BoundScalar, sizeof...(params)>;
 
   static ParVector_t result(const ParVector_t& test, const ParVector_t& ref) {
     ParVector_t result;

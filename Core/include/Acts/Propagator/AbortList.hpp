@@ -104,7 +104,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   bool operator()(const result_t& result, propagator_state_t& state,
                   const stepper_t& stepper) const {
     // clang-format off
-    static_assert(detail::all_of_v<concept::abort_condition_signature_check_v<
+    static_assert(detail::all_of_v<Concepts::abort_condition_signature_check_v<
                         aborters_t,
                         propagator_state_t, stepper_t>...>,
                   "not all aborters support the specified input");

@@ -64,8 +64,8 @@ fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
                                    std::array<size_t, 2> nBinsRZ)>
                   localToGlobalBin,
               std::string fieldMapFile = "",
-              double lengthUnit = Acts::units::_mm,
-              double BFieldUnit = Acts::units::_T, size_t nPoints = 1000,
+              double lengthUnit = Acts::UnitConstants::mm,
+              double BFieldUnit = Acts::UnitConstants::T, size_t nPoints = 1000,
               bool firstOctant = false);
 
 /// Method to setup the FieldMapper
@@ -118,9 +118,9 @@ fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                                     std::array<size_t, 3> nBinsXYZ)>
                    localToGlobalBin,
                std::string fieldMapFile = "",
-               double lengthUnit = Acts::units::_mm,
-               double BFieldUnit = Acts::units::_T, size_t nPoints = 1000,
-               bool firstOctant = false);
+               double lengthUnit = Acts::UnitConstants::mm,
+               double BFieldUnit = Acts::UnitConstants::T,
+               size_t nPoints = 1000, bool firstOctant = false);
 }  // namespace txt
 
 namespace root {
@@ -165,8 +165,9 @@ fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
                                    std::array<size_t, 2> nBinsRZ)>
                   localToGlobalBin,
               std::string fieldMapFile = "", std::string treeName = "",
-              double lengthUnit = Acts::units::_mm,
-              double BFieldUnit = Acts::units::_T, bool firstOctant = false);
+              double lengthUnit = Acts::UnitConstants::mm,
+              double BFieldUnit = Acts::UnitConstants::T,
+              bool firstOctant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -214,8 +215,9 @@ fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                                     std::array<size_t, 3> nBinsXYZ)>
                    localToGlobalBin,
                std::string fieldMapFile = "", std::string treeName = "",
-               double lengthUnit = Acts::units::_mm,
-               double BFieldUnit = Acts::units::_T, bool firstOctant = false);
+               double lengthUnit = Acts::UnitConstants::mm,
+               double BFieldUnit = Acts::UnitConstants::T,
+               bool firstOctant = false);
 }  // namespace root
 
 }  // namespace BField

@@ -37,7 +37,7 @@ template <class T>
 using phi_method_t = decltype(std::declval<const T>().phi());
 
 template <class T>
-using has_phi_method = concept ::is_detected<phi_method_t, T>;
+using has_phi_method = Concepts ::is_detected<phi_method_t, T>;
 
 }  // namespace detail
 

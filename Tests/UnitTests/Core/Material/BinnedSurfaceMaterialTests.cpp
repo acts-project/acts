@@ -25,12 +25,12 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
   xyBinning += BinUtility(3, -3., 3., open, binY);
 
   // Constructor a few material properties
-  MaterialProperties a00(1., 2., 3., 4., 5., 6.);
-  MaterialProperties a01(2., 3., 4., 5., 6., 7.);
-  MaterialProperties a02(3., 4., 5., 6., 7., 8.);
-  MaterialProperties a10(4., 5., 6., 7., 8., 9.);
-  MaterialProperties a11(5., 6., 7., 8., 9., 10.);
-  MaterialProperties a12(6., 7., 8., 9., 10., 11.);
+  MaterialProperties a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
+  MaterialProperties a01(Material::fromMolarDensity(2., 3., 4., 5., 6.), 7.);
+  MaterialProperties a02(Material::fromMolarDensity(3., 4., 5., 6., 7.), 8.);
+  MaterialProperties a10(Material::fromMolarDensity(4., 5., 6., 7., 8.), 9.);
+  MaterialProperties a11(Material::fromMolarDensity(5., 6., 7., 8., 9.), 10.);
+  MaterialProperties a12(Material::fromMolarDensity(6., 7., 8., 9., 10.), 11.);
 
   // Prepare the matrix
   std::vector<MaterialProperties> l0 = {std::move(a00), std::move(a10)};

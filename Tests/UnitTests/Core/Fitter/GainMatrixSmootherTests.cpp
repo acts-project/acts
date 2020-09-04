@@ -25,9 +25,8 @@ namespace Test {
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 using SourceLink = MinimalSourceLink;
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -44,17 +43,17 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas1(
-      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane1, {}, std::move(cov), -0.1, 0.45));
 
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas2(
-      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane2, {}, std::move(cov), -0.2, 0.35));
 
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas3(
-      MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane3, {}, std::move(cov), -0.05, 0.25));
 
   MultiTrajectory<SourceLink> traj;

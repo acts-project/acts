@@ -175,25 +175,28 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
       alignedSurface.isOnSurface(positiveContext, onPositive, dummyMomentum));
 
   // Test local to Global and vice versa
-  alignedSurface.localToGlobal(defaultContext, localPosition, dummyMomentum,
-                               globalPosition);
+  globalPosition = alignedSurface.localToGlobal(defaultContext, localPosition,
+                                                dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onNominal);
-  alignedSurface.globalToLocal(defaultContext, onNominal, dummyMomentum,
-                               localPosition);
+  localPosition =
+      alignedSurface.globalToLocal(defaultContext, onNominal, dummyMomentum)
+          .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
 
-  alignedSurface.localToGlobal(negativeContext, localPosition, dummyMomentum,
-                               globalPosition);
+  globalPosition = alignedSurface.localToGlobal(negativeContext, localPosition,
+                                                dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onNegative);
-  alignedSurface.globalToLocal(negativeContext, onNegative, dummyMomentum,
-                               localPosition);
+  localPosition =
+      alignedSurface.globalToLocal(negativeContext, onNegative, dummyMomentum)
+          .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
 
-  alignedSurface.localToGlobal(positiveContext, localPosition, dummyMomentum,
-                               globalPosition);
+  globalPosition = alignedSurface.localToGlobal(positiveContext, localPosition,
+                                                dummyMomentum);
   BOOST_CHECK_EQUAL(globalPosition, onPositive);
-  alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum,
-                               localPosition);
+  localPosition =
+      alignedSurface.globalToLocal(positiveContext, onPositive, dummyMomentum)
+          .value();
   BOOST_CHECK_EQUAL(localPosition, Vector2D(3., 3.));
 }
 

@@ -37,9 +37,9 @@ struct EventDataView3D {
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
       const ActsSymMatrixD<2>& covariance) {
-    double c00 = covariance(eLOC_0, eLOC_0);
-    double c01 = covariance(eLOC_0, eLOC_1);
-    double c11 = covariance(eLOC_1, eLOC_1);
+    double c00 = covariance(eBoundLoc0, eBoundLoc0);
+    double c01 = covariance(eBoundLoc0, eBoundLoc1);
+    double c11 = covariance(eBoundLoc1, eBoundLoc1);
 
     double cdsq = std::pow((c00 - c11), 2) / 4.;
     double cosq = c01 * c01;

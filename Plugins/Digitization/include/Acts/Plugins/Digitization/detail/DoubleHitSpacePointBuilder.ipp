@@ -318,7 +318,8 @@ Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
+  Acts::Vector2D local(par[Acts::BoundIndices::eBoundLoc0],
+                       par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
@@ -329,10 +330,8 @@ Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
   auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
-  Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
-
-  return pos;
+  Vector3D mom(1., 1., 1.);
+  return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
 }
 
 template <typename Cluster>
@@ -398,10 +397,12 @@ Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::endsOfStrip(
       detail::findLocalTopAndBottomEnd(local, segment);
 
   // Calculate the global coordinates of the top and bottom end of the strip
-  Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
+  Acts::Vector3D mom(1., 1., 1);  // mom is a dummy variable
   const auto* sur = &cluster.referenceObject();
-  sur->localToGlobal(gctx, topBottomLocal.first, mom, topGlobal);
-  sur->localToGlobal(gctx, topBottomLocal.second, mom, bottomGlobal);
+  Acts::Vector3D topGlobal =
+      sur->localToGlobal(gctx, topBottomLocal.first, mom);
+  Acts::Vector3D bottomGlobal =
+      sur->localToGlobal(gctx, topBottomLocal.second, mom);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
