@@ -163,8 +163,8 @@ class LineSurface : public Surface {
   /// memory allocation
   ///
   /// This method is the true global->local transformation.<br>
-  /// makes use of globalToLocal and indicates the sign of the Acts::eLOC_R by
-  /// the given momentum
+  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
+  /// by the given momentum
   ///
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>
@@ -176,7 +176,7 @@ class LineSurface : public Surface {
   /// lies within the so
   /// called measurement plane.
   /// The measurement plane is determined by the two orthogonal vectors \f$
-  /// \vec{measY}= \vec{Acts::eLOC_Z} \f$
+  /// \vec{measY}= \vec{Acts::eBoundLoc1} \f$
   /// and \f$ \vec{measX} = \vec{measY} \times \frac{\vec{p}}{|\vec{p}|}
   /// \f$.<br>
   ///

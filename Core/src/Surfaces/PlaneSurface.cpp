@@ -80,7 +80,7 @@ Acts::Vector3D Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*unused*/) const {
   return transform(gctx) *
-         Vector3D(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+         Vector3D(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2D> Acts::PlaneSurface::globalToLocal(
