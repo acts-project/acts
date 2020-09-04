@@ -13,9 +13,9 @@
 #include <ostream>
 
 void Acts::detail::printBoundTrackParameters(std::ostream& os,
-                                        const Acts::Surface& surface,
-                                        const Acts::BoundVector& params,
-                                        const Acts::BoundSymMatrix* cov) {
+                                             const Acts::Surface& surface,
+                                             const Acts::BoundVector& params,
+                                             const Acts::BoundSymMatrix* cov) {
   // Set stream output format
   auto oldPrecision = os.precision(7);
   auto oldFlags = os.setf(std::ios::fixed);
