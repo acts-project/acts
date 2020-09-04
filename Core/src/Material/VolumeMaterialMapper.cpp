@@ -258,8 +258,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
                                           mTrack.first.second, 0.);
 
   // Prepare Action list and abort list
-  using BoundSurfaceCollector = SurfaceCollector<BoundSurface>;
-  using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
+  using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;
+  using MaterialVolumeCollector = VolumeCollector<MaterialVolumeSelector>;
   using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 

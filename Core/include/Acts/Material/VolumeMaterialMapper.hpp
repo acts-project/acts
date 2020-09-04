@@ -61,20 +61,6 @@ class VolumeMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-  /// @brief selector for finding surface
-  struct BoundSurface {
-    bool operator()(const Surface& sf) const {
-      return (sf.geometryId().boundary() != 0);
-    }
-  };
-
-  /// @brief selector for finding
-  struct MaterialVolume {
-    bool operator()(const TrackingVolume& vf) const {
-      return (vf.volumeMaterial() != nullptr);
-    }
-  };
-
   /// @struct Config
   ///
   /// Nested Configuration struct for the material mapper
@@ -154,6 +140,20 @@ class VolumeMaterialMapper {
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
+  /// @brief selector for finding surface
+  struct BoundSurfaceSelector {
+    bool operator()(const Surface& sf) const {
+      return (sf.geometryId().boundary() != 0);
+    }
+  };
+
+  /// @brief selector for finding
+  struct MaterialVolumeSelector {
+    bool operator()(const TrackingVolume& vf) const {
+      return (vf.volumeMaterial() != nullptr);
+    }
+  };
+
   /// @brief finds all surfaces with ProtoVolumeMaterial of a volume
   ///
   /// @param mState The state to be filled
@@ -174,7 +174,7 @@ class VolumeMaterialMapper {
   void collectMaterialSurfaces(State& /*mState*/,
                                const TrackingVolume& tVolume) const;
 
-  /// @brief Create extra material point for the mapping
+  /// Create extra material point for the mapping
   ///
   /// @param matPoint RecordedMaterialVolumePoint where the extra hit are stored
   /// @param properties material properties of the original hit
