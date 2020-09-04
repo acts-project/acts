@@ -8,6 +8,8 @@
 
 #include "CommandLineArguments.h"
 
+#include "Acts/Plugins/Sycl/Utilities/ListPlatforms.hpp"
+
 #include <fstream>
 #include <iostream>
 
@@ -15,12 +17,6 @@
 #include <boost/type_erasure/any_cast.hpp>
 
 namespace po = boost::program_options;
-
-namespace Acts {
-namespace Sycl {
-extern void listPlatforms();
-}
-}  // namespace Acts
 
 void CommandLineArguments::parse(int argc, char** argv) {
   po::options_description optionsDescription("Allowed options");
@@ -34,7 +30,8 @@ void CommandLineArguments::parse(int argc, char** argv) {
       "LIST,l", "List available SYCL platforms and devices.")(
       "GPU,G", po::bool_switch(), "Execute code only on gpu. Default is 0.")(
       "ALL,a", po::bool_switch(), "Analyze all groups. Default is 0.")(
-      "MATCH,m", po::bool_switch(), "Count seed matches. Default is 0.");
+      "MATCH,m", po::bool_switch(), "Count seed matches. Default is 0.")(
+      "CSV,c", po::bool_switch(), "Output results in csv format");
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, optionsDescription), vm);
@@ -55,7 +52,8 @@ void CommandLineArguments::parse(int argc, char** argv) {
   groups = vm["NUM"].as<unsigned int>();
   deviceName = vm["DEVICE"].as<std::string>();
   allgroup = vm["ALL"].as<bool>();
-  filename = vm["FILE"].as<std::string>();
-  std::ifstream s(filename);
-  fileExists = s.good();
+  csvFormat = vm["CSV"].as<bool>();
+  inpFileName = vm["FILE"].as<std::string>();
+  std::ifstream s(inpFileName);
+  inpFileExists = s.good();
 }

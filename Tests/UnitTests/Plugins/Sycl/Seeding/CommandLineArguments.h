@@ -16,7 +16,10 @@ struct CommandLineArguments {
   bool onlyGpu = false;
   bool matches = false;
   unsigned int groups = 500;
-  bool fileExists = false;
+  bool inpFileExists = false;
+  bool dirExists = false;
+  bool outFileExists = false;
   std::string deviceName = "";
-  std::string filename = "";
+  std::string inpFileName = "";
+  bool csvFormat = false;
 };

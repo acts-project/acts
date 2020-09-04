@@ -59,6 +59,11 @@ QueueWrapper& QueueWrapper::operator=(QueueWrapper&& rhs) noexcept {
 };
 
 QueueWrapper& QueueWrapper::operator=(const QueueWrapper& other) {
+  // Check whether we have to do anything
+  if (this == &other) {
+    return *this;
+  }
+
   m_queue = other.m_queue;
   m_ownsQueue = false;
   return *this;

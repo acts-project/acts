@@ -125,12 +125,12 @@ auto main(int argc, char** argv) -> int {
   CommandLineArguments cmdlTool;
   cmdlTool.parse(argc, argv);
 
-  if (!cmdlTool.fileExists) {
-    std::cerr << "File not found\n";
+  if (!cmdlTool.inpFileName.empty() && !cmdlTool.inpFileExists) {
+    std::cerr << "Input file not found\n";
     return -1;
   }
 
-  auto spVec = readFile(cmdlTool.filename);
+  auto spVec = readFile(cmdlTool.inpFileName);
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>());
@@ -159,15 +159,16 @@ auto main(int argc, char** argv) -> int {
       spVec.begin(), spVec.end(), covarianceTool, bottomBinFinder, topBinFinder,
       std::move(grid), config);
 
-  std::cout << "read " << spVec.size() << " SP from file " << cmdlTool.filename
-            << std::endl;
-
   auto end_prep = std::chrono::system_clock::now();
 
   std::chrono::duration<double> elapsec_prep = end_prep - start_prep;
   double prepTime = elapsec_prep.count();
 
-  std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
+  if (!cmdlTool.csvFormat) {
+    std::cout << "read " << spVec.size() << " SP from file "
+              << cmdlTool.inpFileName << std::endl;
+    std::cout << "Preparation time: " << std::to_string(prepTime) << std::endl;
+  }
 
   // -------------------------------------- //
   // ----------- EXECUTE ON CPU ----------- //
@@ -191,7 +192,9 @@ auto main(int argc, char** argv) -> int {
 
   auto end_cpu = std::chrono::system_clock::now();
 
-  std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
+  if (!cmdlTool.csvFormat) {
+    std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
+  }
 
   // -------------------------------------- //
   // -------- EXECUTE ON GPU - SYCL ------- //
@@ -212,7 +215,9 @@ auto main(int argc, char** argv) -> int {
   }
   auto end_sycl = std::chrono::system_clock::now();
 
-  std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
+  if (!cmdlTool.csvFormat) {
+    std::cout << "Analyzed " << group_count << " groups for SYCL" << std::endl;
+  }
 
   std::chrono::duration<double> elapsec_cpu = end_cpu - start_cpu;
   double cpuTime = elapsec_cpu.count();
@@ -221,34 +226,20 @@ auto main(int argc, char** argv) -> int {
   double syclTime = elapsec_sycl.count();
 
   auto textWidth = 20;
-  auto numWidth = 13;
+  auto numWidth = 11;
 
-  std::cout << std::endl;
-  std::cout
-      << "--------------------------- Time Metric ---------------------------"
-      << std::endl;
-  std::cout << std::setw(textWidth) << " Device:";
-  std::cout << std::setw(numWidth) << "CPU";
-  std::cout << std::setw(numWidth) << "GPU (SYCL)";
-  std::cout << std::setw(textWidth) << "Speedup/ Agreement" << std::endl;
-  std::cout << std::setw(textWidth) << " Time (s):";
-  std::cout << std::setw(numWidth) << std::to_string(cpuTime);
-  std::cout << std::setw(numWidth) << std::to_string(syclTime);
-  std::cout << std::setw(textWidth) << std::to_string(cpuTime / syclTime);
-  std::cout << std::endl;
+  int nSeed_cpu = 0;
+  int nSeed_sycl = 0;
+  int nMatch = 0;
 
   if (cmdlTool.matches && !cmdlTool.onlyGpu) {
-    int nSeed_cpu = 0;
     for (auto& outVec : seedVector_cpu) {
       nSeed_cpu += outVec.size();
     }
 
-    int nSeed_sycl = 0;
     for (auto& outVec : seedVector_sycl) {
       nSeed_sycl += outVec.size();
     }
-
-    int nMatch = 0;
 
     for (size_t i = 0; i < seedVector_cpu.size(); i++) {
       auto regionVec_cpu = seedVector_cpu[i];
@@ -257,14 +248,14 @@ auto main(int argc, char** argv) -> int {
       std::vector<std::vector<SpacePoint>> seeds_cpu;
       std::vector<std::vector<SpacePoint>> seeds_sycl;
 
-      for (auto sd : regionVec_cpu) {
+      for (const auto& sd : regionVec_cpu) {
         std::vector<SpacePoint> seed_cpu;
         seed_cpu.push_back(*(sd.sp()[0]));
         seed_cpu.push_back(*(sd.sp()[1]));
         seed_cpu.push_back(*(sd.sp()[2]));
         seeds_cpu.push_back(seed_cpu);
       }
-      for (auto sd : regionVec_sycl) {
+      for (const auto& sd : regionVec_sycl) {
         std::vector<SpacePoint> seed_sycl;
         seed_sycl.push_back(*(sd.sp()[0]));
         seed_sycl.push_back(*(sd.sp()[1]));
@@ -282,18 +273,40 @@ auto main(int argc, char** argv) -> int {
         }
       }
     }
-
-    std::cout << std::setw(textWidth) << " Seeds found:";
-    std::cout << std::setw(numWidth) << std::to_string(nSeed_cpu);
-    std::cout << std::setw(numWidth) << std::to_string(nSeed_sycl);
-    std::cout << std::setw(textWidth)
-              << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
-    std::cout << std::endl;
   }
 
-  std::cout
-      << "-------------------------------------------------------------------\n"
-      << std::endl;
+  if (!cmdlTool.csvFormat) {
+    std::cout << std::endl;
+    std::cout
+        << "------------------------- Time Metric -------------------------"
+        << std::endl;
+    std::cout << std::setw(textWidth) << " Device:";
+    std::cout << std::setw(numWidth) << "CPU";
+    std::cout << std::setw(numWidth) << "SYCL";
+    std::cout << std::setw(textWidth) << "Speedup/ Agreement" << std::endl;
+    std::cout << std::setw(textWidth) << " Time (s):";
+    std::cout << std::setw(numWidth) << std::to_string(cpuTime);
+    std::cout << std::setw(numWidth) << std::to_string(syclTime);
+    std::cout << std::setw(textWidth) << std::to_string(cpuTime / syclTime);
+    std::cout << std::endl;
+
+    if (cmdlTool.matches && !cmdlTool.onlyGpu) {
+      std::cout << std::setw(textWidth) << " Seeds found:";
+      std::cout << std::setw(numWidth) << std::to_string(nSeed_cpu);
+      std::cout << std::setw(numWidth) << std::to_string(nSeed_sycl);
+      std::cout << std::setw(textWidth)
+                << std::to_string(float(nMatch) / float(nSeed_cpu) * 100);
+      std::cout << std::endl;
+    }
+
+    std::cout
+        << "---------------------------------------------------------------"
+        << std::endl;
+    std::cout << std::endl;
+  } else {
+    std::cout << cpuTime << ',' << syclTime << ',' << cpuTime / syclTime << ','
+              << nSeed_cpu << ',' << nSeed_sycl << ',' << nMatch << '\n';
+  }
 
   for (const auto* S : spVec) {
     delete[] S;
