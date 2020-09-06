@@ -61,7 +61,9 @@ struct KalmanFitterOptions {
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
-  /// @param olCfg The config for the outlier finder
+  /// @param outlierFinder_ The outlier finder
+  /// @param logger_ The logger wrapper
+  /// @param pOPtions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
@@ -485,10 +487,11 @@ class KalmanFitter {
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.predicted() = std::move(boundParams.parameters());
+        trackStateProxy.predictedCovariance() =
+            std::move(*boundParams.covariance());
+        trackStateProxy.jacobian() = std::move(jacobian);
+        trackStateProxy.pathLength() = std::move(pathLength);
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measuerement
@@ -578,10 +581,11 @@ class KalmanFitter {
                 stepper.boundState(state.stepping, *surface);
 
             // Fill the track state
-            trackStateProxy.predicted() = boundParams.parameters();
-            trackStateProxy.predictedCovariance() = *boundParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
+            trackStateProxy.predicted() = std::move(boundParams.parameters());
+            trackStateProxy.predictedCovariance() =
+                std::move(*boundParams.covariance());
+            trackStateProxy.jacobian() = std::move(jacobian);
+            trackStateProxy.pathLength() = std::move(pathLength);
           } else {
             ACTS_VERBOSE("Detected in-sensitive surface "
                          << surface->geometryId());
@@ -591,11 +595,12 @@ class KalmanFitter {
                 stepper.curvilinearState(state.stepping);
 
             // Fill the track state
-            trackStateProxy.predicted() = curvilinearParams.parameters();
+            trackStateProxy.predicted() =
+                std::move(curvilinearParams.parameters());
             trackStateProxy.predictedCovariance() =
-                *curvilinearParams.covariance();
-            trackStateProxy.jacobian() = jacobian;
-            trackStateProxy.pathLength() = pathLength;
+                std::move(*curvilinearParams.covariance());
+            trackStateProxy.jacobian() = std::move(jacobian);
+            trackStateProxy.pathLength() = std::move(pathLength);
           }
 
           // Set the filtered parameter index to be the same with predicted
@@ -661,10 +666,11 @@ class KalmanFitter {
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
         // Fill the track state
-        trackStateProxy.predicted() = boundParams.parameters();
-        trackStateProxy.predictedCovariance() = *boundParams.covariance();
-        trackStateProxy.jacobian() = jacobian;
-        trackStateProxy.pathLength() = pathLength;
+        trackStateProxy.predicted() = std::move(boundParams.parameters());
+        trackStateProxy.predictedCovariance() =
+            std::move(*boundParams.covariance());
+        trackStateProxy.jacobian() = std::move(jacobian);
+        trackStateProxy.pathLength() = std::move(pathLength);
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measuerement
