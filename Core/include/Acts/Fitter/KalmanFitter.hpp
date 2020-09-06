@@ -70,13 +70,16 @@ struct KalmanFitterOptions {
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       const OutlierFinder& outlierFinder_,
-                      LoggerWrapper logger_, const Surface* rSurface = nullptr,
+                      LoggerWrapper logger_,
+                      const PropagatorPlainOptions& pOptions,
+                      const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
                       bool bwdFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         outlierFinder(outlierFinder_),
+        propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -92,6 +95,9 @@ struct KalmanFitterOptions {
 
   /// The config for the outlier finder
   OutlierFinder outlierFinder;
+
+  /// The trivial propagator options
+  PropagatorPlainOptions propagatorPlainOptions;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -948,6 +954,9 @@ class KalmanFitter {
     PropagatorOptions<Actors, Aborters> kalmanOptions(
         kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
+    // Set the trivial propagator options
+    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.inputMeasurements = std::move(inputMeasurements);
@@ -1036,6 +1045,9 @@ class KalmanFitter {
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
         kfOptions.geoContext, kfOptions.magFieldContext);
+
+    // Set the trivial propagator options
+    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();

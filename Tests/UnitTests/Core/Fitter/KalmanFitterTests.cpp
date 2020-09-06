@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
-      rSurface);
+      PropagatorPlainOptions(), rSurface);
 
   KalmanFitter kFitter(rPropagator);
 

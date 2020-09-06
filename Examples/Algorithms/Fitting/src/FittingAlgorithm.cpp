@@ -90,7 +90,8 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
     // Set the KalmanFitter options
     Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
         ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()}, &(*pSurface));
+        Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()},
+        Acts::PropagatorPlainOptions(), &(*pSurface));
 
     ACTS_DEBUG("Invoke fitter");
     auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
