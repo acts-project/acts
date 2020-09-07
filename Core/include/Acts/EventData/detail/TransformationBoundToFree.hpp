@@ -22,10 +22,10 @@ namespace detail {
 /// @param surface Surface onto which the input parameters are bound
 /// @param geoCtx Geometry context for the local-to-global transformation
 /// @param boundParams Bound track parameters vector
-/// @return Equivalent free track parameters vector
-FreeVector transformBoundToFreeTrackParameters(const Surface& surface,
-                                               const GeometryContext& geoCtx,
-                                               const BoundVector& boundParams);
+/// @return Equivalent free trackparameters vector
+FreeVector transformBoundToFreeParameters(const Surface& surface,
+                                          const GeometryContext& geoCtx,
+                                          const BoundVector& boundParams);
 
 }  // namespace detail
 }  // namespace Acts

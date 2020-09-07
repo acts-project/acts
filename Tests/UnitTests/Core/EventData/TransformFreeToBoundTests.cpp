@@ -40,7 +40,7 @@ BOOST_DATA_TEST_CASE(
   Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
 
   // convert to free parameters
-  BoundVector bv = detail::transformFreeToBoundTrackParameters(
+  BoundVector bv = detail::transformFreeToBoundParameters(
       pos, time, dir, qOverP, *surface, geoCtx);
 
   BOOST_TEST_INFO("Using surface " << surface->name());
@@ -62,7 +62,7 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearTrackParameters,
 
   // convert to free parameters
   BoundVector bv =
-      detail::transformFreeToCurvilinearTrackParameters(time, dir, qOverP);
+      detail::transformFreeToCurvilinearParameters(time, dir, qOverP);
 
   CHECK_SMALL(bv[eBoundLoc0], eps);
   CHECK_SMALL(bv[eBoundLoc1], eps);

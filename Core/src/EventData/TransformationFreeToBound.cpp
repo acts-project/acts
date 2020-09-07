@@ -12,7 +12,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-Acts::BoundVector Acts::detail::transformFreeToBoundTrackParameters(
+Acts::BoundVector Acts::detail::transformFreeToBoundParameters(
     const Acts::Vector3D& position, double time,
     const Acts::Vector3D& direction, double qOverP,
     const Acts::Surface& surface, const Acts::GeometryContext& geoCtx) {
@@ -36,7 +36,7 @@ Acts::BoundVector Acts::detail::transformFreeToBoundTrackParameters(
   return bp;
 }
 
-Acts::BoundVector Acts::detail::transformFreeToCurvilinearTrackParameters(
+Acts::BoundVector Acts::detail::transformFreeToCurvilinearParameters(
     double time, const Acts::Vector3D& direction, double qOverP) {
   BoundVector bp = BoundVector::Zero();
   // local coordinates are zero by construction

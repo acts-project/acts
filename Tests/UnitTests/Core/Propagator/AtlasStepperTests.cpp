@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   double charge = 1.;
   BoundSymMatrix cov = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp(cov, pos, mom, charge, time);
-  FreeVector freeParams = detail::transformBoundToFreeTrackParameters(
+  FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   NavigationDirection ndir = forward;
   double stepSize = -256.;

@@ -119,7 +119,7 @@ VolumeTrajectoryStateContainer trajectoryState(
 template <typename track_state_proxy_t>
 FreeVector freeFiltered(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::transformBoundToFreeTrackParameters(
+  return detail::transformBoundToFreeParameters(
       trackStateProxy.referenceSurface(), gctx, trackStateProxy.filtered());
 }
 
@@ -134,7 +134,7 @@ FreeVector freeFiltered(const GeometryContext& gctx,
 template <typename track_state_proxy_t>
 FreeVector freeSmoothed(const GeometryContext& gctx,
                         const track_state_proxy_t& trackStateProxy) {
-  return detail::transformBoundToFreeTrackParameters(
+  return detail::transformBoundToFreeParameters(
       trackStateProxy.referenceSurface(), gctx, trackStateProxy.smoothed());
 }
 }  // namespace MultiTrajectoryHelpers

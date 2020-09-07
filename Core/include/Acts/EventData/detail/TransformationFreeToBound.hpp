@@ -29,11 +29,11 @@ namespace detail {
 ///
 /// @warning The global position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
-BoundVector transformFreeToBoundTrackParameters(
+BoundVector transformFreeToBoundParameters(
     const Vector3D& position, double time, const Vector3D& direction,
     double qOverP, const Surface& surface, const GeometryContext& geoCtx);
 
-/// Convert global direction to bound curvilinear track parameters.
+/// Convert global direction to curvilinear track parameters.
 ///
 /// @param time Global track time
 /// @param direction Global direction three-vector; normalization is ignored.
@@ -43,9 +43,9 @@ BoundVector transformFreeToBoundTrackParameters(
 /// @note The parameters are assumed to be defined at the origin of the
 ///       curvilinear frame derived from the direction vector. The local
 ///       coordinates are zero by construction.
-BoundVector transformFreeToCurvilinearTrackParameters(double time,
-                                                      const Vector3D& direction,
-                                                      double qOverP);
+BoundVector transformFreeToCurvilinearParameters(double time,
+                                                 const Vector3D& direction,
+                                                 double qOverP);
 
 }  // namespace detail
 }  // namespace Acts
