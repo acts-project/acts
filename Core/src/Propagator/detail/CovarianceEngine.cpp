@@ -8,10 +8,9 @@
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
-
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 
 namespace Acts {
 namespace {
@@ -270,7 +269,7 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   pos4[ePos1] = parameters[eFreePos1];
   pos4[ePos2] = parameters[eFreePos2];
   pos4[eTime] = parameters[eFreeTime];
-  CurvilinearTrackParameters curvilinearParameters(
+  CurvilinearTrackParameters curvilinearParams(
       pos4, direction, parameters[eFreeQOverP], std::move(cov));
   // Create the curvilinear state
   return std::make_tuple(std::move(curvilinearParams), jacobian,
