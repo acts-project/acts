@@ -69,8 +69,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   thePlane.matrix().block(0, 3, 3, 1) = vtxPos;
 
   std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(
-          std::make_shared<Transform3D>(thePlane));
+      Surface::makeShared<PlaneSurface>(thePlane);
 
   // Create propagator options
   auto logger = getDefaultLogger("IPEstProp", Logging::INFO);

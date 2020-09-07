@@ -46,8 +46,7 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   CuboidVolumeBounds bounds(4_mm, 5_mm, 6_mm);
 
   // Build and test the volume
-  Volume volume(std::make_shared<const Transform3D>(transform),
-                std::make_shared<const CuboidVolumeBounds>(bounds));
+  Volume volume(transform, std::make_shared<const CuboidVolumeBounds>(bounds));
   BOOST_CHECK_EQUAL(volume.transform().matrix(), transform.matrix());
   CHECK_CLOSE_ABS(volume.itransform().matrix(), transform.inverse().matrix(),
                   eps);
@@ -59,9 +58,9 @@ BOOST_AUTO_TEST_CASE(VolumeTest) {
   Transform3D shift(Transform3D::Identity());
   Vector3D shiftTranslation{-4_mm, -5_mm, -6_mm};
   shift.translation() = shiftTranslation;
-  Volume volumeShift(volume, &shift);
+  Volume volumeShift(volume, shift);
   BOOST_CHECK_EQUAL(volumeShift.center(),
-                    (volume.transform() * shift).translation());
+                    (shift * volume.transform()).translation());
   BOOST_CHECK_EQUAL(volumeShift.transform().rotation(),
                     volume.transform().rotation());
 

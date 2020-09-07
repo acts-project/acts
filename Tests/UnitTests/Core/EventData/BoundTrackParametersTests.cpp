@@ -121,23 +121,19 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   }
 }
 
-std::shared_ptr<Transform3D> makeTransformIdentity() {
-  return std::make_shared<Transform3D>(Transform3D::Identity());
-}
-
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
 // in the datasets header) represent valid points on the surface.
 const auto cones = bdata::make({
-    Surface::makeShared<ConeSurface>(makeTransformIdentity(),
+    Surface::makeShared<ConeSurface>(Transform3D::Identity(),
                                      0.5 /* opening angle */),
 });
 const auto cylinders = bdata::make({
-    Surface::makeShared<CylinderSurface>(makeTransformIdentity(),
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
                                          10.0 /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
-    Surface::makeShared<DiscSurface>(makeTransformIdentity(),
+    Surface::makeShared<DiscSurface>(Transform3D::Identity(),
                                      0 /* radius min */, 100 /* radius max */),
 });
 const auto perigees = bdata::make({
@@ -149,7 +145,7 @@ const auto planes = bdata::make({
     Surface::makeShared<PlaneSurface>(Vector3D(3, -4, 5), Vector3D::UnitZ()),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(makeTransformIdentity(), 2.0 /* radius */,
+    Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,
                                       200.0 /* half z */),
 });
 

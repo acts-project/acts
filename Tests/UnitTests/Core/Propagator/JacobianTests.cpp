@@ -46,15 +46,14 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
-                                                      double angleX,
-                                                      double angleY) {
+Transform3D createCylindricTransform(const Vector3D& nposition, double angleX,
+                                     double angleY) {
   Transform3D ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
   ctransform.prerotate(AngleAxis3D(angleX, Vector3D::UnitX()));
   ctransform.prerotate(AngleAxis3D(angleY, Vector3D::UnitY()));
-  return std::make_shared<Transform3D>(ctransform);
+  return ctransform;
 }
 
 /// Helper method to create a transform for a plane
@@ -64,10 +63,9 @@ std::shared_ptr<Transform3D> createCylindricTransform(const Vector3D& nposition,
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
 /// @param angleU Roation around the original U axis
-std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
-                                                   const Vector3D& nnormal,
-                                                   double angleT,
-                                                   double angleU) {
+Transform3D createPlanarTransform(const Vector3D& nposition,
+                                  const Vector3D& nnormal, double angleT,
+                                  double angleU) {
   // the rotation of the destination surface
   Vector3D T = nnormal.normalized();
   Vector3D U = std::abs(T.dot(Vector3D::UnitZ())) < 0.99
@@ -85,7 +83,7 @@ std::shared_ptr<Transform3D> createPlanarTransform(const Vector3D& nposition,
   ctransform.prerotate(AngleAxis3D(angleT, T));
   ctransform.prerotate(AngleAxis3D(angleU, U));
   //
-  return std::make_shared<Transform3D>(ctransform);
+  return ctransform;
 }
 
 /// Helper method : convert into Acts matrix

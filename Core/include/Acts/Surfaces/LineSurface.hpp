@@ -34,18 +34,19 @@ class LineSurface : public Surface {
  protected:
   /// Constructor from Transform3D and bounds
   ///
-  /// @param htrans The transform that positions the surface in the global frame
+  /// @param transform The transform that positions the surface in the global
+  /// frame
   /// @param radius The straw radius
   /// @param halez The half length in z
-  LineSurface(std::shared_ptr<const Transform3D> htrans, double radius,
-              double halez);
+  LineSurface(const Transform3D& transform, double radius, double halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
-  /// @param htrans The transform that positions the surface in the global frame
+  /// @param transform The transform that positions the surface in the global
+  /// frame
   /// @param lbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
-  LineSurface(std::shared_ptr<const Transform3D> htrans,
+  LineSurface(const Transform3D& transform,
               std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -64,9 +65,9 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   LineSurface(const GeometryContext& gctx, const LineSurface& other,
-              const Transform3D& transf);
+              const Transform3D& shift);
 
  public:
   ~LineSurface() override = default;

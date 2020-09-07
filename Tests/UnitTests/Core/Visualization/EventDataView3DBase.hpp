@@ -64,7 +64,7 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   ViewConfig scolor({235, 198, 52});
 
   auto gctx = GeometryContext();
-  auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
+  auto identity = Transform3D::Identity();
 
   // rectangle and plane
   auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
@@ -151,7 +151,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     // The thickness to construct the associated detector element
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
-        [](std::shared_ptr<const Transform3D> trans,
+        [](const Transform3D& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
