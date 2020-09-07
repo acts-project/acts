@@ -45,7 +45,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
-  using TrackParameters = Acts::BoundParameters;
+  using TrackParameters = Acts::BoundTrackParameters;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using VertexFitter =
       Acts::FullBilloirVertexFitter<TrackParameters, Linearizer>;
@@ -90,7 +90,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   const auto& input =
       ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
           m_cfg.trackCollection);
-  std::vector<Acts::BoundParameters> inputTrackCollection;
+  std::vector<Acts::BoundTrackParameters> inputTrackCollection;
 
   ACTS_INFO("Truth vertices in event: " << input.size());
 
@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
                                 vertexAndTracks.tracks.end());
   }
 
-  std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
   for (const auto& trk : inputTrackCollection) {
     inputTrackPtrCollection.push_back(&trk);
   }

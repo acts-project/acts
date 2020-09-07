@@ -107,26 +107,26 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from
+  /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
   ///
   /// @return Pair of position of global maximum and Gaussian width
   std::pair<double, double> globalMaximumWithWidth(
       State& state, const std::vector<const input_track_t*>& trackList,
-      const std::function<BoundParameters(input_track_t)>& extractParameters)
-      const;
+      const std::function<BoundTrackParameters(input_track_t)>&
+          extractParameters) const;
 
   /// @brief Calculates the z position of the global maximum
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from
+  /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
   ///
   /// @return z position of the global maximum
   double globalMaximum(State& state,
                        const std::vector<const input_track_t*>& trackList,
-                       const std::function<BoundParameters(input_track_t)>&
+                       const std::function<BoundTrackParameters(input_track_t)>&
                            extractParameters) const;
 
  private:
@@ -137,11 +137,11 @@ class GaussianTrackDensity {
   ///
   /// @param state The track density state
   /// @param trackList All input tracks
-  /// @param extractParameters Function extracting BoundParameters from
+  /// @param extractParameters Function extracting BoundTrackParameters from
   /// InputTrack
   void addTracks(State& state,
                  const std::vector<const input_track_t*>& trackList,
-                 const std::function<BoundParameters(input_track_t)>&
+                 const std::function<BoundTrackParameters(input_track_t)>&
                      extractParameters) const;
 
   /// @brief Evaluate the density function and its two first

@@ -135,8 +135,8 @@ void ActsExamples::ResPlotTool::write(
 void ActsExamples::ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
     const ActsFatras::Particle& truthParticle,
-    const Acts::BoundParameters& fittedParamters) const {
-  using ParametersVector = Acts::BoundParameters::ParametersVector;
+    const Acts::BoundTrackParameters& fittedParamters) const {
+  using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;

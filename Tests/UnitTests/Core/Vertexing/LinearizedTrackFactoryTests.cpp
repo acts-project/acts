@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   double z0v = z;
 
   // Start constructing nTracks tracks in the following
-  std::vector<BoundParameters> tracks;
+  std::vector<BoundTrackParameters> tracks;
 
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   ActsMatrixD<eBoundSize, 3> matBound2MomZero =
       ActsMatrixD<eBoundSize, 3>::Zero();
 
-  for (const BoundParameters& parameters : tracks) {
+  for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, Vector4D::Zero(), geoContext,
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   double z0v = z;
 
   // Start constructing nTracks tracks in the following
-  std::vector<BoundParameters> tracks;
+  std::vector<BoundTrackParameters> tracks;
 
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   ActsMatrixD<eBoundSize, 3> matBound2MomZero =
       ActsMatrixD<eBoundSize, 3>::Zero();
 
-  for (const BoundParameters& parameters : tracks) {
+  for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =
         linFactory
             .linearizeTrack(parameters, Vector4D::Zero(), geoContext,

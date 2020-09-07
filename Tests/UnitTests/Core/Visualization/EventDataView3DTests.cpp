@@ -25,9 +25,9 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
 
-BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
+BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   ObjVisualization3D obj;
-  auto objTest = EventDataView3DTest::testBoundParameters(obj);
+  auto objTest = EventDataView3DTest::testBoundTrackParameters(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.size() == 0);
   for (auto objerr : objErrors) {
@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(BoundParametersVisualizationObj) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(BoundParametersVisualizationPly) {
+BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
   PlyVisualization3D ply;
-  auto plyTest = EventDataView3DTest::testBoundParameters(ply);
+  auto plyTest = EventDataView3DTest::testBoundTrackParameters(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.size() == 0);
   for (auto plyerr : plyErrors) {

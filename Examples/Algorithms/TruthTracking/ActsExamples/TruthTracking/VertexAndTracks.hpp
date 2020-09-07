@@ -14,12 +14,12 @@
 namespace ActsExamples {
 
 /// @brief Helper struct that stores a SimVertex object
-/// together with std::vector<Acts::BoundParameters>
+/// together with std::vector<Acts::BoundTrackParameters>
 struct VertexAndTracks {
   // The vertex
   SimVertex vertex;
   // The tracks
-  std::vector<Acts::BoundParameters> tracks;
+  std::vector<Acts::BoundTrackParameters> tracks;
 };
 
 }  // namespace ActsExamples
