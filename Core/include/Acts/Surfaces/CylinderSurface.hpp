@@ -44,7 +44,7 @@ class CylinderSurface : public Surface {
 
   /// Constructor from Transform3D and CylinderBounds
   ///
-  /// @param transform transform to position the surface
+  /// @param transform The transform to position the surface
   /// @param radius The radius of the cylinder
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
@@ -54,9 +54,7 @@ class CylinderSurface : public Surface {
 
   /// Constructor from Transform3D and CylinderBounds arguments
   ///
-  /// @param transform transform to position the surface
-  /// @note if transform == nullptr, the cylinder is positioned around
-  /// (0.,0.,0.)
+  /// @param transform The transform to position the surface
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
   CylinderSurface(const Transform3D& transform,

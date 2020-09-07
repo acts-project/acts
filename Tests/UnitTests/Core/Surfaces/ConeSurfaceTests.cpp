@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(ConeSurfaces)
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   // ConeSurface default constructor is deleted
   //
-  /// Constructor with transform alpha and symmetry
+  /// Constructor with transform, alpha and symmetry
   /// indicator
   double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
   bool symmetric(false);

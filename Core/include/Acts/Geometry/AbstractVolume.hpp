@@ -44,8 +44,7 @@ class AbstractVolume : public Volume {
  public:
   /// Constructor with shared Transform3D*, VolumeBounds*
   ///
-  /// @param transform is the transform 3D the positions the volume in global
-  /// frame
+  /// @param transform is the gobal 3d transformation into the volume frame
   /// @param volbounds is the boundary definition
   AbstractVolume(const Transform3D& transform, VolumeBoundsPtr volbounds);
 

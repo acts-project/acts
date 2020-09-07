@@ -59,11 +59,13 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   std::unique_ptr<const LayerArray> layerArray = nullptr;
 
   // Cases are:
-  // (1) volumeBounds && transform   : use both information
-  // (2) volumeBounds && transform==identity  : centered around 0, but with
-  // given bounds (3) !volumeBounds && transform  : estimate size from layers,
-  // use transform (4) !volumeBounds && transform==identity : estimate size &
-  // translation from layers
+  // (1) volumeBounds && transform : use both information
+  // (2) volumeBounds && transform==identity : centered around 0, but with
+  //     given bounds 
+  // (3) !volumeBounds && transform : estimate size from layers,
+  //     use transform 
+  // (4) !volumeBounds && transform==identity : estimate size &
+  //     translation from layers
   bool idTrf = transform.isApprox(s_idTransform);
 
   const CylinderVolumeBounds* cylinderBounds = nullptr;
