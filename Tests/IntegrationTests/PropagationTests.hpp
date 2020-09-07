@@ -165,7 +165,7 @@ inline void checkCovarianceConsistency(
 
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
-inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
+inline Acts::Transform3D makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
   Acts::Vector3D unitW = params.momentum().normalized();
@@ -178,7 +178,7 @@ inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
   Acts::Translation3D offset(params.position(geoCtx));
   Acts::Transform3D toGlobal = offset * rotation;
 
-  return std::make_shared<Acts::Transform3D>(toGlobal);
+  return toGlobal;
 }
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
@@ -187,12 +187,10 @@ struct ZCylinderSurfaceBuilder {
   std::shared_ptr<Acts::CylinderSurface> operator()(
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
-    auto transform =
-        std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
     return Acts::Surface::makeShared<Acts::CylinderSurface>(
-        std::move(transform), radius, halfz);
+        Acts::Transform3D::Identity(), radius, halfz);
   }
 };
 
@@ -213,10 +211,10 @@ struct DiscSurfaceBuilder {
     Acts::Vector3D localOffset = Acts::Vector3D::Zero();
     localOffset[Acts::ePos0] = 1_cm;
     localOffset[Acts::ePos1] = -1_cm;
-    Acts::Vector3D globalOriginDelta = cl->linear() * localOffset;
-    cl->pretranslate(globalOriginDelta);
+    Acts::Vector3D globalOriginDelta = cl.linear() * localOffset;
+    cl.pretranslate(globalOriginDelta);
 
-    return Acts::Surface::makeShared<Acts::DiscSurface>(std::move(cl));
+    return Acts::Surface::makeShared<Acts::DiscSurface>(cl);
   }
 };
 
@@ -238,8 +236,7 @@ struct ZStrawSurfaceBuilder {
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
-        std::make_shared<Acts::Transform3D>(
-            Acts::Translation3D(params.position(geoCtx))));
+        Acts::Transform3D(Acts::Translation3D(params.position(geoCtx))));
   }
 };
 

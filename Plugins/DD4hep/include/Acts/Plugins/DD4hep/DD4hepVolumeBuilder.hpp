@@ -90,8 +90,7 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
   ///
   /// @param [in] tGeoTrans Transformation of the DD4hep DetElement
   /// @return Pointer to the corresponding Acts transformation
-  std::shared_ptr<const Acts::Transform3D> convertTransform(
-      const TGeoMatrix* tGeoTrans) const;
+  Acts::Transform3D convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 
 inline const std::string& DD4hepVolumeBuilder::identification() const {

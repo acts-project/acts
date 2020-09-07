@@ -34,7 +34,8 @@ GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // Make dummy measurement
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;

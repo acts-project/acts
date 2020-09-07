@@ -26,7 +26,8 @@ using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 /// @brief Unit test for creation of Measurement object
 ///
 BOOST_AUTO_TEST_CASE(measurement_initialization) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;

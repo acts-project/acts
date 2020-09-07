@@ -88,11 +88,9 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   }
 
   TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo) = default;
-
+  ~TrapezoidVolumeBounds() override = default;
   TrapezoidVolumeBounds& operator=(const TrapezoidVolumeBounds& trabo) =
       default;
-
-  ~TrapezoidVolumeBounds() override = default;
 
   VolumeBounds::BoundsType type() const final {
     return VolumeBounds::eTrapezoid;
@@ -123,7 +121,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+      const Transform3D& transform = Transform3D::Identity()) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

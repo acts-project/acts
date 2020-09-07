@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,11 +20,11 @@ Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 Acts::SurfaceArray::SurfaceArray(
     std::unique_ptr<ISurfaceGridLookup> gridLookup,
     std::vector<std::shared_ptr<const Surface>> surfaces,
-    std::shared_ptr<const Transform3D> transform)
+    const Transform3D& transform)
     : p_gridLookup(std::move(gridLookup)),
       m_surfaces(std::move(surfaces)),
       m_surfacesRawPointers(unpack_shared_vector(m_surfaces)),
-      m_transform(std::move(transform)) {}
+      m_transform(transform) {}
 
 Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
     : p_gridLookup(

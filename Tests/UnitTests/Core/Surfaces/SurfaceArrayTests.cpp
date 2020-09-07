@@ -61,10 +61,8 @@ struct SurfaceArrayFixture {
       trans.translate(Vector3D(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
-
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<const Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -91,10 +89,8 @@ struct SurfaceArrayFixture {
       trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<const Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -119,9 +115,8 @@ struct SurfaceArrayFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<const Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -244,8 +239,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture) {
 BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   double w = 3, h = 4;
   auto bounds = std::make_shared<const RectangleBounds>(w, h);
-  auto transptr = std::make_shared<const Transform3D>(Transform3D::Identity());
-  auto srf = Surface::makeShared<PlaneSurface>(transptr, bounds);
+  auto srf = Surface::makeShared<PlaneSurface>(Transform3D::Identity(), bounds);
 
   SurfaceArray sa(srf);
 

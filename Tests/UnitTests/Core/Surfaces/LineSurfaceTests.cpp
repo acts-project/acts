@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   // ctor with translation, radius, halfz
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   const double radius{2.0}, halfz{20.};
   BOOST_CHECK(LineSurfaceStub(pTransform, radius, halfz).constructedOk());
   // ctor with nullptr for LineBounds
@@ -72,15 +72,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // binningPosition()
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  LineSurfaceStub line(pTransform, 2.0, 20.);
+  LineSurfaceStub line(transform, 2.0, 20.);
   Vector3D referencePosition{0., 1., 2.};
   CHECK_CLOSE_ABS(referencePosition, line.binningPosition(tgContext, binX),
                   1e-6);
   //
   // bounds()
   auto pLineBounds = std::make_shared<const LineBounds>(2., 10.0);
-  LineSurfaceStub boundedLine(pTransform, pLineBounds);
+  LineSurfaceStub boundedLine(transform, pLineBounds);
   const LineBounds& bounds =
       dynamic_cast<const LineBounds&>(boundedLine.bounds());
   BOOST_CHECK_EQUAL(bounds, LineBounds(2., 10.0));
@@ -150,9 +149,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
 BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  LineSurfaceStub originalLine(pTransform, 2.0, 20.);
-  LineSurfaceStub assignedLine(pTransform, 1.0, 1.0);
+  LineSurfaceStub originalLine(transform, 2.0, 20.);
+  LineSurfaceStub assignedLine(transform, 1.0, 1.0);
   BOOST_CHECK(assignedLine != originalLine);  // operator != from base
   assignedLine = originalLine;
   BOOST_CHECK(assignedLine == originalLine);  // operator == from base
@@ -162,10 +160,9 @@ BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
 BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  LineSurfaceStub line(pTransform, 2.0, 20.);
+  LineSurfaceStub line(transform, 2.0, 20.);
 
-  const auto& rotation = pTransform->rotation();
+  const auto& rotation = transform.rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis

@@ -394,8 +394,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
   Transform3D trafo = Transform3D::Identity();
-  auto disc = Surface::makeShared<DiscSurface>(
-      std::make_shared<const Transform3D>(trafo));
+  auto disc = Surface::makeShared<DiscSurface>(trafo);
   BoundParameters boundDisc(geoCtx, cov, pos, mom, charge, time, disc);
 
   // Reset the state and test
@@ -413,8 +412,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  auto perigee = Surface::makeShared<PerigeeSurface>(
-      std::make_shared<const Transform3D>(trafo));
+  auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
   BoundParameters boundPerigee(geoCtx, cov, pos, mom, charge, time, perigee);
 
   // Reset the state and test
@@ -433,8 +431,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  auto straw = Surface::makeShared<StrawSurface>(
-      std::make_shared<const Transform3D>(trafo));
+  auto straw = Surface::makeShared<StrawSurface>(trafo);
   BoundParameters boundStraw(geoCtx, cov, pos, mom, charge, time, straw);
 
   // Reset the state and test

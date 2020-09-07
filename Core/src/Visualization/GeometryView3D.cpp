@@ -277,9 +277,9 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
 
   // Line - draw a line
   if (thickness > 0.) {
-    auto ltransform = std::make_shared<Transform3D>(Transform3D::Identity());
-    ltransform->prerotate(lrotation);
-    ltransform->pretranslate(lcenter);
+    auto ltransform = Transform3D::Identity();
+    ltransform.prerotate(lrotation);
+    ltransform.pretranslate(lcenter);
 
     auto lbounds = std::make_shared<CylinderBounds>(thickness, hlength);
     auto line = Surface::makeShared<CylinderSurface>(ltransform, lbounds);
@@ -297,27 +297,27 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
     auto plateBounds = std::make_shared<RadialBounds>(thickness, awith);
 
     if (arrows > 0) {
-      auto aetransform = std::make_shared<Transform3D>(Transform3D::Identity());
-      aetransform->prerotate(lrotation);
-      aetransform->pretranslate(end);
+      auto aetransform = Transform3D::Identity();
+      aetransform.prerotate(lrotation);
+      aetransform.pretranslate(end);
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, -alength, 0.);
       auto cone = Surface::makeShared<ConeSurface>(aetransform, coneBounds);
       drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
                   viewConfig);
       // Arrow end plate
-      auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
-      aptransform->prerotate(lrotation);
-      aptransform->pretranslate(Vector3D(end - alength * direction));
+      auto aptransform = Transform3D::Identity();
+      aptransform.prerotate(lrotation);
+      aptransform.pretranslate(Vector3D(end - alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),
                   viewConfig);
     }
     if (arrows < 0 or arrows == 2) {
-      auto astransform = std::make_shared<Transform3D>(Transform3D::Identity());
-      astransform->prerotate(lrotation);
-      astransform->pretranslate(start);
+      auto astransform = Transform3D::Identity();
+      astransform.prerotate(lrotation);
+      astransform.pretranslate(start);
 
       // Arrow cone
       auto coneBounds = std::make_shared<ConeBounds>(alpha, 0., alength);
@@ -325,9 +325,9 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
       drawSurface(helper, *cone, GeometryContext(), Transform3D::Identity(),
                   viewConfig);
       // Arrow end plate
-      auto aptransform = std::make_shared<Transform3D>(Transform3D::Identity());
-      aptransform->prerotate(lrotation);
-      aptransform->pretranslate(Vector3D(start + alength * direction));
+      auto aptransform = Transform3D::Identity();
+      aptransform.prerotate(lrotation);
+      aptransform.pretranslate(Vector3D(start + alength * direction));
 
       auto plate = Surface::makeShared<DiscSurface>(aptransform, plateBounds);
       drawSurface(helper, *plate, GeometryContext(), Transform3D::Identity(),

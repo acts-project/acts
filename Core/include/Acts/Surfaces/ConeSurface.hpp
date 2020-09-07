@@ -35,27 +35,27 @@ class ConeSurface : public Surface {
  protected:
   /// Constructor form HepTransform and an opening angle
   ///
-  /// @param htrans is the transform to place to cone in a 3D frame
+  /// @param transform is the transform to place to cone in a 3D frame
   /// @param alpha is the opening angle of the cone
   /// @param symmetric indicates if the cones are built to +/1 z
-  ConeSurface(std::shared_ptr<const Transform3D> htrans, double alpha,
+  ConeSurface(const Transform3D& transform, double alpha,
               bool symmetric = false);
 
   /// Constructor form HepTransform and an opening angle
   ///
-  /// @param htrans is the transform that places the cone in the global frame
+  /// @param transform is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
-  ConeSurface(std::shared_ptr<const Transform3D> htrans, double alpha,
-              double zmin, double zmax, double halfPhi = M_PI);
+  ConeSurface(const Transform3D& transform, double alpha, double zmin,
+              double zmax, double halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
   ///
-  /// @param htrans is the transform that places the cone in the global frame
+  /// @param transform is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(std::shared_ptr<const Transform3D> htrans,
+  ConeSurface(const Transform3D& transform,
               const std::shared_ptr<const ConeBounds>& cbounds);
 
   /// Copy constructor
@@ -67,9 +67,9 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param shift is the additional transfrom applied after copying
   ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
-              const Transform3D& transf);
+              const Transform3D& shift);
 
  public:
   ~ConeSurface() override = default;
