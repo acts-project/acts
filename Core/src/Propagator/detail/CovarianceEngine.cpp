@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -272,10 +273,10 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   const Vector3D momentum = std::abs(1. / parameters[eFreeQOverP]) * direction;
   const double charge = std::copysign(1., parameters[eFreeQOverP]);
   const double time = parameters[eFreeTime];
-  CurvilinearTrackParameters CurvilinearTrackParameters(cov, position, momentum,
-                                                        charge, time);
+  CurvilinearTrackParameters curvilinearParams(cov, position, momentum, charge,
+                                               time);
   // Create the curvilinear state
-  return std::make_tuple(std::move(CurvilinearTrackParameters), jacobian,
+  return std::make_tuple(std::move(curvilinearParams), jacobian,
                          accumulatedPath);
 }
 
