@@ -23,7 +23,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
-    MaterialProperties matProp(tv, 1);
+    MaterialSlab matProp(tv, 1);
     matRecord.push_back(std::make_pair(matProp, pos));
   }
 

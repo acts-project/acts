@@ -57,7 +57,7 @@ struct CubicTrackingGeometry {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
   }
 

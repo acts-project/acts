@@ -124,7 +124,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.1_m));
 
   // Material of the surfaces
-  MaterialProperties matProp(Acts::Test::makeSilicon(), 0.5_mm);
+  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 

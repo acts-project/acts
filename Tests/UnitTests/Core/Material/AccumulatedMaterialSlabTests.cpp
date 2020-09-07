@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/AccumulatedMaterialProperties.hpp"
+#include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
@@ -16,9 +16,9 @@
 
 namespace {
 
-using Acts::AccumulatedMaterialProperties;
+using Acts::AccumulatedMaterialSlab;
 using Acts::Material;
-using Acts::MaterialProperties;
+using Acts::MaterialSlab;
 using Acts::Test::makeSilicon;
 using Acts::Test::makeUnitSlab;
 
@@ -26,10 +26,10 @@ constexpr auto eps = std::numeric_limits<float>::epsilon();
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(MaterialAccumulatedMaterialProperties)
+BOOST_AUTO_TEST_SUITE(MaterialAccumulatedMaterialSlab)
 
 BOOST_AUTO_TEST_CASE(Nothing) {
-  AccumulatedMaterialProperties a;
+  AccumulatedMaterialSlab a;
   auto [average, trackCount] = a.totalAverage();
   // material is vaccum
   BOOST_CHECK(not(average));
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(Nothing) {
 
 // average three empty tracks which are ignored by default
 BOOST_AUTO_TEST_CASE(EmptyTracksIgnored) {
-  AccumulatedMaterialProperties a;
+  AccumulatedMaterialSlab a;
   a.trackAverage();
   a.trackAverage();
   a.trackAverage();
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(EmptyTracksIgnored) {
 
 // average three empty tracks and do not ignore them
 BOOST_AUTO_TEST_CASE(EmptyTracks) {
-  AccumulatedMaterialProperties a;
+  AccumulatedMaterialSlab a;
   a.trackAverage(true);
   a.trackAverage(true);
   a.trackAverage(true);
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(EmptyTracks) {
 }
 
 BOOST_AUTO_TEST_CASE(MultipleIdenticalThicknessTrackSteps) {
-  MaterialProperties unit = makeUnitSlab();
-  AccumulatedMaterialProperties a;
+  MaterialSlab unit = makeUnitSlab();
+  AccumulatedMaterialSlab a;
   // accumulate three identical steps for one track
   {
     a.accumulate(unit);
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(MultipleIdenticalThicknessTrackSteps) {
 // accumulate and average three tracks.
 // each track contributes the same material but each in different steps.
 BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
-  MaterialProperties unit = makeUnitSlab();
-  AccumulatedMaterialProperties a;
+  MaterialSlab unit = makeUnitSlab();
+  AccumulatedMaterialSlab a;
   // accumulate three identical steps
   {
     a.accumulate(unit);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
   }
   // accumulate one step with thickness 1, one with thickness 2
   {
-    MaterialProperties twice = unit;
+    MaterialSlab twice = unit;
     twice.scaleThickness(2);
     a.accumulate(unit);
     a.accumulate(twice);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
   }
   // accumulate one step with thickness 3
   {
-    MaterialProperties thrice = unit;
+    MaterialSlab thrice = unit;
     thrice.scaleThickness(3);
     a.accumulate(thrice);
     a.trackAverage();
@@ -141,8 +141,8 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentThicknessTrackSteps) {
 
 // average multiple tracks w/ one step each but different materials
 BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
-  MaterialProperties unit = makeUnitSlab();
-  AccumulatedMaterialProperties a;
+  MaterialSlab unit = makeUnitSlab();
+  AccumulatedMaterialSlab a;
   // add material w/ given thickness
   {
     a.accumulate(unit);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
   }
   // add material w/ given three times the initial thickness
   {
-    MaterialProperties three = unit;
+    MaterialSlab three = unit;
     three.scaleThickness(3);
     a.accumulate(three);
     a.trackAverage();
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(MultipleDifferentTracks) {
   }
   // add vacuum w/ given the same thickness as the current average
   {
-    MaterialProperties vac(2 * unit.thickness());
+    MaterialSlab vac(2 * unit.thickness());
     // add vacuum twice to counteract the existing two tracks stored
     a.accumulate(vac);
     a.trackAverage();

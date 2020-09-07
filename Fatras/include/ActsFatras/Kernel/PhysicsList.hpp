@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <bitset>
@@ -35,7 +35,7 @@ class PhysicsList {
   ///
   /// @tparam generator_t must be a RandomNumberEngine
   template <typename generator_t>
-  bool operator()(generator_t& generator, const Acts::MaterialProperties& slab,
+  bool operator()(generator_t& generator, const Acts::MaterialSlab& slab,
                   Particle& particle, std::vector<Particle>& generated) const {
     static_assert(
         (true && ... &&
@@ -88,14 +88,13 @@ class PhysicsList {
 
   // compile-time index-based recursive function call for all processes
   template <typename generator_t>
-  bool impl(std::index_sequence<>, generator_t&,
-            const Acts::MaterialProperties&, Particle&,
-            std::vector<Particle>&) const {
+  bool impl(std::index_sequence<>, generator_t&, const Acts::MaterialSlab&,
+            Particle&, std::vector<Particle>&) const {
     return false;
   }
   template <std::size_t I0, std::size_t... INs, typename generator_t>
   bool impl(std::index_sequence<I0, INs...>, generator_t& generator,
-            const Acts::MaterialProperties& slab, Particle& particle,
+            const Acts::MaterialSlab& slab, Particle& particle,
             std::vector<Particle>& generated) const {
     // only call process if it is not masked
     if (not m_mask[I0] and

@@ -279,7 +279,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     }
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
-        currentPos, rmIter->materialProperties, currentPathCorrection);
+        currentPos, rmIter->materialSlab, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
     // Update the material interaction with the associated surface

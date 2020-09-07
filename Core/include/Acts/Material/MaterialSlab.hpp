@@ -20,30 +20,30 @@ namespace Acts {
 /// This is intended to describe concrete surface materials.
 ///
 /// @see Material for a description of the available parameters.
-class MaterialProperties {
+class MaterialSlab {
  public:
   /// Construct vacuum without thickness.
-  MaterialProperties() = default;
+  MaterialSlab() = default;
   /// Construct vacuum with thickness.
-  MaterialProperties(float thickness);
+  MaterialSlab(float thickness);
   /// Construct from material description.
   ///
   /// @param material  is the material description
   /// @param thickness is the thickness of the material
-  MaterialProperties(const Material& material, float thickness);
+  MaterialSlab(const Material& material, float thickness);
   /// Construct by averaging the material properties over multiple layers.
   ///
   /// @param layers Input layers to average over.
   ///
   /// The resulting object has the combined thickness of all layers but just
   /// one set of appropriately averaged material constants.
-  MaterialProperties(const std::vector<MaterialProperties>& layers);
-  ~MaterialProperties() = default;
+  MaterialSlab(const std::vector<MaterialSlab>& layers);
+  ~MaterialSlab() = default;
 
-  MaterialProperties(MaterialProperties&&) = default;
-  MaterialProperties(const MaterialProperties&) = default;
-  MaterialProperties& operator=(MaterialProperties&&) = default;
-  MaterialProperties& operator=(const MaterialProperties&) = default;
+  MaterialSlab(MaterialSlab&&) = default;
+  MaterialSlab(const MaterialSlab&) = default;
+  MaterialSlab& operator=(MaterialSlab&&) = default;
+  MaterialSlab& operator=(const MaterialSlab&) = default;
 
   /// Scale the material thickness by the given factor.
   void scaleThickness(float scale);
@@ -68,23 +68,22 @@ class MaterialProperties {
   float m_thicknessInX0 = 0.0f;
   float m_thicknessInL0 = 0.0f;
 
-  friend constexpr bool operator==(const MaterialProperties& lhs,
-                                   const MaterialProperties& rhs) {
+  friend constexpr bool operator==(const MaterialSlab& lhs,
+                                   const MaterialSlab& rhs) {
     // t/X0 and t/L0 are dependent variables and need not be checked
     return (lhs.m_material == rhs.m_material) and
            (lhs.m_thickness == rhs.m_thickness);
   }
-  friend constexpr bool operator!=(const MaterialProperties& lhs,
-                                   const MaterialProperties& rhs) {
+  friend constexpr bool operator!=(const MaterialSlab& lhs,
+                                   const MaterialSlab& rhs) {
     return !(lhs == rhs);
   }
 };
 
-std::ostream& operator<<(std::ostream& os,
-                         const MaterialProperties& materialProperties);
+std::ostream& operator<<(std::ostream& os, const MaterialSlab& materialSlab);
 
 // Useful typedefs
-using MaterialPropertiesVector = std::vector<MaterialProperties>;
-using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
+using MaterialSlabVector = std::vector<MaterialSlab>;
+using MaterialSlabMatrix = std::vector<MaterialSlabVector>;
 
 }  // namespace Acts

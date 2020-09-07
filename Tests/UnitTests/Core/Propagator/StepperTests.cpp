@@ -946,7 +946,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3D yPos(0., 1., 0.);
   Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-  MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+  MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::SurfaceConfig sConf1;

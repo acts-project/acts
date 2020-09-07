@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -37,7 +37,7 @@ struct Scattering {
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
   std::array<Particle, 0> operator()(generator_t &generator,
-                                     const Acts::MaterialProperties &slab,
+                                     const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // the scattered direction can be computed by rotating the initial
     // direction around a vector orthogonal to the initial direction, i.e. the
