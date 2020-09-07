@@ -35,21 +35,22 @@ void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
                      double phi, double theta, double p, double q,
                      const Vector4D& pos4, const Vector3D& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto pos = pos4.segment<3>(ePos0);
 
   // native values
   CHECK_SMALL(params.template get<eBoundLoc0>(), eps);
   CHECK_SMALL(params.template get<eBoundLoc1>(), eps);
-  CHECK_CLOSE_OR_SMALL(params.template get<eBoundTime>(), time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eBoundTime>(), pos4[eTime], eps,
+                       eps);
   CHECK_CLOSE_OR_SMALL(detail::radian_sym(params.template get<eBoundPhi>()),
                        detail::radian_sym(phi), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessorss
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos4.segment<3>(ePos0), eps,
-                       eps);
+  CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection, unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);

@@ -36,6 +36,7 @@ void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
                      const Vector4D& pos4, const Vector3D& unitDir, double p,
                      double q) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto pos = pos4.segment<3>(ePos0);
 
   // native values
   CHECK_CLOSE_OR_SMALL(params.template get<eFreePos0>(), pos4[ePos0], eps, eps);
@@ -51,11 +52,12 @@ void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.template get<eFreeQOverP>(), qOverP, eps, eps);
   // convenience accessors
   CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.position(), pos4.segment<3>(eFreePos0), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.pT(), p * unitDir.template head<2>().norm(), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.p(), p, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
+                       p * unitDir.template head<2>().norm(), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
   // self-consistency

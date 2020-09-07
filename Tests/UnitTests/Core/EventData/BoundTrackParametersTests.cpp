@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
@@ -41,6 +42,7 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
                      double theta, double p, double q, const Vector3D& pos,
                      const Vector3D& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto pos4 = VectorHelpers::makeVector4(pos, time);
 
   // native values
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc0>(), l0, eps, eps);
@@ -71,7 +73,7 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // convert local-to-global for reference
   const Vector2D loc(l0, l1);
-  Vector3D pos = surface->localToGlobal(geoCtx, loc, dir).value();
+  const Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
   // global four-position as input
   Vector4D pos4;
   pos4.segment<3>(ePos0) = pos;
