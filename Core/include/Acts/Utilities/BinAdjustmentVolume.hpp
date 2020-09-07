@@ -34,10 +34,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
                             const CylinderVolumeBounds& cBounds,
                             const Transform3D& transform) {
   // Default constructor
-  BinUtility uBinUtil;
-  if (!transform.isApprox(Transform3D::Identity())) {
-    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
-  }
+  BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
   double minR = cBounds.get(CylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CylinderVolumeBounds::eMaxR);
@@ -91,10 +88,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
                             const CutoutCylinderVolumeBounds& cBounds,
                             const Transform3D& transform) {
   // Default constructor
-  BinUtility uBinUtil;
-  if (!transform.isApprox(Transform3D::Identity())) {
-    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
-  }
+  BinUtility uBinUtil(transform);
   // The parameters from the cutout cylinder bounds
   double minR = cBounds.get(CutoutCylinderVolumeBounds::eMinR);
   double maxR = cBounds.get(CutoutCylinderVolumeBounds::eMaxR);
@@ -148,10 +142,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
                             const CuboidVolumeBounds& cBounds,
                             const Transform3D& transform) {
   // Default constructor
-  BinUtility uBinUtil;
-  if (!transform.isApprox(Transform3D::Identity())) {
-    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
-  }
+  BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
   double minX = -cBounds.get(CuboidVolumeBounds::eHalfLengthX);
   double maxX = cBounds.get(CuboidVolumeBounds::eHalfLengthX);

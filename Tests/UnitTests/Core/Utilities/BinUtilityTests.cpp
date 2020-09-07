@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_transform) {
   noTranform += phiUtil;
   noTranform += zUtil;
 
-  BinUtility withTranform(std::make_shared<const Transform3D>(transform_LtoG));
+  BinUtility withTranform(transform_LtoG);
   withTranform += rUtil;
   withTranform += phiUtil;
   withTranform += zUtil;
