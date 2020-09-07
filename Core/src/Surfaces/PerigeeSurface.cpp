@@ -13,8 +13,8 @@
 #include <utility>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
-    : LineSurface(Transform3D(Translation3D(gp.x(), gp.y(), gp.z())),
-                  nullptr) {}
+    : LineSurface(Transform3D(Translation3D(gp.x(), gp.y(), gp.z())), nullptr) {
+}
 
 Acts::PerigeeSurface::PerigeeSurface(const Transform3D& transform)
     : GeometryObject(), LineSurface(transform) {}
