@@ -91,6 +91,6 @@ Acts::Transform3D Acts::DD4hepVolumeBuilder::convertTransform(
       Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
       Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
       Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3D(translation[0] * units::_cm, translation[1] * units::_cm,
-                     translation[2] * units::_cm));
+      Acts::Vector3D(translation[0] * UnitConstants::cm, translation[1] * UnitConstants::cm,
+                     translation[2] * UnitConstants::cm));
 }
