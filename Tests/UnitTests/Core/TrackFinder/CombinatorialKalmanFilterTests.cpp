@@ -32,6 +32,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -237,8 +238,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Set the starting momentum for propagation
   Vector3D mMom(1_GeV, 0., 0);
   for (const auto& [trackID, mPos] : startingPos) {
-    SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
-                                                           mMom, 42_ns);
+    NeutralCurvilinearTrackParameters mStart(makeVector4(mPos, 42_ns), mMom,
+                                             1 / mMom.norm());
     // Launch and collect - the measurements
     auto mResult = mPropagator.propagate(mStart, mOptions).value();
 
@@ -312,8 +313,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     Vector3D rMom(1_GeV * cos(rTheta) * cos(rPhi),
                   1_GeV * cos(rTheta) * sin(rPhi), 1_GeV * sin(rTheta));
 
-    SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                           42.);
+    CurvilinearParameters rStart(cov, rPos, rMom, 1., 42.);
 
     const Surface* rSurface = &rStart.referenceSurface();
 

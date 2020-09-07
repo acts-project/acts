@@ -248,8 +248,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
                 0.025_GeV * gauss(generator));
 
-  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                         42.);
+  CurvilinearParameters rStart(cov, rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 

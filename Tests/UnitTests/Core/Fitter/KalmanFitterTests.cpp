@@ -304,9 +304,9 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Build propagator for the measurement creation
   MeasurementPropagator mPropagator(mStepper, mNavigator);
-  Vector3D mPos(-3_m, 0., 0.), mMom(1_GeV, 0., 0);
-  SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
-                                                         mMom, 42_ns);
+  Vector4D mPos4(-3_m, 0., 0., 42_ns);
+  Vector3D mDir(1, 0., 0);
+  NeutralCurvilinearTrackParameters mStart(mPos4, mDir, 1 / 1_GeV);
 
   // Create action list for the measurement creation
   using MeasurementActions = ActionList<MeasurementCreator>;
@@ -379,9 +379,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   Vector3D rPos(-3_m, 10_um * gauss(generator), 100_um * gauss(generator));
   Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
                 0.025_GeV * gauss(generator));
-
-  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                         42.);
+  CurvilinearParameters rStart(cov, rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
