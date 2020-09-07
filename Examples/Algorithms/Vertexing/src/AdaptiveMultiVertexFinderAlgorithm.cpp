@@ -48,7 +48,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // Get the input track collection
   auto allTracks = getInputTrackCollection(ctx);
   // Create vector of track pointers for vertexing
-  std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
   for (const auto& trk : allTracks) {
     inputTrackPtrCollection.push_back(&trk);
   }
@@ -64,7 +64,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // Set up ImpactPointEstimator
   using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundParameters, Propagator>;
+      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstimatorCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
 
@@ -80,14 +80,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // Set up the vertex fitter with user-defined annealing
   using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundParameters, Linearizer>;
+      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
   Fitter fitter(fitterCfg);
 
   // Set up the vertex seed finder
   using SeedFinder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundParameters>>;
+      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
   SeedFinder seedFinder;
 
   // The vertex finder type
@@ -104,7 +104,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Finder::State state;
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  using VertexingOptions = Acts::VertexingOptions<Acts::BoundParameters>;
+  using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
   VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // Find vertices
@@ -129,14 +129,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::vector<Acts::BoundParameters>
+std::vector<Acts::BoundTrackParameters>
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::getInputTrackCollection(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input =
       ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
           m_cfg.trackCollection);
-  std::vector<Acts::BoundParameters> inputTrackCollection;
+  std::vector<Acts::BoundTrackParameters> inputTrackCollection;
 
   for (auto& vertexAndTracks : input) {
     inputTrackCollection.insert(inputTrackCollection.end(),

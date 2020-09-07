@@ -95,7 +95,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
+  CurvilinearTrackParameters start(std::nullopt, pos, mom, q, time);
 
   using EndOfWorld = EndOfWorldReached;
 
