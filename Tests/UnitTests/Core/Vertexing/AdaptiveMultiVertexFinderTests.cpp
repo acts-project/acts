@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP 3D Estimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
 
   IPEstimator::Config ipEstimatorCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   AnnealingUtility::Config annealingConfig(temperatures);
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<BoundParameters, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
 
   Fitter::Config fitterCfg(ipEstimator);
 
   fitterCfg.annealingTool = annealingUtility;
 
-  // Linearizer for BoundParameters type test
+  // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
@@ -83,7 +83,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Fitter fitter(fitterCfg);
 
   using SeedFinder =
-      TrackDensityVertexFinder<Fitter, GaussianTrackDensity<BoundParameters>>;
+      TrackDensityVertexFinder<Fitter,
+                               GaussianTrackDensity<BoundTrackParameters>>;
 
   SeedFinder seedFinder;
 
@@ -115,13 +116,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     }
   }
 
-  std::vector<const BoundParameters*> tracksPtr;
+  std::vector<const BoundTrackParameters*> tracksPtr;
   for (const auto& trk : tracks) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
-                                                     magFieldContext);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
+                                                          magFieldContext);
 
   vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
@@ -138,7 +139,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<BoundParameters>> allVertices = *findResult;
+  std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Time needed: " << timediff << " ms." << std::endl;
@@ -178,16 +179,16 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
 
 // Dummy user-defined InputTrack type
 struct InputTrack {
-  InputTrack(const BoundParameters& params, int id)
+  InputTrack(const BoundTrackParameters& params, int id)
       : m_parameters(params), m_id(id) {}
 
-  const BoundParameters& parameters() const { return m_parameters; }
+  const BoundTrackParameters& parameters() const { return m_parameters; }
   // store e.g. link to original objects here
 
   int id() const { return m_id; }
 
  private:
-  BoundParameters m_parameters;
+  BoundTrackParameters m_parameters;
 
   // Some test track ID
   int m_id;
@@ -207,9 +208,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Create a custom std::function to extract BoundParameters from
+  // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
-  std::function<BoundParameters(InputTrack)> extractParameters =
+  std::function<BoundTrackParameters(InputTrack)> extractParameters =
       [](InputTrack params) { return params.parameters(); };
 
   // IP 3D Estimator
@@ -352,7 +353,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // IP Estimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
 
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEst(ipEstCfg);
@@ -361,13 +362,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   AnnealingUtility::Config annealingConfig(temperatures);
   AnnealingUtility annealingUtility(annealingConfig);
 
-  using Fitter = AdaptiveMultiVertexFitter<BoundParameters, Linearizer>;
+  using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
 
   Fitter::Config fitterCfg(ipEst);
 
   fitterCfg.annealingTool = annealingUtility;
 
-  // Linearizer for BoundParameters type test
+  // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
@@ -409,13 +410,13 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     }
   }
 
-  std::vector<const BoundParameters*> tracksPtr;
+  std::vector<const BoundTrackParameters*> tracksPtr;
   for (const auto& trk : tracks) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundParameters> vertexingOptions(geoContext,
-                                                     magFieldContext);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
+                                                          magFieldContext);
 
   vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
 
@@ -432,7 +433,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   BOOST_CHECK(findResult.ok());
 
-  std::vector<Vertex<BoundParameters>> allVertices = *findResult;
+  std::vector<Vertex<BoundTrackParameters>> allVertices = *findResult;
 
   if (debugMode) {
     std::cout << "Time needed: " << timediff << " ms." << std::endl;

@@ -186,7 +186,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
+  CurvilinearTrackParameters start(std::nullopt, pos, mom, q, 42.);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext, getDummyLogger());

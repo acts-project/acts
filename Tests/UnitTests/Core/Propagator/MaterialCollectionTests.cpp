@@ -113,7 +113,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
   std::cout << cov.determinant() << std::endl;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(cov, pos, mom, q, time);
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;
@@ -250,8 +250,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // move forward step by step through the surfaces
-  const BoundParameters* sParameters = &start;
-  std::vector<std::unique_ptr<const BoundParameters>> stepParameters;
+  const BoundTrackParameters* sParameters = &start;
+  std::vector<std::unique_ptr<const BoundTrackParameters>> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
@@ -271,8 +271,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (fwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(
-          std::make_unique<BoundParameters>((*fwdStep.endParameters.get())));
+      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
+          (*fwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }
@@ -345,8 +345,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (bwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(
-          std::make_unique<BoundParameters>(*(bwdStep.endParameters.get())));
+      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
+          *(bwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }

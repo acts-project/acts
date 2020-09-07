@@ -65,7 +65,7 @@ void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(CurvilinearTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataCurvilinearTrackParameters)
 
 BOOST_DATA_TEST_CASE(
     NeutralConstruct,

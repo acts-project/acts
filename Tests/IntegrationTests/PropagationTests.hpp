@@ -24,10 +24,8 @@
 // parameter construction helpers
 
 /// Construct (initial) curvilinear parameters.
-inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
-                                                             double theta,
-                                                             double absMom,
-                                                             double charge) {
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
+    double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
@@ -38,11 +36,11 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
   }
 
   Vector4 pos4 = Vector4D::Zero();
-  return CurvilinearParameters(pos4, phi, theta, absMom, charge);
+  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
-inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
     double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
@@ -72,7 +70,7 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4D pos4 = Vector4D::Zero();
-  return CurvilinearParameters(pos4, phi, theta, absMom, charge, cov);
+  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -238,7 +236,7 @@ struct ZStrawSurfaceBuilder {
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
-inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
+inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
@@ -265,7 +263,7 @@ inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
-inline std::pair<Acts::BoundParameters, double> transportToSurface(
+inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,

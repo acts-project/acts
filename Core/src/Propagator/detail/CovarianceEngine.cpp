@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -17,8 +18,9 @@ namespace {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+using CurvilinearState =
+    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
 ///
@@ -242,7 +244,7 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
       detail::transformFreeToBoundParameters(parameters, surface, geoContext);
   // Create the bound state
   return std::make_tuple(
-      BoundParameters(surface.getSharedPtr(), bv, std::move(cov)), jacobian,
+      BoundTrackParameters(surface.getSharedPtr(), bv, std::move(cov)), jacobian,
       accumulatedPath);
 }
 
@@ -268,10 +270,10 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   pos4[ePos1] = parameters[eFreePos1];
   pos4[ePos2] = parameters[eFreePos2];
   pos4[eTime] = parameters[eFreeTime];
-  CurvilinearParameters curvilinearParameters(
+  CurvilinearTrackParameters curvilinearParameters(
       pos4, direction, parameters[eFreeQOverP], std::move(cov));
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParameters), jacobian,
+  return std::make_tuple(std::move(curvilinearParams), jacobian,
                          accumulatedPath);
 }
 

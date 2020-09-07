@@ -17,12 +17,12 @@ class Surface;
 
 namespace detail {
 
-/// Convert free parameters to bound parameters.
+/// Convert free track parameters to bound track parameters.
 ///
-/// @param freeParams Free parameters vector
+/// @param freeParams Free track parameters vector
 /// @param surface Surface onto which the parameters are bound
 /// @param geoCtx Geometry context for the global-to-local transformation
-/// @return Bound parameters vector on the given surface
+/// @return Bound track parameters vector on the given surface
 ///
 /// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
@@ -30,7 +30,7 @@ BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
                                            const Surface& surface,
                                            const GeometryContext& geoCtx);
 
-/// Convert position and direction to bound parameters.
+/// Convert position and direction to bound track parameters.
 ///
 /// @param position Global track three-position
 /// @param time Global track time
@@ -40,13 +40,13 @@ BoundVector transformFreeToBoundParameters(const FreeVector& freeParams,
 /// @param geoCtx Geometry context for the global-to-local transformation
 /// @return Equivalent bound parameters vector on the given surface
 ///
-/// @warning The global position is assumed to be on the surface. If this is not
+/// @warning The position is assumed to be on the surface. If this is not
 ///          the case, the behaviour is undefined.
 BoundVector transformFreeToBoundParameters(
     const Vector3D& position, FreeScalar time, const Vector3D& direction,
     FreeScalar qOverP, const Surface& surface, const GeometryContext& geoCtx);
 
-/// Convert direction to bound curvilinear parameters.
+/// Convert direction to curvilinear track parameters.
 ///
 /// @param time Global track time
 /// @param direction Global direction three-vector; normalization is ignored.
@@ -60,7 +60,7 @@ BoundVector transformFreeToCurvilinearParameters(FreeScalar time,
                                                  const Vector3D& direction,
                                                  FreeScalar qOverP);
 
-/// Convert global direction angles to bound curvilinear parameters.
+/// Convert direction angles to curvilinear track parameters.
 ///
 /// @param time Global track time
 /// @param phi Global transverse direction angle

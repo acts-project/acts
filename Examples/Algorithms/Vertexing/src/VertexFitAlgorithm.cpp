@@ -38,7 +38,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
-  using TrackParameters = Acts::BoundParameters;
+  using TrackParameters = Acts::BoundTrackParameters;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using VertexFitter =
       Acts::FullBilloirVertexFitter<TrackParameters, Linearizer>;
@@ -75,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
       continue;
     }
 
-    std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
+    std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
     for (const auto& trk : inputTrackCollection) {
       inputTrackPtrCollection.push_back(&trk);
     }

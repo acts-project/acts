@@ -17,7 +17,7 @@
 #include <utility>
 
 namespace ActsExamples {
-using IndexedParams = std::unordered_map<size_t, Acts::BoundParameters>;
+using IndexedParams = std::unordered_map<size_t, Acts::BoundTrackParameters>;
 
 /// @brief Struct for truth track fitting/finding result with
 /// Acts::KalmanFitter/Acts::CombinatorialKalmanFilter
@@ -121,7 +121,8 @@ struct SimMultiTrajectory {
   /// @param entryIndex The trajectory entry index
   ///
   /// @return The fitted track parameters of the trajectory
-  const Acts::BoundParameters& trackParameters(const size_t& entryIndex) const {
+  const Acts::BoundTrackParameters& trackParameters(
+      const size_t& entryIndex) const {
     auto it = m_trackParameters.find(entryIndex);
     if (it != m_trackParameters.end()) {
       return it->second;

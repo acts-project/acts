@@ -107,12 +107,12 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = BoundParameters(surface, vector, cov);
+    params = BoundTrackParameters(surface, vector, cov);
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -126,12 +126,12 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = BoundParameters(surface, vector, cov);
+    params = BoundTrackParameters(surface, vector, cov);
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -163,13 +163,13 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   }
   // negative charged parameters from global information
   {
-    BoundParameters params(surface, geoCtx, pos4, dir, -1_e / p);
+    BoundTrackParameters params(surface, geoCtx, pos4, dir, -1_e / p);
     checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // positive charged parameters from global information
   {
-    BoundParameters params(surface, geoCtx, pos4, dir, 1_e / p);
+    BoundTrackParameters params(surface, geoCtx, pos4, dir, 1_e / p);
     checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
@@ -223,7 +223,7 @@ const auto straws = bdata::make({
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(BoundTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataBoundTrackParameters)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
                      cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,

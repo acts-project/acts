@@ -37,8 +37,9 @@ class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   using BField = bfield_t;
 
@@ -585,7 +586,7 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    BoundParameters parameters(surface.getSharedPtr(), state.geoContext, pos4,
+    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext, pos4,
                                dir, qOverP, std::move(covOpt));
 
     return BoundState(std::move(parameters), state.jacobian,
@@ -622,7 +623,7 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearParameters parameters(pos4, dir, qOverP);
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP);
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);

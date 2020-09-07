@@ -19,8 +19,8 @@ extern template class SingleBoundTrackParameters<SinglyCharged>;
 extern template class SingleCurvilinearTrackParameters<SinglyCharged>;
 extern template class SingleFreeTrackParameters<SinglyCharged>;
 
-using BoundParameters = SingleBoundTrackParameters<SinglyCharged>;
-using CurvilinearParameters = SingleCurvilinearTrackParameters<SinglyCharged>;
+using BoundTrackParameters = SingleBoundTrackParameters<SinglyCharged>;
+using CurvilinearTrackParameters = SingleCurvilinearTrackParameters<SinglyCharged>;
 using FreeTrackParameters = SingleFreeTrackParameters<SinglyCharged>;
 
 }  // namespace Acts

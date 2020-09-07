@@ -29,9 +29,9 @@ constexpr auto eps = std::numeric_limits<BoundScalar>::epsilon();
 BOOST_AUTO_TEST_SUITE(TransformFreeToBound)
 
 BOOST_DATA_TEST_CASE(
-    GlobalToBoundParameters,
-    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
-    surface, l0, l1, time, phiInput, theta, p, q) {
+    GlobalToBoundTrackParameters,
+    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero, surface,
+    l0, l1, time, phiInput, theta, p, q) {
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const auto qOverP = q / p;

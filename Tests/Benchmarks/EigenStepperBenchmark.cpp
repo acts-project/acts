@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   if (withCov) {
     covOpt = cov;
   }
-  CurvilinearParameters pars(pos4, dir, ptInGeV, +1, covOpt);
+  CurvilinearTrackParameters pars(pos4, dir, ptInGeV, +1, covOpt);
 
   double totalPathLength = 0;
   size_t num_iters = 0;
