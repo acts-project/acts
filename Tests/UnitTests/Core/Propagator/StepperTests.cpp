@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the curvilinear state construction
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
-  CHECK_CLOSE_ABS(curvPars.position(), cp.position(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);

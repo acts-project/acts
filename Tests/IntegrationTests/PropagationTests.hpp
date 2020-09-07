@@ -37,17 +37,9 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
-  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
-  CurvilinearTrackParameters params(std::nullopt, pos, mom, charge, time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), charge);
-
-  return params;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return CurvilinearTrackParameters(std::nullopt, pos, absMom * dir, charge,
+                                    time);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
@@ -55,6 +47,12 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
     double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
+
+  // phi is ill-defined in forward/backward tracks. normalize the value to
+  // ensure parameter comparisons give correct answers.
+  if (not((0 < theta) and (theta < M_PI))) {
+    phi = 0;
+  }
 
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
@@ -74,10 +72,11 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  auto withoutCov = makeParametersCurvilinear(phi, theta, absMom, charge);
-  return CurvilinearTrackParameters(std::move(cov), withoutCov.position(),
-                                    withoutCov.momentum(), withoutCov.charge(),
-                                    withoutCov.time());
+  Vector3D pos = Vector3D::Zero();
+  double time = 0.0;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return CurvilinearTrackParameters(std::move(cov), pos, absMom * dir, charge,
+                                    time);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -94,17 +93,9 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
-  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
-  NeutralCurvilinearTrackParameters params(std::nullopt, pos, mom, time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), 0);
-
-  return params;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return NeutralCurvilinearTrackParameters(std::nullopt, pos, absMom * dir,
+                                           time);
 }
 
 // helpers to compare track parameters
@@ -138,7 +129,8 @@ inline void checkParametersConsistency(
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
-  CHECK_CLOSE_ABS(cmp.momentum(), ref.momentum(), epsMom);
+  CHECK_CLOSE_ABS(cmp.unitDirection(), ref.unitDirection(), epsDir);
+  CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
@@ -166,7 +158,7 @@ template <typename charge_t>
 inline Acts::Transform3D makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3D unitW = params.momentum().normalized();
+  Acts::Vector3D unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
   Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
@@ -358,9 +350,9 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
-  CHECK_CLOSE_ABS(surfParams.momentum().normalized(),
-                  freeParams.momentum().normalized(), epsDir);
-  CHECK_CLOSE_ABS(surfParams.momentum().norm(), freeParams.momentum().norm(),
+  CHECK_CLOSE_ABS(surfParams.unitDirection(), freeParams.unitDirection(),
+                  epsDir);
+  CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
 }
