@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -46,7 +46,7 @@ struct MaterialInteraction {
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 1.;
   /// The effective, passed material properties including the path correction.
-  MaterialProperties materialProperties;
+  MaterialSlab materialSlab;
 };
 
 /// Material interactor propagator action.
@@ -121,7 +121,7 @@ struct MaterialInteractor {
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialProperties(state)) {
+      if (not d.evaluateMaterialSlab(state)) {
         return;
       }
 
@@ -150,7 +150,7 @@ struct MaterialInteractor {
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialProperties(state)) {
+      if (not d.evaluateMaterialSlab(state)) {
         return;
       }
       // Record the result
@@ -184,7 +184,7 @@ struct MaterialInteractor {
       mi.surface = d.surface;
       mi.volume = nullptr;
       mi.pathCorrection = d.pathCorrection;
-      mi.materialProperties = d.slab;
+      mi.materialSlab = d.slab;
       result.materialInteractions.push_back(std::move(mi));
     }
   }
@@ -203,7 +203,7 @@ struct MaterialInteractor {
     mi.surface = nullptr;
     mi.volume = d.volume;
     mi.pathCorrection = d.pathCorrection;
-    mi.materialProperties = d.slab;
+    mi.materialSlab = d.slab;
     result.materialInteractions.push_back(std::move(mi));
   }
 
@@ -220,13 +220,13 @@ struct MaterialInteractor {
     double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().materialProperties.scaleThickness(
+    result.materialInteractions.back().materialSlab.scaleThickness(
         shift.norm());
     result.materialInteractions.back().updatedVolumeStep = true;
     result.materialInX0 +=
-        result.materialInteractions.back().materialProperties.thicknessInX0();
+        result.materialInteractions.back().materialSlab.thicknessInX0();
     result.materialInL0 +=
-        result.materialInteractions.back().materialProperties.thicknessInL0();
+        result.materialInteractions.back().materialSlab.thicknessInL0();
   }
 };  // namespace Acts
 

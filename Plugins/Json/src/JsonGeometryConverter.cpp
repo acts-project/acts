@@ -78,16 +78,16 @@ Acts::Material decodeMaterial(const json& encoded) {
 //
 // encoded as an object w/ two entries: `material` and `thickness`
 
-json encodeMaterialSlab(const Acts::MaterialProperties& slab) {
+json encodeMaterialSlab(const Acts::MaterialSlab& slab) {
   return {
       {"material", encodeMaterial(slab.material())},
       {"thickness", slab.thickness()},
   };
 }
 
-Acts::MaterialProperties decodeMaterialSlab(const json& encoded) {
-  return Acts::MaterialProperties(decodeMaterial(encoded.at("material")),
-                                  encoded.at("thickness").get<float>());
+Acts::MaterialSlab decodeMaterialSlab(const json& encoded) {
+  return Acts::MaterialSlab(decodeMaterial(encoded.at("material")),
+                            encoded.at("thickness").get<float>());
 }
 
 }  // namespace
@@ -378,7 +378,7 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
     }
   }
   // Convert the material
-  Acts::MaterialPropertiesMatrix mpMatrix;
+  Acts::MaterialSlabMatrix mpMatrix;
   // Structured binding
   for (auto& [key, value] : material.items()) {
     // Check json keys
@@ -670,7 +670,7 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       if (m_cfg.writeData) {
         smj[m_cfg.datakey] = json::array({
             json::array({
-                encodeMaterialSlab(hsMaterial->materialProperties(0, 0)),
+                encodeMaterialSlab(hsMaterial->materialSlab(0, 0)),
             }),
         });
       }
@@ -890,12 +890,12 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
 }
 
 /// Create the Material Matrix
-Acts::MaterialPropertiesMatrix
-Acts::JsonGeometryConverter::jsonToMaterialMatrix(const json& data) {
-  Acts::MaterialPropertiesMatrix mpMatrix;
+Acts::MaterialSlabMatrix Acts::JsonGeometryConverter::jsonToMaterialMatrix(
+    const json& data) {
+  Acts::MaterialSlabMatrix mpMatrix;
   // the input data must be array[array[object]]
   for (auto& outer : data) {
-    Acts::MaterialPropertiesVector mpVector;
+    Acts::MaterialSlabVector mpVector;
     for (auto& inner : outer) {
       mpVector.emplace_back(decodeMaterialSlab(inner));
     }

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -27,8 +27,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   ///
   /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
-  HomogeneousSurfaceMaterial(const MaterialProperties& full,
-                             double splitFactor = 1.);
+  HomogeneousSurfaceMaterial(const MaterialSlab& full, double splitFactor = 1.);
 
   /// Copy Constructor
   ///
@@ -66,27 +65,26 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// @param hsm is the source material
   bool operator==(const HomogeneousSurfaceMaterial& hsm) const;
 
-  /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector2D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
 
-  /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector3D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
+  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
 
-  /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
+  /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
   ///
   /// @param ib0 The bin at local 0 for retrieving the material
   /// @param ib1 The bin at local 1 for retrieving the material
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties& materialProperties(size_t ib0,
-                                               size_t ib1) const final;
+  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
 
-  /// The inherited methods - for materialProperties access
-  using ISurfaceMaterial::materialProperties;
+  /// The inherited methods - for MaterialSlab access
+  using ISurfaceMaterial::materialSlab;
 
   /// The interited methods - for scale access
   using ISurfaceMaterial::factor;
@@ -97,21 +95,21 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   std::ostream& toStream(std::ostream& sl) const final;
 
  private:
-  /// The five different MaterialProperties
-  MaterialProperties m_fullMaterial = MaterialProperties();
+  /// The five different MaterialSlab
+  MaterialSlab m_fullMaterial = MaterialSlab();
 };
 
-inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
     const Vector2D& /*lp*/) const {
   return (m_fullMaterial);
 }
 
-inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
     const Vector3D& /*gp*/) const {
   return (m_fullMaterial);
 }
 
-inline const MaterialProperties& HomogeneousSurfaceMaterial::materialProperties(
+inline const MaterialSlab& HomogeneousSurfaceMaterial::materialSlab(
     size_t /*ib0*/, size_t /*ib1*/) const {
   return (m_fullMaterial);
 }

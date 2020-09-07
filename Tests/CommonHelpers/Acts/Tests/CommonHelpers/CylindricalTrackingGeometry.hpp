@@ -26,7 +26,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -75,7 +75,7 @@ struct CylindricalTrackingGeometry {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
-    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+    MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
 
     // Create a new surface material
     std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
@@ -134,7 +134,7 @@ struct CylindricalTrackingGeometry {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
-    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+    MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
 
     // Create a new surface material
     std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
@@ -244,7 +244,7 @@ struct CylindricalTrackingGeometry {
         cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
 
     // ----------------- build a beam pipe -----------------------------------
-    MaterialProperties beamPipeMaterial(makeBeryllium(), 0.8_mm);
+    MaterialSlab beamPipeMaterial(makeBeryllium(), 0.8_mm);
     PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
     bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
@@ -274,7 +274,7 @@ struct CylindricalTrackingGeometry {
     //-------------------------------------------------------------------------------------
     // some prep work for the material
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    MaterialProperties lProperties(makeSilicon(), 1.5_mm);
+    MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
     std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr =
         std::shared_ptr<const ISurfaceMaterial>(

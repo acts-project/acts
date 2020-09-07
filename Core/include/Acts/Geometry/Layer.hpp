@@ -226,7 +226,7 @@ class Layer : public virtual GeometryObject {
   ///  optionally, the layer can be resized to the dimensions of the
   /// TrackingVolume
   ///  - Bounds of the Surface are resized
-  ///  - MaterialProperties dimensions are resized
+  ///  - MaterialSlab dimensions are resized
   ///  - SubSurface array boundaries are NOT resized
   ///
   /// @param tvol is the tracking volume the layer is confined

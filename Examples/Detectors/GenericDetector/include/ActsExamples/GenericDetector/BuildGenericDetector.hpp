@@ -169,7 +169,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
       352.8_mm, 407_mm, 9.012, 4.0, 1.848_g / 1_cm3);
   std::shared_ptr<const Acts::ISurfaceMaterial> beamPipeMaterial =
       std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-          Acts::MaterialProperties(beryllium, 0.8_mm));
+          Acts::MaterialSlab(beryllium, 0.8_mm));
   if (protoMaterial) {
     beamPipeMaterial = pCylinderMaterial;
   }
@@ -214,11 +214,11 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
   const auto silicon = Acts::Material::fromMassDensity(95.7_mm, 465.2_mm, 28.03,
                                                        14., 2.32_g / 1_cm3);
-  Acts::MaterialProperties pcModuleMaterial(silicon, pCentralModuleT);
-  Acts::MaterialProperties peModuleMaterial(silicon, pEndcapModuleT);
+  Acts::MaterialSlab pcModuleMaterial(silicon, pCentralModuleT);
+  Acts::MaterialSlab peModuleMaterial(silicon, pEndcapModuleT);
   // Layer material properties - thickness, X0, L0, A, Z, Rho
-  Acts::MaterialProperties pcmbProperties(silicon, 1.5_mm);
-  Acts::MaterialProperties pcmecProperties(silicon, 1.5_mm);
+  Acts::MaterialSlab pcmbProperties(silicon, 1.5_mm);
+  Acts::MaterialSlab pcmecProperties(silicon, 1.5_mm);
 
   // Module, central and disc material
   std::shared_ptr<const Acts::ISurfaceMaterial> pCentralMaterial =
@@ -393,7 +393,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // Material
     std::shared_ptr<const Acts::ISurfaceMaterial> pstMaterial =
         std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-            Acts::MaterialProperties(beryllium, 1.8_mm));
+            Acts::MaterialSlab(beryllium, 1.8_mm));
     if (protoMaterial) {
       pstMaterial = pCylinderMaterial;
     }
@@ -436,12 +436,12 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material sscMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialProperties sscModuleMaterial(silicon, ssCentralModuleT);
-    Acts::MaterialProperties sseModuleMaterial(silicon, ssEndcapModuleT);
+    Acts::MaterialSlab sscModuleMaterial(silicon, ssCentralModuleT);
+    Acts::MaterialSlab sseModuleMaterial(silicon, ssEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    Acts::MaterialProperties ssbmProperties(silicon, 2_mm);
-    Acts::MaterialProperties ssecmProperties(silicon, 2.5_mm);
+    Acts::MaterialSlab ssbmProperties(silicon, 2_mm);
+    Acts::MaterialSlab ssecmProperties(silicon, 2.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> ssCentralMaterial =
@@ -631,12 +631,12 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialProperties lscModuleMaterial(silicon, lsCentralModuleT);
-    Acts::MaterialProperties lseModuleMaterial(silicon, lsEndcapModuleT);
+    Acts::MaterialSlab lscModuleMaterial(silicon, lsCentralModuleT);
+    Acts::MaterialSlab lseModuleMaterial(silicon, lsEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho - barrel
-    Acts::MaterialProperties lsbmProperties(silicon, 2.5_mm);
-    Acts::MaterialProperties lsecmProperties(silicon, 3.5_mm);
+    Acts::MaterialSlab lsbmProperties(silicon, 2.5_mm);
+    Acts::MaterialSlab lsecmProperties(silicon, 3.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> lsCentralMaterial =

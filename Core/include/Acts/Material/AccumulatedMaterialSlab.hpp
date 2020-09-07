@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
@@ -26,7 +26,7 @@ namespace Acts {
 ///     the other.
 /// 2.  The total store averages the accumulated material properties over all
 ///     tracks. Each track contributes equally.
-class AccumulatedMaterialProperties {
+class AccumulatedMaterialSlab {
  public:
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
@@ -44,7 +44,7 @@ class AccumulatedMaterialProperties {
   ///
   ///  Vacuum steps with a non-zero thickness can be added to account for holes
   ///  in material structures.
-  void accumulate(MaterialProperties slabAlongTrack, float pathCorrection = 1);
+  void accumulate(MaterialSlab slabAlongTrack, float pathCorrection = 1);
 
   /// Add the accumulated material for the current track to the total average.
   ///
@@ -68,13 +68,13 @@ class AccumulatedMaterialProperties {
   /// there have been additional calls to `.accumulate(...)` afterwards, the
   /// information is not part of the total average. The thickness corresponds to
   /// the average thickness seen by the tracks.
-  std::pair<MaterialProperties, unsigned int> totalAverage() const;
+  std::pair<MaterialSlab, unsigned int> totalAverage() const;
 
  private:
   /// Averaged properties for a single track.
-  MaterialProperties m_trackAverage;
+  MaterialSlab m_trackAverage;
   /// Averaged properties over multiple tracks.
-  MaterialProperties m_totalAverage;
+  MaterialSlab m_totalAverage;
   // Number of tracks contributing to the total average.
   unsigned int m_totalCount = 0u;
 };

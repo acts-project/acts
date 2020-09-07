@@ -39,8 +39,7 @@ struct GeneralMixture {
   ///
   /// @tparam generator_t is a RandomNumberEngine
   template <typename generator_t>
-  double operator()(generator_t &generator,
-                    const Acts::MaterialProperties &slab,
+  double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
     double theta = 0.0;
 
