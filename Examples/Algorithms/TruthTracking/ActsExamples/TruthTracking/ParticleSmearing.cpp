@@ -30,8 +30,6 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& cfg,
 
 ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     const AlgorithmContext& ctx) const {
-  using Acts::VectorHelpers;
-
   // setup input and output containers
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
@@ -43,8 +41,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   for (const auto& particle : particles) {
-    const auto phi = VectorHelpers::phi(particle.unitDirection());
-    const auto theta = VectorHelpers::theta(particle.unitDirection());
+    const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
+    const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
     const auto pt = particle.transverseMomentum();
     const auto p = particle.absMomentum();
 
