@@ -178,7 +178,7 @@ class SingleFreeTrackParameters {
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleFreeTrackParameters& tp) {
-    detail::printFreeTrackParameters(
+    detail::printFreeParameters(
         os, tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;

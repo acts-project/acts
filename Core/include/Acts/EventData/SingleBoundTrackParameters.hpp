@@ -211,7 +211,7 @@ class SingleBoundTrackParameters {
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleBoundTrackParameters& tp) {
-    detail::printBoundTrackParameters(
+    detail::printBoundParameters(
         os, tp.referenceSurface(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
     return os;
