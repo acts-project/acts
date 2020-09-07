@@ -31,13 +31,13 @@ using ReturnTypeParameters = decltype(std::declval<T>().parameters());
 template <typename T>
 using ReturnTypeCovariance = decltype(std::declval<T>().covariance());
 template <typename T>
-using ReturnTypePosition4FromContext =
-    decltype(std::declval<T>().position4(GeometryContext()));
+using ReturnTypeFourPositionFromContext =
+    decltype(std::declval<T>().fourPosition(std::declval<GeometryContext>()));
 template <typename T>
-using ReturnTypePosition4 = decltype(std::declval<T>().position4());
+using ReturnTypeFourPosition = decltype(std::declval<T>().fourPosition());
 template <typename T>
 using ReturnTypePositionFromContext =
-    decltype(std::declval<T>().position(GeometryContext()));
+    decltype(std::declval<T>().position(std::declval<GeometryContext>()));
 template <typename T>
 using ReturnTypePosition = decltype(std::declval<T>().position());
 template <typename T>
@@ -68,8 +68,8 @@ struct BoundTrackParametersConceptImpl {
   constexpr static bool hasMethodCovariance =
       identical_to<const std::optional<BoundSymMatrix>&, ReturnTypeCovariance,
                    const T>;
-  constexpr static bool hasMethodPosition4FromContext =
-      identical_to<Vector4D, ReturnTypePosition4FromContext, const T>;
+  constexpr static bool hasMethodFourPositionFromContext =
+      identical_to<Vector4D, ReturnTypeFourPositionFromContext, const T>;
   constexpr static bool hasMethodPositionFromContext =
       identical_to<Vector3D, ReturnTypePositionFromContext, const T>;
   constexpr static bool hasMethodTime =
@@ -89,6 +89,8 @@ struct BoundTrackParametersConceptImpl {
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
   static_assert(hasMethodParameters, "Missing or invalid 'parameters' method");
   static_assert(hasMethodCovariance, "Missing or invalid 'covariance' method");
+  static_assert(hasMethodFourPositionFromContext,
+                "Missing or invalid 'fourPosition' method");
   static_assert(hasMethodPositionFromContext,
                 "Missing or invalid 'position' method");
   static_assert(hasMethodTime, "Missing or invalid 'time' method");
@@ -103,7 +105,7 @@ struct BoundTrackParametersConceptImpl {
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
               hasMethodParameters, hasMethodCovariance,
-              hasMethodPosition4FromContext, hasMethodPositionFromContext,
+              hasMethodFourPositionFromContext, hasMethodPositionFromContext,
               hasMethodTime, hasMethodUnitDirection, hasMethodAbsoluteMomentum,
               hasMethodCharge, hasMethodReferenceSurface>;
 };
@@ -123,8 +125,8 @@ struct FreeTrackParametersConceptImpl {
   constexpr static bool hasMethodCovariance =
       identical_to<const std::optional<FreeSymMatrix>&, ReturnTypeCovariance,
                    const T>;
-  constexpr static bool hasMethodPosition4 =
-      identical_to<Vector4D, ReturnTypePosition4, const T>;
+  constexpr static bool hasMethodFourPosition =
+      identical_to<Vector4D, ReturnTypeFourPosition, const T>;
   constexpr static bool hasMethodPosition =
       identical_to<Vector3D, ReturnTypePosition, const T>;
   constexpr static bool hasMethodTime =
@@ -142,7 +144,8 @@ struct FreeTrackParametersConceptImpl {
   static_assert(hasTypeCovarianceMatrix, "Covariance matrix type is missing");
   static_assert(hasMethodParameters, "Missing or invalid 'parameters' method");
   static_assert(hasMethodCovariance, "Missing or invalid 'covariance' method");
-  static_assert(hasMethodPosition4, "Missing or invalid 'position4' method");
+  static_assert(hasMethodFourPosition,
+                "Missing or invalid 'fourPosition' method");
   static_assert(hasMethodPosition, "Missing or invalid 'position' method");
   static_assert(hasMethodTime, "Missing or invalid 'time' method");
   static_assert(hasMethodUnitDirection,
@@ -153,7 +156,7 @@ struct FreeTrackParametersConceptImpl {
 
   constexpr static bool value =
       require<hasTypeScalar, hasTypeParametersVector, hasTypeCovarianceMatrix,
-              hasMethodParameters, hasMethodCovariance, hasMethodPosition4,
+              hasMethodParameters, hasMethodCovariance, hasMethodFourPosition,
               hasMethodPosition, hasMethodTime, hasMethodUnitDirection,
               hasMethodAbsoluteMomentum, hasMethodCharge>;
 };
