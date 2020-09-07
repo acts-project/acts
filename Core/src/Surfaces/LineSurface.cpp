@@ -12,17 +12,15 @@
 #include <cmath>
 #include <utility>
 
-Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
-                               double radius, double halez)
+Acts::LineSurface::LineSurface(const Transform3D& transform, double radius,
+                               double halez)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const LineBounds>(radius, halez)) {}
 
-Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::LineSurface::LineSurface(const Transform3D& transform,
                                std::shared_ptr<const LineBounds> lbounds)
-    : GeometryObject(),
-      Surface(std::move(htrans)),
-      m_bounds(std::move(lbounds)) {}
+    : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
 
 Acts::LineSurface::LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
                                const DetectorElementBase& detelement)
@@ -35,10 +33,8 @@ Acts::LineSurface::LineSurface(const LineSurface& other)
 
 Acts::LineSurface::LineSurface(const GeometryContext& gctx,
                                const LineSurface& other,
-                               const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                               const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
   if (this != &other) {

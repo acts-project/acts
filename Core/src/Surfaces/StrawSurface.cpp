@@ -17,13 +17,13 @@
 #include <iostream>
 #include <utility>
 
-Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
-                                 double radius, double halez)
-    : GeometryObject(), LineSurface(std::move(htrans), radius, halez) {}
+Acts::StrawSurface::StrawSurface(const Transform3D& transform, double radius,
+                                 double halez)
+    : GeometryObject(), LineSurface(transform, radius, halez) {}
 
-Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::StrawSurface::StrawSurface(const Transform3D& transform,
                                  std::shared_ptr<const LineBounds> lbounds)
-    : GeometryObject(), LineSurface(std::move(htrans), std::move(lbounds)) {}
+    : GeometryObject(), LineSurface(transform, std::move(lbounds)) {}
 
 Acts::StrawSurface::StrawSurface(
     const std::shared_ptr<const LineBounds>& lbounds,
@@ -35,8 +35,8 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 
 Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
                                  const StrawSurface& other,
-                                 const Transform3D& transf)
-    : GeometryObject(), LineSurface(gctx, other, transf) {}
+                                 const Transform3D& shift)
+    : GeometryObject(), LineSurface(gctx, other, shift) {}
 
 Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
   if (this != &other) {

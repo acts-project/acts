@@ -18,19 +18,11 @@
 #include <functional>
 #include <utility>
 
-Acts::TrackingVolume::TrackingVolume()
-    : Volume(),
-      m_volumeMaterial(nullptr),
-      m_boundarySurfaces(),
-      m_confinedLayers(nullptr),
-      m_confinedVolumes(nullptr),
-      m_name("undefined") {}
-
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    const Transform3D& transform, VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volbounds)),
+    : Volume(transform, std::move(volbounds)),
       m_volumeMaterial(nullptr),
       m_boundarySurfaces(),
       m_confinedLayers(nullptr),
@@ -42,13 +34,13 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+    const Transform3D& transform, VolumeBoundsPtr volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     MutableTrackingVolumeVector denseVolumeVector,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volumeBounds)),
+    : Volume(transform, std::move(volumeBounds)),
       m_volumeMaterial(std::move(volumeMaterial)),
       m_confinedLayers(std::move(staticLayerArray)),
       m_confinedVolumes(std::move(containedVolumeArray)),
@@ -61,13 +53,13 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    const Transform3D& transform, VolumeBoundsPtr volbounds,
     std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
     std::vector<std::unique_ptr<const Volume>> descendants,
     const Volume::BoundingBox* top,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volbounds)),
+    : Volume(transform, std::move(volbounds)),
       m_volumeMaterial(std::move(volumeMaterial)),
       m_name(volumeName),
       m_descendantVolumes(std::move(descendants)),
@@ -153,8 +145,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces =
-      Volume::volumeBounds().orientedSurfaces(m_transform.get());
+  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
