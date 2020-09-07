@@ -102,7 +102,7 @@ class SingleFreeTrackParameters {
   }
 
   /// Space-time position four-vector.
-  Vector4D position4() const {
+  Vector4D fourPosition() const {
     Vector4D pos4;
     pos4[ePos0] = get<eFreePos0>();
     pos4[ePos1] = get<eFreePos1>();

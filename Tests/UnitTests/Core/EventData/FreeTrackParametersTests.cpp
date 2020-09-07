@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(free_initialization) {
   CHECK_CLOSE_ABS(fp.uncertainty<eFreeQOverP>(), std::sqrt((*cov)(7, 7)), 1e-6);
 
   // Test getter of parts of the parameters by their meaning
-  CHECK_CLOSE_ABS(fp.position4(), pos4, 1e-6);
+  CHECK_CLOSE_ABS(fp.fourPosition(), pos4, 1e-6);
   CHECK_CLOSE_ABS(fp.position(), pos4.segment<3>(ePos0), 1e-6);
   CHECK_CLOSE_ABS(fp.time(), pos4[eTime], 1e-6);
   CHECK_CLOSE_ABS(fp.unitDirection(), dir.normalized(), 1e-6);
