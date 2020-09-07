@@ -8,10 +8,10 @@
 
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
-    const MaterialProperties& full, double splitFactor)
+    const MaterialSlab& full, double splitFactor)
     : ISurfaceMaterial(splitFactor), m_fullMaterial(full) {}
 
 Acts::HomogeneousSurfaceMaterial& Acts::HomogeneousSurfaceMaterial::operator*=(

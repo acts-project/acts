@@ -139,7 +139,7 @@ void ActsExamples::RootMaterialWriter::write(
     for (size_t b0 = 0; b0 < bins0; ++b0) {
       for (size_t b1 = 0; b1 < bins1; ++b1) {
         // get the material for the bin
-        auto& mat = sMaterial->materialProperties(b0, b1);
+        auto& mat = sMaterial->materialSlab(b0, b1);
         if (mat) {
           t->SetBinContent(b0 + 1, b1 + 1, mat.thickness());
           x0->SetBinContent(b0 + 1, b1 + 1, mat.material().X0());

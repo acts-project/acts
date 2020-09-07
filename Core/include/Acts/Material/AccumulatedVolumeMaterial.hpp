@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
@@ -18,7 +18,7 @@ namespace Acts {
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
-  void accumulate(const MaterialProperties& mat);
+  void accumulate(const MaterialSlab& mat);
 
   /// Compute the average material collected so far.
   ///
@@ -26,7 +26,7 @@ class AccumulatedVolumeMaterial {
   const Material& average() { return m_average.material(); }
 
  private:
-  MaterialProperties m_average;
+  MaterialSlab m_average;
 };
 
 }  // namespace Acts
