@@ -27,7 +27,7 @@ constexpr auto eps = std::numeric_limits<BoundScalar>::epsilon();
 BOOST_AUTO_TEST_SUITE(TransformFreeToBound)
 
 BOOST_DATA_TEST_CASE(
-    GlobalToBoundParameters,
+    GlobalToBoundTrackParameters,
     surfaces* posSymmetric* posSymmetric* ts* phis* thetas* qOverPs, surface,
     l0, l1, time, phiInput, theta, qOverP) {
   // phi is ill-defined in forward/backward tracks
@@ -52,8 +52,8 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(bv[eBoundQOverP], qOverP, eps, eps);
 }
 
-BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters, ts* phis* thetas* qOverPs,
-                     time, phiInput, theta, qOverP) {
+BOOST_DATA_TEST_CASE(GlobalToCurvilinearTrackParameters,
+                     ts* phis* thetas* qOverPs, time, phiInput, theta, qOverP) {
   // phi is ill-defined in forward/backward tracks
   auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
 

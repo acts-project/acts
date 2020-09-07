@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-std::tuple<BoundParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
@@ -24,7 +24,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface) const {
                             state.pathAccumulated, surface);
 }
 
-std::tuple<CurvilinearParameters, BoundMatrix, double>
+std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state) const {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],

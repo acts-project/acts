@@ -102,7 +102,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksReader::read(
         vtxAndTracks.vertex.position4[2] = (*m_ptrVz)[idx];
         vtxAndTracks.vertex.position4[3] = 0;
 
-        std::vector<Acts::BoundParameters> tracks;
+        std::vector<Acts::BoundTrackParameters> tracks;
         // Loop over all tracks in current event
         for (size_t trkId = 0; trkId < m_ptrD0->size(); ++trkId) {
           // Take only tracks that belong to current vertex

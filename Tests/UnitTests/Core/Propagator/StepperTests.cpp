@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(std::nullopt, pos, mom, charge, time);
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
                                               stepSize, tolerance);
 
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time = 7.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearParameters cp(cov, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the curvilinear state construction
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
-  CHECK_CLOSE_ABS(curvPars.position(), cp.position(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
+  CurvilinearTrackParameters cp2(cov2, pos2, mom2, charge2, time2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
-  BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
+  BoundTrackParameters bp(tgContext, cov, pos, mom, charge, time, plane);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
                                                 stepSize, tolerance);
 

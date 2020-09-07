@@ -1,10 +1,10 @@
 target_sources_local(
   ActsCore
   PRIVATE
-    ChargedTrackParameters.cpp
     MeasurementHelpers.cpp
     NeutralTrackParameters.cpp
     PrintParameters.cpp
+    TrackParameters.cpp
     TransformationBoundToFree.cpp
     TransformationFreeToBound.cpp
 )

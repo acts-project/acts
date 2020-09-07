@@ -373,8 +373,7 @@ Acts::JsonGeometryConverter::jsonToSurfaceMaterial(const json& material) {
   Acts::BinUtility bUtility;
   for (auto& [key, value] : material.items()) {
     if (key == m_cfg.transfokeys and not value.empty()) {
-      bUtility = Acts::BinUtility(
-          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      bUtility = Acts::BinUtility(jsonToTransform(value));
       break;
     }
   }
@@ -413,8 +412,7 @@ const Acts::IVolumeMaterial* Acts::JsonGeometryConverter::jsonToVolumeMaterial(
   Acts::BinUtility bUtility;
   for (auto& [key, value] : material.items()) {
     if (key == m_cfg.transfokeys and not value.empty()) {
-      bUtility = Acts::BinUtility(
-          std::make_shared<const Transform3D>(jsonToTransform(value)));
+      bUtility = Acts::BinUtility(jsonToTransform(value));
       break;
     }
   }
@@ -728,9 +726,9 @@ json Acts::JsonGeometryConverter::surfaceMaterialToJson(
       }
       smj[binkeys[ibin]] = binj;
     }
-    if (bUtility->transform() != nullptr) {
-      std::vector<double> transfo;
-      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
+    std::vector<double> transfo;
+    Acts::Transform3D transfo_matrix = bUtility->transform();
+    if (not transfo_matrix.isApprox(Acts::Transform3D::Identity())) {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
           transfo.push_back(transfo_matrix(j, i));
@@ -840,16 +838,14 @@ json Acts::JsonGeometryConverter::volumeMaterialToJson(
       }
       smj[binkeys[ibin]] = binj;
     }
-    if (bUtility->transform() != nullptr) {
-      std::vector<double> transfo;
-      Acts::Transform3D transfo_matrix = *(bUtility->transform().get());
-      for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-          transfo.push_back(transfo_matrix(j, i));
-        }
+    std::vector<double> transfo;
+    Acts::Transform3D transfo_matrix = bUtility->transform();
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        transfo.push_back(transfo_matrix(j, i));
       }
-      smj[m_cfg.transfokeys] = transfo;
     }
+    smj[m_cfg.transfokeys] = transfo;
   }
   return smj;
 }
