@@ -117,30 +117,33 @@ struct SinglyCharged {
 /// Only a charge magnitude identical to zero is interpreted as representing a
 /// neutral particle. This avoids ambiguities that might arise from using an
 /// approximate comparison with an arbitrary epsilon.
-struct AnyCharge {
-  float magnitude;
-
+class AnyCharge {
+ public:
   /// Delete default constructor to ensure charge is always explicitely given.
   AnyCharge() = delete;
   /// Construct with the magnitude of the input charge.
   template <typename T>
-  constexpr AnyCharge(T absQ) noexcept : magnitude(std::abs(absQ)) {
+  constexpr AnyCharge(T absQ) noexcept : m_magnitude(std::abs(absQ)) {
     assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
   }
 
   template <typename T>
   constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(magnitude), qOverP);
+    return std::copysign(static_cast<T>(m_magnitude), qOverP);
   }
   template <typename T>
   constexpr T extractMomentum(T qOverP) const noexcept {
-    return (magnitude != 0.0f) ? std::abs(static_cast<T>(magnitude) / qOverP)
-                               : std::abs(1 / qOverP);
+    return (m_magnitude != 0.0f)
+               ? std::abs(static_cast<T>(m_magnitude) / qOverP)
+               : std::abs(1 / qOverP);
   }
+
+ private:
+  float m_magnitude;
 
   /// Compare for equality.
   friend constexpr bool operator==(AnyCharge lhs, AnyCharge rhs) noexcept {
-    return lhs.magnitude == rhs.magnitude;
+    return lhs.m_magnitude == rhs.m_magnitude;
   }
 };
 
