@@ -40,17 +40,7 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  CurvilinearParameters params(std::nullopt, pos, absMom * dir, charge, time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.unitDirection(), dir, 0.1_mrad);
-  CHECK_CLOSE_ABS(params.absoluteMomentum(), absMom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), charge);
-
-  return params;
+  return CurvilinearParameters(std::nullopt, pos, absMom * dir, charge, time);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
@@ -58,6 +48,12 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
     double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
+
+  // phi is ill-defined in forward/backward tracks. normalize the value to
+  // ensure parameter comparisons give correct answers.
+  if (not((0 < theta) and (theta < M_PI))) {
+    phi = 0;
+  }
 
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
@@ -77,10 +73,10 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  auto withoutCov = makeParametersCurvilinear(phi, theta, absMom, charge);
-  return CurvilinearParameters(std::move(cov), withoutCov.position(),
-                               withoutCov.momentum(), withoutCov.charge(),
-                               withoutCov.time());
+  Vector3D pos = Vector3D::Zero();
+  double time = 0.0;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return CurvilinearParameters(std::move(cov), pos, absMom * dir, charge, time);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -98,18 +94,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  NeutralCurvilinearTrackParameters params(std::nullopt, pos, absMom * dir,
+  return NeutralCurvilinearTrackParameters(std::nullopt, pos, absMom * dir,
                                            time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.unitDirection(), dir, 0.1_mrad);
-  CHECK_CLOSE_ABS(params.absoluteMomentum(), absMom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), 0);
-
-  return params;
 }
 
 // helpers to compare track parameters
