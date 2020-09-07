@@ -150,7 +150,7 @@ class SingleBoundTrackParameters {
   /// surface to globalcoordinates. This requires a geometry context to select
   /// the appropriate transformation and might be a computationally expensive
   /// operation.
-  Vector4D position4(const GeometryContext& geoCtx) const {
+  Vector4D fourPosition(const GeometryContext& geoCtx) const {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =
         makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
