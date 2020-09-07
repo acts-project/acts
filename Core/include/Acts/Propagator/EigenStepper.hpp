@@ -79,8 +79,8 @@ class EigenStepper {
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : pos(par.position(gctx)),
-          dir(par.momentum().normalized()),
-          p(par.momentum().norm()),
+          dir(par.unitDirection()),
+          p(par.absoluteMomentum()),
           q(par.charge()),
           t(par.time()),
           navDir(ndir),

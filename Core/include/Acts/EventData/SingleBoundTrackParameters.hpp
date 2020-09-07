@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <memory>
 
 namespace Acts {
 
@@ -142,13 +143,31 @@ class SingleBoundTrackParameters {
     return m_paramSet.getUncertainty<kIndex>();
   }
 
+  /// Space-time position four-vector.
+  ///
+  /// @param[in] geoCtx Geometry context for the local-to-global transformation
+  ///
+  /// This uses the associated surface to transform the local position on the
+  /// surface to globalcoordinates. This requires a geometry context to select
+  /// the appropriate transformation and might be a computationally expensive
+  /// operation.
+  Vector4D fourPosition(const GeometryContext& geoCtx) const {
+    const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
+    const Vector3D dir =
+        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
+    Vector4D pos4;
+    pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
+    pos4[eTime] = get<eBoundTime>();
+    return pos4;
+  }
   /// Access the spatial position vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global transformation
   ///
-  /// This uses the associated surface to transform the local position to global
-  /// coordinates. This requires a geometry context to select the appropriate
-  /// transformation and might be a computationally expensive operation.
+  /// This uses the associated surface to transform the local position on the
+  /// surface to globalcoordinates. This requires a geometry context to select
+  /// the appropriate transformation and might be a computationally expensive
+  /// operation.
   Vector3D position(const GeometryContext& geoCtx) const {
     const Vector2D loc(get<eBoundLoc0>(), get<eBoundLoc1>());
     const Vector3D dir =
@@ -158,19 +177,18 @@ class SingleBoundTrackParameters {
   /// Access the time coordinate.
   Scalar time() const { return get<eBoundTime>(); }
 
-  /// Access the direction pseudo-rapidity.
-  Scalar eta() const { return -std::log(std::tan(get<eBoundTheta>() / 2)); }
-  /// Access the absolute transverse momentum.
-  Scalar pT() const {
-    return std::sin(get<eBoundTheta>()) / std::abs(get<eBoundQOverP>());
+  /// Direction unit three-vector, i.e. the normalized momentum three-vector.
+  Vector3D unitDirection() const {
+    return makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
   }
-  /// Access the momentum three-vector.
-  Vector3D momentum() const {
-    auto mom =
-        makeDirectionUnitFromPhiTheta(get<eBoundPhi>(), get<eBoundTheta>());
-    mom *= std::abs(1 / get<eBoundQOverP>());
-    return mom;
+  /// Absolute momentum.
+  Scalar absoluteMomentum() const { return 1 / std::abs(get<eBoundQOverP>()); }
+  /// Absolute transverse momentum.
+  Scalar transverseMomentum() const {
+    return std::sin(get<eBoundTheta>()) * absoluteMomentum();
   }
+  /// Momentum three-vector.
+  Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Access the particle electric charge.
   Scalar charge() const { return m_chargePolicy.getCharge(); }

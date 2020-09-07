@@ -37,6 +37,9 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
                      double theta, double qOverP, const Vector3D& pos,
                      const Vector3D& mom, double q) {
+  Vector4D pos4 = Vector4D::Zero();
+  pos4.segment<3>(ePos0) = pos;
+  pos4[eTime] = time;
   // native values
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc0>(), l0, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc1>(), l1, eps, eps);
@@ -46,8 +49,13 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), mom.normalized(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), mom.head<2>().norm(), eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), mom.norm(), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), mom, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
 }
