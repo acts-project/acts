@@ -244,8 +244,8 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
       detail::transformFreeToBoundParameters(parameters, surface, geoContext);
   // Create the bound state
   return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), bv, std::move(cov)), jacobian,
-      accumulatedPath);
+      BoundTrackParameters(surface.getSharedPtr(), bv, std::move(cov)),
+      jacobian, accumulatedPath);
 }
 
 CurvilinearState curvilinearState(Covariance& covarianceMatrix,

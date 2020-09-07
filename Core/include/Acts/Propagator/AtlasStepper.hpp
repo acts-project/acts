@@ -586,8 +586,8 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext, pos4,
-                               dir, qOverP, std::move(covOpt));
+    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
+                                    pos4, dir, qOverP, std::move(covOpt));
 
     return BoundState(std::move(parameters), state.jacobian,
                       state.pathAccumulated);
