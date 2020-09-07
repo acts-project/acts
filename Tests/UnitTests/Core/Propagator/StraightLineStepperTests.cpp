@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
+  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, 0, time);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
                                         stepSize, tolerance);
   BOOST_CHECK_EQUAL(slsState.q, 0.);

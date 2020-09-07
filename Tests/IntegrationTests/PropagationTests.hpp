@@ -35,7 +35,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
     phi = 0;
   }
 
-  Vector4 pos4 = Vector4D::Zero();
+  Vector4D pos4 = Vector4D::Zero();
   return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge);
 }
 

@@ -95,12 +95,12 @@ BOOST_DATA_TEST_CASE(
   const Vector4D pos4(x, y, z, time);
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  CurvilinearParameters params(pos4, dir, q / p);
+  CurvilinearTrackParameters params(pos4, dir, q / p);
   checkParameters(params, phi, theta, p, q, pos4, dir);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = CurvilinearParameters(pos4, dir, q / p, cov);
+  params = CurvilinearTrackParameters(pos4, dir, q / p, cov);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
