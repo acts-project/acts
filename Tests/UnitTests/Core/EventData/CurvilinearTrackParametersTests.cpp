@@ -48,9 +48,7 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.get<eBoundQOverP>(), qOverP, eps, eps);
 
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.unitDirection(), dir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), std::sin(theta) * p, eps,
@@ -88,9 +86,7 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_OR_SMALL(params.get<eBoundQOverP>(), 1 / p, eps, eps);
 
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.unitDirection(), dir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), std::sin(theta) * p, eps,
