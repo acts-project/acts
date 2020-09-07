@@ -70,9 +70,9 @@ class Surface : public virtual GeometryObject,
  protected:
   /// Constructor with Transform3D as a shared object
   ///
-  /// @param tform Transform3D positions the surface in 3D global space
+  /// @param transform Transform3D positions the surface in 3D global space
   /// @note also acts as default constructor
-  Surface(std::shared_ptr<const Transform3D> tform = nullptr);
+  Surface(const Transform3D& transform = Transform3D::Identity());
 
   /// Copy constructor
   ///
@@ -94,7 +94,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
-  /// @param shift Additional transform applied after copying from the source
+  /// @param shift Additional transform applied as: shift * transform
   Surface(const GeometryContext& gctx, const Surface& other,
           const Transform3D& shift);
 
@@ -475,7 +475,7 @@ class Surface : public virtual GeometryObject,
  protected:
   /// Transform3D definition that positions
   /// (translation, rotation) the surface in global space
-  std::shared_ptr<const Transform3D> m_transform;
+  Transform3D m_transform = Transform3D::Identity();
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement{nullptr};

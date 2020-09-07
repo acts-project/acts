@@ -13,13 +13,13 @@
 
 #include <utility>
 
-Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D> transform,
+Acts::ConeLayer::ConeLayer(const Transform3D& transform,
                            std::shared_ptr<const ConeBounds> cbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,
                            double thickness,
                            std::unique_ptr<ApproachDescriptor> ade,
                            LayerType laytyp)
-    : ConeSurface(std::move(transform), std::move(cbounds)),
+    : ConeSurface(transform, std::move(cbounds)),
       Layer(std::move(surfaceArray), thickness, std::move(ade), laytyp) {}
 
 const Acts::ConeSurface& Acts::ConeLayer::surfaceRepresentation() const {

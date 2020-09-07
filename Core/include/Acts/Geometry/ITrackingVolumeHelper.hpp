@@ -64,7 +64,7 @@ class ITrackingVolumeHelper {
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = Transform3D::Identity(),
       const std::string& volumeName = "UndefinedVolume",
       BinningType btype = arbitrary) const = 0;
 

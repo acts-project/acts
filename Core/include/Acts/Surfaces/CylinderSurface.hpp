@@ -44,21 +44,20 @@ class CylinderSurface : public Surface {
 
   /// Constructor from Transform3D and CylinderBounds
   ///
-  /// @param htrans transform to position the surface, can be nullptr
+  /// @param transform The transform to position the surface
   /// @param radius The radius of the cylinder
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
-  CylinderSurface(std::shared_ptr<const Transform3D> htrans, double radius,
-                  double halfz, double halfphi = M_PI, double avphi = 0.);
+  CylinderSurface(const Transform3D& transform, double radius, double halfz,
+                  double halfphi = M_PI, double avphi = 0.);
 
   /// Constructor from Transform3D and CylinderBounds arguments
   ///
-  /// @param htrans transform to position the surface, can be nullptr
-  /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
+  /// @param transform The transform to position the surface
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
-  CylinderSurface(std::shared_ptr<const Transform3D> htrans,
+  CylinderSurface(const Transform3D& transform,
                   const std::shared_ptr<const CylinderBounds>& cbounds);
 
   /// Copy constructor
@@ -70,9 +69,9 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param shift is the additional transfrom applied after copying
   CylinderSurface(const GeometryContext& gctx, const CylinderSurface& other,
-                  const Transform3D& transf);
+                  const Transform3D& shift);
 
  public:
   ~CylinderSurface() override = default;

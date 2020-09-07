@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(box.min(), Vector3D(-15, -15, -30), 1e-6);
   CHECK_CLOSE_ABS(box.max(), Vector3D(15, 15, 30), 1e-6);
 
-  auto ccvbSurfaces = ccvb.orientedSurfaces(nullptr);
+  auto ccvbSurfaces = ccvb.orientedSurfaces(Transform3D::Identity());
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
 
   CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
 
-  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(nullptr);
+  auto ccvbOrientedSurfaces = ccvb.orientedSurfaces(Transform3D::Identity());
   BOOST_CHECK_EQUAL(ccvbOrientedSurfaces.size(), 8);
 
   auto geoCtx = GeometryContext();

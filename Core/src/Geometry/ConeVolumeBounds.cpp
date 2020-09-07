@@ -85,56 +85,49 @@ Acts::ConeVolumeBounds::ConeVolumeBounds(double cylinderR, double alpha,
 }
 
 Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
-    const Transform3D* transformPtr) const {
-  // The transform - apply when given
-  Transform3D transform =
-      (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
-
+    const Transform3D& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
   // Create an inner Cone
   if (m_innerConeBounds != nullptr) {
-    auto innerConeTrans = std::make_shared<Transform3D>(
-        transform * Translation3D(0., 0., -get(eInnerOffsetZ)));
+    auto innerConeTrans =
+        transform * Translation3D(0., 0., -get(eInnerOffsetZ));
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(innerCone), forward));
   } else if (m_innerCylinderBounds != nullptr) {
     // Or alternatively the inner Cylinder
-    auto innerCylinderTrans = std::make_shared<Transform3D>(transform);
-    auto innerCylinder = Surface::makeShared<CylinderSurface>(
-        innerCylinderTrans, m_innerCylinderBounds);
+    auto innerCylinder =
+        Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(OrientedSurface(std::move(innerCylinder), forward));
   }
 
   // Create an outer Cone
   if (m_outerConeBounds != nullptr) {
-    auto outerConeTrans = std::make_shared<Transform3D>(
-        transform * Translation3D(0., 0., -get(eOuterOffsetZ)));
+    auto outerConeTrans =
+        transform * Translation3D(0., 0., -get(eOuterOffsetZ));
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(outerCone), backward));
   } else if (m_outerCylinderBounds != nullptr) {
     // or alternatively an outer Cylinder
-    auto outerCylinderTrans = std::make_shared<Transform3D>(transform);
-    auto outerCylinder = Surface::makeShared<CylinderSurface>(
-        outerCylinderTrans, m_outerCylinderBounds);
+    auto outerCylinder =
+        Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
     oSurfaces.push_back(OrientedSurface(std::move(outerCylinder), backward));
   }
 
   // Set a disc at Zmin
   if (m_negativeDiscBounds != nullptr) {
-    auto negativeDiscTrans = std::make_shared<Transform3D>(
-        transform * Translation3D(0., 0., -get(eHalfLengthZ)));
+    auto negativeDiscTrans =
+        transform * Translation3D(0., 0., -get(eHalfLengthZ));
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negativeDisc), forward));
   }
 
   // Set a disc at Zmax
-  auto positiveDiscTrans = std::make_shared<Transform3D>(
-      transform * Translation3D(0., 0., get(eHalfLengthZ)));
+  auto positiveDiscTrans = transform * Translation3D(0., 0., get(eHalfLengthZ));
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
   oSurfaces.push_back(OrientedSurface(std::move(positiveDisc), backward));
@@ -148,9 +141,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     Transform3D negSectorRelTrans{sectorRotation};
     negSectorRelTrans.prerotate(
         AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3D::UnitZ()));
-    auto negSectorAbsTrans =
-        std::make_shared<Transform3D>(transform * negSectorRelTrans);
-
+    auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negSectorPlane), forward));
@@ -158,9 +149,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
     Transform3D posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
         AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3D::UnitZ()));
-    auto posSectorAbsTrans =
-        std::make_shared<Transform3D>(transform * posSectorRelTrans);
-
+    auto posSectorAbsTrans = transform * posSectorRelTrans;
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);
 

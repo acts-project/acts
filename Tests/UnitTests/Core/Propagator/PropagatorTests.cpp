@@ -119,9 +119,11 @@ EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
-auto mSurface = Surface::makeShared<CylinderSurface>(nullptr, mCylinder);
+auto mSurface =
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), mCylinder);
 auto cCylinder = std::make_shared<CylinderBounds>(150_mm, 1000_mm);
-auto cSurface = Surface::makeShared<CylinderSurface>(nullptr, cCylinder);
+auto cSurface =
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), cCylinder);
 
 const int ntests = 5;
 

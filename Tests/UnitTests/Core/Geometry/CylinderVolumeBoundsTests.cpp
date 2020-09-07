@@ -166,14 +166,12 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   double halfz = 3.;
   CylinderVolumeBounds cylBounds(rmin, rmax, halfz);
   // create the transformation matrix
-  auto mutableTransformPtr = std::make_shared<Transform3D>(Translation3D(pos));
-  (*mutableTransformPtr) *= rotZ;
-  (*mutableTransformPtr) *= rotY;
-  (*mutableTransformPtr) *= rotX;
-  auto transformPtr =
-      std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
+  auto transform = Transform3D(Translation3D(pos));
+  transform *= rotZ;
+  transform *= rotY;
+  transform *= rotX;
   // get the boundary surfaces
-  auto boundarySurfaces = cylBounds.orientedSurfaces(transformPtr.get());
+  auto boundarySurfaces = cylBounds.orientedSurfaces(transform);
   // Test
 
   // check if difference is halfZ - sign and direction independent
@@ -184,13 +182,13 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
       (pos - boundarySurfaces.at(1).first->center(tgContext)).norm(),
       cylBounds.get(CylinderVolumeBounds::eHalfLengthZ), 1e-12);
   // transform to local
-  double posDiscPosZ = (transformPtr->inverse() *
-                        boundarySurfaces.at(1).first->center(tgContext))
-                           .z();
-  double centerPosZ = (transformPtr->inverse() * pos).z();
-  double negDiscPosZ = (transformPtr->inverse() *
-                        boundarySurfaces.at(0).first->center(tgContext))
-                           .z();
+  double posDiscPosZ =
+      (transform.inverse() * boundarySurfaces.at(1).first->center(tgContext))
+          .z();
+  double centerPosZ = (transform.inverse() * pos).z();
+  double negDiscPosZ =
+      (transform.inverse() * boundarySurfaces.at(0).first->center(tgContext))
+          .z();
   // check if center of disc boundaries lies in the middle in z
   BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
   BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
@@ -206,13 +204,13 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   // positive disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transformPtr->rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(1).first->normal(
           tgContext, Acts::Vector2D(0., 0.))),
       1., 1e-12);
   // negative disc durface should point in positive direction in the frame of
   // the volume
   CHECK_CLOSE_REL(
-      transformPtr->rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
+      transform.rotation().col(2).dot(boundarySurfaces.at(0).first->normal(
           tgContext, Acts::Vector2D(0., 0.))),
       1., 1e-12);
   // test in r
@@ -273,7 +271,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
 
   CylinderVolumeBounds cvb(5, 10, 20);
 
-  auto cvbOrientedSurfaces = cvb.orientedSurfaces(nullptr);
+  auto cvbOrientedSurfaces = cvb.orientedSurfaces(Transform3D::Identity());
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 4);
 
   auto geoCtx = GeometryContext();
