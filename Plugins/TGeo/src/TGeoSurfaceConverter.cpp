@@ -40,15 +40,15 @@
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"
 
-std::tuple<std::shared_ptr<const Acts::CylinderBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+std::tuple<std::shared_ptr<const Acts::CylinderBounds>, const Acts::Transform3D,
+           double>
 Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
                                                const Double_t* rotation,
                                                const Double_t* translation,
                                                const std::string& axes,
                                                double scalor) noexcept(false) {
   std::shared_ptr<const CylinderBounds> bounds = nullptr;
-  std::shared_ptr<const Transform3D> transform = nullptr;
+  Transform3D transform = Transform3D::Identity();
   double thickness = 0.;
 
   // Check if it's a tube (segment)
@@ -81,9 +81,7 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     double medR = 0.5 * (minR + maxR);
     double halfZ = tube->GetDz() * scalor;
     if (halfZ > deltaR) {
-      transform = std::make_shared<const Transform3D>(
-          TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
-
+      transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
       double halfPhi = M_PI;
       double avgPhi = 0.;
       // Check if it's a segment
@@ -107,8 +105,8 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::DiscBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+std::tuple<std::shared_ptr<const Acts::DiscBounds>, const Acts::Transform3D,
+           double>
 Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            const Double_t* rotation,
                                            const Double_t* translation,
@@ -116,7 +114,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
                                            double scalor) noexcept(false) {
   using Line2D = Eigen::Hyperplane<double, 2>;
   std::shared_ptr<const DiscBounds> bounds = nullptr;
-  std::shared_ptr<const Transform3D> transform = nullptr;
+  Transform3D transform = Transform3D::Identity();
 
   double thickness = 0.;
   // Special test for composite shape of silicon
@@ -136,8 +134,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
     Vector3D ay(rotation[1], rotation[4], rotation[7]);
     Vector3D az(rotation[2], rotation[5], rotation[8]);
 
-    transform = std::make_shared<const Transform3D>(
-        TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
+    transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
 
     auto interNode = dynamic_cast<TGeoIntersection*>(compShape->GetBoolNode());
     if (interNode != nullptr) {
@@ -192,8 +189,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           const Vector2D originShift = -ix;
 
           // Update transform by prepending the origin shift translation
-          transform = std::make_shared<const Transform3D>((*transform) *
-                                                          originTranslation);
+          transform = transform * originTranslation;
           // Transform phi line point to new origin and get phi
           double phi1 =
               VectorHelpers::phi(boundLines[0].second - boundLines[0].first);
@@ -233,9 +229,7 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       Vector3D ax = xs * Vector3D(rotation[0], rotation[3], rotation[6]);
       Vector3D ay = ys * Vector3D(rotation[1], rotation[4], rotation[7]);
       Vector3D az = ax.cross(ay);
-
-      transform = std::make_shared<const Transform3D>(
-          TGeoPrimitivesHelper::makeTransform(ax, ay, az, t));
+      transform = TGeoPrimitivesHelper::makeTransform(ax, ay, az, t);
 
       double minR = tube->GetRmin() * scalor;
       double maxR = tube->GetRmax() * scalor;
@@ -263,8 +257,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<const Acts::PlanarBounds>,
-           std::shared_ptr<const Acts::Transform3D>, double>
+std::tuple<std::shared_ptr<const Acts::PlanarBounds>, const Acts::Transform3D,
+           double>
 Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                             const Double_t* rotation,
                                             const Double_t* translation,
@@ -442,8 +436,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
 
   // Create the normal vector & the transfrom
   auto cz = cx.cross(cy);
-  auto transform = std::make_shared<const Transform3D>(
-      TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t));
+  auto transform = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 
   return {bounds, transform, thickness};
 }

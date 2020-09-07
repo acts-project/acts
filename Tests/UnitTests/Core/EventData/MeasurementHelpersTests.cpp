@@ -27,9 +27,10 @@ using FittableMeasurement = FittableMeasurement<SourceLink>;
 BOOST_AUTO_TEST_CASE(getSurface_test) {
   auto cylinderBounds = std::make_shared<CylinderBounds>(3, 10);
 
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
-  auto cylinder2 =
-      Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
+  auto cylinder = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+                                                       cylinderBounds);
+  auto cylinder2 = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+                                                        cylinderBounds);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
@@ -47,7 +48,8 @@ BOOST_AUTO_TEST_CASE(getSurface_test) {
 }
 
 BOOST_AUTO_TEST_CASE(getSize_test) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
@@ -68,7 +70,8 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
 }
 
 BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;

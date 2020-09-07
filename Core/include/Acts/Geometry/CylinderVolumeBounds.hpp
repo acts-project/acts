@@ -127,7 +127,6 @@ class CylinderVolumeBounds : public VolumeBounds {
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo) = default;
 
   ~CylinderVolumeBounds() override = default;
-
   CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo) = default;
 
   VolumeBounds::BoundsType type() const final {
@@ -157,7 +156,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const override;
+      const Transform3D& transform = Transform3D::Identity()) const override;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

@@ -25,15 +25,13 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
-                                       const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                                       const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D> htrans, double radius, double halfz,
-    double halfphi, double avphi)
-    : Surface(std::move(htrans)),
+Acts::CylinderSurface::CylinderSurface(const Transform3D& transform,
+                                       double radius, double halfz,
+                                       double halfphi, double avphi)
+    : Surface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
                                                       avphi)) {}
 
@@ -46,9 +44,9 @@ Acts::CylinderSurface::CylinderSurface(
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D> htrans,
+    const Transform3D& transform,
     const std::shared_ptr<const CylinderBounds>& cbounds)
-    : Surface(std::move(htrans)), m_bounds(cbounds) {
+    : Surface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 

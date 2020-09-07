@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // RadialBounds) to construct
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
   auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);
@@ -50,11 +50,10 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // next level: need an array of Surfaces;
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
-  /// Constructor with transform pointer
-  std::shared_ptr<const Transform3D> pNullTransform{};
+  /// Construction
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds),
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds)};
   const double thickness(1.0);
   auto pDiscLayerFromSurfaces =
       DiscLayer::create(pTransform, pDisc, nullptr, 1.);
@@ -80,7 +79,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
 /// Unit test for testing Layer properties
 BOOST_AUTO_TEST_CASE(DiscLayerProperties /*, *utf::expected_failures(1)*/) {
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
   auto pDiscLayer = DiscLayer::create(pTransform, pDisc, nullptr, 1.);

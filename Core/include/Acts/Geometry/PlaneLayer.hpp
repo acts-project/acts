@@ -35,27 +35,19 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   ///
   /// @return shared pointer to a PlaneLayer
   static MutableLayerPtr create(
-      std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const PlanarBounds> pbounds,
+      const Transform3D& transform, std::shared_ptr<const PlanarBounds> pbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::active) {
-    return MutableLayerPtr(new PlaneLayer(std::move(transform), pbounds,
+    return MutableLayerPtr(new PlaneLayer(transform, pbounds,
                                           std::move(surfaceArray), thickness,
                                           std::move(ad), laytyp));
   }
 
-  /// Default Constructor - deleted
   PlaneLayer() = delete;
-
-  /// Copy constructor of PlaneLayer - deleted
   PlaneLayer(const PlaneLayer& pla) = delete;
-
-  /// Assignment operator for PlaneLayers - deleted
-  PlaneLayer& operator=(const PlaneLayer&) = delete;
-
-  /// Destructor
   ~PlaneLayer() override = default;
+  PlaneLayer& operator=(const PlaneLayer&) = delete;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
@@ -79,7 +71,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  PlaneLayer(std::shared_ptr<const Transform3D> transform,
+  PlaneLayer(const Transform3D& transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
              double thickness = 0.,

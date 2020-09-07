@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 
   auto testCylinderIntersection = [&](const Transform3D& transform) -> void {
     // A cylinder created alinged with a provided transform
-    auto aCylinder = Surface::makeShared<CylinderSurface>(
-        std::make_shared<Transform3D>(transform), radius, halfZ);
+    auto aCylinder =
+        Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
 
     // Linear transform
     auto lTransform = transform.linear();
@@ -172,8 +172,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
 
   auto testConeIntersection = [&](const Transform3D& transform) -> void {
     // A cone suface ready to use
-    auto aCone = Surface::makeShared<ConeSurface>(
-        std::make_shared<Transform3D>(transform), alpha, true);
+    auto aCone = Surface::makeShared<ConeSurface>(transform, alpha, true);
 
     // Linear transform
     auto lTransform = transform.linear();
@@ -229,8 +228,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
   auto testPlanarIntersection = [&](const Transform3D& transform) -> void {
     // A Plane created with a specific transform
     auto aPlane = Surface::makeShared<PlaneSurface>(
-        std::make_shared<Transform3D>(transform),
-        std::make_shared<RectangleBounds>(halfX, halfY));
+        transform, std::make_shared<RectangleBounds>(halfX, halfY));
 
     /// Forward interseciton test
     Vector3D before = transform * Vector3D(-50_cm, -1_m, -1_m);
@@ -323,8 +321,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
 
   auto testLineAppraoch = [&](const Transform3D& transform) -> void {
     // A Plane created with a specific transform
-    auto aLine = Surface::makeShared<StrawSurface>(
-        std::make_shared<Transform3D>(transform), radius, halfZ);
+    auto aLine = Surface::makeShared<StrawSurface>(transform, radius, halfZ);
 
     /// Forward interseciton test
     Vector3D before = transform * Vector3D(-50_cm, -1_m, -1_m);

@@ -93,12 +93,12 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
         double rMin = tube->GetRmin() * UnitConstants::cm;
         double rMax = tube->GetRmax() * UnitConstants::cm;
         double zMin =
-            (transform->translation() -
-             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
+            (transform.translation() -
+             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         double zMax =
-            (transform->translation() +
-             transform->rotation().col(2) * tube->GetDz() * UnitConstants::cm)
+            (transform.translation() +
+             transform.rotation().col(2) * tube->GetDz() * UnitConstants::cm)
                 .z();
         if (zMin > zMax) {
           std::swap(zMin, zMax);
@@ -323,18 +323,16 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   return dd4hepDetElement->surface().getSharedPtr();
 }
 
-std::shared_ptr<const Acts::Transform3D>
-Acts::DD4hepLayerBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const {
+Acts::Transform3D Acts::DD4hepLayerBuilder::convertTransform(
+    const TGeoMatrix* tGeoTrans) const {
   // get the placement and orientation in respect to its mother
   const Double_t* rotation = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
-  auto transform =
-      std::make_shared<const Transform3D>(TGeoPrimitivesHelper::makeTransform(
-          Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-          Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-          Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-          Acts::Vector3D(translation[0] * UnitConstants::cm,
-                         translation[1] * UnitConstants::cm,
-                         translation[2] * UnitConstants::cm)));
-  return (transform);
+  return TGeoPrimitivesHelper::makeTransform(
+      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
+      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
+      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
+      Acts::Vector3D(translation[0] * UnitConstants::cm,
+                     translation[1] * UnitConstants::cm,
+                     translation[2] * UnitConstants::cm));
 }

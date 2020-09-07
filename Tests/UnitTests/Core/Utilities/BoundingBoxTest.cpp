@@ -383,16 +383,16 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
                {1.8, 1, 1},
                {0, 1, 1}}};
   auto cubo = std::make_shared<GenericCuboidVolumeBounds>(vertices);
-  auto trf = std::make_shared<Transform3D>();
-  *trf = Translation3D(Vector3D(0, 8, -5)) *
-         AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized());
+  auto trf =
+      Transform3D(Translation3D(Vector3D(0, 8, -5)) *
+                  AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized()));
 
   AbstractVolume vol(trf, cubo);
 
   PlyVisualization3D<double> ply;
 
   Transform3D trl = Transform3D::Identity();
-  trl.translation() = trf->translation();
+  trl.translation() = trf.translation();
 
   cubo->draw(ply);
 
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
   Vector3D centroid(0., 0., 0.);
 
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = *trf * vtx_;
+    Vector3D vtx = trf * vtx_;
     centroid += vtx;
   }
 
@@ -414,12 +414,12 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   // shoot rays to the corner points of the cuboid
   for (const auto& vtx_ : vertices) {
-    Vector3D vtx = *trf * vtx_;
+    Vector3D vtx = trf * vtx_;
 
     // this ray goes straight to the actual vertex, this should
     // definitely intersect the OBB
     Ray ray(origin, (vtx - origin).normalized());
-    ray = ray.transformed(trf->inverse());
+    ray = ray.transformed(trf.inverse());
     BOOST_CHECK(obb.intersect(ray));
     ray.draw(ply, (vtx - origin).norm());
 
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
     // this should definitely NOT intersect the OBB
     vtx += (vtx - centroid);
     ray = Ray(origin, (vtx - origin).normalized());
-    ray = ray.transformed(trf->inverse());
+    ray = ray.transformed(trf.inverse());
     BOOST_CHECK(!obb.intersect(ray));
     ray.draw(ply, (vtx - origin).norm());
   }

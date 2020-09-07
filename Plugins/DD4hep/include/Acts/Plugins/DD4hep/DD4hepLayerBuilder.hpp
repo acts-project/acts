@@ -160,8 +160,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   // Private helper function to convert the TGeo transformation matrix into
   // an Acts transformation matrix
   // @param tGeoTrans TGeo transformation matrix which should be converted
-  std::shared_ptr<const Acts::Transform3D> convertTransform(
-      const TGeoMatrix* tGeoTrans) const;
+  Acts::Transform3D convertTransform(const TGeoMatrix* tGeoTrans) const;
 };
 
 inline const std::string& DD4hepLayerBuilder::identification() const {
