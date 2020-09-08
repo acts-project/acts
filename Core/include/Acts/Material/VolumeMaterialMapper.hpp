@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -31,8 +31,8 @@ namespace Acts {
 
 /// list of point used in the mapping of a volume
 using RecordedMaterialVolumePoint = std::vector<
-    std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
-
+    std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+    
 //
 /// @brief VolumeMaterialMapper
 ///
@@ -135,7 +135,7 @@ class VolumeMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  /// @note the RecordedMaterialProperties of the track are assumed
+  /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 

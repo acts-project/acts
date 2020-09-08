@@ -24,13 +24,13 @@ BOOST_AUTO_TEST_CASE(vacuum) {
   BOOST_CHECK(not avm.average());
 
   // averaging over vacuum is still vacuum
-  avm.accumulate(MaterialProperties(1));
+  avm.accumulate(MaterialSlab(1));
   BOOST_CHECK(not avm.average());
 }
 
 BOOST_AUTO_TEST_CASE(single_material) {
   Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
-  MaterialProperties matprop(mat, 1);
+  MaterialSlab matprop(mat, 1);
   AccumulatedVolumeMaterial avm;
   // mean of a single material should be the same material again for a thickness
   // of 1
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(single_material) {
     CHECK_CLOSE_REL(result.massDensity(), mat.massDensity(), 1e-4);
   }
   // adding a vacuum step changes the average
-  avm.accumulate(MaterialProperties(1));
+  avm.accumulate(MaterialSlab(1));
   {
     auto result = avm.average();
     // less scattering in vacuum, larger radiation length
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(two_materials) {
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
 
-  MaterialProperties matprop1(mat1, 1);
-  MaterialProperties matprop2(mat2, 1);
+  MaterialSlab matprop1(mat1, 1);
+  MaterialSlab matprop2(mat2, 1);
 
   AccumulatedVolumeMaterial avm;
   avm.accumulate(matprop1);
@@ -82,8 +82,8 @@ BOOST_AUTO_TEST_CASE(two_materials_different_lengh) {
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
 
-  MaterialProperties matprop1(mat1, 0.5);
-  MaterialProperties matprop2(mat2, 2);
+  MaterialSlab matprop1(mat1, 0.5);
+  MaterialSlab matprop2(mat2, 2);
 
   AccumulatedVolumeMaterial avm;
   avm.accumulate(matprop1);

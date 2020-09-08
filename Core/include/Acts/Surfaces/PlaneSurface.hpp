@@ -36,9 +36,6 @@ class PlaneSurface : public Surface {
   friend Surface;
 
  protected:
-  /// Default Constructor - needed for persistency
-  PlaneSurface();
-
   /// Copy Constructor
   ///
   /// @param psf is the source surface for the copy
@@ -70,11 +67,12 @@ class PlaneSurface : public Surface {
   ///
   /// @param htrans transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(std::shared_ptr<const Transform3D> htrans,
+  PlaneSurface(const Transform3D& htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
   ~PlaneSurface() override = default;
+  PlaneSurface() = delete;
 
   /// Assignment operator
   ///

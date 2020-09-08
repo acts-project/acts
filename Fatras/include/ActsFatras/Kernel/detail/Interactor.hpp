@@ -105,8 +105,8 @@ struct Interactor {
       if (lpResult.ok()) {
         Acts::Vector2D local(0., 0.);
 
-        Acts::MaterialProperties slab =
-            surface.surfaceMaterial()->materialProperties(local);
+        Acts::MaterialSlab slab =
+            surface.surfaceMaterial()->materialSlab(local);
 
         // again: no valid material -> no interaction
         if (slab) {

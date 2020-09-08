@@ -33,10 +33,8 @@ namespace Acts {
 BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
                             const Transform3D& transform) {
   // Default constructor
-  BinUtility uBinUtil;
-  if (!transform.isApprox(Transform3D::Identity())) {
-    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
-  }
+  BinUtility uBinUtil(transform);
+
   // The parameters from the cylinder bounds
   double minR = rBounds.get(RadialBounds::eMinR);
   double maxR = rBounds.get(RadialBounds::eMaxR);
@@ -83,10 +81,8 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
 BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
                             const Transform3D& transform) {
   // Default constructor
-  BinUtility uBinUtil;
-  if (!transform.isApprox(Transform3D::Identity())) {
-    uBinUtil = BinUtility(std::make_shared<const Transform3D>(transform));
-  }
+  BinUtility uBinUtil(transform);
+
   // The parameters from the cylinder bounds
   double cR = cBounds.get(CylinderBounds::eR);
   double cHz = cBounds.get(CylinderBounds::eHalfLengthZ);
@@ -94,7 +90,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds,
   double halfPhi = cBounds.get(CylinderBounds::eHalfPhiSector);
   double minPhi = avgPhi - halfPhi;
   double maxPhi = avgPhi + halfPhi;
-  ;
+
   // Retrieve the binning data
   const std::vector<BinningData>& bData = bu.binningData();
   // Loop over the binning data and adjust the dimensions

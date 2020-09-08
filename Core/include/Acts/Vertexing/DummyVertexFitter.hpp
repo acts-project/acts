@@ -22,7 +22,7 @@ class DummyTrackLinearizer;
 /// @brief Dummy vertex fitter class, only to be used
 /// for ensuring interfaces where a vertex fitter type is
 /// required but no fitter is actually needed
-template <typename input_track_t = BoundParameters,
+template <typename input_track_t = BoundTrackParameters,
           typename linearizer_t = DummyTrackLinearizer>
 class DummyVertexFitter {
  public:

@@ -42,7 +42,7 @@ class TutorialAMVFAlgorithm : public ActsExamples::BareAlgorithm {
   /// The config class
   Config m_cfg;
 
-  std::vector<Acts::BoundParameters> getInputTrackCollection(
+  std::vector<Acts::BoundTrackParameters> getInputTrackCollection(
       const ActsExamples::AlgorithmContext& ctx) const;
 };
 

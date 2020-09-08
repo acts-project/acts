@@ -438,7 +438,7 @@ class SurfaceArray {
   /// @param transform Optional additional transform for this SurfaceArray
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                std::vector<std::shared_ptr<const Surface>> surfaces,
-               std::shared_ptr<const Transform3D> transform = nullptr);
+               const Transform3D& transform = s_idTransform);
 
   /// @brief Constructor which takes concrete type SurfaceGridLookup
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
@@ -520,7 +520,7 @@ class SurfaceArray {
   ///       or overflow bin or out of range in any axis.
   bool isValidBin(size_t bin) const { return p_gridLookup->isValidBin(bin); }
 
-  const Transform3D& transform() const { return *m_transform; }
+  const Transform3D& transform() const { return m_transform; }
 
   /// @brief The binning values described by this surface grid lookup
   /// They are in order of the axes
@@ -543,7 +543,7 @@ class SurfaceArray {
   SurfaceVector m_surfacesRawPointers;
   // this is only used to keep info on transform applied
   // by l2g and g2l
-  std::shared_ptr<const Transform3D> m_transform;
+  Transform3D m_transform;
 };
 
 }  // namespace Acts

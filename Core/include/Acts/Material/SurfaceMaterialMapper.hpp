@@ -148,7 +148,7 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  /// @note the RecordedMaterialProperties of the track are assumed
+  /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 

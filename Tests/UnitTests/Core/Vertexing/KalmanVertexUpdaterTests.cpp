@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(stepper);
 
-  // Linearizer for BoundParameters type test
+  // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
   Linearizer::State state(magFieldContext);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters around origin
-    BoundParameters::ParametersVector paramVec;
+    BoundTrackParameters::ParametersVector paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
 
     // Linearized state of the track
     LinearizedTrack linTrack =
@@ -134,18 +134,19 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
             .value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
+    TrackAtVertex<BoundTrackParameters> trkAtVtx(0., params, &params);
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
 
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex<BoundParameters> vtx(vtxPos);
+    Vertex<BoundTrackParameters> vtx(vtxPos);
     vtx.setFullCovariance(SymMatrix4D::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexUpdater::updateVertexWithTrack<BoundParameters>(vtx, trkAtVtx);
+    KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,
+                                                                     trkAtVtx);
 
     if (debug) {
       std::cout << "Old vertex position: " << vtxPos << std::endl;

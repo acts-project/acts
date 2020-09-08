@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <limits>
@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_SUITE(material_properties)
 
 BOOST_AUTO_TEST_CASE(construct_simple) {
   /// construct from material and thickness
-  Acts::MaterialProperties fromMaterial(
+  Acts::MaterialSlab fromMaterial(
       Acts::Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
 
   CHECK_CLOSE_REL(fromMaterial.thickness(), 6., eps);
@@ -30,13 +30,13 @@ BOOST_AUTO_TEST_CASE(construct_simple) {
 
 BOOST_AUTO_TEST_CASE(construct_compound) {
   using Acts::Material;
-  using Acts::MaterialProperties;
+  using Acts::MaterialSlab;
 
-  MaterialProperties a(Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.);
-  MaterialProperties b(Material::fromMolarDensity(2., 4., 6., 8., 10.), 2.);
-  MaterialProperties c(Material::fromMolarDensity(4., 8., 12., 16., 20.), 3.);
-  std::vector<MaterialProperties> components = {a, b, c};
-  MaterialProperties abc(components);
+  MaterialSlab a(Material::fromMolarDensity(1., 2., 3., 4., 5.), 1.);
+  MaterialSlab b(Material::fromMolarDensity(2., 4., 6., 8., 10.), 2.);
+  MaterialSlab c(Material::fromMolarDensity(4., 8., 12., 16., 20.), 3.);
+  std::vector<MaterialSlab> components = {a, b, c};
+  MaterialSlab abc(components);
 
   // consistency checks
   CHECK_CLOSE_REL(abc.thickness() / abc.material().X0(), abc.thicknessInX0(),
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE(construct_compound) {
 
 BOOST_AUTO_TEST_CASE(scale_thickness) {
   const auto material = Acts::Material::fromMassDensity(1., 2., 3., 4., 5.);
-  const Acts::MaterialProperties mat(material, 0.1);
-  const Acts::MaterialProperties halfMat(material, 0.05);
-  Acts::MaterialProperties halfScaled = mat;
+  const Acts::MaterialSlab mat(material, 0.1);
+  const Acts::MaterialSlab halfMat(material, 0.05);
+  Acts::MaterialSlab halfScaled = mat;
   halfScaled.scaleThickness(0.5);
 
   BOOST_CHECK_NE(mat, halfMat);

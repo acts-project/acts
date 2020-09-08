@@ -333,11 +333,11 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       // If the curent volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
       if (currentRecMaterial != mState.recordedMaterial.end() &&
-          rmIter->materialProperties.thickness() > 0) {
+          rmIter->materialSlab.thickness() > 0) {
         // check if there is vacuum between this material point and the last one
         float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
         if (vacuumThickness > s_epsilon) {
-          auto properties = Acts::MaterialProperties(vacuumThickness);
+          auto properties = Acts::materialSlab(vacuumThickness);
           // creat vacuum hits
           createExtraHits(currentRecMaterial->second, properties,
                           lastPositionEnd, direction);
@@ -346,10 +346,10 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         // direction
         direction = rmIter->direction;
         direction = direction *
-                    (rmIter->materialProperties.thickness() / direction.norm());
+                    (rmIter->materialSlab.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
         // create additional material point
-        createExtraHits(currentRecMaterial->second, rmIter->materialProperties,
+        createExtraHits(currentRecMaterial->second, rmIter->materialSlab,
                         rmIter->position, direction);
       }
 
@@ -371,7 +371,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
               // if the last material slab stop before the boundary surface
               // create vacuum hits
               if (vacuumThickness > s_epsilon) {
-                auto properties = Acts::MaterialProperties(vacuumThickness);
+                auto properties = Acts::materialSlab(vacuumThickness);
                 createExtraHits(currentRecMaterial->second, properties,
                                 lastPositionEnd, direction);
                 lastPositionEnd = sfIter->position;

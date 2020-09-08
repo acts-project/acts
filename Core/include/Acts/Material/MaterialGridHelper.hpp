@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -21,7 +21,8 @@ namespace Acts {
 
 /// list of point used in the mapping of a volume
 using RecordedMaterialVolumePoint = std::vector<
-    std::pair<Acts::MaterialProperties, std::vector<Acts::Vector3D>>>;
+    std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;

@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_SUITE(AtlasStepper)
 BOOST_AUTO_TEST_CASE(ConstructState) {
   Stepper::State state(
       geoCtx, magCtx,
-      CurvilinearParameters(std::nullopt, pos, mom, charge, time), navDir,
+      CurvilinearTrackParameters(std::nullopt, pos, mom, charge, time), navDir,
       stepSize, tolerance);
 
   BOOST_CHECK(!state.covTransport);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 // test state construction from parameters w/ covariance
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   BOOST_CHECK(state.covTransport);
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
 BOOST_AUTO_TEST_CASE(Getters) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Getters) {
 BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   auto newPos = (pos + Vector3D(1_mm, 2_mm, 3_mm)).eval();
@@ -142,7 +142,8 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 
   // example surface and bound parameters at the updated position
   auto plane = Surface::makeShared<PlaneSurface>(newPos, newUnitDir);
-  BoundParameters params(geoCtx, cov, newPos, newMom, charge, newTime, plane);
+  BoundTrackParameters params(geoCtx, cov, newPos, newMom, charge, newTime,
+                              plane);
   FreeVector freeParams;
   freeParams[eFreePos0] = newPos[eX];
   freeParams[eFreePos1] = newPos[eY];
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
 BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   auto newPos = (pos + Vector3D(1_mm, 2_mm, 3_mm)).eval();
@@ -188,7 +189,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
 BOOST_AUTO_TEST_CASE(BuildBound) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
   // example surface at the current state position
   auto plane = Surface::makeShared<PlaneSurface>(pos, unitDir);
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(BuildBound) {
 BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   auto&& [pars, jac, pathLength] = stepper.curvilinearState(state);
@@ -232,7 +233,7 @@ BOOST_AUTO_TEST_CASE(BuildCurvilinear) {
 BOOST_AUTO_TEST_CASE(Step) {
   Stepper stepper(magneticField);
   MockPropagatorState state(Stepper::State(
-      geoCtx, magCtx, CurvilinearParameters(cov, pos, mom, charge, time),
+      geoCtx, magCtx, CurvilinearTrackParameters(cov, pos, mom, charge, time),
       navDir, stepSize, tolerance));
   state.stepping.covTransport = false;
 
@@ -264,7 +265,7 @@ BOOST_AUTO_TEST_CASE(Step) {
 BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   Stepper stepper(magneticField);
   MockPropagatorState state(Stepper::State(
-      geoCtx, magCtx, CurvilinearParameters(cov, pos, mom, charge, time),
+      geoCtx, magCtx, CurvilinearTrackParameters(cov, pos, mom, charge, time),
       navDir, stepSize, tolerance));
   state.stepping.covTransport = true;
 
@@ -299,7 +300,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 BOOST_AUTO_TEST_CASE(Reset) {
   Stepper stepper(magneticField);
   MockPropagatorState state(Stepper::State(
-      geoCtx, magCtx, CurvilinearParameters(cov, pos, mom, charge, time),
+      geoCtx, magCtx, CurvilinearTrackParameters(cov, pos, mom, charge, time),
       navDir, stepSize, tolerance));
   state.stepping.covTransport = true;
 
@@ -312,7 +313,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   double time = 7.5;
   double charge = 1.;
   BoundSymMatrix cov = 8.5 * Covariance::Identity();
-  CurvilinearParameters cp(cov, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(cov, pos, mom, charge, time);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
   NavigationDirection ndir = forward;
@@ -394,9 +395,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
   Transform3D trafo = Transform3D::Identity();
-  auto disc = Surface::makeShared<DiscSurface>(
-      std::make_shared<const Transform3D>(trafo));
-  BoundParameters boundDisc(geoCtx, cov, pos, mom, charge, time, disc);
+  auto disc = Surface::makeShared<DiscSurface>(trafo);
+  BoundTrackParameters boundDisc(geoCtx, cov, pos, mom, charge, time, disc);
 
   // Reset the state and test
   Stepper::State stateDisc = state.stepping;
@@ -413,9 +413,9 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  auto perigee = Surface::makeShared<PerigeeSurface>(
-      std::make_shared<const Transform3D>(trafo));
-  BoundParameters boundPerigee(geoCtx, cov, pos, mom, charge, time, perigee);
+  auto perigee = Surface::makeShared<PerigeeSurface>(trafo);
+  BoundTrackParameters boundPerigee(geoCtx, cov, pos, mom, charge, time,
+                                    perigee);
 
   // Reset the state and test
   Stepper::State statePerigee = state.stepping;
@@ -433,9 +433,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   time = 7.5;
   charge = 1.;
   cov = 8.5 * Covariance::Identity();
-  auto straw = Surface::makeShared<StrawSurface>(
-      std::make_shared<const Transform3D>(trafo));
-  BoundParameters boundStraw(geoCtx, cov, pos, mom, charge, time, straw);
+  auto straw = Surface::makeShared<StrawSurface>(trafo);
+  BoundTrackParameters boundStraw(geoCtx, cov, pos, mom, charge, time, straw);
 
   // Reset the state and test
   Stepper::State stateStraw = state.stepping;
@@ -452,7 +451,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 BOOST_AUTO_TEST_CASE(StepSize) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   // TODO figure out why this fails and what it should be
@@ -470,7 +469,7 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   Stepper stepper(magneticField);
   Stepper::State state(geoCtx, magCtx,
-                       CurvilinearParameters(cov, pos, mom, charge, time),
+                       CurvilinearTrackParameters(cov, pos, mom, charge, time),
                        navDir, stepSize, tolerance);
 
   auto distance = 10_mm;

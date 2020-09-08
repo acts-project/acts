@@ -16,13 +16,10 @@
 #include <utility>
 
 Acts::AbstractVolume::AbstractVolume(
-    std::shared_ptr<const Transform3D> htrans,
-    std::shared_ptr<const VolumeBounds> volbounds)
-    : Volume(std::move(htrans), std::move(volbounds)) {
+    const Transform3D& transform, std::shared_ptr<const VolumeBounds> volbounds)
+    : Volume(transform, std::move(volbounds)) {
   createBoundarySurfaces();
 }
-
-Acts::AbstractVolume::~AbstractVolume() = default;
 
 const std::vector<Acts::BoundarySurfacePtr>&
 Acts::AbstractVolume::boundarySurfaces() const {
@@ -33,8 +30,7 @@ void Acts::AbstractVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<AbstractVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces =
-      Volume::volumeBounds().orientedSurfaces(m_transform.get());
+  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {

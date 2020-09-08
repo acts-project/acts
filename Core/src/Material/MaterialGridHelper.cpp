@@ -151,13 +151,7 @@ Acts::Grid2D Acts::createGrid2D(
       globalToLocalFromBin(bu[0].binvalue);
   std::function<double(Acts::Vector3D)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
-  Transform3D transfo;
-  if (bins.transform() != nullptr) {
-    transfo = bins.transform()->inverse();
-  } else {
-    transfo = Transform3D::Identity();
-  }
-
+  Transform3D transfo = bins.transform().inverse();
   transfoGlobalToLocal = [coord1, coord2,
                           transfo](Acts::Vector3D pos) -> Acts::Vector2D {
     pos = transfo * pos;
@@ -208,12 +202,8 @@ Acts::Grid3D Acts::createGrid3D(
       globalToLocalFromBin(bu[1].binvalue);
   std::function<double(Acts::Vector3D)> coord3 =
       globalToLocalFromBin(bu[2].binvalue);
-  Transform3D transfo;
-  if (bins.transform() != nullptr) {
-    transfo = bins.transform()->inverse();
-  } else {
-    transfo = Transform3D::Identity();
-  }
+  Transform3D transfo = bins.transform().inverse();
+
   transfoGlobalToLocal = [coord1, coord2, coord3,
                           transfo](Acts::Vector3D pos) -> Acts::Vector3D {
     pos = transfo * pos;

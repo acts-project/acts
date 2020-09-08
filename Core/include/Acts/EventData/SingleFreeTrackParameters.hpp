@@ -101,30 +101,47 @@ class SingleFreeTrackParameters {
     return m_oParameters.getCovariance();
   }
 
-  /// @brief access position in global coordinate system
-  ///
-  /// @return 3D vector with global position
+  /// Space-time position four-vector.
+  Vector4D fourPosition() const {
+    Vector4D pos4;
+    pos4[ePos0] = get<eFreePos0>();
+    pos4[ePos1] = get<eFreePos1>();
+    pos4[ePos2] = get<eFreePos2>();
+    pos4[eTime] = get<eFreeTime>();
+    return pos4;
+  }
+  /// Access the spatial position vector.
   Vector3D position() const {
     return parameters().template segment<3>(eFreePos0);
   }
+  /// Access the time coordinate.
+  Scalar time() const { return get<eFreeTime>(); }
 
-  /// @brief access momentum in global coordinate system
-  ///
-  /// @return 3D vector with global momentum
-  Vector3D momentum() const {
-    return parameters().template segment<3>(eFreeDir0) /
-           std::abs(get<eFreeQOverP>());
+  /// Direction unit three-vector, i.e. the normalized momentum three-vector.
+  Vector3D unitDirection() const {
+    return parameters().template segment<3>(eFreeDir0).normalized();
   }
+  /// Absolute momentum.
+  Scalar absoluteMomentum() const { return 1 / std::abs(get<eFreeQOverP>()); }
+  /// Absolute transverse momentum.
+  Scalar transverseMomentum() const {
+    // direction vector w/ arbitrary normalization can be parametrized as
+    //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
+    // w/ f,sin(theta) positive, the transverse magnitude is then
+    //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
+    Scalar transverseMagnitude = std::hypot(get<eFreeDir0>(), get<eFreeDir1>());
+    // absolute magnitude is f by construction
+    Scalar magnitude = std::hypot(transverseMagnitude, get<eFreeDir2>());
+    // such that we can extract sin(theta) = f*sin(theta) / f
+    return (transverseMagnitude / magnitude) * absoluteMomentum();
+  }
+  /// Momentum three-vector.
+  Vector3D momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// @brief retrieve electric charge
   ///
   /// @return value of electric charge
   Scalar charge() const { return m_oChargePolicy.getCharge(); }
-
-  /// @brief retrieve time
-  ///
-  /// @return value of time
-  Scalar time() const { return get<eFreeTime>(); }
 
   /// @brief access to the internally stored FreeParameterSet
   ///

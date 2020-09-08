@@ -80,8 +80,8 @@ namespace Acts {
 ///     // convert output values (via unit constants)
 ///     doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
 ///     // convert output values (via unit user literals)
-///     double x_in_mm   = trackPars.position().x() / 1_mm;
-///     double pt_in_TeV = trackPars.momentum().pT() / 1_TeV;
+///     double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
+///     double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
 ///
 
 namespace UnitConstants {
