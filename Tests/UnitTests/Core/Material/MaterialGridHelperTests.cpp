@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   }
   // Test material mapping
 
-<<<<<<< HEAD
   std::vector<Acts::Vector3D> vectPos1;
   vectPos1.push_back(pos1);
   std::vector<Acts::Vector3D> vectPos2;
@@ -92,10 +91,7 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   std::vector<Acts::Vector3D> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialProperties, std::vector<Vector3D>>> matRecord;
-=======
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
->>>>>>> upstream/master
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -170,8 +166,6 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   }
 
   // Test material mapping
-
-<<<<<<< HEAD
   std::vector<Acts::Vector3D> vectPos1;
   vectPos1.push_back(pos1);
   std::vector<Acts::Vector3D> vectPos2;
@@ -179,10 +173,7 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   std::vector<Acts::Vector3D> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialProperties, std::vector<Vector3D>>> matRecord;
-=======
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
->>>>>>> upstream/master
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -259,8 +250,6 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
         index3[i]);
   }
   // Test material mapping
-
-<<<<<<< HEAD
   std::vector<Acts::Vector3D> vectPos1;
   vectPos1.push_back(pos1);
   std::vector<Acts::Vector3D> vectPos2;
@@ -268,10 +257,7 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   std::vector<Acts::Vector3D> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialProperties, std::vector<Vector3D>>> matRecord;
-=======
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
->>>>>>> upstream/master
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -359,7 +345,7 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   std::vector<Acts::Vector3D> vectPos3;
   vectPos3.push_back(pos3);
 
-  std::vector<std::pair<materialSlab, std::vector<Vector3D>>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;

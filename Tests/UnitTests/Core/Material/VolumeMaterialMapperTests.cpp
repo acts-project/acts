@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
-    materialSlab matProp(tv, 1);
+    MaterialSlab matProp(tv, 1);
     matRecord.push_back(std::make_pair(matProp, volPos));
   }
 
