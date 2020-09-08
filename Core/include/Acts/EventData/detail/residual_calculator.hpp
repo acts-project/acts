@@ -7,13 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// Acts include(s)
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include "Acts/EventData/detail/ParameterTraits.hpp"
 
 namespace Acts {
-/// @cond detail
 namespace detail {
+
 /// @brief calculate residuals from two parameter vectors
 ///
 /// @tparam parameter_indices_t Specifying the underlying parameter index enum
@@ -27,7 +26,6 @@ namespace detail {
 ///         residuals of `first` with respect to `second`
 template <typename parameter_indices_t, parameter_indices_t... params>
 struct residual_calculator;
-/// @cond
 
 template <typename parameter_indices_t, typename R,
           parameter_indices_t... params>
@@ -68,7 +66,6 @@ struct residual_calculator_impl<parameter_indices_t, R, last> {
             test(pos), ref(pos));
   }
 };
-/// @endcond
+
 }  // namespace detail
-/// @endcond
 }  // namespace Acts

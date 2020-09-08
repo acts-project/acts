@@ -1,16 +1,21 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+
 #include <algorithm>
 #include <cmath>
 
 namespace Acts {
+namespace detail {
+
 ///
 /// @brief type for parameters with unrestricted value range
 ///
@@ -130,30 +135,115 @@ struct cyclic_parameter {
   }
 };
 
+template <BoundIndices>
+struct BoundParameterTraits;
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundLoc0> {
+  using type = local_parameter;
+};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundLoc1> {
+  using type = local_parameter;
+};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundPhi> {
+  static constexpr double pMin() { return -M_PI; }
+  static constexpr double pMax() { return M_PI; }
+  using type = cyclic_parameter<double, pMin, pMax>;
+};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundTheta> {
+  static constexpr double pMin() { return 0; }
+  static constexpr double pMax() { return M_PI; }
+  using type = bound_parameter<double, pMin, pMax>;
+};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundQOverP> {
+  using type = unbound_parameter;
+};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundTime> {
+  using type = unbound_parameter;
+};
+
+template <FreeIndices>
+struct FreeParameterTraits;
+template <>
+struct FreeParameterTraits<FreeIndices::eFreePos0> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreePos1> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreePos2> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreeTime> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreeDir0> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreeDir1> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreeDir2> {
+  using type = unbound_parameter;
+};
+template <>
+struct FreeParameterTraits<FreeIndices::eFreeQOverP> {
+  using type = unbound_parameter;
+};
+
+template <typename indices_t>
+struct ParametersSize;
+template <>
+struct ParametersSize<BoundIndices> {
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(BoundIndices::eBoundSize);
+};
+template <>
+struct ParametersSize<FreeIndices> {
+  static constexpr unsigned int size =
+      static_cast<unsigned int>(FreeIndices::eFreeSize);
+};
+
+/// Single bound track parameter type for value constrains.
 ///
-/// @brief parameter traits class
+/// The singular name is not a typo since this describes individual components.
+template <BoundIndices kIndex>
+using BoundParameterType = typename detail::BoundParameterTraits<kIndex>::type;
+
+/// Single free track parameter type for value constrains.
 ///
-/// The user needs to provide a specialization of this class for his parameter
-/// definitions.
-/// The specialization must include a @c typedef with the name @c
-/// parameter_type.
-/// This type
-/// must fulfill the following requirements:
-///   * `parameter_type::getValue` must be a valid expression excepting one
-/// parameter value
-///     as input and returning a valid parameter value (possibly mapped onto
-///     some
-/// restricted/
-///     cyclic value range).
-///   * A static boolean constant with the name `may_modify_value` must exist
-/// which indicates
-///     whether the `getValue` function may actually return a value different
-/// from the output.
+/// The singular name is not a typo since this describes individual components.
+template <FreeIndices kIndex>
+using FreeParameterType = typename detail::FreeParameterTraits<kIndex>::type;
+
+/// Access the (Bound/Free)ParameterType through common struct
 ///
-/// @tparam ParameterPolicy struct or class containing the parameter definitions
-/// @tparam parID identifier for the parameter
-///
-//  template<typename ParameterPolicy,typename ParameterPolicy::par_id_type
-//  parID>
-//  struct parameter_traits;
+/// @tparam T Parameter indices enum
+/// @tparam I Index of @p T
+template <typename T, T I>
+struct ParameterTypeFor {};
+
+/// Access for @c BoundIndices
+template <BoundIndices I>
+struct ParameterTypeFor<BoundIndices, I> {
+  using type = BoundParameterType<I>;
+};
+
+/// Access for @c FreeIndices
+template <FreeIndices I>
+struct ParameterTypeFor<FreeIndices, I> {
+  using type = FreeParameterType<I>;
+};
+
+}  // namespace detail
 }  // namespace Acts

@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <memory>
-#include <optional>
-#include <type_traits>
-#include <utility>
-
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -26,12 +21,16 @@
 #include "Acts/Utilities/detail/MPL/get_position.hpp"
 #include "Acts/Utilities/detail/MPL/is_contained.hpp"
 
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
+
 namespace Acts {
-/// @cond
+
 // forward type declaration for full parameter set
 using FullParameterSet = typename detail::full_parset<BoundIndices>::type;
 using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
-/// @endcond
 
 /**
  * @class ParameterSet
@@ -280,7 +279,8 @@ class ParameterSet {
   template <parameter_indices_t parameter>
   void setParameter(BoundScalar value) {
     m_vValues(getIndex<parameter>()) =
-        ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
+        detail::ParameterTypeFor<parameter_indices_t,
+                                 parameter>::type::getValue(value);
   }
 
   /**

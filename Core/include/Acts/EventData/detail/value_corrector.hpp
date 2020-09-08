@@ -1,19 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// Acts include(s)
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include "Acts/EventData/detail/ParameterTraits.hpp"
 
 namespace Acts {
-/// @cond detail
 namespace detail {
+
 /// @brief check and correct parameter values
 ///
 /// @tparam params template parameter pack containing the multiple parameter
@@ -32,7 +31,6 @@ namespace detail {
 template <BoundIndices... params>
 struct value_corrector;
 
-/// @cond
 template <typename R, BoundIndices... params>
 struct value_corrector_impl;
 
@@ -65,7 +63,6 @@ struct value_corrector_impl<R, last> {
     }
   }
 };
-/// @endcond
+
 }  // namespace detail
-/// @endcond
 }  // namespace Acts
