@@ -21,6 +21,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -85,7 +86,19 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
 
-  // TODO pre-select particles
+  // Pre-select particles
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  // @TODO: add options for truth particle selection criteria
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputHitParticlesMap =
+      clusterReaderCfg.outputHitParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.nHitsMin = 1;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
@@ -101,7 +114,7 @@ int main(int argc, char* argv[]) {
   // The fitter needs the measurements (proto tracks) and initial
   // track states (proto states). The elements in both collections
   // must match and must be created from the same input particles.
-  const auto& inputParticles = particleReader.outputParticles;
+  const auto& inputParticles = particleSelectorCfg.outputParticles;
   // Create truth tracks
   TruthTrackFinder::Config trackFinderCfg;
   trackFinderCfg.inputParticles = inputParticles;
