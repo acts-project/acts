@@ -623,7 +623,7 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP);
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
