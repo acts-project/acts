@@ -140,14 +140,14 @@ class VolumeMaterialMapper {
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
-  /// @brief selector for finding surface
+  /// selector for finding surface
   struct BoundSurfaceSelector {
     bool operator()(const Surface& sf) const {
       return (sf.geometryId().boundary() != 0);
     }
   };
 
-  /// @brief selector for finding
+  /// selector for finding
   struct MaterialVolumeSelector {
     bool operator()(const TrackingVolume& vf) const {
       return (vf.volumeMaterial() != nullptr);
