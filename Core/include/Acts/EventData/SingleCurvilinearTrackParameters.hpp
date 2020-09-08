@@ -46,7 +46,7 @@ class SingleCurvilinearTrackParameters
       : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
              detail::transformFreeToCurvilinearParameters(
                  pos4[eTime], dir, (q != Scalar(0)) ? (q / p) : (1 / p)),
-             std::abs(q), std::move(cov)) {
+             q, std::move(cov)) {
     assert((0 <= p) and "Absolute momentum must be positive");
   }
 
@@ -85,7 +85,7 @@ class SingleCurvilinearTrackParameters
                  makeDirectionUnitFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(
                  pos4[eTime], phi, theta, (q != Scalar(0)) ? (q / p) : (1 / p)),
-             std::abs(q), std::move(cov)) {
+             q, std::move(cov)) {
     assert((0 <= p) and "Absolute momentum must be positive");
   }
 
@@ -127,7 +127,7 @@ class SingleCurvilinearTrackParameters
       : Base(Surface::makeShared<PlaneSurface>(pos, mom),
              detail::transformFreeToCurvilinearParameters(time, mom,
                                                           q / mom.norm()),
-             std::abs(q), std::move(cov)) {}
+             q, std::move(cov)) {}
 
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
