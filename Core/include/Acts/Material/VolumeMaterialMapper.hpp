@@ -30,8 +30,8 @@
 namespace Acts {
 
 /// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint = std::vector<
-    std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+using RecordedMaterialVolumePoint =
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
 
 //
 /// @brief VolumeMaterialMapper

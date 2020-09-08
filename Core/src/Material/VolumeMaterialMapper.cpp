@@ -345,8 +345,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         // determine the position of the last material slab using the track
         // direction
         direction = rmIter->direction;
-        direction = direction *
-                    (rmIter->materialSlab.thickness() / direction.norm());
+        direction =
+            direction * (rmIter->materialSlab.thickness() / direction.norm());
         lastPositionEnd = rmIter->position + direction;
         // create additional material point
         createExtraHits(currentRecMaterial->second, rmIter->materialSlab,
