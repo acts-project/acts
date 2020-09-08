@@ -51,7 +51,10 @@ BOOST_AUTO_TEST_CASE(Neutral) {
   // ensure that result is positive even in this invalid cases
   CHECK_CLOSE_REL(q.extractMomentum(-1 / 128_MeV), 128_MeV, eps);
 
+  BOOST_CHECK_EQUAL(q, Acts::Neutral());
+  BOOST_CHECK_EQUAL(Acts::Neutral(), q);
   BOOST_CHECK_EQUAL(q, Acts::Neutral(0_e));
+  BOOST_CHECK_EQUAL(Acts::Neutral(0_e), q);
 }
 
 BOOST_AUTO_TEST_CASE(SinglyCharged) {
@@ -65,10 +68,10 @@ BOOST_AUTO_TEST_CASE(SinglyCharged) {
   CHECK_CLOSE_REL(q.extractMomentum(1_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(q.extractMomentum(-1_e / 128_MeV), 128_MeV, eps);
 
-  // equality only considers magnitude
-  BOOST_CHECK_EQUAL(Acts::SinglyCharged(1_e), Acts::SinglyCharged(1_e));
-  BOOST_CHECK_EQUAL(Acts::SinglyCharged(-1_e), Acts::SinglyCharged(1_e));
-  BOOST_CHECK_EQUAL(Acts::SinglyCharged(1_e), Acts::SinglyCharged(-1_e));
+  BOOST_CHECK_EQUAL(q, Acts::SinglyCharged());
+  BOOST_CHECK_EQUAL(Acts::SinglyCharged(), q);
+  BOOST_CHECK_EQUAL(q, Acts::SinglyCharged(1_e));
+  BOOST_CHECK_EQUAL(Acts::SinglyCharged(1_e), q);
 }
 
 BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
@@ -84,15 +87,17 @@ BOOST_AUTO_TEST_CASE(AnyChargeNeutral) {
   // ensure that result is positive even in this invalid cases
   CHECK_CLOSE_REL(q.extractMomentum(-1 / 128_MeV), 128_MeV, eps);
 
-  // equality only considers magnitude
   BOOST_CHECK(q == Acts::AnyCharge(0_e));
+  BOOST_CHECK(Acts::AnyCharge(0_e) == q);
   BOOST_CHECK(!(q == Acts::AnyCharge(1_e)));
-  BOOST_CHECK(!(q == Acts::AnyCharge(-2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(1_e) == q));
+  BOOST_CHECK(!(q == Acts::AnyCharge(2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(2_e) == q));
 }
 
 BOOST_AUTO_TEST_CASE(AnyChargeSingle) {
-  // only the magnitude of the charge is used
-  Acts::AnyCharge q(-1_e);
+  // takes only the charge magnitude as input
+  Acts::AnyCharge q(1_e);
 
   BOOST_CHECK_EQUAL(q.extractCharge(1.23), 1_e);
   BOOST_CHECK_EQUAL(q.extractCharge(2.54), 1_e);
@@ -102,15 +107,17 @@ BOOST_AUTO_TEST_CASE(AnyChargeSingle) {
   CHECK_CLOSE_REL(q.extractMomentum(1_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(q.extractMomentum(-1_e / 128_MeV), 128_MeV, eps);
 
-  // equality only considers magnitude
-  BOOST_CHECK(q == Acts::AnyCharge(1_e));
   BOOST_CHECK(!(q == Acts::AnyCharge(0_e)));
-  BOOST_CHECK(!(q == Acts::AnyCharge(-2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(0_e) == q));
+  BOOST_CHECK(q == Acts::AnyCharge(1_e));
+  BOOST_CHECK(Acts::AnyCharge(1_e) == q);
+  BOOST_CHECK(!(q == Acts::AnyCharge(2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(2_e) == q));
 }
 
 BOOST_AUTO_TEST_CASE(AnyChargeMultiple) {
-  // only the magnitude of the charge is used
-  Acts::AnyCharge q(-3_e);
+  // takes only the charge magnitude as input
+  Acts::AnyCharge q(3_e);
 
   BOOST_CHECK_EQUAL(q.extractCharge(1.23), 3_e);
   BOOST_CHECK_EQUAL(q.extractCharge(2.54), 3_e);
@@ -120,11 +127,14 @@ BOOST_AUTO_TEST_CASE(AnyChargeMultiple) {
   CHECK_CLOSE_REL(q.extractMomentum(3_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(q.extractMomentum(-3_e / 128_MeV), 128_MeV, eps);
 
-  // equality only considers magnitude
-  BOOST_CHECK(q == Acts::AnyCharge(3_e));
   BOOST_CHECK(!(q == Acts::AnyCharge(0_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(0_e) == q));
   BOOST_CHECK(!(q == Acts::AnyCharge(1_e)));
-  BOOST_CHECK(!(q == Acts::AnyCharge(-2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(1_e) == q));
+  BOOST_CHECK(!(q == Acts::AnyCharge(2_e)));
+  BOOST_CHECK(!(Acts::AnyCharge(2_e) == q));
+  BOOST_CHECK(q == Acts::AnyCharge(3_e));
+  BOOST_CHECK(Acts::AnyCharge(3_e) == q);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
