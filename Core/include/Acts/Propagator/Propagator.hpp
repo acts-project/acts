@@ -108,7 +108,7 @@ struct PropagatorPlainOptions {
 ///
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
-struct PropagatorOptions {
+struct PropagatorOptions : public PropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
@@ -175,41 +175,6 @@ struct PropagatorOptions {
     tolerance = pOptions.tolerance;
     stepSizeCutOff = pOptions.stepSizeCutOff;
   }
-
-  /// Propagation direction
-  NavigationDirection direction = forward;
-
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
-
-  /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * UnitConstants::MeV;
-
-  /// Maximum number of steps for one propagate call
-  unsigned int maxSteps = 1000;
-
-  /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
-
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-
-  /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
-
-  /// Loop protection step, it adapts the pathLimit
-  bool loopProtection = true;
-  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-  // Configurations for Stepper
-  /// Tolerance for the error of the integration
-  double tolerance = 1e-4;
-
-  /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
 
   /// List of actions
   action_list_t actionList;
