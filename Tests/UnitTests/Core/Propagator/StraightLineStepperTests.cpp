@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
+  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, 0, time);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, ndir,
                                         stepSize, tolerance);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
