@@ -182,7 +182,7 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
 }
 
 void Acts::VolumeMaterialMapper::createExtraHits(
-    RecordedMaterialVolumePoint& matPoint, Acts::MaterialProperties properties,
+    RecordedMaterialVolumePoint& matPoint, Acts::MaterialSlab properties,
     Vector3D position, Vector3D direction) const {
   std::vector<Acts::Vector3D> extraPosition;
   std::vector<Acts::Vector3D> extraRemainderPositions;
@@ -337,7 +337,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         // check if there is vacuum between this material point and the last one
         float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
         if (vacuumThickness > s_epsilon) {
-          auto properties = Acts::materialSlab(vacuumThickness);
+          auto properties = Acts::MaterialSlab(vacuumThickness);
           // creat vacuum hits
           createExtraHits(currentRecMaterial->second, properties,
                           lastPositionEnd, direction);
@@ -371,7 +371,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
               // if the last material slab stop before the boundary surface
               // create vacuum hits
               if (vacuumThickness > s_epsilon) {
-                auto properties = Acts::materialSlab(vacuumThickness);
+                auto properties = Acts::MaterialSlab(vacuumThickness);
                 createExtraHits(currentRecMaterial->second, properties,
                                 lastPositionEnd, direction);
                 lastPositionEnd = sfIter->position;
