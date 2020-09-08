@@ -39,19 +39,26 @@ class SingleBoundTrackParameters {
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSymMatrix;
 
-  /// Construct from a parameters vector on the surface and charge magnitude.
+  /// Construct from a parameters vector on the surface and particle charge.
   ///
   /// @param surface Reference surface the parameters are defined on
   /// @param params Bound parameters vector
-  /// @param absQ Particle charge magnitude/ absolute charge value
+  /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
+  ///
+  /// In principle, only the charge magnitude is needed her to allow unambigous
+  /// extraction of the absolute momentum. The particle charge is required as
+  /// an input here to be consistent with the other constructors below that
+  /// that also take the charge as an input. The charge sign is only used in
+  /// debug builds to check for consistency with the q/p parameter.
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params, Scalar absQ,
+                             const ParametersVector& params, Scalar q,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_paramSet(std::move(cov), params),
         m_surface(std::move(surface)),
-        m_chargeInterpreter(absQ) {
-    assert((0 <= absQ) and "Charge magnitude must be positive");
+        m_chargeInterpreter(std::abs(q)) {
+    assert((0 <= (params[eBoundQOverP] * q)) and
+           "Inconsistent q/p and q signs");
     assert(m_surface);
   }
 

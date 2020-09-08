@@ -32,15 +32,21 @@ class SingleFreeTrackParameters {
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
 
-  /// Construct from a parameters vector and charge magnitude.
+  /// Construct from a parameters vector and and particle charge.
   ///
   /// @param params Free parameters vector
-  /// @param absQ Particle charge magnitude
+  /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
-  SingleFreeTrackParameters(const ParametersVector& params, Scalar absQ,
+  ///
+  /// In principle, only the charge magnitude is needed her to allow unambigous
+  /// extraction of the absolute momentum. The particle charge is required as
+  /// an input here to be consistent with the other constructors below that
+  /// that also take the charge as an input. The charge sign is only used in
+  /// debug builds to check for consistency with the q/p parameter.
+  SingleFreeTrackParameters(const ParametersVector& params, Scalar q,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), params), m_chargeInterpreter(absQ) {
-    assert((0 <= absQ) and "Charge magnitude must be positive");
+      : m_paramSet(std::move(cov), params), m_chargeInterpreter(std::abs(q)) {
+    assert((0 <= (params[eFreeQOverP] * q)) and "Inconsistent q/p and q signs");
   }
 
   /// Construct from a parameters vector.
