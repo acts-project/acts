@@ -37,6 +37,9 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
                      double theta, double qOverP, const Vector3D& pos,
                      const Vector3D& mom, double q) {
+  Vector4D pos4 = Vector4D::Zero();
+  pos4.segment<3>(ePos0) = pos;
+  pos4[eTime] = time;
   // native values
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc0>(), l0, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc1>(), l1, eps, eps);
@@ -46,8 +49,13 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), mom.normalized(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), mom.head<2>().norm(), eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), mom.norm(), eps, eps);
   CHECK_CLOSE_OR_SMALL(params.momentum(), mom, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
 }
@@ -74,12 +82,13 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
   }
   // positively charged from global information
   {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, 1_e, time, surface);
+    BoundTrackParameters params(geoCtx, std::nullopt, pos, mom, 1_e, time,
+                                surface);
     checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
   }
   // negatively charged from local vector
@@ -91,12 +100,13 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -1_e / p;
-    BoundParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
   }
   // negatively charged from global information
   {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, -1_e, time, surface);
+    BoundTrackParameters params(geoCtx, std::nullopt, pos, mom, -1_e, time,
+                                surface);
     checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
   }
   // neutral parameters from local vector
@@ -119,23 +129,19 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   }
 }
 
-std::shared_ptr<Transform3D> makeTransformIdentity() {
-  return std::make_shared<Transform3D>(Transform3D::Identity());
-}
-
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
 // in the datasets header) represent valid points on the surface.
 const auto cones = bdata::make({
-    Surface::makeShared<ConeSurface>(makeTransformIdentity(),
+    Surface::makeShared<ConeSurface>(Transform3D::Identity(),
                                      0.5 /* opening angle */),
 });
 const auto cylinders = bdata::make({
-    Surface::makeShared<CylinderSurface>(makeTransformIdentity(),
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
                                          10.0 /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
-    Surface::makeShared<DiscSurface>(makeTransformIdentity(),
+    Surface::makeShared<DiscSurface>(Transform3D::Identity(),
                                      0 /* radius min */, 100 /* radius max */),
 });
 const auto perigees = bdata::make({
@@ -147,13 +153,13 @@ const auto planes = bdata::make({
     Surface::makeShared<PlaneSurface>(Vector3D(3, -4, 5), Vector3D::UnitZ()),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(makeTransformIdentity(), 2.0 /* radius */,
+    Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,
                                       200.0 /* half z */),
 });
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(BoundTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataBoundTrackParameters)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
                      cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,

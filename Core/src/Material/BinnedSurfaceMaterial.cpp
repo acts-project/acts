@@ -8,10 +8,10 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialPropertiesVector fullProperties,
+    const BinUtility& binUtility, MaterialSlabVector fullProperties,
     double splitFactor)
     : ISurfaceMaterial(splitFactor), m_binUtility(binUtility) {
   // fill the material with deep copy
@@ -19,7 +19,7 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility& binUtility, MaterialPropertiesMatrix fullProperties,
+    const BinUtility& binUtility, MaterialSlabMatrix fullProperties,
     double splitFactor)
     : ISurfaceMaterial(splitFactor),
       m_binUtility(binUtility),
@@ -35,7 +35,7 @@ Acts::BinnedSurfaceMaterial& Acts::BinnedSurfaceMaterial::operator*=(
   return (*this);
 }
 
-const Acts::MaterialProperties& Acts::BinnedSurfaceMaterial::materialProperties(
+const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Vector2D& lp) const {
   // the first bin
   size_t ibin0 = m_binUtility.bin(lp, 0);
@@ -43,7 +43,7 @@ const Acts::MaterialProperties& Acts::BinnedSurfaceMaterial::materialProperties(
   return m_fullMaterial[ibin1][ibin0];
 }
 
-const Acts::MaterialProperties& Acts::BinnedSurfaceMaterial::materialProperties(
+const Acts::MaterialSlab& Acts::BinnedSurfaceMaterial::materialSlab(
     const Acts::Vector3D& gp) const {
   // the first bin
   size_t ibin0 = m_binUtility.bin(gp, 0);

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -41,7 +41,7 @@ struct PointwiseMaterialInteraction {
   const NavigationDirection nav;
 
   /// The effective, passed material properties including the path correction.
-  MaterialProperties slab;
+  MaterialSlab slab;
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection;
   /// Expected phi variance due to the interactions.
@@ -88,9 +88,8 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialProperties(
-      const propagator_state_t& state,
-      MaterialUpdateStage updateStage = fullUpdate) {
+  bool evaluateMaterialSlab(const propagator_state_t& state,
+                            MaterialUpdateStage updateStage = fullUpdate) {
     // We are at the start surface
     if (surface == state.navigation.startSurface) {
       updateStage = postUpdate;
@@ -100,9 +99,8 @@ struct PointwiseMaterialInteraction {
     }
 
     // Retrieve the material properties
-    slab =
-        state.navigation.currentSurface->surfaceMaterial()->materialProperties(
-            pos, nav, updateStage);
+    slab = state.navigation.currentSurface->surfaceMaterial()->materialSlab(
+        pos, nav, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);

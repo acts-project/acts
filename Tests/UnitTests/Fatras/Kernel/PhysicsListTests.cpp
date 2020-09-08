@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -43,8 +43,8 @@ struct FatalProcess {
 
 struct Fixture {
   std::ranlux48 generator{23};
-  Acts::MaterialProperties slab =
-      Acts::MaterialProperties(Acts::Test::makeBeryllium(), 1_mm);
+  Acts::MaterialSlab slab =
+      Acts::MaterialSlab(Acts::Test::makeBeryllium(), 1_mm);
   ActsFatras::Particle inputParticle;
 };
 }  // namespace

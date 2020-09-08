@@ -26,7 +26,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -75,7 +75,7 @@ struct CylindricalTrackingGeometry {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
-    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+    MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
 
     // Create a new surface material
     std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
@@ -96,13 +96,11 @@ struct CylindricalTrackingGeometry {
     for (int im = 0; im < nPhi; ++im) {
       // Get the moduleTransform
       double phi = -M_PI + im * phiStep;
-      std::shared_ptr<Transform3D> mModuleTransform =
-          std::make_shared<Transform3D>(
-              Translation3D(ringRadius * std::cos(phi),
-                            ringRadius * std::sin(phi),
-                            ringZ + (im % 2) * zStagger) *
-              AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
-              AngleAxis3D(moduleTilt, Vector3D::UnitY()));
+      auto mModuleTransform = Transform3D(
+          Translation3D(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
+                        ringZ + (im % 2) * zStagger) *
+          AngleAxis3D(phi - 0.5 * M_PI, Vector3D::UnitZ()) *
+          AngleAxis3D(moduleTilt, Vector3D::UnitY()));
 
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
@@ -136,7 +134,7 @@ struct CylindricalTrackingGeometry {
     std::vector<const Surface*> layerSurfaces;
 
     // Module material from input
-    MaterialProperties moduleMaterial(makeSilicon(), moduleThickness);
+    MaterialSlab moduleMaterial(makeSilicon(), moduleThickness);
 
     // Create a new surface material
     std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr =
@@ -168,9 +166,8 @@ struct CylindricalTrackingGeometry {
       moduleRotation.col(1) = moduleLocalY;
       moduleRotation.col(2) = moduleLocalZ;
       // Get the moduleTransform
-      std::shared_ptr<Transform3D> mModuleTransform =
-          std::make_shared<Transform3D>(Translation3D(mCenter) *
-                                        moduleRotation);
+      auto mModuleTransform =
+          Transform3D(Translation3D(mCenter) * moduleRotation);
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);
@@ -247,7 +244,7 @@ struct CylindricalTrackingGeometry {
         cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
 
     // ----------------- build a beam pipe -----------------------------------
-    MaterialProperties beamPipeMaterial(makeBeryllium(), 0.8_mm);
+    MaterialSlab beamPipeMaterial(makeBeryllium(), 0.8_mm);
     PassiveLayerBuilder::Config bplConfig;
     bplConfig.layerIdentification = "BeamPipe";
     bplConfig.centralLayerRadii = std::vector<double>(1, 19.);
@@ -277,7 +274,7 @@ struct CylindricalTrackingGeometry {
     //-------------------------------------------------------------------------------------
     // some prep work for the material
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    MaterialProperties lProperties(makeSilicon(), 1.5_mm);
+    MaterialSlab lProperties(makeSilicon(), 1.5_mm);
 
     std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr =
         std::shared_ptr<const ISurfaceMaterial>(
@@ -327,9 +324,9 @@ struct CylindricalTrackingGeometry {
     auto pVolumeBounds =
         std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
-    auto pVolume = TrackingVolume::create(nullptr, pVolumeBounds, nullptr,
-                                          std::move(pLayerArray), nullptr, {},
-                                          "Pixel::Barrel");
+    auto pVolume = TrackingVolume::create(
+        Transform3D::Identity(), pVolumeBounds, nullptr, std::move(pLayerArray),
+        nullptr, {}, "Pixel::Barrel");
 
     // The combined volume
     auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(

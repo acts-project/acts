@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
+
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -15,8 +16,9 @@ namespace {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+using CurvilinearState =
+    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
 ///
@@ -241,10 +243,12 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
       std::abs(1. / parameters[eFreeQOverP]) * parameters.segment<3>(eFreeDir0);
   const double charge = std::copysign(1., parameters[eFreeQOverP]);
   const double time = parameters[eFreeTime];
-  BoundParameters boundParameters(geoContext, cov, position, momentum, charge,
-                                  time, surface.getSharedPtr());
+  BoundTrackParameters BoundTrackParameters(geoContext, cov, position, momentum,
+                                            charge, time,
+                                            surface.getSharedPtr());
   // Create the bound state
-  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
+  return std::make_tuple(std::move(BoundTrackParameters), jacobian,
+                         accumulatedPath);
   ;
 }
 
@@ -269,10 +273,10 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   const Vector3D momentum = std::abs(1. / parameters[eFreeQOverP]) * direction;
   const double charge = std::copysign(1., parameters[eFreeQOverP]);
   const double time = parameters[eFreeTime];
-  CurvilinearParameters curvilinearParameters(cov, position, momentum, charge,
-                                              time);
+  CurvilinearTrackParameters curvilinearParams(cov, position, momentum, charge,
+                                               time);
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParameters), jacobian,
+  return std::make_tuple(std::move(curvilinearParams), jacobian,
                          accumulatedPath);
 }
 

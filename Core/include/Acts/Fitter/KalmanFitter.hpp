@@ -20,7 +20,7 @@
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -120,7 +120,7 @@ struct KalmanFitterResult {
   size_t trackTip = SIZE_MAX;
 
   // The optional Parameters at the provided surface
-  std::optional<BoundParameters> fittedParameters;
+  std::optional<BoundTrackParameters> fittedParameters;
 
   // Counter for states with measurements
   size_t measurementStates = 0;
@@ -358,7 +358,7 @@ class KalmanFitter {
           // Transport & bind the parameter to the final surface
           auto fittedState = stepper.boundState(state.stepping, *targetSurface);
           // Assign the fitted parameters
-          result.fittedParameters = std::get<BoundParameters>(fittedState);
+          result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
           // Reset smoothed status of states missed in backward filtering
           if (backwardFiltering) {
@@ -697,8 +697,8 @@ class KalmanFitter {
               });
 
           // update stepping state using filtered parameters after kalman
-          // update We need to (re-)construct a BoundParameters instance here,
-          // which is a bit awkward.
+          // update We need to (re-)construct a BoundTrackParameters instance
+          // here, which is a bit awkward.
           stepper.update(state.stepping,
                          MultiTrajectoryHelpers::freeFiltered(
                              state.options.geoContext, trackStateProxy),
@@ -757,7 +757,7 @@ class KalmanFitter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -917,7 +917,7 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename parameters_t = BoundParameters>
+            typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
@@ -1006,7 +1006,7 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename parameters_t = BoundParameters>
+            typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<outlier_finder_t>& kfOptions,

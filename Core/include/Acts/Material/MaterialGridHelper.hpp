@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -20,7 +20,7 @@
 namespace Acts {
 
 using RecordedMaterialPoint =
-    std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
+    std::vector<std::pair<Acts::MaterialSlab, Acts::Vector3D>>;
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;

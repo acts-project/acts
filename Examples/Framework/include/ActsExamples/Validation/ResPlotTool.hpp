@@ -93,7 +93,7 @@ class ResPlotTool {
   /// @param fittedParamters the fitted parameters at perigee surface
   void fill(ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
             const ActsFatras::Particle& truthParticle,
-            const Acts::BoundParameters& fittedParamters) const;
+            const Acts::BoundTrackParameters& fittedParamters) const;
 
   /// @brief extract the details of the residual/pull plots and fill details
   ///

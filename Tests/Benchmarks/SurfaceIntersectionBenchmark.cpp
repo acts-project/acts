@@ -49,22 +49,18 @@ Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_m) *
 
 // Define the Plane surface
 auto rb = std::make_shared<RectangleBounds>(1_m, 1_m);
-auto aPlane = Surface::makeShared<PlaneSurface>(
-    std::make_shared<Transform3D>(at), std::move(rb));
+auto aPlane = Surface::makeShared<PlaneSurface>(at, std::move(rb));
 
 // Define the Disc surface
 auto db = std::make_shared<RadialBounds>(0.2_m, 1.2_m);
-auto aDisc = Surface::makeShared<DiscSurface>(std::make_shared<Transform3D>(at),
-                                              std::move(db));
+auto aDisc = Surface::makeShared<DiscSurface>(at, std::move(db));
 
 // Define a Cylinder surface
 auto cb = std::make_shared<CylinderBounds>(10_m, 100_m);
-auto aCylinder = Surface::makeShared<CylinderSurface>(
-    std::make_shared<Transform3D>(at), std::move(cb));
+auto aCylinder = Surface::makeShared<CylinderSurface>(at, std::move(cb));
 
 // Define a Straw surface
-auto aStraw = Surface::makeShared<StrawSurface>(
-    std::make_shared<Transform3D>(at), 50_cm, 2_m);
+auto aStraw = Surface::makeShared<StrawSurface>(at, 50_cm, 2_m);
 
 // The orgin of our attempts for plane, disc and cylinder
 Vector3D origin(0., 0., 0.);

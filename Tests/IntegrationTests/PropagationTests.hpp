@@ -24,10 +24,8 @@
 // parameter construction helpers
 
 /// Construct (initial) curvilinear parameters.
-inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
-                                                             double theta,
-                                                             double absMom,
-                                                             double charge) {
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
+    double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
 
@@ -39,24 +37,22 @@ inline Acts::CurvilinearParameters makeParametersCurvilinear(double phi,
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
-  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
-  CurvilinearParameters params(std::nullopt, pos, mom, charge, time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), charge);
-
-  return params;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return CurvilinearTrackParameters(std::nullopt, pos, absMom * dir, charge,
+                                    time);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
-inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
     double phi, double theta, double absMom, double charge) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
+
+  // phi is ill-defined in forward/backward tracks. normalize the value to
+  // ensure parameter comparisons give correct answers.
+  if (not((0 < theta) and (theta < M_PI))) {
+    phi = 0;
+  }
 
   BoundVector stddev = BoundVector::Zero();
   // TODO use momentum-dependent resolutions
@@ -76,10 +72,11 @@ inline Acts::CurvilinearParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  auto withoutCov = makeParametersCurvilinear(phi, theta, absMom, charge);
-  return CurvilinearParameters(std::move(cov), withoutCov.position(),
-                               withoutCov.momentum(), withoutCov.charge(),
-                               withoutCov.time());
+  Vector3D pos = Vector3D::Zero();
+  double time = 0.0;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return CurvilinearTrackParameters(std::move(cov), pos, absMom * dir, charge,
+                                    time);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -96,17 +93,9 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 
   Vector3D pos = Vector3D::Zero();
   double time = 0.0;
-  Vector3D mom = absMom * makeDirectionUnitFromPhiTheta(phi, theta);
-  NeutralCurvilinearTrackParameters params(std::nullopt, pos, mom, time);
-
-  // ensure initial parameters are valid
-  CHECK_CLOSE_ABS(params.position(), pos, 0.125_um);
-  CHECK_CLOSE_ABS(params.time(), time, 1_ps);
-  CHECK_CLOSE_ABS(params.momentum(), mom, 0.125_eV);
-  // charge should be identical not just similar
-  BOOST_CHECK_EQUAL(params.charge(), 0);
-
-  return params;
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  return NeutralCurvilinearTrackParameters(std::nullopt, pos, absMom * dir,
+                                           time);
 }
 
 // helpers to compare track parameters
@@ -140,7 +129,8 @@ inline void checkParametersConsistency(
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
-  CHECK_CLOSE_ABS(cmp.momentum(), ref.momentum(), epsMom);
+  CHECK_CLOSE_ABS(cmp.unitDirection(), ref.unitDirection(), epsDir);
+  CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
 }
@@ -165,10 +155,10 @@ inline void checkCovarianceConsistency(
 
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
-inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
+inline Acts::Transform3D makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3D unitW = params.momentum().normalized();
+  Acts::Vector3D unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
   Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
@@ -178,7 +168,7 @@ inline std::shared_ptr<Acts::Transform3D> makeCurvilinearTransform(
   Acts::Translation3D offset(params.position(geoCtx));
   Acts::Transform3D toGlobal = offset * rotation;
 
-  return std::make_shared<Acts::Transform3D>(toGlobal);
+  return toGlobal;
 }
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
@@ -187,12 +177,10 @@ struct ZCylinderSurfaceBuilder {
   std::shared_ptr<Acts::CylinderSurface> operator()(
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
-    auto transform =
-        std::make_shared<Acts::Transform3D>(Acts::Transform3D::Identity());
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
     return Acts::Surface::makeShared<Acts::CylinderSurface>(
-        std::move(transform), radius, halfz);
+        Acts::Transform3D::Identity(), radius, halfz);
   }
 };
 
@@ -213,10 +201,10 @@ struct DiscSurfaceBuilder {
     Acts::Vector3D localOffset = Acts::Vector3D::Zero();
     localOffset[Acts::ePos0] = 1_cm;
     localOffset[Acts::ePos1] = -1_cm;
-    Acts::Vector3D globalOriginDelta = cl->linear() * localOffset;
-    cl->pretranslate(globalOriginDelta);
+    Acts::Vector3D globalOriginDelta = cl.linear() * localOffset;
+    cl.pretranslate(globalOriginDelta);
 
-    return Acts::Surface::makeShared<Acts::DiscSurface>(std::move(cl));
+    return Acts::Surface::makeShared<Acts::DiscSurface>(cl);
   }
 };
 
@@ -238,8 +226,7 @@ struct ZStrawSurfaceBuilder {
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
-        std::make_shared<Acts::Transform3D>(
-            Acts::Translation3D(params.position(geoCtx))));
+        Acts::Transform3D(Acts::Translation3D(params.position(geoCtx))));
   }
 };
 
@@ -251,7 +238,7 @@ struct ZStrawSurfaceBuilder {
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
-inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
+inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
@@ -278,7 +265,7 @@ inline std::pair<Acts::CurvilinearParameters, double> transportFreely(
 template <typename propagator_t, typename charge_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
-inline std::pair<Acts::BoundParameters, double> transportToSurface(
+inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
@@ -363,9 +350,9 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
-  CHECK_CLOSE_ABS(surfParams.momentum().normalized(),
-                  freeParams.momentum().normalized(), epsDir);
-  CHECK_CLOSE_ABS(surfParams.momentum().norm(), freeParams.momentum().norm(),
+  CHECK_CLOSE_ABS(surfParams.unitDirection(), freeParams.unitDirection(),
+                  epsDir);
+  CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
 }

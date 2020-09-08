@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(interactions)
 // consistency checks for the energy loss values
 BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
                      i, m, q, p) {
-  const auto slab = Acts::MaterialProperties(material, x);
+  const auto slab = Acts::MaterialSlab(material, x);
   const auto qOverP = q / p;
 
   auto dEBethe = computeEnergyLossBethe(slab, i, m, qOverP, q);
@@ -70,8 +70,8 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
 // consistency checks for multiple scattering
 BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
                      thickness* particle* momentum, x, i, m, q, p) {
-  const auto slab = Acts::MaterialProperties(material, x);
-  const auto slabDoubled = Acts::MaterialProperties(material, 2 * x);
+  const auto slab = Acts::MaterialSlab(material, x);
+  const auto slabDoubled = Acts::MaterialSlab(material, 2 * x);
   const auto qOverP = q / p;
   const auto qOver2P = q / (2 * p);
 
@@ -93,7 +93,7 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
 
 // no material -> no interactions
 BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
-  const auto vacuum = Acts::MaterialProperties(Acts::Material(), x);
+  const auto vacuum = Acts::MaterialSlab(Acts::Material(), x);
   const auto qOverP = q / p;
 
   BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, i, m, qOverP, q), 0);

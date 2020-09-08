@@ -203,7 +203,7 @@ The basic information for any material is:
 This information is confined together in the `Material` class.
 
 Surface based material extends this material information by representative
-thickness, the corresponding object is called `MaterialProperties`. The
+thickness, the corresponding object is called `MaterialSlab`. The
 thickness hereby can be arbitrarily chosen in order to regulate the material
 budget, it does not have to represent the actual thickness of a detector
 element. To attach it to a surface, a dedicated `SurfaceMaterial` class (or it's

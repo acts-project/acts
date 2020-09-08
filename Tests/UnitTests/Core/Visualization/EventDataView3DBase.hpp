@@ -57,14 +57,14 @@ std::default_random_engine generator(42);
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundParameters(IVisualization3D& helper) {
+static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   std::stringstream ss;
 
   ViewConfig pcolor({20, 120, 20});
   ViewConfig scolor({235, 198, 52});
 
   auto gctx = GeometryContext();
-  auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
+  auto identity = Transform3D::Identity();
 
   // rectangle and plane
   auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
@@ -79,8 +79,8 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
-  BoundParameters::ParametersVector pars =
-      BoundParameters::ParametersVector::Zero();
+  BoundTrackParameters::ParametersVector pars =
+      BoundTrackParameters::ParametersVector::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -91,9 +91,9 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  EventDataView3D::drawBoundParameters(
-      helper, BoundParameters(plane, pars, std::move(cov)), gctx, momentumScale,
-      localErrorScale, directionErrorScale, pcolor, scolor);
+  EventDataView3D::drawBoundTrackParameters(
+      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
+      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -124,7 +124,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.1_m));
 
   // Material of the surfaces
-  MaterialProperties matProp(Acts::Test::makeSilicon(), 0.5_mm);
+  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
@@ -151,7 +151,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     // The thickness to construct the associated detector element
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
-        [](std::shared_ptr<const Transform3D> trans,
+        [](const Transform3D& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };

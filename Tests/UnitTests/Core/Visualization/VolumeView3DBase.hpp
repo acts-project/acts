@@ -36,7 +36,7 @@ namespace VolumeView3DTest {
 static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   auto gctx = GeometryContext();
-  auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
+  auto identity = Transform3D::Identity();
   std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;

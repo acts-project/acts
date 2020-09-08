@@ -119,12 +119,13 @@ class IterativeVertexFinder {
     typename vfitter_t::State fitterState;
   };
 
-  /// @brief Constructor used if InputTrack_t type == BoundParameters
+  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <typename T = InputTrack_t,
-            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
+  template <
+      typename T = InputTrack_t,
+      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   IterativeVertexFinder(Config& cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
@@ -132,13 +133,15 @@ class IterativeVertexFinder {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type =! BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type =!
+  /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from InputTrack_t object
+  /// @param func Function extracting BoundTrackParameters from InputTrack_t
+  /// object
   /// @param logger The logging instance
   IterativeVertexFinder(Config& cfg,
-                        std::function<BoundParameters(InputTrack_t)> func,
+                        std::function<BoundTrackParameters(InputTrack_t)> func,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -162,11 +165,11 @@ class IterativeVertexFinder {
   const Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other InputTrack_t objects.
+  /// InputTrack_t objects are BoundTrackParameters by default, function to be
+  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
   ///
   /// @param InputTrack_t object to extract track parameters from
-  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -197,7 +200,7 @@ class IterativeVertexFinder {
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<double> getCompatibility(
-      const BoundParameters& params, const Vertex<InputTrack_t>& vertex,
+      const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 
