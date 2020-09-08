@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Set the starting momentum for propagation
   Vector3D mMom(1_GeV, 0., 0);
   for (const auto& [trackID, mPos] : startingPos) {
-    NeutralCurvilinearTrackParameters mStart(makeVector4(mPos, 42_ns), mMom,
-                                             1 / mMom.norm());
+    Vector4D pos4 = VectorHelpers::makeVector4(mPos, 42_ns);
+    NeutralCurvilinearTrackParameters mStart(pos4, mMom, 1 / mMom.norm());
     // Launch and collect - the measurements
     auto mResult = mPropagator.propagate(mStart, mOptions).value();
 
