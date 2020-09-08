@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   Vector3D rPos(-3_m, 10_um * gauss(generator), 100_um * gauss(generator));
   Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
                 0.025_GeV * gauss(generator));
-  CurvilinearParameters rStart(cov, rPos, rMom, 1., 42.);
+  CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
 
   const Surface* rSurface = &rStart.referenceSurface();
 

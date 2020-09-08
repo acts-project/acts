@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
-  CurvilinearParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  CurvilinearParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  CurvilinearParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // first volume
   startParams = endParams.first;
   startMom = endParams.second;
-  CurvilinearParameters sbtpPiecewise(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtpPiecewise(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  CurvilinearParameters sbtp(cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,

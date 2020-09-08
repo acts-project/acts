@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     Vector3D rMom(1_GeV * cos(rTheta) * cos(rPhi),
                   1_GeV * cos(rTheta) * sin(rPhi), 1_GeV * sin(rTheta));
 
-    CurvilinearParameters rStart(cov, rPos, rMom, 1., 42.);
+    CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
 
     const Surface* rSurface = &rStart.referenceSurface();
 

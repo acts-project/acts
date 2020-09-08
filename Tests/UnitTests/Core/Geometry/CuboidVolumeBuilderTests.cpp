@@ -320,7 +320,7 @@ UnitConstants::m, 0., 0.})
 
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  CurvilinearParameters sbtp(
+  CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 
   // Launch and collect results
@@ -434,7 +434,7 @@ propOpts(tgContext, mfContext);
 
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  CurvilinearParameters sbtp(
+  CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 
   // Launch and collect results
