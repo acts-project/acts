@@ -111,24 +111,6 @@ class SingleCurvilinearTrackParameters
                                                           theta, qOverP),
              std::move(cov)) {}
 
-  /// Construct from position, momentum, charge, and time.
-  ///
-  /// @param cov Bound parameters covariance matrix
-  /// @param pos Track position three-vector
-  /// @param mom Track momemtum three-vector
-  /// @param q Particle charge
-  /// @param time Time coordinate
-  ///
-  /// @deprecated This constructor is only available for backward-compatibility.
-  ///   Please use any of the constructors above instead.
-  SingleCurvilinearTrackParameters(std::optional<CovarianceMatrix> cov,
-                                   const Vector3D& pos, const Vector3D& mom,
-                                   Scalar q, Scalar time)
-      : Base(Surface::makeShared<PlaneSurface>(pos, mom),
-             detail::transformFreeToCurvilinearParameters(time, mom,
-                                                          q / mom.norm()),
-             q, std::move(cov)) {}
-
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 };
