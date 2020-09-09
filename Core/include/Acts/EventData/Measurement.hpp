@@ -291,7 +291,7 @@ class Measurement {
   ///
   /// @sa ParameterSet::residual
   ParameterVector residual(
-      const ActsVectorD<detail::ParametersSize<parameter_indices_t>::size>&
+      const ActsVectorD<detail::kParametersSize<parameter_indices_t>>&
           trackPars) const {
     return m_oParameters.residual(trackPars);
   }

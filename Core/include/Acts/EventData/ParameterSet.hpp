@@ -79,12 +79,13 @@ template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
   // local typedefs and constants
-  using Self = ParameterSet<parameter_indices_t,
-                            params...>;  ///< type of this parameter set
-  static constexpr unsigned int kNumberOfParameters =
-      sizeof...(params);  ///< number of parameters stored in this class
-  static constexpr unsigned int kSizeMax = detail::ParametersSize<
-      parameter_indices_t>::size;  ///< Highest index in used parameter indices
+  /// type of this parameter set
+  using Self = ParameterSet<parameter_indices_t, params...>;
+  /// number of parameters stored in this class
+  static constexpr unsigned int kNumberOfParameters = sizeof...(params);
+  /// Highest index in used parameter indices
+  static constexpr unsigned int kSizeMax =
+      detail::kParametersSize<parameter_indices_t>;
 
   // static assert to check that the template parameters are consistent
   static_assert(
@@ -279,8 +280,8 @@ class ParameterSet {
   template <parameter_indices_t parameter>
   void setParameter(BoundScalar value) {
     m_vValues(getIndex<parameter>()) =
-        detail::ParameterTypeFor<parameter_indices_t,
-                                 parameter>::type::getValue(value);
+        detail::ParameterTraits<parameter_indices_t, parameter>::getValue(
+            value);
   }
 
   /**

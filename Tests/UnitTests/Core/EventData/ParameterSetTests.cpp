@@ -49,8 +49,8 @@ double get_cyclic_difference(double a, double b, double min, double max) {
 }
 
 void check_residuals_for_bound_parameters() {
-  const double max = BoundParameterType<eBoundTheta>::max;
-  const double min = BoundParameterType<eBoundTheta>::min;
+  const double max = BoundParameterTraits<eBoundTheta>::max;
+  const double min = BoundParameterTraits<eBoundTheta>::min;
   double theta_1 = 0.7 * M_PI;
   double theta_2 = 0.4 * M_PI;
   ActsVectorD<1> dTheta;
@@ -111,8 +111,8 @@ void check_residuals_for_bound_parameters() {
 }
 
 void check_residuals_for_cyclic_parameters() {
-  const double max = BoundParameterType<eBoundPhi>::max;
-  const double min = BoundParameterType<eBoundPhi>::min;
+  const double max = BoundParameterTraits<eBoundPhi>::max;
+  const double min = BoundParameterTraits<eBoundPhi>::min;
 
   double phi_1 = 0.7 * M_PI;
   double phi_2 = 0.4 * M_PI;
@@ -150,10 +150,10 @@ void random_residual_tests() {
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-  const double theta_max = BoundParameterType<eBoundTheta>::max;
-  const double theta_min = BoundParameterType<eBoundTheta>::min;
-  const double phi_max = BoundParameterType<eBoundPhi>::max;
-  const double phi_min = BoundParameterType<eBoundPhi>::min;
+  const double theta_max = BoundParameterTraits<eBoundTheta>::max;
+  const double theta_min = BoundParameterTraits<eBoundTheta>::min;
+  const double phi_max = BoundParameterTraits<eBoundPhi>::max;
+  const double phi_min = BoundParameterTraits<eBoundPhi>::min;
 
   BoundVector parValues_1;
   BoundVector parValues_2;
@@ -646,18 +646,18 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   // check bound parameter type
   ParameterSet<BoundIndices, eBoundTheta> bound(std::nullopt, small_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
-               BoundParameterType<eBoundTheta>::min));
+               BoundParameterTraits<eBoundTheta>::min));
   bound.setParameter<eBoundTheta>(large_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
-               BoundParameterType<eBoundTheta>::max));
+               BoundParameterTraits<eBoundTheta>::max));
   bound.setParameter<eBoundTheta>(normal_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() == normal_number));
 
   // check cyclic parameter type
   ParameterSet<BoundIndices, eBoundPhi> cyclic(std::nullopt, small_number);
   // calculate expected results
-  const double min = BoundParameterType<eBoundPhi>::min;
-  const double max = BoundParameterType<eBoundPhi>::max;
+  const double min = BoundParameterTraits<eBoundPhi>::min;
+  const double max = BoundParameterTraits<eBoundPhi>::max;
   // check that difference between original phi and stored phi is a multiple
   // of the cyclic period
   double multiple =

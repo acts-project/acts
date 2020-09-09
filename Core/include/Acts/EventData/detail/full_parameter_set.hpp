@@ -59,7 +59,7 @@ struct full_parset {
 
   using type = typename converter<typename tparam_generator<
       parameter_indices_t,
-      ParametersSize<parameter_indices_t>::size - 1>::type>::type;
+      kParametersSize<parameter_indices_t> - 1>::type>::type;
 };
 
 }  // namespace detail

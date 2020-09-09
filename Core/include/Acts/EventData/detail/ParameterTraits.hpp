@@ -16,234 +16,161 @@
 namespace Acts {
 namespace detail {
 
-///
-/// @brief type for parameters with unrestricted value range
-///
-struct unbound_parameter {
-  static constexpr bool may_modify_value{
-      false};  ///< parameter values need no adjustment
+/// Traits class for an unrestricted parameter.
+struct UnrestrictedParameterTraits {
+  /// Values need no adjustment.
+  static constexpr bool may_modify_value = false;
 
-  ///
-  /// @brief retrieve value for unconstrained parameter value ranges
-  ///
-  /// @tparam T type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return identical input parameter value
-  ///
-  template <typename T>
-  static T getValue(const T& input) {
-    return input;
+  /// Get the corrected value within the limits. This is a no-op here.
+  template <typename value_t>
+  static constexpr const value_t& getValue(const value_t& value) {
+    return value;
   }
-
-  template <typename T>
-  static T getDifference(const T& first, const T& second) {
-    return first - second;
+  /// Compute the difference between two values.
+  template <typename value_t>
+  static constexpr value_t getDifference(const value_t& lhs,
+                                         const value_t& rhs) {
+    return lhs - rhs;
   }
 };
 
+/// Traits class for a parameter with a restricted value range.
 ///
-/// @brief type for local parameters bound to a surface
-///
-struct local_parameter : public unbound_parameter {};
-
-///
-/// @brief type for parameter with restricted value range
+/// @tparam limits_t a type with static `lowest()` and `max()` member functions
 ///
 /// This parameter type could be useful to describe parameter with physical
 /// meaningful bounds (e.g. radius).
-///
-/// @tparam T type for boundary value (usually @c double)
-/// @tparam MIN pointer to a @c constexpr function returning the lower bound of
-/// the value range
-/// @tparam MAX pointer to a @c constexpr function returning the upper bound of
-/// the value range
-///
-template <typename T, T (*MIN)(), T (*MAX)()>
-struct bound_parameter {
-  static constexpr bool may_modify_value{
-      true};                      ///< parameter values may need adjustment
-  static constexpr T min{MIN()};  ///< lower bound of range
-  static constexpr T max{MAX()};  ///< upper bound of range
+template <typename limits_t>
+struct RestrictedParameterTraits {
+  /// Parameter values may need adjustment.
+  static constexpr bool may_modify_value = true;
+  /// Lower bound of range.
+  static constexpr double min = limits_t::lowest();
+  /// Upper bound of range.
+  static constexpr double max = limits_t::max();
 
-  ///
-  /// @brief retrieve value for constrained parameter value ranges
-  ///
-  /// @tparam U type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return input parameter value cut of at the boundaries @c
-  /// bound_parameter<U<MIN<MAX>::min and
-  ///         @c bound_parameter<U,MIN,MAX>::max.
-  ///
-  template <typename U>
-  static U getValue(const U& input) {
-    return (input > max) ? max : ((input < min) ? min : input);
+  /// Get the corrected value within the limits.
+  template <typename value_t>
+  static constexpr value_t getValue(const value_t& value) {
+    return std::clamp(value, static_cast<value_t>(min),
+                      static_cast<value_t>(max));
   }
-
-  template <typename U>
-  static U getDifference(const U& first, const U& second) {
-    return getValue(first) - getValue(second);
+  /// Compute the difference between two values with limit handling.
+  template <typename value_t>
+  static constexpr value_t getDifference(const value_t& lhs,
+                                         const value_t& rhs) {
+    return getValue(lhs) - getValue(rhs);
   }
 };
 
+/// Traits class for a parameter with a cyclic value range.
 ///
-/// @brief type for parameter with cyclic value range
+/// @tparam limits_t a type with static `lowest()` and `max()` member functions
 ///
 /// This parameter type is useful to e.g. describe angles.
-///
-/// @tparam T type for boundary value (usually @c double)
-/// @tparam MIN pointer to a @c constexpr function returning the lower bound of
-/// the value range
-/// @tparam MAX pointer to a @c constexpr function returning the upper bound of
-/// the value range
-///
-template <typename T, T (*MIN)(), T (*MAX)()>
-struct cyclic_parameter {
-  static constexpr bool may_modify_value{
-      true};                      ///< parameter values may need adjustment
-  static constexpr T min{MIN()};  ///< lower bound of range
-  static constexpr T max{MAX()};  ///< upper bound of range
+template <typename limits_t>
+struct CyclicParameterTraits {
+  /// Parameter values may need adjustment.
+  static constexpr bool may_modify_value = true;
+  /// Lower bound of range.
+  static constexpr double min = limits_t::lowest();
+  /// Upper bound of range.
+  static constexpr double max = limits_t::max();
 
-  ///
-  /// @brief retrieve value for constrained cyclic parameter value ranges
-  ///
-  /// @tparam U type of the input parameter
-  /// @param input input parameter value
-  ///
-  /// @return parameter value in the range [@c bound_parameter<U,MIN,MAX>::min,
-  ///         @c bound_parameter<U,MIN,MAX>::max] taking into account the cycle
-  /// of this
-  ///         parameter type.
-  ///
-  template <typename U>
-  static U getValue(const U& input) {
-    if (min <= input && input < max) {
-      return input;
+  /// Get the corrected value folded into the central range.
+  template <typename value_t>
+  static constexpr value_t getValue(const value_t& value) {
+    if ((min <= value) and (value < max)) {
+      return value;
     } else {
-      return input - (max - min) * std::floor((input - min) / (max - min));
+      return value - (max - min) * std::floor((value - min) / (max - min));
     }
   }
-
-  template <typename U>
-  static U getDifference(const U& first, const U& second) {
-    static constexpr U half_period = (max - min) / 2;
-    U tmp = getValue(first) - getValue(second);
-    return (tmp < -half_period
-                ? tmp + 2 * half_period
-                : (tmp > half_period ? tmp - 2 * half_period : tmp));
+  /// Compute the smallest equivalent difference when using the periodicity.
+  template <typename value_t>
+  static constexpr value_t getDifference(const value_t& lhs,
+                                         const value_t& rhs) {
+    constexpr value_t range = (max - min);
+    value_t delta = getValue(lhs) - getValue(rhs);
+    if ((2 * delta) < -range) {
+      return delta + range;
+    } else if (range < (2 * delta)) {
+      return delta - range;
+    } else {
+      return delta;
+    }
   }
 };
 
+// Traits types for bound parameters.
+//
+// These types should not be used directly but only via `ParameterTraits` below.
+
+struct PhiBoundParameterLimits {
+  // use function names consistent w/ std::numeric_limits
+  static constexpr double lowest() { return -M_PI; }
+  static constexpr double max() { return M_PI; }
+};
+struct ThetaBoundParameterLimits {
+  // use function names consistent w/ std::numeric_limits
+  static constexpr double lowest() { return 0; }
+  static constexpr double max() { return M_PI; }
+};
+
+// all parameters not explicitely specified are unrestricted
 template <BoundIndices>
-struct BoundParameterTraits;
+struct BoundParameterTraits : public UnrestrictedParameterTraits {};
 template <>
-struct BoundParameterTraits<BoundIndices::eBoundLoc0> {
-  using type = local_parameter;
+struct BoundParameterTraits<BoundIndices::eBoundPhi>
+    : public CyclicParameterTraits<PhiBoundParameterLimits> {};
+template <>
+struct BoundParameterTraits<BoundIndices::eBoundTheta>
+    : public RestrictedParameterTraits<ThetaBoundParameterLimits> {};
+
+// The separate traits implementation structs are needed to generate a
+// compile-time error in case a non-supported enum type/ index combinations is
+// used.
+template <typename index_t, index_t kIndex>
+struct ParameterTraitsImpl;
+template <BoundIndices kIndex>
+struct ParameterTraitsImpl<BoundIndices, kIndex> {
+  using Type = BoundParameterTraits<kIndex>;
 };
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundLoc1> {
-  using type = local_parameter;
-};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundPhi> {
-  static constexpr double pMin() { return -M_PI; }
-  static constexpr double pMax() { return M_PI; }
-  using type = cyclic_parameter<double, pMin, pMax>;
-};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundTheta> {
-  static constexpr double pMin() { return 0; }
-  static constexpr double pMax() { return M_PI; }
-  using type = bound_parameter<double, pMin, pMax>;
-};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundQOverP> {
-  using type = unbound_parameter;
-};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundTime> {
-  using type = unbound_parameter;
+template <FreeIndices kIndex>
+struct ParameterTraitsImpl<FreeIndices, kIndex> {
+  // all free parameters components are unrestricted
+  using Type = UnrestrictedParameterTraits;
 };
 
-template <FreeIndices>
-struct FreeParameterTraits;
-template <>
-struct FreeParameterTraits<FreeIndices::eFreePos0> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreePos1> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreePos2> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreeTime> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreeDir0> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreeDir1> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreeDir2> {
-  using type = unbound_parameter;
-};
-template <>
-struct FreeParameterTraits<FreeIndices::eFreeQOverP> {
-  using type = unbound_parameter;
-};
+/// Parameter traits for an index from one of the indices enums.
+///
+/// @tparam index_t Parameter indices enum
+/// @tparam kIndex A specific parameter index
+///
+/// This type resolves directly to one of the parameter traits classes defined
+/// above and allows for uniform access.
+template <typename index_t, index_t kIndex>
+using ParameterTraits = typename ParameterTraitsImpl<index_t, kIndex>::Type;
 
+// The separate size implementation structs are needed to generate a
+// compile-time error in case a non-supported enum type combinations is used.
+// Template variables can not have an undefined default case.
 template <typename indices_t>
-struct ParametersSize;
+struct ParametersSizeImpl;
 template <>
-struct ParametersSize<BoundIndices> {
-  static constexpr unsigned int size =
+struct ParametersSizeImpl<BoundIndices> {
+  static constexpr unsigned int kSize =
       static_cast<unsigned int>(BoundIndices::eBoundSize);
 };
 template <>
-struct ParametersSize<FreeIndices> {
-  static constexpr unsigned int size =
+struct ParametersSizeImpl<FreeIndices> {
+  static constexpr unsigned int kSize =
       static_cast<unsigned int>(FreeIndices::eFreeSize);
 };
 
-/// Single bound track parameter type for value constrains.
-///
-/// The singular name is not a typo since this describes individual components.
-template <BoundIndices kIndex>
-using BoundParameterType = typename detail::BoundParameterTraits<kIndex>::type;
-
-/// Single free track parameter type for value constrains.
-///
-/// The singular name is not a typo since this describes individual components.
-template <FreeIndices kIndex>
-using FreeParameterType = typename detail::FreeParameterTraits<kIndex>::type;
-
-/// Access the (Bound/Free)ParameterType through common struct
-///
-/// @tparam T Parameter indices enum
-/// @tparam I Index of @p T
-template <typename T, T I>
-struct ParameterTypeFor {};
-
-/// Access for @c BoundIndices
-template <BoundIndices I>
-struct ParameterTypeFor<BoundIndices, I> {
-  using type = BoundParameterType<I>;
-};
-
-/// Access for @c FreeIndices
-template <FreeIndices I>
-struct ParameterTypeFor<FreeIndices, I> {
-  using type = FreeParameterType<I>;
-};
+/// The maximum parameters vector size definable by an index enum.
+template <typename indices_t>
+constexpr unsigned int kParametersSize = ParametersSizeImpl<indices_t>::kSize;
 
 }  // namespace detail
 }  // namespace Acts
