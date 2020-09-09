@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,9 +49,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     double thickness = 0.;
     // Constructor function for optional detector elements
     // Arguments are transform, rectangle bounds and thickness.
-    std::function<DetectorElementBase*(std::shared_ptr<const Transform3D>,
-                                       std::shared_ptr<const RectangleBounds>,
-                                       double)>
+    std::function<DetectorElementBase*(
+        const Transform3D&, std::shared_ptr<const RectangleBounds>, double)>
         detElementConstructor;
   };
 

@@ -239,6 +239,7 @@ components. q
 | ACTS_USE_BUNDLED_NLOHMANN_JSON        | Use external nlohmann::json installation (on by default) |
 | ACTS_BUILD_TGEO_PLUGIN                | Build TGeo plugin |
 | ACTS_BUILD_LEGACY                     | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
 | ACTS_BUILD_EXAMPLES                   | Build standalone examples |
 | ACTS_BUILD_EXAMPLES_DD4HEP            | Build DD4hep-based code in the examples |

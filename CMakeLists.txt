@@ -29,6 +29,7 @@ option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
 option(ACTS_USE_BUNDLED_NLOHMANN_JSON "Use external nlohmann::json installation" ON)
 option(ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options
@@ -102,7 +103,7 @@ set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options unit_test_framework)
 find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 # NOTE we use boost::filesystem instead of std::filesystem since the later
-#   is not uniformly supported even on compilers that nominally support C++17 
+#   is not uniformly supported even on compilers that nominally support C++17
 
 # optional packages
 #
@@ -135,6 +136,9 @@ if(ACTS_BUILD_JSON_PLUGIN)
     message(STATUS "Using external install of nlohmann::json")
     find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
   endif()
+endif()
+if(ACTS_BUILD_PLUGIN_SYCL)
+  find_package(SYCL REQUIRED)
 endif()
 if(ACTS_BUILD_TGEO_PLUGIN)
   find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Geom)

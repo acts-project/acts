@@ -110,7 +110,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(cov, pos, mom, q, time);
 
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.maxStepSize = 10_cm;
@@ -160,7 +160,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(cov, pos, mom, q, time);
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -234,7 +234,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(cov, pos, mom, q, time);
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(
       tgContext, mfContext, getDummyLogger());
@@ -244,8 +244,8 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
   if (result.endParameters) {
     // test that you actually lost some energy
-    BOOST_CHECK_LT(result.endParameters->momentum().norm(),
-                   start.momentum().norm());
+    BOOST_CHECK_LT(result.endParameters->absoluteMomentum(),
+                   start.absoluteMomentum());
   }
 }
 
@@ -289,7 +289,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(cov, pos, mom, q, time);
 
   // Action list and abort list
   PropagatorOptions<ActionList<MaterialInteractor>> options(

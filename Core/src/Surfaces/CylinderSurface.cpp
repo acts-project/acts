@@ -25,15 +25,13 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
-                                       const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                                       const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D> htrans, double radius, double halfz,
-    double halfphi, double avphi)
-    : Surface(std::move(htrans)),
+Acts::CylinderSurface::CylinderSurface(const Transform3D& transform,
+                                       double radius, double halfz,
+                                       double halfphi, double avphi)
+    : Surface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
                                                       avphi)) {}
 
@@ -46,9 +44,9 @@ Acts::CylinderSurface::CylinderSurface(
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D> htrans,
+    const Transform3D& transform,
     const std::shared_ptr<const CylinderBounds>& cbounds)
-    : Surface(std::move(htrans)), m_bounds(cbounds) {
+    : Surface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 
@@ -106,8 +104,8 @@ Acts::Vector3D Acts::CylinderSurface::localToGlobal(
     const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
-  double phi = lposition[Acts::eLOC_RPHI] / r;
-  Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  double phi = lposition[Acts::eBoundLoc0] / r;
+  Vector3D position(r * cos(phi), r * sin(phi), lposition[Acts::eBoundLoc1]);
   return transform(gctx) * position;
 }
 
@@ -135,7 +133,7 @@ std::string Acts::CylinderSurface::name() const {
 
 Acts::Vector3D Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
-  double phi = lposition[Acts::eLOC_RPHI] / m_bounds->get(CylinderBounds::eR);
+  double phi = lposition[Acts::eBoundLoc0] / m_bounds->get(CylinderBounds::eR);
   Vector3D localNormal(cos(phi), sin(phi), 0.);
   return Vector3D(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }

@@ -20,7 +20,7 @@
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
@@ -145,7 +145,7 @@ struct CombinatorialKalmanFilterResult {
   std::vector<size_t> trackTips;
 
   // The Parameters at the provided surface for separate tracks
-  std::unordered_map<size_t, BoundParameters> fittedParameters;
+  std::unordered_map<size_t, BoundTrackParameters> fittedParameters;
 
   // The indices of the 'tip' of the unfinished tracks
   std::vector<std::pair<size_t, CombinatorialKalmanFilterTipState>> activeTips;
@@ -245,9 +245,9 @@ class CombinatorialKalmanFilter {
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
-    using BoundState = std::tuple<BoundParameters, BoundMatrix, double>;
+    using BoundState = std::tuple<BoundTrackParameters, BoundMatrix, double>;
     using CurvilinearState =
-        std::tuple<CurvilinearParameters, BoundMatrix, double>;
+        std::tuple<CurvilinearTrackParameters, BoundMatrix, double>;
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<source_link_t>;
 
@@ -418,7 +418,7 @@ class CombinatorialKalmanFilter {
               // Assign the fitted parameters
               result.fittedParameters.emplace(
                   result.trackTips.at(result.iSmoothed),
-                  std::get<BoundParameters>(fittedState));
+                  std::get<BoundTrackParameters>(fittedState));
               // If there are more trajectories to handle:
               // -> set the targetReached status to false
               // -> set the smoothed status to false
@@ -510,12 +510,12 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper, preUpdate);
-
         // Transport & bind the state to the current surface
         auto boundState = stepper.boundState(state.stepping, *surface);
-        auto boundParams = std::get<BoundParameters>(boundState);
+        auto boundParams = std::get<BoundTrackParameters>(boundState);
+
+        // Update state and stepper with pre material effects
+        materialInteractor(surface, state, stepper, preUpdate);
 
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
@@ -894,9 +894,9 @@ class CombinatorialKalmanFilter {
       trackStateProxy.predictedCovariance() = *curvilinearParams.covariance();
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
-      // Set the surface
-      trackStateProxy.setReferenceSurface(Surface::makeShared<PlaneSurface>(
-          curvilinearParams.position(), curvilinearParams.momentum()));
+      // Set the surface; reuse the existing curvilinear surface
+      trackStateProxy.setReferenceSurface(
+          curvilinearParams.referenceSurface().getSharedPtr());
       // Set the filtered parameter index to be the same with predicted
       // parameter
       trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
@@ -927,7 +927,7 @@ class CombinatorialKalmanFilter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialProperties(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -1086,7 +1086,7 @@ class CombinatorialKalmanFilter {
   ///
   /// @return the output as an output track
   template <typename source_link_container_t, typename start_parameters_t,
-            typename parameters_t = BoundParameters>
+            typename parameters_t = BoundTrackParameters>
   Result<CombinatorialKalmanFilterResult<
       typename source_link_container_t::value_type>>
   findTracks(const source_link_container_t& sourcelinks,

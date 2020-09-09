@@ -14,12 +14,11 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
-    propagator_options_t>::calculate3dDistance(const GeometryContext& gctx,
-                                               const BoundParameters& trkParams,
-                                               const Vector3D& vtxPos,
-                                               State& state) const {
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    calculate3dDistance(const GeometryContext& gctx,
+                        const BoundTrackParameters& trkParams,
+                        const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
 
@@ -36,11 +35,11 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<std::unique_ptr<const Acts::BoundParameters>>
+Acts::Result<std::unique_ptr<const Acts::BoundTrackParameters>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     estimate3DImpactParameters(const GeometryContext& gctx,
                                const Acts::MagneticFieldContext& mctx,
-                               const BoundParameters& trkParams,
+                               const BoundTrackParameters& trkParams,
                                const Vector3D& vtxPos, State& state) const {
   Vector3D deltaR;
   Vector3D momDir;
@@ -70,8 +69,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   thePlane.matrix().block(0, 3, 3, 1) = vtxPos;
 
   std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(
-          std::make_shared<Transform3D>(thePlane));
+      Surface::makeShared<PlaneSurface>(thePlane);
 
   // Create propagator options
   auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
@@ -92,7 +90,7 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     get3dVertexCompatibility(const GeometryContext& gctx,
-                             const BoundParameters* trkParams,
+                             const BoundTrackParameters* trkParams,
                              const Vector3D& vertexPos) const {
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
@@ -190,16 +188,16 @@ template <typename input_track_t, typename propagator_t,
 Acts::Result<void>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
-                           const BoundParameters& trkParams,
+                           const BoundTrackParameters& trkParams,
                            const Vector3D& vtxPos, Vector3D& deltaR,
                            Vector3D& momDir, State& state) const {
   Vector3D trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
 
-  double d0 = trkParams.parameters()[BoundIndices::eLOC_D0];
-  double z0 = trkParams.parameters()[BoundIndices::eLOC_Z0];
-  double phi = trkParams.parameters()[BoundIndices::ePHI];
-  double theta = trkParams.parameters()[BoundIndices::eTHETA];
-  double qOvP = trkParams.parameters()[BoundIndices::eQOP];
+  double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
+  double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
+  double phi = trkParams.parameters()[BoundIndices::eBoundPhi];
+  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
 
   double sinTheta = std::sin(theta);
 
@@ -250,7 +248,7 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<Acts::ImpactParametersAndSigma>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    estimateImpactParameters(const BoundParameters& track,
+    estimateImpactParameters(const BoundTrackParameters& track,
                              const Vertex<input_track_t>& vtx,
                              const GeometryContext& gctx,
                              const Acts::MagneticFieldContext& mctx) const {
@@ -275,10 +273,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   const auto& propRes = *result;
   const auto& params = propRes.endParameters->parameters();
-  const double d0 = params[BoundIndices::eLOC_D0];
-  const double z0 = params[BoundIndices::eLOC_Z0];
-  const double phi = params[BoundIndices::ePHI];
-  const double theta = params[BoundIndices::eTHETA];
+  const double d0 = params[BoundIndices::eBoundLoc0];
+  const double z0 = params[BoundIndices::eBoundLoc1];
+  const double phi = params[BoundIndices::eBoundPhi];
+  const double theta = params[BoundIndices::eBoundTheta];
 
   const double sinPhi = std::sin(phi);
   const double sinTheta = std::sin(theta);
@@ -298,24 +296,24 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
   if (d0_PVcontrib >= 0) {
     newIPandSigma.sigmad0 =
-        std::sqrt(d0_PVcontrib +
-                  perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0));
+        std::sqrt(d0_PVcontrib + perigeeCov(BoundIndices::eBoundLoc0,
+                                            BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
-    newIPandSigma.sigmad0 =
-        std::sqrt(perigeeCov(BoundIndices::eLOC_D0, BoundIndices::eLOC_D0));
+    newIPandSigma.sigmad0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
     newIPandSigma.PVsigmad0 = 0;
   }
 
   SymMatrix2D covPerigeeZ0Theta;
   covPerigeeZ0Theta(0, 0) =
-      perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0);
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
   covPerigeeZ0Theta(0, 1) =
-      perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eTHETA);
+      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTheta);
   covPerigeeZ0Theta(1, 0) =
-      perigeeCov(BoundIndices::eTHETA, BoundIndices::eLOC_Z0);
+      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundLoc1);
   covPerigeeZ0Theta(1, 1) =
-      perigeeCov(BoundIndices::eTHETA, BoundIndices::eTHETA);
+      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundTheta);
 
   double vtxZZCov = vtx.covariance()(eZ, eZ);
 
@@ -329,8 +327,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
     newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 = std::sqrt(
-        vtxZZCov + perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0));
+    newIPandSigma.sigmaz0 =
+        std::sqrt(vtxZZCov + perigeeCov(BoundIndices::eBoundLoc1,
+                                        BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
     // Remove contribution from PV
@@ -341,8 +340,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmaz0SinTheta = 0;
 
     newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 =
-        std::sqrt(perigeeCov(BoundIndices::eLOC_Z0, BoundIndices::eLOC_Z0));
+    newIPandSigma.sigmaz0 = std::sqrt(
+        perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
     newIPandSigma.PVsigmaz0 = 0;
   }
 

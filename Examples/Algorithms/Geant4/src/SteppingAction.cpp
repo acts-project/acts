@@ -66,7 +66,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
       }
     }
     // construct passed material slab for the step
-    const auto slab = Acts::MaterialProperties(
+    const auto slab = Acts::MaterialSlab(
         Acts::Material::fromMassDensity(X0, L0, Ar, Z, rho),
         (step->GetStepLength() / CLHEP::mm) * Acts::UnitConstants::mm);
 
@@ -81,14 +81,14 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
        G4cout << "rho: " << rho << G4endl;
        G4cout << "steplength: " << steplength << G4endl;*/
 
-    // create the RecordedMaterialProperties
+    // create the RecordedMaterialSlab
     const auto& rawPos = step->GetPreStepPoint()->GetPosition();
     const auto& rawDir = step->GetPreStepPoint()->GetMomentum();
     Acts::MaterialInteraction mInteraction;
     mInteraction.position = Acts::Vector3D(rawPos.x(), rawPos.y(), rawPos.z());
     mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
     mInteraction.direction.normalized();
-    mInteraction.materialProperties = slab;
+    mInteraction.materialSlab = slab;
     m_materialSteps.push_back(mInteraction);
 
     //   // Get the track associated to the step

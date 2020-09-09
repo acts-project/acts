@@ -57,7 +57,7 @@ struct CubicTrackingGeometry {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     surfaceMaterial = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
   }
 
@@ -83,8 +83,7 @@ struct CubicTrackingGeometry {
       trafo.translation() = translations[i];
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
-          std::make_shared<const Transform3D>(trafo), rBounds, 1._um,
-          surfaceMaterial);
+          trafo, rBounds, 1._um, surfaceMaterial);
       // And remember the surface
       surfaces[i] = detElement->surface().getSharedPtr();
       // Add it to the event store
@@ -99,8 +98,8 @@ struct CubicTrackingGeometry {
 
       std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
 
-      layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo),
-                                     rBounds, std::move(surArray), 1._mm);
+      layers[i] =
+          PlaneLayer::create(trafo, rBounds, std::move(surArray), 1._mm);
 
       auto mutableSurface = const_cast<Surface*>(surfaces[i].get());
       mutableSurface->associateLayer(*layers[i]);
@@ -124,9 +123,9 @@ struct CubicTrackingGeometry {
         geoContext, layVec, -2_m - 1._mm, -1._m + 1._mm, BinningType::arbitrary,
         BinningValue::binX));
 
-    auto trackVolume1 = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafoVol1), boundsVol, nullptr,
-        std::move(layArr1), nullptr, {}, "Volume 1");
+    auto trackVolume1 =
+        TrackingVolume::create(trafoVol1, boundsVol, nullptr,
+                               std::move(layArr1), nullptr, {}, "Volume 1");
 
     // Build volume for surfaces with positive x-values
     Transform3D trafoVol2(Transform3D::Identity());
@@ -139,9 +138,9 @@ struct CubicTrackingGeometry {
         layArrCreator.layerArray(geoContext, layVec, 1._m - 2._mm, 2._m + 2._mm,
                                  BinningType::arbitrary, BinningValue::binX));
 
-    auto trackVolume2 = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr,
-        std::move(layArr2), nullptr, {}, "Volume 2");
+    auto trackVolume2 =
+        TrackingVolume::create(trafoVol2, boundsVol, nullptr,
+                               std::move(layArr2), nullptr, {}, "Volume 2");
 
     // Glue volumes
     trackVolume2->glueTrackingVolume(
@@ -173,8 +172,7 @@ struct CubicTrackingGeometry {
         new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
     MutableTrackingVolumePtr mtvpWorld(
-        TrackingVolume::create(std::make_shared<const Transform3D>(trafoWorld),
-                               worldVol, trVolArr, "World"));
+        TrackingVolume::create(trafoWorld, worldVol, trVolArr, "World"));
 
     // Build and return tracking geometry
     return std::shared_ptr<TrackingGeometry>(

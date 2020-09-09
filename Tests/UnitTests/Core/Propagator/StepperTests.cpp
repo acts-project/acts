@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearParameters cp(std::nullopt, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(std::nullopt, pos, mom, charge, time);
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
                                               stepSize, tolerance);
 
@@ -162,14 +162,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
+  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, 0, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_EQUAL(esState.q, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
+  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, 0, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time = 7.;
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearParameters cp(cov, pos, mom, charge, time);
+  CurvilinearTrackParameters cp(cov, pos, mom, charge, time);
 
   // Build the state and the stepper
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the curvilinear state construction
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
-  CHECK_CLOSE_ABS(curvPars.position(), cp.position(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
   CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearParameters cp2(cov2, pos2, mom2, charge2, time2);
+  CurvilinearTrackParameters cp2(cov2, pos2, mom2, charge2, time2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, mom.normalized());
-  BoundParameters bp(tgContext, cov, pos, mom, charge, time, plane);
+  BoundTrackParameters bp(tgContext, cov, pos, mom, charge, time, plane);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, cp, ndir,
                                                 stepSize, tolerance);
 
@@ -492,8 +492,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -605,8 +604,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -777,8 +775,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -897,8 +894,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // first volume
   startParams = endParams.first;
   startMom = endParams.second;
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(
-      cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtpPiecewise(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -950,7 +946,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3D yPos(0., 1., 0.);
   Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-  MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+  MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::SurfaceConfig sConf1;
@@ -1033,8 +1029,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,

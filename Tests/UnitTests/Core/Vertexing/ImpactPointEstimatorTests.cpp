@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     }
 
     // The track parameters
-    BoundParameters::ParametersVector paramVec;
+    BoundTrackParameters::ParametersVector paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Distance in transverse plane
     double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
@@ -149,21 +149,21 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
 
     BOOST_CHECK(res.ok());
 
-    BoundParameters trackAtIP3d = std::move(**res);
+    BoundTrackParameters trackAtIP3d = std::move(**res);
 
     const auto& myTrackParams = myTrack.parameters();
     const auto& trackIP3dParams = trackAtIP3d.parameters();
 
     // d0 and z0 should have changed
-    BOOST_CHECK_NE(myTrackParams[BoundIndices::eLOC_D0],
-                   trackIP3dParams[BoundIndices::eLOC_D0]);
-    BOOST_CHECK_NE(myTrackParams[BoundIndices::eLOC_Z0],
-                   trackIP3dParams[BoundIndices::eLOC_Z0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc0],
+                   trackIP3dParams[BoundIndices::eBoundLoc0]);
+    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc1],
+                   trackIP3dParams[BoundIndices::eBoundLoc1]);
     // Theta along helix and q/p shoud remain the same
-    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eTHETA],
-                    trackIP3dParams[BoundIndices::eTHETA], 1e-5);
-    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eQOP],
-                    trackIP3dParams[BoundIndices::eQOP], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundTheta],
+                    trackIP3dParams[BoundIndices::eBoundTheta], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundQOverP],
+                    trackIP3dParams[BoundIndices::eBoundQOverP], 1e-5);
 
     if (debugMode) {
       std::cout << std::setprecision(10) << "Old track parameters: \n"
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   std::mt19937 gen(mySeed);
 
   // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2.) * units::_T);
+  ConstantBField bField(Vector3D(0., 0., 2.) * UnitConstants::T);
 
   // Set up Eigenstepper
   EigenStepper<ConstantBField> stepper(bField);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
     double z0 = z0Dist(gen);
 
     // The track parameters
-    BoundParameters::ParametersVector paramVec;
+    BoundTrackParameters::ParametersVector paramVec;
     paramVec << d0, z0, phiDist(gen), thetaDist(gen), q / pTDist(gen), 0.;
 
     // Corresponding surface
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
         Surface::makeShared<PerigeeSurface>(refPosition);
 
     // Creating the track
-    BoundParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
 
     // Estimate 3D distance
     auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 
     BOOST_CHECK(res.ok());
 
-    BoundParameters params = std::move(**res);
+    BoundTrackParameters params = std::move(**res);
 
     auto compRes =
         ipEstimator.get3dVertexCompatibility(geoContext, &params, refPosition);
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
@@ -330,7 +330,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
       Surface::makeShared<PerigeeSurface>(pos1);
 
   // Some fixed track parameter values
-  BoundParameters params1(geoContext, covMat, pos1, mom1, 1, 0, perigeeSurface);
+  BoundTrackParameters params1(geoContext, covMat, pos1, mom1, 1, 0,
+                               perigeeSurface);
 
   auto res1 =
       ipEstimator.calculate3dDistance(geoContext, params1, vtxPos, state);
@@ -344,7 +345,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
   BOOST_CHECK(res2.ok());
-  BoundParameters endParams = std::move(**res2);
+  BoundTrackParameters endParams = std::move(**res2);
   Vector3D surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
@@ -382,7 +383,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   Vector4D vertexPosition(x, y, z, 0.);
 
   // Constraint for vertex fit
-  Vertex<BoundParameters> myConstraint;
+  Vertex<BoundTrackParameters> myConstraint;
   // Some abitrary values
   SymMatrix4D myCovMat = SymMatrix4D::Zero();
   myCovMat(0, 0) = 30.;
@@ -397,7 +398,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   double z0_v = z;
 
   // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstCfg(bField, propagator);
   IPEstimator ipEstimator(ipEstCfg);
   IPEstimator::State state(magFieldContext);
@@ -426,7 +427,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-    BoundParameters track(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters track(perigeeSurface, paramVec, std::move(covMat));
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =

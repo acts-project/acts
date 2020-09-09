@@ -80,8 +80,8 @@ int main(int argc, char* argv[]) {
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.pathLimit = maxPathInM * UnitConstants::m;
 
-  Vector3D pos(0, 0, 0);
-  Vector3D mom(ptInGeV * UnitConstants::GeV, 0, 0);
+  Vector4D pos4(0, 0, 0, 0);
+  Vector3D dir(1, 0, 0);
   Covariance cov;
   // clang-format off
   cov << 10_mm, 0, 0, 0, 0, 0,
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   if (withCov) {
     covOpt = cov;
   }
-  CurvilinearParameters pars(covOpt, pos, mom, +1, 0.);
+  CurvilinearTrackParameters pars(pos4, dir, ptInGeV, +1, covOpt);
 
   double totalPathLength = 0;
   size_t num_iters = 0;
@@ -104,11 +104,9 @@ int main(int argc, char* argv[]) {
       [&] {
         auto r = propagator.propagate(pars, options).value();
         if (totalPathLength == 0.) {
-          ACTS_DEBUG("reached position ("
-                     << r.endParameters->position().x() << ", "
-                     << r.endParameters->position().y() << ", "
-                     << r.endParameters->position().z() << ") in " << r.steps
-                     << " steps");
+          ACTS_DEBUG("reached position "
+                     << r.endParameters->position(tgContext).transpose()
+                     << " in " << r.steps << " steps");
         }
         totalPathLength += r.pathLength;
         ++num_iters;

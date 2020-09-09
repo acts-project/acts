@@ -7,6 +7,7 @@ add_component_if(Identification IdentificationPlugin ACTS_BUILD_IDENTIFICATION_P
 add_component_if(Json JsonPlugin ACTS_BUILD_JSON_PLUGIN)
 # legacy behaves like a plugin but is not named like one for historical reasons
 add_component_if(Legacy Legacy ACTS_BUILD_LEGACY)
+add_component_if(Sycl PluginSycl ACTS_BUILD_PLUGIN_SYCL)
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(TGeo TGeoPlugin ACTS_BUILD_TGEO_PLUGIN)
 add_component_if(DD4hep DD4hepPlugin ACTS_BUILD_DD4HEP_PLUGIN)

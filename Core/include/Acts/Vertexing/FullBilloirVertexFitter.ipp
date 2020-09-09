@@ -104,9 +104,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     for (const input_track_t* trackContainer : paramVector) {
       const auto& trackParams = extractParameters(*trackContainer);
       if (nIter == 0) {
-        double phi = trackParams.parameters()[BoundIndices::ePHI];
-        double theta = trackParams.parameters()[BoundIndices::eTHETA];
-        double qop = trackParams.parameters()[BoundIndices::eQOP];
+        double phi = trackParams.parameters()[BoundIndices::eBoundPhi];
+        double theta = trackParams.parameters()[BoundIndices::eBoundTheta];
+        double qop = trackParams.parameters()[BoundIndices::eBoundQOverP];
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
@@ -116,11 +116,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       if (result.ok()) {
         const auto& linTrack = *result;
         const auto& parametersAtPCA = linTrack.parametersAtPCA;
-        double d0 = parametersAtPCA[BoundIndices::eLOC_D0];
-        double z0 = parametersAtPCA[BoundIndices::eLOC_Z0];
-        double phi = parametersAtPCA[BoundIndices::ePHI];
-        double theta = parametersAtPCA[BoundIndices::eTHETA];
-        double qOverP = parametersAtPCA[BoundIndices::eQOP];
+        double d0 = parametersAtPCA[BoundIndices::eBoundLoc0];
+        double z0 = parametersAtPCA[BoundIndices::eBoundLoc1];
+        double phi = parametersAtPCA[BoundIndices::eBoundPhi];
+        double theta = parametersAtPCA[BoundIndices::eBoundTheta];
+        double qOverP = parametersAtPCA[BoundIndices::eBoundQOverP];
 
         // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
         double fPhi = trackMomenta[iTrack][0];
@@ -317,7 +317,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundPhi] = trackMomenta[iTrack](0);
         paramVec[eBoundTheta] = trackMomenta[iTrack](1);
         paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
-        BoundParameters refittedParams(perigee, paramVec, covDeltaPmat[iTrack]);
+        BoundTrackParameters refittedParams(perigee, paramVec,
+                                            covDeltaPmat[iTrack]);
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,
                                              bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));

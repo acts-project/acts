@@ -11,7 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -214,7 +214,7 @@ class JsonGeometryConverter {
   /// Create the Material Matrix from Json
   ///
   /// @param data is the json part representing a material data array
-  MaterialPropertiesMatrix jsonToMaterialMatrix(const nlohmann::json& data);
+  MaterialSlabMatrix jsonToMaterialMatrix(const nlohmann::json& data);
 
   /// Create the BinUtility for from Json
   BinUtility jsonToBinUtility(const nlohmann::json& bin);

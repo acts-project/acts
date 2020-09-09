@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/ChargePolicy.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -93,31 +93,15 @@ struct ParticleSimulator {
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;
     interactor.particle = particle;
-
-    // run with a start parameter type depending on the particle charge.
-    // TODO make track parameters consistently constructible regardless
-    //      of the charge policy and template the class on the parameter.
-    if (particle.charge() != 0) {
-      Acts::SingleCurvilinearTrackParameters<Acts::ChargedPolicy> start(
-          std::nullopt, particle.position(),
-          particle.absMomentum() * particle.unitDirection(), particle.charge(),
-          particle.time());
-      auto result = propagator.propagate(start, options);
-      if (result.ok()) {
-        return result.value().template get<InteractorResult>();
-      } else {
-        return result.error();
-      }
+    // use AnyCharge to be able to handle neutral and charged parameters
+    Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
+        particle.position4(), particle.unitDirection(), particle.absMomentum(),
+        particle.charge());
+    auto result = propagator.propagate(start, options);
+    if (result.ok()) {
+      return result.value().template get<InteractorResult>();
     } else {
-      Acts::SingleCurvilinearTrackParameters<Acts::NeutralPolicy> start(
-          std::nullopt, particle.position(),
-          particle.absMomentum() * particle.unitDirection(), particle.time());
-      auto result = propagator.propagate(start, options);
-      if (result.ok()) {
-        return result.value().template get<InteractorResult>();
-      } else {
-        return result.error();
-      }
+      return result.error();
     }
   }
 };

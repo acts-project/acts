@@ -34,12 +34,13 @@ GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // Make dummy measurement
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<SourceLink> meas(
-      MeasurementType<BoundIndices::eLOC_0, BoundIndices::eLOC_1>(
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           cylinder, {}, std::move(cov), -0.1, 0.45));
 
   // Make dummy track parameter
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   Vector3D expMomentum;
   expMomentum << 0.0000000, 80.9016994, 58.7785252;
 
-  BoundParameters filtered(cylinder, ts.filtered(), ts.filteredCovariance());
+  BoundTrackParameters filtered(cylinder, ts.filtered(),
+                                ts.filteredCovariance());
 
   double expChi2 = 1.33958;
 

@@ -21,12 +21,12 @@ using Acts::detail::combineSlabs;
 constexpr auto eps = std::numeric_limits<float>::epsilon();
 
 // vacuum w/ different thickness
-const Acts::MaterialProperties zeroVacuum = Acts::MaterialProperties(0.0f);
-const Acts::MaterialProperties unitVacuum = Acts::MaterialProperties(1.0f);
+const Acts::MaterialSlab zeroVacuum = Acts::MaterialSlab(0.0f);
+const Acts::MaterialSlab unitVacuum = Acts::MaterialSlab(1.0f);
 // same material corresponding to 0%, 1% and 100% radiation/interaction length
-const Acts::MaterialProperties zero(Acts::Test::makeSilicon(), 0.0f);
-const Acts::MaterialProperties percent = Acts::Test::makePercentSlab();
-const Acts::MaterialProperties unit = Acts::Test::makeUnitSlab();
+const Acts::MaterialSlab zero(Acts::Test::makeSilicon(), 0.0f);
+const Acts::MaterialSlab percent = Acts::Test::makePercentSlab();
+const Acts::MaterialSlab unit = Acts::Test::makeUnitSlab();
 
 }  // namespace
 
@@ -171,8 +171,8 @@ BOOST_AUTO_TEST_CASE(CombineSlabsUnitZero) {
 
 BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
   const auto mat = Acts::Test::makeSilicon();
-  const auto slabMat = Acts::MaterialProperties(mat, 1.0f);
-  const auto slabVac = Acts::MaterialProperties(Acts::Material(), 1.0f);
+  const auto slabMat = Acts::MaterialSlab(mat, 1.0f);
+  const auto slabVac = Acts::MaterialSlab(Acts::Material(), 1.0f);
   {
     auto slab = combineSlabs(slabMat, slabVac);
     BOOST_CHECK_EQUAL(slab.thickness(), 2.0f);
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
 BOOST_AUTO_TEST_CASE(CombineSlabs) {
   const auto mat0 = Acts::Material::fromMolarDensity(1, 1, 8, 12, 2);
   const auto mat1 = Acts::Material::fromMolarDensity(2, 2, 2, 6, 5);
-  const auto slabMat0 = Acts::MaterialProperties(mat0, 0.5f);
-  const auto slabMat1 = Acts::MaterialProperties(mat1, 1.0f);
+  const auto slabMat0 = Acts::MaterialSlab(mat0, 0.5f);
+  const auto slabMat1 = Acts::MaterialSlab(mat1, 1.0f);
   // verify derived quantities for the input slabs. these tests are not really
   // needed, but to show the input values for the tests below.
   BOOST_CHECK_EQUAL(slabMat0.thickness(), 0.5f);

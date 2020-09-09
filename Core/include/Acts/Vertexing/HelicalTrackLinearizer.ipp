@@ -11,7 +11,7 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundParameters& params, const Vector4D& linPoint,
+        const BoundTrackParameters& params, const Vector4D& linPoint,
         const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
   Vector3D linPointPos = VectorHelpers::position(linPoint);
@@ -24,7 +24,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
   pOptions.direction = backward;
 
-  const BoundParameters* endParams = nullptr;
+  const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
   if (result.ok()) {
@@ -56,17 +56,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   // phiV and functions
-  double phiV = paramsAtPCA(BoundIndices::ePHI);
+  double phiV = paramsAtPCA(BoundIndices::eBoundPhi);
   double sinPhiV = std::sin(phiV);
   double cosPhiV = std::cos(phiV);
 
   // theta and functions
-  double th = paramsAtPCA(BoundIndices::eTHETA);
+  double th = paramsAtPCA(BoundIndices::eBoundTheta);
   const double sinTh = std::sin(th);
   const double tanTh = std::tan(th);
 
   // q over p
-  double qOvP = paramsAtPCA(BoundIndices::eQOP);
+  double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
   double sgnH = (qOvP < 0.) ? -1 : 1;
 
   Vector3D momentumAtPCA(phiV, th, qOvP);

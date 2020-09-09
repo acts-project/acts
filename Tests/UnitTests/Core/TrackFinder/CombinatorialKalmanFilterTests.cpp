@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
@@ -32,6 +33,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -132,28 +134,28 @@ struct MeasurementCreator {
             double sp = lResolution->second[0].second;
             cov1D << sp * sp;
             double dp = sp * gauss(generator);
-            if (lResolution->second[0].first == eLOC_0) {
+            if (lResolution->second[0].first == eBoundLoc0) {
               // push back & move a LOC_0 measurement
-              MeasurementType<eLOC_0> m0(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_0] + dp);
+              MeasurementType<eBoundLoc0> m0(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc0] + dp);
               result.push_back(std::move(m0));
             } else {
               // push back & move a LOC_1 measurement
-              MeasurementType<eLOC_1> m1(surface->getSharedPtr(), {}, cov1D,
-                                         lPos[eLOC_1] + dp);
+              MeasurementType<eBoundLoc1> m1(surface->getSharedPtr(), {}, cov1D,
+                                             lPos[eBoundLoc1] + dp);
               result.push_back(std::move(m1));
             }
           } else if (lResolution->second.size() == 2) {
             // Create the measurment and move it
-            double sx = lResolution->second[eLOC_0].second;
-            double sy = lResolution->second[eLOC_1].second;
+            double sx = lResolution->second[eBoundLoc0].second;
+            double sy = lResolution->second[eBoundLoc1].second;
             cov2D << sx * sx, 0., 0., sy * sy;
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {},
-                                                cov2D, lPos[eLOC_0] + dx,
-                                                lPos[eLOC_1] + dy);
+            MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eBoundLoc0] + dx,
+                lPos[eBoundLoc1] + dy);
             result.push_back(std::move(m01));
           }
         }
@@ -190,10 +192,10 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using MeasurementActions = ActionList<MeasurementCreator>;
   using MeasurementAborters = AbortList<EndOfWorldReached>;
 
-  auto pixelResX = Resolution(eLOC_0, 25_um);
-  auto pixelResY = Resolution(eLOC_1, 50_um);
-  auto stripResX = Resolution(eLOC_0, 100_um);
-  auto stripResY = Resolution(eLOC_1, 150_um);
+  auto pixelResX = Resolution(eBoundLoc0, 25_um);
+  auto pixelResY = Resolution(eBoundLoc1, 50_um);
+  auto stripResX = Resolution(eBoundLoc0, 100_um);
+  auto stripResY = Resolution(eBoundLoc1, 150_um);
 
   ElementResolution pixelElementRes = {pixelResX, pixelResY};
   ElementResolution stripElementResI = {stripResX};
@@ -237,8 +239,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Set the starting momentum for propagation
   Vector3D mMom(1_GeV, 0., 0);
   for (const auto& [trackID, mPos] : startingPos) {
-    SingleCurvilinearTrackParameters<NeutralPolicy> mStart(std::nullopt, mPos,
-                                                           mMom, 42_ns);
+    Vector4D pos4 = VectorHelpers::makeVector4(mPos, 42_ns);
+    NeutralCurvilinearTrackParameters mStart(pos4, mMom, 1 / mMom.norm());
     // Launch and collect - the measurements
     auto mResult = mPropagator.propagate(mStart, mOptions).value();
 
@@ -312,8 +314,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     Vector3D rMom(1_GeV * cos(rTheta) * cos(rPhi),
                   1_GeV * cos(rTheta) * sin(rPhi), 1_GeV * sin(rTheta));
 
-    SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                           42.);
+    CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
 
     const Surface* rSurface = &rStart.referenceSurface();
 

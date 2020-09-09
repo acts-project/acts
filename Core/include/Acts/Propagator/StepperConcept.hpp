@@ -19,53 +19,53 @@
 namespace Acts {
 class Surface;
 
-namespace concept {
-  namespace Stepper {
+namespace Concepts {
+namespace Stepper {
 
-  template <typename T>
-  using state_t = typename T::State;
+template <typename T>
+using state_t = typename T::State;
 
-  template <typename T>
-  using jacobian_t = typename T::Jacobian;
-  template <typename T>
-  using covariance_t = typename T::Covariance;
-  template <typename T>
-  using bound_state_t = typename T::BoundState;
-  template <typename T>
-  using curvilinear_state_t = typename T::CurvilinearState;
-  template <typename T>
-  using bfield_t = typename T::BField;
+template <typename T>
+using jacobian_t = typename T::Jacobian;
+template <typename T>
+using covariance_t = typename T::Covariance;
+template <typename T>
+using bound_state_t = typename T::BoundState;
+template <typename T>
+using curvilinear_state_t = typename T::CurvilinearState;
+template <typename T>
+using bfield_t = typename T::BField;
 
-  METHOD_TRAIT(reset_state_t, resetState);
-  METHOD_TRAIT(get_field_t, getField);
-  METHOD_TRAIT(position_t, position);
-  METHOD_TRAIT(direction_t, direction);
-  METHOD_TRAIT(momentum_t, momentum);
-  METHOD_TRAIT(charge_t, charge);
-  METHOD_TRAIT(time_t, time);
-  METHOD_TRAIT(overstep_t, overstepLimit);
-  METHOD_TRAIT(bound_state_method_t, boundState);
-  METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
-  METHOD_TRAIT(update_t, update);
-  METHOD_TRAIT(covariance_transport_t, covarianceTransport);
-  METHOD_TRAIT(step_t, step);
-  METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
-  METHOD_TRAIT(set_step_size_t, setStepSize);
-  METHOD_TRAIT(release_step_size_t, releaseStepSize);
-  METHOD_TRAIT(output_step_size_t, outputStepSize);
+METHOD_TRAIT(reset_state_t, resetState);
+METHOD_TRAIT(get_field_t, getField);
+METHOD_TRAIT(position_t, position);
+METHOD_TRAIT(direction_t, direction);
+METHOD_TRAIT(momentum_t, momentum);
+METHOD_TRAIT(charge_t, charge);
+METHOD_TRAIT(time_t, time);
+METHOD_TRAIT(overstep_t, overstepLimit);
+METHOD_TRAIT(bound_state_method_t, boundState);
+METHOD_TRAIT(curvilinear_state_method_t, curvilinearState);
+METHOD_TRAIT(update_t, update);
+METHOD_TRAIT(covariance_transport_t, covarianceTransport);
+METHOD_TRAIT(step_t, step);
+METHOD_TRAIT(update_surface_status_t, updateSurfaceStatus);
+METHOD_TRAIT(set_step_size_t, setStepSize);
+METHOD_TRAIT(release_step_size_t, releaseStepSize);
+METHOD_TRAIT(output_step_size_t, outputStepSize);
 
-  template <typename T>
-  using cov_transport_t = decltype(std::declval<T>().covTransport);
-  template <typename T>
-  using cov_t = decltype(std::declval<T>().cov);
-  template <typename T>
-  using nav_dir_t = decltype(std::declval<T>().navDir);
-  template <typename T>
-  using path_accumulated_t = decltype(std::declval<T>().pathAccumulated);
-  template <typename T>
-  using step_size_t = decltype(std::declval<T>().stepSize);
+template <typename T>
+using cov_transport_t = decltype(std::declval<T>().covTransport);
+template <typename T>
+using cov_t = decltype(std::declval<T>().cov);
+template <typename T>
+using nav_dir_t = decltype(std::declval<T>().navDir);
+template <typename T>
+using path_accumulated_t = decltype(std::declval<T>().pathAccumulated);
+template <typename T>
+using step_size_t = decltype(std::declval<T>().stepSize);
 
-  // clang-format off
+// clang-format off
     template <typename S>
     constexpr bool StepperStateConcept
       = require<has_member<S, cov_transport_t, bool>,
@@ -74,9 +74,9 @@ namespace concept {
                 has_member<S, path_accumulated_t, double>,
                 has_member<S, step_size_t, ConstrainedStep>
                >;
-  // clang-format on
+// clang-format on
 
-  // clang-format off
+// clang-format off
     template <typename S, typename state = typename S::State>
       struct StepperConcept {
         constexpr static bool state_exists = exists<state_t, S>;
@@ -147,14 +147,14 @@ namespace concept {
                                               release_step_size_exists,
                                               output_step_size_exists>;
       };
-  // clang-format on
-  }  // namespace Stepper
-}  // namespace concept
+// clang-format on
+}  // namespace Stepper
+}  // namespace Concepts
 
 template <typename stepper, typename state = typename stepper::State>
 constexpr bool StepperConcept =
-    Acts::concept ::Stepper::StepperConcept<stepper, state>::value;
+    Acts::Concepts ::Stepper::StepperConcept<stepper, state>::value;
 template <typename stepper>
 constexpr bool StepperStateConcept =
-    Acts::concept ::Stepper::StepperStateConcept<stepper>;
+    Acts::Concepts ::Stepper::StepperStateConcept<stepper>;
 }  // namespace Acts

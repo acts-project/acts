@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -23,7 +23,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -206,16 +206,18 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
-  RecordedMaterialPoint matRecord;
+  RecordedMaterialVolumePoint matRecord;
   for (unsigned int i = 0; i < 1e4; i++) {
     Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
+    std::vector<Vector3D> volPos;
+    volPos.push_back(pos);
     Material tv =
         (detector->lowestTrackingVolume(gc, pos)->volumeMaterial() != nullptr)
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
-    MaterialProperties matProp(tv, 1);
-    matRecord.push_back(std::make_pair(matProp, pos));
+    MaterialSlab matProp(tv, 1);
+    matRecord.push_back(std::make_pair(matProp, volPos));
   }
 
   // Build the material grid
@@ -233,10 +235,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
   // Set some start parameters
-  Vector3D pos(0., 0., 0.);
-  Vector3D mom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
-                                                       42_ns);
+  Vector4D pos4(0., 0., 0., 42_ns);
+  Vector3D dir(1., 0., 0.);
+  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

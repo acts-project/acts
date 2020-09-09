@@ -9,14 +9,15 @@
 #pragma once
 
 #include <boost/test/data/test_case.hpp>
-#include <cmath>
-#include <vector>
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Units.hpp"
+
+#include <cmath>
+#include <vector>
 
 namespace {
 
@@ -28,8 +29,7 @@ using namespace Acts;
 // inputs, i.e. no angles or strictly positive radii.
 const auto surfaces = bdata::make(std::vector<std::shared_ptr<const Surface>>{
     Surface::makeShared<CylinderSurface>(
-        std::make_shared<Transform3D>(Transform3D::Identity()), 10 /* radius */,
-        100 /* half-length z */),
+        Transform3D::Identity(), 10 /* radius */, 100 /* half-length z */),
     // TODO perigee roundtrip local->global->local does not seem to work
     // Surface::makeShared<PerigeeSurface>(Vector3D(0, 0, -1.5)),
     Surface::makeShared<PlaneSurface>(Vector3D::Zero(), Vector3D::UnitX()),
@@ -47,9 +47,16 @@ const auto ts = bdata::make(1.0);
 const auto phis = bdata::make({0.0, M_PI, -M_PI, M_PI_2, -M_PI_2});
 const auto thetasNoForwardBackward = bdata::xrange(M_PI_4, M_PI, M_PI_4);
 const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
-// p,q,q/p are intened to be zipped not to construct a cartesian product
-const auto ps = bdata::make(1.0);
-const auto qs = bdata::make(-UnitConstants::e);
-const auto qOverPs = bdata::make(-UnitConstants::e / 1.0);
+// absolute momenta
+const auto ps = bdata::make({1.0, 10.0});
+// charges
+const auto qsNonZero = bdata::make({-UnitConstants::e, UnitConstants::e});
+const auto qsAny = bdata::make({
+    -2 * UnitConstants::e,
+    -1 * UnitConstants::e,
+    0 * UnitConstants::e,
+    1 * UnitConstants::e,
+    2 * UnitConstants::e,
+});
 
 }  // namespace

@@ -74,8 +74,7 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
 
     // Activate loop protection at some pt value
     options.loopProtection =
-        (Acts::VectorHelpers::perp(startParameters.momentum()) <
-         m_cfg.ptLoopers);
+        (startParameters.transverseMomentum() < m_cfg.ptLoopers);
 
     // Switch the material interaction on/off & eventually into logging mode
     auto& mInteractor = options.actionList.get<MaterialInteractor>();
@@ -164,8 +163,8 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
     PropagationOutput pOutput;
     if (charge) {
       // charged extrapolation - with hit recording
-      Acts::BoundParameters startParameters(surface, std::move(pars),
-                                            std::move(cov));
+      Acts::BoundTrackParameters startParameters(surface, std::move(pars),
+                                                 std::move(cov));
       sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
       pOutput = executeTest(context, startParameters);

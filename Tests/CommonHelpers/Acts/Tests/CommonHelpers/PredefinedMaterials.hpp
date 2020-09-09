@@ -12,7 +12,7 @@
 #pragma once
 
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -31,7 +31,7 @@ inline Material makeSilicon() {
 }
 
 /// Build material slab corresponding to 1 radiation and interaction length.
-inline MaterialProperties makeUnitSlab() {
+inline MaterialSlab makeUnitSlab() {
   using namespace UnitLiterals;
   // silicon-like material with higher X0 and lower L0
   return {Material::fromMolarDensity(20_cm, 20_cm, 28.0855, 14,
@@ -40,7 +40,7 @@ inline MaterialProperties makeUnitSlab() {
 }
 
 /// Build material slab corresponding to 1% of radiation and interaction length.
-inline MaterialProperties makePercentSlab() {
+inline MaterialSlab makePercentSlab() {
   auto slab = makeUnitSlab();
   slab.scaleThickness(0.01);
   return slab;

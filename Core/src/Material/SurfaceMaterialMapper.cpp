@@ -18,6 +18,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,
@@ -175,9 +176,12 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
+  using VectorHelpers::makeVector4;
+
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
-                                          mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
+                                          mTrack.first.second,
+                                          1 / mTrack.first.second.norm());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -275,7 +279,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     }
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
-        currentPos, rmIter->materialProperties, currentPathCorrection);
+        currentPos, rmIter->materialSlab, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
     // Update the material interaction with the associated surface

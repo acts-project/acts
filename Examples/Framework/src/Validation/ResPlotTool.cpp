@@ -135,8 +135,8 @@ void ActsExamples::ResPlotTool::write(
 void ActsExamples::ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
     const ActsFatras::Particle& truthParticle,
-    const Acts::BoundParameters& fittedParamters) const {
-  using ParametersVector = Acts::BoundParameters::ParametersVector;
+    const Acts::BoundTrackParameters& fittedParamters) const {
+  using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -156,19 +156,20 @@ void ActsExamples::ResPlotTool::fill(
   auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
                                           truthParticle.unitDirection());
   if (lpResult.ok()) {
-    truthParameter[Acts::BoundIndices::eLOC_D0] =
-        lpResult.value()[Acts::BoundIndices::eLOC_D0];
-    truthParameter[Acts::BoundIndices::eLOC_Z0] =
-        lpResult.value()[Acts::BoundIndices::eLOC_Z0];
+    truthParameter[Acts::BoundIndices::eBoundLoc0] =
+        lpResult.value()[Acts::BoundIndices::eBoundLoc0];
+    truthParameter[Acts::BoundIndices::eBoundLoc1] =
+        lpResult.value()[Acts::BoundIndices::eBoundLoc1];
   } else {
     ACTS_ERROR("Global to local transformation did not succeed.");
   }
-  truthParameter[Acts::BoundIndices::ePHI] = phi(truthParticle.unitDirection());
-  truthParameter[Acts::BoundIndices::eTHETA] =
+  truthParameter[Acts::BoundIndices::eBoundPhi] =
+      phi(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eBoundTheta] =
       theta(truthParticle.unitDirection());
-  truthParameter[Acts::BoundIndices::eQOP] =
+  truthParameter[Acts::BoundIndices::eBoundQOverP] =
       truthParticle.charge() / truthParticle.absMomentum();
-  truthParameter[Acts::BoundIndices::eT] = truthParticle.time();
+  truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT
   const auto truthEta = eta(truthParticle.unitDirection());

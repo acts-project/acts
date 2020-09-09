@@ -25,10 +25,8 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
-                                 const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                                 const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
     : Surface(), m_bounds(nullptr) {
@@ -47,9 +45,8 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   curvilinearRotation.col(2) = T;
 
   // curvilinear surfaces are boundless
-  Transform3D transform{curvilinearRotation};
-  transform.pretranslate(center);
-  Surface::m_transform = std::make_shared<const Transform3D>(transform);
+  m_transform = Transform3D{curvilinearRotation};
+  m_transform.pretranslate(center);
 }
 
 Acts::PlaneSurface::PlaneSurface(
@@ -60,9 +57,9 @@ Acts::PlaneSurface::PlaneSurface(
   throw_assert(pbounds, "PlaneBounds must not be nullptr");
 }
 
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::PlaneSurface::PlaneSurface(const Transform3D& transform,
                                  std::shared_ptr<const PlanarBounds> pbounds)
-    : Surface(std::move(htrans)), m_bounds(std::move(pbounds)) {}
+    : Surface(transform), m_bounds(std::move(pbounds)) {}
 
 Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
@@ -80,13 +77,13 @@ Acts::Vector3D Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*unused*/) const {
   return transform(gctx) *
-         Vector3D(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+         Vector3D(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2D> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
-  Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
+  Vector3D loc3Dframe = transform(gctx).inverse() * position;
   if (loc3Dframe.z() * loc3Dframe.z() >
       s_onSurfaceTolerance * s_onSurfaceTolerance) {
     return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);

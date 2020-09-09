@@ -25,28 +25,25 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other)
 
 Acts::ConeSurface::ConeSurface(const GeometryContext& gctx,
                                const ConeSurface& other,
-                               const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                               const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               double alpha, bool symmetric)
+Acts::ConeSurface::ConeSurface(const Transform3D& transform, double alpha,
+                               bool symmetric)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric)) {}
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               double alpha, double zmin, double zmax,
-                               double halfPhi)
+Acts::ConeSurface::ConeSurface(const Transform3D& transform, double alpha,
+                               double zmin, double zmax, double halfPhi)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi)) {
 }
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::ConeSurface::ConeSurface(const Transform3D& transform,
                                const std::shared_ptr<const ConeBounds>& cbounds)
-    : GeometryObject(), Surface(std::move(htrans)), m_bounds(cbounds) {
+    : GeometryObject(), Surface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
@@ -106,17 +103,16 @@ Acts::Vector3D Acts::ConeSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*unused*/) const {
   // create the position in the local 3d frame
-  double r = lposition[Acts::eLOC_Z] * bounds().tanAlpha();
-  double phi = lposition[Acts::eLOC_RPHI] / r;
-  Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eLOC_Z]);
+  double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
+  double phi = lposition[Acts::eBoundLoc0] / r;
+  Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lposition[Acts::eBoundLoc1]);
   return transform(gctx) * loc3Dframe;
 }
 
 Acts::Result<Acts::Vector2D> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& /*unused*/) const {
-  Vector3D loc3Dframe =
-      m_transform ? (transform(gctx).inverse() * position) : position;
+  Vector3D loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > s_onSurfaceTolerance) {
     return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -129,16 +125,13 @@ double Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
                                          const Vector3D& position,
                                          const Vector3D& direction) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3D posLocal =
-      m_transform ? transform(gctx).inverse() * position : position;
+  Vector3D posLocal = transform(gctx).inverse() * position;
   double phi = VectorHelpers::phi(posLocal);
   double sgn = posLocal.z() > 0. ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3D normalC(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
-  if (m_transform) {
-    normalC = transform(gctx) * normalC;
-  }
+  normalC = transform(gctx) * normalC;
   // Back to the global frame
   double cAlpha = normalC.dot(direction);
   return std::abs(1. / cAlpha);
@@ -151,26 +144,22 @@ std::string Acts::ConeSurface::name() const {
 Acts::Vector3D Acts::ConeSurface::normal(
     const GeometryContext& gctx, const Acts::Vector2D& lposition) const {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  double phi =
-             lposition[Acts::eLOC_RPHI] / (bounds().r(lposition[Acts::eLOC_Z])),
-         sgn = lposition[Acts::eLOC_Z] > 0 ? -1. : +1.;
+  double phi = lposition[Acts::eBoundLoc0] /
+               (bounds().r(lposition[Acts::eBoundLoc1])),
+         sgn = lposition[Acts::eBoundLoc1] > 0 ? -1. : +1.;
   double cosAlpha = std::cos(bounds().get(ConeBounds::eAlpha));
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3D localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha,
                        sgn * sinAlpha);
-  return m_transform ? Vector3D(transform(gctx).linear() * localNormal)
-                     : localNormal;
+  return Vector3D(transform(gctx).linear() * localNormal);
 }
 
 Acts::Vector3D Acts::ConeSurface::normal(const GeometryContext& gctx,
                                          const Acts::Vector3D& position) const {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
-  Vector3D pos3D = position;
-  if (m_transform || (m_associatedDetElement != nullptr)) {
-    pos3D = transform(gctx).inverse() * position;
-    pos3D.z() = 0;
-  }
+  Vector3D pos3D = transform(gctx).inverse() * position;
+  pos3D.z() = 0;
   return pos3D.normalized();
 }
 

@@ -28,30 +28,26 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 
 Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
                                const DiscSurface& other,
-                               const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                               const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double rmin, double rmax, double hphisec)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double rmin,
+                               double rmax, double hphisec)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(std::move(transform)),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double minhalfx, double maxhalfx, double maxR,
-                               double minR, double avephi, double stereo)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double minhalfx,
+                               double maxhalfx, double maxR, double minR,
+                               double avephi, double stereo)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
           minhalfx, maxhalfx, maxR, minR, avephi, stereo)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::DiscSurface::DiscSurface(const Transform3D& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
-    : GeometryObject(),
-      Surface(std::move(htrans)),
-      m_bounds(std::move(dbounds)) {}
+    : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
 
 Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
                                const DetectorElementBase& detelement)
@@ -75,9 +71,9 @@ Acts::Vector3D Acts::DiscSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition,
     const Vector3D& /*gmom*/) const {
   // create the position in the local 3d frame
-  Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
-                      lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
-                      0.);
+  Vector3D loc3Dframe(
+      lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
+      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]), 0.);
   // transform to globalframe
   return transform(gctx) * loc3Dframe;
 }
@@ -108,17 +104,18 @@ Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     Vector2D Pos = cartPos - cartCenter;
 
     Acts::Vector2D locPos(
-        Pos[Acts::eLOC_X] * sin(phi) - Pos[Acts::eLOC_Y] * cos(phi),
-        Pos[Acts::eLOC_Y] * sin(phi) + Pos[Acts::eLOC_X] * cos(phi));
-    return Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
+        Pos[Acts::eBoundLoc0] * sin(phi) - Pos[Acts::eBoundLoc1] * cos(phi),
+        Pos[Acts::eBoundLoc1] * sin(phi) + Pos[Acts::eBoundLoc0] * cos(phi));
+    return Vector2D(locPos[Acts::eBoundLoc0], locPos[Acts::eBoundLoc1]);
   }
-  return Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
-                  locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
+  return Vector2D(locpol[Acts::eBoundLoc0] * cos(locpol[Acts::eBoundLoc1]),
+                  locpol[Acts::eBoundLoc0] * sin(locpol[Acts::eBoundLoc1]));
 }
 
 Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition) const {
-  Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
+                      0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 

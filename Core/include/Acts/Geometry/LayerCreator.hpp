@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,12 +16,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
-
-#ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
-#define ACTS_LAYERCREATOR_TAKESMALLERBIGGER
-#define takeSmaller(current, test) current = current < test ? current : test
-#define takeBigger(current, test) current = current > test ? current : test
-#endif
 
 namespace Acts {
 
@@ -86,7 +80,7 @@ class LayerCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
       size_t binsZ, std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = s_idTransform,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a cylindrical layer
@@ -111,7 +105,7 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi, BinningType bTypeZ,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = s_idTransform,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a disc layer
@@ -135,7 +129,7 @@ class LayerCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
       size_t binsPhi, std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = s_idTransform,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a disc layer
@@ -160,7 +154,7 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = s_idTransform,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// returning a plane layer
@@ -189,7 +183,7 @@ class LayerCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> _protoLayer = std::nullopt,
-      std::shared_ptr<const Transform3D> transform = nullptr,
+      const Transform3D& transform = s_idTransform,
       std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
 
   /// Set the configuration object
