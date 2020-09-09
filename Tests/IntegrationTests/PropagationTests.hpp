@@ -35,11 +35,8 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
     phi = 0;
   }
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return CurvilinearTrackParameters(std::nullopt, pos, absMom * dir, charge,
-                                    time);
+  Vector4D pos4 = Vector4D::Zero();
+  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
@@ -72,11 +69,8 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return CurvilinearTrackParameters(std::move(cov), pos, absMom * dir, charge,
-                                    time);
+  Vector4D pos4 = Vector4D::Zero();
+  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
@@ -91,11 +85,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
     phi = 0;
   }
 
-  Vector3D pos = Vector3D::Zero();
-  double time = 0.0;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  return NeutralCurvilinearTrackParameters(std::nullopt, pos, absMom * dir,
-                                           time);
+  Vector4D pos4 = Vector4D::Zero();
+  return NeutralCurvilinearTrackParameters(pos4, phi, theta, 1 / absMom);
 }
 
 // helpers to compare track parameters
@@ -143,8 +134,15 @@ inline void checkCovarianceConsistency(
     const Acts::SingleBoundTrackParameters<charge_t>& cmp,
     const Acts::SingleBoundTrackParameters<charge_t>& ref,
     double relativeTolerance) {
-  BOOST_CHECK(
-      not(cmp.covariance().has_value() xor ref.covariance().has_value()));
+  // either both or none have covariance set
+  if (cmp.covariance().has_value()) {
+    // comparison parameters have covariance but the reference does not
+    BOOST_CHECK(ref.covariance().has_value());
+  }
+  if (ref.covariance().has_value()) {
+    // reference parameters have covariance but the comparison does not
+    BOOST_CHECK(cmp.covariance().has_value());
+  }
   if (cmp.covariance().has_value() and ref.covariance().has_value()) {
     CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
                            relativeTolerance);
