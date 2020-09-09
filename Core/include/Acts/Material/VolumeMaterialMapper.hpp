@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,9 +29,9 @@
 
 namespace Acts {
 
-/// list of point used in the mapping of a surface
-using RecordedMaterialPoint =
-    std::vector<std::pair<Acts::MaterialSlab, Acts::Vector3D>>;
+/// list of point used in the mapping of a volume
+using RecordedMaterialVolumePoint =
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
 
 //
 /// @brief VolumeMaterialMapper
@@ -60,13 +61,6 @@ class VolumeMaterialMapper {
  public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-  /// @brief selector for finding
-  struct MaterialVolume {
-    bool operator()(const TrackingVolume& vf) const {
-      return (vf.volumeMaterial() != nullptr);
-    }
-  };
-
   /// @struct Config
   ///
   /// Nested Configuration struct for the material mapper
@@ -85,7 +79,7 @@ class VolumeMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The recorded material per geometry ID
-    std::map<GeometryID, RecordedMaterialPoint> recordedMaterial;
+    std::map<GeometryID, RecordedMaterialVolumePoint> recordedMaterial;
 
     /// The binning per geometry ID
     std::map<GeometryID, BinUtility> materialBin;
@@ -146,6 +140,20 @@ class VolumeMaterialMapper {
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
  private:
+  /// selector for finding surface
+  struct BoundSurfaceSelector {
+    bool operator()(const Surface& sf) const {
+      return (sf.geometryId().boundary() != 0);
+    }
+  };
+
+  /// selector for finding
+  struct MaterialVolumeSelector {
+    bool operator()(const TrackingVolume& vf) const {
+      return (vf.volumeMaterial() != nullptr);
+    }
+  };
+
   /// @brief finds all surfaces with ProtoVolumeMaterial of a volume
   ///
   /// @param mState The state to be filled
@@ -165,6 +173,16 @@ class VolumeMaterialMapper {
   /// @param volume is the surface to be checked for a Proxy
   void collectMaterialSurfaces(State& /*mState*/,
                                const TrackingVolume& tVolume) const;
+
+  /// Create extra material point for the mapping
+  ///
+  /// @param matPoint RecordedMaterialVolumePoint where the extra hit are stored
+  /// @param properties material properties of the original hit
+  /// @param position position of the original hit
+  /// @param direction direction of the track
+  void createExtraHits(RecordedMaterialVolumePoint& matPoint,
+                       Acts::MaterialSlab properties, Vector3D position,
+                       Vector3D direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

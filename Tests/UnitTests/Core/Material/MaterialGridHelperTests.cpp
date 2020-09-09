@@ -84,7 +84,14 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   }
   // Test material mapping
 
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
+  std::vector<Acts::Vector3D> vectPos1;
+  vectPos1.push_back(pos1);
+  std::vector<Acts::Vector3D> vectPos2;
+  vectPos2.push_back(pos2);
+  std::vector<Acts::Vector3D> vectPos3;
+  vectPos3.push_back(pos3);
+
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -93,8 +100,8 @@ BOOST_AUTO_TEST_CASE(Square_Grid_test) {
   MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
-  matRecord.push_back(std::make_pair(matprop1, pos1));
-  matRecord.push_back(std::make_pair(matprop2, pos2));
+  matRecord.push_back(std::make_pair(matprop1, vectPos1));
+  matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
@@ -159,8 +166,14 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   }
 
   // Test material mapping
+  std::vector<Acts::Vector3D> vectPos1;
+  vectPos1.push_back(pos1);
+  std::vector<Acts::Vector3D> vectPos2;
+  vectPos2.push_back(pos2);
+  std::vector<Acts::Vector3D> vectPos3;
+  vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -169,8 +182,8 @@ BOOST_AUTO_TEST_CASE(PhiZ_Grid_test) {
   MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
-  matRecord.push_back(std::make_pair(matprop1, pos1));
-  matRecord.push_back(std::make_pair(matprop2, pos2));
+  matRecord.push_back(std::make_pair(matprop1, vectPos1));
+  matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
   MaterialGrid2D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
@@ -237,8 +250,14 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
         index3[i]);
   }
   // Test material mapping
+  std::vector<Acts::Vector3D> vectPos1;
+  vectPos1.push_back(pos1);
+  std::vector<Acts::Vector3D> vectPos2;
+  vectPos2.push_back(pos2);
+  std::vector<Acts::Vector3D> vectPos3;
+  vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -247,8 +266,8 @@ BOOST_AUTO_TEST_CASE(Cubic_Grid_test) {
   MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
-  matRecord.push_back(std::make_pair(matprop1, pos1));
-  matRecord.push_back(std::make_pair(matprop2, pos2));
+  matRecord.push_back(std::make_pair(matprop1, vectPos1));
+  matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
@@ -319,8 +338,14 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   }
 
   // Test material mapping
+  std::vector<Acts::Vector3D> vectPos1;
+  vectPos1.push_back(pos1);
+  std::vector<Acts::Vector3D> vectPos2;
+  vectPos2.push_back(pos2);
+  std::vector<Acts::Vector3D> vectPos3;
+  vectPos3.push_back(pos3);
 
-  std::vector<std::pair<MaterialSlab, Vector3D>> matRecord;
+  std::vector<std::pair<MaterialSlab, std::vector<Vector3D>>> matRecord;
   Material mat1 = Material::fromMolarDensity(1., 2., 3., 4., 5.);
   Material mat2 = Material::fromMolarDensity(6., 7., 8., 9., 10.);
   Material vacuum;
@@ -329,8 +354,8 @@ BOOST_AUTO_TEST_CASE(Cylindrical_Grid_test) {
   MaterialSlab matprop2(mat2, 1);
 
   matRecord.clear();
-  matRecord.push_back(std::make_pair(matprop1, pos1));
-  matRecord.push_back(std::make_pair(matprop2, pos2));
+  matRecord.push_back(std::make_pair(matprop1, vectPos1));
+  matRecord.push_back(std::make_pair(matprop2, vectPos2));
 
   MaterialGrid3D matMap =
       mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
