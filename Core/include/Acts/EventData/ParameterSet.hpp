@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/detail/ResidualCalculator.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
-#include "Acts/EventData/detail/residual_calculator.hpp"
 #include "Acts/EventData/detail/value_corrector.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -467,8 +467,8 @@ class ParameterSet {
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
   /// @endcond
   ParameterVector residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, projector() * fullParSet.getParameters());
+    return detail::ResidualCalculator<parameter_indices_t, params...>::
+        calculate(m_vValues, projector() * fullParSet.getParameters());
   }
 
   /**
@@ -504,8 +504,10 @@ class ParameterSet {
    * @sa ParameterSet::projector
    */
   ParameterVector residual(const ActsVectorD<kSizeMax>& boundParams) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, projector() * boundParams);
+    return detail::ResidualCalculator<parameter_indices_t,
+                                      params...>::calculate(m_vValues,
+                                                            projector() *
+                                                                boundParams);
   }
 
   /**
@@ -541,8 +543,9 @@ class ParameterSet {
    *         with respect to the given other parameter set
    */
   ParameterVector residual(const Self& otherParSet) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, otherParSet.m_vValues);
+    return detail::ResidualCalculator<
+        parameter_indices_t, params...>::calculate(m_vValues,
+                                                   otherParSet.m_vValues);
   }
 
   /**
