@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/EventData/detail/ResidualCalculator.hpp"
+#include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
-#include "Acts/EventData/detail/value_corrector.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/MPL/are_sorted.hpp"
@@ -583,7 +583,7 @@ class ParameterSet {
    * necessary
    */
   static void correctValues(ParameterVector& values) {
-    detail::value_corrector<params...>::result(values);
+    detail::ValueCorrector<params...>::correct(values);
   }
 
  private:
