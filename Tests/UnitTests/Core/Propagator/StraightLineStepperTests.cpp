@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, absMom, charge);
   StraightLineStepper::State slsState(tgContext, mfContext, cp, ndir, stepSize,
                                       tolerance);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                time);
+                                cov);
 
   // Build the state and the stepper
   StraightLineStepper::State slsState(tgContext, mfContext, cp, ndir, stepSize,
@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
-                                 charge2 / absMom2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
+                                 charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
@@ -304,7 +304,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + ndir * 2. * dir, dir);
   sls.updateSurfaceStatus(slsState, *targetSurface, BoundaryCheck(false));
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
+  CHECK_CLOSE_ABS(slsState.stepSize.value(ConstrainedStep::actor), ndir * 2.,
+                  1e-6);
 
   // Test the step size modification in the context of a surface
   sls.updateStepSize(
@@ -312,14 +313,14 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       targetSurface->intersect(slsState.geoContext, slsState.pos,
                                slsState.navDir * slsState.dir, false),
       false);
-  BOOST_CHECK_EQUAL(slsState.stepSize, 2.);
+  CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
   slsState.stepSize = ndir * stepSize;
   sls.updateStepSize(
       slsState,
       targetSurface->intersect(slsState.geoContext, slsState.pos,
                                slsState.navDir * slsState.dir, false),
       true);
-  BOOST_CHECK_EQUAL(slsState.stepSize, 2.);
+  CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
 
   // Test the bound state construction
   auto boundState = sls.boundState(slsState, *plane);

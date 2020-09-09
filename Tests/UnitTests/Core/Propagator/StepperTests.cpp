@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom);
+                                          1 / absMom, cov);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Construct the parameters
   Vector3D pos(1., 2., 3.);
-  Vector3D dir(4., 5., 6.);
+  Vector3D dir = Vector3D(4., 5., 6.).normalized();
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
@@ -287,13 +287,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   /// Test the state reset
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
-  Vector3D dir2(4.5, -5.5, 6.5);
+  Vector3D dir2 = Vector3D(4.5, -5.5, 6.5).normalized();
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
-                                 charge2 / absMom2, cov);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
+                                 charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
@@ -380,7 +380,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + ndir * 2. * dir, dir);
   es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
-  BOOST_CHECK_EQUAL(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.);
+  CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.,
+                  1e-6);
 
   // Test the step size modification in the context of a surface
   es.updateStepSize(
@@ -388,14 +389,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       targetSurface->intersect(esState.geoContext, esState.pos,
                                esState.navDir * esState.dir, false),
       false);
-  BOOST_CHECK_EQUAL(esState.stepSize, 2.);
+  CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, esState.pos,
                                esState.navDir * esState.dir, false),
       true);
-  BOOST_CHECK_EQUAL(esState.stepSize, 2.);
+  CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
 
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane);
