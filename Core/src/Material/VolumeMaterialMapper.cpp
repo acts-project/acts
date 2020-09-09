@@ -16,6 +16,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace {
 using EAxis = Acts::detail::EquidistantAxis;
@@ -253,9 +254,12 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
 
 void Acts::VolumeMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
+  using VectorHelpers::makeVector4;
+
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
-                                          mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
+                                          mTrack.first.second,
+                                          1 / mTrack.first.second.norm());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;

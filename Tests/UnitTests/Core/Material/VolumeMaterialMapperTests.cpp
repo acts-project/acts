@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -235,10 +235,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
   // Set some start parameters
-  Vector3D pos(0., 0., 0.);
-  Vector3D mom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
-                                                       42_ns);
+  Vector4D pos4(0., 0., 0., 42_ns);
+  Vector3D dir(1., 0., 0.);
+  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
 
   MagneticFieldContext mc;
   // Launch propagation and gather result
