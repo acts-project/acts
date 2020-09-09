@@ -272,8 +272,8 @@ BOOST_DATA_TEST_CASE(
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
-  double pmax =
-      options.pathLimit * bField.getField(start.position()).norm() / M_PI;
+  double pmax = options.pathLimit *
+                bField.getField(start.position(tgContext)).norm() / M_PI;
   if (p < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {
