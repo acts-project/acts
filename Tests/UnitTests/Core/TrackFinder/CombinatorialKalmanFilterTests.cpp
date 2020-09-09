@@ -243,11 +243,12 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     NeutralCurvilinearTrackParameters mStart(pos4, 0_degree, 90_degree,
                                              1 / 1_GeV);
     // Launch and collect - the measurements
-    auto mResult = mPropagator.propagate(mStart, mOptions).value();
+    auto result = mPropagator.propagate(mStart, mOptions);
+    BOOST_CHECK(result.ok());
 
     // Extract measurements from result of propagation.
-    auto measurementsCreated =
-        std::move(mResult.template get<MeasurementCreator::result_type>());
+    auto value = std::move(result.value());
+    auto measurementsCreated = value.get<MeasurementCreator::result_type>();
     for (auto& meas : measurementsCreated) {
       measurements.emplace(trackID, std::move(meas));
     }
@@ -309,8 +310,8 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
         0., 0., 0., 0., 0.0001, 0., 0., 0., 0., 0., 0., 1.;
     Vector3D rPos =
         pos + Vector3D{0, 10_um * gauss(generator), 10_um * gauss(generator)};
-    double rPhi = 0.0002 * gauss(generator);
-    double rTheta = 0.0002 * gauss(generator);
+    double rPhi = 0_degree + 0.0002 * gauss(generator);
+    double rTheta = 90_degree + 0.0002 * gauss(generator);
     CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rPhi, rTheta,
                                       1_GeV, 1_e, cov);
 
@@ -325,6 +326,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
     BOOST_CHECK(combKalmanFilterRes.ok());
+
     auto foundTrack = *combKalmanFilterRes;
     auto& fittedStates = foundTrack.fittedStates;
     auto& trackTips = foundTrack.trackTips;
