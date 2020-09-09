@@ -403,7 +403,7 @@ class TrackingVolume : public Volume {
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
 
-  /// close the Geometry, i.e. set the GeometryID and assign material
+  /// close the Geometry, i.e. set the GeometryIdentifier and assign material
   ///
   /// @param materialDecorator is a dedicated decorator for the
   ///        material to be assigned (surface, volume based)

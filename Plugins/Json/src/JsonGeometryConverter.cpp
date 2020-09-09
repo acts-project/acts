@@ -101,9 +101,10 @@ Acts::JsonGeometryConverter::JsonGeometryConverter(
   }
 }
 
-std::pair<
-    std::map<Acts::GeometryID, std::shared_ptr<const Acts::ISurfaceMaterial>>,
-    std::map<Acts::GeometryID, std::shared_ptr<const Acts::IVolumeMaterial>>>
+std::pair<std::map<Acts::GeometryIdentifier,
+                   std::shared_ptr<const Acts::ISurfaceMaterial>>,
+          std::map<Acts::GeometryIdentifier,
+                   std::shared_ptr<const Acts::IVolumeMaterial>>>
 Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
   auto& j = materialmaps;
   // The return maps
@@ -120,7 +121,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
       for (auto& [vkey, vvalue] : volj.items()) {
         // Create the volume id
         int vid = std::stoi(vkey);
-        Acts::GeometryID volumeID;
+        Acts::GeometryIdentifier volumeID;
         volumeID.setVolume(vid);
         ACTS_VERBOSE("j2a: -> Found Volume " << vid);
         // Loop through the information in the volume
@@ -131,7 +132,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
             for (auto& [bkey, bvalue] : vcvalue.items()) {
               // Create the boundary id
               int bid = std::stoi(bkey);
-              Acts::GeometryID boundaryID(volumeID);
+              Acts::GeometryIdentifier boundaryID(volumeID);
               boundaryID.setBoundary(bid);
               ACTS_VERBOSE("j2a: ---> Found boundary surface " << bid);
               if (bvalue[m_cfg.mapkey] == true) {
@@ -147,7 +148,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
             for (auto& [lkey, lvalue] : layj.items()) {
               // Create the layer id
               int lid = std::stoi(lkey);
-              Acts::GeometryID layerID(volumeID);
+              Acts::GeometryIdentifier layerID(volumeID);
               layerID.setLayer(lid);
               ACTS_VERBOSE("j2a: ---> Found Layer " << lid);
               // Finally loop over layer components
@@ -167,7 +168,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                   for (auto& [askey, asvalue] : lcvalue.items()) {
                     // Create the layer id, todo set to max value
                     int aid = (askey == "*") ? 0 : std::stoi(askey);
-                    Acts::GeometryID approachID(layerID);
+                    Acts::GeometryIdentifier approachID(layerID);
                     approachID.setApproach(aid);
                     ACTS_VERBOSE("j2a: -----> Approach surface " << askey);
                     if (asvalue[m_cfg.mapkey] == true) {
@@ -183,7 +184,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
                   for (auto& [sskey, ssvalue] : lcvalue.items()) {
                     // Create the layer id, todo set to max value
                     int sid = (sskey == "*") ? 0 : std::stoi(sskey);
-                    Acts::GeometryID senisitiveID(layerID);
+                    Acts::GeometryIdentifier senisitiveID(layerID);
                     senisitiveID.setSensitive(sid);
                     ACTS_VERBOSE("j2a: -----> Sensitive surface " << sskey);
                     if (ssvalue[m_cfg.mapkey] == true) {
@@ -221,7 +222,7 @@ Acts::JsonGeometryConverter::jsonToMaterialMaps(const json& materialmaps) {
 json Acts::JsonGeometryConverter::materialMapsToJson(
     const DetectorMaterialMaps& maps) {
   DetectorRep detRep;
-  // Collect all GeometryIDs per VolumeID for the formatted output
+  // Collect all GeometryIdentifiers per VolumeID for the formatted output
   for (auto& [key, value] : maps.first) {
     geo_id_value vid = key.volume();
     auto volRep = detRep.volumes.find(vid);
@@ -521,7 +522,7 @@ void Acts::JsonGeometryConverter::convertToRep(
     }
   }
   // Get the volume Id
-  Acts::GeometryID volumeID = tVolume.geometryId();
+  Acts::GeometryIdentifier volumeID = tVolume.geometryId();
   geo_id_value vid = volumeID.volume();
 
   // Write the material if there's one
@@ -541,7 +542,7 @@ void Acts::JsonGeometryConverter::convertToRep(
       auto layRep = convertToRep(*lay);
       if (layRep) {
         // it's a valid representation so let's go with it
-        Acts::GeometryID layerID = lay->geometryId();
+        Acts::GeometryIdentifier layerID = lay->geometryId();
         geo_id_value lid = layerID.layer();
         volRep.layers.insert({lid, std::move(layRep)});
       }
@@ -552,17 +553,17 @@ void Acts::JsonGeometryConverter::convertToRep(
     // the surface representation
     auto& bssfRep = bsurf->surfaceRepresentation();
     if (bssfRep.surfaceMaterial() != nullptr) {
-      Acts::GeometryID boundaryID = bssfRep.geometryId();
+      Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
       // Ignore if the volumeID is not correct (i.e. shared boundary)
-      // if (boundaryID.value(Acts::GeometryID::volume_mask) == vid){
+      // if (boundaryID.value(Acts::GeometryIdentifier::volume_mask) == vid){
       volRep.boundaries[bid] = bssfRep.surfaceMaterial();
       volRep.boundarySurfaces[bid] = &bssfRep;
       // }
     } else if (m_cfg.processnonmaterial == true) {
       // if no material suface exist add a default one for the mapping
       // configuration
-      Acts::GeometryID boundaryID = bssfRep.geometryId();
+      Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
       Acts::BinUtility bUtility = DefaultBin(bssfRep);
       Acts::ISurfaceMaterial* bMaterial =
@@ -588,14 +589,14 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
   if (m_cfg.processSensitives and tLayer.surfaceArray() != nullptr) {
     for (auto& ssf : tLayer.surfaceArray()->surfaces()) {
       if (ssf != nullptr && ssf->surfaceMaterial() != nullptr) {
-        Acts::GeometryID sensitiveID = ssf->geometryId();
+        Acts::GeometryIdentifier sensitiveID = ssf->geometryId();
         geo_id_value sid = sensitiveID.sensitive();
         layRep.sensitives.insert({sid, ssf->surfaceMaterial()});
         layRep.sensitiveSurfaces.insert({sid, ssf});
       } else if (m_cfg.processnonmaterial == true) {
         // if no material suface exist add a default one for the mapping
         // configuration
-        Acts::GeometryID sensitiveID = ssf->geometryId();
+        Acts::GeometryIdentifier sensitiveID = ssf->geometryId();
         geo_id_value sid = sensitiveID.sensitive();
         Acts::BinUtility sUtility = DefaultBin(*ssf);
         Acts::ISurfaceMaterial* sMaterial =
@@ -606,7 +607,7 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
     }
   }
   // the representing
-  if (!(tLayer.surfaceRepresentation().geometryId() == GeometryID())) {
+  if (!(tLayer.surfaceRepresentation().geometryId() == GeometryIdentifier())) {
     if (tLayer.surfaceRepresentation().surfaceMaterial() != nullptr) {
       layRep.representing = tLayer.surfaceRepresentation().surfaceMaterial();
       layRep.representingSurface = &tLayer.surfaceRepresentation();
@@ -625,14 +626,14 @@ Acts::JsonGeometryConverter::LayerRep Acts::JsonGeometryConverter::convertToRep(
     for (auto& asf : tLayer.approachDescriptor()->containedSurfaces()) {
       // get the surface and check for material
       if (asf->surfaceMaterial() != nullptr) {
-        Acts::GeometryID approachID = asf->geometryId();
+        Acts::GeometryIdentifier approachID = asf->geometryId();
         geo_id_value aid = approachID.approach();
         layRep.approaches.insert({aid, asf->surfaceMaterial()});
         layRep.approacheSurfaces.insert({aid, asf});
       } else if (m_cfg.processnonmaterial == true) {
         // if no material suface exist add a default one for the mapping
         // configuration
-        Acts::GeometryID approachID = asf->geometryId();
+        Acts::GeometryIdentifier approachID = asf->geometryId();
         geo_id_value aid = approachID.approach();
         Acts::BinUtility aUtility = DefaultBin(*asf);
         Acts::ISurfaceMaterial* aMaterial =

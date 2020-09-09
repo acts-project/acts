@@ -116,11 +116,11 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     // loop over single steps
     for (auto& step : steps) {
       // the identification of the step
-      Acts::GeometryID::Value volumeID = 0;
-      Acts::GeometryID::Value boundaryID = 0;
-      Acts::GeometryID::Value layerID = 0;
-      Acts::GeometryID::Value approachID = 0;
-      Acts::GeometryID::Value sensitiveID = 0;
+      Acts::GeometryIdentifier::Value volumeID = 0;
+      Acts::GeometryIdentifier::Value boundaryID = 0;
+      Acts::GeometryIdentifier::Value layerID = 0;
+      Acts::GeometryIdentifier::Value approachID = 0;
+      Acts::GeometryIdentifier::Value sensitiveID = 0;
       // get the identification from the surface first
       if (step.surface) {
         auto geoID = step.surface->geometryId();

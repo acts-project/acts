@@ -63,7 +63,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
 
   Config m_cfg;
   /// Lookup container for all digitizable surfaces
-  std::unordered_map<Acts::GeometryID, Digitizable> m_digitizables;
+  std::unordered_map<Acts::GeometryIdentifier, Digitizable> m_digitizables;
 };
 
 }  // namespace ActsExamples

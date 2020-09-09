@@ -30,10 +30,10 @@ namespace Acts {
 class JsonGeometryConverter {
  public:
   using SurfaceMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
   using VolumeMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
@@ -46,7 +46,7 @@ class JsonGeometryConverter {
   /// @brief Layer representation for Json writing
   struct LayerRep {
     // the layer id
-    GeometryID layerID;
+    GeometryIdentifier layerID;
 
     SurfaceMaterialRep sensitives;
     SurfaceRep sensitiveSurfaces;
@@ -65,7 +65,7 @@ class JsonGeometryConverter {
   /// @brief Volume representation for Json writing
   struct VolumeRep {
     // The geometry id
-    GeometryID volumeID;
+    GeometryIdentifier volumeID;
 
     /// The namne
     std::string volumeName;
@@ -176,8 +176,9 @@ class JsonGeometryConverter {
   /// Convert method
   ///
   /// @param surfaceMaterialMap The indexed material map collection
-  std::pair<std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>,
-            std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>>
+  std::pair<
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>,
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>>
   jsonToMaterialMaps(const nlohmann::json& materialmaps);
 
   /// Convert method

@@ -53,7 +53,8 @@ struct MaterialVolume {
 ///
 ///  1) TrackingGeometry is parsed and for each Surface with
 ///     ProtoSurfaceMaterial a local store is initialized
-///     the identification is done hereby through the Surface::GeometryID
+///     the identification is done hereby through the
+///     Surface::GeometryIdentifier
 ///
 ///  2) A Cache is generated that is used to keep the filling thread local,
 ///     the filling is protected with std::mutex
@@ -94,14 +95,16 @@ class SurfaceMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The accumulated material per geometry ID
-    std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+    std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
+        accumulatedMaterial;
 
     /// The created surface material from it
-    std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
+    std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
     /// The volume material of the input tracking geometry
-    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>> volumeMaterial;
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
+        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;

@@ -282,7 +282,7 @@ class Layer : public virtual GeometryObject {
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     const GeometryID& layerID);
+                     const GeometryIdentifier& layerID);
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is

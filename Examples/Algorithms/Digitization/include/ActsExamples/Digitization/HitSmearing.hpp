@@ -49,7 +49,7 @@ class HitSmearing final : public BareAlgorithm {
  private:
   Config m_cfg;
   /// Lookup container for hit surfaces that generate smeared hits
-  std::unordered_map<Acts::GeometryID, const Acts::Surface*> m_surfaces;
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> m_surfaces;
 };
 
 }  // namespace ActsExamples

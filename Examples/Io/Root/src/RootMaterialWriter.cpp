@@ -50,7 +50,7 @@ void ActsExamples::RootMaterialWriter::write(
     const Acts::ISurfaceMaterial* sMaterial = value.get();
 
     // get the geometry ID
-    Acts::GeometryID geoID = key;
+    Acts::GeometryIdentifier geoID = key;
     // decode the geometryID
     const auto gvolID = geoID.volume();
     const auto gbouID = geoID.boundary();

@@ -35,7 +35,7 @@ ActsExamples::Options::readTrackFindingConfig(
   // config is a GeometryHierarchyMap with just the global default
   TrackFindingAlgorithm::Config cfg;
   cfg.sourcelinkSelectorCfg = {
-      {Acts::GeometryID(), {chi2Max, nMax}},
+      {Acts::GeometryIdentifier(), {chi2Max, nMax}},
   };
   return cfg;
 }

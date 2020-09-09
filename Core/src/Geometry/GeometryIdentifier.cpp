@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <ostream>
 
-std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
+std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   os << "[ " << std::setw(3) << id.volume();
   os << " | " << std::setw(3) << id.boundary();
   os << " | " << std::setw(3) << id.layer();
