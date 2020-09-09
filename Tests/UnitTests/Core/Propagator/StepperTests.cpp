@@ -162,14 +162,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, time);
+  NeutralCurvilinearTrackParameters ncp(std::nullopt, pos, mom, 0, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_EQUAL(esState.q, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, time);
+  ncp = NeutralCurvilinearTrackParameters(cov, pos, mom, 0, time);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -492,8 +492,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -605,8 +604,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -777,8 +775,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(5_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -897,8 +894,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // first volume
   startParams = endParams.first;
   startMom = endParams.second;
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(
-      cov, startParams, startMom, 1., 0.);
+  CurvilinearTrackParameters sbtpPiecewise(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -1033,8 +1029,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
   Vector3D startParams(0., 0., 0.), startMom(1._GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(cov, startParams,
-                                                       startMom, 1., 0.);
+  CurvilinearTrackParameters sbtp(cov, startParams, startMom, 1., 0.);
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
