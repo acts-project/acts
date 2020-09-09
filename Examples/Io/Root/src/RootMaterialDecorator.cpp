@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
 #include <Acts/Utilities/BinUtility.hpp>

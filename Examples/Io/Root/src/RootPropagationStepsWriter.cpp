@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
 #include <Acts/Surfaces/Surface.hpp>

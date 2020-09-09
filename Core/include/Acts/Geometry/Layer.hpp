@@ -11,7 +11,7 @@
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"

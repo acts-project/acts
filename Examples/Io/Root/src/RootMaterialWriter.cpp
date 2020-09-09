@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 
 #include <ios>
