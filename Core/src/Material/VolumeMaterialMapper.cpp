@@ -203,7 +203,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     // adjust the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     extraRemainderPositions.push_back(position + volumeStep * direction);
-    matPoint.push_back(std::pair(properties, extraPosition));
+    matPoint.push_back(std::pair(properties, extraRemainderPositions));
   }
 }
 
