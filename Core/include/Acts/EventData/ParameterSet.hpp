@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/EventData/detail/CalculateDifferences.hpp"
 #include "Acts/EventData/detail/CorrectValues.hpp"
-#include "Acts/EventData/detail/ResidualCalculator.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -460,14 +460,13 @@ class ParameterSet {
    *
    * @sa ParameterSet::projector
    */
-  /// @cond
   template <
       typename T = Self,
       std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
-  /// @endcond
-  ParameterVector residual(const FullParameterSet& fullParSet) const {
-    return detail::ResidualCalculator<parameter_indices_t, params...>::
-        calculate(m_vValues, projector() * fullParSet.getParameters());
+  ParametersVector residual(const FullParameterSet& fullParSet) const {
+    return detail::calculateDifferences(
+        m_vValues, projector() * fullParSet.getParameters(),
+        ParametersSequence{});
   }
 
   /**
@@ -502,11 +501,9 @@ class ParameterSet {
    *
    * @sa ParameterSet::projector
    */
-  ParameterVector residual(const ActsVectorD<kSizeMax>& boundParams) const {
-    return detail::ResidualCalculator<parameter_indices_t,
-                                      params...>::calculate(m_vValues,
-                                                            projector() *
-                                                                boundParams);
+  ParametersVector residual(const FullParametersVector& other) const {
+    return detail::calculateDifferences(m_vValues, projector() * other,
+                                        ParametersSequence{});
   }
 
   /**
@@ -541,10 +538,9 @@ class ParameterSet {
    * ParameterSet object
    *         with respect to the given other parameter set
    */
-  ParameterVector residual(const Self& otherParSet) const {
-    return detail::ResidualCalculator<
-        parameter_indices_t, params...>::calculate(m_vValues,
-                                                   otherParSet.m_vValues);
+  ParametersVector residual(const Self& otherParSet) const {
+    return detail::calculateDifferences(m_vValues, otherParSet.m_vValues,
+                                        ParametersSequence{});
   }
 
   /**
