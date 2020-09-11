@@ -111,6 +111,8 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
   float t_X0   = 0;
   std::vector<float> *mat_X0   = 0;
   std::vector<float> *mat_L0   = 0;
+  std::vector<float> *mat_x   = 0;
+  std::vector<float> *mat_y   = 0;
   std::vector<float> *mat_step_length = 0;
 
   std::vector<uint64_t> *sur_id = 0;
@@ -141,7 +143,7 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
     double matL0 = 0;
 
     // loop over all the material hits
-    for(int j=0; j<mat_X0->size(); j++ ){
+    for(int j=0; j<mat_X0->size()-1; j++ ){
 
       Acts::GeometryID ID;
       
