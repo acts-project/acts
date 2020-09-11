@@ -34,10 +34,11 @@ array in ``entries`` that contains the values.
      ]
    }
 
-Each entry is a Json object that contains the decoded content of the
-:class:`Acts::GeometryID` key and the associated value. Each level within the
-:class:`Acts::GeometryID` is specified by name and stored as an integer. If a
-given level is not explicitely specified it is assumed to be zero.
+Each entry is a Json object that contains the encoded content of the
+:class:`Acts::GeometryIdentifier` key and the associated value. Each level
+within the :class:`Acts::GeometryIdentifier` is specified by name and stored as
+an integer. If a given level is not explicitly specified it is assumed to be
+zero.
 
 .. code-block:: json
 

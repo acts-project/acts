@@ -30,10 +30,10 @@ namespace Acts {
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
   using SurfaceMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
   using VolumeMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   JsonMaterialDecorator(const JsonGeometryConverter::Config& rConfig,
                         const std::string& jFileName,

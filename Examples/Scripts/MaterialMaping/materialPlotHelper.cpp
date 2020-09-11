@@ -28,7 +28,7 @@ struct sinfo {
   float range_max;
 };
 
-std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryID id) {
+std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   os << "[ " << std::setw(3) << id.volume();
   os << " | " << std::setw(3) << id.boundary();
   os << " | " << std::setw(3) << id.layer();
@@ -90,7 +90,7 @@ void Initialise_info(sinfo& surface_info,
                      const std::map<std::string, std::string>& surface_name,
                      const uint64_t& id, const int& type, const float& pos,
                      const float& range_min, const float& range_max) {
-  Acts::GeometryID ID(id);
+  Acts::GeometryIdentifier ID(id);
   std::ostringstream layerID;
   layerID << ID;
   std::string surface_id = layerID.str();

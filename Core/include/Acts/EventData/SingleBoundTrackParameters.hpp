@@ -132,33 +132,6 @@ class SingleBoundTrackParameters {
     assert(m_surface);
   }
 
-  /// Construct from position, momentum, charge, and time.
-  ///
-  /// @param geoCtx Geometry context for the local-to-global transformation
-  /// @param cov Bound parameters covariance matrix
-  /// @param pos Track position three-vector
-  /// @param mom Track momemtum three-vector
-  /// @param q Particle charge
-  /// @param time Time coordinate
-  /// @param surface Reference surface the parameters are defined on
-  ///
-  /// @deprecated This constructor is only available for backward-compatibility.
-  ///   Please use any of the constructors above instead.
-  SingleBoundTrackParameters(const GeometryContext& geoCtx,
-                             std::optional<CovarianceMatrix> cov,
-                             const Vector3D& pos, const Vector3D& mom, Scalar q,
-                             Scalar time,
-                             std::shared_ptr<const Surface> surface)
-      : m_paramSet(std::move(cov),
-                   detail::transformFreeToBoundParameters(
-                       pos, time, mom,
-                       (q != Scalar(0)) ? (q / mom.norm()) : (1 / mom.norm()),
-                       *surface, geoCtx)),
-        m_surface(std::move(surface)),
-        m_chargeInterpreter(std::abs(q)) {
-    assert(m_surface);
-  }
-
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 

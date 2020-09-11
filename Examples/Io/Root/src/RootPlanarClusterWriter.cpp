@@ -109,7 +109,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
 
   // Loop over the planar clusters in this event
   for (const auto& entry : clusters) {
-    Acts::GeometryID geoId = entry.first;
+    Acts::GeometryIdentifier geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information: position, @todo coveraiance
     auto parameters = cluster.parameters();

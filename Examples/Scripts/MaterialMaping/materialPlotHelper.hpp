@@ -13,8 +13,8 @@
 
 namespace Acts {
 
-/// Reimplementation of GeometryID du to the fact that the default Root C++
-/// version is too old Identifier for geometry nodes.
+/// Reimplementation of GeometryIdentifier du to the fact that the default Root
+/// C++ version is too old Identifier for geometry nodes.
 ///
 /// Each identifier can be split info the following components:
 ///
@@ -24,19 +24,19 @@ namespace Acts {
 /// - (Approach)  Surfaces    - counts approach surfaces
 /// - (Sensitive) Surfaces    - counts through sensitive surfaces
 ///
-class GeometryID {
+class GeometryIdentifier {
  public:
   using Value = uint64_t;
 
   /// Construct from an already encoded value.
-  constexpr GeometryID(Value encoded) : m_value(encoded) {}
-  /// Construct default GeometryID with all values set to zero.
-  GeometryID() = default;
-  GeometryID(GeometryID&&) = default;
-  GeometryID(const GeometryID&) = default;
-  ~GeometryID() = default;
-  GeometryID& operator=(GeometryID&&) = default;
-  GeometryID& operator=(const GeometryID&) = default;
+  constexpr GeometryIdentifier(Value encoded) : m_value(encoded) {}
+  /// Construct default GeometryIdentifier with all values set to zero.
+  GeometryIdentifier() = default;
+  GeometryIdentifier(GeometryIdentifier&&) = default;
+  GeometryIdentifier(const GeometryIdentifier&) = default;
+  ~GeometryIdentifier() = default;
+  GeometryIdentifier& operator=(GeometryIdentifier&&) = default;
+  GeometryIdentifier& operator=(const GeometryIdentifier&) = default;
 
   /// Return the encoded value.
   constexpr Value value() const { return m_value; }
@@ -76,14 +76,16 @@ class GeometryID {
     return (m_value & mask) >> extractShift(mask);
   }
 
-  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool operator==(GeometryIdentifier lhs,
+                                   GeometryIdentifier rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool operator<(GeometryIdentifier lhs,
+                                  GeometryIdentifier rhs) {
     return lhs.m_value < rhs.m_value;
   }
 };
 
-std::ostream& operator<<(std::ostream& os, GeometryID id);
+std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
 
 }  // namespace Acts

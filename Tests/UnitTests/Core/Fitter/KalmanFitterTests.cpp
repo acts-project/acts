@@ -17,7 +17,7 @@
 #include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Fitter/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -53,8 +53,9 @@ using Covariance = BoundSymMatrix;
 
 using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
-using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
-using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
+using VolumeResolution = std::map<GeometryIdentifier::Value, ElementResolution>;
+using DetectorResolution =
+    std::map<GeometryIdentifier::Value, VolumeResolution>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -377,10 +378,10 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       0., 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0., 0.01, 0., 0., 0.,
       0., 0., 0., 1.;
 
-  Vector3D rPos(-3_m, 10_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
-                0.025_GeV * gauss(generator));
-  CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
+  Vector4D rPos4(-3_m, 10_um * gauss(generator), 100_um * gauss(generator),
+                 42_ns);
+  Vector3D rDir(1_GeV, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  CurvilinearTrackParameters rStart(rPos4, rDir, 1_e / 1_GeV, cov);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -395,7 +396,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
-      rSurface);
+      PropagatorPlainOptions(), rSurface);
 
   KalmanFitter kFitter(rPropagator);
 

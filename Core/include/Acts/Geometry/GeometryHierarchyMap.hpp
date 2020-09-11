@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -27,7 +27,7 @@ namespace Acts {
 /// The core functionality is to find an equivalent element, i.e. an
 /// identifier-value pair, for a given geometry identifier via
 ///
-///     auto it = container.find(GeometryID(...));
+///     auto it = container.find(GeometryIdentifier(...));
 ///     if (it != container.end()) {
 ///         ...
 ///     }
@@ -47,7 +47,7 @@ namespace Acts {
 /// and index-based access to stored elements and associated geometry
 /// identifiers
 ///
-///     GeometryID id3 = container.idAt(3);
+///     GeometryIdentifier id3 = container.idAt(3);
 ///     const auto& element4 = container.valueAt(4);
 ///
 /// @note No guarantees are given for the element order when using range-based
@@ -62,7 +62,7 @@ template <typename value_t>
 class GeometryHierarchyMap {
  public:
   /// Combined geometry identifier and value element. Only used for input.
-  using InputElement = typename std::pair<GeometryID, value_t>;
+  using InputElement = typename std::pair<GeometryIdentifier, value_t>;
   using Iterator = typename std::vector<value_t>::const_iterator;
   using Size = typename std::vector<value_t>::size_type;
   using Value = value_t;
@@ -96,7 +96,7 @@ class GeometryHierarchyMap {
   /// Access the geometry identifier for the i-th element with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
-  GeometryID idAt(Size index) const { return m_ids.at(index); }
+  GeometryIdentifier idAt(Size index) const { return m_ids.at(index); }
   /// Access the value of the i-th element in the container with bounds check.
   ///
   /// @throws std::out_of_range for invalid indices
@@ -111,26 +111,26 @@ class GeometryHierarchyMap {
   /// @param id geometry identifier for which information is requested
   /// @retval iterator to an existing value
   /// @retval `.end()` iterator if no matching element exists
-  Iterator find(GeometryID id) const;
+  Iterator find(GeometryIdentifier id) const;
 
  private:
   // NOTE this class assumes that it knows the ordering of the levels within
   //      the geometry id. if the geometry id changes, this code has to be
   //      adapted too. the asserts ensure that such a change is caught.
-  static_assert(GeometryID().setVolume(1).value() <
-                    GeometryID().setVolume(1).setBoundary(1).value(),
-                "Incompatible GeometryID hierarchy");
-  static_assert(GeometryID().setBoundary(1).value() <
-                    GeometryID().setBoundary(1).setLayer(1).value(),
-                "Incompatible GeometryID hierarchy");
-  static_assert(GeometryID().setLayer(1).value() <
-                    GeometryID().setLayer(1).setApproach(1).value(),
-                "Incompatible GeometryID hierarchy");
-  static_assert(GeometryID().setApproach(1).value() <
-                    GeometryID().setApproach(1).setSensitive(1).value(),
-                "Incompatible GeometryID hierarchy");
+  static_assert(GeometryIdentifier().setVolume(1).value() <
+                    GeometryIdentifier().setVolume(1).setBoundary(1).value(),
+                "Incompatible GeometryIdentifier hierarchy");
+  static_assert(GeometryIdentifier().setBoundary(1).value() <
+                    GeometryIdentifier().setBoundary(1).setLayer(1).value(),
+                "Incompatible GeometryIdentifier hierarchy");
+  static_assert(GeometryIdentifier().setLayer(1).value() <
+                    GeometryIdentifier().setLayer(1).setApproach(1).value(),
+                "Incompatible GeometryIdentifier hierarchy");
+  static_assert(GeometryIdentifier().setApproach(1).value() <
+                    GeometryIdentifier().setApproach(1).setSensitive(1).value(),
+                "Incompatible GeometryIdentifier hierarchy");
 
-  using Identifier = GeometryID::Value;
+  using Identifier = GeometryIdentifier::Value;
 
   // encoded ids for all elements for faster lookup.
   std::vector<Identifier> m_ids;
@@ -139,9 +139,9 @@ class GeometryHierarchyMap {
   std::vector<Value> m_values;
 
   /// Construct a mask where all leading non-zero levels are set.
-  static constexpr Identifier makeLeadingLevelsMask(GeometryID id) {
+  static constexpr Identifier makeLeadingLevelsMask(GeometryIdentifier id) {
     // construct id from encoded value with all bits set
-    auto allSet = GeometryID(~GeometryID::Value(0u));
+    auto allSet = GeometryIdentifier(~GeometryIdentifier::Value(0u));
     // manually iterate over identifier levels starting from the lowest
     if (id.sensitive() != 0u) {
       // all levels are valid; keep all bits set.
@@ -168,7 +168,7 @@ class GeometryHierarchyMap {
   }
   /// Construct a mask where only the highest level is set.
   static constexpr Identifier makeHighestLevelMask() {
-    return makeLeadingLevelsMask(GeometryID(0u).setVolume(1u));
+    return makeLeadingLevelsMask(GeometryIdentifier(0u).setVolume(1u));
   }
   /// Compare the two identifiers only within the masked bits.
   static constexpr bool equalWithinMask(Identifier lhs, Identifier rhs,
@@ -238,7 +238,7 @@ inline void GeometryHierarchyMap<value_t>::fill(iterator_t beg,
 }
 
 template <typename value_t>
-inline auto GeometryHierarchyMap<value_t>::find(GeometryID id) const
+inline auto GeometryHierarchyMap<value_t>::find(GeometryIdentifier id) const
     -> Iterator {
   assert((m_ids.size() == m_values.size()) and
          "Inconsistent container state: #ids != # values");

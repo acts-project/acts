@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
