@@ -31,6 +31,7 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
@@ -40,6 +41,8 @@
 #include <random>
 #include <sstream>
 #include <string>
+
+using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace EventDataView3DTest {
@@ -243,12 +246,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
       0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0.,
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-
   Vector3D rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
-                0.025_GeV * gauss(generator));
-
-  CurvilinearTrackParameters rStart(cov, rPos, rMom, 1., 42.);
+  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
+                                    cov);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -261,7 +262,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
   KalmanFitterOptions<VoidOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, VoidOutlierFinder(),
-      LoggerWrapper{*logger}, rSurface);
+      LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);

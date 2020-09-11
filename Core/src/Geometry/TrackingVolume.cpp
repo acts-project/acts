@@ -351,7 +351,7 @@ void Acts::TrackingVolume::closeGeometry(
   volumeMap[volumeName()] = this;
 
   // we can construct the volume ID from this
-  auto volumeID = GeometryID().setVolume(++vol);
+  auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
@@ -372,13 +372,13 @@ void Acts::TrackingVolume::closeGeometry(
 
   this->assignGeometryId(volumeID);
   // loop over the boundary surfaces
-  GeometryID::Value iboundary = 0;
+  GeometryIdentifier::Value iboundary = 0;
   // loop over the boundary surfaces
   for (auto& bSurfIter : boundarySurfaces()) {
     // get the intersection soltuion
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryID(volumeID).setBoundary(++iboundary);
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
@@ -392,17 +392,17 @@ void Acts::TrackingVolume::closeGeometry(
   if (!m_confinedVolumes) {
     // loop over the confined layers
     if (m_confinedLayers) {
-      GeometryID::Value ilayer = 0;
+      GeometryIdentifier::Value ilayer = 0;
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryID(volumeID).setLayer(++ilayer);
+        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID);
       }
     } else if (m_bvhTop != nullptr) {
-      GeometryID::Value isurface = 0;
+      GeometryIdentifier::Value isurface = 0;
       for (const auto& descVol : m_descendantVolumes) {
         // Attempt to cast to AbstractVolume: only one we'll handle
         const AbstractVolume* avol =
@@ -412,7 +412,7 @@ void Acts::TrackingVolume::closeGeometry(
           for (const auto& bnd : bndSrf) {
             const auto& srf = bnd->surfaceRepresentation();
             Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
-            auto geoID = GeometryID(volumeID).setSensitive(++isurface);
+            auto geoID = GeometryIdentifier(volumeID).setSensitive(++isurface);
             mutableSurfcePtr->assignGeometryId(geoID);
           }
         }

@@ -62,7 +62,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
   hit.hit_id = 0;
 
   for (const auto& entry : clusters) {
-    Acts::GeometryID geoId = entry.first;
+    Acts::GeometryIdentifier geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information
     const auto& parameters = cluster.parameters();

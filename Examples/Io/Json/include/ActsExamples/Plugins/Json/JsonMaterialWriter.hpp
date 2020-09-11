@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Plugins/Json/JsonGeometryConverter.hpp"
@@ -27,10 +27,10 @@ namespace Acts {
 class TrackingGeometry;
 
 using SurfaceMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
 using VolumeMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts

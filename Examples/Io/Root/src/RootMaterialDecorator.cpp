@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
@@ -69,35 +69,35 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.voltag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-    Acts::GeometryID::Value volID = std::stoi(splitNames[0]);
+    Acts::GeometryIdentifier::Value volID = std::stoi(splitNames[0]);
     // boundary
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.boutag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-    Acts::GeometryID::Value bouID = std::stoi(splitNames[0]);
+    Acts::GeometryIdentifier::Value bouID = std::stoi(splitNames[0]);
     // layer
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.laytag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-    Acts::GeometryID::Value layID = std::stoi(splitNames[0]);
+    Acts::GeometryIdentifier::Value layID = std::stoi(splitNames[0]);
     // approach
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.apptag));
     boost::split(splitNames, splitNames[1], boost::is_any_of("_"));
-    Acts::GeometryID::Value appID = std::stoi(splitNames[0]);
+    Acts::GeometryIdentifier::Value appID = std::stoi(splitNames[0]);
     // sensitive
     iter_split(splitNames, tdName,
                boost::algorithm::first_finder(m_cfg.sentag));
-    Acts::GeometryID::Value senID = std::stoi(splitNames[1]);
+    Acts::GeometryIdentifier::Value senID = std::stoi(splitNames[1]);
 
     // Reconstruct the geometry ID
-    Acts::GeometryID geoID;
+    Acts::GeometryIdentifier geoID;
     geoID.setVolume(volID);
     geoID.setBoundary(bouID);
     geoID.setLayer(layID);
     geoID.setApproach(appID);
     geoID.setSensitive(senID);
-    ACTS_VERBOSE("GeometryID re-constructed as " << geoID);
+    ACTS_VERBOSE("GeometryIdentifier re-constructed as " << geoID);
 
     // Construct the names
     std::string nName = tdName + "/" + m_cfg.ntag;

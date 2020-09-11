@@ -81,19 +81,20 @@ auto volume = constructContainerVolume(tgContext, iVolume, oVolume, ov_volumeR,
                                        volumeHalfZ, "WorldVolume");
 
 // creating a TrackingGeometry
-// -> closs the geometry, this should set the GeometryID
+// -> closs the geometry, this should set the GeometryIdentifier
 TrackingGeometry tGeometry(volume);
 // get the world back
 auto world = tGeometry.highestTrackingVolume();
 
-BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
+BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
   // the lambda for checking
-  auto check_vol = [](const TrackingVolume& vol, GeometryID::Value geoid) {
+  auto check_vol = [](const TrackingVolume& vol,
+                      GeometryIdentifier::Value geoid) {
     // check the geometry id of the volume
     BOOST_CHECK_EQUAL(geoid, vol.geometryId().volume());
     // check the geometry id of all boundary surfaces of the volume
     // - this is strictly only possible when glueing if OFF
-    GeometryID::Value bsurface_id = 0;
+    GeometryIdentifier::Value bsurface_id = 0;
     for (auto bSf : vol.boundarySurfaces()) {
       // check the bsurface volume id
       auto bs_vol_id = bSf->surfaceRepresentation().geometryId().volume();
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
     // testing the layer and it's approach surfaces
     if (vol.confinedLayers() != nullptr) {
       // layers start are counted from 1 - n
-      GeometryID::Value layer_id = 0;
+      GeometryIdentifier::Value layer_id = 0;
       for (auto lay : vol.confinedLayers()->arrayObjects()) {
         // check the layer volume id and layer layer id
         auto lay_vol_id = lay->geometryId().volume();
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
         // test the layer approach surfaces
         if (lay->approachDescriptor() != nullptr) {
           // approach surfacesare counted from 1 - n
-          GeometryID::Value asurface_id = 0;
+          GeometryIdentifier::Value asurface_id = 0;
           for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(GeometryID_closeGeometry_test) {
         // test the sensitive surfaces
         if (lay->surfaceArray() != nullptr) {
           // sensitive surfaces are counted from 1 - n
-          GeometryID::Value ssurface_id = 0;
+          GeometryIdentifier::Value ssurface_id = 0;
           for (auto ssf : lay->surfaceArray()->surfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
