@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/EventData/detail/CorrectValues.hpp"
 #include "Acts/EventData/detail/ResidualCalculator.hpp"
-#include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -578,8 +578,8 @@ class ParameterSet {
    * @param values vector with parameter values to be checked and corrected if
    * necessary
    */
-  static void correctValues(ParameterVector& values) {
-    detail::ValueCorrector<params...>::correct(values);
+  static void correctValues(ParametersVector& values) {
+    detail::correctValues(values, ParametersSequence{});
   }
 
  private:
