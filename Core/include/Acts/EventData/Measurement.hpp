@@ -271,7 +271,7 @@ class Measurement {
   ///
   /// @sa ParameterSet::residual
   ParameterVector residual(const BoundTrackParameters& trackPars) const {
-    return m_oParameters.residual(trackPars.getParameterSet());
+    return m_oParameters.residual(trackPars.parameters());
   }
 
   /// @brief calculate residual with respect to given track parameters

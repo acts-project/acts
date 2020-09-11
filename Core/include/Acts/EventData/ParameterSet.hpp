@@ -77,11 +77,9 @@ using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
 template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
-  // local typedefs and constants
-  /// type of this parameter set
-  using Self = ParameterSet<parameter_indices_t, params...>;
   using ParametersSequence =
       std::integer_sequence<parameter_indices_t, params...>;
+
   /// number of parameters stored in this class
   static constexpr unsigned int kNumberOfParameters = sizeof...(params);
   /// Highest index in used parameter indices
@@ -302,49 +300,6 @@ class ParameterSet {
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
   void setCovariance(const CovarianceMatrix& cov) { m_optCovariance = cov; }
-
-  /**
-   * @brief calculate residual difference to full parameter vector
-   *
-   * Calculate the residual differences of the stored parameter values with
-   * respect to the corresponding
-   * parameter values in the full parameter vector. Hereby, the residual vector
-   * is defined as
-   *
-   * \f[
-   * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
-   * \right)
-   *  = \left( \begin{array}{c} v_{i_1} \\ \vdots \\ v_{i_m} \end{array} \right)
-   * -  \mathrm{Proj} \left( \begin{array}{c} v^0_{1} \\ \vdots \\ v^0_{N}
-   * \end{array} \right)
-   *  = \vec{v} - \mathrm{Proj} \left( \vec{v}^0 \right)
-   * \f]
-   *
-   * where \f$\mathrm{Proj}\f$ is the projection matrix, \f$\vec{v}\f$ is the
-   * vector of parameter values of
-   * this ParameterSet object and \f$\vec{v}^0\f$ is the full parameter value
-   * vector.
-   *
-   * @note Constraint and cyclic parameter value ranges are taken into account
-   * when calculating
-   *       the residual values.
-   *
-   * @param fullParSet ParameterSet object containing the full set of parameters
-   *
-   * @return vector containing the residual parameter values of this
-   * ParameterSet object
-   *         with respect to the given full parameter vector
-   *
-   * @sa ParameterSet::projector
-   */
-  template <
-      typename T = Self,
-      std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
-  ParametersVector residual(const FullParameterSet& fullParSet) const {
-    return detail::calculateDifferences(
-        m_vValues, projector() * fullParSet.getParameters(),
-        ParametersSequence{});
-  }
 
   /**
    * @brief calculate residual difference to full parameter vector
