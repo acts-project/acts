@@ -187,7 +187,7 @@ class ParameterSet {
    *         parameter set @c params
    */
   template <size_t index>
-  static constexpr parameter_indices_t getParID() {
+  static constexpr parameter_indices_t getParameterIndex() {
     return detail::at_index<parameter_indices_t, index, params...>::value;
   }
 
