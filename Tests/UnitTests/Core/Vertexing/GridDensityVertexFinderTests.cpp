@@ -14,12 +14,15 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace Test {
@@ -97,11 +100,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(
+        perigeeSurface, geoContext, makeVector4(pos, 0),
+        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -161,25 +164,18 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    // The position of the particle
-    Vector3D pos(xdist(gen), ydist(gen), 0);
+    double x = xdist(gen);
+    double y = ydist(gen);
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
-    if ((i % 4) == 0) {
-      pos[eZ] = z2dist(gen);
-    } else {
-      pos[eZ] = z1dist(gen);
-    }
-
-    // Create momentum and charge of track
+    double z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
-
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(
+        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
@@ -268,18 +264,16 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    // The position of the particle
-    Vector3D pos(xdist(gen), ydist(gen), z1dist(gen));
-
-    // Create momentum and charge of track
+    double x = xdist(gen);
+    double y = ydist(gen);
+    double z = z1dist(gen);
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
-    Vector3D mom(pt * std::cos(phi), pt * std::sin(phi), pt * std::sinh(eta));
     double charge = etaDist(gen) > 0 ? 1 : -1;
-
-    trackVec.push_back(BoundTrackParameters(geoContext, covMat, pos, mom,
-                                            charge, 0, perigeeSurface));
+    trackVec.push_back(BoundTrackParameters(
+        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;
