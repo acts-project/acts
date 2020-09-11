@@ -49,10 +49,10 @@ struct ValueCorrectorImpl<R, kLast> {
 /// range and corrected if necessary.
 ///
 /// Invocation:
-///   - value_corrector<params...>::result(parVector) where `parVector`
-///     contains `sizeof...(params)` elements
+///   - ValueCorrector<kIndices...>::correct(values) where `values`
+///     contains `sizeof...(kIndices)` elements
 ///
-/// @post All values in the argument `parVector` are within the valid
+/// @post All values in the argument `values` are within the valid
 ///       parameter range.
 template <BoundIndices... kIndices>
 struct ValueCorrector {

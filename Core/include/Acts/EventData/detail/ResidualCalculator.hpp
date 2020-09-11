@@ -39,15 +39,15 @@ struct ResidualCalculatorImpl<indices_t, R, kLast> {
 
 /// @brief calculate residuals from two parameter vectors
 ///
-/// @tparam parameter_indices_t Specifying the underlying parameter index enum
-/// @tparam params template parameter pack containing the multiple parameter
+/// @tparam indices_t Specifying the underlying parameter index enum
+/// @tparam kIndices template parameter pack containing the multiple parameter
 ///                identifiers
 ///
 /// Calculate the difference between the two given vectors with parameter
 /// values. Possible corrections for bounded or cyclic parameters are applied.
 ///
-/// @return residual_calculator<params...>::result(first,second) yields the
-///         residuals of `first` with respect to `second`
+/// @return ResidualCalculator<indices_t, kIndices...>::calculate(test, ref) yields the
+///         residuals of `test` with respect to `ref`
 template <typename indices_t, indices_t... kIndices>
 struct ResidualCalculator {
   using ParametersVector = ActsVector<BoundScalar, sizeof...(kIndices)>;
