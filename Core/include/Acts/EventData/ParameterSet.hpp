@@ -246,6 +246,7 @@ class ParameterSet {
   /**
    * @brief checks whether a given parameter is included in this set of
    parameters
+
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
    Otherwise a compile-time
@@ -301,46 +302,6 @@ class ParameterSet {
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
   void setCovariance(const CovarianceMatrix& cov) { m_optCovariance = cov; }
-
-  /**
-   * @brief equality operator
-   *
-   * @return @c true if stored parameter values are equal and both covariance
-   * matrices are
-   *         either identical or not set, otherwise @c false
-   */
-  bool operator==(const Self& rhs) const {
-    // shortcut comparison with myself
-    if (&rhs == this) {
-      return true;
-    }
-
-    // parameter values
-    if (m_vValues != rhs.m_vValues) {
-      return false;
-    }
-    // both have covariance matrices set
-    if ((m_optCovariance && rhs.m_optCovariance) &&
-        (*m_optCovariance != *rhs.m_optCovariance)) {
-      return false;
-    }
-    // only one has a covariance matrix set
-    if ((m_optCovariance && !rhs.m_optCovariance) ||
-        (!m_optCovariance && rhs.m_optCovariance)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * @brief inequality operator
-   *
-   * @return @c true if both objects are not equal, otherwise @c false
-   *
-   * @sa ParameterSet::operator==
-   */
-  bool operator!=(const Self& rhs) const { return !(*this == rhs); }
 
   /**
    * @brief project vector of full parameter set onto parameter sub-space
@@ -531,6 +492,18 @@ class ParameterSet {
 
   /// matrix to project full parameter vector onto local parameter space.
   static const ProjectionMatrix sProjector;
+
+  /// Compare two parameter sets for value equality.
+  friend constexpr bool operator==(const ParameterSet& lhs,
+                                   const ParameterSet& rhs) {
+    return (lhs.m_vValues == rhs.m_vValues) and
+           (lhs.m_optCovariance == rhs.m_optCovariance);
+  }
+  /// Compare two parameters for value inequality.
+  friend constexpr bool operator!=(const ParameterSet& lhs,
+                                   const ParameterSet& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
 template <typename parameter_indices_t, parameter_indices_t... kParameters>
