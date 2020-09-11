@@ -42,7 +42,7 @@ ActsExamples::ProcessCode ActsExamples::PrintHits::execute(
     if (ic == clusters.end()) {
       break;
     }
-    Acts::GeometryID geoId = ic->first;
+    Acts::GeometryIdentifier geoId = ic->first;
     const Acts::PlanarModuleCluster& c = ic->second;
     ACTS_INFO("  Cluster " << ihit << " hitId " << hitId << " geoId " << geoId
                            << " size " << c.digitizationCells().size());
@@ -72,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::PrintHits::execute(
     auto ihit = clusters.index_of(ic);
     auto hitId = hitIds[ihit];
 
-    Acts::GeometryID geoId = ic->first;
+    Acts::GeometryIdentifier geoId = ic->first;
     const Acts::PlanarModuleCluster& c = ic->second;
     ACTS_INFO("  Cluster " << ihit << " hitId " << hitId << " geoId " << geoId
                            << " size " << c.digitizationCells().size());

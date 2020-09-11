@@ -16,7 +16,7 @@ target_sources_local(
     DiscLayer.cpp
     GenericApproachDescriptor.cpp
     GenericCuboidVolumeBounds.cpp
-    GeometryID.cpp
+    GeometryIdentifier.cpp
     GlueVolumesDescriptor.cpp
     Layer.cpp
     LayerArrayCreator.cpp
