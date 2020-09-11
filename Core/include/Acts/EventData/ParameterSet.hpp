@@ -304,35 +304,6 @@ class ParameterSet {
   void setCovariance(const CovarianceMatrix& cov) { m_optCovariance = cov; }
 
   /**
-   * @brief project vector of full parameter set onto parameter sub-space
-   *
-   * Let \f$ \left(p_1 \dots p_N \right)\f$ be the full set of parameters out of
-   * which the \f$m\f$
-   * parameters \f$ \left( p_{i_1} \dots p_{i_m} \right), i_1 < i_2 < \dots <
-   * i_m, m \le N, i_j \le N\f$
-   * are stored in this ParameterSet object. Let \f$ \left(v^0_1 \dots v^0_N
-   * \right)\f$ be the parameter
-   * values given in the full ParameterSet, then this methods applies the
-   * following mapping:
-   * \f[
-   * \mathbb{R}^{N \times 1} \mapsto \mathbb{R}^{m \times 1} : \left(
-   * \begin{array}{c} v_1^0 \\ \vdots \\ v_N^0 \end{array} \right) \mapsto
-   * \left( \begin{array}{c} v_{i_1}^0 \\ \vdots \\ v_{i_m}^0 \end{array}
-   * \right)
-   * \f]
-   *
-   * @param fullParSet ParameterSet object containing values for all defined
-   * parameters
-   *
-   * @return vector containing only the parameter values from the full parameter
-   * vector
-   *         which are also defined for this ParameterSet object
-   */
-  static ParametersVector project(const FullParameterSet& fullParSet) {
-    return projector() * fullParSet.getParameters();
-  }
-
-  /**
    * @brief calculate residual difference to full parameter vector
    *
    * Calculate the residual differences of the stored parameter values with
@@ -444,7 +415,7 @@ class ParameterSet {
    * ParameterSet object
    *         with respect to the given other parameter set
    */
-  ParametersVector residual(const Self& otherParSet) const {
+  ParametersVector residual(const ParameterSet& otherParSet) const {
     return detail::calculateDifferences(m_vValues, otherParSet.m_vValues,
                                         ParametersSequence{});
   }
