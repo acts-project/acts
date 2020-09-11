@@ -11,7 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/covariance_helper.hpp"
-#include "Acts/Fitter/KalmanFitterError.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
