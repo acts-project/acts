@@ -80,11 +80,11 @@ class Measurement {
 
  public:
   /// type of the vector containing the parameter values
-  using ParameterVector = typename ParamSet::ParameterVector;
+  using ParameterVector = typename ParamSet::ParametersVector;
   /// type of the covariance matrix of the measurement
   using CovarianceMatrix = typename ParamSet::CovarianceMatrix;
   /// matrix type for projecting full parameter vector onto local parameters
-  using Projection = typename ParamSet::Projection;
+  using Projection = typename ParamSet::ProjectionMatrix;
   /// Object type that corresponds to the measurement
   using RefObject = typename detail::ReferenceObject<parameter_indices_t>::type;
 

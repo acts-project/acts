@@ -21,7 +21,6 @@
 #include "Acts/Utilities/detail/MPL/get_position.hpp"
 #include "Acts/Utilities/detail/MPL/is_contained.hpp"
 
-#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -44,7 +43,7 @@ using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
  * integral type used to identify different parameters. This could for example
  * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
  * convertible to an <tt>unsigned int</tt>
- *  -# It must contain a <tt>typedef #BoundScalar</tt> specifying the type of
+ *  -# It must contain a <tt>typedef #Scalar</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
  *  -# It must contain a definition of an integral constant named @c N which is
@@ -81,6 +80,8 @@ class ParameterSet {
   // local typedefs and constants
   /// type of this parameter set
   using Self = ParameterSet<parameter_indices_t, params...>;
+  using ParametersSequence =
+      std::integer_sequence<parameter_indices_t, params...>;
   /// number of parameters stored in this class
   static constexpr unsigned int kNumberOfParameters = sizeof...(params);
   /// Highest index in used parameter indices
@@ -103,14 +104,13 @@ class ParameterSet {
       "number of stored parameters can not exceed number of total parameters");
 
  public:
-  // public typedefs
-  /// matrix type for projecting full parameter vector onto local parameter
-  /// space
-  using Projection = ActsMatrix<BoundScalar, kNumberOfParameters, kSizeMax>;
-  /// vector type for stored parameters
-  using ParameterVector = ActsVector<BoundScalar, kNumberOfParameters>;
-  /// type of covariance matrix
-  using CovarianceMatrix = ActsSymMatrix<BoundScalar, kNumberOfParameters>;
+  using Scalar = detail::ParametersScalar<parameter_indices_t>;
+  using ParametersVector = ActsVector<Scalar, kNumberOfParameters>;
+  /// Vector type containing all parameters from the same space
+  using FullParametersVector = ActsVector<Scalar, kSizeMax>;
+  using CovarianceMatrix = ActsSymMatrix<Scalar, kNumberOfParameters>;
+  /// Projection matrix to project full parameters into the configured space.
+  using ProjectionMatrix = ActsMatrix<Scalar, kNumberOfParameters, kSizeMax>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -125,8 +125,7 @@ class ParameterSet {
   template <typename... Tail>
   ParameterSet(
       std::optional<CovarianceMatrix> cov,
-      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, BoundScalar>
-          head,
+      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, Scalar> head,
       Tail... values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
@@ -149,7 +148,7 @@ class ParameterSet {
    * @param values vector with parameter values
    */
   ParameterSet(std::optional<CovarianceMatrix> cov,
-               const ParameterVector& values)
+               const ParametersVector& values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
@@ -256,7 +255,7 @@ class ParameterSet {
    * @return value of the stored parameter
    */
   template <parameter_indices_t parameter>
-  BoundScalar getParameter() const {
+  Scalar getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
 
@@ -265,7 +264,7 @@ class ParameterSet {
    *
    * @return column vector with @c #kNumberOfParameters rows
    */
-  ParameterVector getParameters() const { return m_vValues; }
+  const ParametersVector& getParameters() const { return m_vValues; }
 
   /**
    * @brief sets value for given parameter
@@ -278,7 +277,7 @@ class ParameterSet {
    * @return previously stored value of this parameter
    */
   template <parameter_indices_t parameter>
-  void setParameter(BoundScalar value) {
+  void setParameter(Scalar value) {
     m_vValues(getIndex<parameter>()) =
         detail::ParameterTraits<parameter_indices_t, parameter>::getValue(
             value);
@@ -293,7 +292,7 @@ class ParameterSet {
    *
    * @param values vector of length #kNumberOfParameters
    */
-  void setParameters(const ParameterVector& values) {
+  void setParameters(const ParametersVector& values) {
     detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
                                                                         values);
   }
@@ -340,7 +339,7 @@ class ParameterSet {
    *         covariance matrix is set
    */
   template <parameter_indices_t parameter>
-  BoundScalar getUncertainty() const {
+  Scalar getUncertainty() const {
     if (m_optCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_optCovariance)(index, index));
@@ -423,7 +422,7 @@ class ParameterSet {
    * vector
    *         which are also defined for this ParameterSet object
    */
-  ParameterVector project(const FullParameterSet& fullParSet) const {
+  static ParametersVector project(const FullParameterSet& fullParSet) {
     return projector() * fullParSet.getParameters();
   }
 
@@ -558,10 +557,7 @@ class ParameterSet {
    * @return constant matrix with @c #kNumberOfParameters rows and @c
    * #kSizeMax columns
    */
-  static const ActsMatrix<BoundScalar, kNumberOfParameters, kSizeMax>
-  projector() {
-    return sProjector;
-  }
+  static const ProjectionMatrix& projector() { return sProjector; }
 
   /**
    * @brief number of stored parameters
@@ -587,24 +583,20 @@ class ParameterSet {
   }
 
  private:
-  ParameterVector m_vValues{
-      ParameterVector::Zero()};  ///< column vector containing
-                                 ///< values of local parameters
-  std::optional<CovarianceMatrix> m_optCovariance{
-      std::nullopt};  ///< an optional covariance matrix
+  /// column vector containing values of local parameters.
+  ParametersVector m_vValues{ParametersVector::Zero()};
+  /// optional covariance matrix.
+  std::optional<CovarianceMatrix> m_optCovariance{std::nullopt};
 
-  static const Projection sProjector;  ///< matrix to project full parameter
-                                       /// vector onto local parameter space
+  /// matrix to project full parameter vector onto local parameter space.
+  static const ProjectionMatrix sProjector;
 };
 
-// initialize static class members
-template <typename parameter_indices_t, parameter_indices_t... params>
-constexpr unsigned int
-    ParameterSet<parameter_indices_t, params...>::kNumberOfParameters;
-
-template <typename parameter_indices_t, parameter_indices_t... params>
-const typename ParameterSet<parameter_indices_t, params...>::Projection
-    ParameterSet<parameter_indices_t, params...>::sProjector =
+template <typename parameter_indices_t, parameter_indices_t... kParameters>
+const typename ParameterSet<parameter_indices_t,
+                            kParameters...>::ProjectionMatrix
+    ParameterSet<parameter_indices_t, kParameters...>::sProjector =
         detail::make_projection_matrix<
-            kSizeMax, static_cast<unsigned int>(params)...>::init();
+            kSizeMax, static_cast<unsigned int>(kParameters)...>::init();
+
 }  // namespace Acts
