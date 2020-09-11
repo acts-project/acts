@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/detail/CalculateDifferences.hpp"
+#include "Acts/EventData/detail/DifferenceCalculator.hpp"
 #include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
@@ -23,7 +23,6 @@
 
 #include <optional>
 #include <type_traits>
-#include <utility>
 
 namespace Acts {
 
@@ -77,9 +76,6 @@ using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
 template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
-  using ParametersSequence =
-      std::integer_sequence<parameter_indices_t, params...>;
-
   /// number of parameters stored in this class
   static constexpr unsigned int kNumberOfParameters = sizeof...(params);
   /// Highest index in used parameter indices
@@ -334,8 +330,8 @@ class ParameterSet {
    * @sa ParameterSet::projector
    */
   ParametersVector residual(const FullParametersVector& other) const {
-    return detail::calculateDifferences(m_vValues, projector() * other,
-                                        ParametersSequence{});
+    return detail::DifferenceCalculator<parameter_indices_t, params...>::run(
+        m_vValues, projector() * other);
   }
 
   /**
@@ -371,8 +367,8 @@ class ParameterSet {
    *         with respect to the given other parameter set
    */
   ParametersVector residual(const ParameterSet& otherParSet) const {
-    return detail::calculateDifferences(m_vValues, otherParSet.m_vValues,
-                                        ParametersSequence{});
+    return detail::DifferenceCalculator<parameter_indices_t, params...>::run(
+        m_vValues, otherParSet.m_vValues);
   }
 
   /**
