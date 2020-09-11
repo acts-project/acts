@@ -102,39 +102,36 @@ struct CyclicParameterTraits {
   }
 };
 
-// Traits types for bound parameters.
+// Limit types for parameter traits.
 //
-// These types should not be used directly but only via `ParameterTraits` below.
-
+// The functions names are chosen to be consisten w/ std::numeric_limits
 struct PhiBoundParameterLimits {
-  // use function names consistent w/ std::numeric_limits
   static constexpr double lowest() { return -M_PI; }
   static constexpr double max() { return M_PI; }
 };
 struct ThetaBoundParameterLimits {
-  // use function names consistent w/ std::numeric_limits
   static constexpr double lowest() { return 0; }
   static constexpr double max() { return M_PI; }
 };
 
-// all parameters not explicitely specified are unrestricted
-template <BoundIndices>
-struct BoundParameterTraits : public UnrestrictedParameterTraits {};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundPhi>
-    : public CyclicParameterTraits<PhiBoundParameterLimits> {};
-template <>
-struct BoundParameterTraits<BoundIndices::eBoundTheta>
-    : public RestrictedParameterTraits<ThetaBoundParameterLimits> {};
-
-// The separate traits implementation structs are needed to generate a
-// compile-time error in case a non-supported enum type/ index combinations is
-// used.
+// Traits implementation structs for single parameters.
+//
+// Separate implementation structs are needed to generate a compile-time error
+// in case of an unsupported enum type/ index combination.
 template <typename index_t, index_t kIndex>
 struct ParameterTraitsImpl;
+template <>
+struct ParameterTraitsImpl<BoundIndices, BoundIndices::eBoundPhi> {
+  using Type = CyclicParameterTraits<PhiBoundParameterLimits>;
+};
+template <>
+struct ParameterTraitsImpl<BoundIndices, BoundIndices::eBoundTheta> {
+  using Type = RestrictedParameterTraits<ThetaBoundParameterLimits>;
+};
 template <BoundIndices kIndex>
 struct ParameterTraitsImpl<BoundIndices, kIndex> {
-  using Type = BoundParameterTraits<kIndex>;
+  // other bound parameters not explicitely specified above are unrestricted
+  using Type = UnrestrictedParameterTraits;
 };
 template <FreeIndices kIndex>
 struct ParameterTraitsImpl<FreeIndices, kIndex> {
@@ -142,35 +139,43 @@ struct ParameterTraitsImpl<FreeIndices, kIndex> {
   using Type = UnrestrictedParameterTraits;
 };
 
-/// Parameter traits for an index from one of the indices enums.
+/// Parameter traits for one specific parameter in one of the indices enums.
 ///
 /// @tparam index_t Parameter indices enum
-/// @tparam kIndex A specific parameter index
+/// @tparam kIndex Enum index value to identify a parameter
 ///
 /// This type resolves directly to one of the parameter traits classes defined
 /// above and allows for uniform access.
 template <typename index_t, index_t kIndex>
 using ParameterTraits = typename ParameterTraitsImpl<index_t, kIndex>::Type;
 
-// The separate size implementation structs are needed to generate a
-// compile-time error in case a non-supported enum type combinations is used.
-// Template variables can not have an undefined default case.
+// Traits implementation structs for all parameters in an indices enum.
+//
+// Separate implementation structs are needed to generate a compile-time error
+// in case of an unsupported indices enum. Also required since template
+// variables can not have an undefined default case.
 template <typename indices_t>
-struct ParametersSizeImpl;
+struct ParametersTraitsImpl;
 template <>
-struct ParametersSizeImpl<BoundIndices> {
+struct ParametersTraitsImpl<BoundIndices> {
+  using Scalar = BoundScalar;
   static constexpr unsigned int kSize =
       static_cast<unsigned int>(BoundIndices::eBoundSize);
 };
 template <>
-struct ParametersSizeImpl<FreeIndices> {
+struct ParametersTraitsImpl<FreeIndices> {
+  using Scalar = FreeScalar;
   static constexpr unsigned int kSize =
       static_cast<unsigned int>(FreeIndices::eFreeSize);
 };
 
-/// The maximum parameters vector size definable by an index enum.
+/// Scalar type that corresponds to the indices enum.
 template <typename indices_t>
-constexpr unsigned int kParametersSize = ParametersSizeImpl<indices_t>::kSize;
+using ParametersScalar = typename ParametersTraitsImpl<indices_t>::Scalar;
+
+/// The maximum parameters vector size definable for an indices enum.
+template <typename indices_t>
+constexpr unsigned int kParametersSize = ParametersTraitsImpl<indices_t>::kSize;
 
 }  // namespace detail
 }  // namespace Acts
