@@ -157,8 +157,8 @@ void random_residual_tests() {
 
   BoundVector parValues_1;
   BoundVector parValues_2;
-  FullParameterSet parSet_1(std::nullopt, parValues_1);
-  FullParameterSet parSet_2(std::nullopt, parValues_2);
+  FullBoundParameterSet parSet_1(std::nullopt, parValues_1);
+  FullBoundParameterSet parSet_2(std::nullopt, parValues_2);
   BoundVector residual;
   const unsigned int toys = 1000;
   for (unsigned int i = 0; i < toys; ++i) {
@@ -743,7 +743,7 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
                       eBoundTime>::getParameterIndex<4>() == eBoundTime));
 
   // check consistency
-  using FullSet = FullParameterSet;
+  using FullSet = FullBoundParameterSet;
   BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<0>()>() == 0));
   BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<1>()>() == 1));
   BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<2>()>() == 2));

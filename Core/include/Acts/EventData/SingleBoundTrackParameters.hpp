@@ -163,7 +163,7 @@ class SingleBoundTrackParameters {
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /// Access the parameter set holding the parameters vector and covariance.
-  const FullParameterSet& getParameterSet() const { return m_paramSet; }
+  const FullBoundParameterSet& getParameterSet() const { return m_paramSet; }
   /// Parameters vector.
   ParametersVector parameters() const { return m_paramSet.getParameters(); }
   /// Optional covariance matrix.
@@ -257,7 +257,7 @@ class SingleBoundTrackParameters {
 
  private:
   /// parameter set holding parameters vector and covariance.
-  FullParameterSet m_paramSet;
+  FullBoundParameterSet m_paramSet;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20

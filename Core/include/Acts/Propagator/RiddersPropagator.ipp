@@ -46,9 +46,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
   }
   // Exchange the result by Ridders Covariance
-  const FullParameterSet& parSet =
+  const FullBoundParameterSet& parSet =
       nominalResult.endParameters->getParameterSet();
-  FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
+  FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
   if (start.covariance()) {
     mParSet->setCovariance(
         calculateCovariance(derivatives, *start.covariance(), deviations));
@@ -107,9 +107,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         wiggleDimension(opts, start, i, target, nominalParameters, deviations);
   }
   // Exchange the result by Ridders Covariance
-  const FullParameterSet& parSet =
+  const FullBoundParameterSet& parSet =
       nominalResult.endParameters->getParameterSet();
-  FullParameterSet* mParSet = const_cast<FullParameterSet*>(&parSet);
+  FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
   if (start.covariance()) {
     // Test if target is disc - this may lead to inconsistent results
     if (target.type() == Surface::Disc) {

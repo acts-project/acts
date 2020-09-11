@@ -27,8 +27,8 @@
 
 namespace Acts {
 
-// forward type declaration for full parameter set
-using FullParameterSet = typename detail::full_parset<BoundIndices>::type;
+// Parameter sets corresponding to the full parameters vector
+using FullBoundParameterSet = typename detail::full_parset<BoundIndices>::type;
 using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
 
 /**
