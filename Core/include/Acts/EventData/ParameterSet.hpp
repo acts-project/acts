@@ -157,62 +157,8 @@ class ParameterSet {
                                                                         values);
   }
 
-  /**
-   * @brief copy constructor
-   *
-   * @param copy object whose content is copied into the new @c ParameterSet
-   * object
-   */
-  ParameterSet(const Self& copy)
-      : m_vValues(copy.m_vValues), m_optCovariance(copy.m_optCovariance) {}
-
-  /**
-   * @brief move constructor
-   *
-   * @param copy object whose content is moved into the new @c ParameterSet
-   * object
-   */
-  ParameterSet(Self&& copy) : m_vValues(std::move(copy.m_vValues)) {
-    if (copy.m_optCovariance) {
-      m_optCovariance = std::move(*copy.m_optCovariance);
-    }
-  }
-
-  /**
-   * @brief standard destructor
-   */
-  ~ParameterSet() = default;
-
-  /**
-   * @brief assignment operator
-   *
-   * @param rhs object whose content is assigned to this @c ParameterSet object
-   */
-  Self& operator=(const Self& rhs) {
-    m_vValues = rhs.m_vValues;
-    m_optCovariance = rhs.m_optCovariance;
-    return *this;
-  }
-
-  /**
-   * @brief move assignment operator
-   *
-   * @param rhs object whose content is moved into this @c ParameterSet object
-   */
-  Self& operator=(Self&& rhs) {
-    m_vValues = std::move(rhs.m_vValues);
-    m_optCovariance = std::move(rhs.m_optCovariance);
-    return *this;
-  }
-
-  /**
-   * @brief swap two objects
-   */
-  friend void swap(Self& first, Self& second) noexcept {
-    using std::swap;
-    swap(first.m_vValues, second.m_vValues);
-    swap(first.m_optCovariance, second.m_optCovariance);
-  }
+  // this class does not have a custom default constructor and thus should not
+  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /**
    * @brief return index of parameter identifier in parameter list
@@ -300,7 +246,6 @@ class ParameterSet {
   /**
    * @brief checks whether a given parameter is included in this set of
    parameters
-
    * @tparam parameter identifier for the parameter to be retrieved
    * @remark @c parameter must be part of the template parameter pack @c params.
    Otherwise a compile-time

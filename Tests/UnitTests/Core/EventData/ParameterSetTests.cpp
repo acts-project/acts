@@ -426,12 +426,11 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
 }
 
 /**
- * @brief Unit test for copy/assignment/swap in ParameterSet class
+ * @brief Unit test for copy/assignment in ParameterSet class
  *
  * The behavior of the following functions is checked:
  * -# ParameterSet::ParameterSet
  * -# ParameterSet::operator=
- * -# ParameterSet::swap
  */
 BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   // covariance matrix
@@ -484,9 +483,6 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
-  using std::swap;
-  swap(lhs, rhs);
-  BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
 }
 
 /**
@@ -865,12 +861,11 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
 }
 
 /**
- * @brief Unit test for copy/assignment/swap in ParameterSet class
+ * @brief Unit test for copy/assignment in ParameterSet class
  *
  * The behavior of the following functions is checked:
  * -# ParameterSet::ParameterSet
  * -# ParameterSet::operator=
- * -# ParameterSet::swap
  */
 BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   // covariance matrix
@@ -919,9 +914,6 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   ParameterSet<FreeIndices, eFreePos0, eFreePos1, eFreePos2> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
-  using std::swap;
-  swap(lhs, rhs);
-  BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
 }
 
 /**
