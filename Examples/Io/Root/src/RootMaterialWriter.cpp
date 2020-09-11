@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 
 #include <ios>
@@ -50,7 +50,7 @@ void ActsExamples::RootMaterialWriter::write(
     const Acts::ISurfaceMaterial* sMaterial = value.get();
 
     // get the geometry ID
-    Acts::GeometryID geoID = key;
+    Acts::GeometryIdentifier geoID = key;
     // decode the geometryID
     const auto gvolID = geoID.volume();
     const auto gbouID = geoID.boundary();

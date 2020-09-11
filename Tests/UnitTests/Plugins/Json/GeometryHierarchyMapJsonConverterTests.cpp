@@ -18,12 +18,13 @@
 
 namespace {
 
-using Acts::GeometryID;
+using Acts::GeometryIdentifier;
 using nlohmann::json;
 
 // helper function to create geometry ids.
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
-  return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
+GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+  return GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
+      sensitive);
 }
 
 // example element for the container

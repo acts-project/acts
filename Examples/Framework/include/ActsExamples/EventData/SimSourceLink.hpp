@@ -40,7 +40,7 @@ class SimSourceLink {
   SimSourceLink& operator=(SimSourceLink&&) = default;
   SimSourceLink& operator=(const SimSourceLink&) = default;
 
-  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
+  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   constexpr const Acts::Surface& referenceSurface() const { return *m_surface; }
   constexpr const ActsFatras::Hit& truthHit() const { return *m_truthHit; }
 
@@ -68,7 +68,7 @@ class SimSourceLink {
   Acts::BoundMatrix m_cov;
   size_t m_dim = 0u;
   // store geo id copy to avoid indirection via truth hit
-  Acts::GeometryID m_geometryId;
+  Acts::GeometryIdentifier m_geometryId;
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
   const ActsFatras::Hit* m_truthHit;

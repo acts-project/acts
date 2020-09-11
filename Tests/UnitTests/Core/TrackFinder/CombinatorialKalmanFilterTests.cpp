@@ -15,7 +15,7 @@
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -65,8 +65,9 @@ struct ExtendedMinimalSourceLink {
 };
 
 // helper function to create geometry ids
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
-  return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
+GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+  return GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
+      sensitive);
 }
 
 // A few initialisations and definitionas
@@ -75,8 +76,9 @@ using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
-using VolumeResolution = std::map<GeometryID::Value, ElementResolution>;
-using DetectorResolution = std::map<GeometryID::Value, VolumeResolution>;
+using VolumeResolution = std::map<GeometryIdentifier::Value, ElementResolution>;
+using DetectorResolution =
+    std::map<GeometryIdentifier::Value, VolumeResolution>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);

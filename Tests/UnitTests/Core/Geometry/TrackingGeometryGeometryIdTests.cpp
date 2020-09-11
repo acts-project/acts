@@ -48,7 +48,7 @@ auto iVolume = constructCylinderVolume(
     iVsurfaceZoverlap, iVlayerEnvelope, iVvolumeEnvelope, 0., iVvolumeR,
     "InnerVolume");
 
-BOOST_AUTO_TEST_CASE(GeometryID_innervolume_test) {
+BOOST_AUTO_TEST_CASE(GeometryIdentifier_innervolume_test) {
   BOOST_CHECK_EQUAL(0ul, iVolume->geometryId().value());
   // check the boundary surfaces
   for (auto bSf : iVolume->boundarySurfaces()) {
@@ -73,7 +73,7 @@ auto oVolume = constructCylinderVolume(
     oVsurfaceZoverlap, oVlayerEnvelope, oVvolumeEnvelope, iVvolumeR, oVvolumeR,
     "OuterVolume");
 
-BOOST_AUTO_TEST_CASE(GeometryID_outervolume_test) {
+BOOST_AUTO_TEST_CASE(GeometryIdentifier_outervolume_test) {
   BOOST_CHECK_EQUAL(0ul, oVolume->geometryId().value());
   // check the boundary surfaces
   for (auto bSf : iVolume->boundarySurfaces()) {
@@ -98,8 +98,8 @@ double oVvolumeHalfZ =
 auto hVolume = constructContainerVolume(tgContext, iVolume, oVolume, oVvolumeR,
                                         oVvolumeHalfZ, "Container");
 
-///  pre-check on GeometryID
-BOOST_AUTO_TEST_CASE(GeometryID_containervolume_test) {
+///  pre-check on GeometryIdentifier
+BOOST_AUTO_TEST_CASE(GeometryIdentifier_containervolume_test) {
   ///  let's check that the geometry ID values are all 0
   BOOST_CHECK_EQUAL(0ul, hVolume->geometryId().value());
   /// check the boundaries of the hVolume, should also be 0

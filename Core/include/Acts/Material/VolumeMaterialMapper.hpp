@@ -12,7 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -44,7 +44,7 @@ using RecordedMaterialVolumePoint =
 ///
 ///  1) TrackingGeometry is parsed and for each Volume with
 ///     ProtoVolumeMaterial a local store is initialized
-///     the identification is done hereby through the Volume::GeometryID
+///     the identification is done hereby through the Volume::GeometryIdentifier
 ///
 ///  2) A number of N material tracks is read in, each track has :
 ///       origin, direction, material steps (< position, step length, x0, l0, a,
@@ -79,17 +79,18 @@ class VolumeMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The recorded material per geometry ID
-    std::map<GeometryID, RecordedMaterialVolumePoint> recordedMaterial;
+    std::map<GeometryIdentifier, RecordedMaterialVolumePoint> recordedMaterial;
 
     /// The binning per geometry ID
-    std::map<GeometryID, BinUtility> materialBin;
+    std::map<GeometryIdentifier, BinUtility> materialBin;
 
     /// The surface material of the input tracking geometry
-    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
     /// The created volume material from it
-    std::map<GeometryID, std::unique_ptr<const IVolumeMaterial>> volumeMaterial;
+    std::map<GeometryIdentifier, std::unique_ptr<const IVolumeMaterial>>
+        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;

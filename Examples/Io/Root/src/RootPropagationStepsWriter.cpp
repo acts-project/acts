@@ -10,7 +10,7 @@
 
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
 #include <Acts/Surfaces/Surface.hpp>
@@ -116,11 +116,11 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     // loop over single steps
     for (auto& step : steps) {
       // the identification of the step
-      Acts::GeometryID::Value volumeID = 0;
-      Acts::GeometryID::Value boundaryID = 0;
-      Acts::GeometryID::Value layerID = 0;
-      Acts::GeometryID::Value approachID = 0;
-      Acts::GeometryID::Value sensitiveID = 0;
+      Acts::GeometryIdentifier::Value volumeID = 0;
+      Acts::GeometryIdentifier::Value boundaryID = 0;
+      Acts::GeometryIdentifier::Value layerID = 0;
+      Acts::GeometryIdentifier::Value approachID = 0;
+      Acts::GeometryIdentifier::Value sensitiveID = 0;
       // get the identification from the surface first
       if (step.surface) {
         auto geoID = step.surface->geometryId();

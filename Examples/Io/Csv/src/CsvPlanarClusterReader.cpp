@@ -82,13 +82,14 @@ struct CompareHitId {
 };
 
 /// Convert separate volume/layer/module id into a single geometry identifier.
-inline Acts::GeometryID extractGeometryId(const ActsExamples::HitData& data) {
+inline Acts::GeometryIdentifier extractGeometryId(
+    const ActsExamples::HitData& data) {
   // if available, use the encoded geometry directly
   if (data.geometry_id != 0u) {
     return data.geometry_id;
   }
   // otherwise, reconstruct it from the available components
-  Acts::GeometryID geoId;
+  Acts::GeometryIdentifier geoId;
   geoId.setVolume(data.volume_id);
   geoId.setLayer(data.layer_id);
   geoId.setSensitive(data.module_id);
@@ -178,7 +179,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   simHits.reserve(truths.size());
 
   for (const HitData& hit : hits) {
-    Acts::GeometryID geoId = extractGeometryId(hit);
+    Acts::GeometryIdentifier geoId = extractGeometryId(hit);
 
     // find associated truth/ simulation hits
     std::vector<std::size_t> simHitIndices;
@@ -187,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
                                               hit.hit_id, CompareHitId{}));
       simHitIndices.reserve(range.size());
       for (const auto& truth : range) {
-        const auto simGeometryId = Acts::GeometryID(truth.geometry_id);
+        const auto simGeometryId = Acts::GeometryIdentifier(truth.geometry_id);
         // TODO validate geo id consistency
         const auto simParticleId = ActsFatras::Barcode(truth.particle_id);
         const auto simIndex = truth.index;

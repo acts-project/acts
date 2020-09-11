@@ -116,7 +116,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     //
     //     m_tracksteps.emplace_back(
     //         0,
-    //         0,  // set Acts::GeometryID = 0 and Barcode = 0
+    //         0,  // set Acts::GeometryIdentifier = 0 and Barcode = 0
     //         Acts::ActsVectorD<4>(trkPos.x() * Acts::UnitConstants::mm,
     //                              trkPos.y() * Acts::UnitConstants::mm,
     //                              trkPos.z() * Acts::UnitConstants::mm,
