@@ -63,12 +63,12 @@ class DiscSurface : public Surface {
   /// @param transform is transform that places the disc in the global 3D space
   /// @param minhalfx The half length in x at minimal r
   /// @param maxhalfx The half length in x at maximal r
-  /// @param maxR The inner radius of the disc surface
   /// @param minR The outer radius of the disc surface
+  /// @param maxR The inner radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
   DiscSurface(const Transform3D& transform, double minhalfx, double maxhalfx,
-              double maxR, double minR, double avephi = 0., double stereo = 0.);
+              double minR, double maxR, double avephi = 0., double stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
   ///

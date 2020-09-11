@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -403,7 +403,7 @@ class TrackingVolume : public Volume {
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
 
-  /// close the Geometry, i.e. set the GeometryID and assign material
+  /// close the Geometry, i.e. set the GeometryIdentifier and assign material
   ///
   /// @param materialDecorator is a dedicated decorator for the
   ///        material to be assigned (surface, volume based)

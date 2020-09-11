@@ -70,7 +70,7 @@ class GeometryHierarchyMapJsonConverter {
 
   std::string m_valueIdentifier;
 
-  static nlohmann::json encodeIdentifier(GeometryID id) {
+  static nlohmann::json encodeIdentifier(GeometryIdentifier id) {
     nlohmann::json encoded;
     // only store non-zero identifiers
     if (id.volume()) {
@@ -90,13 +90,14 @@ class GeometryHierarchyMapJsonConverter {
     }
     return encoded;
   }
-  static GeometryID decodeIdentifier(const nlohmann::json& encoded) {
-    return GeometryID()
-        .setVolume(encoded.value("volume", GeometryID::Value(0u)))
-        .setBoundary(encoded.value("boundary", GeometryID::Value(0u)))
-        .setLayer(encoded.value("layer", GeometryID::Value(0u)))
-        .setApproach(encoded.value("approach", GeometryID::Value(0u)))
-        .setSensitive(encoded.value("sensitive", GeometryID::Value(0u)));
+  static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
+    return GeometryIdentifier()
+        .setVolume(encoded.value("volume", GeometryIdentifier::Value(0u)))
+        .setBoundary(encoded.value("boundary", GeometryIdentifier::Value(0u)))
+        .setLayer(encoded.value("layer", GeometryIdentifier::Value(0u)))
+        .setApproach(encoded.value("approach", GeometryIdentifier::Value(0u)))
+        .setSensitive(
+            encoded.value("sensitive", GeometryIdentifier::Value(0u)));
   }
 };
 
@@ -144,7 +145,7 @@ auto GeometryHierarchyMapJsonConverter<value_t>::fromJson(
     throw std::invalid_argument(
         "Missing entries in json geometry hierarchy map");
   }
-  std::vector<std::pair<GeometryID, Value>> elements;
+  std::vector<std::pair<GeometryIdentifier, Value>> elements;
   for (const auto& entry : encoded.at(kEntriesKey)) {
     auto id = decodeIdentifier(entry);
     auto value = entry.at("value").get<Value>();

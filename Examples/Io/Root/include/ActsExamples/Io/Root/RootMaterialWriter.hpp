@@ -13,7 +13,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Material/IMaterialDecorator.hpp>
@@ -28,9 +28,9 @@
 
 namespace Acts {
 using SurfaceMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
 

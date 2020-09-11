@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,19 +25,19 @@ namespace Acts {
 /// - Approach surfaces (for a layer)
 /// - Sensitive surfaces (confined to a layer, also called modules)
 ///
-class GeometryID {
+class GeometryIdentifier {
  public:
   using Value = uint64_t;
 
   /// Construct from an already encoded value.
-  constexpr GeometryID(Value encoded) : m_value(encoded) {}
-  /// Construct default GeometryID with all values set to zero.
-  GeometryID() = default;
-  GeometryID(GeometryID&&) = default;
-  GeometryID(const GeometryID&) = default;
-  ~GeometryID() = default;
-  GeometryID& operator=(GeometryID&&) = default;
-  GeometryID& operator=(const GeometryID&) = default;
+  constexpr GeometryIdentifier(Value encoded) : m_value(encoded) {}
+  /// Construct default GeometryIdentifier with all values set to zero.
+  GeometryIdentifier() = default;
+  GeometryIdentifier(GeometryIdentifier&&) = default;
+  GeometryIdentifier(const GeometryIdentifier&) = default;
+  ~GeometryIdentifier() = default;
+  GeometryIdentifier& operator=(GeometryIdentifier&&) = default;
+  GeometryIdentifier& operator=(const GeometryIdentifier&) = default;
 
   /// Return the encoded value.
   constexpr Value value() const { return m_value; }
@@ -54,23 +54,23 @@ class GeometryID {
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
 
   /// Set the volume identifier.
-  constexpr GeometryID& setVolume(Value volume) {
+  constexpr GeometryIdentifier& setVolume(Value volume) {
     return setBits(kVolumeMask, volume);
   }
   /// Set the boundary identifier.
-  constexpr GeometryID& setBoundary(Value boundary) {
+  constexpr GeometryIdentifier& setBoundary(Value boundary) {
     return setBits(kBoundaryMask, boundary);
   }
   /// Set the layer identifier.
-  constexpr GeometryID& setLayer(Value layer) {
+  constexpr GeometryIdentifier& setLayer(Value layer) {
     return setBits(kLayerMask, layer);
   }
   /// Set the approach identifier.
-  constexpr GeometryID& setApproach(Value approach) {
+  constexpr GeometryIdentifier& setApproach(Value approach) {
     return setBits(kApproachMask, approach);
   }
   /// Set the sensitive identifier.
-  constexpr GeometryID& setSensitive(Value sensitive) {
+  constexpr GeometryIdentifier& setSensitive(Value sensitive) {
     return setBits(kSensitiveMask, sensitive);
   }
 
@@ -101,33 +101,37 @@ class GeometryID {
     return (m_value & mask) >> extractShift(mask);
   }
   /// Set the masked bits to id in the encoded value.
-  constexpr GeometryID& setBits(Value mask, Value id) {
+  constexpr GeometryIdentifier& setBits(Value mask, Value id) {
     m_value = (m_value & ~mask) | ((id << extractShift(mask)) & mask);
     // return *this here so we need to write less lines in the set... methods
     return *this;
   }
 
-  friend constexpr bool operator==(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool operator==(GeometryIdentifier lhs,
+                                   GeometryIdentifier rhs) {
     return lhs.m_value == rhs.m_value;
   }
-  friend constexpr bool operator!=(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool operator!=(GeometryIdentifier lhs,
+                                   GeometryIdentifier rhs) {
     return lhs.m_value != rhs.m_value;
   }
-  friend constexpr bool operator<(GeometryID lhs, GeometryID rhs) {
+  friend constexpr bool operator<(GeometryIdentifier lhs,
+                                  GeometryIdentifier rhs) {
     return lhs.m_value < rhs.m_value;
   }
 };
 
-std::ostream& operator<<(std::ostream& os, GeometryID id);
+std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
 
 }  // namespace Acts
 
-// specialize std::hash so GeometryId can be used e.g. in an unordered_map
+// specialize std::hash so GeometryIdentifier can be used e.g. in an
+// unordered_map
 namespace std {
 template <>
-struct hash<Acts::GeometryID> {
-  auto operator()(Acts::GeometryID gid) const noexcept {
-    return std::hash<Acts::GeometryID::Value>()(gid.value());
+struct hash<Acts::GeometryIdentifier> {
+  auto operator()(Acts::GeometryIdentifier gid) const noexcept {
+    return std::hash<Acts::GeometryIdentifier::Value>()(gid.value());
   }
 };
 }  // namespace std

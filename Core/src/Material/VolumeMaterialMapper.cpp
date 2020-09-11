@@ -203,7 +203,7 @@ void Acts::VolumeMaterialMapper::createExtraHits(
     // adjust the thickness of the last extrapolated step
     properties.scaleThickness(remainder / properties.thickness());
     extraRemainderPositions.push_back(position + volumeStep * direction);
-    matPoint.push_back(std::pair(properties, extraPosition));
+    matPoint.push_back(std::pair(properties, extraRemainderPositions));
   }
 }
 
@@ -303,8 +303,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
-  GeometryID lastID = GeometryID();
-  GeometryID currentID = GeometryID();
+  GeometryIdentifier lastID = GeometryIdentifier();
+  GeometryIdentifier currentID = GeometryIdentifier();
   auto currentRecMaterial = mState.recordedMaterial.end();
 
   // store end position of the last material slab

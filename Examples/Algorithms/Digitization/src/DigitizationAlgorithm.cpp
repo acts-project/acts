@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"

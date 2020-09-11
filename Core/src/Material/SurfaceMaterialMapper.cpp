@@ -204,7 +204,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
-  std::map<GeometryID, unsigned int> assignedMaterial;
+  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
@@ -230,8 +230,8 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
-  GeometryID lastID = GeometryID();
-  GeometryID currentID = GeometryID();
+  GeometryIdentifier lastID = GeometryIdentifier();
+  GeometryIdentifier currentID = GeometryIdentifier();
   Vector3D currentPos(0., 0., 0);
   double currentPathCorrection = 0.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();

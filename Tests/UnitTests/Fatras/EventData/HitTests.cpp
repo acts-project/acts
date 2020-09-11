@@ -18,7 +18,8 @@ using namespace ActsFatras;
 namespace {
 constexpr auto eps = std::numeric_limits<Hit::Scalar>::epsilon();
 const auto pid = Barcode().setVertexPrimary(12).setParticle(23);
-const auto gid = Acts::GeometryID().setVolume(1).setLayer(2).setSensitive(3);
+const auto gid =
+    Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(3);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(FatrasHit)
