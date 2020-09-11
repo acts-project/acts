@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/detail/CalculateDifferences.hpp"
-#include "Acts/EventData/detail/CorrectValues.hpp"
+#include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
@@ -407,7 +407,7 @@ class ParameterSet {
    * necessary
    */
   static void correctValues(ParametersVector& values) {
-    detail::correctValues(values, ParametersSequence{});
+    detail::ValueCorrector<parameter_indices_t, params...>::run(values);
   }
 
  private:
