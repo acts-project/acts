@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
         getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE);
     CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
         tgContext, mfContext, calContext, sourcelinkSelectorConfig,
-        LoggerWrapper{*logger}, rSurface);
+        LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);

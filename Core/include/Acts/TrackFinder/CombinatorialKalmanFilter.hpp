@@ -88,6 +88,8 @@ struct CombinatorialKalmanFilterOptions {
   /// @param cctx The calibration context for this track finding/fitting
   /// @param slsCfg The config for the source link selector for this track
   /// finding/fitting
+  /// @param logger_ The logger wrapper
+  /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the eventual track fitting to be
   /// expressed at
   /// @param mScattering Whether to include multiple scattering
@@ -98,12 +100,13 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
       const SourceLinkSelectorConfig& slsCfg, LoggerWrapper logger_,
-      const Surface* rSurface = nullptr, bool mScattering = true,
-      bool eLoss = true, bool rSmoothing = true)
+      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
+      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         sourcelinkSelectorConfig(slsCfg),
+        propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
@@ -119,6 +122,9 @@ struct CombinatorialKalmanFilterOptions {
 
   /// The config for the source link selector
   SourceLinkSelectorConfig sourcelinkSelectorConfig;
+
+  /// The trivial propagator options
+  PropagatorPlainOptions propagatorPlainOptions;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -1119,8 +1125,9 @@ class CombinatorialKalmanFilter {
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> propOptions(
         tfOptions.geoContext, tfOptions.magFieldContext, tfOptions.logger);
-    // Set max steps
-    propOptions.maxSteps = 10000;
+
+    // Set the trivial propagator options
+    propOptions.setPlainOptions(tfOptions.propagatorPlainOptions);
 
     // Catch the actor and set the measurements
     auto& combKalmanActor =
