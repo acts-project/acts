@@ -36,7 +36,7 @@ CurvilinearTrackParameters make_params() {
   // generate arbitrary positive, definite matrix
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
-  return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
+  return {Vector4D(0, 0, 1, 0), Vector3D(1, 10, 40), 1000, -1, cov};
 }
 
 using ParVec_t = BoundTrackParameters::ParametersVector;

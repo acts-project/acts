@@ -84,23 +84,14 @@ bool debugModeBwdStep = false;
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
              int charge, double time, int index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
 
   if (index < skip) {
     return;
   }
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-
   BoundSymMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
@@ -113,7 +104,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
   std::cout << cov.determinant() << std::endl;
-  CurvilinearTrackParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, q / p,
+                                   cov);
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;

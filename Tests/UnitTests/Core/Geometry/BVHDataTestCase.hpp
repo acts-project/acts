@@ -145,11 +145,10 @@ BOOST_DATA_TEST_CASE(
 
   options.pathLimit = 20_m;
 
-  // this should be irrelevant.
-  double mom = 50_GeV;
-
-  Acts::CurvilinearTrackParameters startPar(std::nullopt, ray.origin(),
-                                            ray.dir() * mom, +1, 0.);
+  Acts::Vector4D pos4 = Acts::Vector4D::Zero();
+  pos4.segment<3>(Acts::ePos0) = ray.origin();
+  // momentum value should be irrelevant.
+  Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);
 
   const auto result = propagator.propagate(startPar, options).value();
 
