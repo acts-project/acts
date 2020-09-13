@@ -16,11 +16,16 @@
 
 namespace Acts::Sycl {
 
-/// @brief Seedfinding algorithm implemented with SYCL to offload computations
-/// to GPUs.
+/// @brief Seedfinding algorithm implemented in SYCL.
+///
+/// @param [in] wrappedQueue is a wrapper object of the SYCL queue
+/// @param [in] seedfinderConfig includes the required configruation
+/// parameters for the algorithm
+/// @param [out] seeds consists of the generated seeds, which can also
+/// be empty if none were found
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,
-    const detail::DeviceSeedfinderConfig& configData,
+    const detail::DeviceSeedfinderConfig& seedfinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     const std::vector<detail::DeviceSpacePoint>& bottomSPs,
     const std::vector<detail::DeviceSpacePoint>& middleSPs,

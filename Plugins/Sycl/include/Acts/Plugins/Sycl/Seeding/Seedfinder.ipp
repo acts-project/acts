@@ -63,6 +63,10 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
+  // As a first step, we create Arrays of Structures (AoS)
+  // that are easily comprehensible by the GPU. This allows us
+  // less memory access operations than with simple (float) arrays.
+
   std::vector<detail::DeviceSpacePoint> deviceBottomSPs;
   std::vector<detail::DeviceSpacePoint> deviceMiddleSPs;
   std::vector<detail::DeviceSpacePoint> deviceTopSPs;
@@ -96,6 +100,7 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   std::vector<std::vector<detail::SeedData>> seeds;
 
+  // Call the SYCL seeding algorithm
   createSeedsForGroupSycl(m_wrappedQueue, m_deviceConfig, m_deviceCuts,
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
                           seeds);
