@@ -53,6 +53,7 @@ struct DeviceSeedfinderConfig {
 struct TripletData {
   float curvature;
   float impact;
+  int32_t topSPIndex;
 };
 
 struct SeedData {

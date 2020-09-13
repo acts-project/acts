@@ -23,7 +23,7 @@
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-/// Kernel classes in order of execution.
+// Kernel classes in order of execution.
 class duplet_search_bottom_kernel;
 class duplet_search_top_kernel;
 class ind_copy_bottom_kernel;
@@ -35,9 +35,25 @@ class filter_2sp_fixed_kernel;
 
 // Returns the smallest multiple of workGroupSize that is not smaller
 // than numThreads.
-uint32_t numWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
+// Calculate global range for 1 dimensional nd_range
+uint32_t num1DWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
   auto q = (numThreads + workGroupSize - 1) / workGroupSize;
   return q * workGroupSize;
+}
+
+// Calculate global and local range for 2 dimensional nd_range
+// Set the number of threads in both dimensions to the smallest multiple
+// of the work group size in that dimension
+void num2DWorkItems(uint32_t& numThreadsDim0, uint32_t& numThreadsDim1,
+                    uint32_t& wgSizeDim0, uint32_t& wgSizeDim1) {
+  while (numThreadsDim1 < wgSizeDim1) {
+    wgSizeDim1 /= 2;
+    wgSizeDim0 *= 2;
+  }
+  auto q1 = (numThreadsDim0 + wgSizeDim0 + 1) / wgSizeDim0;
+  auto q2 = (numThreadsDim1 + wgSizeDim1 + 1) / wgSizeDim1;
+  numThreadsDim0 = q1 * wgSizeDim0;
+  numThreadsDim1 = q2 * wgSizeDim1;
 }
 
 void createSeedsForGroupSycl(
@@ -114,6 +130,30 @@ void createSeedsForGroupSycl(
     q->memset(deviceCountBotDuplets, 0, M * sizeof(std::atomic_uint32_t));
     q->memset(deviceCountTopDuplets, 0, M * sizeof(std::atomic_uint32_t));
 
+    auto globalRangeDim0 = M;
+    auto globalRangeDim1 = B;
+    auto localRangeDim0 = uint32_t(1);
+    auto localRangeDim1 = maxWorkGroupSize;
+
+    num2DWorkItems(globalRangeDim0, globalRangeDim1, localRangeDim0,
+                   localRangeDim1);
+
+    cl::sycl::nd_range<2> bottomDupletNDRange{
+        cl::sycl::range<2>{globalRangeDim0, globalRangeDim1},
+        cl::sycl::range<2>{localRangeDim0, localRangeDim1}};
+
+    globalRangeDim0 = M;
+    globalRangeDim1 = T;
+    localRangeDim0 = 1;
+    localRangeDim1 = maxWorkGroupSize;
+
+    num2DWorkItems(globalRangeDim0, globalRangeDim1, localRangeDim0,
+                   localRangeDim1);
+
+    cl::sycl::nd_range<2> topDupletNDRange{
+        cl::sycl::range<2>{globalRangeDim0, globalRangeDim1},
+        cl::sycl::range<2>{localRangeDim0, localRangeDim1}};
+
     //*********************************************//
     // ********** DUPLET SEARCH - BEGIN ********** //
     //*********************************************//
@@ -121,9 +161,9 @@ void createSeedsForGroupSycl(
     {
       q->submit([&](cl::sycl::handler& h) {
         h.parallel_for<duplet_search_bottom_kernel>(
-            cl::sycl::range<2>{M, B}, [=](cl::sycl::id<2> idx) {
-              const auto mid = idx[0];
-              const auto bot = idx[1];
+            bottomDupletNDRange, [=](cl::sycl::nd_item<2> item) {
+              const auto mid = item.get_global_id(0);
+              const auto bot = item.get_global_id(1);
               // We check whether this thread actually makes sense (within
               // bounds).
               if (mid < M && bot < B) {
@@ -149,9 +189,9 @@ void createSeedsForGroupSycl(
 
       q->submit([&](cl::sycl::handler& h) {
         h.parallel_for<duplet_search_top_kernel>(
-            cl::sycl::range<2>{M, T}, [=](cl::sycl::id<2> idx) {
-              const auto mid = idx[0];
-              const auto top = idx[1];
+            topDupletNDRange, [=](cl::sycl::nd_item<2> item) {
+              const auto mid = item.get_global_id(0);
+              const auto top = item.get_global_id(1);
               // We check whether this thread actually makes sense (within
               // bounds).
               if (mid < M && top < T) {
@@ -222,12 +262,12 @@ void createSeedsForGroupSycl(
       // Global and local range of execution for edgesBottom number of threads.
       // Local range corresponds to block size.
       cl::sycl::nd_range<1> edgesBotNdRange{
-          cl::sycl::range<1>(numWorkItems(edgesBottom, maxWorkGroupSize)),
+          cl::sycl::range<1>(num1DWorkItems(edgesBottom, maxWorkGroupSize)),
           cl::sycl::range<1>(maxWorkGroupSize)};
 
       // Global and local range of execution for edgesTop number of threads.
       cl::sycl::nd_range<1> edgesTopNdRange{
-          cl::sycl::range<1>(numWorkItems(edgesTop, maxWorkGroupSize)),
+          cl::sycl::range<1>(num1DWorkItems(edgesTop, maxWorkGroupSize)),
           cl::sycl::range<1>(maxWorkGroupSize)};
 
       // We store the indices of the BOTTOM/TOP space points of the edges of the
@@ -423,8 +463,13 @@ void createSeedsForGroupSycl(
       std::atomic_uint32_t* countSeeds =
           cl::sycl::malloc_device<std::atomic_uint32_t>(1, *q);
 
+      std::atomic_uint32_t* deviceCountTriplets =
+          cl::sycl::malloc_device<std::atomic_uint32_t>(edgesBottom, *q);
+
+      uint32_t* deviceNumTriplets =
+          cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
+
       seeds.resize(M);
-      const float MIN = -100000.f;
 
       // Do the triplet search and triplet filter for 2 sp fixed for middle
       // space points in the interval [firstMiddle, lastMiddle).
@@ -442,17 +487,29 @@ void createSeedsForGroupSycl(
 
         const auto numCombinations =
             sumBotTopCombined[lastMiddle] - sumBotTopCombined[firstMiddle];
+
         if (numCombinations == 0)
           continue;
+
+        const auto numTripletFilterThreads =
+            sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle];
 
         q->memcpy(tripletSearchOffset, &sumBotTopCombined[firstMiddle],
                   sizeof(uint32_t));
         q->memset(countSeeds, 0, sizeof(std::atomic_uint32_t));
+        q->memset(deviceCountTriplets, 0,
+                  edgesBottom * sizeof(std::atomic_uint32_t));
 
         // nd_range with maximum block size for triplet search and filter
         // global and local range is given
         cl::sycl::nd_range<1> tripletSearchNDRange{
-            cl::sycl::range<1>(numWorkItems(numCombinations, maxWorkGroupSize)),
+            cl::sycl::range<1>(
+                num1DWorkItems(numCombinations, maxWorkGroupSize)),
+            cl::sycl::range<1>(maxWorkGroupSize)};
+
+        cl::sycl::nd_range<1> tripletFilterNDRange{
+            cl::sycl::range<1>(
+                num1DWorkItems(numTripletFilterThreads, maxWorkGroupSize)),
             cl::sycl::range<1>(maxWorkGroupSize)};
 
         auto tripletEvent = q->submit([&](cl::sycl::handler& h) {
@@ -462,7 +519,7 @@ void createSeedsForGroupSycl(
                 const uint32_t idx = item.get_global_linear_id();
                 if (idx < numCombinations) {
                   // Retrieve the index of the corresponding middle space point
-                  // by binomial search
+                  // by binary search
                   auto L = firstMiddle;
                   auto R = lastMiddle;
                   auto mid = L;
@@ -476,8 +533,6 @@ void createSeedsForGroupSycl(
                   }
                   mid = L;
 
-                  detail::TripletData T = {MIN, MIN};
-                  deviceCurvImpact[idx] = T;
                   const auto numT = deviceNumTopDuplets[mid];
 
                   const auto ib =
@@ -547,81 +602,75 @@ void createSeedsForGroupSycl(
                            p2scatter * configData.sigmaScattering *
                                configData.sigmaScattering)) &&
                         !(Im > configData.impactMax)) {
+                      const auto top = deviceIndTop[it];
+                      auto t = deviceCountTriplets[ib].fetch_add(1);
+                      const auto tripletIdx = deviceSumComb[mid] -
+                                              tripletSearchOffset[0] +
+                                              (((idx - deviceSumComb[mid] +
+                                                 tripletSearchOffset[0]) /
+                                                numT) *
+                                               numT) +
+                                              t;
+
+                      detail::TripletData T;
                       T.curvature = B / cl::sycl::sqrt(S2);
                       T.impact = Im;
-                      deviceCurvImpact[idx] = T;
+                      T.topSPIndex = top;
+                      deviceCurvImpact[tripletIdx] = T;
                     }
                   }
                 }
               });
         });
 
+        q->memcpy(deviceNumTriplets, deviceCountTriplets,
+                  edgesBottom * sizeof(std::atomic_uint32_t));
+
         q->submit([&](cl::sycl::handler& h) {
            h.depends_on(tripletEvent);
            h.parallel_for<filter_2sp_fixed_kernel>(
-               tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
-                 const uint32_t idx = item.get_global_linear_id();
-                 if (idx < numCombinations &&
-                     deviceCurvImpact[idx].curvature != MIN) {
-                   // Same as in previous kernel
-                   auto L = firstMiddle;
-                   auto R = lastMiddle;
-                   auto mid = L;
-                   while (L < R - 1) {
-                     mid = (L + R) / 2;
-                     if (idx + tripletSearchOffset[0] < deviceSumComb[mid]) {
-                       R = mid;
-                     } else {
-                       L = mid;
-                     }
-                   }
-                   mid = L;
+               tripletFilterNDRange, [=](cl::sycl::nd_item<1> item) {
+                 if (item.get_global_linear_id() < numTripletFilterThreads) {
+                   const auto idx =
+                       deviceSumBot[firstMiddle] + item.get_global_linear_id();
+                   const auto mid = deviceMidIndPerBot[idx];
+                   const auto bot = deviceIndBot[idx];
 
-                   const auto sumMidComb =
-                       deviceSumComb[mid] - tripletSearchOffset[0];
-                   const auto idxOffset = idx - sumMidComb;
-                   const auto numTopMid = deviceNumTopDuplets[mid];
+                   const auto tripletBegin =
+                       deviceSumComb[mid] - tripletSearchOffset[0] +
+                       (idx - deviceSumBot[mid]) * deviceNumTopDuplets[mid];
+                   const auto tripletEnd =
+                       tripletBegin + deviceNumTriplets[idx];
 
-                   const auto ib =
-                       deviceSumBot[mid] + ((idxOffset) / numTopMid);
-                   const auto it =
-                       deviceSumTop[mid] + ((idxOffset) % numTopMid);
+                   for (auto i1 = tripletBegin; i1 < tripletEnd; ++i1) {
+                     const auto current = deviceCurvImpact[i1];
+                     const auto top = current.topSPIndex;
 
-                   const auto bot = deviceIndBot[ib];
-                   const auto top = deviceIndTop[it];
+                     const auto invHelixDiameter = current.curvature;
+                     const auto lowerLimitCurv =
+                         invHelixDiameter - configData.deltaInvHelixDiameter;
+                     const auto upperLimitCurv =
+                         invHelixDiameter + configData.deltaInvHelixDiameter;
+                     const auto currentTop_r = deviceTopSPs[top].r;
+                     auto weight =
+                         -(current.impact * configData.impactWeightFactor);
 
-                   const auto current = deviceCurvImpact[idx];
+                     uint32_t compatCounter = 0;
 
-                   // By default compatSeedLimit is 2 -> 2 is currently hard
-                   // coded, because variable length arrays are not supported in
-                   // SYCL kernels.
-                   float compatibleSeedR[2];
+                     // By default compatSeedLimit is 2 -> 2 is currently hard
+                     // coded, because variable length arrays are not supported
+                     // in SYCL kernels.
+                     float compatibleSeedR[2];
+                     for (auto i2 = tripletBegin;
+                          i2 < tripletEnd &&
+                          compatCounter < configData.compatSeedLimit;
+                          ++i2) {
+                       const auto other = deviceCurvImpact[i2];
 
-                   const auto invHelixDiameter = current.curvature;
-                   const auto lowerLimitCurv =
-                       invHelixDiameter - configData.deltaInvHelixDiameter;
-                   const auto upperLimitCurv =
-                       invHelixDiameter + configData.deltaInvHelixDiameter;
-                   const auto currentTop_r = deviceTopSPs[top].r;
-                   auto weight =
-                       -(current.impact * configData.impactWeightFactor);
-
-                   uint32_t compatCounter = 0;
-
-                   const auto bottomOffset =
-                       ((idxOffset) / numTopMid) * numTopMid;
-
-                   for (uint32_t j = 0;
-                        j < numTopMid &&
-                        compatCounter < configData.compatSeedLimit;
-                        ++j) {
-                     uint32_t other_idx = sumMidComb + bottomOffset + j;
-                     float otherCurv = deviceCurvImpact[other_idx].curvature;
-                     if (otherCurv != MIN && other_idx != idx) {
-                       uint32_t other_it = deviceSumTop[mid] + j;
-                       float otherTop_r =
-                           deviceTopSPs[deviceIndTop[other_it]].r;
-                       float deltaR = cl::sycl::abs(currentTop_r - otherTop_r);
+                       const auto otherCurv = other.curvature;
+                       const auto otherTop_r = deviceTopSPs[other.topSPIndex].r;
+                       const float deltaR =
+                           cl::sycl::abs(currentTop_r - otherTop_r);
                        if (deltaR >= configData.filterDeltaRMin &&
                            otherCurv >= lowerLimitCurv &&
                            otherCurv <= upperLimitCurv) {
@@ -638,25 +687,25 @@ void createSeedsForGroupSycl(
                          }
                        }
                      }
-                   }
 
-                   weight += compatCounter * configData.compatSeedWeight;
+                     weight += compatCounter * configData.compatSeedWeight;
 
-                   const auto bottomSP = deviceBottomSPs[bot];
-                   const auto middleSP = deviceMiddleSPs[mid];
-                   const auto topSP = deviceTopSPs[top];
+                     const auto bottomSP = deviceBottomSPs[bot];
+                     const auto middleSP = deviceMiddleSPs[mid];
+                     const auto topSP = deviceTopSPs[top];
 
-                   weight += deviceCuts.seedWeight(bottomSP, middleSP, topSP);
+                     weight += deviceCuts.seedWeight(bottomSP, middleSP, topSP);
 
-                   if (deviceCuts.singleSeedCut(weight, bottomSP, middleSP,
-                                                topSP)) {
-                     const auto i = countSeeds[0].fetch_add(1);
-                     detail::SeedData D;
-                     D.bottom = bot;
-                     D.top = top;
-                     D.middle = mid;
-                     D.weight = weight;
-                     deviceSeedArray[i] = D;
+                     if (deviceCuts.singleSeedCut(weight, bottomSP, middleSP,
+                                                  topSP)) {
+                       const auto i = countSeeds[0].fetch_add(1);
+                       detail::SeedData D;
+                       D.bottom = bot;
+                       D.top = top;
+                       D.middle = mid;
+                       D.weight = weight;
+                       deviceSeedArray[i] = D;
+                     }
                    }
                  }
                });
@@ -695,6 +744,9 @@ void createSeedsForGroupSycl(
       cl::sycl::free(deviceSumTop, *q);
       cl::sycl::free(deviceSumComb, *q);
 
+      cl::sycl::free(deviceCountTriplets, *q);
+      cl::sycl::free(deviceNumTriplets, *q);
+
       cl::sycl::free(deviceCurvImpact, *q);
       cl::sycl::free(deviceSeedArray, *q);
       cl::sycl::free(tripletSearchOffset, *q);
@@ -709,7 +761,6 @@ void createSeedsForGroupSycl(
     cl::sycl::free(deviceCountBotDuplets, *q);
     cl::sycl::free(deviceCountTopDuplets, *q);
     cl::sycl::free(deviceNumTopDuplets, *q);
-
   } catch (cl::sycl::exception const& e) {
     std::cout << "Caught synchronous SYCL exception:\n"
               << e.what() << std::endl;
