@@ -416,14 +416,12 @@ class ParameterSet {
   static const ProjectionMatrix sProjector;
 
   /// Compare two parameter sets for value equality.
-  friend constexpr bool operator==(const ParameterSet& lhs,
-                                   const ParameterSet& rhs) {
+  friend bool operator==(const ParameterSet& lhs, const ParameterSet& rhs) {
     return (lhs.m_vValues == rhs.m_vValues) and
            (lhs.m_optCovariance == rhs.m_optCovariance);
   }
   /// Compare two parameters for value inequality.
-  friend constexpr bool operator!=(const ParameterSet& lhs,
-                                   const ParameterSet& rhs) {
+  friend bool operator!=(const ParameterSet& lhs, const ParameterSet& rhs) {
     return !(lhs == rhs);
   }
 };
