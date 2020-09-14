@@ -92,7 +92,7 @@ template <typename parameter_indices_t,
           template <parameter_indices_t...> class meas_meta>
 constexpr auto type_generator() {
   // generate sublists
-  constexpr size_t W = detail::ParametersSize<parameter_indices_t>::size;
+  constexpr size_t W = detail::kParametersSize<parameter_indices_t>;
   constexpr auto sublists = unique_ordered_sublists<W>();
   // map each sublist (tuple of paramater indices) into a measurement using
   // the provided `meas_meta` metafunction.
