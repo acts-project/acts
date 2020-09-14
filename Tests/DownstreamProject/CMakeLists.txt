@@ -4,8 +4,8 @@ project(ActsDownstreamProject)
 
 find_package(
   Acts CONFIG REQUIRED
-  COMPONENTS Core Fatras
-  OPTIONAL_COMPONENTS DD4hepPlugin JsonPlugin)
+  COMPONENTS Core Fatras PluginJson PluginTGeo
+  OPTIONAL_COMPONENTS PluginDD4hep)
 
 # place artifacts in GNU-like paths, e.g. binaries in `<build_dir>/bin`
 include(GNUInstallDirs)
