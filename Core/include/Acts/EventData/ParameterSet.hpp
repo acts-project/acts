@@ -406,6 +406,14 @@ class ParameterSet {
     detail::ValueCorrector<parameter_indices_t, params...>::run(values);
   }
 
+  /// Compare with another parameter set for equality.
+  bool operator==(const ParameterSet& other) const {
+    return (this == &other) or ((m_vValues == other.m_vValues) and
+                                (m_optCovariance == other.m_optCovariance));
+  }
+  /// Compare with another parameter set for inequality.
+  bool operator!=(const ParameterSet& other) const { return !(*this == other); }
+
  private:
   /// column vector containing values of local parameters.
   ParametersVector m_vValues{ParametersVector::Zero()};
@@ -414,16 +422,6 @@ class ParameterSet {
 
   /// matrix to project full parameter vector onto local parameter space.
   static const ProjectionMatrix sProjector;
-
-  /// Compare two parameter sets for value equality.
-  friend bool operator==(const ParameterSet& lhs, const ParameterSet& rhs) {
-    return (lhs.m_vValues == rhs.m_vValues) and
-           (lhs.m_optCovariance == rhs.m_optCovariance);
-  }
-  /// Compare two parameters for value inequality.
-  friend bool operator!=(const ParameterSet& lhs, const ParameterSet& rhs) {
-    return !(lhs == rhs);
-  }
 };
 
 template <typename parameter_indices_t, parameter_indices_t... kParameters>
