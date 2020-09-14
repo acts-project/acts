@@ -31,15 +31,15 @@ struct DifferenceCalculator {
   /// @param lhs Left-hand-side input vector
   /// @return minimal, corrected (lhs - rhs) difference within the nominal range
   template <typename lhs_t, typename rhs_t>
-  static constexpr auto run(const Eigen::MatrixBase<lhs_t>& lhs,
-                            const Eigen::MatrixBase<rhs_t>& rhs) {
+  static auto run(const Eigen::MatrixBase<lhs_t>& lhs,
+                  const Eigen::MatrixBase<rhs_t>& rhs) {
     return runImpl(lhs, rhs, StorageSequence{});
   }
 
   template <typename lhs_t, typename rhs_t, std::size_t... kStorage>
-  static constexpr auto runImpl(const Eigen::MatrixBase<lhs_t>& lhs,
-                                const Eigen::MatrixBase<rhs_t>& rhs,
-                                std::index_sequence<kStorage...>)
+  static auto runImpl(const Eigen::MatrixBase<lhs_t>& lhs,
+                      const Eigen::MatrixBase<rhs_t>& rhs,
+                      std::index_sequence<kStorage...>)
       -> std::decay_t<decltype((lhs - rhs).eval())> {
     EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(lhs_t, rhs_t);
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(lhs_t, sizeof...(kParameters));

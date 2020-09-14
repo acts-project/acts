@@ -30,13 +30,13 @@ struct ValueCorrector {
   /// @param[in,out] values Values vector which will be corrected in-place.
   /// @post All values in `values` are within their nominal range.
   template <typename values_t>
-  static constexpr void run(Eigen::MatrixBase<values_t>& values) {
+  static void run(Eigen::MatrixBase<values_t>& values) {
     runImpl(values, StorageSequence{});
   }
 
   template <typename values_t, std::size_t... kStorage>
-  static constexpr void runImpl(Eigen::MatrixBase<values_t>& values,
-                                std::index_sequence<kStorage...>) {
+  static void runImpl(Eigen::MatrixBase<values_t>& values,
+                      std::index_sequence<kStorage...>) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(values_t, sizeof...(kParameters));
     static_assert(sizeof...(kParameters) == sizeof...(kStorage),
                   "Parameters and storage index packs must have the same size");
