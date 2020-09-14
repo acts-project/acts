@@ -275,7 +275,7 @@ class Measurement {
   ///
   /// @sa ParameterSet::residual
   ParametersVector residual(const FullParametersVector& trackPars) const {
-    return m_oParameters.residual(trackPars.parameters());
+    return m_oParameters.residual(trackPars);
   }
 
   /// @brief equality operator
