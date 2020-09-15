@@ -31,10 +31,8 @@ following folders removed:
 
 ## autodiff
 
-A copy of [autodiff](https://github.com/benjaminhuth/autodiff) revision f4a82c2.This 
-fork differs from the [original library](https://github.com/autodiff/autodiff) by 
-supporting `std::hypot` and some small changes to prevent the library from 
-triggering `-Wshadow`. The following files/folders have been removed:
+A copy of [autodiff](https://github.com/autodiff/autodiff), revision eefd2f7.
+The following files/folders have been removed:
 
 -   art
 -   benchmarks
