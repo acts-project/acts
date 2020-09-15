@@ -23,7 +23,7 @@ ActsFatras::DigitizedHit::DigitizedHit(const DigitizedHit& other)
 
 bool ActsFatras::DigitizedHit::operator==(const DigitizedHit& other) const {
   if (&other != this) {
-    return false;
+    return (m_simulatedHits == other.m_simulatedHits and m_surface == other.m_surface);
   }
   return true;
 }

@@ -2,6 +2,7 @@ add_library(
   ActsFatras SHARED
   src/DigitizationError.cpp
   src/DigitizedHit.cpp
+  src/Hit.cpp
   src/LandauDistribution.cpp
   src/Particle.cpp
   src/ParticleData.cpp
