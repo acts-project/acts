@@ -34,7 +34,7 @@ using SmearFunction = std::function<Acts::Result<std::pair<double, double>>()>;
 class UncorrelatedHitSmearer {
  public:
   /// @brief smearing content
-  class SmearContent : public DigitizedHit::IContent {};
+  class Content : public DigitizedHit::IContent {};
 
   /// Shorthand for Measurement on Surfaces (bound parameterisation)
   template <Acts::BoundIndices... params>
@@ -87,7 +87,7 @@ class UncorrelatedHitSmearer {
       return Result(std::error_code());
     }
 
-    auto smc = std::make_unique<const SmearContent>();
+    auto smc = std::make_unique<const Content>();
 
     return Result(SurfaceMeasurement<params...>(
         sf.getSharedPtr(), DigitizedHit({hit}, sf, std::move(smc)),
