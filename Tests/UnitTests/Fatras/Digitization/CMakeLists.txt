@@ -1,0 +1,3 @@
+set(unittest_extra_libraries ActsFatras)
+
+add_unittest(UncorrelatedHitSmearer UncorrelatedHitSmearerTests.cpp)
