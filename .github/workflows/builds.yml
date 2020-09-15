@@ -47,6 +47,10 @@ jobs:
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Install
         run: ${SETUP} && cmake --build build -- install
+      - uses: actions/upload-artifact@v2
+        with:
+          name: acts-${{ matrix.image }}
+          path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
           ${SETUP} &&
@@ -89,6 +93,10 @@ jobs:
         run: cmake --build build -- integrationtests
       - name: Install
         run: cmake --build build -- install
+      - uses: actions/upload-artifact@v2
+        with:
+          name: acts-macos
+          path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
           cmake -B build-downstream -S Tests/DownstreamProject
