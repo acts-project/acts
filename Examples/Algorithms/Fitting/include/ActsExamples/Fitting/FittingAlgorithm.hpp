@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
