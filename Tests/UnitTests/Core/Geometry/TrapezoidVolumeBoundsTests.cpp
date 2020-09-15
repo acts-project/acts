@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
   TrapezoidVolumeBounds tvb(5, 10, 8, 4);
 
-  auto tvbOrientedSurfaces = tvb.orientedSurfaces(nullptr);
+  auto tvbOrientedSurfaces = tvb.orientedSurfaces(Transform3D::Identity());
   BOOST_CHECK_EQUAL(tvbOrientedSurfaces.size(), 6);
 
   auto geoCtx = GeometryContext();

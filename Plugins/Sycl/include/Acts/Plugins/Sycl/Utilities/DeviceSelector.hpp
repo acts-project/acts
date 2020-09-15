@@ -13,10 +13,13 @@
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
+<<<<<<< HEAD
 /// @brief Custom device selector that refuses to select NVIDIA OpenCL backends.
 ///
 /// It is also possible to the tell the selector explicitly which device we want
 /// to use by providing a substring of the preferred device's name.
+=======
+>>>>>>> master
 struct DeviceSelector : public cl::sycl::device_selector {
   DeviceSelector(const std::string& deviceName = "");
 

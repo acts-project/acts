@@ -28,30 +28,26 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 
 Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
                                const DiscSurface& other,
-                               const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                               const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double rmin, double rmax, double hphisec)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double rmin,
+                               double rmax, double hphisec)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(std::move(transform)),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double minhalfx, double maxhalfx, double maxR,
-                               double minR, double avephi, double stereo)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double minhalfx,
+                               double maxhalfx, double minR, double maxR,
+                               double avephi, double stereo)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
-          minhalfx, maxhalfx, maxR, minR, avephi, stereo)) {}
+          minhalfx, maxhalfx, minR, maxR, avephi, stereo)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::DiscSurface::DiscSurface(const Transform3D& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
-    : GeometryObject(),
-      Surface(std::move(htrans)),
-      m_bounds(std::move(dbounds)) {}
+    : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
 
 Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
                                const DetectorElementBase& detelement)

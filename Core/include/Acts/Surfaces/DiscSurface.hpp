@@ -48,36 +48,33 @@ class DiscSurface : public Surface {
  protected:
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max} \f$
   ///
-  /// @param htrans is transform that places the disc in the global 3D space
-  /// (can be nullptr)
+  /// @param transform is transform that places the disc in the global 3D space
   /// @param rmin The inner radius of the disc surface
   /// @param rmax The outer radius of the disc surface
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
-  DiscSurface(std::shared_ptr<const Transform3D> htrans, double rmin,
-              double rmax, double hphisec = M_PI);
+  DiscSurface(const Transform3D& transform, double rmin, double rmax,
+              double hphisec = M_PI);
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
   /// This is n this case you have DiscTrapezoidBounds
   ///
-  /// @param htrans is transform that places the disc in the global 3D space
-  /// (can be nullptr)
+  /// @param transform is transform that places the disc in the global 3D space
   /// @param minhalfx The half length in x at minimal r
   /// @param maxhalfx The half length in x at maximal r
-  /// @param maxR The inner radius of the disc surface
   /// @param minR The outer radius of the disc surface
+  /// @param maxR The inner radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
-  DiscSurface(std::shared_ptr<const Transform3D> htrans, double minhalfx,
-              double maxhalfx, double maxR, double minR, double avephi = 0.,
-              double stereo = 0.);
+  DiscSurface(const Transform3D& transform, double minhalfx, double maxhalfx,
+              double minR, double maxR, double avephi = 0., double stereo = 0.);
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
   ///
-  /// @param htrans The transform that positions the disc in global 3D
+  /// @param transform The transform that positions the disc in global 3D
   /// @param dbounds The disc bounds describing the surface coverage
-  DiscSurface(std::shared_ptr<const Transform3D> htrans,
+  DiscSurface(const Transform3D& transform,
               std::shared_ptr<const DiscBounds> dbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -96,9 +93,9 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param shift is the additional transfrom applied after copying
   DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
-              const Transform3D& transf);
+              const Transform3D& shift);
 
  public:
   ~DiscSurface() override = default;

@@ -32,8 +32,8 @@ class PerigeeSurface : public LineSurface {
 
   /// Constructor with a Transform - needed for tilt
   ///
-  /// @param tTransform is the transform for position and tilting
-  PerigeeSurface(std::shared_ptr<const Transform3D> tTransform);
+  /// @param transform is the transform for position and tilting
+  PerigeeSurface(const Transform3D& transform);
 
   /// Copy constructor
   ///
@@ -44,9 +44,9 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param shift is the additional transfrom applied after copying
   PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
-                 const Transform3D& transf);
+                 const Transform3D& shift);
 
  public:
   /// Destructor - defaulted

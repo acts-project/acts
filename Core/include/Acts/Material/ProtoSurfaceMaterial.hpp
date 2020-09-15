@@ -72,7 +72,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param lp is local positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
+  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
@@ -80,16 +80,15 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// @param gp is the global positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
+  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
 
-  /// Direct access via bins to the MaterialProperties
+  /// Direct access via bins to the MaterialSlab
   ///
   /// @param ib0 indicates the first bin
   /// @param ib1 indicates the seconf bin
   ///
   /// @return will return dummy material
-  const MaterialProperties& materialProperties(size_t ib0,
-                                               size_t ib1) const final;
+  const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
@@ -101,24 +100,23 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   BinUtility m_binUtility;
 
   /// Dummy material properties
-  MaterialProperties m_materialProperties;
+  MaterialSlab m_materialSlab;
 };
 }  // namespace Acts
 
-inline const Acts::MaterialProperties&
-Acts::ProtoSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const {
-  return (m_materialProperties);
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    const Vector2D& /*lp*/) const {
+  return (m_materialSlab);
 }
 
-inline const Acts::MaterialProperties&
-Acts::ProtoSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const {
-  return (m_materialProperties);
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    const Vector3D& /*gp*/) const {
+  return (m_materialSlab);
 }
 
-inline const Acts::MaterialProperties&
-Acts::ProtoSurfaceMaterial::materialProperties(size_t /*ib0*/,
-                                               size_t /*ib1*/) const {
-  return (m_materialProperties);
+inline const Acts::MaterialSlab& Acts::ProtoSurfaceMaterial::materialSlab(
+    size_t /*ib0*/, size_t /*ib1*/) const {
+  return (m_materialSlab);
 }
 
 inline const Acts::BinUtility& Acts::ProtoSurfaceMaterial::binUtility() const {

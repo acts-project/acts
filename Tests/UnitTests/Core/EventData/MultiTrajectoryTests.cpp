@@ -32,15 +32,15 @@ using SourceLink = MinimalSourceLink;
 using Parameters = BoundVector;
 using Covariance = BoundSymMatrix;
 
-CurvilinearParameters make_params() {
+CurvilinearTrackParameters make_params() {
   // generate arbitrary positive, definite matrix
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
-  return {cov, Vector3D(0, 0, 1), Vector3D(100, 1000, 400), -1, 0};
+  return {Vector4D(0, 0, 1, 0), Vector3D(1, 10, 40), 1000, -1, cov};
 }
 
-using ParVec_t = BoundParameters::ParametersVector;
-using CovMat_t = BoundParameters::CovarianceMatrix;
+using ParVec_t = BoundTrackParameters::ParametersVector;
+using CovMat_t = BoundTrackParameters::CovarianceMatrix;
 
 struct TestTrackState {
   SourceLink sourceLink;
@@ -49,9 +49,9 @@ struct TestTrackState {
       meas3d;
   std::optional<Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1>>
       meas2d;
-  std::optional<BoundParameters> predicted;
-  std::optional<BoundParameters> filtered;
-  std::optional<BoundParameters> smoothed;
+  std::optional<BoundTrackParameters> predicted;
+  std::optional<BoundTrackParameters> filtered;
+  std::optional<BoundTrackParameters> smoothed;
   CovMat_t jacobian;
   double chi2;
   double pathLength;
@@ -140,7 +140,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t predCov;
   predCov.setRandom();
 
-  BoundParameters pred(plane, predPar, predCov);
+  BoundTrackParameters pred(plane, predPar, predCov);
   pc.predicted = pred;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Predicted)) {
     ts.predicted() = pred.parameters();
@@ -155,7 +155,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t filtCov;
   filtCov.setRandom();
 
-  BoundParameters filt(plane, filtPar, filtCov);
+  BoundTrackParameters filt(plane, filtPar, filtCov);
   pc.filtered = filt;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Filtered)) {
     ts.filtered() = filt.parameters();
@@ -170,7 +170,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   CovMat_t smotCov;
   smotCov.setRandom();
 
-  BoundParameters smot(plane, smotPar, smotCov);
+  BoundTrackParameters smot(plane, smotPar, smotCov);
   pc.smoothed = smot;
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Smoothed)) {
     ts.smoothed() = smot.parameters();

@@ -143,13 +143,13 @@ void Fill(std::vector<TH2F*>& detector_hist, const std::string& input_file, std:
     // loop over all the material hits
     for(int j=0; j<mat_X0->size(); j++ ){
 
-      Acts::GeometryID ID;
+      Acts::GeometryIdentifier ID;
       
       if(sur_id->at(j) != 0){
-        ID = Acts::GeometryID(sur_id->at(j));
+        ID = Acts::GeometryIdentifier(sur_id->at(j));
       }
       else if(vol_id->at(j) != 0){
-        ID = Acts::GeometryID(vol_id->at(j));
+        ID = Acts::GeometryIdentifier(vol_id->at(j));
       }
 
       // Check if the volume/surface is part of the selected ones

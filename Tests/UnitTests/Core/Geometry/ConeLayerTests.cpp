@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // ConeBounds) to construct
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   double alpha(M_PI / 8.0);
   const bool symmetric(false);
   auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
@@ -46,10 +46,9 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
   /// Constructor with transform pointer
-  std::shared_ptr<const Transform3D> pNullTransform{};
   const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds),
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rBounds)};
   const double thickness(1.0);
   auto pConeLayerFromSurfaces = ConeLayer::create(pTransform, pCone, nullptr);
   BOOST_CHECK_EQUAL(pConeLayerFromSurfaces->layerType(), LayerType::active);
@@ -69,27 +68,6 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   auto pConeLayerWithLayerType = ConeLayer::create(
       pTransform, pCone, nullptr, thickness, std::move(ad), LayerType::passive);
   BOOST_CHECK_EQUAL(pConeLayerWithLayerType->layerType(), LayerType::passive);
-}
-
-/// Unit test for testing Layer properties
-BOOST_AUTO_TEST_CASE(ConeLayerProperties /*, *utf::expected_failures(1)*/) {
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  double alpha(M_PI / 8.0);
-  const bool symmetric(false);
-  // bounds object, rectangle type
-  auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
-  /// Constructor with transform pointer
-  std::shared_ptr<const Transform3D> pNullTransform{};
-  auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
-  const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
-  // const double        thickness(1.0);
-  auto pConeLayerFromSurfaces = ConeLayer::create(pTransform, pCone, nullptr);
-  // auto planeSurface = pConeLayer->surfaceRepresentation();
-  BOOST_CHECK_EQUAL(pConeLayerFromSurfaces->surfaceRepresentation().name(),
-                    std::string("Acts::ConeSurface"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

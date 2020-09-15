@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Geometry/GeometryID.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <memory>
@@ -20,7 +20,7 @@ namespace Acts {
 ///
 /// Virtual base class of surface based material description
 ///
-/// MaterialProperties that are associated to a surface,
+/// MaterialSlab that are associated to a surface,
 /// extended by certain special representations (binned, homogenous)
 ///
 class ISurfaceMaterial {
@@ -46,25 +46,22 @@ class ISurfaceMaterial {
   ///
   /// @param lp is the local position used for the (eventual) lookup
   ///
-  /// @return const MaterialProperties
-  virtual const MaterialProperties& materialProperties(
-      const Vector2D& lp) const = 0;
+  /// @return const MaterialSlab
+  virtual const MaterialSlab& materialSlab(const Vector2D& lp) const = 0;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
   ///
   /// @param gp is the global position used for the (eventual) lookup
   ///
-  /// @return const MaterialProperties
-  virtual const MaterialProperties& materialProperties(
-      const Vector3D& gp) const = 0;
+  /// @return const MaterialSlab
+  virtual const MaterialSlab& materialSlab(const Vector3D& gp) const = 0;
 
-  /// Direct access via bins to the MaterialProperties
+  /// Direct access via bins to the MaterialSlab
   ///
   /// @param ib0 is the material bin in dimension 0
   /// @param ib1 is the material bin in dimension 1
-  virtual const MaterialProperties& materialProperties(size_t ib0,
-                                                       size_t ib1) const = 0;
+  virtual const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const = 0;
 
   /// Update pre factor
   ///
@@ -79,10 +76,9 @@ class ISurfaceMaterial {
   /// @param pDir is the navigation direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
-  /// @return MaterialProperties
-  MaterialProperties materialProperties(const Vector2D& lp,
-                                        NavigationDirection pDir,
-                                        MaterialUpdateStage mStage) const;
+  /// @return MaterialSlab
+  MaterialSlab materialSlab(const Vector2D& lp, NavigationDirection pDir,
+                            MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -91,10 +87,9 @@ class ISurfaceMaterial {
   /// @param pDir is the navigation direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
-  /// @return MaterialProperties
-  MaterialProperties materialProperties(const Vector3D& gp,
-                                        NavigationDirection pDir,
-                                        MaterialUpdateStage mStage) const;
+  /// @return MaterialSlab
+  MaterialSlab materialSlab(const Vector3D& gp, NavigationDirection pDir,
+                            MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
   ///
@@ -123,32 +118,32 @@ inline double ISurfaceMaterial::factor(NavigationDirection pDir,
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
 }
 
-inline MaterialProperties ISurfaceMaterial::materialProperties(
+inline MaterialSlab ISurfaceMaterial::materialSlab(
     const Vector2D& lp, NavigationDirection pDir,
     MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
-  MaterialProperties plainMatProp = materialProperties(lp);
+  MaterialSlab plainMatProp = materialSlab(lp);
   // Scale if you have material to scale
   if (plainMatProp) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
-      return MaterialProperties();
+      return MaterialSlab();
     }
     plainMatProp.scaleThickness(scaleFactor);
   }
   return plainMatProp;
 }
 
-inline MaterialProperties ISurfaceMaterial::materialProperties(
+inline MaterialSlab ISurfaceMaterial::materialSlab(
     const Vector3D& gp, NavigationDirection pDir,
     MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
-  MaterialProperties plainMatProp = materialProperties(gp);
+  MaterialSlab plainMatProp = materialSlab(gp);
   // Scale if you have material to scale
   if (plainMatProp) {
     double scaleFactor = factor(pDir, mStage);
     if (scaleFactor == 0.) {
-      return MaterialProperties();
+      return MaterialSlab();
     }
     plainMatProp.scaleThickness(scaleFactor);
   }

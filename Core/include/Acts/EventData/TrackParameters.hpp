@@ -8,19 +8,20 @@
 
 #pragma once
 
-#include "Acts/EventData/ChargePolicy.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/SingleFreeTrackParameters.hpp"
 
 namespace Acts {
 
-extern template class SingleBoundTrackParameters<ChargedPolicy>;
-extern template class SingleCurvilinearTrackParameters<ChargedPolicy>;
-extern template class SingleFreeTrackParameters<ChargedPolicy>;
+extern template class SingleBoundTrackParameters<SinglyCharged>;
+extern template class SingleCurvilinearTrackParameters<SinglyCharged>;
+extern template class SingleFreeTrackParameters<SinglyCharged>;
 
-using BoundParameters = SingleBoundTrackParameters<ChargedPolicy>;
-using CurvilinearParameters = SingleCurvilinearTrackParameters<ChargedPolicy>;
-using FreeTrackParameters = SingleFreeTrackParameters<ChargedPolicy>;
+using BoundTrackParameters = SingleBoundTrackParameters<SinglyCharged>;
+using CurvilinearTrackParameters =
+    SingleCurvilinearTrackParameters<SinglyCharged>;
+using FreeTrackParameters = SingleFreeTrackParameters<SinglyCharged>;
 
 }  // namespace Acts

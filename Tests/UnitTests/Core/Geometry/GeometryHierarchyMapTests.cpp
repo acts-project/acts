@@ -15,11 +15,12 @@
 
 namespace {
 
-using Acts::GeometryID;
+using Acts::GeometryIdentifier;
 
 // helper function to create geometry ids
-GeometryID makeId(int volume = 0, int layer = 0, int sensitive = 0) {
-  return GeometryID().setVolume(volume).setLayer(layer).setSensitive(sensitive);
+GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
+  return GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
+      sensitive);
 }
 
 // example value type stored in the geometry hierarchy map
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ConstructDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
-  std::vector<std::pair<GeometryID, Thing>> entries = {
+  std::vector<std::pair<GeometryIdentifier, Thing>> entries = {
       {makeId(2, 4, 6), {1.0}},
       {makeId(3, 5), {1.0}},
       {makeId(3), {1.0}},
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ConstructNonUnique) {
   };
   BOOST_CHECK_THROW(Container(std::move(entries)), std::invalid_argument);
 
-  std::vector<std::pair<GeometryID, Thing>> defaults = {
+  std::vector<std::pair<GeometryIdentifier, Thing>> defaults = {
       {makeId(), {1.0}},
       // duplicate global default
       {makeId(), {2.0}},
@@ -102,7 +103,7 @@ BOOST_AUTO_TEST_CASE(IndexBasedAccess) {
   // NOTE order is undefined and should not be tested
   for (auto i = c.size(); 0 < i--;) {
     // just check that the id is valid
-    BOOST_CHECK_NE(c.idAt(i), GeometryID());
+    BOOST_CHECK_NE(c.idAt(i), GeometryIdentifier());
     // check that something is actually stored by comparing with the default
     BOOST_CHECK_NE(c.valueAt(i).value, Thing().value);
   }

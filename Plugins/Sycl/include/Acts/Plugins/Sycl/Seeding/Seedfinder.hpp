@@ -50,6 +50,7 @@ class Seedfinder {
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 
+<<<<<<< HEAD
   /// Experiment specific cuts
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
 
@@ -57,6 +58,11 @@ class Seedfinder {
   Acts::Sycl::detail::DeviceSeedfinderConfig m_deviceConfig;
 
   /// Wrapper around a SYCL queue object.
+=======
+  // members necessary for the GPU algorithm
+  Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
+  Acts::Sycl::detail::DeviceSeedfinderConfig m_deviceConfig;
+>>>>>>> master
   QueueWrapper m_wrappedQueue;
 };
 

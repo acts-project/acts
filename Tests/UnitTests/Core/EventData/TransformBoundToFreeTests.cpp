@@ -8,14 +8,16 @@
 
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
-#include <cmath>
-#include <limits>
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "TrackParametersTestData.hpp"
+
+#include <cmath>
+#include <limits>
+
+#include "TrackParametersDatasets.hpp"
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
@@ -27,14 +29,17 @@ constexpr auto eps = std::numeric_limits<FreeScalar>::epsilon();
 BOOST_AUTO_TEST_SUITE(TransformBoundToFree)
 
 BOOST_DATA_TEST_CASE(
-    Parameters, surfaces* posSymmetric* posSymmetric* ts* phis* thetas* qOverPs,
-    surface, l0, l1, time, phi, theta, qOverP) {
+    Parameters,
+    surfaces* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
+    surface, l0, l1, time, phi, theta, p, q) {
   GeometryContext geoCtx;
 
   Vector2D loc(l0, l1);
   Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // transform reference position
   Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
+
+  const auto qOverP = q / p;
 
   // construct bound parameters
   BoundVector bv = BoundVector::Zero();

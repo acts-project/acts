@@ -42,50 +42,38 @@ Acts::CuboidVolumeBounds& Acts::CuboidVolumeBounds::operator=(
 }
 
 Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
-    const Transform3D* transformPtr) const {
-  // The transform - apply when given
-  Transform3D transform =
-      (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
-
+    const Transform3D& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(0., 0., -get(eHalfLengthZ))),
-      m_xyBounds);
+      transform * Translation3D(0., 0., -get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(0., 0., get(eHalfLengthZ))),
-      m_xyBounds);
+      transform * Translation3D(0., 0., get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(-get(eHalfLengthX), 0., 0.) * s_planeYZ),
+      transform * Translation3D(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(get(eHalfLengthX), 0., 0.) * s_planeYZ),
+      transform * Translation3D(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX),
+      transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
-      std::make_shared<const Transform3D>(
-          transform * Translation3D(0., get(eHalfLengthY), 0.) * s_planeZX),
+      transform * Translation3D(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   CuboidVolumeBounds box(5, 8, 7);
-  auto cvbOrientedSurfaces = box.orientedSurfaces(nullptr);
+  auto cvbOrientedSurfaces = box.orientedSurfaces(Transform3D::Identity());
 
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 6);
 

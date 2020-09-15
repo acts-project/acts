@@ -61,8 +61,7 @@ struct Stepper {
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
-  auto htrans =
-      std::make_shared<const Transform3D>(Translation3D{-10., -10., 0.});
+  auto htrans = Transform3D(Translation3D{-10., -10., 0.});
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
   auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);
@@ -99,7 +98,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.nav, state.stepping.navDir);
 
   // Evaluate the material
-  bool result = volMatInt.evaluateMaterialProperties(state);
+  bool result = volMatInt.evaluateMaterialSlab(state);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
   BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
@@ -107,7 +106,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
-  result = volMatInt.evaluateMaterialProperties(state);
+  result = volMatInt.evaluateMaterialSlab(state);
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }

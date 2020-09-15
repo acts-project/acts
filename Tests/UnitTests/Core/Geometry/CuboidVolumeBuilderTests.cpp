@@ -16,7 +16,7 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -83,14 +83,14 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element
     cfg.thickness = 1_um;
 
     cfg.detElementConstructor =
-        [](std::shared_ptr<const Transform3D> trans,
+        [](const Transform3D& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
-    MaterialProperties matProp(makeBeryllium(), 0.5_mm);
+    MaterialSlab matProp(makeBeryllium(), 0.5_mm);
     cfg.surMat = std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
     // Thickness of the detector element
@@ -320,7 +320,7 @@ UnitConstants::m, 0., 0.})
 
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+  CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 
   // Launch and collect results
@@ -434,7 +434,7 @@ propOpts(tgContext, mfContext);
 
   // Set initial parameters for the particle track
   Vector3D startParams(0., 0., 0.), startMom(1. * UnitConstants::GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+  CurvilinearTrackParameters sbtp(
       std::nullopt, startParams, startMom, 1., 0.);
 
   // Launch and collect results

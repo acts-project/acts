@@ -76,7 +76,7 @@ void ActsExamples::TrackSummaryPlotTool::write(
 
 void ActsExamples::TrackSummaryPlotTool::fill(
     TrackSummaryPlotTool::TrackSummaryPlotCache& trackSummaryPlotCache,
-    const Acts::BoundParameters& fittedParameters, size_t nStates,
+    const Acts::BoundTrackParameters& fittedParameters, size_t nStates,
     size_t nMeasurements, size_t nOutliers, size_t nHoles) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;

@@ -114,12 +114,12 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continous integration setup and come with all dependencies pre-installed.
 
--   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
-    software
 -   `centos7-lcg95apython3`: based on CentOS 7 with HEP-specific software from
     LCG release 95apython3
 -   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
     release 96
+-   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
+    software
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
@@ -127,17 +127,12 @@ The latest version is also tagged as `master`. The following command downloads
 the latest `ubuntu2004` image:
 
 ```console
-$ docker pull gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+$ docker pull ghcr.io/acts-project/ubuntu2004:master
 ```
 
 This should print the image id as part of the output. You can also find out the
 image id by running `docker images` to list all your locally available container
-images. If you encounter authorization issues, you might need to login to the
-registry first via
-
-```console
-$ docker login gitlab-registry.cern.ch
-```
+images.
 
 Now, you need to start a shell within the container to run the build. Assuming
 that `<source>` is the path to your source checkout on your host machine, the
@@ -161,7 +156,7 @@ container $ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
 container $ cmake --build build
 ```
 
-[acts_containers]: https://gitlab.cern.ch/acts/machines/container_registry
+[acts_containers]: https://github.com/orgs/acts-project/packages?ecosystem=container
 
 ### On your local machine
 

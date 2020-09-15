@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
@@ -13,118 +14,113 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Units.hpp"
 
-namespace Acts {
-namespace Test {
+#include <limits>
 
-/// @brief Unit test for free parameters
-///
-BOOST_AUTO_TEST_CASE(free_initialization) {
-  Vector3D pos(0., 1., 2.);
-  double t = 3.;
-  Vector3D dir(4., 5., 6.);
-  double qop = 7.;
+#include "TrackParametersDatasets.hpp"
 
-  FreeVector params;
-  params << pos.x(), pos.y(), pos.z(), t, dir.x(), dir.y(), dir.z(), qop;
+namespace {
 
-  std::optional<FreeSymMatrix> cov = std::nullopt;
+using namespace Acts;
+using namespace Acts::UnitLiterals;
+using AnyFreeTrackParameters = SingleFreeTrackParameters<AnyCharge>;
 
-  // Test if the object can be created w/o covariance
-  FreeTrackParameters fpwoCov(cov, params);
-  BOOST_CHECK(!fpwoCov.covariance().has_value());
-  CHECK_CLOSE_ABS(fpwoCov.parameters(), params, 1e-6);
+constexpr auto eps = 8 * std::numeric_limits<FreeScalar>::epsilon();
+const GeometryContext geoCtx;
+const FreeSymMatrix cov = FreeSymMatrix::Identity();
 
-  // Test if the object can be create with covariance
-  *cov << 1., 0., 0., 0., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0.,
-      0., 3., 0., 0., 0., 0., 0., 0., 0., 0., 4., 0., 0., 0., 0., 0., 0., 0.,
-      0., 5., 0., 0., 0., 0., 0., 0., 0., 0., 6., 0., 0., 0., 0., 0., 0., 0.,
-      0., 7., 0., 0., 0., 0., 0., 0., 0., 0., 8.;
-  std::optional<FreeSymMatrix> covCpy = *cov;
+template <typename charge_t>
+void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
+                     const Vector4D& pos4, const Vector3D& unitDir, double p,
+                     double q) {
+  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto pos = pos4.segment<3>(ePos0);
 
-  FreeTrackParameters fp(covCpy, params);
-  CHECK_CLOSE_COVARIANCE(*fp.covariance(), *cov, 1e-6);
-  CHECK_CLOSE_ABS(fp.parameters(), params, 1e-6);
-
-  // Test == comparison
-  BOOST_CHECK_EQUAL(fp, fp);
-  BOOST_CHECK_NE(fp, fpwoCov);
-
-  FreeTrackParameters fpCopyConstr(fp);
-  BOOST_CHECK_EQUAL(fpCopyConstr, fp);
-
-  covCpy = *cov;
-  FreeTrackParameters fpMoveConstr(FreeTrackParameters(covCpy, params));
-  BOOST_CHECK_EQUAL(fpMoveConstr, fp);
-
-  // Test copy assignment
-  FreeTrackParameters fpCopyAssignment = fp;
-  BOOST_CHECK_EQUAL(fpCopyAssignment, fp);
-
-  // Test move assignment
-  covCpy = *cov;
-  FreeTrackParameters fpMoveAssignment = FreeTrackParameters(covCpy, params);
-  BOOST_CHECK_EQUAL(fpMoveAssignment, fp);
-
-  /// Repeat constructing and assignment with neutral parameters
-
-  // Test if the object can be created w/o covariance
-  NeutralFreeTrackParameters nfpwoCov(std::nullopt, params);
-  BOOST_CHECK(!nfpwoCov.covariance().has_value());
-  CHECK_CLOSE_ABS(nfpwoCov.parameters(), params, 1e-6);
-
-  covCpy = *cov;
-  NeutralFreeTrackParameters nfp(covCpy, params);
-  CHECK_CLOSE_COVARIANCE(*nfp.covariance(), *cov, 1e-6);
-  CHECK_CLOSE_ABS(nfp.parameters(), params, 1e-6);
-
-  NeutralFreeTrackParameters nfpCopyConstr(nfp);
-  BOOST_CHECK_EQUAL(nfpCopyConstr, nfp);
-
-  covCpy = *cov;
-  NeutralFreeTrackParameters nfpMoveConstr(
-      NeutralFreeTrackParameters(covCpy, params));
-  BOOST_CHECK_EQUAL(nfpMoveConstr, nfp);
-
-  // Test copy assignment
-  NeutralFreeTrackParameters nfpCopyAssignment = nfp;
-  BOOST_CHECK_EQUAL(nfpCopyAssignment, nfp);
-
-  // Test move assignment
-  covCpy = *cov;
-  NeutralFreeTrackParameters nfpMoveAssignment =
-      NeutralFreeTrackParameters(covCpy, params);
-  BOOST_CHECK_EQUAL(nfpMoveAssignment, nfp);
-
-  /// Test getters/setters
-
-  // Test getter of single elements
-  CHECK_CLOSE_ABS(fp.get<eFreePos0>(), pos.x(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos1>(), pos.y(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreePos2>(), pos.z(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeTime>(), t, 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir0>(), dir.x(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir1>(), dir.y(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeDir2>(), dir.z(), 1e-6);
-  CHECK_CLOSE_ABS(fp.get<eFreeQOverP>(), qop, 1e-6);
-
-  // Test getter of uncertainties
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos0>(), std::sqrt((*cov)(0, 0)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos1>(), std::sqrt((*cov)(1, 1)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreePos2>(), std::sqrt((*cov)(2, 2)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreeTime>(), std::sqrt((*cov)(3, 3)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir0>(), std::sqrt((*cov)(4, 4)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir1>(), std::sqrt((*cov)(5, 5)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreeDir2>(), std::sqrt((*cov)(6, 6)), 1e-6);
-  CHECK_CLOSE_ABS(fp.uncertainty<eFreeQOverP>(), std::sqrt((*cov)(7, 7)), 1e-6);
-
-  // Test getter of parts of the parameters by their meaning
-  CHECK_CLOSE_ABS(fp.position(), pos, 1e-6);
-  CHECK_CLOSE_ABS(fp.momentum(), dir / qop, 1e-6);
-  CHECK_CLOSE_ABS(fp.charge(), +1., 1e-6);
-  BOOST_CHECK_EQUAL(nfp.charge(), 0.);
-  CHECK_CLOSE_ABS(fp.time(), t, 1e-6);
+  // native values
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreePos0>(), pos4[ePos0], eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreePos1>(), pos4[ePos1], eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreePos2>(), pos4[ePos2], eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreeTime>(), pos4[eTime], eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreeDir0>(), unitDir[eMom0], eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreeDir1>(), unitDir[eMom1], eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreeDir2>(), unitDir[eMom2], eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.template get<eFreeQOverP>(), qOverP, eps, eps);
+  // convenience accessors
+  CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
+                       p * unitDir.template head<2>().norm(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
+  BOOST_CHECK_EQUAL(params.charge(), q);
+  // self-consistency
+  CHECK_CLOSE_OR_SMALL(params.position(),
+                       params.parameters().template segment<3>(eFreePos0), eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.time(), params.template get<eFreeTime>(), eps,
+                       eps);
 }
 
-}  // namespace Test
-}  // namespace Acts
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(CurvilinearTrackParameters)
+
+BOOST_DATA_TEST_CASE(
+    NeutralConstructFromAngles,
+    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
+    time, phi, theta, p) {
+  Vector4D pos4(x, y, z, time);
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+
+  NeutralFreeTrackParameters params(pos4, phi, theta, 1 / p);
+  checkParameters(params, pos4, dir, p, 0_e);
+  BOOST_CHECK(not params.covariance());
+
+  // reassign w/ covariance
+  params = NeutralFreeTrackParameters(pos4, phi, theta, 1 / p, cov);
+  BOOST_CHECK(params.covariance());
+  BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+}
+
+BOOST_DATA_TEST_CASE(
+    ChargedConstructFromAngles,
+    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
+    x, y, z, time, phi, theta, p, q) {
+  Vector4D pos4(x, y, z, time);
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+
+  FreeTrackParameters params(pos4, phi, theta, q / p);
+  checkParameters(params, pos4, dir, p, q);
+  BOOST_CHECK(not params.covariance());
+
+  // reassign w/ covariance
+  params = FreeTrackParameters(pos4, phi, theta, q / p, cov);
+  BOOST_CHECK(params.covariance());
+  BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+}
+
+BOOST_DATA_TEST_CASE(
+    AnyConstructFromAngles,
+    posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
+    x, y, z, time, phi, theta, p, q) {
+  Vector4D pos4(x, y, z, time);
+  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+
+  AnyFreeTrackParameters params(pos4, phi, theta, p, q);
+  checkParameters(params, pos4, dir, p, q);
+  BOOST_CHECK(not params.covariance());
+
+  // reassign w/ covariance
+  params = AnyFreeTrackParameters(pos4, phi, theta, p, q, cov);
+  BOOST_CHECK(params.covariance());
+  BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

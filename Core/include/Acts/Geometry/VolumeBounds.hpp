@@ -98,7 +98,7 @@ class VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   virtual OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const = 0;
+      const Transform3D& transform = Transform3D::Identity()) const = 0;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

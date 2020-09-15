@@ -13,22 +13,19 @@
 #include <utility>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
-    : LineSurface(nullptr, nullptr) {
-  Surface::m_transform = std::make_shared<const Transform3D>(
-      Translation3D(gp.x(), gp.y(), gp.z()));
+    : LineSurface(Transform3D(Translation3D(gp.x(), gp.y(), gp.z())), nullptr) {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(
-    std::shared_ptr<const Transform3D> tTransform)
-    : GeometryObject(), LineSurface(std::move(tTransform)) {}
+Acts::PerigeeSurface::PerigeeSurface(const Transform3D& transform)
+    : GeometryObject(), LineSurface(transform) {}
 
 Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
     : GeometryObject(), LineSurface(other) {}
 
 Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
                                      const PerigeeSurface& other,
-                                     const Transform3D& transf)
-    : GeometryObject(), LineSurface(gctx, other, transf) {}
+                                     const Transform3D& shift)
+    : GeometryObject(), LineSurface(gctx, other, shift) {}
 
 Acts::PerigeeSurface& Acts::PerigeeSurface::operator=(
     const PerigeeSurface& other) {

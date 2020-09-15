@@ -10,7 +10,7 @@
 
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -82,34 +82,34 @@ class TrackingVolume : public Volume {
   friend class TrackingGeometry;
 
  public:
+  TrackingVolume() = delete;
   ~TrackingVolume() override;
-
   TrackingVolume(const TrackingVolume&) = delete;
-
   TrackingVolume& operator=(const TrackingVolume&) = delete;
 
   /// Factory constructor for a container TrackingVolume
   /// - by definition a Vacuum volume
   ///
-  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param containedVolumes are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
       const std::shared_ptr<const TrackingVolumeArray>& containedVolumes =
           nullptr,
       const std::string& volumeName = "undefined") {
-    return MutableTrackingVolumePtr(
-        new TrackingVolume(std::move(htrans), std::move(volumeBounds),
-                           containedVolumes, volumeName));
+    return MutableTrackingVolumePtr(new TrackingVolume(
+        transform, std::move(volumeBounds), containedVolumes, volumeName));
   }
 
   /// Factory constructor for Tracking Volume with a bounding volume hierarchy
   ///
-  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
   /// @param volBounds is the description of the volume boundaries
   /// @param boxStore Vector owning the contained bounding boxes
   /// @param descendants Vector owning the child volumes
@@ -119,21 +119,22 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+      const Transform3D& transform, VolumeBoundsPtr volbounds,
       std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
       std::vector<std::unique_ptr<const Volume>> descendants,
       const Volume::BoundingBox* top,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
-        std::move(htrans), std::move(volbounds), std::move(boxStore),
+        transform, std::move(volbounds), std::move(boxStore),
         std::move(descendants), top, std::move(volumeMaterial), volumeName));
   }
 
   /// Factory constructor for Tracking Volumes with content
   /// - can not be a container volume
   ///
-  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
   /// @param containedLayers is the confined layer array (optional)
@@ -142,14 +143,14 @@ class TrackingVolume : public Volume {
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr create(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
       MutableTrackingVolumeVector denseVolumes = {},
       const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
-        std::move(htrans), std::move(volumeBounds), std::move(volumeMaterial),
+        transform, std::move(volumeBounds), std::move(volumeMaterial),
         std::move(containedLayers), std::move(containedVolumes),
         std::move(denseVolumes), volumeName));
   }
@@ -350,24 +351,20 @@ class TrackingVolume : public Volume {
   void setMotherVolume(const TrackingVolume* mvol);
 
  protected:
-  /// Default constructor
-  TrackingVolume();
-
   /// Constructor for a container Volume
   /// - vacuum filled volume either as a for other tracking volumes
   ///
-  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
   /// @param volbounds is the description of the volume boundaries
   /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
-  TrackingVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr volbounds,
+  TrackingVolume(const Transform3D& transform, VolumeBoundsPtr volbounds,
                  const std::shared_ptr<const TrackingVolumeArray>&
                      containedVolumeArray = nullptr,
                  const std::string& volumeName = "undefined");
 
-  TrackingVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr volbounds,
+  TrackingVolume(const Transform3D& transform, VolumeBoundsPtr volbounds,
                  std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
                  std::vector<std::unique_ptr<const Volume>> descendants,
                  const Volume::BoundingBox* top,
@@ -376,7 +373,8 @@ class TrackingVolume : public Volume {
 
   /// Constructor for a full equipped Tracking Volume
   ///
-  /// @param htrans is the global 3D transform to position the volume in space
+  /// @param transform is the global 3D transform to position the volume in
+  /// space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param volumeMaterial is are materials of the tracking volume
   /// @param staticLayerArray is the confined layer array (optional)
@@ -385,7 +383,7 @@ class TrackingVolume : public Volume {
   /// @param denseVolumeVector  The contained dense volumes
   /// @param volumeName is a string identifier
   TrackingVolume(
-      std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+      const Transform3D& transform, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
@@ -405,7 +403,7 @@ class TrackingVolume : public Volume {
   /// @param envelope is the clearance between volume boundary and layer
   void synchronizeLayers(double envelope = 1.) const;
 
-  /// close the Geometry, i.e. set the GeometryID and assign material
+  /// close the Geometry, i.e. set the GeometryIdentifier and assign material
   ///
   /// @param materialDecorator is a dedicated decorator for the
   ///        material to be assigned (surface, volume based)

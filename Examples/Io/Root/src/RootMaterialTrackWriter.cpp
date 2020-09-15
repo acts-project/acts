@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
-#include <Acts/Geometry/GeometryID.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Utilities/Helpers.hpp>
@@ -222,7 +222,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // Store surface information
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        Acts::GeometryID slayerID;
+        Acts::GeometryIdentifier slayerID;
         if (surface) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
@@ -271,7 +271,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // store volume information
       if (m_cfg.storeVolume) {
         const Acts::Volume* volume = mint.volume;
-        Acts::GeometryID vlayerID;
+        Acts::GeometryIdentifier vlayerID;
         if (volume) {
           vlayerID = volume->geometryId();
           m_vol_id.push_back(vlayerID.value());
@@ -286,7 +286,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       }
 
       // the material information
-      const auto& mprops = mint.materialProperties;
+      const auto& mprops = mint.materialSlab;
       m_step_length.push_back(mprops.thickness());
       m_step_X0.push_back(mprops.material().X0());
       m_step_L0.push_back(mprops.material().L0());

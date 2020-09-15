@@ -86,16 +86,9 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   }
 
   // Define start parameters from ranom input
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
+  double p = pT / sin(theta);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta,
+                                   dcharge / p);
 
   using EndOfWorld = EndOfWorldReached;
 

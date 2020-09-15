@@ -224,16 +224,11 @@ std::shared_ptr<Acts::Surface> Acts::LayerArrayCreator::createNavigationSurface(
         dynamic_cast<const CylinderBounds*>(&(layerSurface.bounds()));
     double navigationR = cBounds->get(CylinderBounds::eR) + offset;
     double halflengthZ = cBounds->get(CylinderBounds::eHalfLengthZ);
-    // create the new layer surface
-    std::shared_ptr<const Transform3D> navTrasform =
-        (!layerSurface.transform(gctx).isApprox(s_idTransform))
-            ? std::make_shared<const Transform3D>(layerSurface.transform(gctx))
-            : nullptr;
     // new navigation layer
     auto cylinderBounds =
         std::make_shared<CylinderBounds>(navigationR, halflengthZ);
-    navigationSurface =
-        Surface::makeShared<CylinderSurface>(navTrasform, cylinderBounds);
+    navigationSurface = Surface::makeShared<CylinderSurface>(
+        layerSurface.transform(gctx), cylinderBounds);
   } else {
     ACTS_WARNING("Not implemented.");
   }

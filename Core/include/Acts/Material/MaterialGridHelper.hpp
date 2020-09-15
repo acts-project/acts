@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -19,8 +19,10 @@
 
 namespace Acts {
 
-using RecordedMaterialPoint =
-    std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
+/// list of point used in the mapping of a volume
+using RecordedMaterialVolumePoint =
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
@@ -100,7 +102,7 @@ Grid3D createGrid3D(
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid2D mapMaterialPoints(
-    Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 /// @brief Concatenate a set of material at arbitrary space points on a set of
@@ -113,7 +115,7 @@ MaterialGrid2D mapMaterialPoints(
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid3D mapMaterialPoints(
-    Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 }  // namespace Acts

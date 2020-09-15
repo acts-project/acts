@@ -73,14 +73,14 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
       Vector3D(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
   // Construct a transform
-  Vector3D translation(0., 0., 0.);
-  auto transform = std::make_shared<Transform3D>(Translation3D(translation));
+  Translation3D translation(Vector3D(0., 0., 0.));
+  Transform3D transform(translation);
   // Rotation with rotZ * rotY * rotX
-  (*transform) *= rotZ;
-  (*transform) *= rotY;
-  (*transform) *= rotX;
+  transform *= rotZ;
+  transform *= rotY;
+  transform *= rotX;
   // Get the rotation of the transform
-  const auto rotation = transform->rotation();
+  const auto rotation = transform.rotation();
 
   // Check if the rotation matrix is as expected
   CHECK_CLOSE_ABS(rotation, expRot, 1e-15);
