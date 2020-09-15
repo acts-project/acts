@@ -122,13 +122,14 @@ struct CKFSourceLinkSelector {
             // Take the projector (measurement mapping function)
             const auto& H = calibrated.projector();
             // Take the parameter covariance
-            const auto& predicted_covariance = *predictedParams.covariance();
+            const auto& predictedCovariance = *predictedParams.covariance();
             // Get the residual
-            const auto& residual = calibrated.residual(predictedParams);
+            const auto& residual =
+                calibrated.residual(predictedParams.parameters());
             // Get the chi2
             double chi2 = (residual.transpose() *
                            ((calibrated.covariance() +
-                             H * predicted_covariance * H.transpose()))
+                             H * predictedCovariance * H.transpose()))
                                .inverse() *
                            residual)
                               .eval()(0, 0);

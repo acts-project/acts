@@ -49,8 +49,8 @@ double get_cyclic_difference(double a, double b, double min, double max) {
 }
 
 void check_residuals_for_bound_parameters() {
-  const double max = BoundParameterType<eBoundTheta>::max;
-  const double min = BoundParameterType<eBoundTheta>::min;
+  const double max = ParameterTraits<BoundIndices, eBoundTheta>::max;
+  const double min = ParameterTraits<BoundIndices, eBoundTheta>::min;
   double theta_1 = 0.7 * M_PI;
   double theta_2 = 0.4 * M_PI;
   ActsVectorD<1> dTheta;
@@ -111,8 +111,8 @@ void check_residuals_for_bound_parameters() {
 }
 
 void check_residuals_for_cyclic_parameters() {
-  const double max = BoundParameterType<eBoundPhi>::max;
-  const double min = BoundParameterType<eBoundPhi>::min;
+  const double max = ParameterTraits<BoundIndices, eBoundPhi>::max;
+  const double min = ParameterTraits<BoundIndices, eBoundPhi>::min;
 
   double phi_1 = 0.7 * M_PI;
   double phi_2 = 0.4 * M_PI;
@@ -150,15 +150,15 @@ void random_residual_tests() {
   std::default_random_engine e;
   std::uniform_real_distribution<float> uniform_dist(-1000, 300);
 
-  const double theta_max = BoundParameterType<eBoundTheta>::max;
-  const double theta_min = BoundParameterType<eBoundTheta>::min;
-  const double phi_max = BoundParameterType<eBoundPhi>::max;
-  const double phi_min = BoundParameterType<eBoundPhi>::min;
+  const double theta_max = ParameterTraits<BoundIndices, eBoundTheta>::max;
+  const double theta_min = ParameterTraits<BoundIndices, eBoundTheta>::min;
+  const double phi_max = ParameterTraits<BoundIndices, eBoundPhi>::max;
+  const double phi_min = ParameterTraits<BoundIndices, eBoundPhi>::min;
 
   BoundVector parValues_1;
   BoundVector parValues_2;
-  FullParameterSet parSet_1(std::nullopt, parValues_1);
-  FullParameterSet parSet_2(std::nullopt, parValues_2);
+  FullBoundParameterSet parSet_1(std::nullopt, parValues_1);
+  FullBoundParameterSet parSet_2(std::nullopt, parValues_2);
   BoundVector residual;
   const unsigned int toys = 1000;
   for (unsigned int i = 0; i < toys; ++i) {
@@ -426,12 +426,11 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
 }
 
 /**
- * @brief Unit test for copy/assignment/swap in ParameterSet class
+ * @brief Unit test for copy/assignment in ParameterSet class
  *
  * The behavior of the following functions is checked:
  * -# ParameterSet::ParameterSet
  * -# ParameterSet::operator=
- * -# ParameterSet::swap
  */
 BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   // covariance matrix
@@ -484,9 +483,6 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
-  using std::swap;
-  swap(lhs, rhs);
-  BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
 }
 
 /**
@@ -646,18 +642,18 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   // check bound parameter type
   ParameterSet<BoundIndices, eBoundTheta> bound(std::nullopt, small_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
-               BoundParameterType<eBoundTheta>::min));
+               ParameterTraits<BoundIndices, eBoundTheta>::min));
   bound.setParameter<eBoundTheta>(large_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() ==
-               BoundParameterType<eBoundTheta>::max));
+               ParameterTraits<BoundIndices, eBoundTheta>::max));
   bound.setParameter<eBoundTheta>(normal_number);
   BOOST_CHECK((bound.getParameter<eBoundTheta>() == normal_number));
 
   // check cyclic parameter type
   ParameterSet<BoundIndices, eBoundPhi> cyclic(std::nullopt, small_number);
   // calculate expected results
-  const double min = BoundParameterType<eBoundPhi>::min;
-  const double max = BoundParameterType<eBoundPhi>::max;
+  const double min = ParameterTraits<BoundIndices, eBoundPhi>::min;
+  const double max = ParameterTraits<BoundIndices, eBoundPhi>::max;
   // check that difference between original phi and stored phi is a multiple
   // of the cyclic period
   double multiple =
@@ -719,7 +715,7 @@ using ParSet = ParameterSet<BoundIndices, params...>;
  * @brief Unit test for index-/type-based access of coordinates
  *
  * @sa ParameterSet::getIndex
- * @sa ParameterSet::getParID
+ * @sa ParameterSet::getParameterIndex
  */
 BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
   // check logic for type-based access
@@ -736,44 +732,45 @@ BOOST_AUTO_TEST_CASE(parset_parID_mapping) {
 
   // check logic for index-based access
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<0>() == eBoundLoc0));
+                      eBoundTime>::getParameterIndex<0>() == eBoundLoc0));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<1>() == eBoundLoc1));
+                      eBoundTime>::getParameterIndex<1>() == eBoundLoc1));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<2>() == eBoundPhi));
+                      eBoundTime>::getParameterIndex<2>() == eBoundPhi));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<3>() == eBoundQOverP));
+                      eBoundTime>::getParameterIndex<3>() == eBoundQOverP));
   BOOST_CHECK((ParSet<eBoundLoc0, eBoundLoc1, eBoundPhi, eBoundQOverP,
-                      eBoundTime>::getParID<4>() == eBoundTime));
+                      eBoundTime>::getParameterIndex<4>() == eBoundTime));
 
   // check consistency
-  using FullSet = FullParameterSet;
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<3>()>() == 3));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<5>()>() == 5));
+  using FullSet = FullBoundParameterSet;
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<0>()>() == 0));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<1>()>() == 1));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<2>()>() == 2));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<3>()>() == 3));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<4>()>() == 4));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<5>()>() == 5));
 
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eBoundLoc0>()>() ==
+               eBoundLoc0));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eBoundLoc1>()>() ==
+               eBoundLoc1));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eBoundPhi>()>() ==
+               eBoundPhi));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eBoundTheta>()>() ==
+               eBoundTheta));
   BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundLoc0>()>() == eBoundLoc0));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundLoc1>()>() == eBoundLoc1));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundPhi>()>() == eBoundPhi));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundTheta>()>() == eBoundTheta));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundQOverP>()>() == eBoundQOverP));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eBoundTime>()>() == eBoundTime));
+      (FullSet::getParameterIndex<FullSet::getIndex<eBoundQOverP>()>() ==
+       eBoundQOverP));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eBoundTime>()>() ==
+               eBoundTime));
 
   // consistency of types
   BOOST_CHECK(
       (std::is_same<std::remove_cv<decltype(
                         at_index<BoundIndices, 0, eBoundLoc0>::value)>::type,
                     decltype(eBoundLoc0)>::value));
-  BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
+  BOOST_CHECK((std::is_same<decltype(FullSet::getParameterIndex<0>()),
                             decltype(eBoundLoc0)>::value));
 }
 
@@ -865,12 +862,11 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
 }
 
 /**
- * @brief Unit test for copy/assignment/swap in ParameterSet class
+ * @brief Unit test for copy/assignment in ParameterSet class
  *
  * The behavior of the following functions is checked:
  * -# ParameterSet::ParameterSet
  * -# ParameterSet::operator=
- * -# ParameterSet::swap
  */
 BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   // covariance matrix
@@ -919,9 +915,6 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   ParameterSet<FreeIndices, eFreePos0, eFreePos1, eFreePos2> rhs_copy = rhs;
 
   BOOST_CHECK(lhs != rhs && lhs == lhs_copy && rhs == rhs_copy);
-  using std::swap;
-  swap(lhs, rhs);
-  BOOST_CHECK(lhs != rhs && rhs == lhs_copy && lhs == rhs_copy);
 }
 
 /**
@@ -1133,7 +1126,7 @@ using FreeParSet = ParameterSet<FreeIndices, params...>;
  * @brief Unit test for index-/type-based access of coordinates
  *
  * @sa ParameterSet::getIndex
- * @sa ParameterSet::getParID
+ * @sa ParameterSet::getParameterIndex
  */
 BOOST_AUTO_TEST_CASE(free_parset_parID_mapping) {
   // check logic for type-based access
@@ -1171,65 +1164,73 @@ BOOST_AUTO_TEST_CASE(free_parset_parID_mapping) {
        7));
 
   // check logic for index-based access
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<0>() ==
-               eFreePos0));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<1>() ==
-               eFreePos1));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<2>() ==
-               eFreePos2));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<3>() ==
-               eFreeTime));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<4>() ==
-               eFreeDir0));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<5>() ==
-               eFreeDir1));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<6>() ==
-               eFreeDir2));
-  BOOST_CHECK((FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
-                          eFreeDir1, eFreeDir2, eFreeQOverP>::getParID<7>() ==
-               eFreeQOverP));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<0>() ==
+       eFreePos0));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<1>() ==
+       eFreePos1));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<2>() ==
+       eFreePos2));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<3>() ==
+       eFreeTime));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<4>() ==
+       eFreeDir0));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<5>() ==
+       eFreeDir1));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<6>() ==
+       eFreeDir2));
+  BOOST_CHECK(
+      (FreeParSet<eFreePos0, eFreePos1, eFreePos2, eFreeTime, eFreeDir0,
+                  eFreeDir1, eFreeDir2, eFreeQOverP>::getParameterIndex<7>() ==
+       eFreeQOverP));
 
   // check consistency
   using FullSet = FullFreeParameterSet;
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<3>()>() == 3));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<4>()>() == 4));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<5>()>() == 5));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<6>()>() == 6));
-  BOOST_CHECK((FullSet::getIndex<FullSet::getParID<7>()>() == 7));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<0>()>() == 0));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<1>()>() == 1));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<2>()>() == 2));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<3>()>() == 3));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<4>()>() == 4));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<5>()>() == 5));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<6>()>() == 6));
+  BOOST_CHECK((FullSet::getIndex<FullSet::getParameterIndex<7>()>() == 7));
 
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreePos0>()>() == eFreePos0));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreePos1>()>() == eFreePos1));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreePos2>()>() == eFreePos2));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreeTime>()>() == eFreeTime));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreeDir0>()>() == eFreeDir0));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreeDir1>()>() == eFreeDir1));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreeDir2>()>() == eFreeDir2));
-  BOOST_CHECK(
-      (FullSet::getParID<FullSet::getIndex<eFreeQOverP>()>() == eFreeQOverP));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreePos0>()>() ==
+               eFreePos0));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreePos1>()>() ==
+               eFreePos1));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreePos2>()>() ==
+               eFreePos2));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreeTime>()>() ==
+               eFreeTime));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreeDir0>()>() ==
+               eFreeDir0));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreeDir1>()>() ==
+               eFreeDir1));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreeDir2>()>() ==
+               eFreeDir2));
+  BOOST_CHECK((FullSet::getParameterIndex<FullSet::getIndex<eFreeQOverP>()>() ==
+               eFreeQOverP));
 
   // consistency of types
   BOOST_CHECK(
       (std::is_same<std::remove_cv<decltype(
                         at_index<FreeIndices, 0, eFreePos0>::value)>::type,
                     decltype(eFreePos0)>::value));
-  BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
+  BOOST_CHECK((std::is_same<decltype(FullSet::getParameterIndex<0>()),
                             decltype(eFreePos0)>::value));
 }
 }  // namespace Test
