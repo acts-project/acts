@@ -105,6 +105,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
                           seeds);
 
+  // Iterate through seeds returned by the SYCL algorithm and perform the last
+  // step of filtering for fixed middle SP.
   std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       seedsPerSPM;

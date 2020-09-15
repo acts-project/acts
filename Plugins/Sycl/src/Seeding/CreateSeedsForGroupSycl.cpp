@@ -525,14 +525,77 @@ void createSeedsForGroupSycl(
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-      const auto maxMemoryAllocation = std::min(
-          edgesComb, globalBufferSize / uint32_t((sizeof(detail::TripletData) +
-                                                  sizeof(detail::SeedData)) *
-                                                 2));
+      // EXPLANATION OF INDEXING (part 1)
+      // -----------------------
+      //
+      // For the triplet search, we calculate the upper limit of constructible
+      // triplets.
+      //
+      // For this, we multiply the number of compatible bottom and compatible
+      // top SPs for each middle SP, and add these together.
+      // (nb0*nt0 + nb1*nt1 + ... where nbk is the number of compatible bottom
+      // SPs for the kth middle SP, similarly ntb is for tops)
+      //
+      // sumBotTopCombined is a prefix sum array (of length M+1) of the
+      // calculated combinations.
+      //
+      // sumBotTopCombined:
+      // ________________________________________________________
+      // |     |         |                   |     |  M         | M = number of
+      // |  0  | nb0*nt0 | nb0*nt0 + nb1*nt1 | ... |  ∑ nbi+nti | middle SPs
+      // |_____|_________|___________________|_____|_i=0________|
+      //
+      // We will start kernels and reserve memory for these combinations but
+      // only so much we can fit into memory at once.
+      //
+      // We limit our memory usage to globalBufferSize/2, this is currently
+      // hard-coded, but it could be configured. Actually, it would be better to
+      // use a separate object that manages memory allocations and deallocations
+      // and we could ask it to lend us as much memory as it is happy to give.
+      //
+      // For later, let maxMemoryAllocation be maximum allocatable memory for
+      // triplet search.
+      //
+      // We start by adding up summing the combinations, until we arrive at a k
+      // which for
+      // k+1
+      //  ∑ nbi+nti > maxMemoryAllocation
+      // i=0
+      // (or k == M).
+      // So we know, that we need to start our first kernel for the first k
+      // middle SPs.
+      //
+      // Inside the triplet search kernel we start with a binary search, to find
+      // out which middle SP the thread corresponds to.
+      // Note, that sumBotTopCombined is a monotone increasing series of values
+      // which allows us to do a binary search on it.
+      //
+      // Inside the triplet search kernel we count the triplets for fixed bottom
+      // and middle SP. This is deviceCountTriplets.
+      //
+      // (We later copy their values to deviceNumTriplets because it is faster
+      // to read values from it than from atomic variables.)
+      //
+      // The triplet filter kernel is calculated on threads equal to all
+      // possible bottom-middle combinations, which are the sum of found
+      // compatible bottom-middle duplets during the duplet search, which is
+      // edgedBottom. But not exactly, because we only did the triplet search
+      // for the first k middle SPs, so we only need to sum bottom-middle
+      // duplets for the first k middle SPs.
+      //
+      // This will be numTripletFilterThreads =
+      //      sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle]
+      //
+      //
+      const auto maxMemoryAllocation =
+          std::min(edgesComb,
+                   globalBufferSize / uint32_t((sizeof(detail::DeviceTriplet) +
+                                                sizeof(detail::SeedData)) *
+                                               2));
 
-      detail::TripletData* deviceCurvImpact =
-          cl::sycl::malloc_device<detail::TripletData>(maxMemoryAllocation,
-                                                       (*q));
+      detail::DeviceTriplet* deviceCurvImpact =
+          cl::sycl::malloc_device<detail::DeviceTriplet>(maxMemoryAllocation,
+                                                         (*q));
 
       // Reserve memory in advance for seed indices and weight
       // Other way around would allocating it inside the loop
@@ -569,10 +632,10 @@ void createSeedsForGroupSycl(
           ++lastMiddle;
         }
 
-        const auto numCombinations =
+        const auto numTripletSearchThreads =
             sumBotTopCombined[lastMiddle] - sumBotTopCombined[firstMiddle];
 
-        if (numCombinations == 0)
+        if (numTripletSearchThreads == 0)
           continue;
 
         const auto numTripletFilterThreads =
@@ -588,7 +651,7 @@ void createSeedsForGroupSycl(
         // (global and local range is already given)
         cl::sycl::nd_range<1> tripletSearchNDRange{
             cl::sycl::range<1>(
-                num1DWorkItems(numCombinations, maxWorkGroupSize)),
+                num1DWorkItems(numTripletSearchThreads, maxWorkGroupSize)),
             cl::sycl::range<1>(maxWorkGroupSize)};
 
         cl::sycl::nd_range<1> tripletFilterNDRange{
@@ -601,7 +664,7 @@ void createSeedsForGroupSycl(
           h.parallel_for<triplet_search_kernel>(
               tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
                 const uint32_t idx = item.get_global_linear_id();
-                if (idx < numCombinations) {
+                if (idx < numTripletSearchThreads) {
                   // Retrieve the index of the corresponding middle space point
                   // by binary search
                   auto L = firstMiddle;
@@ -696,7 +759,7 @@ void createSeedsForGroupSycl(
                                                numT) +
                                               t;
 
-                      detail::TripletData T;
+                      detail::DeviceTriplet T;
                       T.curvature = B / cl::sycl::sqrt(S2);
                       T.impact = Im;
                       T.topSPIndex = top;
@@ -709,8 +772,9 @@ void createSeedsForGroupSycl(
 
         // Copy the number of triplets per fixed bottom and middle SP to another
         // array, as it is faster to access than atomic variables.
-        q->memcpy(deviceNumTriplets, deviceCountTriplets,
-                  edgesBottom * sizeof(std::atomic_uint32_t));
+        auto e0 = q->memcpy(deviceNumTriplets, deviceCountTriplets,
+                            edgesBottom * sizeof(std::atomic_uint32_t));
+        e0.wait();
 
         q->submit([&](cl::sycl::handler& h) {
            h.depends_on(tripletEvent);
@@ -801,15 +865,15 @@ void createSeedsForGroupSycl(
          }).wait();
 
         uint32_t sumSeeds;
-        auto e0 =
+        auto e1 =
             q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
-        e0.wait();
+        e1.wait();
 
         if (sumSeeds != 0) {
           std::vector<detail::SeedData> hostSeedArray(sumSeeds);
-          auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
+          auto e2 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
                               sumSeeds * sizeof(detail::SeedData));
-          e1.wait();
+          e2.wait();
 
           for (uint32_t t = 0; t < sumSeeds; ++t) {
             auto m = hostSeedArray[t].middle;
@@ -822,6 +886,13 @@ void createSeedsForGroupSycl(
       // ************ TRIPLET SEARCH - END ************ //
       //************************************************//
 
+      // Note that memory management is very naive, but this should only be a
+      // temporary solution. A better idea is to use a separate memory manager,
+      // see the CUDA (2) implementation for SYCL.
+      //
+      // We could also use unique pointers with a custom deleter that frees
+      // memory for us. That would allow a less error prone and therefore more
+      // maintanable code.
       cl::sycl::free(deviceLinBot, *q);
       cl::sycl::free(deviceLinTop, *q);
 

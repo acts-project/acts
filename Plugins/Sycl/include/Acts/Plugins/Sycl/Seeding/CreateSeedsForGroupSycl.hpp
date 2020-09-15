@@ -19,10 +19,11 @@ namespace Acts::Sycl {
 /// @brief Seedfinding algorithm implemented in SYCL.
 ///
 /// @param [in] wrappedQueue is a wrapper object of the SYCL queue
-/// @param [in] seedfinderConfig includes the required configruation
+/// @param [in] seedfinderConfig includes the required configuration
 /// parameters for the algorithm
-/// @param [out] seeds consists of the generated seeds, which can also
-/// be empty if none were found
+/// @param[in] deviceCuts is an experiment specific object with customizable
+/// seed weight altering and seed cutting member functions
+/// @param [out] seeds holds of the generated seed indices and weight
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,
     const detail::DeviceSeedfinderConfig& seedfinderConfig,
