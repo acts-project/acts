@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsFatras/EventData/DigitizedHit.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 namespace ActsFatras {
 
@@ -31,15 +33,13 @@ using SmearFunction = std::function<Acts::Result<std::pair<double, double>>()>;
 /// This smearer only supports uncorrelated smearing of parameters
 class UncorrelatedHitSmearer {
  public:
-  /// Shorthand for Measurement on Surfaces (bound parameterisation)
-  template <typename hit_t, Acts::BoundIndices... params>
-  using SurfaceMeasurement =
-      Acts::Measurement<hit_t, Acts::BoundIndices, params...>;
+  /// @brief smearing content
+  class SmearContent : public DigitizedHit::IContent {};
 
-  /// Shorthand for Measurement in Volumes (free parameterisation)
-  template <typename hit_t, Acts::FreeIndices... params>
-  using VolumeMeasurement =
-      Acts::Measurement<hit_t, Acts::FreeIndices, params...>;
+  /// Shorthand for Measurement on Surfaces (bound parameterisation)
+  template <Acts::BoundIndices... params>
+  using SurfaceMeasurement =
+      Acts::Measurement<DigitizedHit, Acts::BoundIndices, params...>;
 
   /// Generic implementation of a smearing meathod
   /// for surface based Measurements. This can be applied with custom
@@ -54,12 +54,12 @@ class UncorrelatedHitSmearer {
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @return  A surface based Measurement, or a null result
-  template <typename hit_t, Acts::BoundIndices... params>
-  Acts::Result<SurfaceMeasurement<hit_t, params...>> createSurfaceMeasurement(
-      const Acts::GeometryContext& gctx, const hit_t& hit,
+  template <Acts::BoundIndices... params>
+  Acts::Result<SurfaceMeasurement<params...>> createSurfaceMeasurement(
+      const Acts::GeometryContext& gctx, const Hit& hit,
       const Acts::Surface& sf,
       const std::array<SmearFunction, sizeof...(params)>& sFunctions) const {
-    using Result = Acts::Result<SurfaceMeasurement<hit_t, params...>>;
+    using Result = Acts::Result<SurfaceMeasurement<params...>>;
 
     auto dir = hit.unitDirection();
     auto gltResult = sf.globalToLocal(gctx, hit.position(), dir);
@@ -75,10 +75,10 @@ class UncorrelatedHitSmearer {
     boundVector[Acts::eBoundTheta] = Acts::VectorHelpers::theta(dir);
     boundVector[Acts::eBoundTime] = hit.time();
 
-    typename SurfaceMeasurement<hit_t, params...>::ParameterVector vector;
+    typename SurfaceMeasurement<params...>::ParametersVector vector;
     vector.setZero();
 
-    typename SurfaceMeasurement<hit_t, params...>::CovarianceMatrix covariance;
+    typename SurfaceMeasurement<params...>::CovarianceMatrix covariance;
     covariance.setZero();
 
     auto sResult =
@@ -87,53 +87,11 @@ class UncorrelatedHitSmearer {
       return Result(std::error_code());
     }
 
-    return Result(SurfaceMeasurement<hit_t, params...>(
-        sf.getSharedPtr(), hit, std::move(covariance), vector));
-  }
+    auto smc = std::make_unique<const SmearContent>();
 
-  /// Generic implementation of a smearing meathod
-  /// for volume based Measurements. This can be applied with custom
-  /// smearing functions and to variant type measurements.
-  ///
-  /// @tparam hit_t definition requires position(), unitDirection(), time()
-  /// @tparam params parameter pack describing the parameters to smear
-  ///
-  /// @param hit The Fatras hit to be smeared (will be source linked)
-  /// @param volume The Volume in which this measurement was measured
-  /// @param sFunctions The smearing functions that are applied
-  ///
-  /// @return  A surface based Measurement, or a null result
-  template <typename hit_t, Acts::FreeIndices... params>
-  Acts::Result<VolumeMeasurement<hit_t, params...>> createVolumeMeasurement(
-      const hit_t& hit, std::shared_ptr<const Acts::Volume> volume,
-      const std::array<SmearFunction, sizeof...(params)>& sFunctions) const {
-    using Result = Acts::Result<VolumeMeasurement<hit_t, params...>>;
-
-    auto pos = hit.position();
-    auto dir = hit.unitDirection();
-
-    Acts::FreeVector freeVector;
-    freeVector[Acts::eFreePos0] = pos.x();
-    freeVector[Acts::eFreePos1] = pos.y();
-    freeVector[Acts::eFreePos2] = pos.z();
-    freeVector[Acts::eFreeTime] = hit.time();
-    freeVector[Acts::eFreeDir0] = dir.x();
-    freeVector[Acts::eFreeDir1] = dir.y();
-    freeVector[Acts::eFreeDir2] = dir.z();
-
-    typename VolumeMeasurement<hit_t, params...>::ParameterVector vector;
-    vector.setZero();
-
-    typename VolumeMeasurement<hit_t, params...>::CovarianceMatrix covariance;
-    covariance.setZero();
-
-    auto sResult = smear(freeVector, vector, covariance, sFunctions, params...);
-    if (not sResult.ok()) {
-      return Result(sResult.error());
-    }
-
-    return Result(VolumeMeasurement<hit_t, params...>(
-        volume, hit, std::move(covariance), vector));
+    return Result(SurfaceMeasurement<params...>(
+        sf.getSharedPtr(), DigitizedHit({hit}, sf, std::move(smc)),
+        std::move(covariance), vector));
   }
 
  private:
@@ -169,8 +127,9 @@ class UncorrelatedHitSmearer {
       covariance(par, par) = sr.second * sr.second;
 
       if constexpr (sizeof...(rest) > 0) {
-        if (not smear(fVector, vector, covariance, smearing, rest...).ok()) {
-          return Acts::Result<void>::failure(sResult.error());
+        auto recResult = smear(fVector, vector, covariance, smearing, rest...);
+        if (not recResult.ok()) {
+          return recResult;
         }
       }
       return Acts::Result<void>::success();

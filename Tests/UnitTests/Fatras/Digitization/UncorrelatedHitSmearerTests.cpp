@@ -24,6 +24,7 @@ namespace ActsFatras {
 
 BOOST_AUTO_TEST_SUITE(Digitization)
 
+namespace {
 struct TestSetter {
   Acts::Result<std::pair<double, double>> operator()() {
     return Acts::Result<std::pair<double, double>>(
@@ -45,45 +46,33 @@ struct InvalidSmearer {
   }
 };
 
-template <typename object_t>
-struct TestHit {
-  std::shared_ptr<const object_t> hRefOjbect = nullptr;
+const auto pid = Barcode().setVertexPrimary(12).setParticle(23);
+const auto gid =
+    Acts::GeometryIdentifier().setVolume(1).setLayer(2).setSensitive(3);
 
-  Acts::Vector3D hPosition = Acts::Vector3D(3., 2., 0.);
-  Acts::Vector3D hDirection = Acts::Vector3D(1., 2., 1.).normalized();
-  double hTime = 10.;
+auto rec = std::make_shared<Acts::RectangleBounds>(1000, 1000);
+auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+    Acts::Transform3D::Identity(), rec);
 
-  const Acts::Vector3D position() const { return hPosition; }
-  const Acts::Vector3D unitDirection() const { return hDirection; }
-  double time() const { return hTime; }
-
-  bool operator==(const TestHit& /*other*/) const { return true; }
-
-  const Acts::Surface& referenceSurface() const { return (*hRefOjbect.get()); }
-};
+}  // namespace
 
 BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
   Acts::GeometryContext geoCtx = Acts::GeometryContext();
 
-  auto rec = std::make_shared<Acts::RectangleBounds>(1000, 1000);
-  auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-      Acts::Transform3D::Identity(), rec);
-
   UncorrelatedHitSmearer hitSmearer;
 
-  std::vector<TestHit<Acts::Surface>> testHits(10, TestHit<Acts::Surface>());
-  for (auto& tHit : testHits) {
-    tHit.hRefOjbect = tSurface;
-  }
+  // some hit position
+  auto p4 = Hit::Vector4(3, 2, 0, 10.);
+  // before/after four-momenta are the same
+  auto m4 = Hit::Vector4(1, 2, 1, 4);
+  auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
   TestSetter tSmearFnc;
   SterileSmearer tSterileFnc;
   InvalidSmearer tInvalidFnc;
 
-  auto oneDim =
-      hitSmearer
-          .createSurfaceMeasurement<TestHit<Acts::Surface>, Acts::eBoundLoc0>(
-              geoCtx, testHits[0], *tSurface.get(), {tSmearFnc});
+  auto oneDim = hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0>(
+      geoCtx, hit, *tSurface.get(), {tSmearFnc});
 
   BOOST_CHECK(oneDim.ok());
 
@@ -96,9 +85,8 @@ BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
                   Acts::s_epsilon);
 
   auto twoDim =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundLoc0, Acts::eBoundLoc1>(
-          geoCtx, testHits[1], *tSurface.get(), {tSmearFnc, tSmearFnc});
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0, Acts::eBoundLoc1>(
+          geoCtx, hit, *tSurface.get(), {tSmearFnc, tSmearFnc});
 
   BOOST_CHECK(twoDim.ok());
   const auto& semearedTwo = twoDim.value();
@@ -115,9 +103,8 @@ BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
 
   // Check smearing of time
   auto locYTime =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundLoc1, Acts::eBoundTime>(
-          geoCtx, testHits[2], *tSurface.get(), {tSmearFnc, tSmearFnc});
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc1, Acts::eBoundTime>(
+          geoCtx, hit, *tSurface.get(), {tSmearFnc, tSmearFnc});
   BOOST_CHECK(locYTime.ok());
   const auto& smearedLocyTime = locYTime.value();
   auto smearedParSetLocyTime = smearedLocyTime.parameterSet();
@@ -129,67 +116,36 @@ BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
 
   // Use sterile smearer to check if direction is properly translated
   auto phiTheta =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundPhi, Acts::eBoundTheta>(
-          geoCtx, testHits[3], *tSurface.get(), {tSterileFnc, tSterileFnc});
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+          geoCtx, hit, *tSurface.get(), {tSterileFnc, tSterileFnc});
   BOOST_CHECK(phiTheta.ok());
   auto phiThetaParSet = phiTheta.value().parameterSet();
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundPhi>());
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundTheta>());
   CHECK_CLOSE_ABS(phiTheta.value().get<Acts::eBoundPhi>(),
-                  Acts::VectorHelpers::phi(testHits[3].hDirection),
+                  Acts::VectorHelpers::phi(hit.unitDirection()),
                   Acts::s_epsilon);
   CHECK_CLOSE_ABS(phiTheta.value().get<Acts::eBoundTheta>(),
-                  Acts::VectorHelpers::theta(testHits[3].hDirection),
+                  Acts::VectorHelpers::theta(hit.unitDirection()),
                   Acts::s_epsilon);
 
   // Finally check an invalid smearing
   auto invalidHitFirst =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundPhi, Acts::eBoundTheta>(
-          geoCtx, testHits[4], *tSurface.get(), {tInvalidFnc, tSterileFnc});
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+          geoCtx, hit, *tSurface.get(), {tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitFirst.ok());
 
   auto invalidHitMiddle =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundLoc0, Acts::eBoundLoc1,
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0, Acts::eBoundLoc1,
                                           Acts::eBoundPhi, Acts::eBoundTheta>(
-          geoCtx, testHits[6], *tSurface.get(),
+          geoCtx, hit, *tSurface.get(),
           {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitMiddle.ok());
 
   auto invalidHitLast =
-      hitSmearer.createSurfaceMeasurement<TestHit<Acts::Surface>,
-                                          Acts::eBoundPhi, Acts::eBoundTheta>(
-          geoCtx, testHits[6], *tSurface.get(), {tSterileFnc, tInvalidFnc});
+      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+          geoCtx, hit, *tSurface.get(), {tSterileFnc, tInvalidFnc});
   BOOST_CHECK(not invalidHitLast.ok());
-}
-
-/// This is testing the consistency of the Volume smearing function
-///
-/// As this performs the exact same templated code, only a single test is done
-BOOST_AUTO_TEST_CASE(HitSmearing_VolumeMeasurements) {
-  auto rec = std::make_shared<Acts::CuboidVolumeBounds>(1000, 1000, 1000);
-  auto volume =
-      std::make_shared<const Acts::Volume>(Acts::Transform3D::Identity(), rec);
-
-  UncorrelatedHitSmearer hitSmearer;
-
-  std::vector<TestHit<Acts::Volume>> testHits(10, TestHit<Acts::Volume>());
-  for (auto& tHit : testHits) {
-    tHit.hRefOjbect = volume;
-  }
-
-  TestSetter tSmearFnc;
-
-  auto oneDim =
-      hitSmearer
-          .createVolumeMeasurement<TestHit<Acts::Volume>, Acts::eFreePos0>(
-              testHits[0], volume, {tSmearFnc});
-
-  BOOST_CHECK(oneDim.ok());
-  const auto& smearedOneDim = oneDim.value();
-  CHECK_CLOSE_ABS(smearedOneDim.get<Acts::eFreePos0>(), 4., Acts::s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
