@@ -24,13 +24,14 @@ Key features:
    :maxdepth: 2
 
    getting_started
-   contributing
+   versioning
    core/core
    plugins/plugins
    integration/integration
    howto/howto
    formats/formats
    api/api
+   contributionguide
    codeguide
    authors
    license

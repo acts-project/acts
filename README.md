@@ -30,7 +30,15 @@ cmake --build <build-dir>
 For more details, e.g. specific versions and additional dependencies, have a
 look at the [getting started guide](docs/getting_started.md). If you find a bug,
 have a feature request, or want to contribute to Acts, have a look at the
-[contribution guide](CONTRIBUTING.md).
+[contribution guidelines](CONTRIBUTING.rst).
+
+## Versioning and public API
+
+Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.html)
+to indicate whether a new version contains breaking changes within the public API.
+Currently, only a limited part of the visible API is considered the public API
+and subject to the semantic versioning rules. The details are outlined in the
+[versioning and public API documentation](docs/versioning.rst).
 
 ## Repository organization
 

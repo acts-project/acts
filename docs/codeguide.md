@@ -1,4 +1,4 @@
-# Coding guidelines
+# Code guidelines
 
 The following guidelines must be followed by all new code. Existing code that does not yet follow should be adapted when possible.
 You might disagree with some guidelines, but in a large code base as this one consistency is more important than personal opinion.
