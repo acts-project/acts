@@ -10,7 +10,7 @@
 
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <climits>
@@ -22,7 +22,7 @@ namespace Test {
 /// Test the constructors
 BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_construction_test) {
   // construct the material properties from arguments
-  Material mat(1., 2., 3., 4., 5.);
+  Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
 
   // Constructor from arguments
   HomogeneousVolumeMaterial hsm(mat);
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_construction_test) {
 // Test the Access
 BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_access_test) {
   // construct the material properties from arguments
-  Material mat(1., 2., 3., 4., 5.);
+  Material mat = Material::fromMolarDensity(1., 2., 3., 4., 5.);
 
   // Constructor from arguments
   HomogeneousVolumeMaterial hsm(mat);

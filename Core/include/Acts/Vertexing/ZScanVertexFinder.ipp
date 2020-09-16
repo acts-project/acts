@@ -23,8 +23,8 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   std::vector<std::pair<double, double>> zPositions;
 
   for (const auto& iTrk : trackVector) {
-    // Extract BoundParameters from InputTrack_t object
-    const BoundParameters& params = m_extractParameters(*iTrk);
+    // Extract BoundTrackParameters from InputTrack_t object
+    const BoundTrackParameters& params = m_extractParameters(*iTrk);
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
@@ -70,8 +70,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     // apply pT weighting as/if configured
     if (!m_cfg.disableAllWeights && (m_cfg.usePt || m_cfg.useLogPt)) {
-      double Pt = std::abs(1. / params.parameters()[ParID_t::eQOP]) *
-                  std::sin(params.parameters()[ParID_t::eTHETA]);
+      double Pt =
+          std::abs(1. / params.parameters()[BoundIndices::eBoundQOverP]) *
+          std::sin(params.parameters()[BoundIndices::eBoundTheta]);
       if (m_cfg.usePt) {
         z0AndWeight.second *= std::pow(Pt, m_cfg.expPt);
       } else {

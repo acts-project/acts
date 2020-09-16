@@ -8,10 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-
-#include <cmath>
-#include <type_traits>
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -21,7 +18,7 @@ namespace Acts {
 /// This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
-enum AlignmentParametersIndices : unsigned int {
+enum AlignmentIndices : unsigned int {
   // Center of geometry object in global 3D cartesian coordinates
   eAlignmentCenter0 = 0u,
   eAlignmentCenter1 = eAlignmentCenter0 + 1u,
@@ -31,23 +28,20 @@ enum AlignmentParametersIndices : unsigned int {
   eAlignmentRotation1 = eAlignmentRotation0 + 1u,
   eAlignmentRotation2 = eAlignmentRotation0 + 2u,
   // Last uninitialized value contains the total number of components
-  eAlignmentParametersSize,
+  eAlignmentSize,
 };
 
 /// Underlying fundamental scalar type for alignment parameters.
-using AlignmentParametersScalar = double;
+using AlignmentScalar = double;
 
 // Matrix and vector types related to alignment parameters.
-using AlignmentVector =
-    ActsVector<AlignmentParametersScalar, eAlignmentParametersSize>;
-using AlignmentRowVector =
-    ActsRowVector<AlignmentParametersScalar, eAlignmentParametersSize>;
+using AlignmentVector = ActsVector<AlignmentScalar, eAlignmentSize>;
+using AlignmentRowVector = ActsRowVector<AlignmentScalar, eAlignmentSize>;
 using AlingmentMatrix =
-    ActsMatrix<AlignmentParametersScalar, eAlignmentParametersSize,
-               eAlignmentParametersSize>;
+    ActsMatrix<AlignmentScalar, eAlignmentSize, eAlignmentSize>;
 using AlignmentToLocalCartesianMatrix =
-    ActsMatrix<AlignmentParametersScalar, 3, eAlignmentParametersSize>;
+    ActsMatrix<AlignmentScalar, 3, eAlignmentSize>;
 using AlignmentToBoundMatrix =
-    ActsMatrix<BoundParametersScalar, eBoundParametersSize,
-               eAlignmentParametersSize>;
+    ActsMatrix<BoundScalar, eBoundSize, eAlignmentSize>;
+
 }  // namespace Acts

@@ -108,6 +108,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     Acts::Logging::Level surfaceLLevel = Acts::Logging::INFO,
     Acts::Logging::Level layerLLevel = Acts::Logging::INFO,
     Acts::Logging::Level volumeLLevel = Acts::Logging::INFO) {
+  using namespace Acts::UnitLiterals;
+
   using ProtoLayerCreator = ProtoLayerCreatorT<detector_element_t>;
   using LayerBuilder = LayerBuilderT<detector_element_t>;
 
@@ -163,9 +165,11 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   // Beam Pipe
   //-------------------------------------------------------------------------------------
   // BeamPipe material
+  const auto beryllium = Acts::Material::fromMassDensity(
+      352.8_mm, 407_mm, 9.012, 4.0, 1.848_g / 1_cm3);
   std::shared_ptr<const Acts::ISurfaceMaterial> beamPipeMaterial =
       std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-          Acts::MaterialProperties(352.8, 407., 9.012, 4., 1.848e-3, 0.8));
+          Acts::MaterialSlab(beryllium, 0.8_mm));
   if (protoMaterial) {
     beamPipeMaterial = pCylinderMaterial;
   }
@@ -184,7 +188,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
   bpvConfig.volumeName = "BeamPipe";
   bpvConfig.layerBuilder = beamPipeBuilder;
-  bpvConfig.layerEnvelopeR = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
+  bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
+                              1. * Acts::UnitConstants::mm};
   bpvConfig.buildToRadiusZero = true;
   bpvConfig.volumeSignature = 0;
   auto beamPipeVolumeBuilder =
@@ -207,17 +212,13 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
   // Module material properties - X0, L0, A, Z, Rho
   // Acts::Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-  Acts::MaterialProperties pcModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                            pCentralModuleT);
-
-  Acts::MaterialProperties peModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                            pEndcapModuleT);
-
+  const auto silicon = Acts::Material::fromMassDensity(95.7_mm, 465.2_mm, 28.03,
+                                                       14., 2.32_g / 1_cm3);
+  Acts::MaterialSlab pcModuleMaterial(silicon, pCentralModuleT);
+  Acts::MaterialSlab peModuleMaterial(silicon, pEndcapModuleT);
   // Layer material properties - thickness, X0, L0, A, Z, Rho
-  Acts::MaterialProperties pcmbProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                          1.5 * Acts::units::_mm);
-  Acts::MaterialProperties pcmecProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                           1.5 * Acts::units::_mm);
+  Acts::MaterialSlab pcmbProperties(silicon, 1.5_mm);
+  Acts::MaterialSlab pcmecProperties(silicon, 1.5_mm);
 
   // Module, central and disc material
   std::shared_ptr<const Acts::ISurfaceMaterial> pCentralMaterial =
@@ -286,14 +287,16 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pplConfig.posnegLayerBinMultipliers = {1, 1};
 
   pplConfig.posnegLayerPositionsZ = {
-      600. * Acts::units::_mm, 700. * Acts::units::_mm, 820. * Acts::units::_mm,
-      960. * Acts::units::_mm, 1100 * Acts::units::_mm, 1300 * Acts::units::_mm,
-      1500 * Acts::units::_mm};
+      600. * Acts::UnitConstants::mm, 700. * Acts::UnitConstants::mm,
+      820. * Acts::UnitConstants::mm, 960. * Acts::UnitConstants::mm,
+      1100 * Acts::UnitConstants::mm, 1300 * Acts::UnitConstants::mm,
+      1500 * Acts::UnitConstants::mm};
 
   pplConfig.posnegLayerEnvelopeR = {
-      1. * Acts::units::_mm, 1. * Acts::units::_mm, 1. * Acts::units::_mm,
-      1. * Acts::units::_mm, 1. * Acts::units::_mm, 1. * Acts::units::_mm,
-      1. * Acts::units::_mm};
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm, 1. * Acts::UnitConstants::mm,
+      1. * Acts::UnitConstants::mm};
   std::vector<double> perHX = {8.4, 8.4};  // half length x
   std::vector<double> perHY = {36., 36.};  // half length y
   std::vector<size_t> perBP = {40, 68};    // bins in phi
@@ -373,7 +376,8 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   pvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
   pvbConfig.volumeName = "Pixel";
   pvbConfig.buildToRadiusZero = false;
-  pvbConfig.layerEnvelopeR = {1. * Acts::units::_mm, 5. * Acts::units::_mm};
+  pvbConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
+                              5. * Acts::UnitConstants::mm};
   pvbConfig.layerBuilder = pixelLayerBuilder;
   pvbConfig.volumeSignature = 0;
   auto pixelVolumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
@@ -389,7 +393,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     // Material
     std::shared_ptr<const Acts::ISurfaceMaterial> pstMaterial =
         std::make_shared<const Acts::HomogeneousSurfaceMaterial>(
-            Acts::MaterialProperties(352.8, 407., 9.012, 4., 1.848e-3, 1.8));
+            Acts::MaterialSlab(beryllium, 1.8_mm));
     if (protoMaterial) {
       pstMaterial = pCylinderMaterial;
     }
@@ -432,17 +436,12 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material sscMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialProperties sscModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                               ssCentralModuleT);
-
-    Acts::MaterialProperties sseModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                               ssEndcapModuleT);
+    Acts::MaterialSlab sscModuleMaterial(silicon, ssCentralModuleT);
+    Acts::MaterialSlab sseModuleMaterial(silicon, ssEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho
-    Acts::MaterialProperties ssbmProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                            2. * Acts::units::_mm);
-    Acts::MaterialProperties ssecmProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                             2.5 * Acts::units::_mm);
+    Acts::MaterialSlab ssbmProperties(silicon, 2_mm);
+    Acts::MaterialSlab ssecmProperties(silicon, 2.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> ssCentralMaterial =
@@ -632,17 +631,12 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
 
     // Module material properties - X0, L0, A, Z, Rho
     // Acts::Material lsMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
-    Acts::MaterialProperties lscModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                               lsCentralModuleT);
-
-    Acts::MaterialProperties lseModuleMaterial(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                               lsEndcapModuleT);
+    Acts::MaterialSlab lscModuleMaterial(silicon, lsCentralModuleT);
+    Acts::MaterialSlab lseModuleMaterial(silicon, lsEndcapModuleT);
 
     // Layer material properties - thickness, X0, L0, A, Z, Rho - barrel
-    Acts::MaterialProperties lsbmProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                            2.5 * Acts::units::_mm);
-    Acts::MaterialProperties lsecmProperties(95.7, 465.2, 28.03, 14., 2.32e-3,
-                                             3.5 * Acts::units::_mm);
+    Acts::MaterialSlab lsbmProperties(silicon, 2.5_mm);
+    Acts::MaterialSlab lsecmProperties(silicon, 3.5_mm);
 
     // Module, central and disc material
     std::shared_ptr<const Acts::ISurfaceMaterial> lsCentralMaterial =

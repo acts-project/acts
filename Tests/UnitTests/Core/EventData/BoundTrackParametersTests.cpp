@@ -18,26 +18,32 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
-#include "TrackParametersTestData.hpp"
+#include "TrackParametersDatasets.hpp"
 
 namespace {
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
+using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
 
-static constexpr auto eps =
-    8 * std::numeric_limits<BoundParametersScalar>::epsilon();
-static const GeometryContext geoCtx;
+constexpr auto eps = 8 * std::numeric_limits<BoundScalar>::epsilon();
+const GeometryContext geoCtx;
+const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
 template <typename charge_t>
 void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
-                     double theta, double qOverP, const Vector3D& pos,
-                     const Vector3D& mom, double q) {
+                     double theta, double p, double q, const Vector3D& pos,
+                     const Vector3D& unitDir) {
+  const auto qOverP = (q != 0) ? (q / p) : (1 / p);
+  const auto pos4 = VectorHelpers::makeVector4(pos, time);
+
   // native values
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc0>(), l0, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundLoc1>(), l1, eps, eps);
@@ -47,9 +53,14 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundTheta>(), theta, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.template get<eBoundQOverP>(), qOverP, eps, eps);
   // convenience accessors
+  CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), mom, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
+                       eps);
+  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
   BOOST_CHECK_EQUAL(params.charge(), q);
 }
 
@@ -58,49 +69,16 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   // phi is ill-defined in forward/backward tracks
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
-  // global direction/momentum for reference
+  // global direction for reference
   const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
-  const Vector3D mom = p * dir;
-
   // convert local-to-global for reference
   const Vector2D loc(l0, l1);
-  Vector3D pos = Vector3D::Zero();
-  surface->localToGlobal(geoCtx, loc, dir, pos);
+  const Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
+  // global four-position as input
+  Vector4D pos4;
+  pos4.segment<3>(ePos0) = pos;
+  pos4[eTime] = time;
 
-  // positively charged from local vector
-  {
-    BoundVector vector = BoundVector::Zero();
-    vector[eBoundLoc0] = l0;
-    vector[eBoundLoc1] = l1;
-    vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
-    vector[eBoundQOverP] = 1_e / p;
-    BoundParameters params(surface, vector);
-    checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
-  }
-  // positively charged from global information
-  {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, 1_e, time, surface);
-    checkParameters(params, l0, l1, time, phi, theta, 1_e / p, pos, mom, 1_e);
-  }
-  // negatively charged from local vector
-  {
-    BoundVector vector = BoundVector::Zero();
-    vector[eBoundLoc0] = l0;
-    vector[eBoundLoc1] = l1;
-    vector[eBoundTime] = time;
-    vector[eBoundPhi] = phi;
-    vector[eBoundTheta] = theta;
-    vector[eBoundQOverP] = -1_e / p;
-    BoundParameters params(surface, vector);
-    checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
-  }
-  // negatively charged from global information
-  {
-    BoundParameters params(geoCtx, std::nullopt, pos, mom, -1_e, time, surface);
-    checkParameters(params, l0, l1, time, phi, theta, -1_e / p, pos, mom, -1_e);
-  }
   // neutral parameters from local vector
   {
     BoundVector vector = BoundVector::Zero();
@@ -111,33 +89,123 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1 / p;
     NeutralBoundTrackParameters params(surface, vector);
-    checkParameters(params, l0, l1, time, phi, theta, 1 / p, pos, mom, 0);
+    checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+
+    // reassign w/ covariance
+    params = NeutralBoundTrackParameters(surface, vector, cov);
+    checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
+    BOOST_CHECK(params.covariance());
+    BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+  }
+  // negative charged parameters from local vector
+  {
+    BoundVector vector = BoundVector::Zero();
+    vector[eBoundLoc0] = l0;
+    vector[eBoundLoc1] = l1;
+    vector[eBoundTime] = time;
+    vector[eBoundPhi] = phi;
+    vector[eBoundTheta] = theta;
+    vector[eBoundQOverP] = -1_e / p;
+    BoundTrackParameters params(surface, vector);
+    checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+
+    // reassign w/ covariance
+    params = BoundTrackParameters(surface, vector, cov);
+    checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
+    BOOST_CHECK(params.covariance());
+    BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+  }
+  // positive charged parameters from local vector
+  {
+    BoundVector vector = BoundVector::Zero();
+    vector[eBoundLoc0] = l0;
+    vector[eBoundLoc1] = l1;
+    vector[eBoundTime] = time;
+    vector[eBoundPhi] = phi;
+    vector[eBoundTheta] = theta;
+    vector[eBoundQOverP] = 1_e / p;
+    BoundTrackParameters params(surface, vector);
+    checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+
+    // reassign w/ covariance
+    params = BoundTrackParameters(surface, vector, cov);
+    checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
+    BOOST_CHECK(params.covariance());
+    BOOST_CHECK_EQUAL(params.covariance().value(), cov);
+  }
+  // double-negative charged any parameters from local vector
+  {
+    BoundVector vector = BoundVector::Zero();
+    vector[eBoundLoc0] = l0;
+    vector[eBoundLoc1] = l1;
+    vector[eBoundTime] = time;
+    vector[eBoundPhi] = phi;
+    vector[eBoundTheta] = theta;
+    vector[eBoundQOverP] = -2_e / p;
+    AnyBoundTrackParameters params(surface, vector, -2_e);
+    checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+
+    // reassign w/ covariance
+    params = AnyBoundTrackParameters(surface, vector, -2_e, cov);
+    checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
+    BOOST_CHECK(params.covariance());
+    BOOST_CHECK_EQUAL(params.covariance().value(), cov);
   }
   // neutral parameters from global information
   {
-    NeutralBoundTrackParameters params(geoCtx, std::nullopt, pos, mom, time,
-                                       surface);
-    checkParameters(params, l0, l1, time, phi, theta, 1 / p, pos, mom, 0);
+    NeutralBoundTrackParameters params(surface, geoCtx, pos4, dir, 1 / p);
+    checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
   }
-}
-
-std::shared_ptr<Transform3D> makeTransformIdentity() {
-  return std::make_shared<Transform3D>(Transform3D::Identity());
+  // negative charged parameters from global information
+  {
+    BoundTrackParameters params(surface, geoCtx, pos4, dir, -1_e / p);
+    checkParameters(params, l0, l1, time, phi, theta, p, -1_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+  }
+  // positive charged parameters from global information
+  {
+    BoundTrackParameters params(surface, geoCtx, pos4, dir, 1_e / p);
+    checkParameters(params, l0, l1, time, phi, theta, p, 1_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+  }
+  // neutral any parameters from global information
+  {
+    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, 0_e);
+    checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+  }
+  // double-negative any parameters from global information
+  {
+    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, -2_e);
+    checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+  }
+  // triple-positive any parameters from global information
+  {
+    AnyBoundTrackParameters params(surface, geoCtx, pos4, dir, p, 3_e);
+    checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
+    BOOST_CHECK(not params.covariance());
+  }
 }
 
 // different surfaces
 // parameters must be chosen such that all possible local positions (as defined
 // in the datasets header) represent valid points on the surface.
 const auto cones = bdata::make({
-    Surface::makeShared<ConeSurface>(makeTransformIdentity(),
+    Surface::makeShared<ConeSurface>(Transform3D::Identity(),
                                      0.5 /* opening angle */),
 });
 const auto cylinders = bdata::make({
-    Surface::makeShared<CylinderSurface>(makeTransformIdentity(),
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
                                          10.0 /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
-    Surface::makeShared<DiscSurface>(makeTransformIdentity(),
+    Surface::makeShared<DiscSurface>(Transform3D::Identity(),
                                      0 /* radius min */, 100 /* radius max */),
 });
 const auto perigees = bdata::make({
@@ -149,13 +217,13 @@ const auto planes = bdata::make({
     Surface::makeShared<PlaneSurface>(Vector3D(3, -4, 5), Vector3D::UnitZ()),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(makeTransformIdentity(), 2.0 /* radius */,
+    Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,
                                       200.0 /* half z */),
 });
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(BoundTrackParameters)
+BOOST_AUTO_TEST_SUITE(EventDataBoundTrackParameters)
 
 BOOST_DATA_TEST_CASE(ConeSurface,
                      cones* posAngle* posPositiveNonzero* ts* phis* thetas* ps,

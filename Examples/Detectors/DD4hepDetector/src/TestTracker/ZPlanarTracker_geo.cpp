@@ -80,8 +80,8 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
 
     // add Extension for translation to ACTS TrackingGeometry
     Acts::ActsExtension* detlayer = new Acts::ActsExtension("zyx");
-    detlayer->addValue(10. * Acts::units::_mm, "r", "envelope");
-    detlayer->addValue(10. * Acts::units::_mm, "z", "envelope");
+    detlayer->addValue(10. * Acts::UnitConstants::mm, "r", "envelope");
+    detlayer->addValue(10. * Acts::UnitConstants::mm, "z", "envelope");
     detlayer->addType("sensitive plane", "layer");
     layerDE.addExtension<Acts::ActsExtension>(detlayer);
 

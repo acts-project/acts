@@ -22,7 +22,7 @@ void ActsExamples::ResPlotTool::book(
   PlotHelpers::Binning bPull = m_cfg.varBinning.at("Pull");
 
   ACTS_DEBUG("Initialize the histograms for residual and pull plots");
-  for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
+  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
 
     std::string parResidual = "Residual_" + parName;
@@ -91,7 +91,7 @@ void ActsExamples::ResPlotTool::book(
 
 void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Delete the hists.");
-  for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
+  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     delete resPlotCache.res.at(parName);
     delete resPlotCache.res_vs_eta.at(parName);
@@ -113,7 +113,7 @@ void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
 void ActsExamples::ResPlotTool::write(
     const ResPlotTool::ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Write the hists to output file.");
-  for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
+  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     resPlotCache.res.at(parName)->Write();
     resPlotCache.res_vs_eta.at(parName)->Write();
@@ -135,8 +135,8 @@ void ActsExamples::ResPlotTool::write(
 void ActsExamples::ResPlotTool::fill(
     ResPlotTool::ResPlotCache& resPlotCache, const Acts::GeometryContext& gctx,
     const ActsFatras::Particle& truthParticle,
-    const Acts::BoundParameters& fittedParamters) const {
-  using ParametersVector = Acts::BoundParameters::ParametersVector;
+    const Acts::BoundTrackParameters& fittedParamters) const {
+  using ParametersVector = Acts::BoundTrackParameters::ParametersVector;
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
   using Acts::VectorHelpers::phi;
@@ -153,23 +153,30 @@ void ActsExamples::ResPlotTool::fill(
   ParametersVector truthParameter = ParametersVector::Zero();
 
   // get the truth perigee parameter
-  Acts::Vector2D local(0., 0.);
-  pSurface->globalToLocal(gctx, truthParticle.position(),
-                          truthParticle.unitDirection(), local);
-  truthParameter[Acts::ParDef::eLOC_D0] = local[Acts::ParDef::eLOC_D0];
-  truthParameter[Acts::ParDef::eLOC_Z0] = local[Acts::ParDef::eLOC_Z0];
-  truthParameter[Acts::ParDef::ePHI] = phi(truthParticle.unitDirection());
-  truthParameter[Acts::ParDef::eTHETA] = theta(truthParticle.unitDirection());
-  truthParameter[Acts::ParDef::eQOP] =
+  auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
+                                          truthParticle.unitDirection());
+  if (lpResult.ok()) {
+    truthParameter[Acts::BoundIndices::eBoundLoc0] =
+        lpResult.value()[Acts::BoundIndices::eBoundLoc0];
+    truthParameter[Acts::BoundIndices::eBoundLoc1] =
+        lpResult.value()[Acts::BoundIndices::eBoundLoc1];
+  } else {
+    ACTS_ERROR("Global to local transformation did not succeed.");
+  }
+  truthParameter[Acts::BoundIndices::eBoundPhi] =
+      phi(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eBoundTheta] =
+      theta(truthParticle.unitDirection());
+  truthParameter[Acts::BoundIndices::eBoundQOverP] =
       truthParticle.charge() / truthParticle.absMomentum();
-  truthParameter[Acts::ParDef::eT] = truthParticle.time();
+  truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT
   const auto truthEta = eta(truthParticle.unitDirection());
   const auto truthPt = truthParticle.transverseMomentum();
 
   // fill the histograms for residual and pull
-  for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
+  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     float residual = trackParameter[parID] - truthParameter[parID];
     PlotHelpers::fillHisto(resPlotCache.res.at(parName), residual);
@@ -198,7 +205,7 @@ void ActsExamples::ResPlotTool::refinement(
     ResPlotTool::ResPlotCache& resPlotCache) const {
   PlotHelpers::Binning bEta = m_cfg.varBinning.at("Eta");
   PlotHelpers::Binning bPt = m_cfg.varBinning.at("Pt");
-  for (unsigned int parID = 0; parID < Acts::eBoundParametersSize; parID++) {
+  for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     // refine the plots vs eta
     for (int j = 1; j <= bEta.nBins; j++) {

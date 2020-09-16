@@ -14,13 +14,11 @@
 #include <iostream>
 #include <utility>
 
-Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
-    : GeometryObject(), m_transform(std::move(tform)) {}
+Acts::Surface::Surface(const Transform3D& transform)
+    : GeometryObject(), m_transform(transform) {}
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-    : GeometryObject(),
-      m_transform(nullptr),
-      m_associatedDetElement(&detelement) {}
+    : GeometryObject(), m_associatedDetElement(&detelement) {}
 
 Acts::Surface::Surface(const Surface& other)
     : GeometryObject(other),
@@ -31,8 +29,7 @@ Acts::Surface::Surface(const Surface& other)
 Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3D& shift)
     : GeometryObject(),
-      m_transform(std::make_shared<const Transform3D>(
-          Transform3D(shift * other.transform(gctx)))),
+      m_transform(shift * other.transform(gctx)),
       m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
@@ -42,18 +39,15 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
                                 const Vector3D& position,
                                 const Vector3D& momentum,
                                 const BoundaryCheck& bcheck) const {
-  // create the local position
-  Vector2D lposition{0., 0.};
   // global to local transformation
-  bool gtlSuccess = globalToLocal(gctx, position, momentum, lposition);
-  if (gtlSuccess) {
-    return bcheck ? bounds().inside(lposition, bcheck) : true;
+  auto lpResult = globalToLocal(gctx, position, momentum);
+  if (lpResult.ok()) {
+    return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
   }
-  // did not succeed
   return false;
 }
 
-const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
+Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -96,23 +90,23 @@ const Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // 6) Initialize the derivative of bound parameters w.r.t. alignment
   // parameters
   AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
-  // -> For bound track parameters eLOC_0, eLOC_1, it's
+  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
   // loc3DToLocBound*alignToLoc3D +
   // jacToLocal*derivatives*alignToPath
-  alignToBound.block<2, eAlignmentParametersSize>(eLOC_0, eAlignmentCenter0) =
+  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
       loc3DToLocBound * alignToLoc3D +
-      jacToLocal.block<2, eFreeParametersSize>(eLOC_0, eFreePos0) *
-          derivatives * alignToPath;
-  // -> For bound track parameters ePHI, eTHETA, eQOP, eT, it's
-  // jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentParametersSize>(ePHI, eAlignmentCenter0) =
-      jacToLocal.block<4, eFreeParametersSize>(ePHI, eFreePos0) * derivatives *
+      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
+          alignToPath;
+  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
+  // eBoundTime, it's jacToLocal*derivatives*alignToPath
+  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
+      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
       alignToPath;
 
   return alignToBound;
 }
 
-const Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
+Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -173,10 +167,8 @@ bool Acts::Surface::operator==(const Surface& other) const {
     return false;
   }
   // (e) compare transform values
-  if (m_transform != nullptr && other.m_transform != nullptr) {
-    if (!m_transform->isApprox(*other.m_transform, 1e-9)) {
-      return false;
-    }
+  if (!m_transform.isApprox(other.m_transform, 1e-9)) {
+    return false;
   }
   // (f) compare material
   if (m_surfaceMaterial != other.m_surfaceMaterial) {

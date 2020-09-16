@@ -31,11 +31,11 @@ namespace detail {
 template <typename T>
 struct ReferenceObject {};
 template <>
-struct ReferenceObject<BoundParametersIndices> {
+struct ReferenceObject<BoundIndices> {
   using type = Surface;
 };
 template <>
-struct ReferenceObject<FreeParametersIndices> {
+struct ReferenceObject<FreeIndices> {
   using type = Volume;
 };
 }  // namespace detail
@@ -72,19 +72,19 @@ class Measurement {
   static_assert(SourceLinkConcept<source_link_t>,
                 "Source link does not fulfill SourceLinkConcept");
 
- private:
-  // private typedefs
-
-  /// type of the underlying ParameterSet object
+  // type of the underlying ParameterSet object
   using ParamSet = ParameterSet<parameter_indices_t, params...>;
 
  public:
+  using Scalar = typename ParamSet::Scalar;
   /// type of the vector containing the parameter values
-  using ParameterVector = typename ParamSet::ParameterVector;
+  using ParametersVector = typename ParamSet::ParametersVector;
+  /// Vector type containing all parameters from the same space
+  using FullParametersVector = typename ParamSet::FullParametersVector;
   /// type of the covariance matrix of the measurement
   using CovarianceMatrix = typename ParamSet::CovarianceMatrix;
-  /// matrix type for projecting full parameter vector onto local parameters
-  using Projection = typename ParamSet::Projection;
+  /// matrix type for projecting full parameter vector onto measured parameters
+  using ProjectionMatrix = typename ParamSet::ProjectionMatrix;
   /// Object type that corresponds to the measurement
   using RefObject = typename detail::ReferenceObject<parameter_indices_t>::type;
 
@@ -104,7 +104,7 @@ class Measurement {
   Measurement(std::shared_ptr<const RefObject> referenceObject,
               const source_link_t& source, CovarianceMatrix cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
-                                      ParValue_t>::type head,
+                                      Scalar>::type head,
               Tail... values)
       : m_oParameters(std::move(cov), head, values...),
         m_pReferenceObject(std::move(referenceObject)),
@@ -123,7 +123,7 @@ class Measurement {
   /// @param vec parameter vector of the measurement
   Measurement(std::shared_ptr<const RefObject> referenceObject,
               const source_link_t& source, CovarianceMatrix cov,
-              ParameterVector vec)
+              ParametersVector vec)
       : m_oParameters(std::move(cov), std::move(vec)),
         m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
@@ -201,7 +201,7 @@ class Measurement {
   ///
   /// @return value of the stored parameter
   template <parameter_indices_t parameter>
-  ParValue_t get() const {
+  Scalar get() const {
     return m_oParameters.template getParameter<parameter>();
   }
 
@@ -212,12 +212,16 @@ class Measurement {
   ///         given for the measured parameters in the order defined by the
   ///         class
   /// template argument @c params.
-  ParameterVector parameters() const { return m_oParameters.getParameters(); }
+  const ParametersVector& parameters() const {
+    return m_oParameters.getParameters();
+  }
 
   /// @brief access covariance matrix of the measured parameter values
   ///
   /// @return covariance matrix of the measurement
-  CovarianceMatrix covariance() const { return *m_oParameters.getCovariance(); }
+  const CovarianceMatrix& covariance() const {
+    return *m_oParameters.getCovariance();
+  }
 
   /// @brief retrieve stored uncertainty for given parameter
   ///
@@ -229,7 +233,7 @@ class Measurement {
   ///
   /// @return uncertainty \f$\sigma \ge 0\f$ for given parameter
   template <parameter_indices_t parameter>
-  ParValue_t uncertainty() const {
+  Scalar uncertainty() const {
     return m_oParameters.template getUncertainty<parameter>();
   }
 
@@ -270,30 +274,8 @@ class Measurement {
   /// @return vector with the residual parameter values (in valid range)
   ///
   /// @sa ParameterSet::residual
-  ParameterVector residual(const BoundParameters& trackPars) const {
-    return m_oParameters.residual(trackPars.getParameterSet());
-  }
-
-  /// @brief calculate residual with respect to given track parameters
-  ///
-  /// @note It is checked that the residual for non-local parameters are in
-  /// valid
-  /// range (e.g.
-  ///       residuals in \f$\phi\f$ are corrected).
-  ///
-  /// @todo Implement validity check for residuals of local parameters.
-  ///
-  /// @param boundParameters reference bound parameters
-  /// @note The parameter ranges and the reference object of @p boundParameters
-  /// are not tested
-  ///
-  /// @return vector with the residual parameter values (in valid range)
-  ///
-  /// @sa ParameterSet::residual
-  ParameterVector residual(
-      const ActsVectorD<detail::ParametersSize<parameter_indices_t>::size>&
-          boundParameters) const {
-    return m_oParameters.residual(boundParameters);
+  ParametersVector residual(const FullParametersVector& trackPars) const {
+    return m_oParameters.residual(trackPars);
   }
 
   /// @brief equality operator
@@ -317,8 +299,8 @@ class Measurement {
     return !(*this == rhs);
   }
 
-  /// @projection operator
-  static Projection projector() { return ParamSet::projector(); }
+  /// @ProjectionMatrix operator
+  static const ProjectionMatrix& projector() { return ParamSet::projector(); }
 
   friend std::ostream& operator<<(
       std::ostream& out,
@@ -353,24 +335,22 @@ class Measurement {
  */
 template <typename source_link_t>
 struct fittable_measurement_helper {
-  template <BoundParametersIndices... pars>
+  template <BoundIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, BoundParametersIndices, pars...>;
+    using type = Measurement<source_link_t, BoundIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<BoundParametersIndices, meas_factory>;
+  using type = typename detail::type_generator_t<BoundIndices, meas_factory>;
 };
 
 template <typename source_link_t>
 struct fittable_volume_measurement_helper {
-  template <FreeParametersIndices... pars>
+  template <FreeIndices... pars>
   struct meas_factory {
-    using type = Measurement<source_link_t, FreeParametersIndices, pars...>;
+    using type = Measurement<source_link_t, FreeIndices, pars...>;
   };
 
-  using type =
-      typename detail::type_generator_t<FreeParametersIndices, meas_factory>;
+  using type = typename detail::type_generator_t<FreeIndices, meas_factory>;
 };
 
 /**

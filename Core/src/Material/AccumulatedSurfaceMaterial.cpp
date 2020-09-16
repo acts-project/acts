@@ -14,7 +14,7 @@
 // Default Constructor - for homogeneous material
 Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
     : m_splitFactor(splitFactor) {
-  AccumulatedVector accMat = {{AccumulatedMaterialProperties()}};
+  AccumulatedVector accMat = {{AccumulatedMaterialSlab()}};
   m_accumulatedMaterial = {{accMat}};
 }
 
@@ -24,13 +24,13 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
     : m_binUtility(binUtility), m_splitFactor(splitFactor) {
   size_t bins0 = m_binUtility.bins(0);
   size_t bins1 = m_binUtility.bins(1);
-  AccumulatedVector accVec(bins0, AccumulatedMaterialProperties());
+  AccumulatedVector accVec(bins0, AccumulatedMaterialSlab());
   m_accumulatedMaterial = AccumulatedMatrix(bins1, accVec);
 }
 
 // Assign a material properites object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector2D& lp, const MaterialProperties& mp, double pathCorrection) {
+    const Vector2D& lp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -43,7 +43,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
 
 // Assign a material properites object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector3D& gp, const MaterialProperties& mp, double pathCorrection) {
+    const Vector3D& gp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
     return {0, 0, 0};
@@ -97,9 +97,9 @@ Acts::AccumulatedSurfaceMaterial::totalAverage() {
         m_accumulatedMaterial[0][0].totalAverage().first, m_splitFactor);
   }
   // Create the properties matrix
-  MaterialPropertiesMatrix mpMatrix(
+  MaterialSlabMatrix mpMatrix(
       m_binUtility.bins(1),
-      MaterialPropertiesVector(m_binUtility.bins(0), MaterialProperties()));
+      MaterialSlabVector(m_binUtility.bins(0), MaterialSlab()));
   // Loop over and fill
   for (size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
     for (size_t ib0 = 0; ib0 < m_binUtility.bins(0); ++ib0) {

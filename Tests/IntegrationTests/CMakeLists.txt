@@ -41,4 +41,4 @@ add_integrationtest(PropagationCompareAtlasEigenConstant PropagationCompareAtlas
 add_integrationtest(PropagationCompareEigenStraightLine PropagationCompareEigenStraightLine.cpp)
 
 add_subdirectory_if(Fatras ACTS_BUILD_FATRAS)
-add_subdirectory_if(Legacy ACTS_BUILD_LEGACY)
+add_subdirectory_if(Legacy ACTS_BUILD_PLUGIN_LEGACY)

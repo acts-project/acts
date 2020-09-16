@@ -18,7 +18,7 @@ class TTree;
 
 namespace ActsExamples {
 
-using BoundTrackParameters = Acts::BoundParameters;
+using BoundTrackParameters = Acts::BoundTrackParameters;
 using TrackParameterWriter = WriterT<std::vector<BoundTrackParameters>>;
 
 /// Writes out SingleBoundTrackParamters into a TTree

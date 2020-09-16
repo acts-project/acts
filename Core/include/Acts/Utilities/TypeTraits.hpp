@@ -83,143 +83,143 @@ struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
 
 }  // namespace detail
 
-namespace concept {
+namespace Concepts {
 
-  /**
-   * This type ties together the detection idiom. It instantiates the `detector`
-   * template with the `Op` and `Args` and resolves to the exact value type.
-   * In essence, if `Op<Args...>` succeeds, this will evaluate to
-   * `std::true_type`, and if not, it will evaluate to `std::false_type`.
-   * @tparam Op The operation to test
-   * @tparam Args The arguments to the operation
-   */
-  template <template <class...> class Op, class... Args>
-  using is_detected =
-      typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
+/**
+ * This type ties together the detection idiom. It instantiates the `detector`
+ * template with the `Op` and `Args` and resolves to the exact value type.
+ * In essence, if `Op<Args...>` succeeds, this will evaluate to
+ * `std::true_type`, and if not, it will evaluate to `std::false_type`.
+ * @tparam Op The operation to test
+ * @tparam Args The arguments to the operation
+ */
+template <template <class...> class Op, class... Args>
+using is_detected =
+    typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
 
-  /**
-   * This type calls into the detector (same as `is_detected`) but it extracts
-   * the return type of `Op<Args...>`.
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation
-   */
-  template <template <class...> class Op, class... Args>
-  using detected_t =
-      typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
+/**
+ * This type calls into the detector (same as `is_detected`) but it extracts
+ * the return type of `Op<Args...>`.
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation
+ */
+template <template <class...> class Op, class... Args>
+using detected_t =
+    typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
 
-  /**
-   * This invokes `detected_t`, and checks whether its result matches
-   * `Expected`.
-   * @tparam Expected The expected result of the operation.
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation
-   */
-  template <class Expected, template <class...> class Op, class... Args>
-  using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+/**
+ * This invokes `detected_t`, and checks whether its result matches
+ * `Expected`.
+ * @tparam Expected The expected result of the operation.
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation
+ */
+template <class Expected, template <class...> class Op, class... Args>
+using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
-  /**
-   * This evaluates `Op` inside the detector, and checks whether the resolved
-   * type
-   * is convertible to `To`.
-   * @tparam To The type to check convertibility to.
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation
-   */
-  template <class To, template <class...> class Op, class... Args>
-  using is_detected_convertible =
-      std::is_convertible<detected_t<Op, Args...>, To>;
+/**
+ * This evaluates `Op` inside the detector, and checks whether the resolved
+ * type
+ * is convertible to `To`.
+ * @tparam To The type to check convertibility to.
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation
+ */
+template <class To, template <class...> class Op, class... Args>
+using is_detected_convertible =
+    std::is_convertible<detected_t<Op, Args...>, To>;
 
-  /**
-   * Helper which invokes the detector with a default type, and resolves to the
-   * type.
-   * @tparam Default The type to resolve to if `Op<Args...>` does not resolve.
-   * @tparam Op The operation
-   * @tparam Args The argument to the operation
-   */
-  template <class Default, template <class...> class Op, class... Args>
-  using detected_or = detail::detector<Default, void, Op, Args...>;
+/**
+ * Helper which invokes the detector with a default type, and resolves to the
+ * type.
+ * @tparam Default The type to resolve to if `Op<Args...>` does not resolve.
+ * @tparam Op The operation
+ * @tparam Args The argument to the operation
+ */
+template <class Default, template <class...> class Op, class... Args>
+using detected_or = detail::detector<Default, void, Op, Args...>;
 
-  /**
-   * Define some sort of "Domain Specific Languagr" to declare concepts a little
-   * more naturally. These are taken from
-   * https://izzys.casa/2016/09/implementing-concepts-in-cxx/
-   */
-  /**
-   * Helper which combines a set of predicates (constexpr bools) with a logical
-   * AND. Converts to `std::bool_constant`.
-   * @tparam Bs The booleans to combine
-   */
-  template <bool... Bs>
-  constexpr bool require = std::conjunction<std::bool_constant<Bs>...>::value;
+/**
+ * Define some sort of "Domain Specific Language" to declare concepts a little
+ * more naturally. These are taken from
+ * https://izzys.casa/2016/09/implementing-concepts-in-cxx/
+ */
+/**
+ * Helper which combines a set of predicates (constexpr bools) with a logical
+ * AND. Converts to `std::bool_constant`.
+ * @tparam Bs The booleans to combine
+ */
+template <bool... Bs>
+constexpr bool require = std::conjunction<std::bool_constant<Bs>...>::value;
 
-  /**
-   * Helper which forms the logical OR of its arguments.
-   * Converts to `std::bool_constant`.
-   * @tparam Bs The booleans to combine.
-   */
-  template <bool... Bs>
-  constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
+/**
+ * Helper which forms the logical OR of its arguments.
+ * Converts to `std::bool_constant`.
+ * @tparam Bs The booleans to combine.
+ */
+template <bool... Bs>
+constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
 
-  /**
-   * Alias for the negation of a `require`. This is essentially a NOT ANY test.
-   * @tparam Bs The booleans.
-   */
-  template <bool... Bs>
-  constexpr bool disallow = not require<Bs...>;
+/**
+ * Alias for the negation of a `require`. This is essentially a NOT ANY test.
+ * @tparam Bs The booleans.
+ */
+template <bool... Bs>
+constexpr bool disallow = not require<Bs...>;
 
-  /**
-   * Alias to `is_detected` which unpacks the constexpr boolean value.
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation.
-   */
-  template <template <class...> class Op, class... Args>
-  constexpr bool exists = is_detected<Op, Args...>::value;
+/**
+ * Alias to `is_detected` which unpacks the constexpr boolean value.
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation.
+ */
+template <template <class...> class Op, class... Args>
+constexpr bool exists = is_detected<Op, Args...>::value;
 
-  /**
-   * Alias to conversion check, which also extracts the constexpr boolean value.
-   * @tparam To The type to check convertibility to.
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation.
-   */
-  template <class To, template <class...> class Op, class... Args>
-  constexpr bool converts_to = is_detected_convertible<To, Op, Args...>::value;
+/**
+ * Alias to conversion check, which also extracts the constexpr boolean value.
+ * @tparam To The type to check convertibility to.
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation.
+ */
+template <class To, template <class...> class Op, class... Args>
+constexpr bool converts_to = is_detected_convertible<To, Op, Args...>::value;
 
-  /**
-   * Unpacks the constexpr boolean value from `is_detected_exact`
-   * @tparam Exact The type to check identity against
-   * @tparam Op The operation
-   * @tparam Args The arguments to the operation.
-   */
-  template <class Exact, template <class...> class Op, class... Args>
-  constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
+/**
+ * Unpacks the constexpr boolean value from `is_detected_exact`
+ * @tparam Exact The type to check identity against
+ * @tparam Op The operation
+ * @tparam Args The arguments to the operation.
+ */
+template <class Exact, template <class...> class Op, class... Args>
+constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
 
-  /**
-   * Helper which evaluates whether the type `T` has a method with a given
-   * signature.
-   * @tparam T The type to check on. This can contain a const qualifier if you
-   * want to check on that.
-   * @tparam R The return type
-   * @tparam M The method trait, as generated by METHOD_TRAIT
-   * @tparam Arguments The argument types that make up the signature.
-   */
-  template <typename T, typename R, template <class...> class M,
-            typename... Arguments>
-  constexpr bool has_method = M<T, R, Arguments...>::template tv<T>::value;
+/**
+ * Helper which evaluates whether the type `T` has a method with a given
+ * signature.
+ * @tparam T The type to check on. This can contain a const qualifier if you
+ * want to check on that.
+ * @tparam R The return type
+ * @tparam M The method trait, as generated by METHOD_TRAIT
+ * @tparam Arguments The argument types that make up the signature.
+ */
+template <typename T, typename R, template <class...> class M,
+          typename... Arguments>
+constexpr bool has_method = M<T, R, Arguments...>::template tv<T>::value;
 
-  /**
-   * Helper to assert if a member of a given type exists. Basically only calls
-   * into `identical_to` but is nicer to read.
-   * @tparam T The type to check existence of member on.
-   * @tparam M The member type trait
-   * @tparam V The type that the member is supposed to have.
-   */
-  template <typename T, template <class...> class M, typename V>
-  constexpr bool has_member = identical_to<V, M, T>;
+/**
+ * Helper to assert if a member of a given type exists. Basically only calls
+ * into `identical_to` but is nicer to read.
+ * @tparam T The type to check existence of member on.
+ * @tparam M The member type trait
+ * @tparam V The type that the member is supposed to have.
+ */
+template <typename T, template <class...> class M, typename V>
+constexpr bool has_member = identical_to<V, M, T>;
 
-  /**
-   * Have a look at `TypeTraitsTest.cpp` to see most of this in action.
-   */
-}  // namespace concept
+/**
+ * Have a look at `TypeTraitsTest.cpp` to see most of this in action.
+ */
+}  // namespace Concepts
 }  // namespace Acts
 
 /**

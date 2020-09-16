@@ -167,26 +167,19 @@ BOOST_DATA_TEST_CASE(
     return;
   }
 
-  double dcharge = -1 + 2 * charge;
-
-  const double Bz = 2_T;
-  BField bField(0, 0, Bz);
-
-  EigenStepper estepper(bField);
-
-  EigenPropagator epropagator(std::move(estepper));
-
-  // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
   double px = pT * cos(phi);
   double py = pT * sin(phi);
   double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, 42.);
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
+
+  const double Bz = 2_T;
+  BField bField(0, 0, Bz);
+  EigenStepper estepper(bField);
+  EigenPropagator epropagator(std::move(estepper));
+
+  // define start parameters
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, 42), phi, theta, p, q);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext, getDummyLogger());

@@ -12,31 +12,35 @@
 #pragma once
 
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 namespace Test {
 
-constexpr Material makeBeryllium() {
+inline Material makeBeryllium() {
   using namespace UnitLiterals;
-  return {35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3};
+  return Material::fromMolarDensity(35.28_cm, 42.10_cm, 9.012, 4,
+                                    (1.848 / 9.012) * 1_mol / 1_cm3);
 }
 
-constexpr Material makeSilicon() {
+inline Material makeSilicon() {
   using namespace UnitLiterals;
-  return {9.370_cm, 46.52_cm, 28.0855, 14, 2.329_g / 1_cm3};
+  return Material::fromMolarDensity(9.370_cm, 46.52_cm, 28.0855, 14,
+                                    (2.329 / 28.0855) * 1_mol / 1_cm3);
 }
 
 /// Build material slab corresponding to 1 radiation and interaction length.
-MaterialProperties makeUnitSlab() {
+inline MaterialSlab makeUnitSlab() {
   using namespace UnitLiterals;
   // silicon-like material with higher X0 and lower L0
-  return {20_cm, 20_cm, 28.0855, 14, 2.329_g / 1_cm3, 20_cm};
+  return {Material::fromMolarDensity(20_cm, 20_cm, 28.0855, 14,
+                                     (2.329 / 28.0855) * 1_mol / 1_cm3),
+          20_cm};
 }
 
 /// Build material slab corresponding to 1% of radiation and interaction length.
-MaterialProperties makePercentSlab() {
+inline MaterialSlab makePercentSlab() {
   auto slab = makeUnitSlab();
   slab.scaleThickness(0.01);
   return slab;

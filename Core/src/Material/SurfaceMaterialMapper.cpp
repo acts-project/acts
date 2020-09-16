@@ -18,6 +18,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,
@@ -175,9 +176,12 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
+  using VectorHelpers::makeVector4;
+
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(std::nullopt, mTrack.first.first,
-                                          mTrack.first.second, 0.);
+  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
+                                          mTrack.first.second,
+                                          1 / mTrack.first.second.norm());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
@@ -200,7 +204,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
-  std::map<GeometryID, unsigned int> assignedMaterial;
+  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
@@ -226,8 +230,8 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
-  GeometryID lastID = GeometryID();
-  GeometryID currentID = GeometryID();
+  GeometryIdentifier lastID = GeometryIdentifier();
+  GeometryIdentifier currentID = GeometryIdentifier();
   Vector3D currentPos(0., 0., 0);
   double currentPathCorrection = 0.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();
@@ -275,7 +279,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     }
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
-        currentPos, rmIter->materialProperties, currentPathCorrection);
+        currentPos, rmIter->materialSlab, currentPathCorrection);
     touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     ++assignedMaterial[currentID];
     // Update the material interaction with the associated surface

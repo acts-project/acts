@@ -82,13 +82,13 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator, used for comparisons later
-  using IPEstimator = ImpactPointEstimator<BoundParameters, Propagator>;
+  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
   IPEstimator::Config ip3dEstConfig(bField, propagator);
   IPEstimator ip3dEst(ip3dEstConfig);
   IPEstimator::State state(magFieldContext);
 
   // Set up HelicalTrackLinearizer, needed for linearizing the tracks
-  // Linearizer for BoundParameters type test
+  // Linearizer for BoundTrackParameters type test
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
   Linearizer::State linState(magFieldContext);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    BoundParameters::ParametersVector paramVec;
+    BoundTrackParameters::ParametersVector paramVec;
 
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
 
     // Linearized state of the track
     LinearizedTrack linTrack =
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
             .value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundParameters> trkAtVtx(0., params, &params);
+    TrackAtVertex<BoundTrackParameters> trkAtVtx(0., params, &params);
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
@@ -149,10 +149,10 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
 
     // Create a vertex
     Vector3D vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
-    Vertex<BoundParameters> vtx(vtxPos);
+    Vertex<BoundTrackParameters> vtx(vtxPos);
 
     // Update trkAtVertex with assumption of originating from vtx
-    KalmanVertexTrackUpdater::update<BoundParameters>(trkAtVtx, vtx);
+    KalmanVertexTrackUpdater::update<BoundTrackParameters>(trkAtVtx, vtx);
 
     // The old distance
     double oldDistance =

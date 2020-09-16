@@ -94,11 +94,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Pointer to TGeoNode (not owned)
   const TGeoNode* m_detElement{nullptr};
   /// Transformation of the detector element
-  std::shared_ptr<const Acts::Transform3D> m_transform{nullptr};
-  /// Center position of the detector element
-  std::shared_ptr<const Vector3D> m_center{nullptr};
-  /// Normal vector to the detector element
-  std::shared_ptr<const Vector3D> m_normal{nullptr};
+  Transform3D m_transform = Transform3D::Identity();
   /// Identifier of the detector element
   Identifier m_identifier;
   /// Boundaries of the detector element
@@ -115,7 +111,7 @@ inline Identifier TGeoDetectorElement::identifier() const {
 
 inline const Transform3D& TGeoDetectorElement::transform(
     const GeometryContext& /*gctx*/) const {
-  return (*m_transform);
+  return m_transform;
 }
 
 inline const Surface& TGeoDetectorElement::surface() const {

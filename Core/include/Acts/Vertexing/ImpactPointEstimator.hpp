@@ -50,7 +50,6 @@ class ImpactPointEstimator {
     typename BField_t::Cache fieldCache;
   };
 
-  /// @struct Configuration struct
   struct Config {
     /// @brief Config constructor if magnetic field is present
     ///
@@ -95,7 +94,7 @@ class ImpactPointEstimator {
   ///
   /// @return Distance
   Result<double> calculate3dDistance(const GeometryContext& gctx,
-                                     const BoundParameters& trkParams,
+                                     const BoundTrackParameters& trkParams,
                                      const Vector3D& vtxPos,
                                      State& state) const;
 
@@ -114,10 +113,11 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundParameters>> estimate3DImpactParameters(
-      const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
-      const BoundParameters& trkParams, const Vector3D& vtxPos,
-      State& state) const;
+  Result<std::unique_ptr<const BoundTrackParameters>>
+  estimate3DImpactParameters(const GeometryContext& gctx,
+                             const Acts::MagneticFieldContext& mctx,
+                             const BoundTrackParameters& trkParams,
+                             const Vector3D& vtxPos, State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -130,7 +130,7 @@ class ImpactPointEstimator {
   ///
   /// @return The compatibility value
   Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
-                                          const BoundParameters* trkParams,
+                                          const BoundTrackParameters* trkParams,
                                           const Vector3D& vertexPos) const;
 
   /// @brief Estimates the impact parameters and their errors of a given
@@ -142,7 +142,7 @@ class ImpactPointEstimator {
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
   Result<ImpactParametersAndSigma> estimateImpactParameters(
-      const BoundParameters& track, const Vertex<input_track_t>& vtx,
+      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
 
  private:
@@ -177,7 +177,7 @@ class ImpactPointEstimator {
   ///   determined by method
   /// @param state The state object
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
-                                      const BoundParameters& trkParams,
+                                      const BoundTrackParameters& trkParams,
                                       const Vector3D& vtxPos, Vector3D& deltaR,
                                       Vector3D& momDir, State& state) const;
 };

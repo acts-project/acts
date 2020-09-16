@@ -20,8 +20,6 @@
 
 namespace Acts {
 
-// @class ObjectSorterT
-///
 template <class T>
 class ObjectSorterT : public std::binary_function<T, T, bool> {
  public:
@@ -81,8 +79,6 @@ class ObjectSorterT : public std::binary_function<T, T, bool> {
   BinningValue m_binningValue;  ///< the binning value
 };
 
-/// @class DistanceSorterT
-///
 /// This will check on absolute distance
 template <class T>
 class DistanceSorterT : public std::binary_function<T, T, bool> {
@@ -164,8 +160,6 @@ class DistanceSorterT : public std::binary_function<T, T, bool> {
   double m_refEta;
 };
 
-/// @class GeometryObjectSorter
-///
 template <class T>
 class GeometryObjectSorterT : public std::binary_function<T, T, bool> {
  public:

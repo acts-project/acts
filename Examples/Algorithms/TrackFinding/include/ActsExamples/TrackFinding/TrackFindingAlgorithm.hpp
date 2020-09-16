@@ -11,8 +11,8 @@
 #include <functional>
 //#include <memory>
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/TrackFinder/CKFSourceLinkSelector.hpp"
-#include "Acts/TrackFinder/CombinatorialKalmanFilter.hpp"
+#include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"

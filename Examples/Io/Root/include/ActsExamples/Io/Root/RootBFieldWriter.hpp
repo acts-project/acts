@@ -211,12 +211,12 @@ class RootBFieldWriter {
             if (cfg.bField->isInside(position)) {
               auto bField = cfg.bField->getField(position);
 
-              x = raw_x / Acts::units::_mm;
-              y = raw_y / Acts::units::_mm;
-              z = raw_z / Acts::units::_mm;
-              Bx = bField.x() / Acts::units::_T;
-              By = bField.y() / Acts::units::_T;
-              Bz = bField.z() / Acts::units::_T;
+              x = raw_x / Acts::UnitConstants::mm;
+              y = raw_y / Acts::UnitConstants::mm;
+              z = raw_z / Acts::UnitConstants::mm;
+              Bx = bField.x() / Acts::UnitConstants::T;
+              By = bField.y() / Acts::UnitConstants::T;
+              Bz = bField.z() / Acts::UnitConstants::T;
               outputTree->Fill();
             }
           }  // for z
@@ -297,10 +297,10 @@ class RootBFieldWriter {
             Acts::Vector3D position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
             if (cfg.bField->isInside(position)) {
               auto bField = cfg.bField->getField(position);
-              z = raw_z / Acts::units::_mm;
-              r = raw_r / Acts::units::_mm;
-              Bz = bField.z() / Acts::units::_T;
-              Br = VectorHelpers::perp(bField) / Acts::units::_T;
+              z = raw_z / Acts::UnitConstants::mm;
+              r = raw_r / Acts::UnitConstants::mm;
+              Bz = bField.z() / Acts::UnitConstants::T;
+              Br = VectorHelpers::perp(bField) / Acts::UnitConstants::T;
               outputTree->Fill();
             }
           }

@@ -49,9 +49,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   auto correctedPhiTheta =
       Acts::detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
 
-  newTrkParams(ParID_t::ePHI) = correctedPhiTheta.first;     // phi
-  newTrkParams(ParID_t::eTHETA) = correctedPhiTheta.second;  // theta
-  newTrkParams(ParID_t::eQOP) = newTrkMomentum(2);           // qOverP
+  newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
+  newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
+  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
   // Vertex covariance and weight matrices
   const ActsSymMatrixD<3> vtxCov =
@@ -101,8 +101,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
-  BoundParameters refittedPerigee =
-      BoundParameters(perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
+  BoundTrackParameters refittedPerigee = BoundTrackParameters(
+      perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
 
   // Set new properties
   track.fittedParams = refittedPerigee;

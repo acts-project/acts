@@ -33,26 +33,24 @@ class Volume : public virtual GeometryObject {
  public:
   using BoundingBox = AxisAlignedBoundingBox<Volume, double, 3>;
 
-  Volume();
-
   /// Explicit constructor with shared arguments
   ///
-  /// @param htrans is the transform to position the volume in 3D space
+  /// @param transform is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const std::shared_ptr<const Transform3D>& htrans,
-         VolumeBoundsPtr volbounds);
+  Volume(const Transform3D& transform, VolumeBoundsPtr volbounds);
 
   /// Copy Constructor - with optional shift
   ///
   /// @param vol is the source volume for the copy
-  /// @param shift is the optional shift applied after copying
+  /// @param shift is the optional shift applied as : shift * vol.transform()
   /// @note This will automatically build an oriented bounding box with an
   /// envelope value of (0.05, 0.05, 0.05)mm
-  Volume(const Volume& vol, const Transform3D* shift = nullptr);
+  Volume(const Volume& vol, const Transform3D& shift = Transform3D::Identity());
 
-  virtual ~Volume();
+  Volume() = delete;
+  virtual ~Volume() = default;
 
   /// Assignment operator
   ///
@@ -95,11 +93,11 @@ class Volume : public virtual GeometryObject {
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
-  const Vector3D binningPosition(const GeometryContext& gctx,
-                                 BinningValue bValue) const override;
+  Vector3D binningPosition(const GeometryContext& gctx,
+                           BinningValue bValue) const override;
 
  protected:
-  std::shared_ptr<const Transform3D> m_transform;
+  Transform3D m_transform;
   Transform3D m_itransform;
   Vector3D m_center;
   VolumeBoundsPtr m_volumeBounds;
@@ -107,10 +105,7 @@ class Volume : public virtual GeometryObject {
 };
 
 inline const Transform3D& Volume::transform() const {
-  if (m_transform) {
-    return (*(m_transform.get()));
-  }
-  return Acts::s_idTransform;
+  return m_transform;
 }
 
 inline const Transform3D& Volume::itransform() const {

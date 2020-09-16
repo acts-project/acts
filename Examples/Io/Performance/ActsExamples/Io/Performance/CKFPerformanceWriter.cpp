@@ -79,7 +79,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
   // The number of majority particle hits and fitted track parameters
-  using RecoTrackInfo = std::pair<size_t, Acts::BoundParameters>;
+  using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
 
   // Read truth particles from input collection
   const auto& particles =

@@ -8,7 +8,7 @@
 
 #pragma once
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -17,7 +17,7 @@ namespace Acts {
 /// @class BinnedSurfaceMaterial
 ///
 /// It extends the SurfaceMaterial base class and is an array pf
-/// MaterialProperties. This is not memory optimised as every bin
+/// MaterialSlab. This is not memory optimised as every bin
 /// holds one material property object.
 
 class BinnedSurfaceMaterial : public ISurfaceMaterial {
@@ -25,7 +25,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// Default Constructor - deleted
   BinnedSurfaceMaterial() = delete;
 
-  /// Explicit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialSlab,
   /// for one-dimensional binning.
   ///
   /// The split factors:
@@ -37,10 +37,10 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialPropertiesVector fullProperties,
+                        MaterialSlabVector fullProperties,
                         double splitFactor = 0.);
 
-  /// Explicit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialSlab,
   /// for two-dimensional binning.
   ///
   /// The split factors:
@@ -52,7 +52,7 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
   BinnedSurfaceMaterial(const BinUtility& binUtility,
-                        MaterialPropertiesMatrix fullProperties,
+                        MaterialSlabMatrix fullProperties,
                         double splitFactor = 0.);
 
   /// Copy Move Constructor
@@ -83,17 +83,16 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   const BinUtility& binUtility() const;
 
   /// @copydoc SurfaceMaterial::fullMaterial
-  const MaterialPropertiesMatrix& fullMaterial() const;
+  const MaterialSlabMatrix& fullMaterial() const;
 
-  /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
-  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector2D&)
+  const MaterialSlab& materialSlab(const Vector2D& lp) const final;
 
-  /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
-  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
+  /// @copydoc SurfaceMaterial::materialSlab(const Vector3D&)
+  const MaterialSlab& materialSlab(const Vector3D& gp) const final;
 
-  /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
-  const MaterialProperties& materialProperties(size_t bin0,
-                                               size_t bin1) const final;
+  /// @copydoc SurfaceMaterial::materialSlab(size_t, size_t)
+  const MaterialSlab& materialSlab(size_t bin0, size_t bin1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream& toStream(std::ostream& sl) const final;
@@ -102,20 +101,19 @@ class BinnedSurfaceMaterial : public ISurfaceMaterial {
   /// The helper for the bin finding
   BinUtility m_binUtility;
 
-  /// The five different MaterialProperties
-  MaterialPropertiesMatrix m_fullMaterial;
+  /// The five different MaterialSlab
+  MaterialSlabMatrix m_fullMaterial;
 };
 
 inline const BinUtility& BinnedSurfaceMaterial::binUtility() const {
   return (m_binUtility);
 }
 
-inline const MaterialPropertiesMatrix& BinnedSurfaceMaterial::fullMaterial()
-    const {
+inline const MaterialSlabMatrix& BinnedSurfaceMaterial::fullMaterial() const {
   return m_fullMaterial;
 }
 
-inline const MaterialProperties& BinnedSurfaceMaterial::materialProperties(
+inline const MaterialSlab& BinnedSurfaceMaterial::materialSlab(
     size_t bin0, size_t bin1) const {
   return m_fullMaterial[bin1][bin0];
 }

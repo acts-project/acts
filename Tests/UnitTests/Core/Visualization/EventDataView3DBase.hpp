@@ -11,9 +11,6 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Fitter/GainMatrixSmoother.hpp"
-#include "Acts/Fitter/GainMatrixUpdater.hpp"
-#include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -28,8 +25,13 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
@@ -40,14 +42,15 @@
 #include <sstream>
 #include <string>
 
+using Acts::VectorHelpers::makeVector4;
+
 namespace Acts {
 namespace EventDataView3DTest {
 using SourceLink = MinimalSourceLink;
 using Covariance = BoundSymMatrix;
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -57,14 +60,14 @@ std::default_random_engine generator(42);
 /// @param helper The visualziation helper
 ///
 /// @return an overall string including all written output
-static inline std::string testBoundParameters(IVisualization3D& helper) {
+static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
   std::stringstream ss;
 
   ViewConfig pcolor({20, 120, 20});
   ViewConfig scolor({235, 198, 52});
 
   auto gctx = GeometryContext();
-  auto identity = std::make_shared<Transform3D>(Transform3D::Identity());
+  auto identity = Transform3D::Identity();
 
   // rectangle and plane
   auto rectangle = std::make_shared<RectangleBounds>(15., 15.);
@@ -79,8 +82,8 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
   std::array<double, 6> pars_array = {
       {-0.1234, 4.8765, 0.45, 0.128, 0.001, 21.}};
 
-  BoundParameters::ParametersVector pars =
-      BoundParameters::ParametersVector::Zero();
+  BoundTrackParameters::ParametersVector pars =
+      BoundTrackParameters::ParametersVector::Zero();
   pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
       pars_array[4], pars_array[5];
 
@@ -91,9 +94,9 @@ static inline std::string testBoundParameters(IVisualization3D& helper) {
       -2.85e-11, 0, -2.11 - 07, -4.017e-08, 1.123e-08, -2.85 - 11, 1.26e-10, 0,
       0, 0, 0, 0, 0, 1;
 
-  EventDataView3D::drawBoundParameters(
-      helper, BoundParameters(plane, pars, std::move(cov)), gctx, momentumScale,
-      localErrorScale, directionErrorScale, pcolor, scolor);
+  EventDataView3D::drawBoundTrackParameters(
+      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
+      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -124,7 +127,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.1_m));
 
   // Material of the surfaces
-  MaterialProperties matProp(95.7, 465.2, 28.03, 14., 2.32e-3, 0.5_mm);
+  MaterialSlab matProp(Acts::Test::makeSilicon(), 0.5_mm);
   const auto surfaceMaterial =
       std::make_shared<HomogeneousSurfaceMaterial>(matProp);
 
@@ -151,7 +154,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     // The thickness to construct the associated detector element
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
-        [](std::shared_ptr<const Transform3D> trans,
+        [](const Transform3D& trans,
            std::shared_ptr<const RectangleBounds> bounds, double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
@@ -206,15 +209,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Vector2D lPosCenter{10_mm, 10_mm};
   std::array<double, 2> resolution = {30_um, 50_um};
   SymMatrix2D cov2D;
-  cov2D << resolution[eLOC_0] * resolution[eLOC_0], 0., 0.,
-      resolution[eLOC_1] * resolution[eLOC_1];
+  cov2D << resolution[eBoundLoc0] * resolution[eBoundLoc0], 0., 0.,
+      resolution[eBoundLoc1] * resolution[eBoundLoc1];
   for (const auto& surface : surfaces) {
     // 2D measurements
-    double dx = resolution[eLOC_0] * gauss(generator);
-    double dy = resolution[eLOC_1] * gauss(generator);
-    MeasurementType<eLOC_0, eLOC_1> m01(surface->getSharedPtr(), {}, cov2D,
-                                        lPosCenter[eLOC_0] + dx,
-                                        lPosCenter[eLOC_1] + dy);
+    double dx = resolution[eBoundLoc0] * gauss(generator);
+    double dy = resolution[eBoundLoc1] * gauss(generator);
+    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
+        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
+        lPosCenter[eBoundLoc1] + dy);
     measurements.push_back(std::move(m01));
   }
 
@@ -243,13 +246,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   cov << std::pow(100_um, 2), 0., 0., 0., 0., 0., 0., std::pow(100_um, 2), 0.,
       0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0., 0., 0., 0.025, 0., 0., 0., 0.,
       0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
-
   Vector3D rPos(-1_m, 100_um * gauss(generator), 100_um * gauss(generator));
-  Vector3D rMom(1_GeV, 0.025_GeV * gauss(generator),
-                0.025_GeV * gauss(generator));
-
-  SingleCurvilinearTrackParameters<ChargedPolicy> rStart(cov, rPos, rMom, 1.,
-                                                         42.);
+  Vector3D rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
+  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
+                                    cov);
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -262,7 +262,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
   KalmanFitterOptions<VoidOutlierFinder> kfOptions(
       tgContext, mfContext, calContext, VoidOutlierFinder(),
-      LoggerWrapper{*logger}, rSurface);
+      LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);

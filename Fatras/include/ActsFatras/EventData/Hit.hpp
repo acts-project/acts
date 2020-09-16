@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -43,8 +43,9 @@ class Hit {
   /// All quantities are given in the global coordinate system. It is the
   /// users responsibility to ensure that the position correspond to a
   /// position on the given surface.
-  Hit(Acts::GeometryID geometryId, Barcode particleId, const Vector4& pos4,
-      const Vector4& before4, const Vector4& after4, int32_t index_ = -1)
+  Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
+      const Vector4& pos4, const Vector4& before4, const Vector4& after4,
+      int32_t index_ = -1)
       : m_geometryId(geometryId),
         m_particleId(particleId),
         m_index(index_),
@@ -57,7 +58,7 @@ class Hit {
   Hit& operator=(Hit&&) = default;
 
   /// Geometry identifier of the hit surface.
-  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
+  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   /// Particle identifier of the particle that generated the hit.
   constexpr Barcode particleId() const { return m_particleId; }
   /// Hit index along the particle trajectory.
@@ -100,7 +101,7 @@ class Hit {
 
  private:
   /// Identifier of the surface.
-  Acts::GeometryID m_geometryId;
+  Acts::GeometryIdentifier m_geometryId;
   /// Identifier of the generating particle.
   Barcode m_particleId;
   /// Index of the hit along the particle trajectory.

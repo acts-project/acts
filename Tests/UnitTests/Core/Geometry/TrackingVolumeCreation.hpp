@@ -28,12 +28,10 @@ TrackingVolumePtr constructCylinderVolume(
   ///  the surface transforms
   auto sfnPosition =
       Vector3D(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfnTransform =
-      std::make_shared<const Transform3D>(Translation3D(sfnPosition));
-  auto sfcTransform = nullptr;
+  auto sfnTransform = Transform3D(Translation3D(sfnPosition));
+  auto sfcTransform = Transform3D::Identity();
   auto sfpPosition = Vector3D(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfpTransform =
-      std::make_shared<const Transform3D>(Translation3D(sfpPosition));
+  auto sfpTransform = Transform3D(Translation3D(sfpPosition));
   ///  the surfaces
   auto sfnBounds = std::make_shared<CylinderBounds>(
       surfaceR - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
@@ -70,7 +68,8 @@ TrackingVolumePtr constructCylinderVolume(
 
   ///  now create the Layer
   auto layer0bounds = std::make_shared<const CylinderBounds>(surfaceR, bUmax);
-  auto layer0 = CylinderLayer::create(nullptr, layer0bounds, std::move(bArray),
+  auto layer0 = CylinderLayer::create(Transform3D::Identity(), layer0bounds,
+                                      std::move(bArray),
                                       surfaceRstagger + 2 * layerEnvelope);
   std::unique_ptr<const LayerArray> layerArray =
       std::make_unique<const BinnedArrayXD<LayerPtr>>(layer0);
@@ -79,8 +78,9 @@ TrackingVolumePtr constructCylinderVolume(
   auto volumeBounds = std::make_shared<const CylinderVolumeBounds>(
       innerVolumeR, outerVolumeR, bUmax + volumeEnvelope);
 
-  TrackingVolumePtr volume = TrackingVolume::create(
-      nullptr, volumeBounds, nullptr, std::move(layerArray), nullptr, {}, name);
+  TrackingVolumePtr volume =
+      TrackingVolume::create(Transform3D::Identity(), volumeBounds, nullptr,
+                             std::move(layerArray), nullptr, {}, name);
   ///  return the volume
   return volume;
 }
@@ -106,7 +106,8 @@ MutableTrackingVolumePtr constructContainerVolume(const GeometryContext& gctx,
       std::make_shared<const BinnedArrayXD<TrackingVolumePtr>>(
           volumes, std::move(vUtility));
   ///  create the container volume
-  auto hVolume = TrackingVolume::create(nullptr, hVolumeBounds, vArray, name);
+  auto hVolume = TrackingVolume::create(Transform3D::Identity(), hVolumeBounds,
+                                        vArray, name);
   // return the container
   return hVolume;
 }

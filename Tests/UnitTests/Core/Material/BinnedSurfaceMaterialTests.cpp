@@ -10,7 +10,7 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
 #include <climits>
@@ -25,21 +25,21 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
   xyBinning += BinUtility(3, -3., 3., open, binY);
 
   // Constructor a few material properties
-  MaterialProperties a00(1., 2., 3., 4., 5., 6.);
-  MaterialProperties a01(2., 3., 4., 5., 6., 7.);
-  MaterialProperties a02(3., 4., 5., 6., 7., 8.);
-  MaterialProperties a10(4., 5., 6., 7., 8., 9.);
-  MaterialProperties a11(5., 6., 7., 8., 9., 10.);
-  MaterialProperties a12(6., 7., 8., 9., 10., 11.);
+  MaterialSlab a00(Material::fromMolarDensity(1., 2., 3., 4., 5.), 6.);
+  MaterialSlab a01(Material::fromMolarDensity(2., 3., 4., 5., 6.), 7.);
+  MaterialSlab a02(Material::fromMolarDensity(3., 4., 5., 6., 7.), 8.);
+  MaterialSlab a10(Material::fromMolarDensity(4., 5., 6., 7., 8.), 9.);
+  MaterialSlab a11(Material::fromMolarDensity(5., 6., 7., 8., 9.), 10.);
+  MaterialSlab a12(Material::fromMolarDensity(6., 7., 8., 9., 10.), 11.);
 
   // Prepare the matrix
-  std::vector<MaterialProperties> l0 = {std::move(a00), std::move(a10)};
-  std::vector<MaterialProperties> l1 = {std::move(a01), std::move(a11)};
-  std::vector<MaterialProperties> l2 = {std::move(a02), std::move(a12)};
+  std::vector<MaterialSlab> l0 = {std::move(a00), std::move(a10)};
+  std::vector<MaterialSlab> l1 = {std::move(a01), std::move(a11)};
+  std::vector<MaterialSlab> l2 = {std::move(a02), std::move(a12)};
 
   // Build the matrix
-  std::vector<std::vector<MaterialProperties>> m = {
-      std::move(l0), std::move(l1), std::move(l2)};
+  std::vector<std::vector<MaterialSlab>> m = {std::move(l0), std::move(l1),
+                                              std::move(l2)};
 
   // Create the material
   BinnedSurfaceMaterial bsm(xyBinning, std::move(m));

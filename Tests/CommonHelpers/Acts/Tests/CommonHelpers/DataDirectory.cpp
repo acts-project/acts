@@ -8,10 +8,10 @@
 
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
-std::string Acts::Test::getDataPath(std::string_view relativePath) {
-  using std::filesystem::path;
+std::string Acts::Test::getDataPath(const std::string& relativePath) {
+  using boost::filesystem::path;
 
   path dataDir(ACTS_TEST_DATA_DIR);
   path absPath = dataDir / path(relativePath);

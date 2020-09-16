@@ -37,16 +37,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   // scaffolding...
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   //
-  /// Test DiscSurface fully specified constructor but no transform
-  BOOST_CHECK_NO_THROW(
-      Surface::makeShared<DiscSurface>(nullptr, rMin, rMax, halfPhiSector));
-  //
   /// Test DiscSurface constructor with default halfPhiSector
-  BOOST_CHECK_NO_THROW(Surface::makeShared<DiscSurface>(nullptr, rMin, rMax));
+  BOOST_CHECK_NO_THROW(
+      Surface::makeShared<DiscSurface>(Transform3D::Identity(), rMin, rMax));
   //
   /// Test DiscSurface constructor with a transform specified
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   BOOST_CHECK_NO_THROW(
       Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector));
   //
@@ -62,7 +59,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
   //
   /// Copied and transformed DiscSurface
   BOOST_CHECK_NO_THROW(Surface::makeShared<DiscSurface>(
-      tgContext, *anotherDiscSurface, *pTransform));
+      tgContext, *anotherDiscSurface, pTransform));
 
   /// Construct with nullptr bounds
   DetectorElementStub detElem;
@@ -74,10 +71,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3D origin3D{0, 0, 0};
-  std::shared_ptr<const Transform3D> pTransform;  // nullptr
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
-  auto discSurfaceObject =
-      Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector);
+  auto discSurfaceObject = Surface::makeShared<DiscSurface>(
+      Transform3D::Identity(), rMin, rMax, halfPhiSector);
   //
   /// Test type
   BOOST_CHECK_EQUAL(discSurfaceObject->type(), Surface::Disc);
@@ -115,30 +111,35 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
   Vector3D expectedPosition{1.2, 0, 0};
   Vector2D rPhiOnDisc{1.2, 0.0};
   Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
-  discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum,
-                                   returnedPosition);
+  returnedPosition =
+      discSurfaceObject->localToGlobal(tgContext, rPhiOnDisc, ignoredMomentum);
   CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
   //
-  discSurfaceObject->localToGlobal(tgContext, rPhiNotInSector, ignoredMomentum,
-                                   returnedPosition);
+  returnedPosition = discSurfaceObject->localToGlobal(
+      tgContext, rPhiNotInSector, ignoredMomentum);
   Vector3D expectedNonPosition{-1.2, 0, 0};
   CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
   //
   /// Test globalToLocal
   Vector2D returnedLocalPosition{33., 44.};
   Vector2D expectedLocalPosition{1.2, 0.0};
-  BOOST_CHECK(discSurfaceObject->globalToLocal(tgContext, point3DOnSurface,
-                                               ignoredMomentum,
-                                               returnedLocalPosition));  // pass
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, point3DOnSurface, ignoredMomentum)
+          .value();
   CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
 
   // Global to local does not check inside bounds
-  BOOST_CHECK(discSurfaceObject->globalToLocal(
-      tgContext, point3DNotInSector, ignoredMomentum, returnedLocalPosition));
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, point3DNotInSector, ignoredMomentum)
+          .value();
   //
   Vector3D pointOutsideR{0.0, 100., 0};
-  BOOST_CHECK(discSurfaceObject->globalToLocal(
-      tgContext, pointOutsideR, ignoredMomentum, returnedLocalPosition));
+  returnedLocalPosition =
+      discSurfaceObject
+          ->globalToLocal(tgContext, pointOutsideR, ignoredMomentum)
+          .value();
   //
   /// Test localPolarToCartesian
   Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
@@ -202,11 +203,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties, *utf::expected_failures(2)) {
 /// Unit test for testing DiscSurface assignment and equality
 BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
   Vector3D origin3D{0, 0, 0};
-  std::shared_ptr<const Transform3D> pTransform;  // nullptr
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
-  auto discSurfaceObject =
-      Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector);
-  auto assignedDisc = Surface::makeShared<DiscSurface>(nullptr, 2.2, 4.4, 0.07);
+  auto discSurfaceObject = Surface::makeShared<DiscSurface>(
+      Transform3D::Identity(), rMin, rMax, halfPhiSector);
+  auto assignedDisc =
+      Surface::makeShared<DiscSurface>(Transform3D::Identity(), 2.2, 4.4, 0.07);
   //
   BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
   BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
@@ -216,7 +217,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAssignment) {
 BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
   double rMin(1.0), rMax(5.0);
 
-  auto pDisc = Surface::makeShared<DiscSurface>(nullptr, 0., rMax);
+  auto pDisc =
+      Surface::makeShared<DiscSurface>(Transform3D::Identity(), 0., rMax);
   auto pDiscExtent = pDisc->polyhedronRepresentation(tgContext, 1).extent();
 
   CHECK_CLOSE_ABS(0., pDiscExtent.min(binZ), s_onSurfaceTolerance);
@@ -230,7 +232,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
   CHECK_CLOSE_ABS(-M_PI, pDiscExtent.min(binPhi), s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(M_PI, pDiscExtent.max(binPhi), s_onSurfaceTolerance);
 
-  auto pRing = Surface::makeShared<DiscSurface>(nullptr, rMin, rMax);
+  auto pRing =
+      Surface::makeShared<DiscSurface>(Transform3D::Identity(), rMin, rMax);
   auto pRingExtent = pRing->polyhedronRepresentation(tgContext, 1).extent();
 
   CHECK_CLOSE_ABS(0., pRingExtent.min(binZ), s_onSurfaceTolerance);
@@ -247,12 +250,11 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Translation3D translation{0., 1., 2.};
   Transform3D transform(translation);
-  auto pTransform = std::make_shared<const Transform3D>(translation);
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject =
-      Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector);
+      Surface::makeShared<DiscSurface>(transform, rMin, rMax, halfPhiSector);
 
-  const auto& rotation = pTransform->rotation();
+  const auto& rotation = transform.rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis

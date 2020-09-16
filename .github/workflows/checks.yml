@@ -10,7 +10,7 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: gitlab-registry.cern.ch/acts/machines/format8:v3
+    container: ghcr.io/acts-project/format8:v5
     steps:
       - uses: actions/checkout@v2
       - name: Check
@@ -37,7 +37,6 @@ jobs:
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
-
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:

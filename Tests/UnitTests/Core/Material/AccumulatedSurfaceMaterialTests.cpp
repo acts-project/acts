@@ -48,8 +48,9 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_construction_test) {
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
-  MaterialProperties one(1., 1., 1., 1., 1., 1.);
-  MaterialProperties two(1., 1., 1., 1., 1., 2.);
+  Material mat = Material::fromMolarDensity(1., 1., 1., 1., 1.);
+  MaterialSlab one(mat, 1.);
+  MaterialSlab two(mat, 2.);
 
   AccumulatedSurfaceMaterial material0D{};
   // assign 2 one steps
@@ -62,18 +63,19 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_0D) {
   // get the single matrix
   auto accMat0D = material0D.accumulatedMaterial();
   auto accMatProp0D = accMat0D[0][0];
-  auto matProp0D = accMatProp0D.totalAverage();
+  auto [matProp0D, trackCount] = accMatProp0D.totalAverage();
 
-  BOOST_CHECK_EQUAL(matProp0D.second, 2u);
-  BOOST_CHECK_EQUAL(matProp0D.first.thicknessInX0(), two.thicknessInX0());
+  BOOST_CHECK_EQUAL(matProp0D.thicknessInX0(), two.thicknessInX0());
+  BOOST_CHECK_EQUAL(trackCount, 2u);
 }
 
 /// Test the filling and conversion
 BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
-  MaterialProperties one(1., 1., 1., 1., 1., 1.);
-  MaterialProperties two(1., 1., 1., 1., 1., 2.);
-  MaterialProperties three(1., 1., 1., 1., 1., 3.);
-  MaterialProperties four(1., 1., 1., 1., 1., 4.);
+  Material mat = Material::fromMolarDensity(1., 1., 1., 1., 1.);
+  MaterialSlab one(mat, 1.);
+  MaterialSlab two(mat, 2.);
+  MaterialSlab three(mat, 3.);
+  MaterialSlab four(mat, 4.);
 
   // BinnesSurfaceMatieral accumulation - 2D
   BinUtility binUtility2D(2, -1., 1., open, binX);
@@ -102,20 +104,19 @@ BOOST_AUTO_TEST_CASE(AccumulatedSurfaceMaterial_fill_convert_1D) {
   // get the single matrix
   auto accMat2D = material2D.accumulatedMaterial();
   // the accumulated properties
-  auto accMatProp00 = accMat2D[0][0].totalAverage();
-  auto accMatProp01 = accMat2D[0][1].totalAverage();
-  auto accMatProp10 = accMat2D[1][0].totalAverage();
-  auto accMatProp11 = accMat2D[1][1].totalAverage();
+  auto [accMatProp00, trackCount00] = accMat2D[0][0].totalAverage();
+  auto [accMatProp01, trackCount01] = accMat2D[0][1].totalAverage();
+  auto [accMatProp10, trackCount10] = accMat2D[1][0].totalAverage();
+  auto [accMatProp11, trackCount11] = accMat2D[1][1].totalAverage();
 
-  BOOST_CHECK_EQUAL(accMatProp00.second, 1u);
-  BOOST_CHECK_EQUAL(accMatProp01.second, 2u);
-  BOOST_CHECK_EQUAL(accMatProp10.second, 3u);
-  BOOST_CHECK_EQUAL(accMatProp11.second, 4u);
-
-  BOOST_CHECK_EQUAL(accMatProp00.first.thicknessInX0(), one.thicknessInX0());
-  BOOST_CHECK_EQUAL(accMatProp01.first.thicknessInX0(), two.thicknessInX0());
-  BOOST_CHECK_EQUAL(accMatProp10.first.thicknessInX0(), three.thicknessInX0());
-  BOOST_CHECK_EQUAL(accMatProp11.first.thicknessInX0(), four.thicknessInX0());
+  BOOST_CHECK_EQUAL(accMatProp00.thicknessInX0(), one.thicknessInX0());
+  BOOST_CHECK_EQUAL(accMatProp01.thicknessInX0(), two.thicknessInX0());
+  BOOST_CHECK_EQUAL(accMatProp10.thicknessInX0(), three.thicknessInX0());
+  BOOST_CHECK_EQUAL(accMatProp11.thicknessInX0(), four.thicknessInX0());
+  BOOST_CHECK_EQUAL(trackCount00, 1u);
+  BOOST_CHECK_EQUAL(trackCount01, 2u);
+  BOOST_CHECK_EQUAL(trackCount10, 3u);
+  BOOST_CHECK_EQUAL(trackCount11, 4u);
 }
 
 }  // namespace Test

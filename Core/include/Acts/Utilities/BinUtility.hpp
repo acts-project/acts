@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// BinUtility.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -35,17 +31,18 @@ namespace Acts {
 class BinUtility {
  public:
   /// Constructor for equidistant
-  BinUtility() : m_binningData(), m_transform(nullptr), m_itransform(nullptr) {
+  BinUtility()
+      : m_binningData(),
+        m_transform(Transform3D::Identity()),
+        m_itransform(Transform3D::Identity()) {
     m_binningData.reserve(3);
   }
 
   /// Constructor with only a Transform3D
   ///
   /// @param tForm is the local to global transform
-  BinUtility(const std::shared_ptr<const Transform3D>& tForm)
-      : m_binningData(),
-        m_transform(tForm),
-        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
+  BinUtility(const Transform3D& tForm)
+      : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
   }
 
@@ -54,10 +51,8 @@ class BinUtility {
   /// @param bData is the provided binning data
   /// @param tForm is the (optional) transform
   BinUtility(const BinningData& bData,
-             const std::shared_ptr<const Transform3D>& tForm = nullptr)
-      : m_binningData(),
-        m_transform(tForm),
-        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
+             const Transform3D& tForm = Transform3D::Identity())
+      : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(bData);
   }
@@ -72,10 +67,8 @@ class BinUtility {
   /// @param tForm is the (optional) transform
   BinUtility(size_t bins, float min, float max, BinningOption opt = open,
              BinningValue value = binX,
-             const std::shared_ptr<const Transform3D>& tForm = nullptr)
-      : m_binningData(),
-        m_transform(tForm),
-        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
+             const Transform3D& tForm = Transform3D::Identity())
+      : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(BinningData(opt, value, bins, min, max));
   }
@@ -88,10 +81,8 @@ class BinUtility {
   /// @param tForm is the (optional) transform
   BinUtility(std::vector<float>& bValues, BinningOption opt = open,
              BinningValue value = binPhi,
-             const std::shared_ptr<const Transform3D>& tForm = nullptr)
-      : m_binningData(),
-        m_transform(tForm),
-        m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr) {
+             const Transform3D& tForm = Transform3D::Identity())
+      : m_binningData(), m_transform(tForm), m_itransform(tForm.inverse()) {
     m_binningData.reserve(3);
     m_binningData.push_back(BinningData(opt, value, bValues));
   }
@@ -102,9 +93,7 @@ class BinUtility {
   BinUtility(const BinUtility& sbu)
       : m_binningData(sbu.m_binningData),
         m_transform(sbu.m_transform),
-        m_itransform(sbu.m_transform
-                         ? new Transform3D(sbu.m_transform->inverse())
-                         : nullptr) {}
+        m_itransform(sbu.m_itransform) {}
 
   /// Assignment operator
   ///
@@ -113,10 +102,7 @@ class BinUtility {
     if (this != &sbu) {
       m_binningData = sbu.m_binningData;
       m_transform = sbu.m_transform;
-      m_itransform = sbu.m_transform
-                         ? std::unique_ptr<const Transform3D>(
-                               new Transform3D(sbu.m_transform->inverse()))
-                         : nullptr;
+      m_itransform = sbu.m_itransform;
     }
     return (*this);
   }
@@ -127,23 +113,8 @@ class BinUtility {
   BinUtility& operator+=(const BinUtility& gbu) {
     const std::vector<BinningData>& bData = gbu.binningData();
 
-    if (m_transform == nullptr && gbu.transform() != nullptr) {
-      // use other transform
-      m_transform = gbu.transform();
-      m_itransform =
-          std::make_unique<const Transform3D>(m_transform->inverse());
-    } else if (m_transform != nullptr && gbu.transform() != nullptr) {
-      // combine two existing transform
-      // note that this might lead to undesired behaviour of the combined
-      // BinUtility
-      m_transform = std::make_shared<const Transform3D>((*m_transform) *
-                                                        (*gbu.transform()));
-      m_itransform =
-          std::make_unique<const Transform3D>(m_transform->inverse());
-    }  // else {
-    // only this BU has transform, just keep it.
-    //}
-
+    m_transform = m_transform * gbu.transform();
+    m_itransform = m_transform.inverse();
     if (m_binningData.size() + bData.size() > 3) {
       throw "BinUtility does not support dim > 3";
     }
@@ -169,8 +140,7 @@ class BinUtility {
   /// @return is the bin value in 3D
   std::array<size_t, 3> binTriple(const Vector3D& position) const {
     /// transform or not
-    const Vector3D& bPosition =
-        m_itransform ? Vector3D((*m_itransform) * position) : position;
+    const Vector3D bPosition = m_itransform * position;
     // get the dimension
     size_t mdim = m_binningData.size();
     /// now get the bins
@@ -182,7 +152,6 @@ class BinUtility {
   }
 
   /// Bin from a 3D vector (already in binning frame)
-  /// @todo - optionally the itransform is applied
   ///
   /// @param position is the 3D position to be evaluated
   /// @param ba is the bin dimension
@@ -192,10 +161,7 @@ class BinUtility {
     if (ba >= m_binningData.size()) {
       return 0;
     }
-    size_t bEval =
-        m_itransform
-            ? m_binningData[ba].searchGlobal((*m_itransform) * position)
-            : m_binningData[ba].searchGlobal(position);
+    size_t bEval = m_binningData[ba].searchGlobal(m_itransform * position);
     return bEval;
   }
 
@@ -268,8 +234,7 @@ class BinUtility {
   /// @return is a boolean check
   bool inside(const Vector3D& position) const {
     /// transform or not
-    const Vector3D& bPosition =
-        m_itransform ? Vector3D((*m_itransform) * position) : position;
+    const Vector3D& bPosition = m_itransform * position;
     // loop and break
     for (auto& bData : m_binningData) {
       if (!(bData.inside(bPosition))) {
@@ -326,7 +291,7 @@ class BinUtility {
   /// Transform applied to global positions before lookup
   ///
   /// @return Shared pointer to transform
-  std::shared_ptr<const Transform3D> transform() const { return m_transform; }
+  const Transform3D& transform() const { return m_transform; }
 
   /// The type/value of the binning
   ///
@@ -384,9 +349,9 @@ class BinUtility {
   }
 
  private:
-  std::vector<BinningData> m_binningData;           /// vector of BinningData
-  std::shared_ptr<const Transform3D> m_transform;   /// shared transform
-  std::unique_ptr<const Transform3D> m_itransform;  /// unique inverse transform
+  std::vector<BinningData> m_binningData;  /// vector of BinningData
+  Transform3D m_transform;                 /// shared transform
+  Transform3D m_itransform;                /// unique inverse transform
 };
 
 /// Overload of << operator for std::ostream for debug output

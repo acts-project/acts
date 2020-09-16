@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -17,9 +17,7 @@
 
 namespace Acts {
 
-/// @class GeometryObject
-///
-/// Base class to provide GeometryID interface:
+/// Base class to provide GeometryIdentifier interface:
 /// - simple set and get
 ///
 /// It also provides the binningPosition method for
@@ -36,7 +34,8 @@ class GeometryObject {
   /// Constructor from a value
   ///
   /// @param geometryId the geometry identifier of the object
-  GeometryObject(const GeometryID& geometryId) : m_geometryId(geometryId) {}
+  GeometryObject(const GeometryIdentifier& geometryId)
+      : m_geometryId(geometryId) {}
 
   /// Assignment operator
   ///
@@ -49,7 +48,7 @@ class GeometryObject {
   }
 
   /// @return the geometry id by reference
-  const GeometryID& geometryId() const;
+  const GeometryIdentifier& geometryId() const;
 
   /// Force a binning position method
   ///
@@ -57,8 +56,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual const Vector3D binningPosition(const GeometryContext& gctx,
-                                         BinningValue bValue) const = 0;
+  virtual Vector3D binningPosition(const GeometryContext& gctx,
+                                   BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///
@@ -72,17 +71,18 @@ class GeometryObject {
   /// Set the value
   ///
   /// @param geometryId the geometry identifier to be assigned
-  void assignGeometryId(const GeometryID& geometryId);
+  void assignGeometryId(const GeometryIdentifier& geometryId);
 
  protected:
-  GeometryID m_geometryId;
+  GeometryIdentifier m_geometryId;
 };
 
-inline const GeometryID& GeometryObject::geometryId() const {
+inline const GeometryIdentifier& GeometryObject::geometryId() const {
   return m_geometryId;
 }
 
-inline void GeometryObject::assignGeometryId(const GeometryID& geometryId) {
+inline void GeometryObject::assignGeometryId(
+    const GeometryIdentifier& geometryId) {
   m_geometryId = geometryId;
 }
 

@@ -40,7 +40,7 @@ class SimSourceLink {
   SimSourceLink& operator=(SimSourceLink&&) = default;
   SimSourceLink& operator=(const SimSourceLink&) = default;
 
-  constexpr Acts::GeometryID geometryId() const { return m_geometryId; }
+  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   constexpr const Acts::Surface& referenceSurface() const { return *m_surface; }
   constexpr const ActsFatras::Hit& truthHit() const { return *m_truthHit; }
 
@@ -48,12 +48,12 @@ class SimSourceLink {
     if (m_dim == 0) {
       throw std::runtime_error("Cannot create dim 0 measurement");
     } else if (m_dim == 1) {
-      return Acts::Measurement<SimSourceLink, Acts::BoundParametersIndices,
+      return Acts::Measurement<SimSourceLink, Acts::BoundIndices,
                                Acts::eBoundLoc0>{
           m_surface->getSharedPtr(), *this, m_cov.topLeftCorner<1, 1>(),
           m_values[0]};
     } else if (m_dim == 2) {
-      return Acts::Measurement<SimSourceLink, Acts::BoundParametersIndices,
+      return Acts::Measurement<SimSourceLink, Acts::BoundIndices,
                                Acts::eBoundLoc0, Acts::eBoundLoc1>{
           m_surface->getSharedPtr(), *this, m_cov.topLeftCorner<2, 2>(),
           m_values[0], m_values[1]};
@@ -68,7 +68,7 @@ class SimSourceLink {
   Acts::BoundMatrix m_cov;
   size_t m_dim = 0u;
   // store geo id copy to avoid indirection via truth hit
-  Acts::GeometryID m_geometryId;
+  Acts::GeometryIdentifier m_geometryId;
   // need to store pointers to make the object copyable
   const Acts::Surface* m_surface;
   const ActsFatras::Hit* m_truthHit;

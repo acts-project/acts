@@ -30,8 +30,6 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& cfg,
 
 ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     const AlgorithmContext& ctx) const {
-  namespace vh = Acts::VectorHelpers;
-
   // setup input and output containers
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
@@ -43,10 +41,10 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   for (const auto& particle : particles) {
+    const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
+    const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
     const auto pt = particle.transverseMomentum();
     const auto p = particle.absMomentum();
-    const auto theta = vh::theta(particle.unitDirection());
-    const auto phi = vh::phi(particle.unitDirection());
 
     // compute momentum-dependent resolutions
     const auto sigmaD0 =
@@ -76,33 +74,29 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     const auto deltaTheta = sigmaTheta * stdNormal(rng);
     const auto deltaP = sigmaP * stdNormal(rng);
 
-    // smear the position
-    const Acts::Vector3D pos =
-        particle.position() + Acts::Vector3D(deltaD0 * std::sin(phi),
-                                             deltaD0 * -std::cos(phi), deltaZ0);
-    // smear the time
-    const auto time = particle.time() + deltaT0;
+    // smear the position/time
+    Acts::Vector4D pos4 = particle.position4();
+    pos4[Acts::ePos0] += deltaD0 * std::sin(phi);
+    pos4[Acts::ePos1] += deltaD0 * -std::cos(phi);
+    pos4[Acts::ePos2] += deltaZ0;
+    pos4[Acts::eTime] += deltaT0;
     // smear direction angles phi,theta ensuring correct bounds
-    const auto angles =
+    const auto [newPhi, newTheta] =
         Acts::detail::ensureThetaBounds(phi + deltaPhi, theta + deltaTheta);
-    // compute smeared direction vector
-    const Acts::Vector3D dir(std::sin(angles.second) * std::cos(angles.first),
-                             std::sin(angles.second) * std::sin(angles.first),
-                             std::cos(angles.second));
-    // compute smeared momentum vector
-    const Acts::Vector3D mom = (p + deltaP) * dir;
+    // compute smeared absolute momentum vector
+    const auto newP = p + deltaP;
 
     // build the track covariance matrix using the smearing sigmas
     Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
-    cov(Acts::eLOC_0, Acts::eLOC_0) = sigmaU * sigmaU;
-    cov(Acts::eLOC_1, Acts::eLOC_1) = sigmaV * sigmaV;
-    cov(Acts::ePHI, Acts::ePHI) = sigmaPhi * sigmaPhi;
-    cov(Acts::eTHETA, Acts::eTHETA) = sigmaTheta * sigmaTheta;
-    cov(Acts::eQOP, Acts::eQOP) = sigmaQOverP * sigmaQOverP;
-    cov(Acts::eT, Acts::eT) = sigmaT0 * sigmaT0;
+    cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = sigmaU * sigmaU;
+    cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = sigmaV * sigmaV;
+    cov(Acts::eBoundTime, Acts::eBoundTime) = sigmaT0 * sigmaT0;
+    cov(Acts::eBoundPhi, Acts::eBoundPhi) = sigmaPhi * sigmaPhi;
+    cov(Acts::eBoundTheta, Acts::eBoundTheta) = sigmaTheta * sigmaTheta;
+    cov(Acts::eBoundQOverP, Acts::eBoundQOverP) = sigmaQOverP * sigmaQOverP;
 
-    parameters.emplace_back(std::make_optional(std::move(cov)), pos, mom,
-                            particle.charge(), time);
+    parameters.emplace_back(pos4, newPhi, newTheta, newP, particle.charge(),
+                            cov);
   };
 
   ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(parameters));

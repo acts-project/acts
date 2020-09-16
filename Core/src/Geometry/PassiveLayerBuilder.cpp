@@ -1,21 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// PassiveLayerBuilder.cpp, Acts project
-///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -70,12 +66,11 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
           std::make_shared<const RadialBounds>(m_cfg.posnegLayerRmin.at(ipnl),
                                                m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
-      const Transform3D* eTransform = new Transform3D(
+      const Transform3D eTransform(
           Translation3D(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
       // create the layers
       MutableLayerPtr eLayer = DiscLayer::create(
-          std::shared_ptr<const Transform3D>(eTransform), dBounds, nullptr,
-          m_cfg.posnegLayerThickness.at(ipnl));
+          eTransform, dBounds, nullptr, m_cfg.posnegLayerThickness.at(ipnl));
 
       // assign the material to the layer surface
       std::shared_ptr<const ISurfaceMaterial> material = nullptr;
@@ -114,7 +109,7 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
       MutableLayerPtr cLayer = CylinderLayer::create(
-          nullptr, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
+          s_idTransform, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
       std::shared_ptr<const ISurfaceMaterial> material = nullptr;
       // create the material from jobOptions

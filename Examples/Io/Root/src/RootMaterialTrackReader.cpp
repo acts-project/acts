@@ -121,8 +121,10 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
             Acts::Vector3D((*m_step_x)[is], (*m_step_y)[is], (*m_step_z)[is]);
         mInteraction.direction = Acts::Vector3D(
             (*m_step_dx)[is], (*m_step_dy)[is], (*m_step_dz)[is]);
-        mInteraction.materialProperties = Acts::MaterialProperties(
-            mX0, mL0, (*m_step_A)[is], (*m_step_Z)[is], (*m_step_rho)[is], s);
+        mInteraction.materialSlab = Acts::MaterialSlab(
+            Acts::Material::fromMassDensity(mX0, mL0, (*m_step_A)[is],
+                                            (*m_step_Z)[is], (*m_step_rho)[is]),
+            s);
         rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
       }
       mtrackCollection.push_back(std::move(rmTrack));

@@ -20,7 +20,7 @@ namespace ActsExamples {
 
 /// @class SteppingAction
 ///
-/// @brief Collects the RecordedMaterialProperties entities
+/// @brief Collects the RecordedMaterialSlab entities
 ///
 /// The SteppingAction class is the implementation of the
 /// Geant4 class SteppingAction. It extracts the weighted material

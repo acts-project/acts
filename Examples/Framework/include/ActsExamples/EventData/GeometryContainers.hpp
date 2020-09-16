@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
@@ -24,23 +24,25 @@ namespace detail {
 // extract the geometry identifier from a variety of types
 struct GeometryIdGetter {
   // explicit geometry identifier are just forwarded
-  constexpr Acts::GeometryID operator()(Acts::GeometryID geometryId) const {
+  constexpr Acts::GeometryIdentifier operator()(
+      Acts::GeometryIdentifier geometryId) const {
     return geometryId;
   }
   // encoded geometry ids are converted back to geometry identifiers.
-  constexpr Acts::GeometryID operator()(Acts::GeometryID::Value encoded) const {
-    return Acts::GeometryID(encoded);
+  constexpr Acts::GeometryIdentifier operator()(
+      Acts::GeometryIdentifier::Value encoded) const {
+    return Acts::GeometryIdentifier(encoded);
   }
   // support elements in map-like structures.
   template <typename T>
-  constexpr Acts::GeometryID operator()(
-      const std::pair<Acts::GeometryID, T>& mapItem) const {
+  constexpr Acts::GeometryIdentifier operator()(
+      const std::pair<Acts::GeometryIdentifier, T>& mapItem) const {
     return mapItem.first;
   }
   // support elements that implement `.geometryId()`.
   template <typename T>
   inline auto operator()(const T& thing) const
-      -> decltype(thing.geometryId(), Acts::GeometryID()) {
+      -> decltype(thing.geometryId(), Acts::GeometryIdentifier()) {
     return thing.geometryId();
   }
 };
@@ -84,17 +86,19 @@ using GeometryIdMultiset =
 ///     }
 ///
 template <typename T>
-using GeometryIdMultimap = GeometryIdMultiset<std::pair<Acts::GeometryID, T>>;
+using GeometryIdMultimap =
+    GeometryIdMultiset<std::pair<Acts::GeometryIdentifier, T>>;
 
 /// Select all elements within the given volume.
 template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID::Value volume) {
-  auto cmp = Acts::GeometryID().setVolume(volume);
+    const GeometryIdMultiset<T>& container,
+    Acts::GeometryIdentifier::Value volume) {
+  auto cmp = Acts::GeometryIdentifier().setVolume(volume);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
   // WARNING overflows to volume==0 if the input volume is the last one
-  cmp = Acts::GeometryID().setVolume(volume + 1u);
+  cmp = Acts::GeometryIdentifier().setVolume(volume + 1u);
   // optimize search by using the lower bound as start point. also handles
   // volume overflows since the geo id would be located before the start of
   // the upper edge search window.
@@ -104,20 +108,21 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectVolume(
 }
 template <typename T>
 inline auto selectVolume(const GeometryIdMultiset<T>& container,
-                         Acts::GeometryID id) {
+                         Acts::GeometryIdentifier id) {
   return selectVolume(container, id.volume());
 }
 
 /// Select all elements within the given layer.
 template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID::Value volume,
-    Acts::GeometryID::Value layer) {
-  auto cmp = Acts::GeometryID().setVolume(volume).setLayer(layer);
+    const GeometryIdMultiset<T>& container,
+    Acts::GeometryIdentifier::Value volume,
+    Acts::GeometryIdentifier::Value layer) {
+  auto cmp = Acts::GeometryIdentifier().setVolume(volume).setLayer(layer);
   auto beg = std::lower_bound(container.begin(), container.end(), cmp,
                               detail::CompareGeometryId{});
   // WARNING resets to layer==0 if the input layer is the last one
-  cmp = Acts::GeometryID().setVolume(volume).setLayer(layer + 1u);
+  cmp = Acts::GeometryIdentifier().setVolume(volume).setLayer(layer + 1u);
   // optimize search by using the lower bound as start point. also handles
   // volume overflows since the geo id would be located before the start of
   // the upper edge search window.
@@ -127,25 +132,25 @@ inline Range<typename GeometryIdMultiset<T>::const_iterator> selectLayer(
 }
 template <typename T>
 inline auto selectLayer(const GeometryIdMultiset<T>& container,
-                        Acts::GeometryID id) {
+                        Acts::GeometryIdentifier id) {
   return selectLayer(container, id.volume(), id.layer());
 }
 
 /// Select all elements for the given module / sensitive surface.
 template <typename T>
 inline Range<typename GeometryIdMultiset<T>::const_iterator> selectModule(
-    const GeometryIdMultiset<T>& container, Acts::GeometryID geoId) {
+    const GeometryIdMultiset<T>& container, Acts::GeometryIdentifier geoId) {
   // module is the lowest level and defines a single geometry id value
   return makeRange(container.equal_range(geoId));
 }
 template <typename T>
 inline auto selectModule(const GeometryIdMultiset<T>& container,
-                         Acts::GeometryID::Value volume,
-                         Acts::GeometryID::Value layer,
-                         Acts::GeometryID::Value module) {
+                         Acts::GeometryIdentifier::Value volume,
+                         Acts::GeometryIdentifier::Value layer,
+                         Acts::GeometryIdentifier::Value module) {
   return selectModule(
       container,
-      Acts::GeometryID().setVolume(volume).setLayer(layer).setSensitive(
+      Acts::GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
           module));
 }
 

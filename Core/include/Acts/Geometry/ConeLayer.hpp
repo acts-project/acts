@@ -1,14 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-///////////////////////////////////////////////////////////////////
-// ConeLayer.h, Acts project
-///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include "Acts/Geometry/Layer.hpp"
@@ -41,27 +37,19 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   ///
   /// @return is a shared pointer to a layer
   static MutableLayerPtr create(
-      std::shared_ptr<const Transform3D> transform,
-      std::shared_ptr<const ConeBounds> cbounds,
+      const Transform3D& transform, std::shared_ptr<const ConeBounds> cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
       std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::active) {
-    return MutableLayerPtr(new ConeLayer(
-        std::move(transform), std::move(cbounds), std::move(surfaceArray),
-        thickness, std::move(ad), laytyp));
+    return MutableLayerPtr(new ConeLayer(transform, std::move(cbounds),
+                                         std::move(surfaceArray), thickness,
+                                         std::move(ad), laytyp));
   }
 
-  /// Default Constructor - delete
   ConeLayer() = delete;
-
-  /// Copy constructor of ConeLayer - delete
   ConeLayer(const ConeLayer& cla) = delete;
-
-  /// Assignment operator for ConeLayers - delete
-  ConeLayer& operator=(const ConeLayer&) = delete;
-
-  /// Destructor
   ~ConeLayer() override = default;
+  ConeLayer& operator=(const ConeLayer&) = delete;
 
   /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface& surfaceRepresentation() const override;
@@ -80,7 +68,7 @@ class ConeLayer : virtual public ConeSurface, public Layer {
   /// @param laytyp is the layer type
   ///
   /// @todo chage od and ad to unique_ptr
-  ConeLayer(std::shared_ptr<const Transform3D> transform,
+  ConeLayer(const Transform3D& transform,
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
             std::unique_ptr<ApproachDescriptor> ade = nullptr,

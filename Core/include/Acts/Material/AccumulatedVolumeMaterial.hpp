@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "Acts/Material/MaterialProperties.hpp"
-
-#include <limits>
+#include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
@@ -20,21 +18,15 @@ namespace Acts {
 class AccumulatedVolumeMaterial {
  public:
   /// Add one entry with the given material properties.
-  void accumulate(const MaterialProperties& mat);
+  void accumulate(const MaterialSlab& mat);
 
   /// Compute the average material collected so far.
   ///
   /// @returns Vacuum properties if no matter has been accumulated yet.
-  Material average();
+  const Material& average() { return m_average.material(); }
 
  private:
-  double m_totalX0{std::numeric_limits<double>::infinity()};
-  double m_totalL0{std::numeric_limits<double>::infinity()};
-  double m_totalAr{0.};
-  double m_totalZ{0.};
-  double m_totalRho{0.};
-  double m_thickness{1.};
-  unsigned int m_materialEntries{0};
+  MaterialSlab m_average;
 };
 
 }  // namespace Acts

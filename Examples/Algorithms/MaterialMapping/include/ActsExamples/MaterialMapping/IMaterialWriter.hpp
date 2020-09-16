@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <map>
 
@@ -18,10 +18,10 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 
 using SurfaceMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
 using VolumeMaterialMap =
-    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 }  // namespace Acts
