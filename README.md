@@ -30,7 +30,7 @@ cmake --build <build-dir>
 For more details, e.g. specific versions and additional dependencies, have a
 look at the [getting started guide](docs/getting_started.md). If you find a bug,
 have a feature request, or want to contribute to Acts, have a look at the
-[contribution guidelines](CONTRIBUTING).
+[contribution guidelines](CONTRIBUTING.rst).
 
 ## Versioning and public API
 
