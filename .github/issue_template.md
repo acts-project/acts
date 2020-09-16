@@ -10,10 +10,14 @@ FOR YOUR INFORMATION AN MUST BE REMOVED BEFORE SUBMITTING ISSUE.
     - Improvement
     - infrastructure
 
-- [ ] If the issue reports a bug, is it also marked with one of the
-    `Impact - {Minor,Major,Critical}` labels?
+- [ ] If the issue reports a bug:
 
-- [ ] Is the issue assigned to a milestone? In most cases this should be `next`.
+    - [ ] Is it also marked with one of the `Impact - {Minor,Major,Critical}` labels?
+    - [ ] Does the description contain all necessary information to reproduce
+        the error?
+
+- [ ] Is the issue assigned to a milestone? This should be `next` unless you
+    know exactly what you are doing.
 
 - [ ] If the issue is a question or the start of a discussion, please add the
     `Needs discussion` label.
