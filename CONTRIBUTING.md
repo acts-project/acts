@@ -14,7 +14,8 @@ Contributions to the Acts project are very welcome and feedback on the documenta
 ## Bug reports and feature requests
 
 To report an issue and before starting work, please create an issue in the [Github issue tracker](https://github.com/acts-project/acts-core/issues). A comprehensive explanation will help the development team to respond in a timely manner. Verbalizing the issue before starting work allows the other contributors to chime in and avoids disagreements how to progress.
-- The title should summarize the issue
+
+- The title should summarise the issue
 - Describe the issue in as much detail as possible in the comment
 
 Github does not allow editing labels, assignees or setting milestone to non-members of a project with at least "Triage" permission. These will have to be set by members with Triage permission after an issue/PR is created.
@@ -29,7 +30,7 @@ Guidelines regarding labels, assignees and milestone therefore only concern memb
 - bug reports
     - mention affected version(s)
     - issue type: "Bug"
-    - a detailed description of the bug including a receipe on how to reproduce it and any hints which may help diagnosing the problem
+    - a detailed description of the bug including a recipe on how to reproduce it and any hints which may help diagnosing the problem
 - feature requests
     - issue type: "Improvement" or "New Feature"
     - a detailed description of the feature request including possible use cases and benefits for other users
@@ -38,11 +39,12 @@ Guidelines regarding labels, assignees and milestone therefore only concern memb
 
 Anyone is welcome to contribute to Acts. Below is a short description how to contribute. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
 
-Please always fork the Acts repository you want to work on and create branches only in your own fork. Once you want to share your work, create a Pull Request (PR) (for gitlab users: equivalent to merge request) to the master branch of the upstream acts-project repository. If it is not yet ready to be merged in, please create a draft pull request (by clicking on the small arrow on the green "create pull request" button) to mark it work in progress. Once you want your branch to be merged in, request a review from the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers). Once a draft merge request is reviewed, it can be merged in.
+Please always fork the Acts repository you want to work on and create branches only in your own fork. Once you want to share your work, create a Pull Request (PR) (for GitLab users: equivalent to merge request) to the master branch of the upstream acts-project repository. If it is not yet ready to be merged in, please create a draft pull request (by clicking on the small arrow on the green "create pull request" button) to mark it work in progress. Once you want your branch to be merged in, request a review from the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers). Once a draft merge request is reviewed, it can be merged in.
 
 To get started with git, please refer to the [short introduction](http://git-scm.com/docs/gittutorial) as well as the [full git documentation](https://git-scm.com/doc). Tutorials as well as explanations of concepts and workflows with git can also be found on [Atlassian](http://www.atlassian.com/git/).
  
 ### Checklist for pull requests
+
 - Your branch has been rebased on the target branch and can be integrated through a fast-forward merge.
 - A detailed description of the pull request is provided.
 - The issue the PR closes is linked.
@@ -57,7 +59,7 @@ To get started with git, please refer to the [short introduction](http://git-scm
 In the following a few recommendations are outlined which should help you to get familiar with development process in the Acts project.
 
 1. **Each development in its own branch of your private fork!**
-Write access for developers has been disabled for developers on acts-project. Therefore, always start by creating your own fork and creating branches there. You should start a new branch for every development and all work which is logically/conceptually linked should happen in one branch. Try to keep your branches short. This helps immensly to understand the git history if you need to look at it in the future and helps reviewers of your code.
+Write access for developers has been disabled for developers on acts-project. Therefore, always start by creating your own fork and creating branches there. You should start a new branch for every development and all work which is logically/conceptually linked should happen in one branch. Try to keep your branches short. This helps immensely to understand the git history if you need to look at it in the future and helps reviewers of your code.
 If projects are complex (e.g. large code refactoring or complex new features), you may want to use _sub_-branches from the main development branch.
 
 1. **Never, ever directly work on any "official" branch!**
@@ -71,7 +73,7 @@ Well-written commit messages are key to understand your changes. There are many 
     - Structure your commit messages into short title (max 50 characters) and longer description (max width 72 characters)!
       This is best achieved by avoiding the `commit -m` option. Instead write the commit message in an editor/git tool/IDE...
     - Describe why you did the change (git diff already tells you what has changed)!
-    - Mention any side effects/implications/consquences!
+    - Mention any side effects/implications/consequences!
 
 1. **Prefer git pull --rebase!**
 If you work with a colleague on a new development, you may want to include his latest changes. This is usually done by calling `git pull` which will synchronise your local working copy with the remote repository (which may have been updated by your colleague). By default, this action creates a merge commit if you have local commits which were not yet published to the remote repository. These merge commits are considered to contribute little information to the development process of the feature and they clutter the history (read more e.g.  [here](https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/) or [here](http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history)). This problem can be avoided by using `git pull --rebase` which replays your local (un-pushed) commits on the tip of the remote branch. You can make this the default behaviour by running `git config pull.rebase true`. More about merging vs rebasing can be found [here](https://www.atlassian.com/git/tutorials/merging-vs-rebasing/).
@@ -97,6 +99,7 @@ In addition, some conventions are used in Acts code, details can be found [here]
 ### Example: Make a bugfix while working on a feature
   
 During the development of a new feature you discover a bug which needs to be fixed. In order to not mix bugfix and feature development, the bugfix should happen in a different branch. The recommended procedure for handling this situation is the following:
+
 1. Get into a clean state of your working directory on your feature branch (either by commiting open changes or by stashing them).
 1. Checkout the branch the bugfix should be merged into (either _master_ or _release/X.Y.Z_) and get the most recent version.
 1. Create a new branch for the bugfix.
@@ -108,11 +111,11 @@ During the development of a new feature you discover a bug which needs to be fix
 
 ### Example: Backporting a feature or bugfix
 
-Suppose you have a bugfix or feature branch that is eventually going to be merged in `master`. You might want to have the feature/bugfix avilable in a patch (say `0.25.1`) tag. To to that, find the corresponding release branch, for this example that would be `release/v0.25.X`. You must create a dedicated branch that **only** contains the commits that relate to your feature/bugfix, otherwise the PR will contain all other commits that were merged into master since the release was branched off. With that branch, open a PR to that branch, and make it clear that it is a backport, also linking to a potential equivalent PR that targets `master`.
+Suppose you have a bugfix or feature branch that is eventually going to be merged in `master`. You might want to have the feature/bugfix available in a patch (say `0.25.1`) tag. To to that, find the corresponding release branch, for this example that would be `release/v0.25.X`. You must create a dedicated branch that **only** contains the commits that relate to your feature/bugfix, otherwise the PR will contain all other commits that were merged into master since the release was branched off. With that branch, open a PR to that branch, and make it clear that it is a backport, also linking to a potential equivalent PR that targets `master`.
 
-### Tips for users migrating from Gitlab
+### Tips for users migrating from GitLab
 
-- The most obvious difference first: What is called Merge Request (MR) in Gitlab is called Pull Request (PR) in Github.
+- The most obvious difference first: What is called Merge Request (MR) in GitLab is called Pull Request (PR) in GitHub.
 - Once your PR is ready to be merged, request a review by the users in the [reviewers team](https://github.com/orgs/acts-project/teams/reviewers)
 - As Acts started enforcing using your own fork with the switch to Github, developers no longer have write access to the upstream repository.
 - The CI will fail if a PR does not yet have the required approvals.
@@ -125,22 +128,22 @@ As some of the guidelines recommended here require rights granted to the reviewe
 
 ### Configuring your own PRs and PRs by people with read rights
 
-* Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
-* Check if the "triage" label is set and configure labels, assignees and milestone for those PR
-    * Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
+- Check if the "request review" label is set, if it is a draft PR or if the title starts with WIP. The latter two are equivalent.
+- Check if the "triage" label is set and configure labels, assignees and milestone for those PR
+    - Needs at least label "Bug", "Improvement", "Infrastructure" or "New Feature"
 
 ### Approving a pull request
 
-* Does its title and description reflect its contents?
-* Do the automated continuous integration tests pass without problems?
-* Have all the comments raised by previous reviewers been addressed?
+- Does its title and description reflect its contents?
+- Do the automated continuous integration tests pass without problems?
+- Have all the comments raised by previous reviewers been addressed?
 
-If you are confident that a pull request is ready for integration, please make it known by clicking the "Approve pull request" button of the Gitlab interface. This notifies other members of the Acts team of your decision, and marks the pull request as ready to be merged.
+If you are confident that a pull request is ready for integration, please make it known by clicking the "Approve pull request" button of the GitHub interface. This notifies other members of the Acts team of your decision, and marks the pull request as ready to be merged.
 
 ### Merging a pull request
 
 If you have been granted write access on the Acts repository, you can merge a pull request into the Acts master branch after it has been approved.
 
-Github may warn you that a "Fast-forward merge is not possible". This warning means that the pull request has fallen behind the current Acts master branch, and should be updated through a rebase. Please notify the pull request author in order to make sure that the latest master changes do not affect the pull request, and to have it updated as appropriate.
+GitHub may warn you that a "Fast-forward merge is not possible". This warning means that the pull request has fallen behind the current Acts master branch, and should be updated through a rebase. Please notify the pull request author in order to make sure that the latest master changes do not affect the pull request, and to have it updated as appropriate.
 
 For a PR that is behind master, a button "Update branch" may appear. This should NOT be used as it merges instead of rebasing, which is not our workflow.
