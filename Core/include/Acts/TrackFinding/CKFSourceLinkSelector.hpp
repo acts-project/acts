@@ -11,7 +11,7 @@
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/TrackFinder/CombinatorialKalmanFilterError.hpp"
+#include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"

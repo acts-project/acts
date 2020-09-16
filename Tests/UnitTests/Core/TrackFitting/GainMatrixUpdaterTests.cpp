@@ -11,9 +11,9 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Fitter/GainMatrixUpdater.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <memory>
