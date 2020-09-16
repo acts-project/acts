@@ -19,8 +19,8 @@ ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
       m_charge(ActsFatras::findCharge(m_cfg.pdg)),
       m_mass(ActsFatras::findMass(m_cfg.pdg)) {}
 
-ActsExamples::SimParticleContainer
-ActsExamples::ParametricProcessGenerator::operator()(RandomEngine& rng) const {
+ActsExamples::SimParticleContainer ActsExamples::ParametricParticleGenerator::
+operator()(RandomEngine& rng) const {
   using UniformReal = std::uniform_real_distribution<double>;
   using UniformIndex = std::uniform_int_distribution<size_t>;
 
