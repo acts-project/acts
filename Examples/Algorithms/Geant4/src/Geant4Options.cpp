@@ -43,11 +43,11 @@ void ActsExamples::Options::addGeant4Options(
       value<read_range>()->multitoken()->default_value({-M_PI, M_PI}),
       "Azimutal angle phi range for the geantino");
   opt("g4-eta-range",
-      value<read_range>()->multitoken()->default_value({-4., 4.}),
+      value<read_range>()->multitoken()->default_value({-5., 5.}),
       "Pseudorapidity eta range for the geantino");
   opt("g4-sampling-variable", value<std::string>()->default_value("theta"),
       "Variable from which the particle generation is uniform. Can be theta "
-      "(default) or eta");
+      "or eta");
 }
 
 ActsExamples::GeantinoRecording::Config
