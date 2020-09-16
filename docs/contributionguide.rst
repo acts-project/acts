@@ -1,5 +1,1 @@
-Contribution guidelines
-=======================
-
-.. mdinclude:: ../CONTRIBUTING.md
-
+.. include:: ../CONTRIBUTING
