@@ -9,7 +9,7 @@
 #include "FatrasDigitizationBase.hpp"
 
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
@@ -27,7 +27,7 @@ void ActsExamples::setupDigitization(
   auto logLevel = ActsExamples::Options::readLogLevel(vars);
 
   // Configure the digitizer
-  ActsExamples::DigitizationAlgorithm::Config digi;
+  ActsExamples::PlanarSteppingAlgorithm::Config digi;
   digi.inputSimulatedHits = "hits";
   digi.outputClusters = "clusters";
   digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
@@ -35,7 +35,7 @@ void ActsExamples::setupDigitization(
   digi.randomNumbers = randomNumbers;
   digi.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::DigitizationAlgorithm>(digi, logLevel));
+      std::make_shared<ActsExamples::PlanarSteppingAlgorithm>(digi, logLevel));
 
   // Output directory
   std::string outputDir = vars["output-dir"].template as<std::string>();
