@@ -25,10 +25,9 @@ using TrackParameters = Acts::CurvilinearTrackParameters;
 /// Container of reconstructed track states for multiple tracks.
 using TrackParametersContainer = std::vector<TrackParameters>;
 
-/// MultiTrajectory definition
+/// Single track trajectory with multiple states
 using Trajectory = Acts::MultiTrajectory<SimSourceLink>;
-
-/// Container for the truth fitting/finding track(s)
+/// Container of reconstructed trajectories
 using TrajectoryContainer = std::vector<SimMultiTrajectory>;
 
 }  // namespace ActsExamples
