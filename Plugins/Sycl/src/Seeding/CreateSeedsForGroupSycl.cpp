@@ -9,34 +9,19 @@
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
-<<<<<<< HEAD
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
-=======
-
-#include <algorithm>
-#include <array>
->>>>>>> master
 #include <atomic>
 #include <cstdint>
 #include <cstring>
 #include <exception>
-<<<<<<< HEAD
-=======
-#include <iterator>
-#include <numeric>
->>>>>>> master
 #include <vector>
 
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
-<<<<<<< HEAD
 // Kernel classes in order of execution.
-=======
-/// Kernel classes in order of execution.
->>>>>>> master
 class duplet_search_bottom_kernel;
 class duplet_search_top_kernel;
 class ind_copy_bottom_kernel;
@@ -48,17 +33,12 @@ class filter_2sp_fixed_kernel;
 
 // Returns the smallest multiple of workGroupSize that is not smaller
 // than numThreads.
-<<<<<<< HEAD
 // Calculate global range for 1 dimensional nd_range
 uint32_t num1DWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
-=======
-uint32_t numWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
->>>>>>> master
   auto q = (numThreads + workGroupSize - 1) / workGroupSize;
   return q * workGroupSize;
 }
 
-<<<<<<< HEAD
 // Calculate global and local range for 2 dimensional nd_range
 // Set the number of threads in both dimensions to the smallest multiple
 // of the work group size in that dimension
@@ -77,11 +57,6 @@ void num2DWorkItems(uint32_t& numThreadsDim0, uint32_t& numThreadsDim1,
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,
     const detail::DeviceSeedfinderConfig& seedfinderConfig,
-=======
-void createSeedsForGroupSycl(
-    const QueueWrapper& wrappedQueue,
-    const detail::DeviceSeedfinderConfig& configData,
->>>>>>> master
     const DeviceExperimentCuts& deviceCuts,
     const std::vector<detail::DeviceSpacePoint>& bottomSPs,
     const std::vector<detail::DeviceSpacePoint>& middleSPs,
@@ -105,20 +80,18 @@ void createSeedsForGroupSycl(
 
   // After completing the duplet search, we'll have successfully contructed
   // two bipartite graphs for bottom-middle and top-middle space points.
-  // We store the indices of the middle space points of the corresponding edges.
+  // We store the indices of the middle space points of the corresponding
+  // edges.
   std::vector<uint32_t> indMidBotComp;
   std::vector<uint32_t> indMidTopComp;
 
   // Number of edges for middle-bottom and middle-top duplet bipartite graphs.
   uint32_t edgesBottom = 0;
   uint32_t edgesTop = 0;
-<<<<<<< HEAD
-  // Number of possible compatible triplets. This is the sum of the combination
-  // of the number of compatible bottom and compatible top duplets per middle
-  // space point. (nb0*nt0 + nb1*nt1 + ... where nbk is the number of comp. bot.
-  // SPs for the kth middle SP)
-=======
->>>>>>> master
+  // Number of possible compatible triplets. This is the sum of the
+  // combination of the number of compatible bottom and compatible top duplets
+  // per middle space point. (nb0*nt0 + nb1*nt1 + ... where nbk is the number
+  // of comp. bot. SPs for the kth middle SP)
   uint32_t edgesComb = 0;
 
   try {
@@ -142,17 +115,15 @@ void createSeedsForGroupSycl(
     std::atomic_uint32_t* deviceCountTopDuplets =
         cl::sycl::malloc_device<std::atomic_uint32_t>(M, *q);
 
-<<<<<<< HEAD
     // We will copy the number of compatible top duplets to another array so
     // that we don't have to access atomic variables later in the algorithm.
-=======
->>>>>>> master
     uint32_t* deviceNumTopDuplets = cl::sycl::malloc_device<uint32_t>(M, *q);
 
-    // The limit of compatible bottom [top] space points per middle space point
-    // is B [T]. Temporarily we reserve buffers of this size (M*B and M*T). We
-    // store the indices of bottom [top] space points in bottomSPs [topSPs]. We
-    // move the indices to optimal size vectors for easier indexing.
+    // The limit of compatible bottom [top] space points per middle space
+    // point is B [T]. Temporarily we reserve buffers of this size (M*B and
+    // M*T). We store the indices of bottom [top] space points in bottomSPs
+    // [topSPs]. We move the indices to optimal size vectors for easier
+    // indexing.
     uint32_t* deviceTmpIndBot = cl::sycl::malloc_device<uint32_t>(M * B, *q);
     uint32_t* deviceTmpIndTop = cl::sycl::malloc_device<uint32_t>(M * T, *q);
 
@@ -162,7 +133,6 @@ void createSeedsForGroupSycl(
               sizeof(detail::DeviceSpacePoint) * (M));
     q->memcpy(deviceTopSPs, topSPs.data(),
               sizeof(detail::DeviceSpacePoint) * (T));
-<<<<<<< HEAD
 
     // Set all counters to zero.
     q->memset(deviceCountBotDuplets, 0, M * sizeof(std::atomic_uint32_t));
@@ -170,8 +140,8 @@ void createSeedsForGroupSycl(
 
     // Calculate 2 dimensional range of bottom-middle duplet search kernel
     // We'll have a total of M*B threads globally, but we need to give the
-    // nd_range the global dimensions so that they are an exact multiple of the
-    // local dimensions. That's why we need this calculation.
+    // nd_range the global dimensions so that they are an exact multiple of
+    // the local dimensions. That's why we need this calculation.
     auto globalRangeDim0 = M;
     auto globalRangeDim1 = B;
     auto localRangeDim0 = uint32_t(1);
@@ -197,11 +167,6 @@ void createSeedsForGroupSycl(
         cl::sycl::range<2>{globalRangeDim0, globalRangeDim1},
         cl::sycl::range<2>{localRangeDim0, localRangeDim1}};
 
-=======
-    q->memset(deviceCountBotDuplets, 0, M * sizeof(std::atomic_uint32_t));
-    q->memset(deviceCountTopDuplets, 0, M * sizeof(std::atomic_uint32_t));
-
->>>>>>> master
     //*********************************************//
     // ********** DUPLET SEARCH - BEGIN ********** //
     //*********************************************//
@@ -209,22 +174,13 @@ void createSeedsForGroupSycl(
     {
       q->submit([&](cl::sycl::handler& h) {
         h.parallel_for<duplet_search_bottom_kernel>(
-<<<<<<< HEAD
             bottomDupletNDRange, [=](cl::sycl::nd_item<2> item) {
               const auto mid = item.get_global_id(0);
               const auto bot = item.get_global_id(1);
               // We check whether this thread actually makes sense (within
               // bounds).
-              // The number of threads is usually a factor of 2, or 3*2^k (k \in
-              // N), etc.
-              // Without this check we may index out of arrays.
-=======
-            cl::sycl::range<2>{M, B}, [=](cl::sycl::id<2> idx) {
-              const auto mid = idx[0];
-              const auto bot = idx[1];
-              // We check whether this thread actually makes sense (within
-              // bounds).
->>>>>>> master
+              // The number of threads is usually a factor of 2, or 3*2^k (k
+              // \in N), etc. Without this check we may index out of arrays.
               if (mid < M && bot < B) {
                 const auto midSP = deviceMiddleSPs[mid];
                 const auto botSP = deviceBottomSPs[bot];
@@ -233,19 +189,11 @@ void createSeedsForGroupSycl(
                 const auto cotTheta = (midSP.z - botSP.z) / deltaR;
                 const auto zOrigin = midSP.z - midSP.r * cotTheta;
 
-<<<<<<< HEAD
                 if (!(deltaR < seedfinderConfig.deltaRMin) &&
                     !(deltaR > seedfinderConfig.deltaRMax) &&
                     !(cl::sycl::abs(cotTheta) > seedfinderConfig.cotThetaMax) &&
                     !(zOrigin < seedfinderConfig.collisionRegionMin) &&
                     !(zOrigin > seedfinderConfig.collisionRegionMax)) {
-=======
-                if (!(deltaR < configData.deltaRMin) &&
-                    !(deltaR > configData.deltaRMax) &&
-                    !(cl::sycl::abs(cotTheta) > configData.cotThetaMax) &&
-                    !(zOrigin < configData.collisionRegionMin) &&
-                    !(zOrigin > configData.collisionRegionMax)) {
->>>>>>> master
                   // We keep counting duplets with atomic variables
                   const auto ind = deviceCountBotDuplets[mid].fetch_add(1);
                   deviceTmpIndBot[mid * B + ind] = bot;
@@ -256,15 +204,9 @@ void createSeedsForGroupSycl(
 
       q->submit([&](cl::sycl::handler& h) {
         h.parallel_for<duplet_search_top_kernel>(
-<<<<<<< HEAD
             topDupletNDRange, [=](cl::sycl::nd_item<2> item) {
               const auto mid = item.get_global_id(0);
               const auto top = item.get_global_id(1);
-=======
-            cl::sycl::range<2>{M, T}, [=](cl::sycl::id<2> idx) {
-              const auto mid = idx[0];
-              const auto top = idx[1];
->>>>>>> master
               // We check whether this thread actually makes sense (within
               // bounds).
               if (mid < M && top < T) {
@@ -275,19 +217,11 @@ void createSeedsForGroupSycl(
                 const auto cotTheta = (topSP.z - midSP.z) / deltaR;
                 const auto zOrigin = midSP.z - midSP.r * cotTheta;
 
-<<<<<<< HEAD
                 if (!(deltaR < seedfinderConfig.deltaRMin) &&
                     !(deltaR > seedfinderConfig.deltaRMax) &&
                     !(cl::sycl::abs(cotTheta) > seedfinderConfig.cotThetaMax) &&
                     !(zOrigin < seedfinderConfig.collisionRegionMin) &&
                     !(zOrigin > seedfinderConfig.collisionRegionMax)) {
-=======
-                if (!(deltaR < configData.deltaRMin) &&
-                    !(deltaR > configData.deltaRMax) &&
-                    !(cl::sycl::abs(cotTheta) > configData.cotThetaMax) &&
-                    !(zOrigin < configData.collisionRegionMin) &&
-                    !(zOrigin > configData.collisionRegionMax)) {
->>>>>>> master
                   // We keep counting duplets with atomic access.
                   const auto ind = deviceCountTopDuplets[mid].fetch_add(1);
                   deviceTmpIndTop[mid * T + ind] = top;
@@ -314,13 +248,9 @@ void createSeedsForGroupSycl(
                 M * sizeof(std::atomic_uint32_t));
       q->wait();
 
-<<<<<<< HEAD
       // Construct prefix sum arrays of duplet counts.
       // These will later be used to index other arrays based on middle SP
       // indices.
-=======
-      // use std::parital_sum instead?
->>>>>>> master
       for (uint32_t i = 1; i < M + 1; ++i) {
         sumBotCompUptoMid[i] +=
             sumBotCompUptoMid[i - 1] + countBotDuplets[i - 1];
@@ -337,10 +267,7 @@ void createSeedsForGroupSycl(
       indMidBotComp.reserve(edgesBottom);
       indMidTopComp.reserve(edgesTop);
 
-<<<<<<< HEAD
       // Fill arrays of middle SP indices of found duplets (bottom and top).
-=======
->>>>>>> master
       for (uint32_t mid = 0; mid < M; ++mid) {
         std::fill_n(std::back_inserter(indMidBotComp), countBotDuplets[mid],
                     mid);
@@ -350,19 +277,14 @@ void createSeedsForGroupSycl(
     }  // sync
 
     if (edgesBottom > 0 && edgesTop > 0) {
-      // Global and local range of execution for edgesBottom number of threads.
-      // Local range corresponds to block size.
+      // Global and local range of execution for edgesBottom number of
+      // threads. Local range corresponds to block size.
       cl::sycl::nd_range<1> edgesBotNdRange{
-<<<<<<< HEAD
           cl::sycl::range<1>(num1DWorkItems(edgesBottom, maxWorkGroupSize)),
-=======
-          cl::sycl::range<1>(numWorkItems(edgesBottom, maxWorkGroupSize)),
->>>>>>> master
           cl::sycl::range<1>(maxWorkGroupSize)};
 
       // Global and local range of execution for edgesTop number of threads.
       cl::sycl::nd_range<1> edgesTopNdRange{
-<<<<<<< HEAD
           cl::sycl::range<1>(num1DWorkItems(edgesTop, maxWorkGroupSize)),
           cl::sycl::range<1>(maxWorkGroupSize)};
 
@@ -371,18 +293,19 @@ void createSeedsForGroupSycl(
       //
       // (for bottom-middle duplets, but it is the same for middle-tops)
       //
-      // In case we have 4 middle SP and 5 bottom SP, our temporary array of the
-      // compatible bottom duplet indices would look like this:
+      // In case we have 4 middle SP and 5 bottom SP, our temporary array of
+      // the compatible bottom duplet indices would look like this:
       //      ---------------------
       // mid0 | 0 | 3 | 4 | 1 | - |    Indices in the columns correspond to
       // mid1 | 3 | 2 | - | - | - |    bottom SP indices in the bottomSPs
-      // mid2 | - | - | - | - | - |    array. Threads are executed concurrently,
-      // mid3 | 4 | 2 | 1 | - | - |    so the order of indices is random.
+      // mid2 | - | - | - | - | - |    array. Threads are executed
+      // concurrently, mid3 | 4 | 2 | 1 | - | - |    so the order of indices
+      // is random.
       //      ---------------------
       // We will refer to this structure as a bipartite graph, as it can be
       // described by a graph of nodes for middle and bottom SPs, and edges
-      // between one middle and one bottom SP, but never to middle or two bottom
-      // SPs.
+      // between one middle and one bottom SP, but never to middle or two
+      // bottom SPs.
       //
       // We will flatten this matrix out, and store the indices the
       // following way (this is deviceIndBot):
@@ -408,10 +331,10 @@ void createSeedsForGroupSycl(
       // | 0 | 4 | 6 | 6 | 9 |
       // ---------------------
       //
-      // If we have the middle SP with index 1, then we know that the indices of
-      // the compatible bottom SPs are in the range (left closed, right open)
-      // [deviceSumBot[1] , deviceSumBot[2] ) of deviceIndBot.
-      // In this case, these indices are 3 and 2, so we'd use these to index
+      // If we have the middle SP with index 1, then we know that the indices
+      // of the compatible bottom SPs are in the range (left closed, right
+      // open) [deviceSumBot[1] , deviceSumBot[2] ) of deviceIndBot. In this
+      // case, these indices are 3 and 2, so we'd use these to index
       // deviceBottomSPs to gather data about the bottom SP.
       //
       // To be able to get the indices of middle SPs in constant time inside
@@ -429,17 +352,12 @@ void createSeedsForGroupSycl(
       // or 9 in our example.
       //
       // The size of the array storing our transformed coordiantes
-      // (deviceLinBot) is also edgesBottom, the sum of bottom duplets we found
-      // so far.
+      // (deviceLinBot) is also edgesBottom, the sum of bottom duplets we
+      // found so far.
 
-=======
-          cl::sycl::range<1>(numWorkItems(edgesTop, maxWorkGroupSize)),
-          cl::sycl::range<1>(maxWorkGroupSize)};
-
->>>>>>> master
-      // We store the indices of the BOTTOM/TOP space points of the edges of the
-      // bottom-middle and top-middle bipartite duplet graphs.
-      // They index the bottomSPs and topSPs vectors.
+      // We store the indices of the BOTTOM/TOP space points of the edges of
+      // the bottom-middle and top-middle bipartite duplet graphs. They index
+      // the bottomSPs and topSPs vectors.
       uint32_t* deviceIndBot =
           cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
       uint32_t* deviceIndTop = cl::sycl::malloc_device<uint32_t>(edgesTop, *q);
@@ -479,10 +397,7 @@ void createSeedsForGroupSycl(
       q->wait();
 
       // Copy indices from temporary matrices to final, optimal size vectors.
-<<<<<<< HEAD
       // We will use these for easier indexing.
-=======
->>>>>>> master
       {
         q->submit([&](cl::sycl::handler& h) {
           h.parallel_for<ind_copy_bottom_kernel>(
@@ -612,7 +527,6 @@ void createSeedsForGroupSycl(
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-<<<<<<< HEAD
       // EXPLANATION OF INDEXING (part 1)
       // -----------------------
       //
@@ -629,37 +543,38 @@ void createSeedsForGroupSycl(
       //
       // sumBotTopCombined:
       // ________________________________________________________
-      // |     |         |                   |     |  M         | M = number of
-      // |  0  | nb0*nt0 | nb0*nt0 + nb1*nt1 | ... |  ∑ nbi+nti | middle SPs
+      // |     |         |                   |     |  M         | M = number
+      // of |  0  | nb0*nt0 | nb0*nt0 + nb1*nt1 | ... |  ∑ nbi+nti | middle
+      // SPs
       // |_____|_________|___________________|_____|_i=0________|
       //
       // We will start kernels and reserve memory for these combinations but
       // only so much we can fit into memory at once.
       //
       // We limit our memory usage to globalBufferSize/2, this is currently
-      // hard-coded, but it could be configured. Actually, it would be better to
-      // use a separate object that manages memory allocations and deallocations
-      // and we could ask it to lend us as much memory as it is happy to give.
+      // hard-coded, but it could be configured. Actually, it would be better
+      // to use a separate object that manages memory allocations and
+      // deallocations and we could ask it to lend us as much memory as it is
+      // happy to give.
       //
       // For later, let maxMemoryAllocation be maximum allocatable memory for
       // triplet search.
       //
-      // We start by adding up summing the combinations, until we arrive at a k
-      // which for
-      // k+1
+      // We start by adding up summing the combinations, until we arrive at a
+      // k which for k+1
       //  ∑ nbi+nti > maxMemoryAllocation
       // i=0
       // (or k == M).
       // So we know, that we need to start our first kernel for the first k
       // middle SPs.
       //
-      // Inside the triplet search kernel we start with a binary search, to find
-      // out which middle SP the thread corresponds to.
-      // Note, that sumBotTopCombined is a monotone increasing series of values
-      // which allows us to do a binary search on it.
+      // Inside the triplet search kernel we start with a binary search, to
+      // find out which middle SP the thread corresponds to. Note, that
+      // sumBotTopCombined is a monotone increasing series of values which
+      // allows us to do a binary search on it.
       //
-      // Inside the triplet search kernel we count the triplets for fixed bottom
-      // and middle SP. This is deviceCountTriplets.
+      // Inside the triplet search kernel we count the triplets for fixed
+      // bottom and middle SP. This is deviceCountTriplets.
       //
       // (We later copy their values to deviceNumTriplets because it is faster
       // to read values from it than from atomic variables.)
@@ -684,16 +599,6 @@ void createSeedsForGroupSycl(
       detail::DeviceTriplet* deviceCurvImpact =
           cl::sycl::malloc_device<detail::DeviceTriplet>(maxMemoryAllocation,
                                                          (*q));
-=======
-      const auto maxMemoryAllocation = std::min(
-          edgesComb, globalBufferSize / uint32_t((sizeof(detail::TripletData) +
-                                                  sizeof(detail::SeedData)) *
-                                                 2));
-
-      detail::TripletData* deviceCurvImpact =
-          cl::sycl::malloc_device<detail::TripletData>(maxMemoryAllocation,
-                                                       (*q));
->>>>>>> master
 
       // Reserve memory in advance for seed indices and weight
       // Other way around would allocating it inside the loop
@@ -708,7 +613,6 @@ void createSeedsForGroupSycl(
       std::atomic_uint32_t* countSeeds =
           cl::sycl::malloc_device<std::atomic_uint32_t>(1, *q);
 
-<<<<<<< HEAD
       std::atomic_uint32_t* deviceCountTriplets =
           cl::sycl::malloc_device<std::atomic_uint32_t>(edgesBottom, *q);
 
@@ -716,10 +620,6 @@ void createSeedsForGroupSycl(
           cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
 
       seeds.resize(M);
-=======
-      seeds.resize(M);
-      const float MIN = -100000.f;
->>>>>>> master
 
       // Do the triplet search and triplet filter for 2 sp fixed for middle
       // space points in the interval [firstMiddle, lastMiddle).
@@ -735,7 +635,6 @@ void createSeedsForGroupSycl(
           ++lastMiddle;
         }
 
-<<<<<<< HEAD
         const auto numTripletSearchThreads =
             sumBotTopCombined[lastMiddle] - sumBotTopCombined[firstMiddle];
 
@@ -761,21 +660,6 @@ void createSeedsForGroupSycl(
         cl::sycl::nd_range<1> tripletFilterNDRange{
             cl::sycl::range<1>(
                 num1DWorkItems(numTripletFilterThreads, maxWorkGroupSize)),
-=======
-        const auto numCombinations =
-            sumBotTopCombined[lastMiddle] - sumBotTopCombined[firstMiddle];
-        if (numCombinations == 0)
-          continue;
-
-        q->memcpy(tripletSearchOffset, &sumBotTopCombined[firstMiddle],
-                  sizeof(uint32_t));
-        q->memset(countSeeds, 0, sizeof(std::atomic_uint32_t));
-
-        // nd_range with maximum block size for triplet search and filter
-        // global and local range is given
-        cl::sycl::nd_range<1> tripletSearchNDRange{
-            cl::sycl::range<1>(numWorkItems(numCombinations, maxWorkGroupSize)),
->>>>>>> master
             cl::sycl::range<1>(maxWorkGroupSize)};
 
         auto tripletEvent = q->submit([&](cl::sycl::handler& h) {
@@ -783,15 +667,9 @@ void createSeedsForGroupSycl(
           h.parallel_for<triplet_search_kernel>(
               tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
                 const uint32_t idx = item.get_global_linear_id();
-<<<<<<< HEAD
                 if (idx < numTripletSearchThreads) {
-                  // Retrieve the index of the corresponding middle space point
-                  // by binary search
-=======
-                if (idx < numCombinations) {
-                  // Retrieve the index of the corresponding middle space point
-                  // by binomial search
->>>>>>> master
+                  // Retrieve the index of the corresponding middle space
+                  // point by binary search
                   auto L = firstMiddle;
                   auto R = lastMiddle;
                   auto mid = L;
@@ -805,11 +683,6 @@ void createSeedsForGroupSycl(
                   }
                   mid = L;
 
-<<<<<<< HEAD
-=======
-                  detail::TripletData T = {MIN, MIN};
-                  deviceCurvImpact[idx] = T;
->>>>>>> master
                   const auto numT = deviceNumTopDuplets[mid];
 
                   const auto ib =
@@ -843,15 +716,9 @@ void createSeedsForGroupSycl(
 
                   auto iSinTheta2 = (1.f + cotThetab * cotThetab);
                   auto scatteringInRegion2 =
-<<<<<<< HEAD
                       seedfinderConfig.maxScatteringAngle2 * iSinTheta2;
                   scatteringInRegion2 *= seedfinderConfig.sigmaScattering *
                                          seedfinderConfig.sigmaScattering;
-=======
-                      configData.maxScatteringAngle2 * iSinTheta2;
-                  scatteringInRegion2 *=
-                      configData.sigmaScattering * configData.sigmaScattering;
->>>>>>> master
                   auto error2 =
                       Ert + Erb +
                       2.f * (cotThetab * cotThetat * varianceRM + varianceZM) *
@@ -875,7 +742,6 @@ void createSeedsForGroupSycl(
 
                     auto iHelixDiameter2 = B2 / S2;
                     auto pT2scatter =
-<<<<<<< HEAD
                         4.f * iHelixDiameter2 * seedfinderConfig.pT2perRadius;
                     auto p2scatter = pT2scatter * iSinTheta2;
                     auto Im = cl::sycl::abs((A - B * rM) * rM);
@@ -901,30 +767,14 @@ void createSeedsForGroupSycl(
                       T.impact = Im;
                       T.topSPIndex = top;
                       deviceCurvImpact[tripletIdx] = T;
-=======
-                        4.f * iHelixDiameter2 * configData.pT2perRadius;
-                    auto p2scatter = pT2scatter * iSinTheta2;
-                    auto Im = cl::sycl::abs((A - B * rM) * rM);
-
-                    if (!(S2 < B2 * configData.minHelixDiameter2) &&
-                        !((deltaCotTheta2 - error2 > 0.f) &&
-                          (dCotThetaMinusError2 >
-                           p2scatter * configData.sigmaScattering *
-                               configData.sigmaScattering)) &&
-                        !(Im > configData.impactMax)) {
-                      T.curvature = B / cl::sycl::sqrt(S2);
-                      T.impact = Im;
-                      deviceCurvImpact[idx] = T;
->>>>>>> master
                     }
                   }
                 }
               });
         });
 
-<<<<<<< HEAD
-        // Copy the number of triplets per fixed bottom and middle SP to another
-        // array, as it is faster to access than atomic variables.
+        // Copy the number of triplets per fixed bottom and middle SP to
+        // another array, as it is faster to access than atomic variables.
         auto e0 = q->memcpy(deviceNumTriplets, deviceCountTriplets,
                             edgesBottom * sizeof(std::atomic_uint32_t));
         e0.wait();
@@ -963,8 +813,8 @@ void createSeedsForGroupSycl(
                      uint32_t compatCounter = 0;
 
                      // By default compatSeedLimit is 2 -> 2 is currently hard
-                     // coded, because variable length arrays are not supported
-                     // in SYCL kernels.
+                     // coded, because variable length arrays are not
+                     // supported in SYCL kernels.
                      float compatibleSeedR[2];
                      for (auto i2 = tripletBegin;
                           i2 < tripletEnd &&
@@ -977,86 +827,13 @@ void createSeedsForGroupSycl(
                        const float deltaR =
                            cl::sycl::abs(currentTop_r - otherTop_r);
                        if (deltaR >= seedfinderConfig.filterDeltaRMin &&
-=======
-        q->submit([&](cl::sycl::handler& h) {
-           h.depends_on(tripletEvent);
-           h.parallel_for<filter_2sp_fixed_kernel>(
-               tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
-                 const uint32_t idx = item.get_global_linear_id();
-                 if (idx < numCombinations &&
-                     deviceCurvImpact[idx].curvature != MIN) {
-                   // Same as in previous kernel
-                   auto L = firstMiddle;
-                   auto R = lastMiddle;
-                   auto mid = L;
-                   while (L < R - 1) {
-                     mid = (L + R) / 2;
-                     if (idx + tripletSearchOffset[0] < deviceSumComb[mid]) {
-                       R = mid;
-                     } else {
-                       L = mid;
-                     }
-                   }
-                   mid = L;
-
-                   const auto sumMidComb =
-                       deviceSumComb[mid] - tripletSearchOffset[0];
-                   const auto idxOffset = idx - sumMidComb;
-                   const auto numTopMid = deviceNumTopDuplets[mid];
-
-                   const auto ib =
-                       deviceSumBot[mid] + ((idxOffset) / numTopMid);
-                   const auto it =
-                       deviceSumTop[mid] + ((idxOffset) % numTopMid);
-
-                   const auto bot = deviceIndBot[ib];
-                   const auto top = deviceIndTop[it];
-
-                   const auto current = deviceCurvImpact[idx];
-
-                   // By default compatSeedLimit is 2 -> 2 is currently hard
-                   // coded, because variable length arrays are not supported in
-                   // SYCL kernels.
-                   float compatibleSeedR[2];
-
-                   const auto invHelixDiameter = current.curvature;
-                   const auto lowerLimitCurv =
-                       invHelixDiameter - configData.deltaInvHelixDiameter;
-                   const auto upperLimitCurv =
-                       invHelixDiameter + configData.deltaInvHelixDiameter;
-                   const auto currentTop_r = deviceTopSPs[top].r;
-                   auto weight =
-                       -(current.impact * configData.impactWeightFactor);
-
-                   uint32_t compatCounter = 0;
-
-                   const auto bottomOffset =
-                       ((idxOffset) / numTopMid) * numTopMid;
-
-                   for (uint32_t j = 0;
-                        j < numTopMid &&
-                        compatCounter < configData.compatSeedLimit;
-                        ++j) {
-                     uint32_t other_idx = sumMidComb + bottomOffset + j;
-                     float otherCurv = deviceCurvImpact[other_idx].curvature;
-                     if (otherCurv != MIN && other_idx != idx) {
-                       uint32_t other_it = deviceSumTop[mid] + j;
-                       float otherTop_r =
-                           deviceTopSPs[deviceIndTop[other_it]].r;
-                       float deltaR = cl::sycl::abs(currentTop_r - otherTop_r);
-                       if (deltaR >= configData.filterDeltaRMin &&
->>>>>>> master
                            otherCurv >= lowerLimitCurv &&
                            otherCurv <= upperLimitCurv) {
                          uint32_t c = 0;
                          for (;
                               c < compatCounter &&
                               cl::sycl::abs(compatibleSeedR[c] - otherTop_r) >=
-<<<<<<< HEAD
                                   seedfinderConfig.filterDeltaRMin;
-=======
-                                  configData.filterDeltaRMin;
->>>>>>> master
                               ++c) {
                          }
                          if (c == compatCounter) {
@@ -1065,7 +842,6 @@ void createSeedsForGroupSycl(
                          }
                        }
                      }
-<<<<<<< HEAD
 
                      weight +=
                          compatCounter * seedfinderConfig.compatSeedWeight;
@@ -1086,34 +862,12 @@ void createSeedsForGroupSycl(
                        D.weight = weight;
                        deviceSeedArray[i] = D;
                      }
-=======
-                   }
-
-                   weight += compatCounter * configData.compatSeedWeight;
-
-                   const auto bottomSP = deviceBottomSPs[bot];
-                   const auto middleSP = deviceMiddleSPs[mid];
-                   const auto topSP = deviceTopSPs[top];
-
-                   weight += deviceCuts.seedWeight(bottomSP, middleSP, topSP);
-
-                   if (deviceCuts.singleSeedCut(weight, bottomSP, middleSP,
-                                                topSP)) {
-                     const auto i = countSeeds[0].fetch_add(1);
-                     detail::SeedData D;
-                     D.bottom = bot;
-                     D.top = top;
-                     D.middle = mid;
-                     D.weight = weight;
-                     deviceSeedArray[i] = D;
->>>>>>> master
                    }
                  }
                });
          }).wait();
 
         uint32_t sumSeeds;
-<<<<<<< HEAD
         auto e1 =
             q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
         e1.wait();
@@ -1123,17 +877,6 @@ void createSeedsForGroupSycl(
           auto e2 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
                               sumSeeds * sizeof(detail::SeedData));
           e2.wait();
-=======
-        auto e0 =
-            q->memcpy(&sumSeeds, countSeeds, sizeof(std::atomic_uint32_t));
-        e0.wait();
-
-        if (sumSeeds != 0) {
-          std::vector<detail::SeedData> hostSeedArray(sumSeeds);
-          auto e1 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
-                              sumSeeds * sizeof(detail::SeedData));
-          e1.wait();
->>>>>>> master
 
           for (uint32_t t = 0; t < sumSeeds; ++t) {
             auto m = hostSeedArray[t].middle;
@@ -1146,16 +889,13 @@ void createSeedsForGroupSycl(
       // ************ TRIPLET SEARCH - END ************ //
       //************************************************//
 
-<<<<<<< HEAD
       // Note that memory management is very naive, but this should only be a
-      // temporary solution. A better idea is to use a separate memory manager,
-      // see the CUDA (2) implementation for SYCL.
+      // temporary solution. A better idea is to use a separate memory
+      // manager, see the CUDA (2) implementation for SYCL.
       //
       // We could also use unique pointers with a custom deleter that frees
       // memory for us. That would allow a less error prone and therefore more
       // maintanable code.
-=======
->>>>>>> master
       cl::sycl::free(deviceLinBot, *q);
       cl::sycl::free(deviceLinTop, *q);
 
@@ -1167,12 +907,9 @@ void createSeedsForGroupSycl(
       cl::sycl::free(deviceSumTop, *q);
       cl::sycl::free(deviceSumComb, *q);
 
-<<<<<<< HEAD
       cl::sycl::free(deviceCountTriplets, *q);
       cl::sycl::free(deviceNumTriplets, *q);
 
-=======
->>>>>>> master
       cl::sycl::free(deviceCurvImpact, *q);
       cl::sycl::free(deviceSeedArray, *q);
       cl::sycl::free(tripletSearchOffset, *q);
@@ -1187,17 +924,10 @@ void createSeedsForGroupSycl(
     cl::sycl::free(deviceCountBotDuplets, *q);
     cl::sycl::free(deviceCountTopDuplets, *q);
     cl::sycl::free(deviceNumTopDuplets, *q);
-<<<<<<< HEAD
   } catch (cl::sycl::exception const& e) {
     ACTS_LOCAL_LOGGER(
         Acts::getDefaultLogger("SyclSeeding", Acts::Logging::INFO));
     ACTS_FATAL("Caught (a)synchronous SYCL exception:\n" << e.what())
-=======
-
-  } catch (cl::sycl::exception const& e) {
-    std::cout << "Caught synchronous SYCL exception:\n"
-              << e.what() << std::endl;
->>>>>>> master
     exit(0);
   }
 };
