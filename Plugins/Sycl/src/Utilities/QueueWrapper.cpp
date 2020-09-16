@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 
 #include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <string>
 
@@ -77,15 +78,12 @@ void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
   // SYCL kernel exceptions are asynchronous
   auto exception_handler = [](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
-      try {
-        std::rethrow_exception(e);
-      } catch (cl::sycl::exception const& e) {
-        std::cerr << "Caught asynchronous SYCL exception:\n" << e.what();
-        exit(0);
-      }
+      std::rethrow_exception(e);
     }
   };
 
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("QueueWrapper", Acts::Logging::INFO));
   // Create queue with custom device selector
   m_queue = new cl::sycl::queue(DeviceSelector(deviceNameSubstring),
                                 exception_handler);
@@ -93,9 +91,8 @@ void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
   m_ownsQueue = true;
 
   // See which device we are running on.
-  std::cerr << "Running on: "
-            << m_queue->get_device().get_info<cl::sycl::info::device::name>()
-            << std::endl;
+  ACTS_INFO("Running on: "
+            << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 };
 
 }  // namespace Acts::Sycl

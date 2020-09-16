@@ -21,12 +21,16 @@ namespace Acts::Sycl {
 class QueueWrapper {
  public:
   /// Create queue with default selector or given name
+  /// Default constructed queue wrappers are owners.
   QueueWrapper(const std::string& = "");
   /// Move constructor
+  /// It takes ownership (if it is given).
   QueueWrapper(QueueWrapper&& parent) noexcept;
   /// Copy constructor
+  /// Does not give ownership to the underlying pointer.
   QueueWrapper(const QueueWrapper& other);
   /// Destructor
+  /// Destroy the underlying pointer, but only if it is owned.
   ~QueueWrapper();
 
   /// Move assignment operator
