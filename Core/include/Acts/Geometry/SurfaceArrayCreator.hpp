@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -115,7 +115,7 @@ class SurfaceArrayCreator {
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
       size_t binsZ, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
+      const Transform3D& transform = s_idTransform) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -139,7 +139,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces,
       BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
+      const Transform3D& transform = s_idTransform) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -154,14 +154,14 @@ class SurfaceArrayCreator {
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
-  /// @param transformOpt is the (optional) additional transform applied
+  /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
       const GeometryContext& gctx,
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
       size_t binsPhi, std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
+      const Transform3D& transform = s_idTransform) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -177,7 +177,7 @@ class SurfaceArrayCreator {
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
-  /// @param transformOpt is the (optional) additional transform applied
+  /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   /// @note If there is more than on R-Ring, number of phi bins
@@ -188,7 +188,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
       BinningType bTypePhi,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
+      const Transform3D& transform = s_idTransform) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -207,7 +207,7 @@ class SurfaceArrayCreator {
   /// @param [in] bValue Direction of the aligned surfaces
   /// @param [in] bTypePhi the binning type in phi direction
   /// (equidistant/aribtrary)
-  /// @param [in] transformOpt is the (optional) additional transform applied
+  /// @param [in] transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
@@ -215,7 +215,7 @@ class SurfaceArrayCreator {
       std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
       size_t bins2, BinningValue bValue,
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
-      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
+      const Transform3D& transform = s_idTransform) const;
 
   /// Static check funtion for surface equivalent
   ///

@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-///@class NeighborhooodIterator Iterates over the elements of all bins given
+/// Iterates over the elements of all bins given
 /// by the indices parameter in the given SpacePointGrid.
 /// Fullfills the forward iterator.
 template <typename external_spacepoint_t>
@@ -164,6 +164,10 @@ class BinnedSPGroupIterator {
 
   bool operator==(const BinnedSPGroupIterator& otherState) {
     return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
+  }
+
+  bool operator!=(const BinnedSPGroupIterator& otherState) {
+    return !(this->operator==(otherState));
   }
 
   Neighborhood<external_spacepoint_t> middle() {

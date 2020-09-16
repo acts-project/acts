@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -25,9 +25,9 @@ namespace {
 /// with momenta 1,2,3,4 GeV.
 struct MakeChildren {
   template <typename generator_t>
-  std::array<ActsFatras::Particle, 4> operator()(
-      generator_t &, const Acts::MaterialProperties &,
-      ActsFatras::Particle &) const {
+  std::array<ActsFatras::Particle, 4> operator()(generator_t &,
+                                                 const Acts::MaterialSlab &,
+                                                 ActsFatras::Particle &) const {
     // create daughter particles
     return {
         Particle().setAbsMomentum(1_GeV),
@@ -49,7 +49,7 @@ struct HighP {
 
 struct Fixture {
   std::default_random_engine generator;
-  Acts::MaterialProperties slab{Acts::Test::makeBeryllium(), 1_mm};
+  Acts::MaterialSlab slab{Acts::Test::makeBeryllium(), 1_mm};
   Particle parent = Particle().setAbsMomentum(10_GeV);
   std::vector<Particle> children;
 };

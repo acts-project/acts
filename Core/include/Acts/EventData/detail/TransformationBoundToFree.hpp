@@ -17,12 +17,12 @@ class Surface;
 
 namespace detail {
 
-/// Transform bound parameters into free parameters.
+/// Transform bound track parameters into equivalent free track parameters.
 ///
 /// @param surface Surface onto which the input parameters are bound
 /// @param geoCtx Geometry context for the local-to-global transformation
-/// @param boundParams Bound parameters vector
-/// @return Equivalent free parameters vector
+/// @param boundParams Bound track parameters vector
+/// @return Equivalent free trackparameters vector
 FreeVector transformBoundToFreeParameters(const Surface& surface,
                                           const GeometryContext& geoCtx,
                                           const BoundVector& boundParams);

@@ -102,7 +102,7 @@ struct SurfaceCollector {
       result.collected.push_back(surface_hit);
       // Screen output
       ACTS_VERBOSE("Collect surface  "
-                   << state.navigation.currentSurface->geoID());
+                   << state.navigation.currentSurface->geometryId());
     }
   }
 

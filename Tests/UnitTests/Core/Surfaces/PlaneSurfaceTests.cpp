@@ -35,15 +35,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   // PlaneSurface default constructor is deleted
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
-  /// Constructor with transform pointer, null or valid, alpha and symmetry
-  /// indicator
+  /// Constructor with transform and bounds
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  std::shared_ptr<const Transform3D> pNullTransform{};
-  // constructor with nullptr transform
-  BOOST_CHECK_EQUAL(
-      Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)->type(),
-      Surface::Plane);
+  auto pTransform = Transform3D(translation);
   // constructor with transform
   BOOST_CHECK_EQUAL(
       Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
@@ -58,7 +52,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   //
   /// Copied and transformed
   auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
-      tgContext, *planeSurfaceObject, *pTransform);
+      tgContext, *planeSurfaceObject, pTransform);
   BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
   /// Construct with nullptr bounds
@@ -74,12 +68,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Test clone method
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   // Is it in the right place?
   Translation3D translation2{0., 2., 4.};
-  auto pTransform2 = std::make_shared<const Transform3D>(translation2);
+  auto pTransform2 = Transform3D(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
   /// Test type (redundant)
@@ -111,8 +105,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   /// Test localToGlobal
   Vector2D localPosition{1.5, 1.7};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  globalPosition =
+      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   //
   // expected position is the translated one
   Vector3D expectedPosition{1.5 + translation.x(), 1.7 + translation.y(),
@@ -121,8 +115,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
   /// Testing globalToLocal
-  planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum,
-                                    localPosition);
+  localPosition =
+      planeSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
+          .value();
   Vector2D expectedLocalPosition{1.5, 1.7};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
@@ -176,7 +171,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   // rectangle bounds
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   auto planeSurfaceObject2 =
@@ -189,7 +184,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
       "Create and then assign a PlaneSurface object to the existing one");
   /// Test assignment
   auto assignedPlaneSurface =
-      Surface::makeShared<PlaneSurface>(nullptr, nullptr);
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), nullptr);
   *assignedPlaneSurface = *planeSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
@@ -208,9 +203,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
 
   auto plane = Surface::makeShared<PlaneSurface>(
-      std::make_shared<Transform3D>(Translation3D(Vector3D(0., yPs, 0.)) *
-                                    planeZX),
-      rBounds);
+      Transform3D(Translation3D(Vector3D(0., yPs, 0.)) * planeZX), rBounds);
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
@@ -227,9 +220,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // Now rotate
   double alpha = 0.123;
   auto planeRot = Surface::makeShared<PlaneSurface>(
-      std::make_shared<Transform3D>(Translation3D(Vector3D(0., yPs, 0.)) *
-                                    AngleAxis3D(alpha, Vector3D(0., 0., 1.)) *
-                                    planeZX),
+      Transform3D(Translation3D(Vector3D(0., yPs, 0.)) *
+                  AngleAxis3D(alpha, Vector3D(0., 0., 1.)) * planeZX),
       rBounds);
 
   auto planeExtentRot =
@@ -254,10 +246,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Test clone method
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
-  const auto& rotation = pTransform->rotation();
+  const auto& rotation = pTransform.rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis
@@ -268,9 +260,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
   /// Get the global position
-  Vector3D globalPosition{0, 0, 0};
-  planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                    globalPosition);
+  Vector3D globalPosition =
+      planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
 
   // Call the function to calculate the derivative of local frame axes w.r.t its
   // rotation

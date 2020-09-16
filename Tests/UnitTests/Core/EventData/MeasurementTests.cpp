@@ -20,26 +20,29 @@ namespace Test {
 
 using SourceLink = MinimalSourceLink;
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///
 BOOST_AUTO_TEST_CASE(measurement_initialization) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
+      cylinder, {}, cov, -0.1, 0.45);
+
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m_vec(
+      cylinder, {}, cov, {-0.1, 0.45});
 
   std::default_random_engine generator(42);
 
   // Create a measurement on a cylinder
   SymMatrix2D covc;
   covc << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mc(
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mc(
       cylinder, {}, std::move(covc), -0.1, 0.45);
 
   // Check the copy constructor
@@ -62,18 +65,19 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   // The parameters should be identical though
   BOOST_CHECK_EQUAL(mc.parameters(), mcAssigned.parameters());
 
-  std::vector<MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>> caMeasurements{
-      std::move(mcCopy), std::move(mcAssigned)};
+  std::vector<
+      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>>
+      caMeasurements{std::move(mcCopy), std::move(mcAssigned)};
 
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),
                                                  Vector3D(1., 0., 0.));
   ActsSymMatrixD<1> covp;
   covp << 0.01;
-  MeasurementType<ParDef::eLOC_0> mp(plane, {}, std::move(covp), 0.1);
+  MeasurementType<BoundIndices::eBoundLoc0> mp(plane, {}, std::move(covp), 0.1);
 
   SymMatrix2D covpp;
   covpp << 0.01, 0., 0., 0.02;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mpp(
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mpp(
       plane, {}, std::move(covpp), 0.1, 0.2);
 
   std::vector<FittableMeasurement<SourceLink>> measurements{

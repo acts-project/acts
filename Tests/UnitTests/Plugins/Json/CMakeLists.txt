@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsJsonPlugin)
+set(unittest_extra_libraries ActsPluginJson)
 
 add_unittest(GeometryHierarchyMapJsonConverter GeometryHierarchyMapJsonConverterTests.cpp)
-add_unittest(JsonConversion JsonConversionTest.cpp)
+add_unittest(MaterialMapJsonConverter MaterialMapJsonConverterTests.cpp)

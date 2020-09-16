@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -69,7 +69,7 @@ class CsvPlanarClusterReader final : public IReader {
 
  private:
   Config m_cfg;
-  std::unordered_map<Acts::GeometryID, const Acts::Surface*> m_surfaces;
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> m_surfaces;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

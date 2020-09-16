@@ -37,10 +37,10 @@ void writeField(boost::program_options::variables_map vm,
   if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
     auto rBounds = vm["bf-rRange"].template as<read_range>();
     auto zBounds = vm["bf-zRange"].template as<read_range>();
-    writerConfig.rBounds = {
-        {rBounds[0] * Acts::units::_mm, rBounds[1] * Acts::units::_mm}};
-    writerConfig.zBounds = {
-        {zBounds[0] * Acts::units::_mm, zBounds[1] * Acts::units::_mm}};
+    writerConfig.rBounds = {{rBounds[0] * Acts::UnitConstants::mm,
+                             rBounds[1] * Acts::UnitConstants::mm}};
+    writerConfig.zBounds = {{zBounds[0] * Acts::UnitConstants::mm,
+                             zBounds[1] * Acts::UnitConstants::mm}};
   }
   writerConfig.rBins = vm["bf-rBins"].template as<size_t>();
   writerConfig.zBins = vm["bf-ZBins"].template as<size_t>();

@@ -60,12 +60,10 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     // The step length logger for testing & end of world aborter
     using MaterialInteractor = Acts::MaterialInteractor;
     using SteppingLogger = Acts::detail::SteppingLogger;
-    using DebugOutput = Acts::DebugOutputActor;
     using EndOfWorld = Acts::EndOfWorldReached;
 
     // Action list and abort list
-    using ActionList =
-        Acts::ActionList<SteppingLogger, MaterialInteractor, DebugOutput>;
+    using ActionList = Acts::ActionList<SteppingLogger, MaterialInteractor>;
     using AbortList = Acts::AbortList<EndOfWorld>;
     using PropagatorOptions =
         Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
@@ -73,12 +71,10 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     PropagatorOptions options(context.geoContext, context.magFieldContext,
                               Acts::LoggerWrapper{logger()});
     options.pathLimit = pathLength;
-    options.debug = m_cfg.debugOutput;
 
     // Activate loop protection at some pt value
     options.loopProtection =
-        (Acts::VectorHelpers::perp(startParameters.momentum()) <
-         m_cfg.ptLoopers);
+        (startParameters.transverseMomentum() < m_cfg.ptLoopers);
 
     // Switch the material interaction on/off & eventually into logging mode
     auto& mInteractor = options.actionList.get<MaterialInteractor>();
@@ -101,12 +97,6 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
       auto materialResult =
           result.template get<MaterialInteractor::result_type>();
       pOutput.second = std::move(materialResult);
-    }
-
-    // screen output if requested
-    if (m_cfg.debugOutput) {
-      auto& debugResult = result.template get<DebugOutput::result_type>();
-      ACTS_VERBOSE(debugResult.debugString);
     }
   }
   return pOutput;
@@ -173,8 +163,8 @@ ProcessCode PropagationAlgorithm<propagator_t>::execute(
     PropagationOutput pOutput;
     if (charge) {
       // charged extrapolation - with hit recording
-      Acts::BoundParameters startParameters(surface, std::move(pars),
-                                            std::move(cov));
+      Acts::BoundTrackParameters startParameters(surface, std::move(pars),
+                                                 std::move(cov));
       sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
       pOutput = executeTest(context, startParameters);

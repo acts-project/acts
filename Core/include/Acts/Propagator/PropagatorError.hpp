@@ -14,7 +14,11 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class PropagatorError { Failure = 1, WrongDirection = 2 };
+enum class PropagatorError {
+  Failure = 1,
+  WrongDirection = 2,
+  StepCountLimitReached = 3
+};
 
 namespace detail {
 // Define a custom error code category derived from std::error_category
@@ -29,6 +33,8 @@ class PropagatorErrorCategory : public std::error_category {
         return "Propagation failed";
       case PropagatorError::WrongDirection:
         return "Propagation occurred in the wrong direction";
+      case PropagatorError::StepCountLimitReached:
+        return "Propagation reached the configured maximum number of steps";
       default:
         return "unknown";
     }

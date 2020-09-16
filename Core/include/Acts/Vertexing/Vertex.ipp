@@ -42,7 +42,7 @@ Acts::Vector3D Acts::Vertex<input_track_t>::position() const {
 }
 
 template <typename input_track_t>
-Acts::ParValue_t Acts::Vertex<input_track_t>::time() const {
+Acts::BoundScalar Acts::Vertex<input_track_t>::time() const {
   return m_position[eTime];
 }
 
@@ -74,7 +74,7 @@ std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
 
 template <typename input_track_t>
 void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position,
-                                              ParValue_t time) {
+                                              BoundScalar time) {
   m_position[ePos0] = position[ePos0];
   m_position[ePos1] = position[ePos1];
   m_position[ePos2] = position[ePos2];
@@ -88,7 +88,7 @@ void Acts::Vertex<input_track_t>::setFullPosition(
 }
 
 template <typename input_track_t>
-void Acts::Vertex<input_track_t>::setTime(ParValue_t time) {
+void Acts::Vertex<input_track_t>::setTime(BoundScalar time) {
   m_position[eTime] = time;
 }
 

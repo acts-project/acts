@@ -20,8 +20,6 @@
 #include <type_traits>
 
 namespace Acts {
-/// @class AdaptiveMultiVertexFinder
-///
 /// @brief Implements an iterative vertex finder
 ///
 ////////////////////////////////////////////////////////////
@@ -162,12 +160,13 @@ class AdaptiveMultiVertexFinder {
   /// @struct State State struct for fulfilling interface
   struct State {};
 
-  /// @brief Constructor used if InputTrack_t type == BoundParameters
+  /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
   ///
   /// @param cfg Configuration object
   /// @param logger The logging instance
-  template <typename T = InputTrack_t,
-            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
+  template <
+      typename T = InputTrack_t,
+      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   AdaptiveMultiVertexFinder(Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFinder",
@@ -176,16 +175,17 @@ class AdaptiveMultiVertexFinder {
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
 
-  /// @brief Constructor for user-defined InputTrack_t type != BoundParameters
+  /// @brief Constructor for user-defined InputTrack_t type !=
+  /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from InputTrack_t object
+  /// @param func Function extracting BoundTrackParameters from InputTrack_t
+  /// object
   /// @param logger The logging instance
-  AdaptiveMultiVertexFinder(Config& cfg,
-                            std::function<BoundParameters(InputTrack_t)> func,
-                            std::unique_ptr<const Logger> logger =
-                                getDefaultLogger("AdaptiveMultiVertexFinder",
-                                                 Logging::INFO))
+  AdaptiveMultiVertexFinder(
+      Config& cfg, std::function<BoundTrackParameters(InputTrack_t)> func,
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("AdaptiveMultiVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
@@ -208,11 +208,11 @@ class AdaptiveMultiVertexFinder {
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other InputTrack_t objects.
+  /// InputTrack_t objects are BoundTrackParameters by default, function to be
+  /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
   ///
   /// @param InputTrack_t object to extract track parameters from
-  std::function<BoundParameters(InputTrack_t)> m_extractParameters;
+  std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
@@ -338,12 +338,14 @@ class AdaptiveMultiVertexFinder {
   /// @param fitterState The vertex fitter state
   /// @param[out] removedSeedTracks Collection of seed track that will be
   /// removed
+  /// @param[in] geoCtx The geometry context to access global positions
   ///
   /// @return Incompatible track was removed
   bool removeTrackIfIncompatible(
       Vertex<InputTrack_t>& vtx, std::vector<const InputTrack_t*>& seedTracks,
       FitterState_t& fitterState,
-      std::vector<const InputTrack_t*>& removedSeedTracks) const;
+      std::vector<const InputTrack_t*>& removedSeedTracks,
+      const GeometryContext& geoCtx) const;
 
   /// @brief Method that evaluates if the new vertex candidate should
   /// be kept, i.e. saved, or not

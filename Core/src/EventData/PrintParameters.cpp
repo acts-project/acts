@@ -28,7 +28,8 @@ void Acts::detail::printBoundParameters(std::ostream& os,
   } else {
     os << "  no covariance stored\n";
   }
-  os << "  on surface: " << surface.geoID() << ' ' << surface.name() << '\n';
+  os << "  on surface: " << surface.geometryId() << ' ' << surface.name()
+     << '\n';
 
   // Reset stream format
   os.setf(oldFlags);

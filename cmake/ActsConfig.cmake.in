@@ -24,7 +24,7 @@ endif()
 
 # check that requested components are available
 foreach(_component ${Acts_FIND_COMPONENTS})
-  # check if this component is available 
+  # check if this component is available
   if(NOT _component IN_LIST Acts_COMPONENTS)
     if (${Acts_FIND_REQUIRED_${_component}})
       # not supported, but required -> fail
@@ -51,15 +51,15 @@ include(CMakeFindDependencyMacro)
 set(Boost_NO_BOOST_CMAKE ON)
 find_dependency(Boost @Boost_VERSION_STRING@ MODULE EXACT)
 find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
-if(DD4hepPlugin IN_LIST Acts_COMPONENTS)
+if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
-if(JsonPlugin IN_LIST Acts_COMPONENTS)
+if(PluginJson IN_LIST Acts_COMPONENTS)
   # if nlohmann::json is compiled as part of the Acts build
   # then the version is undefined; can not search for exac match
   find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)
 endif()
-if(TGeoPlugin IN_LIST Acts_COMPONENTS)
+if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
 

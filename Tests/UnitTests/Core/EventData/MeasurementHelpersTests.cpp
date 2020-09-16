@@ -20,60 +20,63 @@ GeometryContext tgContext = GeometryContext();
 
 using SourceLink = MinimalSourceLink;
 
-template <ParID_t... params>
-using MeasurementType =
-    Measurement<SourceLink, BoundParametersIndices, params...>;
+template <BoundIndices... params>
+using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
 using FittableMeasurement = FittableMeasurement<SourceLink>;
 
 BOOST_AUTO_TEST_CASE(getSurface_test) {
   auto cylinderBounds = std::make_shared<CylinderBounds>(3, 10);
 
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
-  auto cylinder2 =
-      Surface::makeShared<CylinderSurface>(nullptr, cylinderBounds);
+  auto cylinder = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+                                                       cylinderBounds);
+  auto cylinder2 = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+                                                        cylinderBounds);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
 
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder.get());
 
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m2(
       cylinder2, {}, std::move(cov), -0.1, 0.45);
   fm = m2;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSurface(fm), cylinder2.get());
 }
 
 BOOST_AUTO_TEST_CASE(getSize_test) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2u);
 
   ActsSymMatrixD<3> cov3;
   cov.setRandom();
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1, ParDef::eT> m2(
-      cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
+                  BoundIndices::eBoundTime>
+      m2(cylinder, {}, std::move(cov3), -0.1, 0.45, 42);
   fm = m2;
 
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 3u);
 }
 
 BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
-  auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+  auto cylinder =
+      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(cylinder, {},
-                                                    std::move(cov), -0.1, 0.45);
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
+      cylinder, {}, std::move(cov), -0.1, 0.45);
 
   FittableMeasurement fm = m;
   MinimalSourceLink msl{&fm};
@@ -83,7 +86,7 @@ BOOST_AUTO_TEST_CASE(MinimalSourceLinkTest) {
   MinimalSourceLink msl2{&fm};
   BOOST_CHECK_EQUAL(msl, msl2);
 
-  MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2(
+  MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m2(
       cylinder, {}, std::move(cov), -0.1, 0.45);
   FittableMeasurement fm2 = m2;
   MinimalSourceLink msl3{&fm2};

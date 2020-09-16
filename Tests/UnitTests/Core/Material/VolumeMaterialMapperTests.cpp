@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -23,15 +23,15 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -165,8 +165,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   vCfg2.position = Vector3D(1.5_m, 0., 0.);
   vCfg2.length = Vector3D(1_m, 1_m, 1_m);
   vCfg2.name = "First material volume";
-  vCfg2.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
-      Material(95.7, 465.2, 28.03, 14., 2.32e-3));
+  vCfg2.volumeMaterial =
+      std::make_shared<HomogeneousVolumeMaterial>(makeSilicon());
 
   // Build another material volume with different material
   CuboidVolumeBuilder::VolumeConfig vCfg3;
@@ -206,16 +206,18 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::uniform_real_distribution<> disYZ(-0.5_m, 0.5_m);
 
   // Sample the Material in the detector
-  RecordedMaterialPoint matRecord;
+  RecordedMaterialVolumePoint matRecord;
   for (unsigned int i = 0; i < 1e4; i++) {
     Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
+    std::vector<Vector3D> volPos;
+    volPos.push_back(pos);
     Material tv =
         (detector->lowestTrackingVolume(gc, pos)->volumeMaterial() != nullptr)
             ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
                   ->material(pos)
             : Material();
-    MaterialProperties matProp(tv, 1);
-    matRecord.push_back(std::make_pair(matProp, pos));
+    MaterialSlab matProp(tv, 1);
+    matRecord.push_back(std::make_pair(matProp, volPos));
   }
 
   // Build the material grid
@@ -233,28 +235,20 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
   // Set some start parameters
-  Vector3D pos(0., 0., 0.);
-  Vector3D mom(1_GeV, 0., 0.);
-  SingleCurvilinearTrackParameters<NeutralPolicy> sctp(std::nullopt, pos, mom,
-                                                       42_ns);
+  Vector4D pos4(0., 0., 0., 42_ns);
+  Vector3D dir(1., 0., 0.);
+  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
 
   MagneticFieldContext mc;
   // Launch propagation and gather result
-  PropagatorOptions<ActionList<MaterialCollector, DebugOutputActor>,
-                    AbortList<EndOfWorldReached>>
+  PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
       po(gc, mc, getDummyLogger());
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
-  po.debug = true;
 
   const auto& result = prop.propagate(sctp, po).value();
   const MaterialCollector::this_result& stepResult =
       result.get<typename MaterialCollector::result_type>();
-
-  if (po.debug) {
-    auto screenOutput = result.get<DebugOutputActor::result_type>();
-    std::cout << screenOutput.debugString << std::endl;
-  }
 
   // Collect the material as given by the grid and test it
   std::vector<Material> matvector;

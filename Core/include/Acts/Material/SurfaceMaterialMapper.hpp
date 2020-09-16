@@ -12,7 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -53,7 +53,8 @@ struct MaterialVolume {
 ///
 ///  1) TrackingGeometry is parsed and for each Surface with
 ///     ProtoSurfaceMaterial a local store is initialized
-///     the identification is done hereby through the Surface::GeometryID
+///     the identification is done hereby through the
+///     Surface::GeometryIdentifier
 ///
 ///  2) A Cache is generated that is used to keep the filling thread local,
 ///     the filling is protected with std::mutex
@@ -94,14 +95,16 @@ class SurfaceMaterialMapper {
         : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The accumulated material per geometry ID
-    std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+    std::map<GeometryIdentifier, AccumulatedSurfaceMaterial>
+        accumulatedMaterial;
 
     /// The created surface material from it
-    std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
+    std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
     /// The volume material of the input tracking geometry
-    std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>> volumeMaterial;
+    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
+        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -148,7 +151,7 @@ class SurfaceMaterialMapper {
   /// @param mState The current state map
   /// @param mTrack The material track to be mapped
   ///
-  /// @note the RecordedMaterialProperties of the track are assumed
+  /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 

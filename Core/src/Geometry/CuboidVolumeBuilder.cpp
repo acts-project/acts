@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -39,11 +39,9 @@ Acts::CuboidVolumeBuilder::buildSurface(
   if (cfg.detElementConstructor) {
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
-        *(cfg.detElementConstructor(std::make_shared<const Transform3D>(trafo),
-                                    cfg.rBounds, cfg.thickness)));
+        *(cfg.detElementConstructor(trafo, cfg.rBounds, cfg.thickness)));
   } else {
-    surface = Surface::makeShared<PlaneSurface>(
-        std::make_shared<const Transform3D>(trafo), cfg.rBounds);
+    surface = Surface::makeShared<PlaneSurface>(trafo, cfg.rBounds);
   }
   surface->assignSurfaceMaterial(cfg.surMat);
   return surface;
@@ -63,10 +61,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator::Config lCfg;
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
-
   return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
-                                 BinningValue::binX, std::nullopt,
-                                 std::make_shared<const Transform3D>(trafo));
+                                 BinningValue::binX, std::nullopt, trafo);
 }
 
 std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
@@ -77,12 +73,16 @@ std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
   for (const auto& layercfg : cfg.layerCfg) {
+    auto surfacePosMin =
+        layercfg.surfaceCfg.position.x() - layercfg.surfaceCfg.thickness / 2.;
+    auto surfacePosMax =
+        layercfg.surfaceCfg.position.x() + layercfg.surfaceCfg.thickness / 2.;
     // Test if new extreme is found and set it
-    if (layercfg.surfaceCfg.position.x() - 1_um < minMax.first) {
-      minMax.first = layercfg.surfaceCfg.position.x() - 1_um;
+    if (surfacePosMin < minMax.first) {
+      minMax.first = surfacePosMin;
     }
-    if (layercfg.surfaceCfg.position.x() + 1_um > minMax.second) {
-      minMax.second = layercfg.surfaceCfg.position.x() + 1_um;
+    if (surfacePosMax > minMax.second) {
+      minMax.second = surfacePosMax;
     }
   }
   return minMax;
@@ -151,14 +151,14 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-        nullptr, nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume =
+        TrackingVolume::create(trafo, bounds, cfg.volumeMaterial, nullptr,
+                               nullptr, cfg.trackingVolumes, cfg.name);
   } else {
     // Build TrackingVolume
-    trackVolume = TrackingVolume::create(
-        std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-        std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
+    trackVolume = TrackingVolume::create(trafo, bounds, cfg.volumeMaterial,
+                                         std::move(layArr), nullptr,
+                                         cfg.trackingVolumes, cfg.name);
   }
   return trackVolume;
 }
@@ -216,8 +216,8 @@ Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
       new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
 
   // Create world volume
-  MutableTrackingVolumePtr mtvp(TrackingVolume::create(
-      std::make_shared<const Transform3D>(trafo), volume, trVolArr, "World"));
+  MutableTrackingVolumePtr mtvp(
+      TrackingVolume::create(trafo, volume, trVolArr, "World"));
 
   return mtvp;
 }

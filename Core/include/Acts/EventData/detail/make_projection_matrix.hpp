@@ -1,18 +1,18 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// Acts include(s)
+
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-/// @cond detail
 namespace detail {
+
 /// @brief  initialize projection matrices
 ///
 /// @tparam columns number of columns (= dimension of full parameter space)
@@ -29,7 +29,6 @@ namespace detail {
 template <unsigned int columns, unsigned int... rows>
 struct make_projection_matrix;
 
-/// @cond
 // build projection matrix by iteratively stacking row vectors
 template <unsigned int columns, unsigned int i, unsigned int... N>
 struct make_projection_matrix<columns, i, N...> {
@@ -57,7 +56,6 @@ struct make_projection_matrix<columns, i> {
     return v;
   }
 };
-/// @endcond
+
 }  // namespace detail
-/// @endcond
 }  // namespace Acts

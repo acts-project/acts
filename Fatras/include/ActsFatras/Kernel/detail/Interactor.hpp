@@ -97,38 +97,43 @@ struct Interactor {
 
     // interactions only make sense if there is material to interact with.
     if (surface.surfaceMaterial()) {
-      Acts::Vector2D local;
-      // TODO what to do in case of invalid return value?
-      surface.globalToLocal(state.geoContext, before.position(),
-                            before.unitDirection(), local);
-      Acts::MaterialProperties slab =
-          surface.surfaceMaterial()->materialProperties(local);
+      // TODO - is this the right thing to do when globalToLocal fails
+      // it should in principle never happen, so probably it would be best
+      // to change to a model using transform() directly
+      auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
+                                            before.unitDirection());
+      if (lpResult.ok()) {
+        Acts::Vector2D local(0., 0.);
 
-      // again: no valid material -> no interaction
-      if (slab) {
-        // adapt material for non-zero incidence
-        auto normal = surface.normal(state.geoContext, local);
-        // dot-product(unit normal, direction) = cos(incidence angle)
-        // particle direction is normalized, not sure about surface normal
-        auto cosIncidenceInv =
-            normal.norm() / normal.dot(before.unitDirection());
-        slab.scaleThickness(cosIncidenceInv);
-        // physics list returns if the particle was killed.
-        result.isAlive =
-            not physics(*generator, slab, after, result.generatedParticles);
-        // add the accumulated material; assumes the full material was passsed
-        // event if the particle was killed.
-        result.pathInX0 += slab.thicknessInX0();
-        result.pathInL0 += slab.thicknessInL0();
-        // WARNING this overwrites changes that the physics interactions
-        //         might have performed with regard to the passed material.
-        //         ensures consistent material counting by making the one
-        //         component that by construction will see all material
-        //         contributions (this Interactor) responsible.
-        // TODO review this for supporting multiple interactions within the same
-        //      material slab
-        after.setMaterialPassed(before.pathInX0() + slab.thicknessInX0(),
-                                before.pathInL0() + slab.thicknessInL0());
+        Acts::MaterialSlab slab =
+            surface.surfaceMaterial()->materialSlab(local);
+
+        // again: no valid material -> no interaction
+        if (slab) {
+          // adapt material for non-zero incidence
+          auto normal = surface.normal(state.geoContext, local);
+          // dot-product(unit normal, direction) = cos(incidence angle)
+          // particle direction is normalized, not sure about surface normal
+          auto cosIncidenceInv =
+              normal.norm() / normal.dot(before.unitDirection());
+          slab.scaleThickness(cosIncidenceInv);
+          // physics list returns if the particle was killed.
+          result.isAlive =
+              not physics(*generator, slab, after, result.generatedParticles);
+          // add the accumulated material; assumes the full material was passsed
+          // event if the particle was killed.
+          result.pathInX0 += slab.thicknessInX0();
+          result.pathInL0 += slab.thicknessInL0();
+          // WARNING this overwrites changes that the physics interactions
+          //         might have performed with regard to the passed material.
+          //         ensures consistent material counting by making the one
+          //         component that by construction will see all material
+          //         contributions (this Interactor) responsible.
+          // TODO review this for supporting multiple interactions within the
+          // same material slab
+          after.setMaterialPassed(before.pathInX0() + slab.thicknessInX0(),
+                                  before.pathInL0() + slab.thicknessInL0());
+        }
       }
     }
 
@@ -136,7 +141,7 @@ struct Interactor {
     result.particle = after;
     if (selectHitSurface(surface)) {
       result.hits.emplace_back(
-          surface.geoID(), before.particleId(),
+          surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
           Hit::Scalar(0.5) * (before.position4() + after.position4()),
           before.momentum4(), after.momentum4(), result.hits.size());

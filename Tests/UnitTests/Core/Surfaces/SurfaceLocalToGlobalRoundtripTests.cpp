@@ -39,8 +39,7 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
 
   // convert local-to-global
   Vector3D sentinel = Vector3D::Random();
-  Vector3D pos = sentinel;
-  surface.localToGlobal(geoCtx, Vector2D(l0, l1), dir, pos);
+  Vector3D pos = surface.localToGlobal(geoCtx, Vector2D(l0, l1), dir);
   BOOST_CHECK_MESSAGE(pos != sentinel, "Position was not changed");
   BOOST_CHECK_MESSAGE(
       std::isfinite(pos[0]),
@@ -56,15 +55,10 @@ void runTest(const Surface& surface, double l0, double l1, double phi,
       "Position " << pos.transpose() << " is not on the surface");
 
   // convert global-to-local
-  Vector2D loc = Vector2D::Zero();
-  bool validTransform = surface.globalToLocal(geoCtx, pos, dir, loc);
-  BOOST_CHECK(validTransform);
-  CHECK_CLOSE_OR_SMALL(loc[ePos0], l0, eps, eps);
-  CHECK_CLOSE_OR_SMALL(loc[ePos1], l1, eps, eps);
-}
-
-std::shared_ptr<Transform3D> makeTransformIdentity() {
-  return std::make_shared<Transform3D>(Transform3D::Identity());
+  auto lpResult = surface.globalToLocal(geoCtx, pos, dir);
+  BOOST_CHECK(lpResult.ok());
+  CHECK_CLOSE_OR_SMALL(lpResult.value()[ePos0], l0, eps, eps);
+  CHECK_CLOSE_OR_SMALL(lpResult.value()[ePos1], l1, eps, eps);
 }
 
 // test datasets
@@ -83,15 +77,15 @@ const auto thetas = bdata::make({0.0, M_PI}) + thetasNoForwardBackward;
 // parameters must be chosen such that all possible local positions (as defined
 // in the datasets above) represent valid points on the surface.
 const auto cones = bdata::make({
-    Surface::makeShared<ConeSurface>(makeTransformIdentity(),
+    Surface::makeShared<ConeSurface>(Transform3D::Identity(),
                                      0.5 /* opening angle */),
 });
 const auto cylinders = bdata::make({
-    Surface::makeShared<CylinderSurface>(makeTransformIdentity(),
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
                                          10.0 /* radius */, 100 /* half z */),
 });
 const auto discs = bdata::make({
-    Surface::makeShared<DiscSurface>(makeTransformIdentity(),
+    Surface::makeShared<DiscSurface>(Transform3D::Identity(),
                                      0 /* radius min */, 100 /* radius max */),
 });
 const auto perigees = bdata::make({
@@ -103,7 +97,7 @@ const auto planes = bdata::make({
     Surface::makeShared<PlaneSurface>(Vector3D(3, -4, 5), Vector3D::UnitZ()),
 });
 const auto straws = bdata::make({
-    Surface::makeShared<StrawSurface>(makeTransformIdentity(), 2.0 /* radius */,
+    Surface::makeShared<StrawSurface>(Transform3D::Identity(), 2.0 /* radius */,
                                       200.0 /* half z */),
 });
 

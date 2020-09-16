@@ -24,25 +24,22 @@ namespace detail {
    */
   struct coordinate_transformation
   {
-    typedef ActsVector<ParValue_t, Acts::NGlobalPars> ParVector_t;
+    typedef ActsVector<BoundScalar, Acts::NGlobalPars> ParVector_t;
 
     static Vector3D
     parameters2globalPosition(const ParVector_t& pars, const Surface& s)
     {
-      Vector3D globalPosition;
-      s.localToGlobal(Vector2D(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
-                      parameters2globalMomentum(pars),
-                      globalPosition);
-      return globalPosition;
+      return s.localToGlobal(Vector2D(pars(Acts::eBoundLoc0), pars(Acts::eBoundLoc1)),
+                             parameters2globalMomentum(pars));
     }
 
     static Vector3D
     parameters2globalMomentum(const ParVector_t& pars)
     {
       Vector3D momentum;
-      double         p     = std::abs(1. / pars(Acts::eQOP));
-      double         phi   = pars(Acts::ePHI);
-      double         theta = pars(Acts::eTHETA);
+      double         p     = std::abs(1. / pars(Acts::eBoundQOverP));
+      double         phi   = pars(Acts::eBoundPhi);
+      double         theta = pars(Acts::eBoundTheta);
       momentum << p * sin(theta) * cos(phi), p * sin(theta) * sin(phi),
           p * cos(theta);
 
@@ -66,29 +63,6 @@ namespace detail {
 } // end of namespace Acts
 ```
 
-The default parametrization is chosen to be the ATLAS parameterisation:
-
-```cpp
-namespace Acts {
-enum ParDef : unsigned int {
-  eLOC_0    = 0,  ///< first coordinate in local surface frame
-  eLOC_1    = 1,  ///< second coordinate in local surface frame
-  eLOC_R    = eLOC_0,
-  eLOC_PHI  = eLOC_1,
-  eLOC_RPHI = eLOC_0,
-  eLOC_Z    = eLOC_1,
-  eLOC_X    = eLOC_0,
-  eLOC_Y    = eLOC_1,
-  eLOC_D0   = eLOC_0,
-  eLOC_Z0   = eLOC_1,
-  ePHI      = 2,  ///< phi direction of momentum in global frame
-  eTHETA    = 3,  ///< theta direction of momentum in global frame
-  eQOP = 4,  ///< charge/momentum for charged tracks, for neutral tracks it is
-             /// 1/momentum
-  NGlobalPars
-};
-```
-
 Changing the default parameter definition and transformation needs recompilation
 of the Acts Software and redefinition of the relevant plugin:
  
@@ -104,8 +78,8 @@ which either is a `ChargedPolicy` class for charged track parameter representati
 ```cpp
 namespace Acts {
     typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
-    typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearParameters;
-    typedef SingleBoundTrackParameters<ChargedPolicy>       BoundParameters;
+    typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearTrackParameters;
+    typedef SingleBoundTrackParameters<ChargedPolicy>       BoundTrackParameters;
 }  // end of namespace Acts
 ```
 
@@ -142,7 +116,7 @@ Measurements in a detector can be one to many-dimensional (covering the full
 range up to the full track parametrization).
 
 ```cpp
-template <typename Identifier, ParID_t... params>
+template <typename Identifier, BoundIndices... params>
 class Measurement
 {
   // check type conditions

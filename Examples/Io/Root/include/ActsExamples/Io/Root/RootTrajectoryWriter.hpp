@@ -100,8 +100,8 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   std::vector<float>
       m_t_dz;  ///< Truth particle direction z at global hit position
 
-  std::vector<float> m_t_eLOC0;   ///< truth parameter eLOC_0
-  std::vector<float> m_t_eLOC1;   ///< truth parameter eLOC_1
+  std::vector<float> m_t_eLOC0;   ///< truth parameter eBoundLoc0
+  std::vector<float> m_t_eLOC1;   ///< truth parameter eBoundLoc1
   std::vector<float> m_t_ePHI;    ///< truth parameter ePHI
   std::vector<float> m_t_eTHETA;  ///< truth parameter eTHETA
   std::vector<float> m_t_eQOP;    ///< truth parameter eQOP
@@ -126,14 +126,14 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
   bool m_hasFittedParams;        ///< if the track has fitted parameter
-  float m_eLOC0_fit{-99.};       ///< fitted parameter eLOC_0
-  float m_eLOC1_fit{-99.};       ///< fitted parameter eLOC_1
+  float m_eLOC0_fit{-99.};       ///< fitted parameter eBoundLoc0
+  float m_eLOC1_fit{-99.};       ///< fitted parameter eBoundLoc1
   float m_ePHI_fit{-99.};        ///< fitted parameter ePHI
   float m_eTHETA_fit{-99.};      ///< fitted parameter eTHETA
   float m_eQOP_fit{-99.};        ///< fitted parameter eQOP
   float m_eT_fit{-99.};          ///< fitted parameter eT
-  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC_-99.err
-  float m_err_eLOC1_fit{-99.};   ///< fitted parameter eLOC_1 err
+  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC err
+  float m_err_eLOC1_fit{-99.};   ///< fitted parameter eBoundLoc1 err
   float m_err_ePHI_fit{-99.};    ///< fitted parameter ePHI err
   float m_err_eTHETA_fit{-99.};  ///< fitted parameter eTHETA err
   float m_err_eQOP_fit{-99.};    ///< fitted parameter eQOP err

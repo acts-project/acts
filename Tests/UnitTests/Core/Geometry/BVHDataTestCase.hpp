@@ -39,7 +39,7 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
       for (size_t k = 0; k <= n; k++) {
         Vector3D pos(min + i * step, min + j * step, min + k * step);
 
-        auto trf = std::make_shared<Transform3D>(Translation3D(pos));
+        auto trf = Transform3D(Translation3D(pos));
         auto vol = std::make_unique<AbstractVolume>(trf, vbds);
 
         volumes.push_back(std::move(vol));
@@ -61,13 +61,12 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
   }
 
   // box like overall shape
-  auto tvTrf = std::make_shared<Transform3D>(Transform3D::Identity());
   auto tvBounds =
       std::make_shared<CuboidVolumeBounds>(hl * 1.1, hl * 1.1, hl * 1.1);
 
-  auto tv =
-      TrackingVolume::create(tvTrf, tvBounds, std::move(boxStore),
-                             std::move(volumes), top, nullptr, "TheVolume");
+  auto tv = TrackingVolume::create(Transform3D::Identity(), tvBounds,
+                                   std::move(boxStore), std::move(volumes), top,
+                                   nullptr, "TheVolume");
 
   auto tg = std::make_shared<TrackingGeometry>(tv);
 
@@ -138,30 +137,20 @@ BOOST_DATA_TEST_CASE(
   Navigator navigator(tg);
   PropagatorType propagator(std::move(stepper), navigator);
 
-  using DebugOutput = Acts::DebugOutputActor;
-  using ActionList = Acts::ActionList<SteppingLogger, DebugOutput>;
+  using ActionList = Acts::ActionList<SteppingLogger>;
   using AbortConditions = Acts::AbortList<>;
 
   Acts::PropagatorOptions<ActionList, AbortConditions> options(
       tgContext, mfContext, Acts::getDummyLogger());
 
-  options.debug = false;
   options.pathLimit = 20_m;
 
-  // this should be irrelevant.
-  double mom = 50_GeV;
-
-  Acts::CurvilinearParameters startPar(std::nullopt, ray.origin(),
-                                       ray.dir() * mom, +1, 0.);
+  Acts::Vector4D pos4 = Acts::Vector4D::Zero();
+  pos4.segment<3>(Acts::ePos0) = ray.origin();
+  // momentum value should be irrelevant.
+  Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);
 
   const auto result = propagator.propagate(startPar, options).value();
-
-  const auto debugString =
-      result.template get<DebugOutput::result_type>().debugString;
-
-  if (options.debug) {
-    std::cout << debugString << std::endl;
-  }
 
   // collect surfaces
   std::vector<const Surface*> actHits;
@@ -172,7 +161,7 @@ BOOST_DATA_TEST_CASE(
       continue;
     }
 
-    auto sensitiveID = step.surface->geoID().sensitive();
+    auto sensitiveID = step.surface->geometryId().sensitive();
     if (sensitiveID != 0) {
       actHits.push_back(step.surface.get());
     }
@@ -184,6 +173,6 @@ BOOST_DATA_TEST_CASE(
     const Surface* act = actHits[i];
 
     BOOST_CHECK_EQUAL(exp, act);
-    BOOST_CHECK_EQUAL(exp->geoID(), act->geoID());
+    BOOST_CHECK_EQUAL(exp->geometryId(), act->geometryId());
   }
 }

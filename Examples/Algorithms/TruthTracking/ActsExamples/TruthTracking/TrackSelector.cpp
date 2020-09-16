@@ -40,12 +40,14 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     return (min <= x) and (x < max);
   };
   auto isValidTrack = [&](const auto& trk) {
-    auto rho = std::hypot(trk.position().x(), trk.position().y());
-    auto phi = std::atan2(trk.momentum().y(), trk.momentum().x());
-    auto eta = std::atanh(trk.momentum().z() / trk.momentum().norm());
-    auto pt = std::hypot(trk.momentum().x(), trk.momentum().y());
+    auto pos = trk.position(ctx.geoContext);
+    auto dir = trk.unitDirection();
+    auto rho = std::hypot(pos[Acts::eX], pos[Acts::eY]);
+    auto phi = std::atan2(dir[Acts::eY], dir[Acts::eX]);
+    auto eta = std::atanh(dir[Acts::eZ]);
+    auto pt = trk.transverseMomentum();
     return within(rho, 0, m_cfg.rhoMax) and
-           within(std::abs(trk.position().z()), 0, m_cfg.absZMax) and
+           within(std::abs(pos[Acts::eZ]), 0, m_cfg.absZMax) and
            within(phi, m_cfg.phiMin, m_cfg.phiMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and

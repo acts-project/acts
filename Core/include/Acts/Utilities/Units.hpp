@@ -36,6 +36,7 @@ namespace Acts {
 ///
 ///     With the chosen magnetic field unit the expression above stays the
 ///     same and no additional conversion factors are necessary.
+/// *   Amount of substance is expressed in mol.
 ///
 /// To ensure consistent computations and results the following guidelines
 /// **must** be followed when handling physical quantities with units:
@@ -74,12 +75,13 @@ namespace Acts {
 ///     double mass     = 511_keV;
 ///     double velocity = 345_m / 1_s;
 ///     double bfield   = 3.9_T;
+///     double density  = 1_mol / 1_cm3;
 ///
 ///     // convert output values (via unit constants)
 ///     doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
 ///     // convert output values (via unit user literals)
-///     double x_in_mm   = trackPars.position().x() / 1_mm;
-///     double pt_in_TeV = trackPars.momentum().pT() / 1_TeV;
+///     double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
+///     double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
 ///
 
 namespace UnitConstants {
@@ -138,6 +140,8 @@ constexpr double C = 1.602176634e19;
 constexpr double T = 0.000299792458;  // equivalent to c in appropriate SI units
 constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
+// Amount of substance, native unit mol
+constexpr double mol = 1.0;
 }  // namespace UnitConstants
 
 namespace UnitLiterals {
@@ -187,59 +191,8 @@ ACTS_DEFINE_UNIT_LITERAL(C)
 ACTS_DEFINE_UNIT_LITERAL(T)
 ACTS_DEFINE_UNIT_LITERAL(Gauss)
 ACTS_DEFINE_UNIT_LITERAL(kGauss)
+ACTS_DEFINE_UNIT_LITERAL(mol)
 // not needed anymore. undef to prevent littering the namespace
 #undef ACTS_DEFINE_UNIT_LITERAL
 }  // namespace UnitLiterals
-
-/// Legacy namespace for backward-compatibility
-namespace units {
-
-/// @name length units
-/// @{
-constexpr double _km = UnitConstants::km;
-constexpr double _m = UnitConstants::m;
-constexpr double _cm = UnitConstants::cm;
-constexpr double _mm = UnitConstants::mm;
-constexpr double _um = UnitConstants::um;
-constexpr double _nm = UnitConstants::nm;
-constexpr double _pm = UnitConstants::pm;
-constexpr double _fm = UnitConstants::fm;
-/// Higher orders
-constexpr double _mm2 = _mm * _mm;
-/// @}
-
-/// @name time units
-/// @{
-constexpr double _h = UnitConstants::h;
-constexpr double _s = UnitConstants::s;
-constexpr double _ms = UnitConstants::ms;
-/// @}
-
-/// @name energy/momentum/mass units
-/// @{
-constexpr double _GeV = UnitConstants::GeV;
-constexpr double _TeV = UnitConstants::TeV;
-constexpr double _MeV = UnitConstants::MeV;
-constexpr double _keV = UnitConstants::keV;
-constexpr double _eV = UnitConstants::eV;
-constexpr double _g = UnitConstants::g;
-constexpr double _kg = UnitConstants::kg;
-/// @}
-
-/// @name charge units
-/// @{
-constexpr double _C = UnitConstants::C;
-constexpr double _e = UnitConstants::e;
-/// Higher orders
-constexpr double _e2 = _e * _e;
-/// @}
-
-/// @name magnetic field units
-/// @{
-constexpr double _T = UnitConstants::T;
-constexpr double _Gauss = UnitConstants::Gauss;
-constexpr double _kGauss = UnitConstants::kGauss;
-/// @}
-
-}  // namespace units
 }  // namespace Acts

@@ -24,25 +24,55 @@ namespace Acts {
 /// - nuclear interaction length L0 (native length units)
 /// - relative atomic mass Ar (unitless number)
 /// - nuclear charge number Z (elementary charge e)
-/// - mass density rho (native mass unit / (native length unit)³)
+/// - molar density (native amount-of-substance unit / (native length unit)³)
 ///
-/// The parameters can be effective or average parameters when e.g. a mixture
+/// The parameters can be effective or average parameters e.g. when a mixture
 /// of materials is described.
+///
+/// @note Always use the opaque parameters vector to serialize/deserialize the
+///   material information. Since the internal storage might be different from
+///   the external accessors, this ensures that always the numerically optimal
+///   parameters are stored. Use the `ParametersVector` type and do not assume
+///   any particular size since we might consider to store more parameters in
+///   the future.
 class Material {
  public:
+  using ParametersVector = Acts::ActsVectorF<5>;
+
+  // Both mass and molar density are stored as a float and can thus not be
+  // distinguished by their types. Just changing the last element in the
+  // previously existing constructor that took five floats as input to represent
+  // molar density instead of mass density could have lead to significant
+  // confusion compared to the previous behaviour. To avoid any ambiguity,
+  // construction from separate material parameters must happen through the
+  // following named constructors.
+
+  /// Construct from material parameters using the molar density.
+  ///
+  /// @param X0 is the radiation length
+  /// @param L0 is the nuclear interaction length
+  /// @param Ar is the relative atomic mass
+  /// @param Z is the nuclear charge number
+  /// @param molarRho is the molar density
+  static Material fromMolarDensity(float x0, float l0, float ar, float z,
+                                   float molarRho);
+  /// Construct from material parameters using the mass density.
+  ///
+  /// @param X0 is the radiation length
+  /// @param L0 is the nuclear interaction length
+  /// @param Ar is the relative atomic mass
+  /// @param Z is the nuclear charge number
+  /// @param massRho is the mass density
+  ///
+  /// @warning Due to the choice of native mass units, using the mass density
+  ///   can lead to numerical problems. Typical mass densities lead to
+  ///   computations with values differing by 20+ orders of magnitude.
+  static Material fromMassDensity(float x0, float l0, float ar, float z,
+                                  float massRho);
   /// Construct a vacuum representation.
   Material() = default;
-  /// Construct from material parameters.
-  ///
-  /// @param X0_  is the radiation length
-  /// @param L0_  is the nuclear interaction length
-  /// @param Ar_  is the relative atomic mass
-  /// @param Z_   is the atomic number
-  /// @param rho_ is the mass density
-  constexpr Material(float X0_, float L0_, float Ar_, float Z_, float rho_)
-      : m_x0(X0_), m_l0(L0_), m_ar(Ar_), m_z(Z_), m_rho(rho_) {}
   /// Construct from an encoded parameters vector.
-  Material(const ActsVectorF<5>& parameters);
+  Material(const ParametersVector& parameters);
 
   Material(Material&& mat) = default;
   Material(const Material& mat) = default;
@@ -61,30 +91,29 @@ class Material {
   constexpr float Ar() const { return m_ar; }
   /// Return the nuclear charge number.
   constexpr float Z() const { return m_z; }
+  /// Return the molar density.
+  constexpr float molarDensity() const { return m_molarRho; }
+  /// Return the molar electron density.
+  constexpr float molarElectronDensity() const { return m_z * m_molarRho; }
   /// Return the mass density.
-  constexpr float massDensity() const { return m_rho; }
-  /// Return the molar electron density in mol / (native length unit)³.
-  ///
-  /// Use mol instead of the real number of electrons to avoid large numbers
-  /// which could result in numerical instabilities somewhere else.
-  float molarElectronDensity() const;
+  float massDensity() const;
   /// Return the mean electron excitation energy.
   float meanExcitationEnergy() const;
 
   /// Encode the properties into an opaque parameters vector.
-  ActsVectorF<5> classificationNumbers() const;
+  ParametersVector parameters() const;
 
  private:
   float m_x0 = std::numeric_limits<float>::infinity();
   float m_l0 = std::numeric_limits<float>::infinity();
   float m_ar = 0.0f;
   float m_z = 0.0f;
-  float m_rho = 0.0f;
+  float m_molarRho = 0.0f;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) and (lhs.m_l0 == rhs.m_l0) and
            (lhs.m_ar == rhs.m_ar) and (lhs.m_z == rhs.m_z) and
-           (lhs.m_rho == rhs.m_rho);
+           (lhs.m_molarRho == rhs.m_molarRho);
   }
   friend constexpr bool operator!=(const Material& lhs, const Material& rhs) {
     return !(lhs == rhs);

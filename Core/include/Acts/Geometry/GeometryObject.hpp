@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -17,9 +17,7 @@
 
 namespace Acts {
 
-/// @class GeometryObject
-///
-/// Base class to provide GeometryID interface:
+/// Base class to provide GeometryIdentifier interface:
 /// - simple set and get
 ///
 /// It also provides the binningPosition method for
@@ -35,21 +33,22 @@ class GeometryObject {
 
   /// Constructor from a value
   ///
-  /// @param geoID the geometry identifier of the object
-  GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
+  /// @param geometryId the geometry identifier of the object
+  GeometryObject(const GeometryIdentifier& geometryId)
+      : m_geometryId(geometryId) {}
 
   /// Assignment operator
   ///
-  /// @param geoID the source geoID
-  GeometryObject& operator=(const GeometryObject& geoID) {
-    if (&geoID != this) {
-      m_geoID = geoID.m_geoID;
+  /// @param geometryId the source geometryId
+  GeometryObject& operator=(const GeometryObject& geometryId) {
+    if (&geometryId != this) {
+      m_geometryId = geometryId.m_geometryId;
     }
     return *this;
   }
 
   /// @return the geometry id by reference
-  const GeometryID& geoID() const;
+  const GeometryIdentifier& geometryId() const;
 
   /// Force a binning position method
   ///
@@ -57,8 +56,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual const Vector3D binningPosition(const GeometryContext& gctx,
-                                         BinningValue bValue) const = 0;
+  virtual Vector3D binningPosition(const GeometryContext& gctx,
+                                   BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///
@@ -71,19 +70,20 @@ class GeometryObject {
 
   /// Set the value
   ///
-  /// @param geoID the geometry identifier to be assigned
-  void assignGeoID(const GeometryID& geoID);
+  /// @param geometryId the geometry identifier to be assigned
+  void assignGeometryId(const GeometryIdentifier& geometryId);
 
  protected:
-  GeometryID m_geoID;
+  GeometryIdentifier m_geometryId;
 };
 
-inline const GeometryID& GeometryObject::geoID() const {
-  return m_geoID;
+inline const GeometryIdentifier& GeometryObject::geometryId() const {
+  return m_geometryId;
 }
 
-inline void GeometryObject::assignGeoID(const GeometryID& geoID) {
-  m_geoID = geoID;
+inline void GeometryObject::assignGeometryId(
+    const GeometryIdentifier& geometryId) {
+  m_geometryId = geometryId;
 }
 
 inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,

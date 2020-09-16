@@ -8,20 +8,19 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/EventData/detail/ParameterTraits.hpp"
 
 #include <type_traits>
 #include <utility>
 
 namespace Acts {
-/// @cond
+
 // forward declaration
 template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet;
-/// @endcond
 
-/// @cond detail
 namespace detail {
+
 /// @brief generate ParameterSet type containing all defined parameters
 ///
 /// @return full_parset<Policy>::type is equivalent to
@@ -60,8 +59,8 @@ struct full_parset {
 
   using type = typename converter<typename tparam_generator<
       parameter_indices_t,
-      detail::ParametersSize<parameter_indices_t>::size - 1>::type>::type;
+      kParametersSize<parameter_indices_t> - 1>::type>::type;
 };
+
 }  // namespace detail
-/// @endcond
 }  // namespace Acts

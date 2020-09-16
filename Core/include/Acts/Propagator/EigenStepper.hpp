@@ -50,8 +50,9 @@ class EigenStepper {
   /// Jacobian, Covariance and State defintions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = bfield_t;
 
   /// @brief State for track parameter propagation
@@ -78,9 +79,9 @@ class EigenStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position()),
-          dir(par.momentum().normalized()),
-          p(par.momentum().norm()),
+        : pos(par.position(gctx)),
+          dir(par.unitDirection()),
+          p(par.absoluteMomentum()),
           q(par.charge()),
           t(par.time()),
           navDir(ndir),

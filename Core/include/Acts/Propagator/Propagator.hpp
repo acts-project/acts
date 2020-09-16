@@ -59,6 +59,45 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   double pathLength = 0.;
 };
 
+/// @brief Class holding the trivial options in propagator options
+///
+struct PropagatorPlainOptions {
+  /// Propagation direction
+  NavigationDirection direction = forward;
+
+  /// The |pdg| code for (eventual) material integration - pion default
+  int absPdgCode = 211;
+
+  /// The mass for the particle for (eventual) material integration
+  double mass = 139.57018 * UnitConstants::MeV;
+
+  /// Maximum number of steps for one propagate call
+  unsigned int maxSteps = 1000;
+
+  /// Maximum number of Runge-Kutta steps for the stepper step call
+  unsigned int maxRungeKuttaStepTrials = 10000;
+
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
+
+  /// Absolute maximum path length
+  double pathLimit = std::numeric_limits<double>::max();
+
+  /// Required tolerance to reach target (surface, pathlength)
+  double targetTolerance = s_onSurfaceTolerance;
+
+  /// Loop protection step, it adapts the pathLimit
+  bool loopProtection = true;
+  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+
+  // Configurations for Stepper
+  /// Tolerance for the error of the integration
+  double tolerance = 1e-4;
+
+  /// Cut-off value for the step size
+  double stepSizeCutOff = 0.;
+};
+
 /// @brief Options for propagate() call
 ///
 /// @tparam action_list_t List of action types called after each
@@ -69,7 +108,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
-struct PropagatorOptions {
+struct PropagatorOptions : public PropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
@@ -107,11 +146,7 @@ struct PropagatorOptions {
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
     eoptions.loopFraction = loopFraction;
-    // Output option
-    eoptions.debug = debug;
-    eoptions.debugString = debugString;
-    eoptions.debugPfxWidth = debugPfxWidth;
-    eoptions.debugMsgWidth = debugMsgWidth;
+
     // Stepper options
     eoptions.tolerance = tolerance;
     eoptions.stepSizeCutOff = stepSizeCutOff;
@@ -122,49 +157,24 @@ struct PropagatorOptions {
     return eoptions;
   }
 
-  /// Propagation direction
-  NavigationDirection direction = forward;
-
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
-
-  /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * UnitConstants::MeV;
-
-  /// Maximum number of steps for one propagate call
-  unsigned int maxSteps = 1000;
-
-  /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
-
-  /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
-
-  /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
-
-  /// Loop protection step, it adapts the pathLimit
-  bool loopProtection = true;
-  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-  /// Debug output steering:
-  //  -> @todo: move to a debug struct
-  // - the string where debug messages are stored (optionally)
-  // - it also has some formatting options
-  bool debug = false;            ///< switch debug on
-  std::string debugString = "";  ///< the string to collect msgs
-  size_t debugPfxWidth = 30;     ///< the prefix width
-  size_t debugMsgWidth = 50;     ///< the mesage width
-
-  // Configurations for Stepper
-  /// Tolerance for the error of the integration
-  double tolerance = 1e-4;
-
-  /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
+  /// @brief Set the plain options
+  ///
+  /// @param pOptions The plain options
+  void setPlainOptions(const PropagatorPlainOptions& pOptions) {
+    // Copy the options over
+    direction = pOptions.direction;
+    absPdgCode = pOptions.absPdgCode;
+    mass = pOptions.mass;
+    maxSteps = pOptions.maxSteps;
+    maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
+    maxStepSize = direction * std::abs(pOptions.maxStepSize);
+    targetTolerance = pOptions.targetTolerance;
+    pathLimit = direction * std::abs(pOptions.pathLimit);
+    loopProtection = pOptions.loopProtection;
+    loopFraction = pOptions.loopFraction;
+    tolerance = pOptions.tolerance;
+    stepSizeCutOff = pOptions.stepSizeCutOff;
+  }
 
   /// List of actions
   action_list_t actionList;
@@ -209,8 +219,9 @@ struct PropagatorOptions {
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");
@@ -351,8 +362,9 @@ class Propagator final {
   ///
   template <typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      CurvilinearParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
@@ -379,7 +391,7 @@ class Propagator final {
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
   Result<action_list_t_result_t<
-      BoundParameters, typename propagator_options_t::action_list_type>>
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 

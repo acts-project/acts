@@ -352,7 +352,7 @@ struct DenseEnvironmentExtension {
   void initializeEnergyLoss(const propagator_state_t& state) {
     energy[0] = std::hypot(initialMomentum, state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
-    Acts::MaterialProperties slab(material, 1);
+    Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, state.options.absPdgCode,
@@ -462,11 +462,7 @@ struct DenseStepperPropagatorOptions
     eoptions.pathLimit = this->pathLimit;
     eoptions.loopProtection = this->loopProtection;
     eoptions.loopFraction = this->loopFraction;
-    // Output option
-    eoptions.debug = this->debug;
-    eoptions.debugString = this->debugString;
-    eoptions.debugPfxWidth = this->debugPfxWidth;
-    eoptions.debugMsgWidth = this->debugMsgWidth;
+
     // Stepper options
     eoptions.tolerance = this->tolerance;
     eoptions.stepSizeCutOff = this->stepSizeCutOff;

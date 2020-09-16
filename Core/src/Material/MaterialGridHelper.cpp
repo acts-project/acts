@@ -151,13 +151,7 @@ Acts::Grid2D Acts::createGrid2D(
       globalToLocalFromBin(bu[0].binvalue);
   std::function<double(Acts::Vector3D)> coord2 =
       globalToLocalFromBin(bu[1].binvalue);
-  Transform3D transfo;
-  if (bins.transform() != nullptr) {
-    transfo = bins.transform()->inverse();
-  } else {
-    transfo = Transform3D::Identity();
-  }
-
+  Transform3D transfo = bins.transform().inverse();
   transfoGlobalToLocal = [coord1, coord2,
                           transfo](Acts::Vector3D pos) -> Acts::Vector2D {
     pos = transfo * pos;
@@ -208,12 +202,8 @@ Acts::Grid3D Acts::createGrid3D(
       globalToLocalFromBin(bu[1].binvalue);
   std::function<double(Acts::Vector3D)> coord3 =
       globalToLocalFromBin(bu[2].binvalue);
-  Transform3D transfo;
-  if (bins.transform() != nullptr) {
-    transfo = bins.transform()->inverse();
-  } else {
-    transfo = Transform3D::Identity();
-  }
+  Transform3D transfo = bins.transform().inverse();
+
   transfoGlobalToLocal = [coord1, coord2, coord3,
                           transfo](Acts::Vector3D pos) -> Acts::Vector3D {
     pos = transfo * pos;
@@ -224,14 +214,17 @@ Acts::Grid3D Acts::createGrid3D(
 }
 
 Acts::MaterialGrid2D Acts::mapMaterialPoints(
-    Acts::Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Acts::Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal) {
-  // Walk over each point
+  // Walk over each properties
   for (const auto& rm : mPoints) {
-    // Search for fitting grid point and accumulate
-    Acts::Grid2D::index_t index =
-        grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(rm.second));
-    grid.atLocalBins(index).accumulate(rm.first);
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid2D::index_t index =
+          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      grid.atLocalBins(index).accumulate(rm.first);
+    }
   }
 
   // Build material grid
@@ -246,21 +239,24 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   // Build the grid and fill it with data
   Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
   for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
+    mGrid.at(index) = grid.at(index).average().parameters();
   }
 
   return mGrid;
 }
 
 Acts::MaterialGrid3D Acts::mapMaterialPoints(
-    Acts::Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Acts::Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal) {
-  // Walk over each point
+  // Walk over each properties
   for (const auto& rm : mPoints) {
-    // Search for fitting grid point and accumulate
-    Acts::Grid3D::index_t index =
-        grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(rm.second));
-    grid.atLocalBins(index).accumulate(rm.first);
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      grid.atLocalBins(index).accumulate(rm.first);
+    }
   }
 
   // Build material grid
@@ -276,7 +272,7 @@ Acts::MaterialGrid3D Acts::mapMaterialPoints(
   // Build the grid and fill it with data
   Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
   for (size_t index = 0; index < grid.size(); index++) {
-    mGrid.at(index) = grid.at(index).average().classificationNumbers();
+    mGrid.at(index) = grid.at(index).average().parameters();
   }
   return mGrid;
 }

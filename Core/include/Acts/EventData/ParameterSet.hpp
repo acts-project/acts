@@ -7,18 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
-#include <memory>
-#include <optional>
-#include <type_traits>
-#include <utility>
 
-// Acts includes
+#include "Acts/EventData/detail/DifferenceCalculator.hpp"
+#include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
-#include "Acts/EventData/detail/residual_calculator.hpp"
-#include "Acts/EventData/detail/value_corrector.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/MPL/are_sorted.hpp"
@@ -27,14 +21,14 @@
 #include "Acts/Utilities/detail/MPL/get_position.hpp"
 #include "Acts/Utilities/detail/MPL/is_contained.hpp"
 
+#include <optional>
+#include <type_traits>
+
 namespace Acts {
-/// @cond
-// forward type declaration for full parameter set
-using FullParameterSet =
-    typename detail::full_parset<BoundParametersIndices>::type;
-using FullFreeParameterSet =
-    typename detail::full_parset<FreeParametersIndices>::type;
-/// @endcond
+
+// Parameter sets corresponding to the full parameters vector
+using FullBoundParameterSet = typename detail::full_parset<BoundIndices>::type;
+using FullFreeParameterSet = typename detail::full_parset<FreeIndices>::type;
 
 /**
  * @class ParameterSet
@@ -48,7 +42,7 @@ using FullFreeParameterSet =
  * integral type used to identify different parameters. This could for example
  * be an @c enum, @c short, or <tt>unsigned int</tt>. This @c typedef must be
  * convertible to an <tt>unsigned int</tt>
- *  -# It must contain a <tt>typedef #ParValue_t</tt> specifying the type of
+ *  -# It must contain a <tt>typedef #Scalar</tt> specifying the type of
  * the parameter values. This could for
  *     instance be @c double, or @c float.
  *  -# It must contain a definition of an integral constant named @c N which is
@@ -82,13 +76,11 @@ using FullFreeParameterSet =
 template <typename parameter_indices_t, parameter_indices_t... params>
 class ParameterSet {
  private:
-  // local typedefs and constants
-  using Self = ParameterSet<parameter_indices_t,
-                            params...>;  ///< type of this parameter set
-  static constexpr unsigned int kNumberOfParameters =
-      sizeof...(params);  ///< number of parameters stored in this class
-  static constexpr unsigned int kSizeMax = detail::ParametersSize<
-      parameter_indices_t>::size;  ///< Highest index in used parameter indices
+  /// number of parameters stored in this class
+  static constexpr unsigned int kNumberOfParameters = sizeof...(params);
+  /// Highest index in used parameter indices
+  static constexpr unsigned int kSizeMax =
+      detail::kParametersSize<parameter_indices_t>;
 
   // static assert to check that the template parameters are consistent
   static_assert(
@@ -106,14 +98,13 @@ class ParameterSet {
       "number of stored parameters can not exceed number of total parameters");
 
  public:
-  // public typedefs
-  /// matrix type for projecting full parameter vector onto local parameter
-  /// space
-  using Projection = ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>;
-  /// vector type for stored parameters
-  using ParameterVector = ActsVector<ParValue_t, kNumberOfParameters>;
-  /// type of covariance matrix
-  using CovarianceMatrix = ActsSymMatrix<ParValue_t, kNumberOfParameters>;
+  using Scalar = detail::ParametersScalar<parameter_indices_t>;
+  using ParametersVector = ActsVector<Scalar, kNumberOfParameters>;
+  /// Vector type containing all parameters from the same space
+  using FullParametersVector = ActsVector<Scalar, kSizeMax>;
+  using CovarianceMatrix = ActsSymMatrix<Scalar, kNumberOfParameters>;
+  /// Projection matrix to project full parameters into the configured space.
+  using ProjectionMatrix = ActsMatrix<Scalar, kNumberOfParameters, kSizeMax>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -128,15 +119,14 @@ class ParameterSet {
   template <typename... Tail>
   ParameterSet(
       std::optional<CovarianceMatrix> cov,
-      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, ParValue_t>
-          head,
+      std::enable_if_t<sizeof...(Tail) + 1 == kNumberOfParameters, Scalar> head,
       Tail... values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this, head,
-                                                                    values...);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vals(
+        *this, head, values...);
   }
 
   /**
@@ -152,71 +142,17 @@ class ParameterSet {
    * @param values vector with parameter values
    */
   ParameterSet(std::optional<CovarianceMatrix> cov,
-               const ParameterVector& values)
+               const ParametersVector& values)
       : m_vValues(kNumberOfParameters) {
     if (cov) {
       m_optCovariance = std::move(*cov);
     }
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
-  /**
-   * @brief copy constructor
-   *
-   * @param copy object whose content is copied into the new @c ParameterSet
-   * object
-   */
-  ParameterSet(const Self& copy)
-      : m_vValues(copy.m_vValues), m_optCovariance(copy.m_optCovariance) {}
-
-  /**
-   * @brief move constructor
-   *
-   * @param copy object whose content is moved into the new @c ParameterSet
-   * object
-   */
-  ParameterSet(Self&& copy) : m_vValues(std::move(copy.m_vValues)) {
-    if (copy.m_optCovariance) {
-      m_optCovariance = std::move(*copy.m_optCovariance);
-    }
-  }
-
-  /**
-   * @brief standard destructor
-   */
-  ~ParameterSet() = default;
-
-  /**
-   * @brief assignment operator
-   *
-   * @param rhs object whose content is assigned to this @c ParameterSet object
-   */
-  Self& operator=(const Self& rhs) {
-    m_vValues = rhs.m_vValues;
-    m_optCovariance = rhs.m_optCovariance;
-    return *this;
-  }
-
-  /**
-   * @brief move assignment operator
-   *
-   * @param rhs object whose content is moved into this @c ParameterSet object
-   */
-  Self& operator=(Self&& rhs) {
-    m_vValues = std::move(rhs.m_vValues);
-    m_optCovariance = std::move(rhs.m_optCovariance);
-    return *this;
-  }
-
-  /**
-   * @brief swap two objects
-   */
-  friend void swap(Self& first, Self& second) noexcept {
-    using std::swap;
-    swap(first.m_vValues, second.m_vValues);
-    swap(first.m_optCovariance, second.m_optCovariance);
-  }
+  // this class does not have a custom default constructor and thus should not
+  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /**
    * @brief return index of parameter identifier in parameter list
@@ -245,7 +181,7 @@ class ParameterSet {
    *         parameter set @c params
    */
   template <size_t index>
-  static constexpr parameter_indices_t getParID() {
+  static constexpr parameter_indices_t getParameterIndex() {
     return detail::at_index<parameter_indices_t, index, params...>::value;
   }
 
@@ -259,7 +195,7 @@ class ParameterSet {
    * @return value of the stored parameter
    */
   template <parameter_indices_t parameter>
-  ParValue_t getParameter() const {
+  Scalar getParameter() const {
     return m_vValues(getIndex<parameter>());
   }
 
@@ -268,7 +204,7 @@ class ParameterSet {
    *
    * @return column vector with @c #kNumberOfParameters rows
    */
-  ParameterVector getParameters() const { return m_vValues; }
+  const ParametersVector& getParameters() const { return m_vValues; }
 
   /**
    * @brief sets value for given parameter
@@ -281,9 +217,10 @@ class ParameterSet {
    * @return previously stored value of this parameter
    */
   template <parameter_indices_t parameter>
-  void setParameter(ParValue_t value) {
+  void setParameter(Scalar value) {
     m_vValues(getIndex<parameter>()) =
-        ParameterTypeFor<parameter_indices_t, parameter>::type::getValue(value);
+        detail::ParameterTraits<parameter_indices_t, parameter>::getValue(
+            value);
   }
 
   /**
@@ -295,9 +232,9 @@ class ParameterSet {
    *
    * @param values vector of length #kNumberOfParameters
    */
-  void setParameters(const ParameterVector& values) {
-    detail::initialize_parset<parameter_indices_t, params...>::init(*this,
-                                                                    values);
+  void setParameters(const ParametersVector& values) {
+    detail::initialize_parset<parameter_indices_t, params...>::init_vec(*this,
+                                                                        values);
   }
 
   /**
@@ -342,7 +279,7 @@ class ParameterSet {
    *         covariance matrix is set
    */
   template <parameter_indices_t parameter>
-  ParValue_t getUncertainty() const {
+  Scalar getUncertainty() const {
     if (m_optCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_optCovariance)(index, index));
@@ -359,119 +296,6 @@ class ParameterSet {
    * @param cov unique pointer to new covariance matrix (nullptr is accepted)
    */
   void setCovariance(const CovarianceMatrix& cov) { m_optCovariance = cov; }
-
-  /**
-   * @brief equality operator
-   *
-   * @return @c true if stored parameter values are equal and both covariance
-   * matrices are
-   *         either identical or not set, otherwise @c false
-   */
-  bool operator==(const Self& rhs) const {
-    // shortcut comparison with myself
-    if (&rhs == this) {
-      return true;
-    }
-
-    // parameter values
-    if (m_vValues != rhs.m_vValues) {
-      return false;
-    }
-    // both have covariance matrices set
-    if ((m_optCovariance && rhs.m_optCovariance) &&
-        (*m_optCovariance != *rhs.m_optCovariance)) {
-      return false;
-    }
-    // only one has a covariance matrix set
-    if ((m_optCovariance && !rhs.m_optCovariance) ||
-        (!m_optCovariance && rhs.m_optCovariance)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * @brief inequality operator
-   *
-   * @return @c true if both objects are not equal, otherwise @c false
-   *
-   * @sa ParameterSet::operator==
-   */
-  bool operator!=(const Self& rhs) const { return !(*this == rhs); }
-
-  /**
-   * @brief project vector of full parameter set onto parameter sub-space
-   *
-   * Let \f$ \left(p_1 \dots p_N \right)\f$ be the full set of parameters out of
-   * which the \f$m\f$
-   * parameters \f$ \left( p_{i_1} \dots p_{i_m} \right), i_1 < i_2 < \dots <
-   * i_m, m \le N, i_j \le N\f$
-   * are stored in this ParameterSet object. Let \f$ \left(v^0_1 \dots v^0_N
-   * \right)\f$ be the parameter
-   * values given in the full ParameterSet, then this methods applies the
-   * following mapping:
-   * \f[
-   * \mathbb{R}^{N \times 1} \mapsto \mathbb{R}^{m \times 1} : \left(
-   * \begin{array}{c} v_1^0 \\ \vdots \\ v_N^0 \end{array} \right) \mapsto
-   * \left( \begin{array}{c} v_{i_1}^0 \\ \vdots \\ v_{i_m}^0 \end{array}
-   * \right)
-   * \f]
-   *
-   * @param fullParSet ParameterSet object containing values for all defined
-   * parameters
-   *
-   * @return vector containing only the parameter values from the full parameter
-   * vector
-   *         which are also defined for this ParameterSet object
-   */
-  ParameterVector project(const FullParameterSet& fullParSet) const {
-    return projector() * fullParSet.getParameters();
-  }
-
-  /**
-   * @brief calculate residual difference to full parameter vector
-   *
-   * Calculate the residual differences of the stored parameter values with
-   * respect to the corresponding
-   * parameter values in the full parameter vector. Hereby, the residual vector
-   * is defined as
-   *
-   * \f[
-   * \vec{r} = \left( \begin{array}{c} r_{i_1} \\ \vdots \\ r_{i_m} \end{array}
-   * \right)
-   *  = \left( \begin{array}{c} v_{i_1} \\ \vdots \\ v_{i_m} \end{array} \right)
-   * -  \mathrm{Proj} \left( \begin{array}{c} v^0_{1} \\ \vdots \\ v^0_{N}
-   * \end{array} \right)
-   *  = \vec{v} - \mathrm{Proj} \left( \vec{v}^0 \right)
-   * \f]
-   *
-   * where \f$\mathrm{Proj}\f$ is the projection matrix, \f$\vec{v}\f$ is the
-   * vector of parameter values of
-   * this ParameterSet object and \f$\vec{v}^0\f$ is the full parameter value
-   * vector.
-   *
-   * @note Constraint and cyclic parameter value ranges are taken into account
-   * when calculating
-   *       the residual values.
-   *
-   * @param fullParSet ParameterSet object containing the full set of parameters
-   *
-   * @return vector containing the residual parameter values of this
-   * ParameterSet object
-   *         with respect to the given full parameter vector
-   *
-   * @sa ParameterSet::projector
-   */
-  /// @cond
-  template <
-      typename T = Self,
-      std::enable_if_t<not std::is_same<T, FullParameterSet>::value, int> = 0>
-  /// @endcond
-  ParameterVector residual(const FullParameterSet& fullParSet) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, projector() * fullParSet.getParameters());
-  }
 
   /**
    * @brief calculate residual difference to full parameter vector
@@ -493,11 +317,11 @@ class ParameterSet {
    * vector of parameter values of this ParameterSet object and \f$\vec{v}^0\f$
    * is the full parameter value vector.
    *
-   * @param boundParameters Vector of bound parameters
-   * @note Constraint and cyclic parameter value ranges of @p boundParameters
-   * are not tested.
-   * @note It is not tested whether @p boundParameters is at the same reference
-   * object
+   * @param boundParams Vector of bound parameters
+   * @note Constraint and cyclic parameter value ranges of @p
+   * BoundTrackParameters are not tested.
+   * @note It is not tested whether @p BoundTrackParameters is at the same
+   * reference object
    *
    * @return vector containing the residual parameter values of this
    * ParameterSet object
@@ -505,9 +329,9 @@ class ParameterSet {
    *
    * @sa ParameterSet::projector
    */
-  ParameterVector residual(const ActsVectorD<kSizeMax>& boundParameters) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
-        m_vValues, projector() * boundParameters);
+  ParametersVector residual(const FullParametersVector& other) const {
+    return detail::DifferenceCalculator<parameter_indices_t, params...>::run(
+        m_vValues, projector() * other);
   }
 
   /**
@@ -542,8 +366,8 @@ class ParameterSet {
    * ParameterSet object
    *         with respect to the given other parameter set
    */
-  ParameterVector residual(const Self& otherParSet) const {
-    return detail::residual_calculator<parameter_indices_t, params...>::result(
+  ParametersVector residual(const ParameterSet& otherParSet) const {
+    return detail::DifferenceCalculator<parameter_indices_t, params...>::run(
         m_vValues, otherParSet.m_vValues);
   }
 
@@ -557,10 +381,7 @@ class ParameterSet {
    * @return constant matrix with @c #kNumberOfParameters rows and @c
    * #kSizeMax columns
    */
-  static const ActsMatrix<ParValue_t, kNumberOfParameters, kSizeMax>
-  projector() {
-    return sProjector;
-  }
+  static const ProjectionMatrix& projector() { return sProjector; }
 
   /**
    * @brief number of stored parameters
@@ -581,29 +402,33 @@ class ParameterSet {
    * @param values vector with parameter values to be checked and corrected if
    * necessary
    */
-  static void correctValues(ParameterVector& values) {
-    detail::value_corrector<params...>::result(values);
+  static void correctValues(ParametersVector& values) {
+    detail::ValueCorrector<parameter_indices_t, params...>::run(values);
   }
 
- private:
-  ParameterVector m_vValues{
-      ParameterVector::Zero()};  ///< column vector containing
-                                 ///< values of local parameters
-  std::optional<CovarianceMatrix> m_optCovariance{
-      std::nullopt};  ///< an optional covariance matrix
+  /// Compare with another parameter set for equality.
+  bool operator==(const ParameterSet& other) const {
+    return (this == &other) or ((m_vValues == other.m_vValues) and
+                                (m_optCovariance == other.m_optCovariance));
+  }
+  /// Compare with another parameter set for inequality.
+  bool operator!=(const ParameterSet& other) const { return !(*this == other); }
 
-  static const Projection sProjector;  ///< matrix to project full parameter
-                                       /// vector onto local parameter space
+ private:
+  /// column vector containing values of local parameters.
+  ParametersVector m_vValues{ParametersVector::Zero()};
+  /// optional covariance matrix.
+  std::optional<CovarianceMatrix> m_optCovariance{std::nullopt};
+
+  /// matrix to project full parameter vector onto local parameter space.
+  static const ProjectionMatrix sProjector;
 };
 
-// initialize static class members
-template <typename parameter_indices_t, parameter_indices_t... params>
-constexpr unsigned int
-    ParameterSet<parameter_indices_t, params...>::kNumberOfParameters;
-
-template <typename parameter_indices_t, parameter_indices_t... params>
-const typename ParameterSet<parameter_indices_t, params...>::Projection
-    ParameterSet<parameter_indices_t, params...>::sProjector =
+template <typename parameter_indices_t, parameter_indices_t... kParameters>
+const typename ParameterSet<parameter_indices_t,
+                            kParameters...>::ProjectionMatrix
+    ParameterSet<parameter_indices_t, kParameters...>::sProjector =
         detail::make_projection_matrix<
-            kSizeMax, static_cast<unsigned int>(params)...>::init();
+            kSizeMax, static_cast<unsigned int>(kParameters)...>::init();
+
 }  // namespace Acts

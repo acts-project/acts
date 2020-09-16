@@ -1,31 +1,29 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline void LineSurface::localToGlobal(const GeometryContext& gctx,
-                                       const Vector2D& lposition,
-                                       const Vector3D& momentum,
-                                       Vector3D& position) const {
+inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
+                                           const Vector2D& lposition,
+                                           const Vector3D& momentum) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 
   // get the vector perpendicular to the momentum and the straw axis
   Vector3D radiusAxisGlobal(lineDirection.cross(momentum));
-  Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eLOC_Z]);
-  // add eLOC_R * radiusAxis
-  position = Vector3D(locZinGlobal +
-                      lposition[eLOC_R] * radiusAxisGlobal.normalized());
+  Vector3D locZinGlobal = sTransform * Vector3D(0., 0., lposition[eBoundLoc1]);
+  // add eBoundLoc0 * radiusAxis
+  return Vector3D(locZinGlobal +
+                  lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
 }
 
-inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
-                                       const Vector3D& position,
-                                       const Vector3D& momentum,
-                                       Vector2D& lposition) const {
+inline Result<Vector2D> LineSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& momentum) const {
   using VectorHelpers::perp;
 
   const auto& sTransform = transform(gctx);
@@ -34,20 +32,20 @@ inline bool LineSurface::globalToLocal(const GeometryContext& gctx,
   // Bring the global position into the local frame
   Vector3D loc3Dframe = sTransform.inverse() * position;
   // construct localPosition with sign*perp(candidate) and z.()
-  lposition = Vector2D(perp(loc3Dframe), loc3Dframe.z());
+  Vector2D lposition(perp(loc3Dframe), loc3Dframe.z());
   Vector3D sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
   Vector3D decVec(position - sCenter);
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
-  lposition[eLOC_R] *= sign;
-  return true;
+  lposition[eBoundLoc0] *= sign;
+  return Result<Vector2D>::success(lposition);
 }
 
 inline std::string LineSurface::name() const {
   return "Acts::LineSurface";
 }
 
-inline const RotationMatrix3D LineSurface::referenceFrame(
+inline RotationMatrix3D LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& /*unused*/,
     const Vector3D& momentum) const {
   RotationMatrix3D mFrame;
@@ -69,13 +67,13 @@ inline double LineSurface::pathCorrection(const GeometryContext& /*unused*/,
   return 1.;
 }
 
-inline const Vector3D LineSurface::binningPosition(
-    const GeometryContext& gctx, BinningValue /*bValue*/) const {
+inline Vector3D LineSurface::binningPosition(const GeometryContext& gctx,
+                                             BinningValue /*bValue*/) const {
   return center(gctx);
 }
 
-inline const Vector3D LineSurface::normal(const GeometryContext& gctx,
-                                          const Vector2D& /*lpos*/) const {
+inline Vector3D LineSurface::normal(const GeometryContext& gctx,
+                                    const Vector2D& /*lpos*/) const {
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
@@ -158,32 +156,33 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   // the local error components - given by the reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
-  jacobian(3, eT) = 1;
+  jacobian(3, eBoundTime) = 1;
   // the momentum components
-  jacobian(4, ePHI) = (-sin_theta) * sin_phi;
-  jacobian(4, eTHETA) = cos_theta * cos_phi;
-  jacobian(5, ePHI) = sin_theta * cos_phi;
-  jacobian(5, eTHETA) = cos_theta * sin_phi;
-  jacobian(6, eTHETA) = (-sin_theta);
-  jacobian(7, eQOP) = 1;
+  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
+  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
+  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
+  jacobian(6, eBoundTheta) = (-sin_theta);
+  jacobian(7, eBoundQOverP) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
-  // build the cross product of d(D)/d(ePHI) components with y axis
-  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, ePHI));
+  // build the cross product of d(D)/d(eBoundPhi) components with y axis
+  auto dDPhiY =
+      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundPhi));
   // and the same for the d(D)/d(eTheta) components
   auto dDThetaY =
-      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eTHETA));
+      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundTheta));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacobian.block<3, 1>(0, ePHI) = dDPhiY * pars[eLOC_0] * ipdn;
-  jacobian.block<3, 1>(0, eTHETA) = dDThetaY * pars[eLOC_0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundPhi) = dDPhiY * pars[eBoundLoc0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundTheta) = dDThetaY * pars[eBoundLoc0] * ipdn;
 }
 
-inline const BoundRowVector LineSurface::derivativeFactors(
+inline BoundRowVector LineSurface::derivativeFactors(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const RotationMatrix3D& rft,
     const BoundToFreeMatrix& jacobian) const {
@@ -196,23 +195,20 @@ inline const BoundRowVector LineSurface::derivativeFactors(
   ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
   // calculate the s factors for the dependency on X
   const BoundRowVector s_vec =
-      norm_vec * jacobian.topLeftCorner<3, eBoundParametersSize>();
+      norm_vec * jacobian.topLeftCorner<3, eBoundSize>();
   // calculate the d factors for the dependency on Tx
-  const BoundRowVector d_vec =
-      locz * jacobian.block<3, eBoundParametersSize>(4, 0);
+  const BoundRowVector d_vec = locz * jacobian.block<3, eBoundSize>(4, 0);
   // normalisation of normal & longitudinal components
   double norm = 1. / (1. - long_c * long_c);
   // create a matrix representation
-  ActsMatrixD<3, eBoundParametersSize> long_mat =
-      ActsMatrixD<3, eBoundParametersSize>::Zero();
+  ActsMatrixD<3, eBoundSize> long_mat = ActsMatrixD<3, eBoundSize>::Zero();
   long_mat.colwise() += locz.transpose();
   // build the combined normal & longitudinal components
-  return (norm *
-          (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                         jacobian.block<3, eBoundParametersSize>(4, 0))));
+  return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
+                                jacobian.block<3, eBoundSize>(4, 0))));
 }
 
-inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
+inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
@@ -241,7 +237,7 @@ inline const AlignmentRowVector LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline const LocalCartesianToBoundLocalMatrix
+inline LocalCartesianToBoundLocalMatrix
 LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::phi;

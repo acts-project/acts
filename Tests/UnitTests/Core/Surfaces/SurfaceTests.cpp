@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <limits>
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   BOOST_CHECK_EQUAL(Surface::Other,
                     SurfaceStub(tgContext, original, transform).type());
   // need some cruft to make the next one work
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(5., 10.);
   DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
@@ -77,11 +78,10 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
       std::make_shared<const RectangleBounds>(5., 10.);
   Vector3D reference{0., 1., 2.};
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
-  MaterialProperties properties{0.2, 0.2, 0.2, 20., 10, 5.};
   auto pMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(properties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
   SurfaceStub surface(detElement);
   // associatedDetectorElement
@@ -119,14 +119,13 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
   // surfaceMaterial()
-  MaterialProperties newProperties{0.5, 0.5, 0.5, 20., 10., 5.};
   auto pNewMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(newProperties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   surface.assignSurfaceMaterial(pNewMaterial);
   BOOST_CHECK_EQUAL(surface.surfaceMaterial(),
                     pNewMaterial.get());  // passes ??
   //
-  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), *pTransform, 1e-6, 1e-9);
+  CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), pTransform, 1e-6, 1e-9);
   // type() is pure virtual
 }
 
@@ -137,15 +136,14 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   Vector3D reference{0., 1., 2.};
   Translation3D translation1{0., 1., 2.};
   Translation3D translation2{1., 1., 2.};
-  auto pTransform1 = std::make_shared<const Transform3D>(translation1);
-  auto pTransform2 = std::make_shared<const Transform3D>(translation2);
+  auto pTransform1 = Transform3D(translation1);
+  auto pTransform2 = Transform3D(translation2);
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);
   auto pLayer = PlaneLayer::create(pTransform1, pPlanarBound);
-  MaterialProperties properties{1., 1., 1., 20., 10, 5.};
   auto pMaterial =
-      std::make_shared<const HomogeneousSurfaceMaterial>(properties);
+      std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
   DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
   DetectorElementStub detElement2{pTransform1, pPlanarBound, 0.3, pMaterial};
   DetectorElementStub detElement3{pTransform2, pPlanarBound, 0.3, pMaterial};

@@ -27,6 +27,7 @@
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
+using Acts::VectorHelpers::makeVector4;
 using Acts::VectorHelpers::perp;
 
 namespace Acts {
@@ -119,9 +120,11 @@ EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
 
 auto mCylinder = std::make_shared<CylinderBounds>(10_mm, 1000_mm);
-auto mSurface = Surface::makeShared<CylinderSurface>(nullptr, mCylinder);
+auto mSurface =
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), mCylinder);
 auto cCylinder = std::make_shared<CylinderBounds>(150_mm, 1000_mm);
-auto cSurface = Surface::makeShared<CylinderSurface>(nullptr, cCylinder);
+auto cSurface =
+    Surface::makeShared<CylinderSurface>(Transform3D::Identity(), cCylinder);
 
 const int ntests = 5;
 
@@ -187,7 +190,7 @@ BOOST_DATA_TEST_CASE(
   double q = dcharge;
   Vector3D pos(x, y, z);
   Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q);
   // propagate to the cylinder surface
   const auto& result = epropagator.propagate(start, *cSurface, options).value();
   auto& sor = result.get<so_result>();
@@ -239,7 +242,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
+                                   cov);
   // propagate to a path length of 100 with two steps of 50
   const auto& mid_parameters =
       epropagator.propagate(start, options_2s).value().endParameters;
@@ -255,8 +259,8 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(start, options_1s).value().endParameters;
 
   // test that the propagation is additive
-  CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
-                  0.001);
+  CHECK_CLOSE_REL(end_parameters_1s->position(tgContext),
+                  end_parameters_2s->position(tgContext), 0.001);
 
   const auto& cov_1s = *(end_parameters_1s->covariance());
   const auto& cov_2s = *(end_parameters_2s->covariance());
@@ -312,7 +316,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(makeVector4(pos, time), mom, mom.norm(), q,
+                                   cov);
   // propagate to a final surface with one stop in between
   const auto& mid_parameters =
       epropagator.propagate(start, *mSurface, options_2s).value().endParameters;
@@ -331,8 +336,8 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(start, *cSurface, options_1s).value().endParameters;
 
   // test that the propagation is additive
-  CHECK_CLOSE_REL(end_parameters_1s->position(), end_parameters_2s->position(),
-                  0.001);
+  CHECK_CLOSE_REL(end_parameters_1s->position(tgContext),
+                  end_parameters_2s->position(tgContext), 0.001);
 
   const auto& cov_1s = (*(end_parameters_1s->covariance()));
   const auto& cov_2s = (*(end_parameters_2s->covariance()));

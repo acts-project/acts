@@ -11,7 +11,7 @@
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
@@ -226,7 +226,7 @@ class Layer : public virtual GeometryObject {
   ///  optionally, the layer can be resized to the dimensions of the
   /// TrackingVolume
   ///  - Bounds of the Surface are resized
-  ///  - MaterialProperties dimensions are resized
+  ///  - MaterialSlab dimensions are resized
   ///  - SubSurface array boundaries are NOT resized
   ///
   /// @param tvol is the tracking volume the layer is confined
@@ -282,7 +282,7 @@ class Layer : public virtual GeometryObject {
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     const GeometryID& layerID);
+                     const GeometryIdentifier& layerID);
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is

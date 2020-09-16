@@ -93,9 +93,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -124,10 +123,8 @@ struct SurfaceArrayCreatorFixture {
       trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
-
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -152,9 +149,8 @@ struct SurfaceArrayCreatorFixture {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
-      auto transptr = std::make_shared<const Transform3D>(trans);
       std::shared_ptr<Surface> srf =
-          Surface::makeShared<PlaneSurface>(transptr, bounds);
+          Surface::makeShared<PlaneSurface>(trans, bounds);
 
       res.push_back(srf);
       m_surfaces.push_back(
@@ -199,18 +195,14 @@ struct SurfaceArrayCreatorFixture {
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
-
-        auto transAptr = std::make_shared<const Transform3D>(trans);
-
         std::shared_ptr<Surface> srfA =
-            Surface::makeShared<PlaneSurface>(transAptr, bounds);
+            Surface::makeShared<PlaneSurface>(trans, bounds);
 
         Vector3D nrm = srfA->normal(tgContext);
         Transform3D transB = trans;
         transB.pretranslate(nrm * 0.1);
-        auto transBptr = std::make_shared<const Transform3D>(transB);
         std::shared_ptr<Surface> srfB =
-            Surface::makeShared<PlaneSurface>(transBptr, bounds);
+            Surface::makeShared<PlaneSurface>(transB, bounds);
 
         pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
 

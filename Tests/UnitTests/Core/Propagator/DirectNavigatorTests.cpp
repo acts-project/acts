@@ -14,7 +14,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/DebugOutputActor.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
@@ -87,29 +86,19 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   }
 
   // Define start parameters from ranom input
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-  CurvilinearParameters start(std::nullopt, pos, mom, q, time);
+  double p = pT / sin(theta);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta,
+                                   dcharge / p);
 
-  using DebugOutput = DebugOutputActor;
   using EndOfWorld = EndOfWorldReached;
 
   // Action list and abort list
-  using RefereceActionList =
-      ActionList<MaterialInteractor, SurfaceCollector<>, DebugOutput>;
+  using RefereceActionList = ActionList<MaterialInteractor, SurfaceCollector<>>;
   using ReferenceAbortList = AbortList<EndOfWorld>;
 
   // Options definition
   using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
   Options pOptions(tgContext, mfContext, getDummyLogger());
-  pOptions.debug = debugMode;
   if (oversteppingTest) {
     pOptions.maxStepSize = oversteppingMaxStepSize;
   }
@@ -122,18 +111,11 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Result is immediately used, non-valid result would indicate failure
   const auto& pResult = rprop.propagate(start, pOptions).value();
   auto& cSurfaces = pResult.template get<SurfaceCollector<>::result_type>();
-  auto& cOutput = pResult.template get<DebugOutput::result_type>();
   auto& cMaterial = pResult.template get<MaterialInteractor::result_type>();
   const Surface& destination = pResult.endParameters->referenceSurface();
 
-  if (debugMode) {
-    std::cout << ">>> Standard Navigator output to come : " << std::endl;
-    std::cout << cOutput.debugString << std::endl;
-
-    std::cout << " - the standard navigator yielded "
-              << cSurfaces.collected.size() << " collected surfaces"
-              << std::endl;
-  }
+  std::cout << " - the standard navigator yielded "
+            << cSurfaces.collected.size() << " collected surfaces" << std::endl;
 
   if (not referenceTiming) {
     // Create the surface sequence
@@ -144,14 +126,12 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     }
 
     // Action list for direct navigator with its initalizer
-    using DirectActionList =
-        ActionList<DirectNavigator::Initializer, MaterialInteractor,
-                   SurfaceCollector<>, DebugOutput>;
+    using DirectActionList = ActionList<DirectNavigator::Initializer,
+                                        MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
     using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
     DirectOptions dOptions(tgContext, mfContext, getDummyLogger());
-    dOptions.debug = debugMode;
     // Set the surface sequence
     auto& dInitializer =
         dOptions.actionList.get<DirectNavigator::Initializer>();
@@ -165,29 +145,15 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     const auto& ddResult =
         dprop.propagate(start, destination, dOptions).value();
     auto& ddSurfaces = ddResult.template get<SurfaceCollector<>::result_type>();
-    auto& ddOutput = ddResult.template get<DebugOutput::result_type>();
     auto& ddMaterial = ddResult.template get<MaterialInteractor::result_type>();
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), ddSurfaces.collected.size());
     CHECK_CLOSE_REL(cMaterial.materialInX0, ddMaterial.materialInX0, 1e-3);
 
-    if (debugMode) {
-      std::cout << ">>> Direct Navigator (with destination) output to come : "
-                << std::endl;
-      std::cout << ddOutput.debugString << std::endl;
-    }
-
     // Now redo the propagation with the direct propagator - without destination
     const auto& dwResult = dprop.propagate(start, dOptions).value();
     auto& dwSurfaces = dwResult.template get<SurfaceCollector<>::result_type>();
-    auto& dwOutput = dwResult.template get<DebugOutput::result_type>();
-
-    if (debugMode) {
-      std::cout << ">>> Direct Navigator (w/o  destination) output to come : "
-                << std::endl;
-      std::cout << dwOutput.debugString << std::endl;
-    }
 
     // CHECK if you have as many surfaces collected as the default navigator
     BOOST_CHECK_EQUAL(cSurfaces.collected.size(), dwSurfaces.collected.size());
