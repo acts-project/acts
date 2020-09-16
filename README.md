@@ -36,8 +36,8 @@ have a feature request, or want to contribute to Acts, have a look at the
 
 Release versions follow [semantic versioning](https://semver.org/spec/v2.0.0.html)
 to indicate whether a new version contains breaking changes within the public API.
-Which parts of the code are part of the public API and are subject to the
-semantic versioning rules is outlined in the
+Currently, only a limited part of the visible API is considered the public API
+and subject to the semantic versioning rules. The details are outlined in the
 [versioning and public API documentation](docs/versioning.rst).
 
 ## Repository organization

@@ -1,5 +1,5 @@
 PLEASE FOLLOW THE CHECKLIST BELOW WHEN CREATING A NEW ISSUE. THE CHECKLIST IS
-FOR YOUR INFORMATION AN MUST BE REMOVED BEFORE SUBMITTING ISSUE.
+FOR YOUR INFORMATION AND MUST BE REMOVED BEFORE SUBMITTING THE ISSUE.
 
 ## Checklist
 
@@ -17,7 +17,7 @@ FOR YOUR INFORMATION AN MUST BE REMOVED BEFORE SUBMITTING ISSUE.
         the error?
 
 - [ ] Is the issue assigned to a milestone? This should be `next` unless you
-    know exactly what you are doing.
+    target a specific release.
 
 - [ ] If the issue is a question or the start of a discussion, please add the
     `Needs discussion` label.

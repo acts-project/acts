@@ -10,8 +10,8 @@ version number is increased correctly.
 
 Since Acts is still under active development not all visible symbols are
 automatically considered part of the public API and as such fall under the
-Semantic Versioning rules. Which symbols are part of the public API (and which
-ones are not) is outlined below.
+Semantic Versioning rules. The subset of symbols that are currently part of the
+public API is outlined below.
 
 Public API
 ----------

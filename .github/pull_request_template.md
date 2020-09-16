@@ -1,5 +1,5 @@
 PLEASE FOLLOW THE CHECKLIST BELOW WHEN CREATING A NEW PULL REQUEST. THE
-CHECKLIST IS FOR YOUR INFORMATION AN MUST BE REMOVED BEFORE SUBMITTING THE PULL
+CHECKLIST IS FOR YOUR INFORMATION AND MUST BE REMOVED BEFORE SUBMITTING THE PULL
 REQUEST.
 
 ## Checklist
@@ -25,11 +25,11 @@ REQUEST.
 
     - [ ] If not: is it marked as work-in-progress using the `WIP` label?
 
-- [ ] Is the PR assigned to a milestone? In most cases this should be `next`.
+- [ ] Is the PR assigned to a milestone? This should be `next` unless you
+    target a specific release.
 
 - [ ] Does this PR close an existing issue?
 
-    - [ ] If yes: is the issue correctly linked so it will be automatically
-        closed upon successful merge (See closing keywords link in the sidebar)?
-    - [ ] If yes: does the PR milestone match the issue milestone?
-    - [ ] If no: why not?
+    - [ ] Is the issue correctly linked so it will be automatically closed
+        upon successful merge (See closing keywords link in the sidebar)?
+    - [ ] Does the PR milestone match the issue milestone?
