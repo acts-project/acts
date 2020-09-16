@@ -4,19 +4,20 @@ Versioning and public API
 Acts uses `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_ to
 indicate breaking changes in its public API. A breaking change will result in a
 new major version. The `Conventional Commits
-<https://www.conventionalcommits.org/en/v1.0.0/>`_ convention is used to track
-the type of changes that have been merged and ensure that the version number is
-increased correctly.
+<https://www.conventionalcommits.org/en/v1.0.0/>`_ convention is used for pull
+requests to track the type of changes that have been merged and ensure that the
+version number is increased correctly.
 
 Since Acts is still under active development not all visible symbols are
 automatically considered part of the public API and as such fall under the
-Semantic Versioning rules.
+Semantic Versioning rules. Which symbols are part of the public API (and which
+ones are not) is outlined below.
 
 Public API
 ----------
 
-Only symbols defined directly in the ``Acts`` namespace and are part of the
-following modules of the core library constitute the public API:
+At the moment only the following modules of the core library in the ``Core``
+directory contribute to the public API.
 
 - ``EventData``
 - ``MagneticField``
@@ -24,21 +25,24 @@ following modules of the core library constitute the public API:
 - ``Surfaces``
 - ``Vertexing``
 
-Private API and components
---------------------------
+Within these modules, only symbols defined directly in the ``Acts`` namespace
+must be considered as public.
+
+Private API
+-----------
 
 The following components are not part of the public API but are expected to
 become part of it at a later stage:
 
-- Symbols in helper namespaces e.g. in ``Acts::detail`` must be considered
-  implementation details and are not part of the public API.
-- All components of the core library that are not explicitly listed as part of
+- All modules of the core library that are not explicitly listed as part of
   the public API.
 - All plugins in the ``Plugins`` directory.
 - The Fatras library in the ``Fatras`` directory.
 
 The following components will never become part of the public API:
 
-- The examples framework and binaries in the ``Examples`` directory.
+- Symbols in helper namespaces e.g. in ``Acts::detail`` must be considered
+  implementation details and are not part of the public API.
+- The examples framework and executables in the ``Examples`` directory.
 - All units tests, integration tests, (micro)-benchmarks, and related code in
   the ``Tests`` directory.
