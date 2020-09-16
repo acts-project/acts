@@ -35,7 +35,7 @@ class DigitizedHit {
   /// Constructor with arguments
   ///
   /// @param hits The simulated hits at input
-  /// @param surface The surface for the measuremetn representation
+  /// @param surface The surface for the measurement representation
   /// @param content The digitization content to be filled by the digitizer
   DigitizedHit(std::vector<Hit>&& hits, const Acts::Surface& surface,
                std::unique_ptr<const DigitizedHit::IContent> content);

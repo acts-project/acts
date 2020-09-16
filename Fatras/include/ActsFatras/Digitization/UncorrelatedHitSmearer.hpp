@@ -28,7 +28,15 @@ namespace ActsFatras {
 using SmearFunction = std::function<Acts::Result<std::pair<double, double>>()>;
 
 /// Parameter smearer for fast digitisation that can produce surface bound
-/// and free measurements.
+/// measurements.
+///
+/// The logic of this smearer is the following:
+/// - Input is a single simulated ActsFatras::Hit which is wrapped into
+///   a ActsFatras::DigitizedHit object
+/// - The newly created ActsFatras::DigitizedHit is then wrapped into
+///   a Acts::Measurement object and returned
+/// - If an error during the digitization occurs, a Acts::DigitizationError
+///   is returned
 ///
 /// This smearer only supports uncorrelated smearing of parameters
 class UncorrelatedHitSmearer {
@@ -45,7 +53,6 @@ class UncorrelatedHitSmearer {
   /// for surface based Measurements. This can be applied with custom
   /// smearing functions and to variant type measurements.
   ///
-  /// @tparam hit_t definition requires position(), unitDirection(), time()
   /// @tparam params parameter pack describing the parameters to smear
   ///
   /// @param gctx The Geometry context (alignment, etc.)
@@ -84,7 +91,7 @@ class UncorrelatedHitSmearer {
     auto sResult =
         smear(boundVector, vector, covariance, sFunctions, params...);
     if (not sResult.ok()) {
-      return Result(std::error_code());
+      return Result(sResult.error());
     }
 
     auto smc = std::make_unique<const Content>();
