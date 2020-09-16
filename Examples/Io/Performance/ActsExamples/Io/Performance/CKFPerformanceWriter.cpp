@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -99,6 +100,11 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
+  // initialize OnnxRuntime plugin
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR, "MLTrackClassifier");
+  Acts::MLTrackClassifier neuralNetworkClassifier(
+      env, m_cfg.onnxModelFilename.c_str());
+
   // Loop over all trajectories
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
@@ -165,25 +171,48 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       }
       // Fill fake rate plots
       m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+
+      // Use neural network classification for duplication rate plots
+      // Currently, the network used for this example can only handle
+      // good/duplicate classification, so need to manually exclude fake tracks
+      if (m_cfg.useMLTrackClassifier && !isFake) {
+        // create vector of input features for neural network
+        std::vector<float> inputFeatures(3);
+        inputFeatures[0] = trajState.nMeasurements;
+        inputFeatures[1] = trajState.nOutliers;
+        inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
+        Acts::MLTrackClassifier::TrackLabels predictedLabel =
+            neuralNetworkClassifier.predictTrackLabel(inputFeatures,
+                                                      m_cfg.decisionThreshProb);
+        bool isDuplicated =
+            predictedLabel == Acts::MLTrackClassifier::TrackLabels::duplicate;
+        // Fill the duplication rate
+        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                                   isDuplicated);
+      }
     }  // end all trajectories in a multiTrajectory
   }    // end all multiTrajectories
 
-  // Loop over all truth-matched reco tracks for duplication rate plots
-  for (auto& [particleId, matchedTracks] : matched) {
-    // Sort the reco tracks matched to this particle by the number of majority
-    // hits
-    std::sort(matchedTracks.begin(), matchedTracks.end(),
-              [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
-                return lhs.first > rhs.first;
-              });
-    for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
-      const auto& [nMajorityHits, fittedParameters] = matchedTracks.at(itrack);
-      // The tracks with maximum number of majority hits is taken as the 'real'
-      // track; others are as 'duplicated'
-      bool isDuplicated = (itrack != 0);
-      // Fill the duplication rate
-      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                 isDuplicated);
+  // Use truth-based classification for duplication rate plots
+  if (!m_cfg.useMLTrackClassifier) {
+    // Loop over all truth-matched reco tracks for duplication rate plots
+    for (auto& [particleId, matchedTracks] : matched) {
+      // Sort the reco tracks matched to this particle by the number of majority
+      // hits
+      std::sort(matchedTracks.begin(), matchedTracks.end(),
+                [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
+                  return lhs.first > rhs.first;
+                });
+      for (size_t itrack = 0; itrack < matchedTracks.size(); itrack++) {
+        const auto& [nMajorityHits, fittedParameters] =
+            matchedTracks.at(itrack);
+        // The tracks with maximum number of majority hits is taken as the
+        // 'real' track; others are as 'duplicated'
+        bool isDuplicated = (itrack != 0);
+        // Fill the duplication rate
+        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                                   isDuplicated);
+      }
     }
   }
 

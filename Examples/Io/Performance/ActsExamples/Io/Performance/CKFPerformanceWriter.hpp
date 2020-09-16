@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -57,6 +58,12 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     size_t nMeasurementsMin = 9;
     /// Min transverse momentum
     double ptMin = 1_GeV;
+    /// path to ML model in ONNX format
+    std::string onnxModelFilename = "test.onnx";
+    /// flag to use neural network for track classification
+    bool useMLTrackClassifier = false;
+    /// threshold probability for neural network to classify track as duplicate
+    double decisionThreshProb = 0.5;
   };
 
   /// Construct from configuration and log level.
