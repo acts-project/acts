@@ -109,15 +109,9 @@ if( SYCL_builtin_FOUND )
    endif()
    # Look for object files holding SYCL device code, which would be needed for
    # the final binaries.
-   if( MSVC )
-      set( _defaultSupportLib "msvc" )
-   else()
-      set( _defaultSupportLib "glibc" )
-   endif()
-   set( SYCL_SEARCH_SUPPORT_LIBRARIES "${_defaultSupportLib};cmath" CACHE STRING
-      "List of support libraries / object files to look for" )
+   set( SYCL_SEARCH_SUPPORT_LIBRARIES "" CACHE STRING
+      "List of support libraries / object files to look for and link" )
    mark_as_advanced( SYCL_SEARCH_SUPPORT_LIBRARIES )
-   unset( _defaultSupportLib )
    get_filename_component( _compilerDir "${CMAKE_CXX_COMPILER}" DIRECTORY )
    set( SYCL_SUPPORT_LIBRARIES )
    foreach( _supportLib ${SYCL_SEARCH_SUPPORT_LIBRARIES} )
