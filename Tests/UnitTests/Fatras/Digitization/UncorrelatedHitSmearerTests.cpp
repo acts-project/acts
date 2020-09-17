@@ -25,22 +25,25 @@ namespace ActsFatras {
 BOOST_AUTO_TEST_SUITE(Digitization)
 
 namespace {
-struct TestSetter {
-  Acts::Result<std::pair<double, double>> operator()() {
+struct AddSmearer {
+  unsigned int stats = 0;
+
+  Acts::Result<std::pair<double, double>> operator()(double value) {
+    ++stats;
     return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(1., 3.));
+        std::make_pair<double, double>(value + 1., 3.));
   }
 };
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()() {
+  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(0., 0.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()() {
+  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/) {
     return Acts::Result<std::pair<double, double>>(
         ActsFatras::DigitizationError::SmearError);
   }
@@ -56,7 +59,7 @@ auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
 
 }  // namespace
 
-BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
+BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   Acts::GeometryContext geoCtx = Acts::GeometryContext();
 
   UncorrelatedHitSmearer hitSmearer;
@@ -67,85 +70,114 @@ BOOST_AUTO_TEST_CASE(HitSmearing_SurfaceMeasurements) {
   auto m4 = Hit::Vector4(1, 2, 1, 4);
   auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
-  TestSetter tSmearFnc;
+  AddSmearer tAddFnc;
   SterileSmearer tSterileFnc;
   InvalidSmearer tInvalidFnc;
 
-  auto oneDim = hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0>(
-      geoCtx, hit, *tSurface.get(), {tSmearFnc});
+  auto oneDim = hitSmearer.smearedParameterSet<Acts::eBoundLoc0>(
+      geoCtx, hit, *tSurface.get(), {tAddFnc});
 
   BOOST_CHECK(oneDim.ok());
 
-  const auto& semearedOne = oneDim.value();
-  const auto& smearedParametersOne = semearedOne.parameters();
-  BOOST_CHECK(smearedParametersOne.rows() == 1);
-  CHECK_CLOSE_ABS(smearedParametersOne[0], 4., Acts::s_epsilon);
-  const auto& smearedCovarianceOne = semearedOne.covariance();
-  CHECK_CLOSE_ABS(smearedCovarianceOne(Acts::eBoundLoc0, Acts::eBoundLoc0), 9.,
-                  Acts::s_epsilon);
+  const auto& smearedOne = oneDim.value();
+  BOOST_CHECK(smearedOne.contains<Acts::eBoundLoc0>());
+
+  const auto& sParametersOne = smearedOne.getParameters();
+  const auto& sCovarianceOne = smearedOne.getCovariance().value();
+
+  CHECK_CLOSE_ABS(sParametersOne[0], 4., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(sCovarianceOne(0, 0), 9., Acts::s_epsilon);
 
   auto twoDim =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0, Acts::eBoundLoc1>(
-          geoCtx, hit, *tSurface.get(), {tSmearFnc, tSmearFnc});
+      hitSmearer.smearedParameterSet<Acts::eBoundLoc0, Acts::eBoundLoc1>(
+          geoCtx, hit, *tSurface.get(), {tAddFnc, tAddFnc});
 
   BOOST_CHECK(twoDim.ok());
-  const auto& semearedTwo = twoDim.value();
-  const auto& smearedParametersTwo = semearedTwo.parameters();
-  BOOST_CHECK(smearedParametersTwo.rows() == 2);
-  CHECK_CLOSE_ABS(smearedParametersTwo[0], 4., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(smearedParametersTwo[1], 3., Acts::s_epsilon);
+  const auto& smearedTwo = twoDim.value();
+  BOOST_CHECK(smearedTwo.contains<Acts::eBoundLoc0>());
+  BOOST_CHECK(smearedTwo.contains<Acts::eBoundLoc1>());
 
-  const auto& smearedCovarianceTwo = semearedTwo.covariance();
-  CHECK_CLOSE_ABS(smearedCovarianceTwo(Acts::eBoundLoc0, Acts::eBoundLoc0), 9.,
-                  Acts::s_epsilon);
-  CHECK_CLOSE_ABS(smearedCovarianceTwo(Acts::eBoundLoc1, Acts::eBoundLoc1), 9.,
-                  Acts::s_epsilon);
+  const auto& sParametersTwo = smearedTwo.getParameters();
+  const auto& sCovarianceTwo = smearedTwo.getCovariance().value();
+
+  CHECK_CLOSE_ABS(sParametersTwo[0], 4., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(sParametersTwo[1], 3., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(sCovarianceTwo(0, 0), 9., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(sCovarianceTwo(1, 1), 9., Acts::s_epsilon);
 
   // Check smearing of time
   auto locYTime =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc1, Acts::eBoundTime>(
-          geoCtx, hit, *tSurface.get(), {tSmearFnc, tSmearFnc});
+      hitSmearer.smearedParameterSet<Acts::eBoundLoc1, Acts::eBoundTime>(
+          geoCtx, hit, *tSurface.get(), {tAddFnc, tAddFnc});
   BOOST_CHECK(locYTime.ok());
   const auto& smearedLocyTime = locYTime.value();
-  auto smearedParSetLocyTime = smearedLocyTime.parameterSet();
-  BOOST_CHECK(smearedParSetLocyTime.contains<Acts::eBoundLoc1>());
-  BOOST_CHECK(smearedParSetLocyTime.contains<Acts::eBoundTime>());
-  CHECK_CLOSE_ABS(smearedLocyTime.get<Acts::eBoundLoc1>(), 3., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(smearedLocyTime.get<Acts::eBoundTime>(), 11.,
+  BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundLoc1>());
+  BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundTime>());
+  CHECK_CLOSE_ABS(smearedLocyTime.getParameter<Acts::eBoundLoc1>(), 3.,
+                  Acts::s_epsilon);
+  CHECK_CLOSE_ABS(smearedLocyTime.getParameter<Acts::eBoundTime>(), 11.,
                   Acts::s_epsilon);
 
   // Use sterile smearer to check if direction is properly translated
   auto phiTheta =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+      hitSmearer.smearedParameterSet<Acts::eBoundPhi, Acts::eBoundTheta>(
           geoCtx, hit, *tSurface.get(), {tSterileFnc, tSterileFnc});
   BOOST_CHECK(phiTheta.ok());
-  auto phiThetaParSet = phiTheta.value().parameterSet();
+  auto phiThetaParSet = phiTheta.value();
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundPhi>());
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundTheta>());
-  CHECK_CLOSE_ABS(phiTheta.value().get<Acts::eBoundPhi>(),
+  CHECK_CLOSE_ABS(phiThetaParSet.getParameter<Acts::eBoundPhi>(),
                   Acts::VectorHelpers::phi(hit.unitDirection()),
                   Acts::s_epsilon);
-  CHECK_CLOSE_ABS(phiTheta.value().get<Acts::eBoundTheta>(),
+  CHECK_CLOSE_ABS(phiThetaParSet.getParameter<Acts::eBoundTheta>(),
                   Acts::VectorHelpers::theta(hit.unitDirection()),
                   Acts::s_epsilon);
 
   // Finally check an invalid smearing
   auto invalidHitFirst =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+      hitSmearer.smearedParameterSet<Acts::eBoundPhi, Acts::eBoundTheta>(
           geoCtx, hit, *tSurface.get(), {tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitFirst.ok());
 
   auto invalidHitMiddle =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundLoc0, Acts::eBoundLoc1,
-                                          Acts::eBoundPhi, Acts::eBoundTheta>(
+      hitSmearer.smearedParameterSet<Acts::eBoundLoc0, Acts::eBoundLoc1,
+                                     Acts::eBoundPhi, Acts::eBoundTheta>(
           geoCtx, hit, *tSurface.get(),
           {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitMiddle.ok());
 
   auto invalidHitLast =
-      hitSmearer.createSurfaceMeasurement<Acts::eBoundPhi, Acts::eBoundTheta>(
+      hitSmearer.smearedParameterSet<Acts::eBoundPhi, Acts::eBoundTheta>(
           geoCtx, hit, *tSurface.get(), {tSterileFnc, tInvalidFnc});
   BOOST_CHECK(not invalidHitLast.ok());
+}
+
+BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
+  UncorrelatedHitSmearer hitSmearer;
+
+  // some hit position
+  auto p4 = Hit::Vector4(3, 2, 0, 10.);
+  // before/after four-momenta are the same
+  auto m4 = Hit::Vector4(1, 2, 1, 4);
+  auto hit = Hit(gid, pid, p4, m4, m4, 12u);
+
+  AddSmearer tAddFnc;
+  SterileSmearer tSterileFnc;
+
+  auto freeSmear =
+      hitSmearer.smearedParameterSet<Acts::eFreePos0, Acts::eFreePos1,
+                                     Acts::eFreeDir2>(
+          hit, {tSterileFnc, tAddFnc, tSterileFnc});
+
+  BOOST_CHECK(freeSmear.ok());
+  const auto& freeSet = freeSmear.value();
+  BOOST_CHECK(freeSet.contains<Acts::eFreePos0>());
+  BOOST_CHECK(freeSet.contains<Acts::eFreePos1>());
+  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos0>(), 4., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos1>(), 2., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreeDir2>(),
+                  m4.segment<3>(0).normalized()[Acts::eFreeDir2],
+                  Acts::s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

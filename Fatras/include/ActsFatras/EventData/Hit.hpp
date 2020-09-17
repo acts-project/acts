@@ -51,8 +51,6 @@ class Hit {
   Hit(Hit&&) = default;
   Hit& operator=(const Hit&) = default;
   Hit& operator=(Hit&&) = default;
-
-  /// Equality operator
   bool operator==(const Hit& other) const;
 
   /// Geometry identifier of the hit surface.

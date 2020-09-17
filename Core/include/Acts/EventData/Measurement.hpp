@@ -205,15 +205,6 @@ class Measurement {
     return m_oParameters.template getParameter<parameter>();
   }
 
-  /// @brief access to full parameter set
-  ///
-  /// This gives access (if needed) to the cotains() and
-  /// other methods of the parameter set which might be useful
-  /// for debugging purposes.
-  ///
-  /// @return the full internally stored parameter set
-  const ParamSet& parameterSet() const { return m_oParameters; }
-
   /// @brief access vector with measured parameter values
   ///
   /// @return column vector whose size is equal to the dimensionality of this
