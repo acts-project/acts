@@ -288,76 +288,77 @@ void createSeedsForGroupSycl(
           cl::sycl::range<1>(num1DWorkItems(edgesTop, maxWorkGroupSize)),
           cl::sycl::range<1>(maxWorkGroupSize)};
 
-      // EXPLANATION OF INDEXING (part 0)
-      // -----------------------
-      //
-      // (for bottom-middle duplets, but it is the same for middle-tops)
-      //
-      // In case we have 4 middle SP and 5 bottom SP, our temporary array of
-      // the compatible bottom duplet indices would look like this:
-      //      ---------------------
-      // mid0 | 0 | 3 | 4 | 1 | - |    Indices in the columns correspond to
-      // mid1 | 3 | 2 | - | - | - |    bottom SP indices in the bottomSPs
-      // mid2 | - | - | - | - | - |    array. Threads are executed
-      // concurrently, mid3 | 4 | 2 | 1 | - | - |    so the order of indices
-      // is random.
-      //      ---------------------
-      // We will refer to this structure as a bipartite graph, as it can be
-      // described by a graph of nodes for middle and bottom SPs, and edges
-      // between one middle and one bottom SP, but never to middle or two
-      // bottom SPs.
-      //
-      // We will flatten this matrix out, and store the indices the
-      // following way (this is deviceIndBot):
-      // -------------------------------------
-      // | 0 | 3 | 4 | 1 | 3 | 2 | 4 | 2 | 1 |
-      // -------------------------------------
-      //
-      // Also the length of this array is equal to edgesBottom, which is 9 in
-      // this example. It is the number of the edges of the bottom-middle
-      // bipartite graph.
-      //
-      // To find out where the indices of bottom SPs start for a particular
-      // middle SP, we use prefix sum arrays.
-      // We now how many duplets were found for each middle SP (this is
-      // deviceCountBotDuplets).
-      // -----------------
-      // | 4 | 2 | 0 | 3 |
-      // -----------------
-      //
-      // We will make a prefix sum array of these counts, with a leading zero:
-      // (this is deviceSumBot)
-      // ---------------------
-      // | 0 | 4 | 6 | 6 | 9 |
-      // ---------------------
-      //
-      // If we have the middle SP with index 1, then we know that the indices
-      // of the compatible bottom SPs are in the range (left closed, right
-      // open) [deviceSumBot[1] , deviceSumBot[2] ) of deviceIndBot. In this
-      // case, these indices are 3 and 2, so we'd use these to index
-      // deviceBottomSPs to gather data about the bottom SP.
-      //
-      // To be able to get the indices of middle SPs in constant time inside
-      // kernels, we will also prepare arrays that store the indices of the
-      // middleSPs of the edges (deviceMidIndPerBot).
-      // -------------------------------------
-      // | 0 | 0 | 0 | 0 | 1 | 1 | 3 | 3 | 3 |
-      // -------------------------------------
-      //
-      // (For the same purpose, we could also do a binary search on the
-      // deviceSumBot array, and we will do exactly that later, in the triplet
-      // search kernel.)
-      //
-      // We will execute the coordinate transformation on edgesBottom threads,
-      // or 9 in our example.
-      //
-      // The size of the array storing our transformed coordiantes
-      // (deviceLinBot) is also edgesBottom, the sum of bottom duplets we
-      // found so far.
+      // EXPLANATION OF INDEXING (fisrt part)
+      /*
+        (for bottom-middle duplets, but it is the same for middle-tops)
 
-      // We store the indices of the BOTTOM/TOP space points of the edges of
-      // the bottom-middle and top-middle bipartite duplet graphs. They index
-      // the bottomSPs and topSPs vectors.
+        In case we have 4 middle SP and 5 bottom SP, our temporary array of
+        the compatible bottom duplet indices would look like this:
+            ---------------------
+        mid0 | 0 | 3 | 4 | 1 | - |    Indices in the columns correspond to
+        mid1 | 3 | 2 | - | - | - |    bottom SP indices in the bottomSPs
+        mid2 | - | - | - | - | - |    array. Threads are executed
+        concurrently, mid3 | 4 | 2 | 1 | - | - |    so the order of indices
+        is random.
+            ---------------------
+        We will refer to this structure as a bipartite graph, as it can be
+        described by a graph of nodes for middle and bottom SPs, and edges
+        between one middle and one bottom SP, but never to middle or two
+        bottom SPs.
+
+        We will flatten this matrix out, and store the indices the
+        following way (this is deviceIndBot):
+        -------------------------------------
+        | 0 | 3 | 4 | 1 | 3 | 2 | 4 | 2 | 1 |
+        -------------------------------------
+
+        Also the length of this array is equal to edgesBottom, which is 9 in
+        this example. It is the number of the edges of the bottom-middle
+        bipartite graph.
+
+        To find out where the indices of bottom SPs start for a particular
+        middle SP, we use prefix sum arrays.
+        We now how many duplets were found for each middle SP (this is
+        deviceCountBotDuplets).
+        -----------------
+        | 4 | 2 | 0 | 3 |
+        -----------------
+
+        We will make a prefix sum array of these counts, with a leading zero:
+        (this is deviceSumBot)
+        ---------------------
+        | 0 | 4 | 6 | 6 | 9 |
+        ---------------------
+
+        If we have the middle SP with index 1, then we know that the indices
+        of the compatible bottom SPs are in the range (left closed, right
+        open) [deviceSumBot[1] , deviceSumBot[2] ) of deviceIndBot. In this
+        case, these indices are 3 and 2, so we'd use these to index
+        deviceBottomSPs to gather data about the bottom SP.
+
+        To be able to get the indices of middle SPs in constant time inside
+        kernels, we will also prepare arrays that store the indices of the
+        middleSPs of the edges (deviceMidIndPerBot).
+        -------------------------------------
+        | 0 | 0 | 0 | 0 | 1 | 1 | 3 | 3 | 3 |
+        -------------------------------------
+
+        (For the same purpose, we could also do a binary search on the
+        deviceSumBot array, and we will do exactly that later, in the triplet
+        search kernel.)
+
+        We will execute the coordinate transformation on edgesBottom threads,
+        or 9 in our example.
+
+        The size of the array storing our transformed coordiantes
+        (deviceLinBot) is also edgesBottom, the sum of bottom duplets we
+        found so far.
+
+        We store the indices of the BOTTOM/TOP space points of the edges of
+        the bottom-middle and top-middle bipartite duplet graphs. They index
+        the bottomSPs and topSPs vectors.
+      */
+
       uint32_t* deviceIndBot =
           cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
       uint32_t* deviceIndTop = cl::sycl::malloc_device<uint32_t>(edgesTop, *q);
@@ -527,69 +528,78 @@ void createSeedsForGroupSycl(
       // *********** TRIPLET SEARCH - BEGIN *********** //
       //************************************************//
 
-      // EXPLANATION OF INDEXING (part 1)
-      // -----------------------
-      //
-      // For the triplet search, we calculate the upper limit of constructible
-      // triplets.
-      //
-      // For this, we multiply the number of compatible bottom and compatible
-      // top SPs for each middle SP, and add these together.
-      // (nb0*nt0 + nb1*nt1 + ... where nbk is the number of compatible bottom
-      // SPs for the kth middle SP, similarly ntb is for tops)
-      //
-      // sumBotTopCombined is a prefix sum array (of length M+1) of the
-      // calculated combinations.
-      //
-      // sumBotTopCombined:
-      // ________________________________________________________
-      // |     |         |                   |     |  M         | M = number
-      // of |  0  | nb0*nt0 | nb0*nt0 + nb1*nt1 | ... |  ∑ nbi+nti | middle
-      // SPs
-      // |_____|_________|___________________|_____|_i=0________|
-      //
-      // We will start kernels and reserve memory for these combinations but
-      // only so much we can fit into memory at once.
-      //
-      // We limit our memory usage to globalBufferSize/2, this is currently
-      // hard-coded, but it could be configured. Actually, it would be better
-      // to use a separate object that manages memory allocations and
-      // deallocations and we could ask it to lend us as much memory as it is
-      // happy to give.
-      //
-      // For later, let maxMemoryAllocation be maximum allocatable memory for
-      // triplet search.
-      //
-      // We start by adding up summing the combinations, until we arrive at a
-      // k which for k+1
-      //  ∑ nbi+nti > maxMemoryAllocation
-      // i=0
-      // (or k == M).
-      // So we know, that we need to start our first kernel for the first k
-      // middle SPs.
-      //
-      // Inside the triplet search kernel we start with a binary search, to
-      // find out which middle SP the thread corresponds to. Note, that
-      // sumBotTopCombined is a monotone increasing series of values which
-      // allows us to do a binary search on it.
-      //
-      // Inside the triplet search kernel we count the triplets for fixed
-      // bottom and middle SP. This is deviceCountTriplets.
-      //
-      // (We later copy their values to deviceNumTriplets because it is faster
-      // to read values from it than from atomic variables.)
-      //
-      // The triplet filter kernel is calculated on threads equal to all
-      // possible bottom-middle combinations, which are the sum of found
-      // compatible bottom-middle duplets during the duplet search, which is
-      // edgedBottom. But not exactly, because we only did the triplet search
-      // for the first k middle SPs, so we only need to sum bottom-middle
-      // duplets for the first k middle SPs.
-      //
-      // This will be numTripletFilterThreads =
-      //      sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle]
-      //
-      //
+      // EXPLANATION OF INDEXING (second part)
+      /*
+        For the triplet search, we calculate the upper limit of constructible
+        triplets.
+
+        For this, we multiply the number of compatible bottom and compatible
+        top SPs for each middle SP, and add these together.
+        (nb0*nt0 + nb1*nt1 + ... where nbk is the number of compatible bottom
+        SPs for the kth middle SP, similarly ntb is for tops)
+
+        sumBotTopCombined is a prefix sum array (of length M+1) of the
+        calculated combinations.
+
+        sumBotTopCombined:
+        ________________________________________________________
+        |     |         |                   |     |  M         | M = number
+        |  0  | nb0*nt0 | nb0*nt0 + nb1*nt1 | ... |  ∑ nbi+nti | of middle
+        |_____|_________|___________________|_____|_i=0________| space points
+
+        We will start kernels and reserve memory for these combinations but
+        only so much we can fit into memory at once.
+
+        We limit our memory usage to globalBufferSize/2, this is currently
+        hard-coded, but it could be configured. Actually, it would be better
+        to use a separate object that manages memory allocations and
+        deallocations and we could ask it to lend us as much memory as it is
+        happy to give.
+
+        For later, let maxMemoryAllocation be maximum allocatable memory for
+        triplet search.
+
+        We start by adding up summing the combinations, until we arrive at a
+        k which for:
+
+        k+1
+         ∑ nbi+nti > maxMemoryAllocation
+        i=0
+        (or k == M).
+
+        So we know, that we need to start our first kernel for the first k
+        middle SPs.
+
+        Inside the triplet search kernel we start with a binary search, to
+        find out which middle SP the thread corresponds to. Note, that
+        sumBotTopCombined is a monotone increasing series of values which
+        allows us to do a binary search on it.
+
+        Inside the triplet search kernel we count the triplets for fixed
+        bottom and middle SP. This is deviceCountTriplets.
+
+        (We later copy their values to deviceNumTriplets because it is faster
+        to read values from it than from atomic variables.)
+
+        The triplet filter kernel is calculated on threads equal to all
+        possible bottom-middle combinations, which are the sum of found
+        compatible bottom-middle duplets during the duplet search, which is
+        edgedBottom. But not exactly, because we only did the triplet search
+        for the first k middle SPs, so we only need to sum bottom-middle
+        duplets for the first k middle SPs.
+
+        This will be numTripletFilterThreads =
+            sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle]
+
+        If the triplet search and triplet filter kernel finished, we continue
+        summing up possible triplet combinations from the (k+1)th middle SP.
+
+        Inside the kernels we need to use offset because of this, to be able to
+        map threads to space point indices.
+
+        This offset is sumCombUptoFirstMiddle.
+      */
+
       const auto maxMemoryAllocation =
           std::min(edgesComb,
                    globalBufferSize / uint32_t((sizeof(detail::DeviceTriplet) +
@@ -605,8 +615,6 @@ void createSeedsForGroupSycl(
       // -> less memory usage, but more frequent allocation and deallocation
       detail::SeedData* deviceSeedArray =
           cl::sycl::malloc_device<detail::SeedData>(maxMemoryAllocation, *q);
-
-      uint32_t* tripletSearchOffset = cl::sycl::malloc_device<uint32_t>(1, *q);
 
       // Counting the seeds in the second kernel allows us to copy back the
       // right number of seeds, and no more.
@@ -644,8 +652,8 @@ void createSeedsForGroupSycl(
         const auto numTripletFilterThreads =
             sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle];
 
-        q->memcpy(tripletSearchOffset, &sumBotTopCombined[firstMiddle],
-                  sizeof(uint32_t));
+        const auto sumCombUptoFirstMiddle = sumBotTopCombined[firstMiddle];
+
         q->memset(countSeeds, 0, sizeof(std::atomic_uint32_t));
         q->memset(deviceCountTriplets, 0,
                   edgesBottom * sizeof(std::atomic_uint32_t));
@@ -675,7 +683,9 @@ void createSeedsForGroupSycl(
                   auto mid = L;
                   while (L < R - 1) {
                     mid = (L + R) / 2;
-                    if (idx + tripletSearchOffset[0] < deviceSumComb[mid]) {
+                    // To be able to search in deviceSumComb, we need to use an
+                    // offset (sumCombUptoFirstMiddle).
+                    if (idx + sumCombUptoFirstMiddle < deviceSumComb[mid]) {
                       R = mid;
                     } else {
                       L = mid;
@@ -684,15 +694,45 @@ void createSeedsForGroupSycl(
                   mid = L;
 
                   const auto numT = deviceNumTopDuplets[mid];
+                  const auto threadIdxForMiddleSP =
+                      (idx - deviceSumComb[mid] + sumCombUptoFirstMiddle);
+
+                  // NOTES ON THREAD MAPPING TO SPACE POINTS
+                  /*
+                    We need to map bottom and top SP indices to this thread.
+                    This is done in the following way:
+                    We calculated the number of possible triplet combinations
+                    for this middle SP (let it be num_comp_bot*num_comp_top).
+                    Let num_comp_bot = 2 and num_comp_top=3 in this example.
+                    So we have 2 compatible bottom and 3 compatible top SP for
+                    this middle SP.
+
+                    That gives us 6 threads altogether:
+                              ===========================================
+                    thread:    |  0   |  1   |  2   |  3   |  4   |  5   |
+                    bottom id: | bot0 | bot0 | bot0 | bot1 | bot1 | bot1 |
+                    top id:    | top0 | top1 | top2 | top0 | top1 | top2 |
+                              ===========================================
+
+                    If we divide 6 by the number of compatible top SP for this
+                    middle SP, or deviceNumTopDuplets[mid] which is 3 now, we
+                    get the id for the bottom SP.
+                    Similarly, if we take modulo deviceNumTopDuplets[mid], we
+                    get the id for the top SP.
+
+                    So if threadIdxForMiddleSP = 3, then ib = 1 and it = 0.
+
+                    We can use these ids together with deviceSumBot[mid] and
+                    deviceSumTop[mid] to be able to index our other arrays that
+                    actually indices for corresponding bottom and top SPs
+                    (deviceIndBot and deviceIndTop) or data of duplets
+                    in linear equation form (deviceLinBot and deviceLinTop).
+                  */
 
                   const auto ib =
-                      deviceSumBot[mid] +
-                      ((idx - deviceSumComb[mid] + tripletSearchOffset[0]) /
-                       numT);
+                      deviceSumBot[mid] + (threadIdxForMiddleSP / numT);
                   const auto it =
-                      deviceSumTop[mid] +
-                      ((idx - deviceSumComb[mid] + tripletSearchOffset[0]) %
-                       numT);
+                      deviceSumTop[mid] + (threadIdxForMiddleSP % numT);
 
                   const auto linBotEq = deviceLinBot[ib];
                   const auto linTopEq = deviceLinTop[it];
@@ -753,11 +793,31 @@ void createSeedsForGroupSycl(
                                seedfinderConfig.sigmaScattering)) &&
                         !(Im > seedfinderConfig.impactMax)) {
                       const auto top = deviceIndTop[it];
+                      // this will be the t-th top space point for fixed middle
+                      // and bottom SP
                       auto t = deviceCountTriplets[ib].fetch_add(1);
+                      /*
+                        deviceSumComb[mid] - sumCombUptoFirstMiddle: gives the
+                        memory location reserved for this middle SP
+
+                        (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle:
+                        this is the nth thread for this middle SP
+
+                        (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle)/numT:
+                        this is the mth bottom SP for this middle SP
+
+                        multiplying this by numT gives the memory location for
+                        this middle and bottom SP
+
+                        and by adding t to it, we will end up storing
+                        compatible triplet candidates for this middle and
+                        bottom SP right next to each other starting from the
+                        given memory location
+                      */
                       const auto tripletIdx = deviceSumComb[mid] -
-                                              tripletSearchOffset[0] +
+                                              sumCombUptoFirstMiddle +
                                               (((idx - deviceSumComb[mid] +
-                                                 tripletSearchOffset[0]) /
+                                                 sumCombUptoFirstMiddle) /
                                                 numT) *
                                                numT) +
                                               t;
@@ -790,7 +850,7 @@ void createSeedsForGroupSycl(
                    const auto bot = deviceIndBot[idx];
 
                    const auto tripletBegin =
-                       deviceSumComb[mid] - tripletSearchOffset[0] +
+                       deviceSumComb[mid] - sumCombUptoFirstMiddle +
                        (idx - deviceSumBot[mid]) * deviceNumTopDuplets[mid];
                    const auto tripletEnd =
                        tripletBegin + deviceNumTriplets[idx];
@@ -889,13 +949,17 @@ void createSeedsForGroupSycl(
       // ************ TRIPLET SEARCH - END ************ //
       //************************************************//
 
-      // Note that memory management is very naive, but this should only be a
-      // temporary solution. A better idea is to use a separate memory
-      // manager, see the CUDA (2) implementation for SYCL.
-      //
-      // We could also use unique pointers with a custom deleter that frees
-      // memory for us. That would allow a less error prone and therefore more
-      // maintanable code.
+      // NOTES ON MEMORY MANAGEMENT
+      /*
+        Note that memory management is very naive, but this should only be a
+        temporary solution. A better idea is to use a separate memory
+        manager, see the CUDA (2) implementation for SYCL.
+
+        We could also use unique pointers with a custom deleter that frees
+        memory for us. That would allow a less error prone and therefore more
+        maintanable code.
+      */
+
       cl::sycl::free(deviceLinBot, *q);
       cl::sycl::free(deviceLinTop, *q);
 
@@ -912,7 +976,6 @@ void createSeedsForGroupSycl(
 
       cl::sycl::free(deviceCurvImpact, *q);
       cl::sycl::free(deviceSeedArray, *q);
-      cl::sycl::free(tripletSearchOffset, *q);
       cl::sycl::free(countSeeds, *q);
     }
 
