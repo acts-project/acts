@@ -32,15 +32,13 @@ void ActsExamples::setupEvgenInput(
     auto evgCfg = ActsExamples::Options::readParticleGunOptions(vm);
     evgCfg.outputParticles = particlesCollection;
     evgCfg.randomNumbers = randomNumberSvc;
-    sequencer.addReader(
-        std::make_shared<ActsExamples::EventGenerator>(evgCfg, logLevel));
+    sequencer.addReader(std::make_shared<EventGenerator>(evgCfg, logLevel));
 
   } else if (evgenInput == "pythia8") {
     auto evgCfg = ActsExamples::Options::readPythia8Options(vm, logLevel);
     evgCfg.outputParticles = particlesCollection;
     evgCfg.randomNumbers = randomNumberSvc;
-    sequencer.addReader(
-        std::make_shared<ActsExamples::EventGenerator>(evgCfg, logLevel));
+    sequencer.addReader(std::make_shared<EventGenerator>(evgCfg, logLevel));
 
   } else {
     throw std::runtime_error("unknown event generator input: " + evgenInput);
@@ -55,8 +53,8 @@ void ActsExamples::setupEvgenInput(
     pWriterCsvConfig.inputParticles = particlesCollection;
     pWriterCsvConfig.outputDir = outputDir;
     pWriterCsvConfig.outputStem = "particles_generated";
-    sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
-        pWriterCsvConfig, logLevel));
+    sequencer.addWriter(
+        std::make_shared<CsvParticleWriter>(pWriterCsvConfig, logLevel));
   }
 
   // Write generated particles as ROOT file
@@ -64,8 +62,8 @@ void ActsExamples::setupEvgenInput(
     // Write particles as ROOT TTree
     ActsExamples::RootParticleWriter::Config pWriterRootConfig;
     pWriterRootConfig.inputParticles = particlesCollection;
-    pWriterRootConfig.filePath = FW::joinPaths(outputDir, "particles.root");
+    pWriterRootConfig.filePath = joinPaths(outputDir, "particles.root");
     sequencer.addWriter(
-        std::make_shared<FW::RootParticleWriter>(pWriterRootConfig, logLevel));
+        std::make_shared<RootParticleWriter>(pWriterRootConfig, logLevel));
   }
 }

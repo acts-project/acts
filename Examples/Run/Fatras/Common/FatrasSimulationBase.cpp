@@ -95,7 +95,7 @@ void setupSimulationAlgorithms(
   select.inputParticles = "particles_generated";
   select.outputParticles = "particles_selected";
   sequencer.addAlgorithm(
-      std::make_shared<FW::ParticleSelector>(select, logLevel));
+      std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
 
   // setup propagator-related types
   // use the default navigation
