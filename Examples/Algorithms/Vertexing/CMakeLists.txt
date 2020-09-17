@@ -2,7 +2,7 @@ add_library(
   ActsExamplesVertexing SHARED
   src/AdaptiveMultiVertexFinderAlgorithm.cpp
   src/IterativeVertexFinderAlgorithm.cpp
-  src/TutorialAMVFAlgorithm.cpp
+  src/TutorialVertexFinderAlgorithm.cpp
   src/VertexFitterAlgorithm.cpp
 )
 target_include_directories(
