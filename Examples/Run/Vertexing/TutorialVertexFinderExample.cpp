@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
 #include <memory>
 
@@ -63,12 +63,12 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
   // find vertices
-  IterativeVertexFinderAlgorithm::Config findVertices;
+  TutorialVertexFinderAlgorithm::Config findVertices;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
-      std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
+      std::make_shared<TutorialVertexFinderAlgorithm>(findVertices, logLevel));
 
   return sequencer.run();
 }

@@ -1,35 +1,25 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Generators/MultiplicityGenerators.hpp"
-#include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
-#include "ActsExamples/Generators/VertexGenerators.hpp"
-#include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
-#include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
-#include "ActsExamples/TruthTracking/TruthVerticesToTracks.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Vertexing/VertexFitAlgorithm.hpp"
-#include <Acts/EventData/TrackParameters.hpp>
+#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
 
-#include <boost/program_options.hpp>
-
+using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-/// Main vertex fitter example executable
-///
-/// @param argc The argument count
-/// @param argv The argument list
 int main(int argc, char* argv[]) {
   // setup and parse options
   auto desc = Options::makeDefaultOptions();
@@ -37,49 +27,57 @@ int main(int argc, char* argv[]) {
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
   Options::addOutputOptions(desc);
-  auto vm = Options::parse(desc, argc, argv);
-  if (vm.empty()) {
+  auto vars = Options::parse(desc, argc, argv);
+  if (vars.empty()) {
     return EXIT_FAILURE;
   }
 
   // basic setup
-  auto logLevel = Options::readLogLevel(vm);
+  auto logLevel = Options::readLogLevel(vars);
   auto rnd =
-      std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
-  Sequencer sequencer(Options::readSequencerConfig(vm));
+      std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
+  Sequencer sequencer(Options::readSequencerConfig(vars));
 
-  // Set up event generator
-  EventGenerator::Config evgen = Options::readPythia8Options(vm, logLevel);
-  evgen.output = "generated_event";
+  // setup event generator
+  EventGenerator::Config evgen = Options::readPythia8Options(vars, logLevel);
+  evgen.outputParticles = "particles_generated";
   evgen.randomNumbers = rnd;
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
-  // Set up TruthVerticesToTracks converter algorithm
-  TruthVerticesToTracksAlgorithm::Config trkConvConfig;
-  trkConvConfig.input = evgen.output;
-  trkConvConfig.output = "all_tracks";
-  trkConvConfig.randomNumberSvc = rnd;
-  trkConvConfig.bField = {0_T, 0_T, 2_T};
-  sequencer.addAlgorithm(std::make_shared<TruthVerticesToTracksAlgorithm>(
-      trkConvConfig, logLevel));
-
-  // Set up track selector
-  TrackSelector::Config selectorConfig;
-  selectorConfig.input = trkConvConfig.output;
-  selectorConfig.output = "selected_tracks";
-  selectorConfig.absEtaMax = 2.5;
-  selectorConfig.rhoMax = 4_mm;
-  selectorConfig.ptMin = 400_MeV;
-  selectorConfig.keepNeutral = false;
+  // pre-select particles
+  ParticleSelector::Config selectParticles;
+  selectParticles.inputParticles = evgen.outputParticles;
+  selectParticles.outputParticles = "particles_selected";
+  selectParticles.absEtaMax = 2.5;
+  selectParticles.rhoMax = 4_mm;
+  selectParticles.ptMin = 400_MeV;
+  selectParticles.removeNeutral = true;
   sequencer.addAlgorithm(
-      std::make_shared<TrackSelector>(selectorConfig, logLevel));
+      std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
-  // Add the fit algorithm with Billoir fitter
-  ActsExamples::VertexFitAlgorithm::Config vertexFitCfg;
-  vertexFitCfg.trackCollection = selectorConfig.output;
-  vertexFitCfg.bField = trkConvConfig.bField;
-  sequencer.addAlgorithm(std::make_shared<ActsExamples::VertexFitAlgorithm>(
-      vertexFitCfg, logLevel));
+  // simulate track reconstruction by smearing truth track parameters
+  ParticleSmearing::Config smearParticles;
+  smearParticles.inputParticles = selectParticles.outputParticles;
+  smearParticles.outputTrackParameters = "trackparameters";
+  smearParticles.randomNumbers = rnd;
+  sequencer.addAlgorithm(
+      std::make_shared<ParticleSmearing>(smearParticles, logLevel));
+
+  // find true primary vertices w/o secondary particles
+  TruthVertexFinder::Config findVertices;
+  findVertices.inputParticles = selectParticles.outputParticles;
+  findVertices.outputProtoVertices = "protovertices";
+  findVertices.excludeSecondaries = true;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthVertexFinder>(findVertices, logLevel));
+
+  // fit vertices using the Billoir fitter
+  VertexFitterAlgorithm::Config fitVertices;
+  fitVertices.inputTrackParameters = smearParticles.outputTrackParameters;
+  fitVertices.inputProtoVertices = findVertices.outputProtoVertices;
+  fitVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  sequencer.addAlgorithm(
+      std::make_shared<VertexFitterAlgorithm>(fitVertices, logLevel));
 
   return sequencer.run();
 }
