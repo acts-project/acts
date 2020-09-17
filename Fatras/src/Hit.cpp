@@ -17,17 +17,3 @@ ActsFatras::Hit::Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
       m_pos4(pos4),
       m_before4(before4),
       m_after4(after4) {}
-
-bool ActsFatras::Hit::operator==(const ActsFatras::Hit& other) const {
-  if (this != &other) {
-    bool identical =
-        (m_geometryId == other.m_geometryId and
-         m_particleId == other.m_particleId and m_index == other.m_index);
-    if (identical) {
-      return (m_pos4 == other.m_pos4 and m_before4 == other.m_before4 and
-              m_after4 == other.m_after4);
-    }
-    return false;
-  }
-  return true;
-}

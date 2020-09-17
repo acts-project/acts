@@ -25,7 +25,7 @@ std::string ActsFatras::detail::DigitizationErrorCategory::message(
   }
 }
 
-extern const ActsFatras::detail::DigitizationErrorCategory&
+const ActsFatras::detail::DigitizationErrorCategory&
 ActsFatras::DigitizationErrorCategory() {
   static ActsFatras::detail::DigitizationErrorCategory c;
   return c;
