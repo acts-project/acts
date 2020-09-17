@@ -124,7 +124,7 @@ class UncorrelatedHitSmearer {
   ///
   /// @tparam vec_t The parameter vector, static size known at compile time
   /// @tparam param_t The first of the pack
-  /// @tparam paramts_t The remaining pack
+  /// @tparam params_t The remaining pack
   ///
   /// @param vector[in,out] The to be filled parameters vector
   /// @param lhit The local hit parameters
