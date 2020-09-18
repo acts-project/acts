@@ -17,6 +17,8 @@
 #include "ActsFatras/Digitization/detail/ParametersSmearer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
+#include <functional>
+
 namespace ActsFatras {
 
 /// Smearing functions definition:
@@ -25,7 +27,25 @@ namespace ActsFatras {
 using SmearFunction =
     std::function<Acts::Result<std::pair<double, double>>(double)>;
 
-/// Parameter smearer for fast digitisation that produces
+/// Smearing input to be used by the smearers
+/// - this struct helps to harmonize the interface between
+///   free and bound smearers
+struct SmearInput {
+  /// Only valid constructor, wraps the @param hit_,
+  /// the  and optionally the @param surface_
+  SmearInput(std::reference_wrapper<const Hit> hit_,
+             std::reference_wrapper<const Acts::GeometryContext> geoContext_,
+             std::shared_ptr<const Acts::Surface> surface_ = nullptr)
+      : hit(hit_), geoContext(geoContext_), surface(surface_) {}
+
+  SmearInput() = delete;
+
+  std::reference_wrapper<const Hit> hit;
+  std::reference_wrapper<const Acts::GeometryContext> geoContext;
+  std::shared_ptr<const Acts::Surface> surface = nullptr;
+};
+
+/// Parameter smearer for fast digitisation for bound parameters
 ///
 ///
 /// The logic of this smearer is the following:
@@ -34,8 +54,8 @@ using SmearFunction =
 ///
 /// @note This smearer only supports uncorrelated smearing of parameters
 ///
-class UncorrelatedHitSmearer {
- public:
+template <Acts::BoundIndices... kParameters>
+struct BoundParametersSmearer {
   /// Generic implementation of a smearing meathod for bound parameters
   ///
   /// @tparam kParameters parameter pack describing the parameters to smear
@@ -46,10 +66,8 @@ class UncorrelatedHitSmearer {
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @return Smeared bound parameter vector and covariance matrix
-  template <Acts::BoundIndices... kParameters>
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  smearedParameterSet(const Acts::GeometryContext& gctx, const Hit& hit,
-                      const Acts::Surface& sf,
+  smearedParameterSet(const SmearInput& sInput,
                       const std::array<SmearFunction, sizeof...(kParameters)>&
                           sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
@@ -57,8 +75,15 @@ class UncorrelatedHitSmearer {
     using ParametersSmearer =
         detail::ParametersSmearer<Acts::BoundIndices, kParameters...>;
 
+    if (sInput.surface == nullptr) {
+      return Result(ActsFatras::DigitizationError::NoSurfaceDefined);
+    }
+
+    const auto& hit = sInput.hit.get();
+
     auto dir = hit.unitDirection();
-    auto gltResult = sf.globalToLocal(gctx, hit.position(), dir);
+    auto gltResult =
+        sInput.surface->globalToLocal(sInput.geoContext, hit.position(), dir);
     if (not gltResult.ok()) {
       return Result(Acts::SurfaceError::GlobalPositionNotOnSurface);
     }
@@ -83,10 +108,14 @@ class UncorrelatedHitSmearer {
     }
     return ParSet{sCovariance, sParameters};
   }
+};
 
-  /// Generic implementation of a smearing meathod for free parameters
-  ///
-  /// @tparam kParameters parameter pack describing the parameters to smear
+/// Generic implementation of a smearing meathod for free parameters
+///
+/// @tparam kParameters parameter pack describing the parameters to smear
+template <Acts::FreeIndices... kParameters>
+struct FreeParametersSmearer {
+  /// Smearing function
   ///
   /// @param gctx The Geometry context (alignment, etc.)
   /// @param hit The Fatras hit to be smeared (will be source linked)
@@ -96,15 +125,16 @@ class UncorrelatedHitSmearer {
   ///       is not recommended
   ///
   /// @return Smeared free parameter vector and covariance matrix
-  template <Acts::FreeIndices... kParameters>
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  smearedParameterSet(const Hit& hit,
+  smearedParameterSet(const SmearInput& sInput,
                       const std::array<SmearFunction, sizeof...(kParameters)>&
                           sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
         detail::ParametersSmearer<Acts::FreeIndices, kParameters...>;
+
+    const auto& hit = sInput.hit.get();
 
     typename ParSet::FullParametersVector fParameters;
     fParameters.setZero();

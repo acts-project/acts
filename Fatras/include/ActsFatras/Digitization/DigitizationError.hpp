@@ -13,7 +13,11 @@
 
 namespace ActsFatras {
 
-enum class DigitizationError { SmearOutOfBounds = 1, SmearError = 2 };
+enum class DigitizationError {
+  SmearOutOfBounds = 1,
+  SmearError = 2,
+  NoSurfaceDefined = 3
+};
 
 namespace detail {
 // /Define a custom error code category derived from std::error_category
