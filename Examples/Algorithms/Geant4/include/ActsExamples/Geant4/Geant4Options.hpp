@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include "GeantinoRecording.hpp"

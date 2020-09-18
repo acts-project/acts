@@ -18,7 +18,6 @@
 #include <G4VUserDetectorConstruction.hh>
 
 #include "EventAction.hpp"
-#include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
 
@@ -36,12 +35,15 @@ GeantinoRecording::GeantinoRecording(GeantinoRecording::Config&& cfg,
     throw std::invalid_argument("Missing detector construction object");
   }
 
+  m_cfg.generationConfig.particleName = "geantino";
+  m_cfg.generationConfig.energy = 1000.;
+
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new RunAction());
   m_runManager->SetUserAction(new EventAction());
   m_runManager->SetUserAction(
-      new PrimaryGeneratorAction("geantino", 1000., m_cfg.seed1, m_cfg.seed2));
+      new PrimaryGeneratorAction(m_cfg.generationConfig));
   m_runManager->SetUserAction(new SteppingAction());
   m_runManager->Initialize();
 }
