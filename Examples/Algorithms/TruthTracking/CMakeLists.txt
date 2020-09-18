@@ -3,10 +3,9 @@ add_library(
   ActsExamples/TruthTracking/ParticleSelector.cpp
   ActsExamples/TruthTracking/ParticleSmearing.cpp
   ActsExamples/TruthTracking/TrackSelector.cpp
-  ActsExamples/TruthTracking/TruthTrackFinder.cpp
-  ActsExamples/TruthTracking/TruthVerticesToTracks.cpp
-  ActsExamples/TruthTracking/TruthVertexFinder.cpp
   ActsExamples/TruthTracking/TruthSeedSelector.cpp
+  ActsExamples/TruthTracking/TruthTrackFinder.cpp
+  ActsExamples/TruthTracking/TruthVertexFinder.cpp
 )
 target_include_directories(
   ActsExamplesTruthTracking

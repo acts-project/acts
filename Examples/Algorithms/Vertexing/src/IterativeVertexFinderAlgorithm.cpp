@@ -31,7 +31,6 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
 #include "VertexingHelpers.hpp"
 

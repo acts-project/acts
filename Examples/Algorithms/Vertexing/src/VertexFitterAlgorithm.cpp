@@ -22,7 +22,6 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
 #include <stdexcept>
 
