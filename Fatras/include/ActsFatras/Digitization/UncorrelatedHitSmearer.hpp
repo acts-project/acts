@@ -102,9 +102,9 @@ class UncorrelatedHitSmearer {
         detail::ParametersSmearer<Acts::FreeIndices, kParameters...>;
 
     typename ParSet::FullParametersVector fParameters;
+    fParameters.setZero();
     fParameters.template segment<4>(0) = hit.position4();
     fParameters.template segment<3>(4) = hit.unitDirection();
-
     typename ParSet::ParametersVector sParameters =
         ParSet::projector() * fParameters;
     typename ParSet::CovarianceMatrix sCovariance;

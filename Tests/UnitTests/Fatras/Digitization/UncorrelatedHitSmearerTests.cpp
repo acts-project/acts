@@ -36,9 +36,9 @@ struct AddSmearer {
 };
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/) {
+  Acts::Result<std::pair<double, double>> operator()(double value) {
     return Acts::Result<std::pair<double, double>>(
-        std::make_pair<double, double>(0., 0.));
+        std::make_pair<double, double>(value + 0., 0.));
   }
 };
 
@@ -173,11 +173,10 @@ BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
   const auto& freeSet = freeSmear.value();
   BOOST_CHECK(freeSet.contains<Acts::eFreePos0>());
   BOOST_CHECK(freeSet.contains<Acts::eFreePos1>());
-  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos0>(), 4., Acts::s_epsilon);
-  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos1>(), 2., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos0>(), 3., Acts::s_epsilon);
+  CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreePos1>(), 3., Acts::s_epsilon);
   CHECK_CLOSE_ABS(freeSet.getParameter<Acts::eFreeDir2>(),
-                  m4.segment<3>(0).normalized()[Acts::eFreeDir2],
-                  Acts::s_epsilon);
+                  m4.segment<3>(0).normalized()[2], Acts::s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
