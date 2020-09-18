@@ -14,7 +14,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "ActsFatras/Digitization/detail/ParametersCast.hpp"
 #include "ActsFatras/Digitization/detail/ParametersSmearer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
@@ -65,11 +64,17 @@ class UncorrelatedHitSmearer {
     }
     const auto& lPosition = gltResult.value();
 
-    typename ParSet::ParametersVector sParameters;
+    typename ParSet::FullParametersVector fParameters;
+    fParameters.setZero();
+    fParameters.template segment<2>(0) = lPosition;
+    fParameters[Acts::eBoundPhi] = Acts::VectorHelpers::phi(dir);
+    fParameters[Acts::eBoundTheta] = Acts::VectorHelpers::theta(dir);
+    fParameters[Acts::eBoundTime] = hit.time();
+    typename ParSet::ParametersVector sParameters =
+        ParSet::projector() * fParameters;
+
     typename ParSet::CovarianceMatrix sCovariance;
     sCovariance.setZero();
-    fillBoundParameters(sParameters, lPosition, dir, hit.time(),
-                        kParameters...);
 
     auto smearResult =
         ParametersSmearer::run(sParameters, sCovariance, sFunctions);
@@ -116,33 +121,6 @@ class UncorrelatedHitSmearer {
       return Result(smearResult.error());
     }
     return ParSet{sCovariance, sParameters};
-  }
-
- private:
-  /// Apply the recursive smearing on the parameter pack,
-  /// the base local position or time is used as unsmeared
-  ///
-  /// @tparam vec_t The parameter vector, static size known at compile time
-  /// @tparam param_t The first of the pack
-  /// @tparam params_t The remaining pack
-  ///
-  /// @param vector[in,out] The to be filled parameters vector
-  /// @param lhit The local hit parameters
-  /// @param dir The direction of the hit
-  /// @param ctime The current time
-  /// @param first The first of the pack
-  /// @param rest The remaining pack
-  ///
-  template <typename vector_t, typename param_t, typename... kParameters_t>
-  void fillBoundParameters(vector_t& vector, const Acts::Vector2D& lhit,
-                           const Acts::Vector3D& dir, double ctime,
-                           const param_t& first,
-                           kParameters_t const&... rest) const {
-    const size_t par = vector.rows() - sizeof...(rest) - 1;
-    vector[par] = detail::BoundCasts[first](lhit, dir, ctime);
-    if constexpr (sizeof...(rest) > 0) {
-      fillBoundParameters(vector, lhit, dir, ctime, rest...);
-    }
   }
 };
 
