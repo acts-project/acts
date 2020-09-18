@@ -33,6 +33,9 @@ class ParticleSelector final : public BareAlgorithm {
     // Minimum/maximum absolute distance from the origin along z.
     double absZMin = 0;
     double absZMax = std::numeric_limits<double>::infinity();
+    // Minimum/maximum particle time.
+    double timeMin = -std::numeric_limits<double>::infinity();
+    double timeMax = std::numeric_limits<double>::infinity();
     // Direction cuts.
     double phiMin = -std::numeric_limits<double>::infinity();
     double phiMax = std::numeric_limits<double>::infinity();
@@ -41,7 +44,7 @@ class ParticleSelector final : public BareAlgorithm {
     double absEtaMin = 0;
     double absEtaMax = std::numeric_limits<double>::infinity();
     // Momentum cuts.
-    double ptMin = 0.0;
+    double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
     /// Remove charged particles.
     bool removeCharged = false;
