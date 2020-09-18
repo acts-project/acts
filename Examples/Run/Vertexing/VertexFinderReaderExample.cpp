@@ -1,19 +1,25 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+/// @file Find vertices using truth particle information as input
+///
+/// Reads truth particles from TrackMl files and use the truth information
+/// to generate smeared track parameters. Use this pseudo-reconstructed
+/// tracks as the input to the vertex finder.
+
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
-#include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
+#include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
 #include <memory>
 
@@ -25,7 +31,8 @@ int main(int argc, char* argv[]) {
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
-  Options::addPythia8Options(desc);
+  ParticleSelector::addOptions(desc);
+  Options::addInputOptions(desc);
   Options::addOutputOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -38,19 +45,18 @@ int main(int argc, char* argv[]) {
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
   Sequencer sequencer(Options::readSequencerConfig(vars));
 
-  // setup event generator
-  EventGenerator::Config evgen = Options::readPythia8Options(vars, logLevel);
-  evgen.outputParticles = "particles_generated";
-  evgen.randomNumbers = rnd;
-  sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
+  // setup particle reader generator
+  CsvParticleReader::Config readParticles =
+      Options::readCsvParticleReaderConfig(vars);
+  readParticles.outputParticles = "particles";
+  sequencer.addReader(
+      std::make_shared<CsvParticleReader>(readParticles, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles;
-  selectParticles.inputParticles = evgen.outputParticles;
+  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
+  selectParticles.inputParticles = readParticles.outputParticles;
   selectParticles.outputParticles = "particles_selected";
-  selectParticles.absEtaMax = 2.5;
-  selectParticles.rhoMax = 4_mm;
-  selectParticles.ptMin = 400_MeV;
+  // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
@@ -63,21 +69,13 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
-  // find true primary vertices w/o secondary particles
-  TruthVertexFinder::Config findVertices;
-  findVertices.inputParticles = selectParticles.outputParticles;
+  // find vertices
+  IterativeVertexFinderAlgorithm::Config findVertices;
+  findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.excludeSecondaries = true;
+  findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
   sequencer.addAlgorithm(
-      std::make_shared<TruthVertexFinder>(findVertices, logLevel));
-
-  // fit vertices using the Billoir fitter
-  VertexFitterAlgorithm::Config fitVertices;
-  fitVertices.inputTrackParameters = smearParticles.outputTrackParameters;
-  fitVertices.inputProtoVertices = findVertices.outputProtoVertices;
-  fitVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
-  sequencer.addAlgorithm(
-      std::make_shared<VertexFitterAlgorithm>(fitVertices, logLevel));
+      std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
 
   return sequencer.run();
 }

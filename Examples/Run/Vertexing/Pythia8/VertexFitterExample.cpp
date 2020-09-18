@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,8 @@
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
+#include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
 #include <memory>
 
@@ -25,6 +26,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
+  ParticleSelector::addOptions(desc);
   Options::addOutputOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -44,12 +46,10 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles;
+  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
   selectParticles.inputParticles = evgen.outputParticles;
   selectParticles.outputParticles = "particles_selected";
-  selectParticles.absEtaMax = 2.5;
-  selectParticles.rhoMax = 4_mm;
-  selectParticles.ptMin = 400_MeV;
+  // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
@@ -62,13 +62,21 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
-  // find vertices
-  IterativeVertexFinderAlgorithm::Config findVertices;
-  findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
+  // find true primary vertices w/o secondary particles
+  TruthVertexFinder::Config findVertices;
+  findVertices.inputParticles = selectParticles.outputParticles;
   findVertices.outputProtoVertices = "protovertices";
-  findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  findVertices.excludeSecondaries = true;
   sequencer.addAlgorithm(
-      std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));
+      std::make_shared<TruthVertexFinder>(findVertices, logLevel));
+
+  // fit vertices using the Billoir fitter
+  VertexFitterAlgorithm::Config fitVertices;
+  fitVertices.inputTrackParameters = smearParticles.outputTrackParameters;
+  fitVertices.inputProtoVertices = findVertices.outputProtoVertices;
+  fitVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
+  sequencer.addAlgorithm(
+      std::make_shared<VertexFitterAlgorithm>(fitVertices, logLevel));
 
   return sequencer.run();
 }

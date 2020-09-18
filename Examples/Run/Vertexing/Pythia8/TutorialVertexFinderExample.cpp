@@ -12,7 +12,7 @@
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
+#include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
 #include <memory>
 
@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
   Options::addPythia8Options(desc);
+  ParticleSelector::addOptions(desc);
   Options::addOutputOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
@@ -44,12 +45,10 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles;
+  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
   selectParticles.inputParticles = evgen.outputParticles;
   selectParticles.outputParticles = "particles_selected";
-  selectParticles.absEtaMax = 2.5;
-  selectParticles.rhoMax = 4_mm;
-  selectParticles.ptMin = 400_MeV;
+  // smearing only works with charge particles for now
   selectParticles.removeNeutral = true;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
@@ -63,12 +62,12 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
 
   // find vertices
-  AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
+  TutorialVertexFinderAlgorithm::Config findVertices;
   findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   findVertices.bField = Acts::Vector3D(0_T, 0_T, 2_T);
-  sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(
-      findVertices, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<TutorialVertexFinderAlgorithm>(findVertices, logLevel));
 
   return sequencer.run();
 }
