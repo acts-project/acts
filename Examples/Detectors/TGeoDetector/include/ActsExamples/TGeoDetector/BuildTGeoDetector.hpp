@@ -47,7 +47,8 @@ template <typename variable_maps_t>
 std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     variable_maps_t& vm, const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
-        detElementStore) {
+        detElementStore,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) {
   Acts::Logging::Level surfaceLogLevel =
       Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
   Acts::Logging::Level layerLogLevel =
@@ -211,6 +212,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // create the tracking geometry
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the builders
+  tgConfig.materialDecorator = mdecorator;
+
   for (auto& vb : volumeBuilders) {
     tgConfig.trackingVolumeBuilders.push_back(
         [=](const auto& gcontext, const auto& inner, const auto&) {
