@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/DigitizedHit.hpp"
@@ -16,9 +16,9 @@
 
 #include <stdexcept>
 
-ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    ActsExamples::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
+ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
+    ActsExamples::SmearingAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("SmearingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimulatedHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
@@ -31,7 +31,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Prepare the input and output collections
   const auto& hits =
