@@ -51,8 +51,6 @@ struct SingleComponentSmearer {
 };
 
 /// Smear the parameters in the given vector with provided smear functions
-/// it uses a cast operator/function to retrieve the right parameter value
-/// from the input
 ///
 /// @tparam indices_t the Parameter indices type (bound, free)
 /// @tparam kParameters Parameter indices pack that defines the used parameter
@@ -66,6 +64,7 @@ struct ParametersSmearer {
   /// @param[in,out] covariances which will be filled in place as well
   /// @param[in] sFunctions the smearing functions to be applied
   ///
+  /// @return a Result object that may carry a DigitizationError
   template <typename values_t, typename covariances_t>
   static Acts::Result<void> run(
       Eigen::MatrixBase<values_t>& values,
