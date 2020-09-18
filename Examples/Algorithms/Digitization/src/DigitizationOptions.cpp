@@ -8,12 +8,12 @@
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include <boost/program_options.hpp>
 
 #include <string>
 
 void ActsExamples::Options::addDigitizationOptions(
     ActsExamples::Options::Description& desc) {
-  using boost::program_options::bool_switch;
   using boost::program_options::value;
   using namespace std;
 
