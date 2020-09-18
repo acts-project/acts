@@ -16,15 +16,18 @@
 
 namespace ActsFatras {
 
+namespace detail {
+
 /// Smearing functions definition:
 /// - it takes the unsmeared parameter
 /// - it returns the smeared parameter and a covariance
 using SmearFunction =
     std::function<Acts::Result<std::pair<double, double>>(double)>;
 
-namespace detail {
-
-/// @brief single component smearing struct
+/// Single component smearing struct.
+///
+/// @tparam values_t The type of the values vector
+/// @tparam covariance_t The type of the covariance vector
 ///
 /// This is used to unpack the parameter pack smearing
 /// @param idx The index of the smearing
@@ -34,10 +37,10 @@ namespace detail {
 /// @param[in,out] result a recursive smearing result trigger
 ///        if a single component is not ok, this will be communicated
 ///        upstream to the caller
-template <typename values_t, typename covariances_t>
+template <typename values_t, typename covariance_t>
 struct SingleComponentSmearer {
   void operator()(size_t idx, Eigen::MatrixBase<values_t>& values,
-                  Eigen::MatrixBase<covariances_t>& covariances,
+                  Eigen::MatrixBase<covariance_t>& covariances,
                   const SmearFunction& sFunction, Acts::Result<void>& result) {
     auto sResult = sFunction(values[idx]);
     if (sResult.ok()) {
@@ -65,28 +68,28 @@ struct ParametersSmearer {
   /// @param[in] sFunctions the smearing functions to be applied
   ///
   /// @return a Result object that may carry a DigitizationError
-  template <typename values_t, typename covariances_t>
+  template <typename values_t, typename covariance_t>
   static Acts::Result<void> run(
       Eigen::MatrixBase<values_t>& values,
-      Eigen::MatrixBase<covariances_t>& covariances,
+      Eigen::MatrixBase<covariance_t>& covariances,
       const std::array<SmearFunction, sizeof...(kParameters)>& sFunctions) {
     return runImpl(values, covariances, sFunctions, StorageSequence{});
   }
 
-  template <typename values_t, typename covariances_t, std::size_t... kStorage>
+  template <typename values_t, typename covariance_t, std::size_t... kStorage>
   static Acts::Result<void> runImpl(
       Eigen::MatrixBase<values_t>& values,
-      Eigen::MatrixBase<covariances_t>& covariances,
+      Eigen::MatrixBase<covariance_t>& covariances,
       const std::array<SmearFunction, sizeof...(kParameters)>& sFunctions,
       std::index_sequence<kStorage...>) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(values_t, sizeof...(kParameters));
     EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(
-        covariances_t, sizeof...(kParameters), sizeof...(kParameters));
+        covariance_t, sizeof...(kParameters), sizeof...(kParameters));
     static_assert(sizeof...(kParameters) == sizeof...(kStorage),
                   "Parameters and storage index packs must have the same size");
 
     Acts::Result<void> result;
-    SingleComponentSmearer<values_t, covariances_t> scs;
+    SingleComponentSmearer<values_t, covariance_t> scs;
     ((scs(kStorage, values, covariances, sFunctions[kStorage], result)), ...);
     return result;
   }

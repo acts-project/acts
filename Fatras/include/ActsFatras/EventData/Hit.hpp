@@ -45,8 +45,13 @@ class Hit {
   /// position on the given surface.
   Hit(Acts::GeometryIdentifier geometryId, Barcode particleId,
       const Vector4& pos4, const Vector4& before4, const Vector4& after4,
-      int32_t index_ = -1);
-
+      int32_t index_ = -1)
+      : m_geometryId(geometryId),
+        m_particleId(particleId),
+        m_index(index_),
+        m_pos4(pos4),
+        m_before4(before4),
+        m_after4(after4) {}
   Hit(const Hit&) = default;
   Hit(Hit&&) = default;
   Hit& operator=(const Hit&) = default;
