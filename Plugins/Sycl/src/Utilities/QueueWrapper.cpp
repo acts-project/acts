@@ -82,7 +82,13 @@ void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
   // SYCL kernel exceptions are asynchronous
   auto exception_handler = [](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
-      std::rethrow_exception(e);
+      try {
+        std::rethrow_exception(e);
+      } catch (std::exception& e) {
+        ACTS_LOCAL_LOGGER(
+            Acts::getDefaultLogger("SyclQueue", Acts::Logging::INFO));
+        ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
+      }
     }
   };
 
