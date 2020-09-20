@@ -6,13 +6,15 @@ add_library(
   include/Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp
   include/Acts/Plugins/Sycl/Seeding/Seedfinder.hpp
   include/Acts/Plugins/Sycl/Seeding/Seedfinder.ipp
+  include/Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp
   include/Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp
   include/Acts/Plugins/Sycl/Utilities/ListPlatforms.hpp
   include/Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp
   # implementation files
   src/Seeding/CreateSeedsForGroupSycl.cpp
-  src/Utilities/ListPlatforms.cpp
+  src/Utilities/CalculateNdRange.cpp
   src/Utilities/DeviceSelector.cpp
+  src/Utilities/ListPlatforms.cpp
   src/Utilities/QueueWrapper.cpp
 )
 

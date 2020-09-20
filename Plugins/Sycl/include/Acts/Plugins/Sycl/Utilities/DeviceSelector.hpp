@@ -8,8 +8,10 @@
 
 #pragma once
 
+// System include(s)
 #include <string>
 
+// SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {

@@ -14,7 +14,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
-// Sycl plugin include(s).
+// SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"

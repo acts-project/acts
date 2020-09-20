@@ -6,18 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
-
-#include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
+// System include(s)
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <vector>
 
+// Acts include(s)
+#include "Acts/Utilities/Logger.hpp"
+
+// SYCL plugin include(s)
+#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
+#include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
+#include "Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp"
+
+// SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
@@ -30,29 +36,6 @@ class transform_coord_bottom_kernel;
 class transform_coord_top_kernel;
 class triplet_search_kernel;
 class filter_2sp_fixed_kernel;
-
-// Returns the smallest multiple of workGroupSize that is not smaller
-// than numThreads.
-// Calculate global range for 1 dimensional nd_range
-uint32_t num1DWorkItems(uint32_t numThreads, uint32_t workGroupSize) {
-  auto q = (numThreads + workGroupSize - 1) / workGroupSize;
-  return q * workGroupSize;
-}
-
-// Calculate global and local range for 2 dimensional nd_range
-// Set the number of threads in both dimensions to the smallest multiple
-// of the work group size in that dimension
-void num2DWorkItems(uint32_t& numThreadsDim0, uint32_t& numThreadsDim1,
-                    uint32_t& wgSizeDim0, uint32_t& wgSizeDim1) {
-  while (numThreadsDim1 < wgSizeDim1) {
-    wgSizeDim1 /= 2;
-    wgSizeDim0 *= 2;
-  }
-  auto q1 = (numThreadsDim0 + wgSizeDim0 + 1) / wgSizeDim0;
-  auto q2 = (numThreadsDim1 + wgSizeDim1 + 1) / wgSizeDim1;
-  numThreadsDim0 = q1 * wgSizeDim0;
-  numThreadsDim1 = q2 * wgSizeDim1;
-}
 
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,
@@ -142,30 +125,11 @@ void createSeedsForGroupSycl(
     // We'll have a total of M*B threads globally, but we need to give the
     // nd_range the global dimensions so that they are an exact multiple of
     // the local dimensions. That's why we need this calculation.
-    auto globalRangeDim0 = M;
-    auto globalRangeDim1 = B;
-    auto localRangeDim0 = uint32_t(1);
-    auto localRangeDim1 = maxWorkGroupSize;
 
-    num2DWorkItems(globalRangeDim0, globalRangeDim1, localRangeDim0,
-                   localRangeDim1);
-
-    cl::sycl::nd_range<2> bottomDupletNDRange{
-        cl::sycl::range<2>{globalRangeDim0, globalRangeDim1},
-        cl::sycl::range<2>{localRangeDim0, localRangeDim1}};
-
-    // Calculate 2 dimensional range of middle-top duplet search kernel
-    globalRangeDim0 = M;
-    globalRangeDim1 = T;
-    localRangeDim0 = 1;
-    localRangeDim1 = maxWorkGroupSize;
-
-    num2DWorkItems(globalRangeDim0, globalRangeDim1, localRangeDim0,
-                   localRangeDim1);
-
-    cl::sycl::nd_range<2> topDupletNDRange{
-        cl::sycl::range<2>{globalRangeDim0, globalRangeDim1},
-        cl::sycl::range<2>{localRangeDim0, localRangeDim1}};
+    cl::sycl::nd_range<2> bottomDupletNDRange =
+        calculate2DimNDRange(M, B, maxWorkGroupSize);
+    cl::sycl::nd_range<2> topDupletNDRange =
+        calculate2DimNDRange(M, T, maxWorkGroupSize);
 
     //*********************************************//
     // ********** DUPLET SEARCH - BEGIN ********** //
@@ -279,14 +243,12 @@ void createSeedsForGroupSycl(
     if (edgesBottom > 0 && edgesTop > 0) {
       // Global and local range of execution for edgesBottom number of
       // threads. Local range corresponds to block size.
-      cl::sycl::nd_range<1> edgesBotNdRange{
-          cl::sycl::range<1>(num1DWorkItems(edgesBottom, maxWorkGroupSize)),
-          cl::sycl::range<1>(maxWorkGroupSize)};
+      cl::sycl::nd_range<1> edgesBotNdRange =
+          calculate1DimNDRange(edgesBottom, maxWorkGroupSize);
 
       // Global and local range of execution for edgesTop number of threads.
-      cl::sycl::nd_range<1> edgesTopNdRange{
-          cl::sycl::range<1>(num1DWorkItems(edgesTop, maxWorkGroupSize)),
-          cl::sycl::range<1>(maxWorkGroupSize)};
+      cl::sycl::nd_range<1> edgesTopNdRange =
+          calculate1DimNDRange(edgesTop, maxWorkGroupSize);
 
       // EXPLANATION OF INDEXING (fisrt part)
       /*
@@ -660,15 +622,11 @@ void createSeedsForGroupSycl(
 
         // Nd_range with maximum block size for triplet search and filter.
         // (global and local range is already given)
-        cl::sycl::nd_range<1> tripletSearchNDRange{
-            cl::sycl::range<1>(
-                num1DWorkItems(numTripletSearchThreads, maxWorkGroupSize)),
-            cl::sycl::range<1>(maxWorkGroupSize)};
+        cl::sycl::nd_range<1> tripletSearchNDRange =
+            calculate1DimNDRange(numTripletSearchThreads, maxWorkGroupSize);
 
-        cl::sycl::nd_range<1> tripletFilterNDRange{
-            cl::sycl::range<1>(
-                num1DWorkItems(numTripletFilterThreads, maxWorkGroupSize)),
-            cl::sycl::range<1>(maxWorkGroupSize)};
+        cl::sycl::nd_range<1> tripletFilterNDRange =
+            calculate1DimNDRange(numTripletFilterThreads, maxWorkGroupSize);
 
         auto tripletEvent = q->submit([&](cl::sycl::handler& h) {
           h.depends_on({linB, linT});
@@ -953,11 +911,7 @@ void createSeedsForGroupSycl(
       /*
         Note that memory management is very naive, but this should only be a
         temporary solution. A better idea is to use a separate memory
-        manager, see the CUDA (2) implementation for SYCL.
-
-        We could also use unique pointers with a custom deleter that frees
-        memory for us. That would allow a less error prone and therefore more
-        maintanable code.
+        manager, see the CUDA (2) implementation.
       */
 
       cl::sycl::free(deviceLinBot, *q);

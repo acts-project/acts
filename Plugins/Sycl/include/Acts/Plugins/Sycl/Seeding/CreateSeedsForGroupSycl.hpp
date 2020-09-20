@@ -8,11 +8,13 @@
 
 #pragma once
 
+// System include(s)
+#include <vector>
+
+// SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-
-#include <vector>
 
 namespace Acts::Sycl {
 

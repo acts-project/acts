@@ -6,13 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-
-#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
-#include "Acts/Utilities/Logger.hpp"
-
+// System include(s)
 #include <string>
 
+// Acts include(s)
+#include "Acts/Utilities/Logger.hpp"
+
+// SYCL plugin include(s)
+#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
+#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
+
+// SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
