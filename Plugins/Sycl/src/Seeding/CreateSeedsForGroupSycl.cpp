@@ -68,19 +68,19 @@ void createSeedsForGroupSycl(
   std::vector<uint32_t> indMidTopComp;
 
   // Number of edges for middle-bottom and middle-top duplet bipartite graphs.
-  uint32_t edgesBottom = 0;
-  uint32_t edgesTop = 0;
+  uint64_t edgesBottom = 0;
+  uint64_t edgesTop = 0;
   // Number of possible compatible triplets. This is the sum of the
   // combination of the number of compatible bottom and compatible top duplets
   // per middle space point. (nb0*nt0 + nb1*nt1 + ... where nbk is the number
   // of comp. bot. SPs for the kth middle SP)
-  uint32_t edgesComb = 0;
+  uint64_t edgesComb = 0;
 
   try {
     auto* q = wrappedQueue.getQueue();
-    uint32_t globalBufferSize =
+    uint64_t globalBufferSize =
         q->get_device().get_info<cl::sycl::info::device::global_mem_size>();
-    uint32_t maxWorkGroupSize =
+    uint64_t maxWorkGroupSize =
         q->get_device().get_info<cl::sycl::info::device::max_work_group_size>();
 
     // Device allocations
@@ -194,7 +194,8 @@ void createSeedsForGroupSycl(
               }
             });
       });
-    }  // sync
+    }  // sync (buffers get destroyed and duplet counts are copied back to
+       // countBotDuplets and countTopDuplets)
 
     //*********************************************//
     // *********** DUPLET SEARCH - END *********** //
@@ -228,11 +229,11 @@ void createSeedsForGroupSycl(
         std::fill_n(std::back_inserter(indMidTopComp), countTopDuplets[mid],
                     mid);
       }
-    }  // sync
+    }
 
     if (edgesBottom > 0 && edgesTop > 0) {
-      // Global and local range of execution for edgesBottom number of
-      // threads. Local range corresponds to block size.
+      // Calcualte global and local range of execution for edgesBottom number of
+      // threads. Local range is the same as block size in CUDA.
       cl::sycl::nd_range<1> edgesBotNdRange =
           calculate1DimNDRange(edgesBottom, maxWorkGroupSize);
 
@@ -553,7 +554,7 @@ void createSeedsForGroupSycl(
 
       const auto maxMemoryAllocation =
           std::min(edgesComb,
-                   globalBufferSize / uint32_t((sizeof(detail::DeviceTriplet) +
+                   globalBufferSize / uint64_t((sizeof(detail::DeviceTriplet) +
                                                 sizeof(detail::SeedData)) *
                                                2));
 
@@ -571,6 +572,8 @@ void createSeedsForGroupSycl(
       // right number of seeds, and no more.
 
       seeds.resize(M);
+      uint32_t sumSeeds = 0;
+      std::vector<uint32_t> deviceCountTriplets(edgesBottom, 0);
 
       // Do the triplet search and triplet filter for 2 sp fixed for middle
       // space points in the interval [firstMiddle, lastMiddle).
@@ -586,14 +589,14 @@ void createSeedsForGroupSycl(
           ++lastMiddle;
         }
 
-        uint32_t sumSeeds = 0;
-        std::vector<uint32_t> deviceCountTriplets(edgesBottom, 0);
-
         const auto numTripletSearchThreads =
             sumBotTopCombined[lastMiddle] - sumBotTopCombined[firstMiddle];
 
         if (numTripletSearchThreads == 0)
           continue;
+
+        sumSeeds = 0;
+        deviceCountTriplets.resize(edgesBottom, 0);
 
         const auto numTripletFilterThreads =
             sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle];
@@ -611,188 +614,186 @@ void createSeedsForGroupSycl(
         sycl::buffer<uint32_t> countTripletsBuf(deviceCountTriplets.data(),
                                                 edgesBottom);
 
-        {
-          q->submit([&](cl::sycl::handler& h) {
-            h.depends_on({linB, linT});
-            auto countTripletsAcc = sycl::ONEAPI::atomic_accessor<
-                uint32_t, 1, sycl::ONEAPI::memory_order::relaxed,
-                sycl::ONEAPI::memory_scope::device>(countTripletsBuf, h);
-            auto numTopDupletsAcc = numTopDupletsBuf.get_access<
-                sycl::access::mode::read, sycl::access::target::global_buffer>(
-                h);
-            h.parallel_for<triplet_search_kernel>(
-                tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
-                  const uint32_t idx = item.get_global_linear_id();
-                  if (idx < numTripletSearchThreads) {
-                    // Retrieve the index of the corresponding middle
-                    // space point by binary search
-                    auto L = firstMiddle;
-                    auto R = lastMiddle;
-                    auto mid = L;
-                    while (L < R - 1) {
-                      mid = (L + R) / 2;
-                      // To be able to search in deviceSumComb, we need
-                      // to use an offset (sumCombUptoFirstMiddle).
-                      if (idx + sumCombUptoFirstMiddle < deviceSumComb[mid]) {
-                        R = mid;
-                      } else {
-                        L = mid;
-                      }
-                    }
-                    mid = L;
-
-                    const auto numT = numTopDupletsAcc[mid];
-                    const auto threadIdxForMiddleSP =
-                        (idx - deviceSumComb[mid] + sumCombUptoFirstMiddle);
-
-                    // NOTES ON THREAD MAPPING TO SPACE POINTS
-                    /*
-                      We need to map bottom and top SP indices to this
-                      thread. This is done in the following way: We
-                      calculated the number of possible triplet
-                      combinations for this middle SP (let it be
-                      num_comp_bot*num_comp_top). Let num_comp_bot = 2
-                      and num_comp_top=3 in this example. So we have 2
-                      compatible bottom and 3 compatible top SP for this
-                      middle SP.
-
-                      That gives us 6 threads altogether:
-                                ===========================================
-                      thread:    |  0   |  1   |  2   |  3   |  4   |  5
-                      | bottom id: | bot0 | bot0 | bot0 | bot1 | bot1 |
-                      bot1 | top id:    | top0 | top1 | top2 | top0 |
-                      top1 | top2 |
-                                ===========================================
-
-                      If we divide 6 by the number of compatible top SP
-                      for this middle SP, or deviceNumTopDuplets[mid]
-                      which is 3 now, we get the id for the bottom SP.
-                      Similarly, if we take modulo
-                      deviceNumTopDuplets[mid], we get the id for the
-                      top SP.
-
-                      So if threadIdxForMiddleSP = 3, then ib = 1 and it
-                      = 0.
-
-                      We can use these ids together with
-                      deviceSumBot[mid] and deviceSumTop[mid] to be able
-                      to index our other arrays that actually indices
-                      for corresponding bottom and top SPs (deviceIndBot
-                      and deviceIndTop) or data of duplets in linear
-                      equation form (deviceLinBot and deviceLinTop).
-                    */
-
-                    const auto ib =
-                        deviceSumBot[mid] + (threadIdxForMiddleSP / numT);
-                    const auto it =
-                        deviceSumTop[mid] + (threadIdxForMiddleSP % numT);
-
-                    const auto linBotEq = deviceLinBot[ib];
-                    const auto linTopEq = deviceLinTop[it];
-                    const auto midSP = deviceMiddleSPs[mid];
-
-                    const auto Vb = linBotEq.v;
-                    const auto Ub = linBotEq.u;
-                    const auto Erb = linBotEq.er;
-                    const auto cotThetab = linBotEq.cotTheta;
-                    const auto iDeltaRb = linBotEq.iDeltaR;
-
-                    const auto Vt = linTopEq.v;
-                    const auto Ut = linTopEq.u;
-                    const auto Ert = linTopEq.er;
-                    const auto cotThetat = linTopEq.cotTheta;
-                    const auto iDeltaRt = linTopEq.iDeltaR;
-
-                    const auto rM = midSP.r;
-                    const auto varianceRM = midSP.varR;
-                    const auto varianceZM = midSP.varZ;
-
-                    auto iSinTheta2 = (1.f + cotThetab * cotThetab);
-                    auto scatteringInRegion2 =
-                        seedfinderConfig.maxScatteringAngle2 * iSinTheta2;
-                    scatteringInRegion2 *= seedfinderConfig.sigmaScattering *
-                                           seedfinderConfig.sigmaScattering;
-                    auto error2 =
-                        Ert + Erb +
-                        2.f *
-                            (cotThetab * cotThetat * varianceRM + varianceZM) *
-                            iDeltaRb * iDeltaRt;
-                    auto deltaCotTheta = cotThetab - cotThetat;
-                    auto deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-
-                    deltaCotTheta = cl::sycl::abs(deltaCotTheta);
-                    auto error = cl::sycl::sqrt(error2);
-                    auto dCotThetaMinusError2 =
-                        deltaCotTheta2 + error2 - 2.f * deltaCotTheta * error;
-                    auto dU = Ut - Ub;
-
-                    if ((!(deltaCotTheta2 - error2 > 0.f) ||
-                         !(dCotThetaMinusError2 > scatteringInRegion2)) &&
-                        !(dU == 0.f)) {
-                      auto A = (Vt - Vb) / dU;
-                      auto S2 = 1.f + A * A;
-                      auto B = Vb - A * Ub;
-                      auto B2 = B * B;
-
-                      auto iHelixDiameter2 = B2 / S2;
-                      auto pT2scatter =
-                          4.f * iHelixDiameter2 * seedfinderConfig.pT2perRadius;
-                      auto p2scatter = pT2scatter * iSinTheta2;
-                      auto Im = cl::sycl::abs((A - B * rM) * rM);
-
-                      if (!(S2 < B2 * seedfinderConfig.minHelixDiameter2) &&
-                          !((deltaCotTheta2 - error2 > 0.f) &&
-                            (dCotThetaMinusError2 >
-                             p2scatter * seedfinderConfig.sigmaScattering *
-                                 seedfinderConfig.sigmaScattering)) &&
-                          !(Im > seedfinderConfig.impactMax)) {
-                        const auto top = deviceIndTop[it];
-                        // this will be the t-th top space point for
-                        // fixed middle and bottom SP
-                        auto t = countTripletsAcc[ib].fetch_add(1);
-                        /*
-                          deviceSumComb[mid] - sumCombUptoFirstMiddle:
-                          gives the memory location reserved for this
-                          middle SP
-
-                          (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle:
-                          this is the nth thread for this middle SP
-
-                          (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle)/numT:
-                          this is the mth bottom SP for this middle SP
-
-                          multiplying this by numT gives the memory
-                          location for this middle and bottom SP
-
-                          and by adding t to it, we will end up storing
-                          compatible triplet candidates for this middle
-                          and bottom SP right next to each other
-                          starting from the given memory location
-                        */
-                        const auto tripletIdx = deviceSumComb[mid] -
-                                                sumCombUptoFirstMiddle +
-                                                (((idx - deviceSumComb[mid] +
-                                                   sumCombUptoFirstMiddle) /
-                                                  numT) *
-                                                 numT) +
-                                                t;
-
-                        detail::DeviceTriplet T;
-                        T.curvature = B / cl::sycl::sqrt(S2);
-                        T.impact = Im;
-                        T.topSPIndex = top;
-                        deviceCurvImpact[tripletIdx] = T;
-                      }
+        auto tripletKernel = q->submit([&](cl::sycl::handler& h) {
+          h.depends_on({linB, linT});
+          auto countTripletsAcc =
+              sycl::ONEAPI::atomic_accessor<uint32_t, 1,
+                                            sycl::ONEAPI::memory_order::relaxed,
+                                            sycl::ONEAPI::memory_scope::device>(
+                  countTripletsBuf, h);
+          auto numTopDupletsAcc = numTopDupletsBuf.get_access<
+              sycl::access::mode::read, sycl::access::target::global_buffer>(h);
+          h.parallel_for<triplet_search_kernel>(
+              tripletSearchNDRange, [=](cl::sycl::nd_item<1> item) {
+                const uint32_t idx = item.get_global_linear_id();
+                if (idx < numTripletSearchThreads) {
+                  // Retrieve the index of the corresponding middle
+                  // space point by binary search
+                  auto L = firstMiddle;
+                  auto R = lastMiddle;
+                  auto mid = L;
+                  while (L < R - 1) {
+                    mid = (L + R) / 2;
+                    // To be able to search in deviceSumComb, we need
+                    // to use an offset (sumCombUptoFirstMiddle).
+                    if (idx + sumCombUptoFirstMiddle < deviceSumComb[mid]) {
+                      R = mid;
+                    } else {
+                      L = mid;
                     }
                   }
-                });
-          });
-        }
+                  mid = L;
+
+                  const auto numT = numTopDupletsAcc[mid];
+                  const auto threadIdxForMiddleSP =
+                      (idx - deviceSumComb[mid] + sumCombUptoFirstMiddle);
+
+                  // NOTES ON THREAD MAPPING TO SPACE POINTS
+                  /*
+                    We need to map bottom and top SP indices to this
+                    thread. This is done in the following way: We
+                    calculated the number of possible triplet
+                    combinations for this middle SP (let it be
+                    num_comp_bot*num_comp_top). Let num_comp_bot = 2
+                    and num_comp_top=3 in this example. So we have 2
+                    compatible bottom and 3 compatible top SP for this
+                    middle SP.
+
+                    That gives us 6 threads altogether:
+                              ===========================================
+                    thread:    |  0   |  1   |  2   |  3   |  4   |  5
+                    | bottom id: | bot0 | bot0 | bot0 | bot1 | bot1 |
+                    bot1 | top id:    | top0 | top1 | top2 | top0 |
+                    top1 | top2 |
+                              ===========================================
+
+                    If we divide 6 by the number of compatible top SP
+                    for this middle SP, or deviceNumTopDuplets[mid]
+                    which is 3 now, we get the id for the bottom SP.
+                    Similarly, if we take modulo
+                    deviceNumTopDuplets[mid], we get the id for the
+                    top SP.
+
+                    So if threadIdxForMiddleSP = 3, then ib = 1 and it
+                    = 0.
+
+                    We can use these ids together with
+                    deviceSumBot[mid] and deviceSumTop[mid] to be able
+                    to index our other arrays that actually indices
+                    for corresponding bottom and top SPs (deviceIndBot
+                    and deviceIndTop) or data of duplets in linear
+                    equation form (deviceLinBot and deviceLinTop).
+                  */
+
+                  const auto ib =
+                      deviceSumBot[mid] + (threadIdxForMiddleSP / numT);
+                  const auto it =
+                      deviceSumTop[mid] + (threadIdxForMiddleSP % numT);
+
+                  const auto linBotEq = deviceLinBot[ib];
+                  const auto linTopEq = deviceLinTop[it];
+                  const auto midSP = deviceMiddleSPs[mid];
+
+                  const auto Vb = linBotEq.v;
+                  const auto Ub = linBotEq.u;
+                  const auto Erb = linBotEq.er;
+                  const auto cotThetab = linBotEq.cotTheta;
+                  const auto iDeltaRb = linBotEq.iDeltaR;
+
+                  const auto Vt = linTopEq.v;
+                  const auto Ut = linTopEq.u;
+                  const auto Ert = linTopEq.er;
+                  const auto cotThetat = linTopEq.cotTheta;
+                  const auto iDeltaRt = linTopEq.iDeltaR;
+
+                  const auto rM = midSP.r;
+                  const auto varianceRM = midSP.varR;
+                  const auto varianceZM = midSP.varZ;
+
+                  auto iSinTheta2 = (1.f + cotThetab * cotThetab);
+                  auto scatteringInRegion2 =
+                      seedfinderConfig.maxScatteringAngle2 * iSinTheta2;
+                  scatteringInRegion2 *= seedfinderConfig.sigmaScattering *
+                                         seedfinderConfig.sigmaScattering;
+                  auto error2 =
+                      Ert + Erb +
+                      2.f * (cotThetab * cotThetat * varianceRM + varianceZM) *
+                          iDeltaRb * iDeltaRt;
+                  auto deltaCotTheta = cotThetab - cotThetat;
+                  auto deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+                  deltaCotTheta = cl::sycl::abs(deltaCotTheta);
+                  auto error = cl::sycl::sqrt(error2);
+                  auto dCotThetaMinusError2 =
+                      deltaCotTheta2 + error2 - 2.f * deltaCotTheta * error;
+                  auto dU = Ut - Ub;
+
+                  if ((!(deltaCotTheta2 - error2 > 0.f) ||
+                       !(dCotThetaMinusError2 > scatteringInRegion2)) &&
+                      !(dU == 0.f)) {
+                    auto A = (Vt - Vb) / dU;
+                    auto S2 = 1.f + A * A;
+                    auto B = Vb - A * Ub;
+                    auto B2 = B * B;
+
+                    auto iHelixDiameter2 = B2 / S2;
+                    auto pT2scatter =
+                        4.f * iHelixDiameter2 * seedfinderConfig.pT2perRadius;
+                    auto p2scatter = pT2scatter * iSinTheta2;
+                    auto Im = cl::sycl::abs((A - B * rM) * rM);
+
+                    if (!(S2 < B2 * seedfinderConfig.minHelixDiameter2) &&
+                        !((deltaCotTheta2 - error2 > 0.f) &&
+                          (dCotThetaMinusError2 >
+                           p2scatter * seedfinderConfig.sigmaScattering *
+                               seedfinderConfig.sigmaScattering)) &&
+                        !(Im > seedfinderConfig.impactMax)) {
+                      const auto top = deviceIndTop[it];
+                      // this will be the t-th top space point for
+                      // fixed middle and bottom SP
+                      auto t = countTripletsAcc[ib].fetch_add(1);
+                      /*
+                        deviceSumComb[mid] - sumCombUptoFirstMiddle:
+                        gives the memory location reserved for this
+                        middle SP
+
+                        (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle:
+                        this is the nth thread for this middle SP
+
+                        (idx-deviceSumComb[mid]+sumCombUptoFirstMiddle)/numT:
+                        this is the mth bottom SP for this middle SP
+
+                        multiplying this by numT gives the memory
+                        location for this middle and bottom SP
+
+                        and by adding t to it, we will end up storing
+                        compatible triplet candidates for this middle
+                        and bottom SP right next to each other
+                        starting from the given memory location
+                      */
+                      const auto tripletIdx = deviceSumComb[mid] -
+                                              sumCombUptoFirstMiddle +
+                                              (((idx - deviceSumComb[mid] +
+                                                 sumCombUptoFirstMiddle) /
+                                                numT) *
+                                               numT) +
+                                              t;
+
+                      detail::DeviceTriplet T;
+                      T.curvature = B / cl::sycl::sqrt(S2);
+                      T.impact = Im;
+                      T.topSPIndex = top;
+                      deviceCurvImpact[tripletIdx] = T;
+                    }
+                  }
+                }
+              });
+        });
 
         {
           sycl::buffer<uint32_t> countSeedsBuf(&sumSeeds, 1);
           q->submit([&](cl::sycl::handler& h) {
-            // h.depends_on(tripletEvent);
+            h.depends_on(tripletKernel);
             auto countSeedsAcc = sycl::ONEAPI::atomic_accessor<
                 uint32_t, 1, sycl::ONEAPI::memory_order::relaxed,
                 sycl::ONEAPI::memory_scope::device>(countSeedsBuf, h);
@@ -889,7 +890,8 @@ void createSeedsForGroupSycl(
                   }
                 });
           });
-        }
+        }  // sync, countSeedsBuf gets destroyed and its value is copied back to
+           // sumSeeds
 
         if (sumSeeds != 0) {
           std::vector<detail::SeedData> hostSeedArray(sumSeeds);
