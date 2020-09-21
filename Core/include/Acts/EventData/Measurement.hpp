@@ -208,10 +208,10 @@ class Measurement {
   /// @brief access vector with measured parameter values
   ///
   /// @return column vector whose size is equal to the dimensionality of this
-  /// Measurement. The values are
-  ///         given for the measured parameters in the order defined by the
-  ///         class
-  /// template argument @c params.
+  /// Measurement. The values are given for the measured parameters in the
+  /// order defined by the class template argument @c params.
+  ///
+  /// @return A pure vector type of length size_of(params...)
   const ParametersVector& parameters() const {
     return m_oParameters.getParameters();
   }
