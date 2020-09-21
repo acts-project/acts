@@ -18,7 +18,9 @@
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+
 #include <system_error>
+#include <variant>
 
 namespace ActsFatras {
 
@@ -68,12 +70,14 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   auto m4 = Hit::Vector4(1, 2, 1, 4);
   auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
+  SmearInput sInput{hit, geoCtx, tSurface};
+
   AddSmearer tAddFnc;
   SterileSmearer tSterileFnc;
   InvalidSmearer tInvalidFnc;
 
   BoundParametersSmearer<Acts::eBoundLoc0> oneDimSmearer;
-  auto oneDim = oneDimSmearer({hit, geoCtx, tSurface}, {tAddFnc});
+  auto oneDim = oneDimSmearer(sInput, {tAddFnc});
 
   BOOST_CHECK(oneDim.ok());
 
@@ -87,7 +91,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   CHECK_CLOSE_ABS(sCovarianceOne(0, 0), 9., Acts::s_epsilon);
 
   BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1> twoDimSmearer;
-  auto twoDim = twoDimSmearer({hit, geoCtx, tSurface}, {tAddFnc, tAddFnc});
+  auto twoDim = twoDimSmearer(sInput, {tAddFnc, tAddFnc});
 
   BOOST_CHECK(twoDim.ok());
   const auto& smearedTwo = twoDim.value();
@@ -104,7 +108,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
 
   // Check smearing of time
   BoundParametersSmearer<Acts::eBoundLoc1, Acts::eBoundTime> locYTimeSmearer;
-  auto locYTime = locYTimeSmearer({hit, geoCtx, tSurface}, {tAddFnc, tAddFnc});
+  auto locYTime = locYTimeSmearer(sInput, {tAddFnc, tAddFnc});
   BOOST_CHECK(locYTime.ok());
   const auto& smearedLocyTime = locYTime.value();
   BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundLoc1>());
@@ -117,8 +121,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   // Use sterile BoundParametersSmearer to check if direction is properly
   // translated
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta> phiThetaSmearer;
-  auto phiTheta =
-      phiThetaSmearer({hit, geoCtx, tSurface}, {tSterileFnc, tSterileFnc});
+  auto phiTheta = phiThetaSmearer(sInput, {tSterileFnc, tSterileFnc});
   BOOST_CHECK(phiTheta.ok());
   auto phiThetaParSet = phiTheta.value();
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundPhi>());
@@ -133,8 +136,8 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   // Finally check an invalid smearing
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
       invalidHitFirstSmearer;
-  auto invalidHitFirst = invalidHitFirstSmearer({hit, geoCtx, tSurface},
-                                                {tInvalidFnc, tSterileFnc});
+  auto invalidHitFirst =
+      invalidHitFirstSmearer(sInput, {tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitFirst.ok());
 
   BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
@@ -142,15 +145,64 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
       invalidHitMiddleSmearer;
 
   auto invalidHitMiddle = invalidHitMiddleSmearer(
-      {hit, geoCtx, tSurface},
-      {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
+      sInput, {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitMiddle.ok());
 
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
       invalidHitLastSmearer;
-  auto invalidHitLast = invalidHitLastSmearer({hit, geoCtx, tSurface},
-                                              {tSterileFnc, tInvalidFnc});
+  auto invalidHitLast =
+      invalidHitLastSmearer(sInput, {tSterileFnc, tInvalidFnc});
   BOOST_CHECK(not invalidHitLast.ok());
+
+  // Test the variant approach for smearers
+  using StripSmearer = std::pair<BoundParametersSmearer<Acts::eBoundLoc0>,
+                                 std::array<SmearFunction, 1>>;
+
+  using PixelSmearer =
+      std::pair<BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1>,
+                std::array<SmearFunction, 2>>;
+
+  using SiliconSmearer = std::variant<StripSmearer, PixelSmearer>;
+
+  using SiliconParSets =
+      std::variant<Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0>,
+                   Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0,
+                                      Acts::eBoundLoc1>>;
+
+  StripSmearer stripSmearer(oneDimSmearer, {tAddFnc});
+  PixelSmearer pixelSmearer(twoDimSmearer, {tAddFnc, tAddFnc});
+
+  std::map<std::string, SiliconSmearer> siSmearers;
+  siSmearers["pixel"] = pixelSmearer;
+  siSmearers["strip"] = stripSmearer;
+
+  std::map<std::string, Hit> siHits;
+  siHits["pixel"] = hit;
+  siHits["strip"] = hit;
+
+  std::vector<SiliconParSets> siParSets;
+
+  for (auto& [key, value] : siHits) {
+    std::string key_id = key;
+    std::visit(
+        [&](auto&& sm) {
+          auto sParSet = sm.first(sInput, sm.second);
+          if (sParSet.ok()) {
+            siParSets.push_back(sParSet.value());
+            // siParSets.push_Back(sParSet);
+            std::cout << "Smearing a hit for " << key_id << std::endl;
+            std::cout << " - contains loc0 : "
+                      << sParSet.value().template contains<Acts::eBoundLoc0>()
+                      << std::endl;
+            std::cout << " - contains loc1 : "
+                      << sParSet.value().template contains<Acts::eBoundLoc1>()
+                      << std::endl;
+          }
+        },
+        siSmearers[key]);
+  }
+
+  BOOST_CHECK_EQUAL(siParSets.size(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
