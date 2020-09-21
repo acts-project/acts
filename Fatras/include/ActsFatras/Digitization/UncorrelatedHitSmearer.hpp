@@ -67,9 +67,9 @@ struct BoundParametersSmearer {
   ///
   /// @return Smeared bound parameter vector and covariance matrix
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  smearedParameterSet(const SmearInput& sInput,
-                      const std::array<SmearFunction, sizeof...(kParameters)>&
-                          sFunctions) const {
+  operator()(const SmearInput& sInput,
+             const std::array<SmearFunction, sizeof...(kParameters)>&
+                 sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
@@ -126,9 +126,9 @@ struct FreeParametersSmearer {
   ///
   /// @return Smeared free parameter vector and covariance matrix
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  smearedParameterSet(const SmearInput& sInput,
-                      const std::array<SmearFunction, sizeof...(kParameters)>&
-                          sFunctions) const {
+  operator()(const SmearInput& sInput,
+             const std::array<SmearFunction, sizeof...(kParameters)>&
+                 sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
