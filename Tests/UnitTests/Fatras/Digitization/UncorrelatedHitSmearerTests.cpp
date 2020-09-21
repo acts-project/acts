@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
       invalidHitFirstSmearer;
   auto invalidHitFirst = invalidHitFirstSmearer({hit, geoCtx, tSurface},
-                                                 {tInvalidFnc, tSterileFnc});
+                                                {tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitFirst.ok());
 
   BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
