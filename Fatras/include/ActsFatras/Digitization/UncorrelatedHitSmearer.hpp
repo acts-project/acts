@@ -60,12 +60,10 @@ struct BoundParametersSmearer {
   ///
   /// @tparam kParameters parameter pack describing the parameters to smear
   ///
-  /// @param gctx The Geometry context (alignment, etc.)
-  /// @param hit The Fatras hit to be smeared (will be source linked)
-  /// @param sf The Surface to which this hit is attached
+  /// @param sInput The smearing input struct: surface and simulated hit
   /// @param sFunctions The smearing functions that are applied
   ///
-  /// @return Smeared bound parameter vector and covariance matrix
+  /// @return Smeared bound parameter set wrapped in a Result<...> object
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
   operator()(const SmearInput& sInput,
              const std::array<SmearFunction, sizeof...(kParameters)>&
@@ -117,14 +115,13 @@ template <Acts::FreeIndices... kParameters>
 struct FreeParametersSmearer {
   /// Smearing function
   ///
-  /// @param gctx The Geometry context (alignment, etc.)
-  /// @param hit The Fatras hit to be smeared (will be source linked)
+  /// @param sInput The smearing input struct with the simulated hit
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @note uncorrelated smearing of the direction using the components
   ///       is not recommended
   ///
-  /// @return Smeared free parameter vector and covariance matrix
+  /// @return Smeared free parameter set wrapped in a Result<...> object
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
   operator()(const SmearInput& sInput,
              const std::array<SmearFunction, sizeof...(kParameters)>&
