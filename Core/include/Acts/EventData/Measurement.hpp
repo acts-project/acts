@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -125,6 +124,22 @@ class Measurement {
               const source_link_t& source, CovarianceMatrix cov,
               ParametersVector vec)
       : m_oParameters(std::move(cov), std::move(vec)),
+        m_pReferenceObject(std::move(referenceObject)),
+        m_sourceLink(source) {
+    assert(m_pReferenceObject);
+  }
+
+  /// @brief standard constructor for surface/volume measurements
+  ///
+  /// Concrete class for all possible measurements, built from properly
+  /// formatted parameter set
+  ///
+  /// @param referenceObject surface/volume origin of the measurement
+  /// @param source object for this measurement
+  /// @param pset parameter set of the measurement
+  Measurement(std::shared_ptr<const RefObject> referenceObject,
+              const source_link_t& source, ParamSet pset)
+      : m_oParameters(std::move(pset)),
         m_pReferenceObject(std::move(referenceObject)),
         m_sourceLink(source) {
     assert(m_pReferenceObject);
