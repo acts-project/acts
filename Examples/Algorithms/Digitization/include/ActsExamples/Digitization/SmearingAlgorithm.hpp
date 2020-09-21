@@ -29,9 +29,9 @@ namespace ActsExamples {
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
   template <Acts::BoundIndices... kParameters>
-  using Smearer =
-      std::pair<ActsFatras::BoundParametersSmearer<kParameters...>,
-                std::array<ActsFatras::SmearFunction, sizeof...(kParameters)>>;
+  using Smearer = std::pair<ActsFatras::BoundParametersSmearer<kParameters...>,
+                            std::array<ActsFatras::SmearFunction<RandomEngine>,
+                                       sizeof...(kParameters)>>;
 
   /// Supported smears for this example are
   /// - strip type (either in loc0 or loc1)
@@ -54,6 +54,8 @@ class SmearingAlgorithm final : public BareAlgorithm {
     std::string inputSimulatedHits;
     /// Output collection of measuremetns
     std::string outputMeasurements;
+    /// Random numbers tool.
+    std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
     ActsExamples::GeometryIdMultimap<SupportedSmearer> smearers;
   };

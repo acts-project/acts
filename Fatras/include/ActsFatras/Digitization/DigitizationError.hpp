@@ -14,8 +14,8 @@
 namespace ActsFatras {
 
 enum class DigitizationError {
-  SmearOutOfBounds = 1,
-  SmearError = 2,
+  SmearingOutOfRange = 1,
+  SmearingError = 2,
   NoSurfaceDefined = 3
 };
 

@@ -25,8 +25,9 @@ namespace ActsFatras {
 /// Smearing functions definition:
 /// - it takes the unsmeared parameter
 /// - it returns the smeared parameter and a covariance
-using SmearFunction =
-    std::function<Acts::Result<std::pair<double, double>>(double)>;
+template <typename random_generator_t>
+using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
+    double, random_generator_t&)>;
 
 /// Smearing input to be used by the smearers
 /// - this struct helps to harmonize the interface between
@@ -59,16 +60,19 @@ template <Acts::BoundIndices... kParameters>
 struct BoundParametersSmearer {
   /// Generic implementation of a smearing meathod for bound parameters
   ///
+  /// @tparam random_gnerator_t The type of the random generator provided
   /// @tparam kParameters parameter pack describing the parameters to smear
   ///
   /// @param sInput The smearing input struct: surface and simulated hit
+  /// @param sRandom The smearing random number gnerator
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @return Smeared bound parameter set wrapped in a Result<...> object
+  template <typename random_generator_t>
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  operator()(const SmearInput& sInput,
-             const std::array<SmearFunction, sizeof...(kParameters)>&
-                 sFunctions) const {
+  operator()(const SmearInput& sInput, random_generator_t& sRandom,
+             const std::array<SmearFunction<random_generator_t>,
+                              sizeof...(kParameters)>& sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
@@ -101,7 +105,7 @@ struct BoundParametersSmearer {
     sCovariance.setZero();
 
     auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sFunctions);
+        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
     if (not smearResult.ok()) {
       return Result(smearResult.error());
     }
@@ -116,17 +120,22 @@ template <Acts::FreeIndices... kParameters>
 struct FreeParametersSmearer {
   /// Smearing function
   ///
+  /// @tparam random_gnerator_t The type of the random generator provided
+  /// @tparam kParameters parameter pack describing the parameters to smear
+  ///
   /// @param sInput The smearing input struct with the simulated hit
+  /// @param sRandom The smearing random number gnerator
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @note uncorrelated smearing of the direction using the components
   ///       is not recommended
   ///
   /// @return Smeared free parameter set wrapped in a Result<...> object
+  template <typename random_generator_t>
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  operator()(const SmearInput& sInput,
-             const std::array<SmearFunction, sizeof...(kParameters)>&
-                 sFunctions) const {
+  operator()(const SmearInput& sInput, random_generator_t& sRandom,
+             const std::array<SmearFunction<random_generator_t>,
+                              sizeof...(kParameters)>& sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
@@ -144,7 +153,7 @@ struct FreeParametersSmearer {
     sCovariance.setZero();
 
     auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sFunctions);
+        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
     if (not smearResult.ok()) {
       return Result(smearResult.error());
     }
