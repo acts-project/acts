@@ -24,6 +24,9 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing output measurement collection");
   }
+  if (!m_cfg.randomNumbers) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
@@ -34,6 +37,8 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
 
   ActsExamples::GeometryIdMultimap<Acts::FittableMeasurement<DigitizedHit>>
       measurements;
+
+  auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
     for (auto ih = moduleHits.begin(); ih != moduleHits.end(); ++ih) {
@@ -49,7 +54,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
         // Run the visitor
         std::visit(
             [&](auto&& sm) {
-              auto sParSet = sm.first(sInput, sm.second);
+              auto sParSet = sm.first(sInput, rng, sm.second);
               if (sParSet.ok()) {
                 auto measurement =
                     createMeasurement(std::move(sParSet.value()), surface);
