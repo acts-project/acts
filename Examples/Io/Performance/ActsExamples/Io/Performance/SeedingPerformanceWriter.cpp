@@ -15,9 +15,9 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <set>
 #include <TFile.h>
 #include <TTree.h>
-#include <set>
 
 namespace {
 using Acts::VectorHelpers::eta;
