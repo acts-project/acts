@@ -23,7 +23,9 @@ class TrackSelector final : public BareAlgorithm {
     std::string inputTrackParameters;
     /// Output track parameters collection.
     std::string outputTrackParameters;
-    /// Output track parameters collection.
+    /// Output track indices collection.
+    ///
+    /// This records for each output track the index in the input container.
     std::string outputTrackIndices;
     // Minimum/maximum local positions.
     double loc0Min = -std::numeric_limits<double>::infinity();
