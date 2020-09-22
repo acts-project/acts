@@ -22,6 +22,7 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
+#include <set>
 
 class TFile;
 class TTree;
