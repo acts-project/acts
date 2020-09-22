@@ -16,7 +16,7 @@
 
 namespace ActsExamples {
 
-/// Create track parameters pointer container from examples container.
+/// Create a pointers container for all track parameters in the input container.
 ///
 /// @param trackParameters input examples track parameters container
 /// @return track parameters pointer container referencing the input tracks
@@ -32,7 +32,7 @@ makeTrackParametersPointerContainer(
   return trackParametersPointers;
 }
 
-/// Convert proto vertices from the reconstructed vertices.
+/// Create proto vertices from reconstructed vertices.
 ///
 /// @param trackParameters input track parameters container
 /// @param vertices reconstructed vertices
@@ -48,7 +48,7 @@ inline ProtoVertexContainer makeProtoVertices(
   protoVertices.reserve(vertices.size());
 
   // use pointer arithmetic to compute the position/index of the original
-  // parameters in the given track parameters container.
+  // parameters in the input track parameters container.
   const Acts::BoundTrackParameters* first = trackParameters.data();
   for (const auto& vertex : vertices) {
     ProtoVertex protoVertex;
