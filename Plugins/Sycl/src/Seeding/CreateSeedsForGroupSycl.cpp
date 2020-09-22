@@ -247,16 +247,15 @@ void createSeedsForGroupSycl(
 
         In case we have 4 middle SP and 5 bottom SP, our temporary array of
         the compatible bottom duplet indices would look like this:
-            ---------------------
+             ---------------------
         mid0 | 0 | 3 | 4 | 1 | - |    Indices in the columns correspond to
         mid1 | 3 | 2 | - | - | - |    bottom SP indices in the bottomSPs
-        mid2 | - | - | - | - | - |    array. Threads are executed
-        concurrently, mid3 | 4 | 2 | 1 | - | - |    so the order of indices
-        is random.
-            ---------------------
+        mid2 | - | - | - | - | - |    array. Threads are executed concurrently,
+        mid3 | 4 | 2 | 1 | - | - |    so the order of indices is random.
+             ---------------------
         We will refer to this structure as a bipartite graph, as it can be
         described by a graph of nodes for middle and bottom SPs, and edges
-        between one middle and one bottom SP, but never to middle or two
+        between one middle and one bottom SP, but never two middle or two
         bottom SPs.
 
         We will flatten this matrix out, and store the indices the
@@ -271,7 +270,7 @@ void createSeedsForGroupSycl(
 
         To find out where the indices of bottom SPs start for a particular
         middle SP, we use prefix sum arrays.
-        We now how many duplets were found for each middle SP (this is
+        We know how many duplets were found for each middle SP (this is
         deviceCountBotDuplets).
         -----------------
         | 4 | 2 | 0 | 3 |
@@ -303,17 +302,16 @@ void createSeedsForGroupSycl(
         We will execute the coordinate transformation on edgesBottom threads,
         or 9 in our example.
 
-        The size of the array storing our transformed coordiantes
+        The size of the array storing our transformed coordinates
         (deviceLinBot) is also edgesBottom, the sum of bottom duplets we
         found so far.
-
-        We store the indices of the BOTTOM/TOP space points of the edges of
-        the bottom-middle and top-middle bipartite duplet graphs. They index
-        the bottomSPs and topSPs vectors.
       */
 
       sycl::buffer<uint32_t> numTopDupletsBuf(countTopDuplets.data(), M);
 
+      // We store the indices of the BOTTOM/TOP space points of the edges of
+      // the bottom-middle and top-middle bipartite duplet graphs. They index
+      // the bottomSPs and topSPs vectors.
       uint32_t* deviceIndBot =
           cl::sycl::malloc_device<uint32_t>(edgesBottom, *q);
       uint32_t* deviceIndTop = cl::sycl::malloc_device<uint32_t>(edgesTop, *q);
