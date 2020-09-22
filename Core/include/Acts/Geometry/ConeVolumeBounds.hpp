@@ -83,9 +83,7 @@ class ConeVolumeBounds : public VolumeBounds {
   }
 
   ConeVolumeBounds(const ConeVolumeBounds& cobo) = default;
-
   ~ConeVolumeBounds() override = default;
-
   ConeVolumeBounds& operator=(const ConeVolumeBounds& cobo) = default;
 
   VolumeBounds::BoundsType type() const final { return VolumeBounds::eCone; }
@@ -113,7 +111,7 @@ class ConeVolumeBounds : public VolumeBounds {
   ///
   /// @return a vector of surfaces bounding this volume
   OrientedSurfaces orientedSurfaces(
-      const Transform3D* transform = nullptr) const final;
+      const Transform3D& transform = Transform3D::Identity()) const final;
 
   /// Construct bounding box for this shape
   /// @param trf Optional transform

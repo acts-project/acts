@@ -89,7 +89,7 @@ class HelicalTrackLinearizer {
   /// @param config Configuration object
   HelicalTrackLinearizer(const Config& config) : m_cfg(config) {}
 
-  /// @brief Function that linearizes BoundParameters at
+  /// @brief Function that linearizes BoundTrackParameters at
   /// given linearization point
   ///
   /// @param params Parameters to linearize
@@ -99,7 +99,7 @@ class HelicalTrackLinearizer {
   /// @param state The state object
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const BoundParameters& params,
+  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
                                          const Vector4D& linPoint,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,

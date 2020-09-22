@@ -10,7 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <sstream>
@@ -68,11 +68,11 @@ struct MaterialCollector {
       }
 
       ACTS_VERBOSE("Material check on surface "
-                   << state.navigation.currentSurface->geoID());
+                   << state.navigation.currentSurface->geometryId());
 
       if (state.navigation.currentSurface->surfaceMaterial()) {
         // get the material propertices and only continue
-        const MaterialProperties* mProperties =
+        const MaterialSlab* mProperties =
             state.navigation.currentSurface->surfaceMaterial()->material(
                 stepper.position(state.stepping));
         if (mProperties) {

@@ -13,22 +13,34 @@
 
 namespace Acts {
 
-std::tuple<BoundParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, double>
 StraightLineStepper::boundState(State& state, const Surface& surface) const {
   FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
+  parameters[eFreePos0] = state.pos[ePos0];
+  parameters[eFreePos1] = state.pos[ePos1];
+  parameters[eFreePos2] = state.pos[ePos2];
+  parameters[eFreeTime] = state.t;
+  parameters[eFreeDir0] = state.dir[eMom0];
+  parameters[eFreeDir1] = state.dir[eMom1];
+  parameters[eFreeDir2] = state.dir[eMom2];
+  parameters[eFreeQOverP] = state.q / state.p;
   return detail::boundState(state.geoContext, state.cov, state.jacobian,
                             state.jacTransport, state.derivative,
                             state.jacToGlobal, parameters, state.covTransport,
                             state.pathAccumulated, surface);
 }
 
-std::tuple<CurvilinearParameters, BoundMatrix, double>
+std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state) const {
   FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
+  parameters[eFreePos0] = state.pos[ePos0];
+  parameters[eFreePos1] = state.pos[ePos1];
+  parameters[eFreePos2] = state.pos[ePos2];
+  parameters[eFreeTime] = state.t;
+  parameters[eFreeDir0] = state.dir[eMom0];
+  parameters[eFreeDir1] = state.dir[eMom1];
+  parameters[eFreeDir2] = state.dir[eMom2];
+  parameters[eFreeQOverP] = state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
       state.jacToGlobal, parameters, state.covTransport, state.pathAccumulated);
@@ -40,7 +52,6 @@ void StraightLineStepper::update(State& state, const FreeVector& parameters,
   state.dir = parameters.template segment<3>(eFreeDir0).normalized();
   state.p = std::abs(1. / parameters[eFreeQOverP]);
   state.t = parameters[eFreeTime];
-
   state.cov = covariance;
 }
 
@@ -48,7 +59,7 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
                                  const Vector3D& udirection, double up,
                                  double time) const {
   state.pos = uposition;
-  state.dir = udirection;
+  state.dir = udirection.normalized();
   state.p = up;
   state.t = time;
 }
@@ -61,8 +72,14 @@ void StraightLineStepper::covarianceTransport(State& state) const {
 void StraightLineStepper::covarianceTransport(State& state,
                                               const Surface& surface) const {
   FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
+  parameters[eFreePos0] = state.pos[ePos0];
+  parameters[eFreePos1] = state.pos[ePos1];
+  parameters[eFreePos2] = state.pos[ePos2];
+  parameters[eFreeTime] = state.t;
+  parameters[eFreeDir0] = state.dir[eMom0];
+  parameters[eFreeDir1] = state.dir[eMom1];
+  parameters[eFreeDir2] = state.dir[eMom2];
+  parameters[eFreeQOverP] = state.q / state.p;
   detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
                               state.jacToGlobal, parameters, surface);
@@ -90,4 +107,5 @@ void StraightLineStepper::resetState(State& state,
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();
 }
+
 }  // namespace Acts

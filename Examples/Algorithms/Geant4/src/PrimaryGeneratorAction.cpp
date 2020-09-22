@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "PrimaryGeneratorAction.hpp"
+#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 
 #include <stdexcept>
 
@@ -26,11 +26,9 @@ PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
   return s_instance;
 }
 
-PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
-                                               G4double energy,
-                                               G4int randomSeed1,
-                                               G4int randomSeed2)
+PrimaryGeneratorAction::PrimaryGeneratorAction(const Config& cfg)
     : G4VUserPrimaryGeneratorAction(),
+      m_cfg(cfg),
       m_particleGun(std::make_unique<G4ParticleGun>(1)) {
   if (s_instance) {
     throw std::logic_error(
@@ -41,13 +39,15 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(const G4String& particleName,
 
   // default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
-  G4ParticleDefinition* particle = particleTable->FindParticle(particleName);
+  G4ParticleDefinition* particle =
+      particleTable->FindParticle(m_cfg.particleName);
   m_particleGun->SetParticleDefinition(particle);
-  m_particleGun->SetParticleEnergy(energy);
+  m_particleGun->SetParticleEnergy(m_cfg.energy);
   G4UnitDefinition::PrintUnitsTable();
 
   // set the random seeds
-  CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
+  CLHEP::HepRandom::getTheEngine()->setSeed(m_cfg.randomSeed1,
+                                            m_cfg.randomSeed2);
 }
 
 PrimaryGeneratorAction::~PrimaryGeneratorAction() {
@@ -56,12 +56,29 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
   // this function is called at the begining of event
-  G4double phi = -M_PI + G4UniformRand() * 2. * M_PI;
-  G4double theta = G4UniformRand() * M_PI;
+  G4double phi =
+      m_cfg.phiRange.first +
+      G4UniformRand() * (m_cfg.phiRange.second - m_cfg.phiRange.first);
+  G4double theta = 0;
+  if (m_cfg.samplingVariable == "theta") {
+    G4double thetaMin = 2 * atan(exp(-m_cfg.etaRange.first));
+    G4double thetaMax = 2 * atan(exp(-m_cfg.etaRange.second));
+    theta = thetaMin + G4UniformRand() * (thetaMax - thetaMin);
+  } else if (m_cfg.samplingVariable == "eta") {
+    G4double eta =
+        m_cfg.etaRange.first +
+        G4UniformRand() * (m_cfg.etaRange.second - m_cfg.etaRange.first);
+    theta = 2 * atan(exp(-eta));
+  } else {
+    throw std::invalid_argument("Unknow sampling variable");
+  }
   // build a direction
   m_direction =
       G4ThreeVector(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
-  m_position = G4ThreeVector(0., 0., 0.);
+  m_position =
+      G4ThreeVector(G4RandGauss::shoot(m_cfg.vertexPosX, m_cfg.vertexSigmaX),
+                    G4RandGauss::shoot(m_cfg.vertexPosY, m_cfg.vertexSigmaY),
+                    G4RandGauss::shoot(m_cfg.vertexPosZ, m_cfg.vertexSigmaZ));
   // set to the particle gun and
   m_particleGun->SetParticleMomentumDirection(m_direction);
   m_particleGun->SetParticlePosition(m_position);

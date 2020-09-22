@@ -159,7 +159,8 @@ int main(int argc, char* argv[]) {
   size_t theta_steps = vm["bf-thetasteps"].as<size_t>();
   // The defaults
   size_t access_steps = vm["bf-accesssteps"].as<size_t>();
-  double track_length = vm["bf-tracklength"].as<double>() * Acts::units::_mm;
+  double track_length =
+      vm["bf-tracklength"].as<double>() * Acts::UnitConstants::mm;
   // sort the ranges - and prepare the access grid
   std::sort(phir.begin(), phir.end());
   std::sort(thetar.begin(), thetar.end());

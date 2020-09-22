@@ -8,13 +8,18 @@
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+
 namespace Acts {
 namespace {
 /// Some type defs
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+using CurvilinearState =
+    std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
 ///
@@ -124,8 +129,7 @@ const FreeToBoundMatrix surfaceDerivative(
   // Transport the covariance
   const ActsRowVectorD<3> normVec(direction);
   const BoundRowVector sfactors =
-      normVec *
-      jacobianLocalToGlobal.template topLeftCorner<3, eBoundParametersSize>();
+      normVec * jacobianLocalToGlobal.template topLeftCorner<3, eBoundSize>();
   jacobianLocalToGlobal -= derivatives * sfactors;
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
@@ -157,12 +161,18 @@ void reinitializeJacobians(
   jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
   // Reset the jacobian from local to global
-  Vector2D loc{0., 0.};
   const Vector3D position = parameters.segment<3>(eFreePos0);
   const Vector3D direction = parameters.segment<3>(eFreeDir0);
-  surface.globalToLocal(geoContext, position, direction, loc);
+  auto lpResult = surface.globalToLocal(geoContext, position, direction);
+  if (not lpResult.ok()) {
+    ACTS_LOCAL_LOGGER(
+        Acts::getDefaultLogger("CovarianceEngine", Logging::INFO));
+    ACTS_FATAL(
+        "Inconsistency in global to local transformation during propagation.")
+  }
+  auto loc = lpResult.value();
   BoundVector pars;
-  pars << loc[eLOC_0], loc[eLOC_1], phi(direction), theta(direction),
+  pars << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction), theta(direction),
       parameters[eFreeQOverP], parameters[eFreeTime];
   surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, position,
                                direction, pars);
@@ -197,18 +207,18 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
 
-  jacobianLocalToGlobal(0, eLOC_0) = -sinPhi;
-  jacobianLocalToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
-  jacobianLocalToGlobal(1, eLOC_0) = cosPhi;
-  jacobianLocalToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
-  jacobianLocalToGlobal(2, eLOC_1) = sinTheta;
-  jacobianLocalToGlobal(3, eT) = 1;
-  jacobianLocalToGlobal(4, ePHI) = -sinTheta * sinPhi;
-  jacobianLocalToGlobal(4, eTHETA) = cosTheta * cosPhi;
-  jacobianLocalToGlobal(5, ePHI) = sinTheta * cosPhi;
-  jacobianLocalToGlobal(5, eTHETA) = cosTheta * sinPhi;
-  jacobianLocalToGlobal(6, eTHETA) = -sinTheta;
-  jacobianLocalToGlobal(7, eQOP) = 1;
+  jacobianLocalToGlobal(0, eBoundLoc0) = -sinPhi;
+  jacobianLocalToGlobal(0, eBoundLoc1) = -cosPhi * cosTheta;
+  jacobianLocalToGlobal(1, eBoundLoc0) = cosPhi;
+  jacobianLocalToGlobal(1, eBoundLoc1) = -sinPhi * cosTheta;
+  jacobianLocalToGlobal(2, eBoundLoc1) = sinTheta;
+  jacobianLocalToGlobal(3, eBoundTime) = 1;
+  jacobianLocalToGlobal(4, eBoundPhi) = -sinTheta * sinPhi;
+  jacobianLocalToGlobal(4, eBoundTheta) = cosTheta * cosPhi;
+  jacobianLocalToGlobal(5, eBoundPhi) = sinTheta * cosPhi;
+  jacobianLocalToGlobal(5, eBoundTheta) = cosTheta * sinPhi;
+  jacobianLocalToGlobal(6, eBoundTheta) = -sinTheta;
+  jacobianLocalToGlobal(7, eBoundQOverP) = 1;
 }
 }  // namespace
 
@@ -229,16 +239,12 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
     cov = covarianceMatrix;
   }
   // Create the bound parameters
-  const Vector3D& position = parameters.segment<3>(eFreePos0);
-  const Vector3D momentum =
-      std::abs(1. / parameters[eFreeQOverP]) * parameters.segment<3>(eFreeDir0);
-  const double charge = std::copysign(1., parameters[eFreeQOverP]);
-  const double time = parameters[eFreeTime];
-  BoundParameters boundParameters(geoContext, cov, position, momentum, charge,
-                                  time, surface.getSharedPtr());
+  BoundVector bv =
+      detail::transformFreeToBoundParameters(parameters, surface, geoContext);
   // Create the bound state
-  return std::make_tuple(std::move(boundParameters), jacobian, accumulatedPath);
-  ;
+  return std::make_tuple(
+      BoundTrackParameters(surface.getSharedPtr(), bv, std::move(cov)),
+      jacobian, accumulatedPath);
 }
 
 CurvilinearState curvilinearState(Covariance& covarianceMatrix,
@@ -258,14 +264,15 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
     cov = covarianceMatrix;
   }
   // Create the curvilinear parameters
-  const Vector3D& position = parameters.segment<3>(eFreePos0);
-  const Vector3D momentum = std::abs(1. / parameters[eFreeQOverP]) * direction;
-  const double charge = std::copysign(1., parameters[eFreeQOverP]);
-  const double time = parameters[eFreeTime];
-  CurvilinearParameters curvilinearParameters(cov, position, momentum, charge,
-                                              time);
+  Vector4D pos4 = Vector4D::Zero();
+  pos4[ePos0] = parameters[eFreePos0];
+  pos4[ePos1] = parameters[eFreePos1];
+  pos4[ePos2] = parameters[eFreePos2];
+  pos4[eTime] = parameters[eFreeTime];
+  CurvilinearTrackParameters curvilinearParams(
+      pos4, direction, parameters[eFreeQOverP], std::move(cov));
   // Create the curvilinear state
-  return std::make_tuple(std::move(curvilinearParameters), jacobian,
+  return std::make_tuple(std::move(curvilinearParams), jacobian,
                          accumulatedPath);
 }
 
@@ -312,5 +319,6 @@ void covarianceTransport(
   // Store The global and bound jacobian (duplication for the moment)
   jacobian = jacFull;
 }
+
 }  // namespace detail
 }  // namespace Acts

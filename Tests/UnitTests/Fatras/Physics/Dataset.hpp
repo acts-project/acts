@@ -8,7 +8,7 @@
 
 #include <boost/test/data/test_case.hpp>
 
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"

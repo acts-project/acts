@@ -433,8 +433,9 @@ class Navigator {
     // an extrapolation process
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
-      ACTS_VERBOSE(volInfo(state) << "Current surface set to start surface "
-                                  << state.navigation.currentSurface->geoID());
+      ACTS_VERBOSE(volInfo(state)
+                   << "Current surface set to start surface "
+                   << state.navigation.currentSurface->geometryId());
     }
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
@@ -530,7 +531,7 @@ class Navigator {
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
                      << "Current surface set to surface "
-                     << state.navigation.currentSurface->geoID());
+                     << state.navigation.currentSurface->geometryId());
       }
     }
     // Return a positive status: either on it, or on the way
@@ -597,8 +598,8 @@ class Navigator {
       // Take the surface
       auto surface = state.navigation.navSurfaceIter->object;
       // Screen output which surface you are on
-      ACTS_VERBOSE(volInfo(state)
-                   << "Next surface candidate will be " << surface->geoID());
+      ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
+                                  << surface->geometryId());
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
@@ -671,8 +672,7 @@ class Navigator {
 
         /*
         Vector3D pos = stepper.position(state.stepping);
-        double mom =
-            units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
+        double mom = stepper.momentum(state.stepping) / UnitConstants::GeV;
         double q = stepper.charge(state.stepping);
         Vector3D dir = stepper.direction(state.stepping);
         Vector3D B = stepper.getField(state.stepping, pos);
@@ -956,8 +956,9 @@ class Navigator {
         !state.navigation.targetVolume) {
       ACTS_VERBOSE(volInfo(state)
                    << "Fast target initialization through association.");
-      ACTS_VERBOSE(volInfo(state) << "Target surface set to "
-                                  << state.navigation.targetSurface->geoID());
+      ACTS_VERBOSE(volInfo(state)
+                   << "Target surface set to "
+                   << state.navigation.targetSurface->geometryId());
       state.navigation.targetLayer =
           state.navigation.targetSurface->associatedLayer();
       state.navigation.targetVolume =
@@ -1180,7 +1181,7 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state)
                      << volInfo(state)
                      << "Current surface set to target surface "
-                     << state.navigation.currentSurface->geoID());
+                     << state.navigation.currentSurface->geometryId());
         return true;
       }
     }

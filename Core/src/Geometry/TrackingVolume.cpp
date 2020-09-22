@@ -18,19 +18,11 @@
 #include <functional>
 #include <utility>
 
-Acts::TrackingVolume::TrackingVolume()
-    : Volume(),
-      m_volumeMaterial(nullptr),
-      m_boundarySurfaces(),
-      m_confinedLayers(nullptr),
-      m_confinedVolumes(nullptr),
-      m_name("undefined") {}
-
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    const Transform3D& transform, VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volbounds)),
+    : Volume(transform, std::move(volbounds)),
       m_volumeMaterial(nullptr),
       m_boundarySurfaces(),
       m_confinedLayers(nullptr),
@@ -42,13 +34,13 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+    const Transform3D& transform, VolumeBoundsPtr volumeBounds,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     MutableTrackingVolumeVector denseVolumeVector,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volumeBounds)),
+    : Volume(transform, std::move(volumeBounds)),
       m_volumeMaterial(std::move(volumeMaterial)),
       m_confinedLayers(std::move(staticLayerArray)),
       m_confinedVolumes(std::move(containedVolumeArray)),
@@ -61,13 +53,13 @@ Acts::TrackingVolume::TrackingVolume(
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
+    const Transform3D& transform, VolumeBoundsPtr volbounds,
     std::vector<std::unique_ptr<Volume::BoundingBox>> boxStore,
     std::vector<std::unique_ptr<const Volume>> descendants,
     const Volume::BoundingBox* top,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     const std::string& volumeName)
-    : Volume(std::move(htrans), std::move(volbounds)),
+    : Volume(transform, std::move(volbounds)),
       m_volumeMaterial(std::move(volumeMaterial)),
       m_name(volumeName),
       m_descendantVolumes(std::move(descendants)),
@@ -153,8 +145,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   using Boundary = BoundarySurfaceT<TrackingVolume>;
 
   // Transform Surfaces To BoundarySurfaces
-  auto orientedSurfaces =
-      Volume::volumeBounds().orientedSurfaces(m_transform.get());
+  auto orientedSurfaces = Volume::volumeBounds().orientedSurfaces(m_transform);
 
   m_boundarySurfaces.reserve(orientedSurfaces.size());
   for (auto& osf : orientedSurfaces) {
@@ -360,10 +351,10 @@ void Acts::TrackingVolume::closeGeometry(
   volumeMap[volumeName()] = this;
 
   // we can construct the volume ID from this
-  auto volumeID = GeometryID().setVolume(++vol);
+  auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
-  thisVolume->assignGeoID(volumeID);
+  thisVolume->assignGeometryId(volumeID);
 
   // assign the material if you have a decorator
   if (materialDecorator != nullptr) {
@@ -379,18 +370,18 @@ void Acts::TrackingVolume::closeGeometry(
     }
   }
 
-  this->assignGeoID(volumeID);
+  this->assignGeometryId(volumeID);
   // loop over the boundary surfaces
-  GeometryID::Value iboundary = 0;
+  GeometryIdentifier::Value iboundary = 0;
   // loop over the boundary surfaces
   for (auto& bSurfIter : boundarySurfaces()) {
     // get the intersection soltuion
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
-    auto boundaryID = GeometryID(volumeID).setBoundary(++iboundary);
+    auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
-    mutableBSurface.assignGeoID(boundaryID);
+    mutableBSurface.assignGeometryId(boundaryID);
     // assign the material if you have a decorator
     if (materialDecorator != nullptr) {
       materialDecorator->decorate(mutableBSurface);
@@ -401,17 +392,17 @@ void Acts::TrackingVolume::closeGeometry(
   if (!m_confinedVolumes) {
     // loop over the confined layers
     if (m_confinedLayers) {
-      GeometryID::Value ilayer = 0;
+      GeometryIdentifier::Value ilayer = 0;
       // loop over the layers
       for (auto& layerPtr : m_confinedLayers->arrayObjects()) {
         // create the layer identification
-        auto layerID = GeometryID(volumeID).setLayer(++ilayer);
+        auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(materialDecorator, layerID);
       }
     } else if (m_bvhTop != nullptr) {
-      GeometryID::Value isurface = 0;
+      GeometryIdentifier::Value isurface = 0;
       for (const auto& descVol : m_descendantVolumes) {
         // Attempt to cast to AbstractVolume: only one we'll handle
         const AbstractVolume* avol =
@@ -421,8 +412,8 @@ void Acts::TrackingVolume::closeGeometry(
           for (const auto& bnd : bndSrf) {
             const auto& srf = bnd->surfaceRepresentation();
             Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
-            auto geoID = GeometryID(volumeID).setSensitive(++isurface);
-            mutableSurfcePtr->assignGeoID(geoID);
+            auto geoID = GeometryIdentifier(volumeID).setSensitive(++isurface);
+            mutableSurfcePtr->assignGeometryId(geoID);
           }
         }
       }

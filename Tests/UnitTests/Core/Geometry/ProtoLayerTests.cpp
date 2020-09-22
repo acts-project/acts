@@ -46,23 +46,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto createProtoLayer = [&](const Transform3D& trf,
                               bool shared = false) -> ProtoLayer {
     auto atNegX = Surface::makeShared<PlaneSurface>(
-        std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(-3., 0., 0.)) * planeYZ),
+        Transform3D(trf * Translation3D(Vector3D(-3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atPosX = Surface::makeShared<PlaneSurface>(
-        std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(3., 0., 0.)) * planeYZ),
+        Transform3D(trf * Translation3D(Vector3D(3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atNegY = Surface::makeShared<PlaneSurface>(
-        std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(0., -3, 0.)) * planeZX),
+        Transform3D(trf * Translation3D(Vector3D(0., -3, 0.)) * planeZX),
         recBounds);
 
     auto atPosY = Surface::makeShared<PlaneSurface>(
-        std::make_shared<Transform3D>(
-            trf * Translation3D(Vector3D(0., 3., 0.)) * planeZX),
+        Transform3D(trf * Translation3D(Vector3D(0., 3., 0.)) * planeZX),
         recBounds);
 
     std::vector<std::shared_ptr<const Surface>> sharedSurfaces = {
@@ -91,8 +87,8 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto rB = std::make_shared<RectangleBounds>(30., 60.);
 
   // Create the detector element
-  auto addSurface = Surface::makeShared<PlaneSurface>(
-      std::make_shared<Transform3D>(Transform3D::Identity()), rB);
+  auto addSurface =
+      Surface::makeShared<PlaneSurface>(Transform3D::Identity(), rB);
 
   pLayerSf.add(tgContext, *addSurface.get());
   // CHECK That if you now have 5 surfaces

@@ -25,7 +25,7 @@ The following dependencies are required to build the Acts core library:
 
 -   A C++17 compatible compiler (recent versions of either gcc and clang should work)
 -   [CMake](https://cmake.org) >= 3.11
--   [Boost](http://boost.org) >= 1.69 with `program_options`, and `unit_test_framework`
+-   [Boost](http://boost.org) >= 1.69 with `filesystem`, `program_options`, and `unit_test_framework`
 -   [Eigen](http://eigen.tuxfamily.org) >= 3.2.9
 
 The following dependencies are optional and are needed to build additional
@@ -114,12 +114,12 @@ A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
 continous integration setup and come with all dependencies pre-installed.
 
--   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
-    software
 -   `centos7-lcg95apython3`: based on CentOS 7 with HEP-specific software from
     LCG release 95apython3
 -   `centos7-lcg96`: based on CentOS 7 with HEP-specific software from LCG
     release 96
+-   `ubuntu2004`: based on Ubuntu 20.04 with manual installation of HEP-specific
+    software
 
 To use these locally, you first need to pull the relevant images from the
 registry. Stable versions are tagged as `vX` where `X` is the version number.
@@ -127,17 +127,12 @@ The latest version is also tagged as `master`. The following command downloads
 the latest `ubuntu2004` image:
 
 ```console
-$ docker pull gitlab-registry.cern.ch/acts/machines/ubuntu2004:master
+$ docker pull ghcr.io/acts-project/ubuntu2004:master
 ```
 
 This should print the image id as part of the output. You can also find out the
 image id by running `docker images` to list all your locally available container
-images. If you encounter authorization issues, you might need to login to the
-registry first via
-
-```console
-$ docker login gitlab-registry.cern.ch
-```
+images.
 
 Now, you need to start a shell within the container to run the build. Assuming
 that `<source>` is the path to your source checkout on your host machine, the
@@ -161,7 +156,7 @@ container $ cmake -B build -S /acts -DACTS_BUILD_FATRAS=on
 container $ cmake --build build
 ```
 
-[acts_containers]: https://gitlab.cern.ch/acts/machines/container_registry
+[acts_containers]: https://github.com/orgs/acts-project/packages?ecosystem=container
 
 ### On your local machine
 
@@ -225,20 +220,19 @@ $ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
 Multiple options can be given. `cmake` caches the options so that only changed
 options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
-components. q
+components.
 
 | Option                                | Description |
 |---------------------------------------|-------------|
 | ACTS_BUILD_EVERYTHING                 | Build with most options enabled (except HepMC3 and documentation) |
-| ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
-| ACTS_BUILD_CUDA_PLUGIN                | Build CUDA plugin |
-| ACTS_BUILD_DD4HEP_PLUGIN              | Build DD4hep geometry plugin |
-| ACTS_BUILD_DIGITIZATION_PLUGIN        | Build Digitization plugin |
-| ACTS_BUILD_IDENTIFICATION_PLUGIN      | Build Identification plugin |
-| ACTS_BUILD_JSON_PLUGIN                | Build Json plugin |
-| ACTS_USE_BUNDLED_NLOHMANN_JSON        | Use external nlohmann::json installation (on by default) |
-| ACTS_BUILD_TGEO_PLUGIN                | Build TGeo plugin |
-| ACTS_BUILD_LEGACY                     | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_CUDA                | Build CUDA plugin |
+| ACTS_BUILD_PLUGIN_DD4HEP              | Build DD4hep geometry plugin |
+| ACTS_BUILD_PLUGIN_DIGITIZATION        | Build Digitization plugin |
+| ACTS_BUILD_PLUGIN_IDENTIFICATION      | Build Identification plugin |
+| ACTS_BUILD_PLUGIN_JSON                | Build Json plugin |
+| ACTS_BUILD_PLUGIN_LEGACY              | Build legacy plugin |
+| ACTS_BUILD_PLUGIN_SYCL                | Build SYCL plugin |
+| ACTS_BUILD_PLUGIN_TGEO                | Build TGeo plugin |
 | ACTS_BUILD_FATRAS                     | Build FAst TRAcking Simulation package |
 | ACTS_BUILD_EXAMPLES                   | Build standalone examples |
 | ACTS_BUILD_EXAMPLES_DD4HEP            | Build DD4hep-based code in the examples |
@@ -249,13 +243,15 @@ components. q
 | ACTS_BUILD_INTEGRATIONTESTS           | Build integration tests |
 | ACTS_BUILD_UNITTESTS                  | Build unit tests |
 | ACTS_BUILD_DOCS                       | Build documentation |
+| ACTS_PARAMETER_DEFINITIONS_HEADER     | Use a different (track) parameter definitions header |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON         | Use nlohmann::json provided by the system instead of the bundled version |
 
-All Acts-specific options are disabled or empty by default (except for
-`ACTS_USE_BUNDLED_NLOHMANN_JSON`) and must be specifically requested. Some of
-the options have interdependencies that are automatically handled, e.g. enabling
-any of the specific `ACTS_BUILD_EXAMPLES_...` options will also enable the
-overall `ACTS_BUILD_EXAMPLES` option. You only need to tell the build system
-what you want and it will figure out the rest.
+All Acts-specific options are disabled or empty by default and must be
+specifically requested. Some of the options have interdependencies that are
+automatically handled, e.g. enabling any of the specific
+`ACTS_BUILD_EXAMPLES_...` options will also enable the overall
+`ACTS_BUILD_EXAMPLES` option. You only need to tell the build system what you
+want and it will figure out the rest.
 
 In addition to the Acts-specific options, many generic options are available
 that modify various aspects of the build. The following options are some of the

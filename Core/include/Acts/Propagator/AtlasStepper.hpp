@@ -37,8 +37,9 @@ class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
-  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
-  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
 
   using BField = bfield_t;
 
@@ -107,29 +108,28 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance =
-            new ActsSymMatrixD<eBoundParametersSize>(*pars.covariance());
+        covariance = new ActsSymMatrixD<eBoundSize>(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.momentum());
+            geoContext, pos, pars.unitDirection());
 
-        pVector[8] = transform(0, eLOC_0);
-        pVector[16] = transform(0, eLOC_1);
+        pVector[8] = transform(0, eBoundLoc0);
+        pVector[16] = transform(0, eBoundLoc1);
         pVector[24] = 0.;
         pVector[32] = 0.;
         pVector[40] = 0.;
         pVector[48] = 0.;  // dX /
 
-        pVector[9] = transform(1, eLOC_0);
-        pVector[17] = transform(1, eLOC_1);
+        pVector[9] = transform(1, eBoundLoc0);
+        pVector[17] = transform(1, eBoundLoc1);
         pVector[25] = 0.;
         pVector[33] = 0.;
         pVector[41] = 0.;
         pVector[49] = 0.;  // dY /
 
-        pVector[10] = transform(2, eLOC_0);
-        pVector[18] = transform(2, eLOC_1);
+        pVector[10] = transform(2, eBoundLoc0);
+        pVector[18] = transform(2, eBoundLoc1);
         pVector[26] = 0.;
         pVector[34] = 0.;
         pVector[42] = 0.;
@@ -268,11 +268,11 @@ class AtlasStepper {
     /// Cache: P[56] - P[59]
 
     // result
-    double parameters[eBoundParametersSize] = {0., 0., 0., 0., 0., 0.};
+    double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
     const Covariance* covariance;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
-    double jacobian[eBoundParametersSize * eBoundParametersSize];
+    double jacobian[eBoundSize * eBoundSize];
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -336,22 +336,22 @@ class AtlasStepper {
     Se = sin(boundParams[eBoundTheta]);
     Ce = cos(boundParams[eBoundTheta]);
 
-    state.pVector[8] = transform(0, eLOC_0);
-    state.pVector[16] = transform(0, eLOC_1);
+    state.pVector[8] = transform(0, eBoundLoc0);
+    state.pVector[16] = transform(0, eBoundLoc1);
     state.pVector[24] = 0.;
     state.pVector[32] = 0.;
     state.pVector[40] = 0.;
     state.pVector[48] = 0.;  // dX /
 
-    state.pVector[9] = transform(1, eLOC_0);
-    state.pVector[17] = transform(1, eLOC_1);
+    state.pVector[9] = transform(1, eBoundLoc0);
+    state.pVector[17] = transform(1, eBoundLoc1);
     state.pVector[25] = 0.;
     state.pVector[33] = 0.;
     state.pVector[41] = 0.;
     state.pVector[49] = 0.;  // dY /
 
-    state.pVector[10] = transform(2, eLOC_0);
-    state.pVector[18] = transform(2, eLOC_1);
+    state.pVector[10] = transform(2, eBoundLoc0);
+    state.pVector[18] = transform(2, eBoundLoc1);
     state.pVector[26] = 0.;
     state.pVector[34] = 0.;
     state.pVector[42] = 0.;
@@ -566,14 +566,19 @@ class AtlasStepper {
   BoundState boundState(State& state, const Surface& surface) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
-
-    /// The transport of the position
-    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
-    mom /= std::abs(state.pVector[7]);
+    // extract state information
+    Acts::Vector4D pos4;
+    pos4[ePos0] = state.pVector[0];
+    pos4[ePos1] = state.pVector[1];
+    pos4[ePos2] = state.pVector[2];
+    pos4[eTime] = state.pVector[3];
+    Acts::Vector3D dir;
+    dir[eMom0] = state.pVector[4];
+    dir[eMom1] = state.pVector[5];
+    dir[eMom2] = state.pVector[6];
+    const auto qOverP = state.pVector[7];
 
     // The transport of the covariance
-    std::unique_ptr<const Covariance> cov = nullptr;
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
       covarianceTransport(state, surface);
@@ -581,9 +586,8 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    BoundParameters parameters(state.geoContext, std::move(covOpt), gp, mom,
-                               charge(state), state.pVector[3],
-                               surface.getSharedPtr());
+    BoundTrackParameters parameters(surface.getSharedPtr(), state.geoContext,
+                                    pos4, dir, qOverP, std::move(covOpt));
 
     return BoundState(std::move(parameters), state.jacobian,
                       state.pathAccumulated);
@@ -601,10 +605,17 @@ class AtlasStepper {
   CurvilinearState curvilinearState(State& state) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
-    //
-    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[4], state.pVector[5], state.pVector[6]);
-    mom /= std::abs(state.pVector[7]);
+    // extract state information
+    Acts::Vector4D pos4;
+    pos4[ePos0] = state.pVector[0];
+    pos4[ePos1] = state.pVector[1];
+    pos4[ePos2] = state.pVector[2];
+    pos4[eTime] = state.pVector[3];
+    Acts::Vector3D dir;
+    dir[eMom0] = state.pVector[4];
+    dir[eMom1] = state.pVector[5];
+    dir[eMom2] = state.pVector[6];
+    const auto qOverP = state.pVector[7];
 
     std::optional<Covariance> covOpt = std::nullopt;
     if (state.covTransport) {
@@ -612,8 +623,7 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearParameters parameters(std::move(covOpt), gp, mom, charge(state),
-                                     state.pVector[3]);
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
 
     return CurvilinearState(std::move(parameters), state.jacobian,
                             state.pathAccumulated);
@@ -643,7 +653,7 @@ class AtlasStepper {
 
     // prepare the jacobian if we have a covariance
     // copy the covariance matrix
-    state.covariance = new ActsSymMatrixD<eBoundParametersSize>(covariance);
+    state.covariance = new ActsSymMatrixD<eBoundSize>(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -815,8 +825,7 @@ class AtlasStepper {
     state.jacobian[34] = P[43];  // dT/dCM
     state.jacobian[35] = P[51];  // dT/dT
 
-    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
-                             Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }
@@ -1073,8 +1082,7 @@ class AtlasStepper {
     state.jacobian[34] = state.pVector[43];  // dT/dCM
     state.jacobian[35] = state.pVector[51];  // dT/dT
 
-    Eigen::Map<Eigen::Matrix<double, eBoundParametersSize, eBoundParametersSize,
-                             Eigen::RowMajor>>
+    Eigen::Map<Eigen::Matrix<double, eBoundSize, eBoundSize, Eigen::RowMajor>>
         J(state.jacobian);
     state.cov = J * (*state.covariance) * J.transpose();
   }

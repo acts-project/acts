@@ -91,26 +91,19 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+                                   cov);
 
   PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
   options.maxStepSize = 10_cm;
@@ -141,26 +134,19 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+                                   cov);
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -215,26 +201,19 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+                                   cov);
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(
       tgContext, mfContext, getDummyLogger());
@@ -244,8 +223,8 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
   if (result.endParameters) {
     // test that you actually lost some energy
-    BOOST_CHECK_LT(result.endParameters->momentum().norm(),
-                   start.momentum().norm());
+    BOOST_CHECK_LT(result.endParameters->absoluteMomentum(),
+                   start.absoluteMomentum());
   }
 }
 
@@ -270,26 +249,19 @@ BOOST_DATA_TEST_CASE(
              bdata::distribution = std::uniform_int_distribution<>(0, 100))) ^
         bdata::xrange(ntests),
     pT, phi, theta, charge, time, index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
   (void)index;
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
   /// a covariance matrix to transport
   Covariance cov;
   // take some major correlations (off-diagonals)
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, p, q,
+                                   cov);
 
   // Action list and abort list
   PropagatorOptions<ActionList<MaterialInteractor>> options(
@@ -300,8 +272,9 @@ BOOST_DATA_TEST_CASE(
   const auto& status = epropagator.propagate(start, options).value();
   // this test assumes state.options.loopFraction = 0.5
   // maximum momentum allowed
-  double pmax = options.pathLimit * bField.getField(pos).norm() / M_PI;
-  if (mom.norm() < pmax) {
+  double pmax = options.pathLimit *
+                bField.getField(start.position(tgContext)).norm() / M_PI;
+  if (p < pmax) {
     BOOST_CHECK_LT(status.pathLength, options.pathLimit);
   } else {
     CHECK_CLOSE_REL(status.pathLength, options.pathLimit, 1e-3);

@@ -11,7 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -30,10 +30,10 @@ namespace Acts {
 class JsonGeometryConverter {
  public:
   using SurfaceMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
   using VolumeMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
 
@@ -46,7 +46,7 @@ class JsonGeometryConverter {
   /// @brief Layer representation for Json writing
   struct LayerRep {
     // the layer id
-    GeometryID layerID;
+    GeometryIdentifier layerID;
 
     SurfaceMaterialRep sensitives;
     SurfaceRep sensitiveSurfaces;
@@ -65,7 +65,7 @@ class JsonGeometryConverter {
   /// @brief Volume representation for Json writing
   struct VolumeRep {
     // The geometry id
-    GeometryID volumeID;
+    GeometryIdentifier volumeID;
 
     /// The namne
     std::string volumeName;
@@ -123,9 +123,9 @@ class JsonGeometryConverter {
     /// The data key
     std::string datakey = "data";
     /// The geoid key
-    std::string geoidkey = "Geoid";
+    std::string geometryidkey = "Geoid";
     /// The surface geoid key
-    std::string surfacegeoidkey = "SGeoid";
+    std::string surfacegeometryidkey = "SGeoid";
     /// The mapping key, add surface to map if true
     std::string mapkey = "mapMaterial";
     /// The surface type key
@@ -176,8 +176,9 @@ class JsonGeometryConverter {
   /// Convert method
   ///
   /// @param surfaceMaterialMap The indexed material map collection
-  std::pair<std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>,
-            std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>>
+  std::pair<
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>,
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>>
   jsonToMaterialMaps(const nlohmann::json& materialmaps);
 
   /// Convert method
@@ -214,7 +215,7 @@ class JsonGeometryConverter {
   /// Create the Material Matrix from Json
   ///
   /// @param data is the json part representing a material data array
-  MaterialPropertiesMatrix jsonToMaterialMatrix(const nlohmann::json& data);
+  MaterialSlabMatrix jsonToMaterialMatrix(const nlohmann::json& data);
 
   /// Create the BinUtility for from Json
   BinUtility jsonToBinUtility(const nlohmann::json& bin);

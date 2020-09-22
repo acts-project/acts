@@ -34,17 +34,16 @@ BOOST_AUTO_TEST_SUITE(ConeSurfaces)
 BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   // ConeSurface default constructor is deleted
   //
-  /// Constructor with transform pointer, null or valid, alpha and symmetry
+  /// Constructor with transform, alpha and symmetry
   /// indicator
   double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
-  std::shared_ptr<const Transform3D> pNullTransform{};
-  BOOST_CHECK_EQUAL(
-      Surface::makeShared<ConeSurface>(pNullTransform, alpha, symmetric)
-          ->type(),
-      Surface::Cone);
+  auto pTransform = Transform3D(translation);
+  BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(Transform3D::Identity(),
+                                                     alpha, symmetric)
+                        ->type(),
+                    Surface::Cone);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric)->type(),
       Surface::Cone);
@@ -74,13 +73,13 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   //
   /// Copied and transformed
   auto copiedTransformedConeSurface = Surface::makeShared<ConeSurface>(
-      tgContext, *coneSurfaceObject, *pTransform);
+      tgContext, *coneSurfaceObject, pTransform);
   BOOST_CHECK_EQUAL(copiedTransformedConeSurface->type(), Surface::Cone);
 
   /// Construct with nullptr bounds
-  BOOST_CHECK_THROW(
-      auto nullBounds = Surface::makeShared<ConeSurface>(nullptr, nullptr),
-      AssertionFailureException);
+  BOOST_CHECK_THROW(auto nullBounds = Surface::makeShared<ConeSurface>(
+                        Transform3D::Identity(), nullptr),
+                    AssertionFailureException);
 }
 //
 /// Unit test for testing ConeSurface properties
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //
@@ -134,16 +133,17 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   //
   /// Test localToGlobal
   Vector2D localPosition{1.0, M_PI / 2.0};
-  coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum,
-                                   globalPosition);
+  globalPosition =
+      coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   // std::cout<<globalPosition<<std::endl;
   Vector3D expectedPosition{0.0220268, 1.65027, 3.5708};
 
   CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
   //
   /// Testing globalToLocal
-  coneSurfaceObject->globalToLocal(tgContext, globalPosition, momentum,
-                                   localPosition);
+  localPosition =
+      coneSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
+          .value();
   // std::cout<<localPosition<<std::endl;
   Vector2D expectedLocalPosition{1.0, M_PI / 2.0};
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
   double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
   //
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
       "Create and then assign a ConeSurface object to the existing one");
   /// Test assignment
   auto assignedConeSurface =
-      Surface::makeShared<ConeSurface>(nullptr, 0.1, true);
+      Surface::makeShared<ConeSurface>(Transform3D::Identity(), 0.1, true);
   *assignedConeSurface = *coneSurfaceObject;
   /// Test equality of assigned to original
   BOOST_CHECK(*assignedConeSurface == *coneSurfaceObject);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   Translation3D translation{0., 0., 0.};
 
   // Testing a Full cone
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto pConeBounds = std::make_shared<const ConeBounds>(alpha, zMin, zMax);
   auto pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
   auto pConeExtent = pCone->polyhedronRepresentation(tgContext, 1).extent();
@@ -243,11 +243,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   double alpha{M_PI / 8.};
   bool symmetric(false);
   Translation3D translation{0., 1., 2.};
-  auto pTransform = std::make_shared<const Transform3D>(translation);
+  auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
 
-  const auto& rotation = pTransform->rotation();
+  const auto& rotation = pTransform.rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // Check the local z axis is aligned to global z axis

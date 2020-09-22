@@ -7,7 +7,7 @@ stages:
 
 variables:
   # everything on except legacy, dd4hp, tgeo
-  COMMON_BUILD_OPTIONS: -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_BENCHMARKS=on -DACTS_BUILD_FATRAS=on -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_INTEGRATIONTESTS=on -DACTS_BUILD_UNITTESTS=on
+  COMMON_BUILD_OPTIONS: -DACTS_BUILD_PLUGIN_DIGITIZATION=on -DACTS_BUILD_PLUGIN_IDENTIFICATION=on -DACTS_BUILD_PLUGIN_JSON=on -DACTS_BUILD_BENCHMARKS=on -DACTS_BUILD_FATRAS=on -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_INTEGRATIONTESTS=on -DACTS_BUILD_UNITTESTS=on
   CLICOLOR_FORCE: 1
 
 before_script:
@@ -63,7 +63,7 @@ include_guards:
     - cvmfs
   variables:
     BUILD_TYPE: Release
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_LEGACY=on -DACTS_BUILD_PLUGIN_DD4HEP=on -DACTS_BUILD_PLUGIN_TGEO=on
   script:
     - mkdir build
     - cd build
@@ -107,7 +107,7 @@ build_cc7_lcg96_debug:
   <<: *template_build
   variables:
     BUILD_TYPE: Debug # for coverage check
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_LEGACY=on -DACTS_BUILD_PLUGIN_DD4HEP=on -DACTS_BUILD_PLUGIN_TGEO=on
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
@@ -217,14 +217,14 @@ build_cc7_lcg96_no_legacy:
   # need to set all variables again since we are overriding the template section
   variables:
     BUILD_TYPE: Release
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_DD4HEP=on -DACTS_BUILD_PLUGIN_TGEO=on
   image: gitlab-registry.cern.ch/acts/machines/cc7:latest
   before_script:
     - set +e && source CI/setup_lcg96.sh; set -e
   script:
     - mkdir build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=off ..
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_LEGACY=off ..
     - cmake --build . -- -j${ACTS_NCPUS}
     - find . -name "*.o" -delete
 
@@ -263,7 +263,7 @@ build_ubuntu1804_llvm90:
     - source CI/env_info.sh
   variables:
     BUILD_TYPE: Release
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
 unit_tests_ubuntu1804_llvm90:
   <<: *template_unit_tests
@@ -335,7 +335,7 @@ clang_tidy:
     - mkdir report
     - mkdir build && cd build
     # contain LCG to only where needed
-    - /bin/sh -c "set +e && source ../CI/setup_lcg96.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on"
+    - /bin/sh -c "set +e && source ../CI/setup_lcg96.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_PLUGIN_DD4HEP=on -DACTS_BUILD_PLUGIN_TGEO=on"
     - cd ..
     - run-clang-tidy.py -p build -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv

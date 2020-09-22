@@ -55,20 +55,24 @@ class FullBilloirVertexFitter {
     int maxIterations = 5;
   };
 
-  /// @brief Constructor used if input_track_t type == BoundParameters
+  /// @brief Constructor used if input_track_t type == BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  template <typename T = input_track_t,
-            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
+  template <
+      typename T = input_track_t,
+      std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
       : m_cfg(cfg), extractParameters([](T params) { return params; }) {}
 
-  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
+  /// @brief Constructor for user-defined input_track_t type =!
+  /// BoundTrackParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from input_track_t object
-  FullBilloirVertexFitter(const Config& cfg,
-                          std::function<BoundParameters(input_track_t)> func)
+  /// @param func Function extracting BoundTrackParameters from input_track_t
+  /// object
+  FullBilloirVertexFitter(
+      const Config& cfg,
+      std::function<BoundTrackParameters(input_track_t)> func)
       : m_cfg(cfg), extractParameters(func) {}
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
@@ -90,11 +94,12 @@ class FullBilloirVertexFitter {
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other input_track_t objects.
+  /// input_track_t objects are BoundTrackParameters by default, function to be
+  /// overwritten to return BoundTrackParameters for other input_track_t
+  /// objects.
   ///
   /// @param params input_track_t object to extract track parameters from
-  std::function<BoundParameters(input_track_t)> extractParameters;
+  std::function<BoundTrackParameters(input_track_t)> extractParameters;
 };
 
 }  // namespace Acts

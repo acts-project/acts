@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsTGeoPlugin)
+set(unittest_extra_libraries ActsPluginTGeo)
 
 add_unittest(TGeoArb8Conversion TGeoArb8ConversionTests.cpp)
 add_unittest(TGeoBBoxConversion TGeoBBoxConversionTests.cpp)

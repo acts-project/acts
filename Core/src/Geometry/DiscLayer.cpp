@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// DiscLayer.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/DiscLayer.hpp"
 
 #include "Acts/Geometry/AbstractVolume.hpp"
@@ -25,7 +21,7 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
+Acts::DiscLayer::DiscLayer(const Transform3D& transform,
                            const std::shared_ptr<const DiscBounds>& dbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,
                            double thickness,

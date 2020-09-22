@@ -84,8 +84,9 @@ class RiddersPropagator {
   ///
   /// @return Result of the propagation
   template <typename parameters_t, typename propagator_options_t>
-  Result<action_list_t_result_t<
-      CurvilinearParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
@@ -102,7 +103,7 @@ class RiddersPropagator {
   /// inconsistent. In this case a zero matrix is returned.
   template <typename parameters_t, typename propagator_options_t>
   Result<action_list_t_result_t<
-      BoundParameters, typename propagator_options_t::action_list_type>>
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
@@ -146,8 +147,7 @@ class RiddersPropagator {
   ///
   /// @return Propagated covariance matrix
   const Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, eBoundParametersSize>&
-          derivatives,
+      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
       const Covariance& startCov, const std::vector<double>& deviations) const;
 
   /// @brief This function fits a linear function through the final state

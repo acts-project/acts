@@ -73,14 +73,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  BoundParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundParameters params2(perigeeSurface, paramVec2, covMat);
-  BoundParameters params3(perigeeSurface, paramVec3, covMat);
-  BoundParameters params3_1(perigeeSurface, paramVec3_1, covMat);
-  BoundParameters params4(perigeeSurface, paramVec4, covMat);
-  BoundParameters params5(perigeeSurface, paramVec5, covMat);
-  BoundParameters params6(perigeeSurface, paramVec6, covMat);
-  BoundParameters params7(perigeeSurface, paramVec7, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
+  BoundTrackParameters params3(perigeeSurface, paramVec3, covMat);
+  BoundTrackParameters params3_1(perigeeSurface, paramVec3_1, covMat);
+  BoundTrackParameters params4(perigeeSurface, paramVec4, covMat);
+  BoundTrackParameters params5(perigeeSurface, paramVec5, covMat);
+  BoundTrackParameters params6(perigeeSurface, paramVec6, covMat);
+  BoundTrackParameters params7(perigeeSurface, paramVec7, covMat);
 
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  BoundParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundParameters params2(perigeeSurface, paramVec2, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
@@ -248,8 +248,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  BoundParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundParameters params2(perigeeSurface, paramVec2, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
   ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());

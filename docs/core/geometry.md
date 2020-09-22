@@ -6,13 +6,13 @@ of higher complexity. This design has been chosen as the surface objects can be
 used together with the track propagation module and thus all geometry objects
 become natively integrated into the tracking software.
 
-## GeometryObject base class and GeometryID
+## GeometryObject base class and GeometryIdentifier
 
 All geometry objects in Acts inherit from a virtual `GeometryObject` base class
 
     /// @class GeometryObject
     ///
-    /// Base class to provide GeometryID interface:
+    /// Base class to provide GeometryIdentifier interface:
     /// - simple set and get
     ///
     /// It also provides the binningPosition method for
@@ -22,38 +22,38 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
     {
     public:
      /// default constructor
-     GeometryObject() : m_geoID(0) {}
-    
+     GeometryObject() : m_geometryId(0) {}
+
      /// constructor from a ready-made value
      ///
-     /// @param geoID the geometry identifier of the object
-     GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
-    
+     /// @param geometryId the geometry identifier of the object
+     GeometryObject(const GeometryIdentifier& geometryId) : m_geometryId(geometryId) {}
+
      /// assignment operator
      ///
-     /// @param geoID the source geoID
+     /// @param geometryId the source geometryId
      GeometryObject&
-     operator=(const GeometryObject& geoID)
+     operator=(const GeometryObject& geometryId)
      {
-       if (&geoID != this) {
-         m_geoID = geoID.m_geoID;
+       if (&geometryId != this) {
+         m_geometryId = geometryId.m_geometryId;
        }
        return *this;
      }
-    
+
      /// Return the value
      /// @return the geometry id by reference
-     const GeometryID&
-     geoID() const;
-    
+     const GeometryIdentifier&
+     geometryId() const;
+
      /// Force a binning position method
      ///
      /// @param bValue is the value in which you want to bin
      ///
      /// @return vector 3D used for the binning schema
-     virtual const Vector3D
+     virtual Vector3D
      binningPosition(BinningValue bValue) const = 0;
-    
+
      /// Implement the binningValue
      ///
      /// @param bValue is the dobule in which you want to bin
@@ -61,23 +61,23 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
      /// @return float to be used for the binning schema
      double
      binningPositionValue(BinningValue bValue) const;
-    
+
      /// Set the value
      ///
-     /// @param geoID the geometry identifier to be assigned
+     /// @param geometryId the geometry identifier to be assigned
      void
-     assignGeoID(const GeometryID& geoID);
-    
+     assignGeometryId(const GeometryIdentifier& geometryId);
+
     protected:
-     GeometryID m_geoID;
+     GeometryIdentifier m_geometryId;
     };
 
-This class ensures that a unique `GeometryID` is assigned to every geometry
-object. The `GeometryID` is mainly used for fast identification of the type of
+This class ensures that a unique `GeometryIdentifier` is assigned to every geometry
+object. The `GeometryIdentifier` is mainly used for fast identification of the type of
 the geometry object (as most are either extensions or containers of the
 `Surface` objects) and for the identification of the geometry surfaces after
 building, e.g. for the uploading/assigning of material to the surface after
-creation. The `GeometryID` uses a simple masking procedure for applying an
+creation. The `GeometryIdentifier` uses a simple masking procedure for applying an
 identification schema.
 
 It is used for Acts internal applications, such as material mapping, but not for
@@ -85,10 +85,10 @@ It is used for Acts internal applications, such as material mapping, but not for
 `Identifier` class is to be used and/or defined.
 
     typedef uint64_t geo_id_value;
-    
+
     namespace Acts {
-    
-    /// @class GeometryID
+
+    /// @class GeometryIdentifier
     ///
     ///  Identifier for Geometry nodes - packing the
     ///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
@@ -96,7 +96,7 @@ It is used for Acts internal applications, such as material mapping, but not for
     ///  - (Layer)     Surfaces    - uses counting confined layers
     ///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
     ///  - Volumes                 - uses counting given by TrackingGeometry
-    class GeometryID
+    class GeometryIdentifier
     {
     public:
       const static geo_id_value volume_mask    = 0xff00000000000000;
@@ -144,7 +144,7 @@ description or represent a more complex object that may contain:
 * method an array of contained surfaces, accessible via `surfaceArray()` method
 * approach surfaces (i.e. boundary surface of the volume occupied by the layer)
 * surface material description on any of the confined surfaces
-   
+
 The following illustration shows an x-y view of a cylinder layer with planar
 detection modules:
 
@@ -203,7 +203,7 @@ The basic information for any material is:
 This information is confined together in the `Material` class.
 
 Surface based material extends this material information by representative
-thickness, the corresponding object is called `MaterialProperties`. The
+thickness, the corresponding object is called `MaterialSlab`. The
 thickness hereby can be arbitrarily chosen in order to regulate the material
 budget, it does not have to represent the actual thickness of a detector
 element. To attach it to a surface, a dedicated `SurfaceMaterial` class (or it's

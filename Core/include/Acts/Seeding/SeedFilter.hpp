@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-/// @class Filter seeds at various stages with the currently
+/// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>
 class SeedFilter {

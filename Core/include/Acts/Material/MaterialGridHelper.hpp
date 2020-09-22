@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -19,16 +19,19 @@
 
 namespace Acts {
 
-using RecordedMaterialPoint =
-    std::vector<std::pair<Acts::MaterialProperties, Acts::Vector3D>>;
+/// list of point used in the mapping of a volume
+using RecordedMaterialVolumePoint =
+    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3D>>>;
+
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
-using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
+using MaterialGrid2D =
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -99,7 +102,7 @@ Grid3D createGrid3D(
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid2D mapMaterialPoints(
-    Grid2D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector2D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 /// @brief Concatenate a set of material at arbitrary space points on a set of
@@ -112,7 +115,7 @@ MaterialGrid2D mapMaterialPoints(
 ///
 /// @return The average material grid decomposed into classification numbers
 MaterialGrid3D mapMaterialPoints(
-    Grid3D& grid, const Acts::RecordedMaterialPoint& mPoints,
+    Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
     std::function<Acts::Vector3D(Acts::Vector3D)>& transfoGlobalToLocal);
 
 }  // namespace Acts

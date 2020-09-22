@@ -30,10 +30,10 @@ namespace Acts {
 class JsonMaterialDecorator : public IMaterialDecorator {
  public:
   using SurfaceMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const ISurfaceMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 
   using VolumeMaterialMap =
-      std::map<GeometryID, std::shared_ptr<const IVolumeMaterial>>;
+      std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
   JsonMaterialDecorator(const JsonGeometryConverter::Config& rConfig,
                         const std::string& jFileName,
@@ -63,7 +63,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
       surface.assignSurfaceMaterial(nullptr);
     }
     // Try to find the surface in the map
-    auto sMaterial = m_surfaceMaterialMap.find(surface.geoID());
+    auto sMaterial = m_surfaceMaterialMap.find(surface.geometryId());
     if (sMaterial != m_surfaceMaterialMap.end()) {
       surface.assignSurfaceMaterial(sMaterial->second);
     }
@@ -78,7 +78,7 @@ class JsonMaterialDecorator : public IMaterialDecorator {
       volume.assignVolumeMaterial(nullptr);
     }
     // Try to find the volume in the map
-    auto vMaterial = m_volumeMaterialMap.find(volume.geoID());
+    auto vMaterial = m_volumeMaterialMap.find(volume.geometryId());
     if (vMaterial != m_volumeMaterialMap.end()) {
       volume.assignVolumeMaterial(vMaterial->second);
     }

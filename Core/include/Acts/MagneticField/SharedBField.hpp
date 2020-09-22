@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <memory>
+
 namespace Acts {
 
 /// @ingroup MagneticField

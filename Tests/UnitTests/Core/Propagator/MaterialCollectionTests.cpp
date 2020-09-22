@@ -84,23 +84,14 @@ bool debugModeBwdStep = false;
 template <typename propagator_t>
 void runTest(const propagator_t& prop, double pT, double phi, double theta,
              int charge, double time, int index) {
-  double dcharge = -1 + 2 * charge;
+  double p = pT / sin(theta);
+  double q = -1 + 2 * charge;
 
   if (index < skip) {
     return;
   }
 
   // define start parameters
-  double x = 0;
-  double y = 0;
-  double z = 0;
-  double px = pT * cos(phi);
-  double py = pT * sin(phi);
-  double pz = pT / tan(theta);
-  double q = dcharge;
-  Vector3D pos(x, y, z);
-  Vector3D mom(px, py, pz);
-
   BoundSymMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
@@ -113,7 +104,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
      0, 0, 0, 0, 0, 1_us;
   // clang-format on
   std::cout << cov.determinant() << std::endl;
-  CurvilinearParameters start(cov, pos, mom, q, time);
+  CurvilinearTrackParameters start(Vector4D(0, 0, 0, time), phi, theta, q / p,
+                                   cov);
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;
@@ -146,8 +138,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
   // check that the sum of all steps is the total material
   for (auto& mInteraction : fwdMaterial.materialInteractions) {
-    fwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
-    fwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
+    fwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
+    fwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
   CHECK_CLOSE_REL(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-3);
   CHECK_CLOSE_REL(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-3);
@@ -157,7 +149,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << fwdStepsC.surface->geoID()
+      std::cout << "--> Surface with " << fwdStepsC.surface->geometryId()
                 << std::endl;
     }
   }
@@ -199,8 +191,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
   // check that the sum of all steps is the total material
   for (auto& mInteraction : bwdMaterial.materialInteractions) {
-    bwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
-    bwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
+    bwdStepMaterialInX0 += mInteraction.materialSlab.thicknessInX0();
+    bwdStepMaterialInL0 += mInteraction.materialSlab.thicknessInL0();
   }
 
   CHECK_CLOSE_REL(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
@@ -211,7 +203,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     // check if the surfaces are free
     std::cout << ">>> Material steps found on ..." << std::endl;
     for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << bwdStepsC.surface->geoID()
+      std::cout << "--> Surface with " << bwdStepsC.surface->geometryId()
                 << std::endl;
     }
   }
@@ -244,19 +236,19 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     std::cout << ">>> Forward steps to be processed sequentially ..."
               << std::endl;
     for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << fwdStepsC.surface->geoID()
+      std::cout << "--> Surface with " << fwdStepsC.surface->geometryId()
                 << std::endl;
     }
   }
 
   // move forward step by step through the surfaces
-  const BoundParameters* sParameters = &start;
-  std::vector<std::unique_ptr<const BoundParameters>> stepParameters;
+  const BoundTrackParameters* sParameters = &start;
+  std::vector<std::unique_ptr<const BoundTrackParameters>> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
-                << sParameters->referenceSurface().geoID() << " --> "
-                << fwdSteps.surface->geoID() << std::endl;
+                << sParameters->referenceSurface().geometryId() << " --> "
+                << fwdSteps.surface->geometryId() << std::endl;
     }
 
     // make a forward step
@@ -271,8 +263,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (fwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(
-          std::make_unique<BoundParameters>((*fwdStep.endParameters.get())));
+      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
+          (*fwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }
@@ -281,8 +273,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeFwdStep) {
     std::cout << ">>> Forward step : "
-              << sParameters->referenceSurface().geoID() << " --> "
-              << dSurface.geoID() << std::endl;
+              << sParameters->referenceSurface().geometryId() << " --> "
+              << dSurface.geometryId() << std::endl;
   }
 
   const auto& fwdStepFinal =
@@ -320,7 +312,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     std::cout << ">>> Backward steps to be processed sequentially ..."
               << std::endl;
     for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
-      std::cout << "--> Surface with " << bwdStepsC.surface->geoID()
+      std::cout << "--> Surface with " << bwdStepsC.surface->geometryId()
                 << std::endl;
     }
   }
@@ -330,8 +322,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   for (auto& bwdSteps : bwdMaterial.materialInteractions) {
     if (debugModeBwdStep) {
       std::cout << ">>> Backward step : "
-                << sParameters->referenceSurface().geoID() << " --> "
-                << bwdSteps.surface->geoID() << std::endl;
+                << sParameters->referenceSurface().geometryId() << " --> "
+                << bwdSteps.surface->geometryId() << std::endl;
     }
     // make a forward step
     const auto& bwdStep =
@@ -345,8 +337,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
     if (bwdStep.endParameters != nullptr) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(
-          std::make_unique<BoundParameters>(*(bwdStep.endParameters.get())));
+      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
+          *(bwdStep.endParameters.get())));
       sParameters = stepParameters.back().get();
     }
   }
@@ -355,8 +347,8 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeBwdStep) {
     std::cout << ">>> Backward step : "
-              << sParameters->referenceSurface().geoID() << " --> "
-              << dSurface.geoID() << std::endl;
+              << sParameters->referenceSurface().geometryId() << " --> "
+              << dSurface.geometryId() << std::endl;
   }
 
   const auto& bwdStepFinal =

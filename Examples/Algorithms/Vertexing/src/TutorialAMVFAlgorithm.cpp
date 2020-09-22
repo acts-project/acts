@@ -44,7 +44,7 @@ ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
   // Get the input track collection
   auto allTracks = getInputTrackCollection(ctx);
   // Create vector of track pointers for vertexing
-  std::vector<const Acts::BoundParameters*> inputTrackPtrCollection;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
   for (const auto& trk : allTracks) {
     inputTrackPtrCollection.push_back(&trk);
   }
@@ -69,14 +69,14 @@ ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::vector<Acts::BoundParameters>
+std::vector<Acts::BoundTrackParameters>
 ActsExamples::TutorialAMVFAlgorithm::getInputTrackCollection(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Setup containers
   const auto& input =
       ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
           m_cfg.trackCollection);
-  std::vector<Acts::BoundParameters> inputTrackCollection;
+  std::vector<Acts::BoundTrackParameters> inputTrackCollection;
 
   for (auto& vertexAndTracks : input) {
     inputTrackCollection.insert(inputTrackCollection.end(),

@@ -197,12 +197,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexAndTracksWriter::writeT(
 
     for (auto& track : vertexAndTracks.tracks) {
       // Collect the track information
-      m_d0.push_back(track.parameters()[Acts::ParDef::eLOC_D0]);
-      m_z0.push_back(track.parameters()[Acts::ParDef::eLOC_Z0]);
-      m_phi.push_back(track.parameters()[Acts::ParDef::ePHI]);
-      m_theta.push_back(track.parameters()[Acts::ParDef::eTHETA]);
-      m_qp.push_back(track.parameters()[Acts::ParDef::eQOP]);
-      m_time.push_back(track.parameters()[Acts::ParDef::eT]);
+      m_d0.push_back(track.parameters()[Acts::BoundIndices::eBoundLoc0]);
+      m_z0.push_back(track.parameters()[Acts::BoundIndices::eBoundLoc1]);
+      m_phi.push_back(track.parameters()[Acts::BoundIndices::eBoundPhi]);
+      m_theta.push_back(track.parameters()[Acts::BoundIndices::eBoundTheta]);
+      m_qp.push_back(track.parameters()[Acts::BoundIndices::eBoundQOverP]);
+      m_time.push_back(track.parameters()[Acts::BoundIndices::eBoundTime]);
       // Current vertex index as vertex ID
       m_vtxID.push_back(m_vx.size() - 1);
 

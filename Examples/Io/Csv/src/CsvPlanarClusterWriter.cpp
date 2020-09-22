@@ -62,16 +62,14 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
   hit.hit_id = 0;
 
   for (const auto& entry : clusters) {
-    Acts::GeometryID geoId = entry.first;
+    Acts::GeometryIdentifier geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information
     const auto& parameters = cluster.parameters();
     Acts::Vector2D localPos(parameters[0], parameters[1]);
     Acts::Vector3D globalFakeMom(1, 1, 1);
-    Acts::Vector3D globalPos(0, 0, 0);
-    // transform local into global position information
-    cluster.referenceObject().localToGlobal(ctx.geoContext, localPos,
-                                            globalFakeMom, globalPos);
+    Acts::Vector3D globalPos = cluster.referenceObject().localToGlobal(
+        ctx.geoContext, localPos, globalFakeMom);
 
     // encoded geometry identifier
     hit.geometry_id = geoId.value();

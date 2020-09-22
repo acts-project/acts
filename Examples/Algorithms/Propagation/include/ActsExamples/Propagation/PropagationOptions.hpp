@@ -134,60 +134,69 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     /// Set the covariance transport to true
     pAlgConfig.covarianceTransport = true;
     /// Set the covariance matrix
-    pAlgConfig.covariances(Acts::ParDef::eLOC_D0, Acts::ParDef::eLOC_D0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc0,
+                           Acts::BoundIndices::eBoundLoc0) =
         pAlgConfig.d0Sigma * pAlgConfig.d0Sigma;
-    pAlgConfig.covariances(Acts::ParDef::eLOC_Z0, Acts::ParDef::eLOC_Z0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1,
+                           Acts::BoundIndices::eBoundLoc1) =
         pAlgConfig.z0Sigma * pAlgConfig.z0Sigma;
-    pAlgConfig.covariances(Acts::ParDef::ePHI, Acts::ParDef::ePHI) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi,
+                           Acts::BoundIndices::eBoundPhi) =
         pAlgConfig.phiSigma * pAlgConfig.phiSigma;
-    pAlgConfig.covariances(Acts::ParDef::eTHETA, Acts::ParDef::eTHETA) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta,
+                           Acts::BoundIndices::eBoundTheta) =
         pAlgConfig.thetaSigma * pAlgConfig.thetaSigma;
-    pAlgConfig.covariances(Acts::ParDef::eQOP, Acts::ParDef::eQOP) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
+                           Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::ParDef::eT, Acts::ParDef::eT) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime,
+                           Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Read if the offdiagonal parameters have been read
     auto readOffd = vm["prop-corr-offd"].template as<read_range>();
     // Only if they are properly defined, assign
     if (readOffd.size() == 15) {
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eLOC_Z0) =
-          readOffd[0];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::ePHI) =
-          readOffd[1];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eTHETA) =
-          readOffd[2];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eQOP) =
-          readOffd[3];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eT) =
-          readOffd[4];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::ePHI) =
-          readOffd[5];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eTHETA) =
-          readOffd[6];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eQOP) =
-          readOffd[7];
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eT) =
-          readOffd[8];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eTHETA) =
-          readOffd[9];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eQOP) =
-          readOffd[10];
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eT) =
-          readOffd[11];
-      pAlgConfig.correlations(Acts::ParDef::eTHETA, Acts::ParDef::eQOP) =
-          readOffd[12];
-      pAlgConfig.correlations(Acts::ParDef::eTHETA, Acts::ParDef::eT) =
-          readOffd[13];
-      pAlgConfig.correlations(Acts::ParDef::eQOP, Acts::ParDef::eT) =
-          readOffd[14];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundLoc1) = readOffd[0];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundPhi) = readOffd[1];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundTheta) = readOffd[2];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundQOverP) = readOffd[3];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundTime) = readOffd[4];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
+                              Acts::BoundIndices::eBoundPhi) = readOffd[5];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
+                              Acts::BoundIndices::eBoundTheta) = readOffd[6];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
+                              Acts::BoundIndices::eBoundQOverP) = readOffd[7];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
+                              Acts::BoundIndices::eBoundTime) = readOffd[8];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
+                              Acts::BoundIndices::eBoundTheta) = readOffd[9];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
+                              Acts::BoundIndices::eBoundQOverP) = readOffd[10];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
+                              Acts::BoundIndices::eBoundTime) = readOffd[11];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundTheta,
+                              Acts::BoundIndices::eBoundQOverP) = readOffd[12];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundTheta,
+                              Acts::BoundIndices::eBoundTime) = readOffd[13];
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundQOverP,
+                              Acts::BoundIndices::eBoundTime) = readOffd[14];
     } else {
       /// Some pre-defined values (non-trivial helical correlations)
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::ePHI) = -0.8;
-      pAlgConfig.correlations(Acts::ParDef::eLOC_D0, Acts::ParDef::eQOP) = -0.3;
-      pAlgConfig.correlations(Acts::ParDef::eLOC_Z0, Acts::ParDef::eTHETA) =
-          -0.8;
-      pAlgConfig.correlations(Acts::ParDef::ePHI, Acts::ParDef::eQOP) = 0.4;
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundPhi) = -0.8;
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
+                              Acts::BoundIndices::eBoundQOverP) = -0.3;
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc1,
+                              Acts::BoundIndices::eBoundTheta) = -0.8;
+      pAlgConfig.correlations(Acts::BoundIndices::eBoundPhi,
+                              Acts::BoundIndices::eBoundQOverP) = 0.4;
     }
   }
 

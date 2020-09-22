@@ -85,7 +85,7 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
 std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
     std::string fieldMapFile = "Field.txt") {
   // Declare the mapper
-  concept ::AnyFieldLookup<> mapper;
+  Concepts ::AnyFieldLookup<> mapper;
   double lengthUnit = UnitConstants::mm;
   double BFieldUnit = UnitConstants::T;
   // read the field x,y,z from a text file

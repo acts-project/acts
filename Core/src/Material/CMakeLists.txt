@@ -1,8 +1,10 @@
 target_sources_local(
   ActsCore
   PRIVATE
+    AccumulatedMaterialSlab.cpp
     AccumulatedSurfaceMaterial.cpp
     AccumulatedVolumeMaterial.cpp
+    AverageMaterials.cpp
     BinnedSurfaceMaterial.cpp
     HomogeneousSurfaceMaterial.cpp
     HomogeneousVolumeMaterial.cpp
@@ -10,7 +12,7 @@ target_sources_local(
     Material.cpp
     MaterialGridHelper.cpp
     MaterialMapUtils.cpp
-    MaterialProperties.cpp
+    MaterialSlab.cpp
     ProtoSurfaceMaterial.cpp
     ProtoVolumeMaterial.cpp
     SurfaceMaterialMapper.cpp

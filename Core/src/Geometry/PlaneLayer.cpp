@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// PlaneLayer.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 // Geometry module
 #include "Acts/Geometry/PlaneLayer.hpp"
 
@@ -19,13 +15,13 @@
 
 #include <utility>
 
-Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D> transform,
+Acts::PlaneLayer::PlaneLayer(const Transform3D& transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
                              std::unique_ptr<SurfaceArray> surfaceArray,
                              double thickness,
                              std::unique_ptr<ApproachDescriptor> ades,
                              LayerType laytyp)
-    : PlaneSurface(std::move(transform), pbounds),
+    : PlaneSurface(transform, pbounds),
       Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp) {
   // @todo create representing volume
   // register the layer to the surface
@@ -61,19 +57,17 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
   const Vector3D& lCenter = PlaneSurface::center(GeometryContext());
   const Vector3D& lVector = Surface::normal(GeometryContext(), lCenter);
   // create new surfaces
-  const Transform3D* apnTransform = new Transform3D(
+  const Transform3D apnTransform = Transform3D(
       Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector) *
       lRotation);
-  const Transform3D* appTransform = new Transform3D(
+  const Transform3D appTransform = Transform3D(
       Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector) *
       lRotation);
   // create the new surfaces
   aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(
-      std::shared_ptr<const Transform3D>(apnTransform),
-      PlaneSurface::m_bounds));
+      apnTransform, PlaneSurface::m_bounds));
   aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(
-      std::shared_ptr<const Transform3D>(appTransform),
-      PlaneSurface::m_bounds));
+      appTransform, PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
   for (auto& sfPtr : aSurfaces) {
     auto mutableSf = const_cast<Surface*>(sfPtr.get());

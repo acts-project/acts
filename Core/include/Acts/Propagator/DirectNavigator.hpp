@@ -149,13 +149,13 @@ class DirectNavigator {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.nextSurfaceIter;
         ACTS_VERBOSE("Current surface set to  "
-                     << state.navigation.currentSurface->geoID())
+                     << state.navigation.currentSurface->geometryId())
         // Move the sequence to the next surface
         ++state.navigation.nextSurfaceIter;
         if (state.navigation.nextSurfaceIter !=
             state.navigation.surfaceSequence.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
-                       << (*state.navigation.nextSurfaceIter)->geoID());
+                       << (*state.navigation.nextSurfaceIter)->geometryId());
           stepper.releaseStepSize(state.stepping);
         }
       } else if (surfaceStatus == Intersection3D::Status::reachable) {

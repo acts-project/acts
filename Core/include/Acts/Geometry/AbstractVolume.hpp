@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -44,18 +44,14 @@ class AbstractVolume : public Volume {
  public:
   /// Constructor with shared Transform3D*, VolumeBounds*
   ///
-  /// @param htrans is the transform 3D the positions the volume in global frame
+  /// @param transform is the gobal 3d transformation into the volume frame
   /// @param volbounds is the boundary definition
-  AbstractVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr volbounds);
+  AbstractVolume(const Transform3D& transform, VolumeBoundsPtr volbounds);
 
   AbstractVolume(const AbstractVolume& vol) = default;
 
   AbstractVolume() = delete;
-
-  ~AbstractVolume() override;
-
-  /// Assignment operator - deleted
+  ~AbstractVolume() override = default;
   AbstractVolume& operator=(const AbstractVolume& vol) = delete;
 
   /// Method to return the BoundarySurfaces

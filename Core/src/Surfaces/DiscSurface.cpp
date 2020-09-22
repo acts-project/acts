@@ -11,16 +11,13 @@
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
-#include <algorithm>
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
-#include <utility>
+#include <system_error>
 #include <vector>
 
 using Acts::VectorHelpers::perp;
@@ -31,30 +28,26 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 
 Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
                                const DiscSurface& other,
-                               const Transform3D& transf)
-    : GeometryObject(),
-      Surface(gctx, other, transf),
-      m_bounds(other.m_bounds) {}
+                               const Transform3D& shift)
+    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double rmin, double rmax, double hphisec)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double rmin,
+                               double rmax, double hphisec)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(std::move(transform)),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
-                               double minhalfx, double maxhalfx, double maxR,
-                               double minR, double avephi, double stereo)
+Acts::DiscSurface::DiscSurface(const Transform3D& transform, double minhalfx,
+                               double maxhalfx, double minR, double maxR,
+                               double avephi, double stereo)
     : GeometryObject(),
-      Surface(std::move(htrans)),
+      Surface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
-          minhalfx, maxhalfx, maxR, minR, avephi, stereo)) {}
+          minhalfx, maxhalfx, minR, maxR, avephi, stereo)) {}
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
+Acts::DiscSurface::DiscSurface(const Transform3D& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
-    : GeometryObject(),
-      Surface(std::move(htrans)),
-      m_bounds(std::move(dbounds)) {}
+    : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
 
 Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
                                const DetectorElementBase& detelement)
@@ -74,29 +67,30 @@ Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
   return Surface::Disc;
 }
 
-void Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                      const Vector2D& lposition,
-                                      const Vector3D& /*gmom*/,
-                                      Vector3D& position) const {
+Acts::Vector3D Acts::DiscSurface::localToGlobal(
+    const GeometryContext& gctx, const Vector2D& lposition,
+    const Vector3D& /*gmom*/) const {
   // create the position in the local 3d frame
-  Vector3D loc3Dframe(lposition[Acts::eLOC_R] * cos(lposition[Acts::eLOC_PHI]),
-                      lposition[Acts::eLOC_R] * sin(lposition[Acts::eLOC_PHI]),
-                      0.);
-  // transport it to the globalframe (very unlikely that this is not needed)
-  position = transform(gctx) * loc3Dframe;
+  Vector3D loc3Dframe(
+      lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
+      lposition[Acts::eBoundLoc0] * sin(lposition[Acts::eBoundLoc1]), 0.);
+  // transform to globalframe
+  return transform(gctx) * loc3Dframe;
 }
 
-bool Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
-                                      const Vector3D& position,
-                                      const Vector3D& /*gmom*/,
-                                      Vector2D& lposition) const {
-  // transport it to the globalframe (very unlikely that this is not needed)
+Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& /*gmom*/) const {
+  // transport it to the globalframe
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
-  lposition = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
-  return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
+  if (loc3Dframe.z() * loc3Dframe.z() >
+      s_onSurfaceTolerance * s_onSurfaceTolerance) {
+    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+  return Result<Acts::Vector2D>::success({perp(loc3Dframe), phi(loc3Dframe)});
 }
 
-const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
+Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     const Vector2D& locpol) const {
   const DiscTrapezoidBounds* dtbo =
       dynamic_cast<const Acts::DiscTrapezoidBounds*>(&(bounds()));
@@ -110,21 +104,22 @@ const Acts::Vector2D Acts::DiscSurface::localPolarToLocalCartesian(
     Vector2D Pos = cartPos - cartCenter;
 
     Acts::Vector2D locPos(
-        Pos[Acts::eLOC_X] * sin(phi) - Pos[Acts::eLOC_Y] * cos(phi),
-        Pos[Acts::eLOC_Y] * sin(phi) + Pos[Acts::eLOC_X] * cos(phi));
-    return Vector2D(locPos[Acts::eLOC_X], locPos[Acts::eLOC_Y]);
+        Pos[Acts::eBoundLoc0] * sin(phi) - Pos[Acts::eBoundLoc1] * cos(phi),
+        Pos[Acts::eBoundLoc1] * sin(phi) + Pos[Acts::eBoundLoc0] * cos(phi));
+    return Vector2D(locPos[Acts::eBoundLoc0], locPos[Acts::eBoundLoc1]);
   }
-  return Vector2D(locpol[Acts::eLOC_R] * cos(locpol[Acts::eLOC_PHI]),
-                  locpol[Acts::eLOC_R] * sin(locpol[Acts::eLOC_PHI]));
+  return Vector2D(locpol[Acts::eBoundLoc0] * cos(locpol[Acts::eBoundLoc1]),
+                  locpol[Acts::eBoundLoc0] * sin(locpol[Acts::eBoundLoc1]));
 }
 
-const Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
+Acts::Vector3D Acts::DiscSurface::localCartesianToGlobal(
     const GeometryContext& gctx, const Vector2D& lposition) const {
-  Vector3D loc3Dframe(lposition[Acts::eLOC_X], lposition[Acts::eLOC_Y], 0.);
+  Vector3D loc3Dframe(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1],
+                      0.);
   return Vector3D(transform(gctx) * loc3Dframe);
 }
 
-const Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
+Acts::Vector2D Acts::DiscSurface::globalToLocalCartesian(
     const GeometryContext& gctx, const Vector3D& position,
     double /*unused*/) const {
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;

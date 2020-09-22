@@ -73,12 +73,11 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
     return false;
   };
 
-  auto surfaces = cubo.orientedSurfaces(nullptr);
+  auto surfaces = cubo.orientedSurfaces(Transform3D::Identity());
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -94,12 +93,11 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
                {0, 1, 1}}};
   cubo = GenericCuboidVolumeBounds(vertices);
 
-  surfaces = cubo.orientedSurfaces(nullptr);
+  surfaces = cubo.orientedSurfaces(Transform3D::Identity());
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(glob, vertices));
     }
@@ -109,12 +107,11 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   trf = Translation3D(Vector3D(0, 8, -5)) *
         AngleAxis3D(M_PI / 3., Vector3D(1, -3, 9).normalized());
 
-  surfaces = cubo.orientedSurfaces(&trf);
+  surfaces = cubo.orientedSurfaces(trf);
   for (const auto& srf : surfaces) {
     auto pbounds = dynamic_cast<const PlanarBounds*>(&srf.first->bounds());
     for (const auto& vtx : pbounds->vertices()) {
-      Vector3D glob;
-      srf.first->localToGlobal(gctx, vtx, {}, glob);
+      Vector3D glob = srf.first->localToGlobal(gctx, vtx, {});
       // check if glob is in actual vertex list
       BOOST_CHECK(is_in(trf.inverse() * glob, vertices));
     }
@@ -196,7 +193,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
 
   GenericCuboidVolumeBounds cubo(vertices);
 
-  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(nullptr);
+  auto gcvbOrientedSurfaces = cubo.orientedSurfaces(Transform3D::Identity());
   BOOST_CHECK_EQUAL(gcvbOrientedSurfaces.size(), 6);
 
   for (auto& os : gcvbOrientedSurfaces) {

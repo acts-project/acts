@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
-#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
@@ -68,7 +68,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
       return;
     }
     // record all valid surfaces
-    this->m_digitizables.insert_or_assign(surface->geoID(), dg);
+    this->m_digitizables.insert_or_assign(surface->geometryId(), dg);
   });
 }
 

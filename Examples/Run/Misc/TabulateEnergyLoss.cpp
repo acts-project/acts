@@ -10,7 +10,7 @@
 
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
@@ -26,7 +26,7 @@ static constexpr int width = 11;
 static constexpr int precision = 3;
 static constexpr char separator = ' ';
 
-static void printHeader(std::ostream& os, const Acts::MaterialProperties& slab,
+static void printHeader(std::ostream& os, const Acts::MaterialSlab& slab,
                         Acts::PdgParticle pdg, float mass, float charge) {
   os << "# material: " << slab << '\n';
   os << "# particle pdg id: " << pdg << '\n';
@@ -88,8 +88,9 @@ int main(int argc, char const* argv[]) {
 
   // use fixed material (beryllium) for now
   // TODO make material configurable by command line
-  const Acts::Material material(35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3);
-  const Acts::MaterialProperties slab(material, thickness);
+  const auto material = Acts::Material::fromMassDensity(
+      35.28_cm, 42.10_cm, 9.012, 4, 1.848_g / 1_cm3);
+  const Acts::MaterialSlab slab(material, thickness);
 
   printHeader(std::cout, slab, pdg, mass, charge);
   // scan momentum

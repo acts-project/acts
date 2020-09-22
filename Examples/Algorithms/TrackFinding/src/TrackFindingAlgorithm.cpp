@@ -46,16 +46,19 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3D{0., 0., 0.});
 
+  Acts::PropagatorPlainOptions pOptions;
+  pOptions.maxSteps = 10000;
+
+  // Set the CombinatorialKalmanFilter options
+  ActsExamples::TrackFindingAlgorithm::CKFOptions ckfOptions(
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+      m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()}, pOptions,
+      &(*pSurface));
+
   // Perform the track finding for each starting parameter
   // @TODO: use seeds from track seeding algorithm as starting parameter
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     const auto& initialParams = initialParameters[iseed];
-
-    // Set the CombinatorialKalmanFilter options
-    ActsExamples::TrackFindingAlgorithm::CKFOptions ckfOptions(
-        ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-        m_cfg.sourcelinkSelectorCfg, Acts::LoggerWrapper{logger()},
-        &(*pSurface));
 
     ACTS_DEBUG("Invoke track finding seeded by truth particle " << iseed);
     auto result = m_cfg.findTracks(sourceLinks, initialParams, ckfOptions);
