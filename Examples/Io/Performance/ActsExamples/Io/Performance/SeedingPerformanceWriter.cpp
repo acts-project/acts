@@ -72,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 
 std::set<ActsFatras::Barcode>
 ActsExamples::SeedingPerformanceWriter::identifySharedParticles(
-								const Acts::Seed<SimSpacePoint>* seed) const {
+    const Acts::Seed<SimSpacePoint>* seed) const {
   const SimSpacePoint* sp0 = seed->sp()[0];
   const SimSpacePoint* sp1 = seed->sp()[1];
   const SimSpacePoint* sp2 = seed->sp()[2];
@@ -98,11 +98,11 @@ ActsExamples::SeedingPerformanceWriter::identifySharedParticles(
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-									 const AlgorithmContext& ctx,
-									 const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+    const AlgorithmContext& ctx,
+    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
   // Read truth particles from input collection
   const auto& particles =
-    ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -120,7 +120,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
 
       std::set<ActsFatras::Barcode> prtsInCommon =
-	identifySharedParticles(seed);
+          identifySharedParticles(seed);
       if (prtsInCommon.size() > 0) {
         for (const auto& prt : prtsInCommon) {
           auto it = truthCount.try_emplace(prt, 0u).first;
