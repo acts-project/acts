@@ -5,7 +5,8 @@ add_library(
   src/GeometryExampleBase.cpp
   src/MaterialMappingBase.cpp
   src/MaterialValidationBase.cpp
-  src/PropagationExampleBase.cpp)
+  src/PropagationExampleBase.cpp
+  src/SeedingExampleBase.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -16,7 +17,8 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesMagneticField
     ActsExamplesDetectorsCommon ActsExamplesPropagation
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
-    ActsExamplesIoRoot ActsExamplesIoObj)
+    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
+    ActsExamplesSeeding)
 
 install(
   TARGETS ActsExamplesCommon
