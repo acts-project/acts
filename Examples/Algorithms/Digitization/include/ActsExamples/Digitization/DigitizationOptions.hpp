@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
@@ -22,8 +22,7 @@ void addDigitizationOptions(Description& desc);
 /// Read Digitization Config from the options.
 ///
 /// @param variables The variables to read from
-/// DigitizationAlgorithm::Config readDigitizationConfig(
-///    const Variables& variables);
+SmearingAlgorithm::Config readDigitizationConfig(const Variables& variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

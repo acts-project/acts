@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Digitization/HitSmearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include <boost/program_options.hpp>
 
@@ -38,13 +39,11 @@ void ActsExamples::Options::addDigitizationOptions(
       "Input: smear sigma values for this volume.");
 }
 
-/**
-ActsExamples::DigitizationAlgorithm::Config
+ActsExamples::SmearingAlgorithm::Config
 ActsExamples::Options::readDigitizationConfig(
     const boost::program_options::variables_map& variables) {
   using namespace Acts::UnitLiterals;
-  DigitizationAlgorithm::Config digiCfg;
+  SmearingAlgorithm::Config smearCfg;
 
-  return digiCfg;
+  return smearCfg;
 }
-*/
