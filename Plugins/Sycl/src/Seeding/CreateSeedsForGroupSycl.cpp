@@ -648,7 +648,12 @@ void createSeedsForGroupSycl(
                   // NOTES ON THREAD MAPPING TO SPACE POINTS
                   /*
                     We need to map bottom and top SP indices to this
-                    thread. This is done in the following way: We
+                    thread.
+
+                    So we are mapping one bottom and one top SP to this thread
+                    (we already have a middle SP) which gives us a tiplet.
+
+                    This is done in the following way: We
                     calculated the number of possible triplet
                     combinations for this middle SP (let it be
                     num_comp_bot*num_comp_top). Let num_comp_bot = 2
@@ -657,12 +662,11 @@ void createSeedsForGroupSycl(
                     middle SP.
 
                     That gives us 6 threads altogether:
-                              ===========================================
-                    thread:    |  0   |  1   |  2   |  3   |  4   |  5
-                    | bottom id: | bot0 | bot0 | bot0 | bot1 | bot1 |
-                    bot1 | top id:    | top0 | top1 | top2 | top0 |
-                    top1 | top2 |
-                              ===========================================
+                               ===========================================
+                    thread:    |  0   |  1   |  2   |  3   |  4   |  5   |
+                    bottom id: | bot0 | bot0 | bot0 | bot1 | bot1 | bot1 |
+                    top id:    | top0 | top1 | top2 | top0 | top1 | top2 |
+                               ===========================================
 
                     If we divide 6 by the number of compatible top SP
                     for this middle SP, or deviceNumTopDuplets[mid]
@@ -671,15 +675,19 @@ void createSeedsForGroupSycl(
                     deviceNumTopDuplets[mid], we get the id for the
                     top SP.
 
-                    So if threadIdxForMiddleSP = 3, then ib = 1 and it
-                    = 0.
+                    So if threadIdxForMiddleSP = 3, then ib = 1 and it = 0.
 
                     We can use these ids together with
                     deviceSumBot[mid] and deviceSumTop[mid] to be able
-                    to index our other arrays that actually indices
-                    for corresponding bottom and top SPs (deviceIndBot
-                    and deviceIndTop) or data of duplets in linear
-                    equation form (deviceLinBot and deviceLinTop).
+                    to index our other arrays.
+
+                    These other arrays are deviceIndBot and deviceIndTop.
+
+                    So to retrieve the bottom SP index for this thread, we'd
+                    have to index the deviceIndBot array at
+                      deviceSumBot[mid] + ib
+                    which is the id for the bottom SP that we just calculated
+                    (ib = 1 in the example).
                   */
 
                   const auto ib =
@@ -892,9 +900,9 @@ void createSeedsForGroupSycl(
 
         if (sumSeeds != 0) {
           std::vector<detail::SeedData> hostSeedArray(sumSeeds);
-          auto e2 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
+          auto e0 = q->memcpy(&hostSeedArray[0], deviceSeedArray,
                               sumSeeds * sizeof(detail::SeedData));
-          e2.wait();
+          e0.wait();
 
           for (uint32_t t = 0; t < sumSeeds; ++t) {
             auto m = hostSeedArray[t].middle;
