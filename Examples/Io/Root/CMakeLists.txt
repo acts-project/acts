@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesIoRoot SHARED
+  src/RootDigitizationWriter.cpp
   src/RootMaterialDecorator.cpp
   src/RootMaterialWriter.cpp
   src/RootMaterialTrackReader.cpp
@@ -17,7 +18,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)

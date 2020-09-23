@@ -24,7 +24,7 @@ class DigitizedHit {
   ///
   /// @param surface is the Surface where the digitization result
   ///        has been expressed wrt
-  DigitizedHit(const Acts::Surface& surface);
+  DigitizedHit(const Acts::Surface& surface, std::vector<SimHit> simhits = {});
   DigitizedHit() = default;
   DigitizedHit(const DigitizedHit& other) = default;
   virtual ~DigitizedHit() = default;
@@ -35,8 +35,12 @@ class DigitizedHit {
   /// Reference Surface required by the SourceLinkConcept
   const Acts::Surface& referenceSurface() const;
 
+  /// The simulated hits - @todo change to index to container?
+  const std::vector<SimHit>& simulatedHits() const;
+
  private:
   std::shared_ptr<const Acts::Surface> m_surface = nullptr;
+  std::vector<SimHit> m_simulatedHits = {};
 };
 
 }  // namespace ActsExamples

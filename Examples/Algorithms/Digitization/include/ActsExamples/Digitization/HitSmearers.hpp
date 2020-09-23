@@ -23,7 +23,7 @@ namespace HitSmearers {
 ///
 /// @note This smearer will smear over module boundaries
 /// it has no notion of a parameter range is assumed
-class Gauss {
+struct Gauss {
   std::normal_distribution<> dist{0., 1.};
 
   /// Construct with a @param sigma standard deviation
@@ -46,10 +46,14 @@ class Gauss {
 ///
 /// In case a hit is smeared outside the range, a DigitizationError
 /// indicating the truncation
-class GaussTrunc {
+struct GaussTrunc {
   std::normal_distribution<> dist{0., 1.};
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
+
+  /// Construct with a @param sigma standard deviation and @param range
+  GaussTrunc(double sigma, const std::pair<double, double>& range_)
+      : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
 
   /// Call operator for the SmearFunction caller interface
   ///
@@ -72,10 +76,14 @@ class GaussTrunc {
 ///
 /// In case a hit is smeared outside the range, the smearing will be
 /// repeated, until a maximum attempt number is reached
-class GaussClipped {
+struct GaussClipped {
   std::normal_distribution<> dist{0., 1.};
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
+
+  /// Construct with a @param sigma standard deviation and @param range
+  GaussClipped(double sigma, const std::pair<double, double>& range_)
+      : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
 
   size_t maxAttemps = 1000;
 
@@ -103,10 +111,16 @@ class GaussClipped {
 /// Uniform smearing of a hit within bounds
 ///
 /// It estimates the bin borders and smears uniformly between them
-class Uniform {
+struct Uniform {
   Acts::BinningData binningData;
 
   std::uniform_real_distribution<> dist{0., 1.};
+
+  /// Construct with a @param pitch standard deviation and @param range
+  Uniform(double pitch, const std::pair<double, double>& range_)
+      : binningData(Acts::open, Acts::binX,
+                    (range_.second - range_.first) / pitch, range_.first,
+                    range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders
   ///
@@ -130,6 +144,71 @@ class Uniform {
           std::pair<double, double>(svalue, (higher - lower) / std::sqrt(12.)));
     }
     return ActsFatras::DigitizationError::SmearingError;
+  }
+};
+
+template <size_t DIM>
+using Functions = std::array<ActsFatras::SmearFunction<RandomEngine>, DIM>;
+
+template <size_t DIM>
+using Types = std::array<int, DIM>;
+
+template <size_t DIM>
+using Parameters = std::array<std::vector<double>, DIM>;
+
+/// Struct to generate smearing functions from arguments
+///
+/// @tparam indices_t The type of free/bound indices
+/// @tparam DIM The dimension of the smearing function array
+struct FunctionGenerator {
+  /// Template unrolling
+  ///
+  /// @pram ENTRY is the entry that is currently filled
+  ///
+  /// @param functions[in,out] The smearing functions that are generated
+  /// @param types The smearing function type (Gauss as default)
+  /// @param pars The parameters for the smearing function
+  template <size_t DIM, size_t ENTRY>
+  void generateFunction(Functions<DIM>& functions, const Types<DIM>& types,
+                        const Parameters<DIM>& pars) {
+    switch (types[ENTRY]) {
+      case 0: {
+        functions[ENTRY] = Gauss(pars[ENTRY][0]);
+      } break;
+
+      case 1: {
+        functions[ENTRY] =
+            GaussTrunc(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+      } break;
+
+      case 2: {
+        functions[ENTRY] =
+            GaussClipped(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+      } break;
+
+      case 3: {
+        functions[ENTRY] =
+            Uniform(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+      } break;
+    }
+
+    if constexpr (ENTRY > 0) {
+      generateFunction<DIM, ENTRY - 1>(functions, types, pars);
+    }
+  }
+
+  /// Generate call
+  ///
+  /// @param types The smearing function type (Gauss as default)
+  /// @param pars The parameters for the smearing function
+  ///
+  /// @return a properly dimensioned resultion function array
+  template <size_t DIM>
+  Functions<DIM> generate(const Types<DIM>& types,
+                          const Parameters<DIM>& pars) {
+    Functions<DIM> sFunctions;
+    generateFunction<DIM, DIM - 1>(sFunctions, types, pars);
+    return sFunctions;
   }
 };
 

@@ -9,6 +9,7 @@
 #include "FatrasMain.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Fatras/FatrasOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -46,6 +47,7 @@ int ActsExamples::fatrasMain(
   ActsExamples::Options::addBFieldOptions(desc);
   ActsExamples::ParticleSelector::addOptions(desc);
   ActsExamples::Options::addFatrasOptions(desc);
+  ActsExamples::Options::addDigitizationOptions(desc);
   ActsExamples::Options::addOutputOptions(desc);
   desc.add_options()("evg-input-type",
                      value<std::string>()->default_value("pythia8"),

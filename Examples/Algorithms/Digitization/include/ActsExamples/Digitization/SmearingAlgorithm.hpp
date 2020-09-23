@@ -58,6 +58,8 @@ class SmearingAlgorithm final : public BareAlgorithm {
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
     ActsExamples::GeometryIdMultimap<SupportedSmearer> smearers;
+    /// flag misconfiguration
+    bool configured = false;
   };
 
   /// Construct the digitization algorithm.
@@ -88,8 +90,9 @@ class SmearingAlgorithm final : public BareAlgorithm {
   template <Acts::BoundIndices... kParameters>
   Acts::FittableMeasurement<DigitizedHit> createMeasurement(
       Acts::ParameterSet<Acts::BoundIndices, kParameters...>&& pset,
-      std::shared_ptr<const Acts::Surface> surface) const {
-    DigitizedHit dhit(*surface);
+      std::shared_ptr<const Acts::Surface> surface,
+      std::vector<SimHit> simHits) const {
+    DigitizedHit dhit(*surface, std::move(simHits));
     return Acts::Measurement<DigitizedHit, Acts::BoundIndices, kParameters...>(
         std::move(surface), std::move(dhit), std::move(pset));
   }

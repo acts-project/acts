@@ -22,7 +22,7 @@ void addDigitizationOptions(Description& desc);
 /// Read Digitization Config from the options.
 ///
 /// @param variables The variables to read from
-SmearingAlgorithm::Config readDigitizationConfig(const Variables& variables);
+SmearingAlgorithm::Config readSmearingConfig(const Variables& variables);
 
 }  // namespace Options
 }  // namespace ActsExamples

@@ -8,8 +8,9 @@
 
 #include "ActsExamples/EventData/DigitizedHit.hpp"
 
-ActsExamples::DigitizedHit::DigitizedHit(const Acts::Surface& surface)
-    : m_surface(surface.getSharedPtr()) {}
+ActsExamples::DigitizedHit::DigitizedHit(const Acts::Surface& surface,
+                                         std::vector<SimHit> simhits)
+    : m_surface(surface.getSharedPtr()), m_simulatedHits(std::move(simhits)) {}
 
 bool ActsExamples::DigitizedHit::operator==(const DigitizedHit& other) const {
   return (this == &other);
@@ -17,4 +18,9 @@ bool ActsExamples::DigitizedHit::operator==(const DigitizedHit& other) const {
 
 const Acts::Surface& ActsExamples::DigitizedHit::referenceSurface() const {
   return (*m_surface.get());
+}
+
+const std::vector<ActsExamples::SimHit>&
+ActsExamples::DigitizedHit::simulatedHits() const {
+  return m_simulatedHits;
 }

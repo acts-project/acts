@@ -31,6 +31,11 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+  if (not m_cfg.configured) {
+    ACTS_FATAL("Smearing Algorithm is misconfigured. Aborting.");
+    return ProcessCode::ABORT;
+  }
+
   // Prepare the input and output collections
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
@@ -46,7 +51,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
 
       auto surfaceRange = selectModule(m_digitizableSurfaces, moduleGeoId);
       auto smearerRange = selectModule(m_cfg.smearers, moduleGeoId);
-      if (not surfaceRange.empty() and smearerRange.empty()) {
+      if (not surfaceRange.empty() and not smearerRange.empty()) {
         // First one wins (there shouldn't be more than one smearer per) surface
         auto& surface = surfaceRange.begin()->second;
         auto& smearer = smearerRange.begin()->second;
@@ -56,11 +61,11 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
             [&](auto&& sm) {
               auto sParSet = sm.first(sInput, rng, sm.second);
               if (sParSet.ok()) {
-                auto measurement =
-                    createMeasurement(std::move(sParSet.value()), surface);
-                // measurements.emplace_hint(measurements.end(),
-                // surface->geometryId(),
-                //                          std::move())));
+                auto measurement = createMeasurement(std::move(sParSet.value()),
+                                                     surface, {hit});
+                measurements.emplace_hint(measurements.end(),
+                                          surface->geometryId(),
+                                          std::move(measurement));
               }
             },
             smearer);
