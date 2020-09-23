@@ -51,6 +51,7 @@ cmake_minimum_required( VERSION 3.13 )
 include( CheckIncludeFileCXX )
 include( CheckCXXSourceCompiles )
 include( CMakeParseArguments )
+include( FindPackageHandleStandardArgs )
 set( CMAKE_REQUIRED_QUIET TRUE )
 
 # Greet the user.
@@ -109,15 +110,9 @@ if( SYCL_builtin_FOUND )
    endif()
    # Look for object files holding SYCL device code, which would be needed for
    # the final binaries.
-   if( MSVC )
-      set( _defaultSupportLib "msvc" )
-   else()
-      set( _defaultSupportLib "glibc" )
-   endif()
-   set( SYCL_SEARCH_SUPPORT_LIBRARIES "${_defaultSupportLib};cmath" CACHE STRING
-      "List of support libraries / object files to look for" )
+   set( SYCL_SEARCH_SUPPORT_LIBRARIES "" CACHE STRING
+      "List of support libraries / object files to look for and link" )
    mark_as_advanced( SYCL_SEARCH_SUPPORT_LIBRARIES )
-   unset( _defaultSupportLib )
    get_filename_component( _compilerDir "${CMAKE_CXX_COMPILER}" DIRECTORY )
    set( SYCL_SUPPORT_LIBRARIES )
    foreach( _supportLib ${SYCL_SEARCH_SUPPORT_LIBRARIES} )
@@ -191,3 +186,7 @@ else()
       set( SYCL_FOUND FALSE )
    endif()
 endif()
+
+# Handle the standard find_package(...) arguments explicitly.
+find_package_handle_standard_args( SYCL
+   REQUIRED_VARS CMAKE_CXX_COMPILER SYCL_FOUND )
