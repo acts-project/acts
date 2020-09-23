@@ -6,12 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
-
-#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
-
+// System include(s)
 #include <string>
 
+// Acts include(s)
+#include "Acts/Utilities/Logger.hpp"
+
+// SYCL plugin include(s)
+#include "Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp"
+#include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
+
+// SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
@@ -79,13 +84,16 @@ void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
     for (std::exception_ptr const& e : exceptions) {
       try {
         std::rethrow_exception(e);
-      } catch (cl::sycl::exception const& e) {
-        std::cerr << "Caught asynchronous SYCL exception:\n" << e.what();
-        exit(0);
+      } catch (std::exception& e) {
+        ACTS_LOCAL_LOGGER(
+            Acts::getDefaultLogger("SyclQueue", Acts::Logging::INFO));
+        ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
       }
     }
   };
 
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("QueueWrapper", Acts::Logging::INFO));
   // Create queue with custom device selector
   m_queue = new cl::sycl::queue(DeviceSelector(deviceNameSubstring),
                                 exception_handler);
@@ -93,9 +101,8 @@ void QueueWrapper::initialize(const std::string& deviceNameSubstring) {
   m_ownsQueue = true;
 
   // See which device we are running on.
-  std::cerr << "Running on: "
-            << m_queue->get_device().get_info<cl::sycl::info::device::name>()
-            << std::endl;
+  ACTS_INFO("Running on: "
+            << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 };
 
 }  // namespace Acts::Sycl
