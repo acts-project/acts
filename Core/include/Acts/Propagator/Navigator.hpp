@@ -706,8 +706,8 @@ class Navigator {
 
           // Check: are we on the first surface?
           if (state.navigation.currentSurface == nullptr ||
-              state.navigation.currentSurface !=
-                  protoNavSurfaces.front().object) {
+              fabs(state.navigation.currentSurface.intersection.pathLength) >
+                  s_epsilon) {
             // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
 
