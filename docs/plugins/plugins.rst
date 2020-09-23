@@ -11,4 +11,5 @@ dependencies and are thus disabled by default.
    dd4hep
    digitization
    identification
+   sycl
    tgeo
