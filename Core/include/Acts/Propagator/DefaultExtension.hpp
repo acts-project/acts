@@ -8,20 +8,19 @@
 
 #pragma once
 
-#include <array>
-
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-/// @note This it templated on the floating point type because of the autodiff plugin.
+/// @note This it templated on the floating point type because of the autodiff
+/// plugin.
 template <typename float_t>
 struct GenericDefaultExtension {
   /// @brief Default constructor
   GenericDefaultExtension() = default;
-  
+
   /// @brief templated Vector3D replacement
   template <typename T>
   using Vector3D = Eigen::Matrix<T, 3, 1>;
@@ -56,8 +55,8 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D<float_t>& knew, const Vector3D<double>& bField, std::array<float_t, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         Vector3D<float_t>& knew, const Vector3D<double>& bField,
+         std::array<float_t, 4>& kQoP, const int i = 0, const double h = 0.,
          const Vector3D<float_t>& kprev = Vector3D<float_t>()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
@@ -121,7 +120,7 @@ struct GenericDefaultExtension {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
-    using std::hypot; 
+    using std::hypot;
     auto derivative =
         hypot(1, state.options.mass / stepper.momentum(state.stepping));
     state.stepping.t += h * derivative;

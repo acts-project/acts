@@ -26,7 +26,8 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-/// @note This it templated on the floating point type because of the autodiff plugin.
+/// @note This it templated on the floating point type because of the autodiff
+/// plugin.
 template <typename float_t>
 struct GenericDenseEnvironmentExtension {
   /// @brief templated Vector3D replacement
@@ -35,7 +36,7 @@ struct GenericDenseEnvironmentExtension {
   /// @brief templated FreeVector replacement
   template <typename T>
   using FreeVector = Eigen::Matrix<T, 8, 1>;
-  
+
   /// Momentum at a certain point
   float_t currentMomentum = 0.;
   /// Particles momentum at k1
@@ -100,8 +101,8 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D<float_t>& knew, const Vector3D<double>& bField, std::array<float_t, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         Vector3D<float_t>& knew, const Vector3D<double>& bField,
+         std::array<float_t, 4>& kQoP, const int i = 0, const double h = 0.,
          const Vector3D<float_t>& kprev = Vector3D<float_t>()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
@@ -172,15 +173,14 @@ struct GenericDenseEnvironmentExtension {
     using std::sqrt;
     state.stepping.derivative(7) =
         -sqrt(state.options.mass * state.options.mass +
-                   newMomentum * newMomentum) *
+              newMomentum * newMomentum) *
         g / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.p = newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
     using std::hypot;
-    state.stepping.derivative(3) =
-        hypot(1, state.options.mass / newMomentum);
+    state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
     // Update time
     state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
@@ -370,12 +370,14 @@ struct GenericDenseEnvironmentExtension {
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, state.options.absPdgCode,
-                                 state.options.mass, static_cast<double>(qop[0]));
+                                 state.options.mass,
+                                 static_cast<double>(qop[0]));
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
       g = -computeEnergyLossMode(slab, state.options.absPdgCode,
-                                 state.options.mass, static_cast<double>(qop[0]));
+                                 state.options.mass,
+                                 static_cast<double>(qop[0]));
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -386,11 +388,13 @@ struct GenericDenseEnvironmentExtension {
       if (state.options.includeGgradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, state.options.absPdgCode, state.options.mass, static_cast<double>(qop[0]));
+              slab, state.options.absPdgCode, state.options.mass,
+              static_cast<double>(qop[0]));
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, state.options.absPdgCode, state.options.mass, static_cast<double>(qop[0]));
+              slab, state.options.absPdgCode, state.options.mass,
+              static_cast<double>(qop[0]));
         }
       }
       // Calculate term for later error propagation
@@ -493,7 +497,8 @@ struct DenseStepperPropagatorOptions
   }
 };
 
-/// @brief A typedef for the default GenericDenseEnvironmentExtension with double.
+/// @brief A typedef for the default GenericDenseEnvironmentExtension with
+/// double.
 using DenseEnvironmentExtension = GenericDenseEnvironmentExtension<double>;
 
 }  // namespace Acts

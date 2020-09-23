@@ -13,8 +13,8 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Autodiff/AutodiffExtensionWrapper.hpp"
-#include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 
