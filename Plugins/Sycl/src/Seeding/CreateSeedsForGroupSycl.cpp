@@ -531,12 +531,11 @@ void createSeedsForGroupSycl(
         Inside the triplet search kernel we count the triplets for fixed
         bottom and middle SP. This is deviceCountTriplets.
 
-        The triplet filter kernel is calculated on threads equal to all
-        possible bottom-middle combinations, which are the sum of found
-        compatible bottom-middle duplets during the duplet search, which is
-        edgedBottom. But not exactly, because we only did the triplet search
-        for the first k middle SPs, so we only need to sum bottom-middle
-        duplets for the first k middle SPs.
+        The triplet filter kernel is calculated on threads equal to all possible
+        bottom-middle combinations for the first k middle SPs, which are
+        the sum of bottom-middle duplets. (For the next kernel it would be the
+        bottom-middle combinations from the (k+1)th middle SP to another jth
+        middle SP j<=M.)
 
         This will be numTripletFilterThreads =
             sumBotCompUptoMid[lastMiddle] - sumBotCompUptoMid[firstMiddle]
