@@ -13,7 +13,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Autodiff/AutodiffExtensionWrapper.hpp"
-#include "Acts/Plugins/Autodiff/GenericDefaultExtension.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -86,7 +86,7 @@ BOOST_DATA_TEST_CASE(
     theta, p, q, s) {
   runForwardComparisonTest(eigenPropagatorZero, autodiffPropagatorZero, geoCtx,
                            magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov, showDebug);
+                           s, epsPos, epsDir, epsMom, epsCov);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for

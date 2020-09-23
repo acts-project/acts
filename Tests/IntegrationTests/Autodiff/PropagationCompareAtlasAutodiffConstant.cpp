@@ -13,7 +13,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Autodiff/AutodiffExtensionWrapper.hpp"
-#include "Acts/Plugins/Autodiff/GenericDefaultExtension.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -44,7 +44,6 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.0125;
-constexpr bool showDebug = false;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -67,7 +66,7 @@ BOOST_DATA_TEST_CASE(Forward,
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
   runForwardComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                            makeParametersCurvilinear(phi, theta, p, q), s,
-                           epsPos, epsDir, epsMom, epsCov, showDebug);
+                           epsPos, epsDir, epsMom, epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
@@ -78,7 +77,7 @@ BOOST_DATA_TEST_CASE(ToCylinderAlongZ,
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom,
-                             epsCov, showDebug);
+                             epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToDisc,
@@ -89,7 +88,7 @@ BOOST_DATA_TEST_CASE(ToDisc,
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              DiscSurfaceBuilder(), epsPos, epsDir, epsMom,
-                             epsCov, showDebug);
+                             epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToPlane,
@@ -100,7 +99,7 @@ BOOST_DATA_TEST_CASE(ToPlane,
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              PlaneSurfaceBuilder(), epsPos, epsDir, epsMom,
-                             epsCov, showDebug);
+                             epsCov);
 }
 
 BOOST_DATA_TEST_CASE(ToStrawAlongZ,
@@ -111,7 +110,7 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
   runToSurfaceComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                              makeParametersCurvilinear(phi, theta, p, q), s,
                              ZStrawSurfaceBuilder(), epsPos, epsDir, epsMom,
-                             epsCov, showDebug);
+                             epsCov);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
