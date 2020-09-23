@@ -31,13 +31,40 @@ namespace ActsExamples {
 /// @todo tempate with RandomService
 class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
  public:
+  struct Config {
+    /// Name of the generated particle
+    G4String particleName = "geantino";
+    /// Energy of the generated particles
+    G4double energy = 1000.0;
+    /// First random seed
+    G4int randomSeed1 = 12345;
+    /// Second random seed
+    G4int randomSeed2 = 45678;
+    /// Position in X of the generated vertex
+    G4double vertexPosX = 0.0;
+    /// Position in Y of the generated vertex
+    G4double vertexPosY = 0.0;
+    /// Position in Z of the generated vertex
+    G4double vertexPosZ = 0.0;
+    /// Spread in X of the generated vertex
+    G4double vertexSigmaX = 0.0;
+    /// Spread in Y of the generated vertex
+    G4double vertexSigmaY = 0.0;
+    /// Spread in Z of the generated vertex
+    G4double vertexSigmaZ = 0.0;
+    /// Azimutal angle phi range of the generated particles
+    std::pair<G4double, G4double> phiRange = {-M_PI, M_PI};
+    /// Pseudorapidity eta range of the generated particles
+    std::pair<G4double, G4double> etaRange = {-4., 4.};
+    /// Variable from which the particle generation is uniform.
+    G4String samplingVariable = "theta";
+  };
+
   /// Static access method
   static PrimaryGeneratorAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  PrimaryGeneratorAction(const G4String& particleName = "geantino",
-                         G4double energy = 1000. * MeV,
-                         G4int randomSeed1 = 12345, G4int randomSeed2 = 23456);
+  PrimaryGeneratorAction(const Config& cfg);
   ~PrimaryGeneratorAction() final override;
 
   /// Interface method to generate the primary
@@ -50,6 +77,9 @@ class PrimaryGeneratorAction final : public G4VUserPrimaryGeneratorAction {
   const G4ThreeVector& position() const { return m_position; }
 
  private:
+  /// The config class
+  Config m_cfg;
+
   /// Instance of the PrimaryGeneratorAction
   static PrimaryGeneratorAction* s_instance;
 
