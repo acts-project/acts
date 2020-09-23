@@ -16,9 +16,18 @@ namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-struct DefaultExtension {
+/// @note This it templated on the floating point type because of the autodiff plugin.
+template <typename float_t>
+struct GenericDefaultExtension {
   /// @brief Default constructor
-  DefaultExtension() = default;
+  GenericDefaultExtension() = default;
+  
+  /// @brief templated Vector3D replacement
+  template <typename T>
+  using Vector3D = Eigen::Matrix<T, 3, 1>;
+  /// @brief templated FreeVector replacement
+  template <typename T>
+  using FreeVector = Eigen::Matrix<T, 8, 1>;
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -47,9 +56,9 @@ struct DefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+         Vector3D<float_t>& knew, const Vector3D<double>& bField, std::array<float_t, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const Vector3D& kprev = Vector3D()) {
+         const Vector3D<float_t>& kprev = Vector3D<float_t>()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data
@@ -112,8 +121,9 @@ struct DefaultExtension {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
+    using std::hypot; 
     auto derivative =
-        std::hypot(1, state.options.mass / stepper.momentum(state.stepping));
+        hypot(1, state.options.mass / stepper.momentum(state.stepping));
     state.stepping.t += h * derivative;
     if (state.stepping.covTransport) {
       state.stepping.derivative(3) = derivative;
@@ -172,10 +182,10 @@ struct DefaultExtension {
     ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
     ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
 
-    Vector3D dk1dL = Vector3D::Zero();
-    Vector3D dk2dL = Vector3D::Zero();
-    Vector3D dk3dL = Vector3D::Zero();
-    Vector3D dk4dL = Vector3D::Zero();
+    Vector3D<double> dk1dL = Vector3D<double>::Zero();
+    Vector3D<double> dk2dL = Vector3D<double>::Zero();
+    Vector3D<double> dk3dL = Vector3D<double>::Zero();
+    Vector3D<double> dk4dL = Vector3D<double>::Zero();
 
     // For the case without energy loss
     dk1dL = dir.cross(sd.B_first);
@@ -221,4 +231,8 @@ struct DefaultExtension {
     return true;
   }
 };
+
+/// @brief A typedef for the default GenericDefaultExtension with double.
+using DefaultExtension = GenericDefaultExtension<double>;
+
 }  // namespace Acts

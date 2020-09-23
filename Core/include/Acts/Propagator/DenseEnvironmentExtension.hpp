@@ -26,33 +26,42 @@ namespace Acts {
 /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
 /// in the propagation and the jacobian. These effects will only occur if the
 /// propagation is in a TrackingVolume with attached material.
-struct DenseEnvironmentExtension {
+/// @note This it templated on the floating point type because of the autodiff plugin.
+template <typename float_t>
+struct GenericDenseEnvironmentExtension {
+  /// @brief templated Vector3D replacement
+  template <typename T>
+  using Vector3D = Eigen::Matrix<T, 3, 1>;
+  /// @brief templated FreeVector replacement
+  template <typename T>
+  using FreeVector = Eigen::Matrix<T, 8, 1>;
+  
   /// Momentum at a certain point
-  double currentMomentum = 0.;
+  float_t currentMomentum = 0.;
   /// Particles momentum at k1
-  double initialMomentum = 0.;
+  float_t initialMomentum = 0.;
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<double, 4> dLdl;
+  std::array<float_t, 4> dLdl;
   /// q/p at each sub-step
-  std::array<double, 4> qop;
+  std::array<float_t, 4> qop;
   /// Derivatives dPds at each sub-step
-  std::array<double, 4> dPds;
+  std::array<float_t, 4> dPds;
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
-  double dgdqopValue = 0.;
+  float_t dgdqopValue = 0.;
   /// Derivative dEds at the initial point
-  double g = 0.;
+  float_t g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<double, 4> tKi;
+  std::array<float_t, 4> tKi;
   /// Lambda''_i
-  std::array<double, 4> Lambdappi;
+  std::array<float_t, 4> Lambdappi;
   /// Energy at each sub-step
-  std::array<double, 4> energy;
+  std::array<float_t, 4> energy;
 
   /// @brief Default constructor
-  DenseEnvironmentExtension() = default;
+  GenericDenseEnvironmentExtension() = default;
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -91,15 +100,15 @@ struct DenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D& knew, const Vector3D& bField, std::array<double, 4>& kQoP,
+         Vector3D<float_t>& knew, const Vector3D<double>& bField, std::array<float_t, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const Vector3D& kprev = Vector3D()) {
+         const Vector3D<float_t>& kprev = Vector3D<float_t>()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
-      Vector3D position = stepper.position(state.stepping);
-      material = (volumeMaterial->material(position));
+      Vector3D<float_t> position = stepper.position(state.stepping);
+      material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.charge(state.stepping) / initialMomentum;
@@ -111,7 +120,8 @@ struct DenseEnvironmentExtension {
           -qop[0] * qop[0] * qop[0] * g * energy[0] /
           (stepper.charge(state.stepping) * stepper.charge(state.stepping));
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
-      tKi[0] = std::hypot(1, state.options.mass * qop[0]);
+      using std::hypot;
+      tKi[0] = hypot(1, state.options.mass * qop[0]);
       kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
@@ -123,12 +133,13 @@ struct DenseEnvironmentExtension {
       knew = qop[i] *
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
-      double qopNew = qop[0] + h * Lambdappi[i - 1];
+      auto qopNew = qop[0] + h * Lambdappi[i - 1];
       Lambdappi[i] =
           -qopNew * qopNew * qopNew * g * energy[i] /
           (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
            UnitConstants::C * UnitConstants::C);
-      tKi[i] = std::hypot(1, state.options.mass * qopNew);
+      using std::hypot;
+      tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
     return true;
@@ -148,7 +159,7 @@ struct DenseEnvironmentExtension {
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const double h) const {
     // Evaluate the new momentum
-    double newMomentum =
+    auto newMomentum =
         stepper.momentum(state.stepping) +
         (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
@@ -158,16 +169,18 @@ struct DenseEnvironmentExtension {
     }
 
     // Add derivative dlambda/ds = Lambda''
+    using std::sqrt;
     state.stepping.derivative(7) =
-        -std::sqrt(state.options.mass * state.options.mass +
+        -sqrt(state.options.mass * state.options.mass +
                    newMomentum * newMomentum) *
         g / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.p = newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
+    using std::hypot;
     state.stepping.derivative(3) =
-        std::hypot(1, state.options.mass / newMomentum);
+        hypot(1, state.options.mass / newMomentum);
     // Update time
     state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
@@ -244,10 +257,10 @@ struct DenseEnvironmentExtension {
     ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
     ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
 
-    Vector3D dk1dL = Vector3D::Zero();
-    Vector3D dk2dL = Vector3D::Zero();
-    Vector3D dk3dL = Vector3D::Zero();
-    Vector3D dk4dL = Vector3D::Zero();
+    Vector3D<double> dk1dL = Vector3D<double>::Zero();
+    Vector3D<double> dk2dL = Vector3D<double>::Zero();
+    Vector3D<double> dk3dL = Vector3D<double>::Zero();
+    Vector3D<double> dk4dL = Vector3D<double>::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
     std::array<double, 4> jdL;
@@ -350,18 +363,19 @@ struct DenseEnvironmentExtension {
   /// @param [in] state Deliverer of configurations
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
-    energy[0] = std::hypot(initialMomentum, state.options.mass);
+    using std::hypot;
+    energy[0] = hypot(initialMomentum, state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, state.options.absPdgCode,
-                                 state.options.mass, qop[0]);
+                                 state.options.mass, static_cast<double>(qop[0]));
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
       g = -computeEnergyLossMode(slab, state.options.absPdgCode,
-                                 state.options.mass, qop[0]);
+                                 state.options.mass, static_cast<double>(qop[0]));
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -372,11 +386,11 @@ struct DenseEnvironmentExtension {
       if (state.options.includeGgradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, state.options.absPdgCode, state.options.mass, qop[0]);
+              slab, state.options.absPdgCode, state.options.mass, static_cast<double>(qop[0]));
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, state.options.absPdgCode, state.options.mass, qop[0]);
+              slab, state.options.absPdgCode, state.options.mass, static_cast<double>(qop[0]));
         }
       }
       // Calculate term for later error propagation
@@ -401,7 +415,8 @@ struct DenseEnvironmentExtension {
                         const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    energy[i] = std::sqrt(currentMomentum * currentMomentum + mass * mass);
+    using std::sqrt;
+    energy[i] = sqrt(currentMomentum * currentMomentum + mass * mass);
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation
@@ -477,5 +492,8 @@ struct DenseStepperPropagatorOptions
     return eoptions;
   }
 };
+
+/// @brief A typedef for the default GenericDenseEnvironmentExtension with double.
+using DenseEnvironmentExtension = GenericDenseEnvironmentExtension<double>;
 
 }  // namespace Acts
