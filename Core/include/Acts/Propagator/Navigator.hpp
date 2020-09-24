@@ -598,8 +598,12 @@ class Navigator {
       // Take the surface
       auto surface = state.navigation.navSurfaceIter->object;
       // Screen output which surface you are on
-      ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
-                                  << surface->geometryId());
+      ACTS_VERBOSE(volInfo(state)
+                   << "Next surface candidate will be " << surface->geometryId()
+                   << " position : "
+                   << state.navigation.navSurfaceIter->intersection.position
+                   << "pathLength : "
+                   << state.navigation.navSurfaceIter->intersection.pathLength);
       // Estimate the surface status
       auto surfaceStatus =
           stepper.updateSurfaceStatus(state.stepping, *surface, true);
@@ -718,9 +722,13 @@ class Navigator {
             // The stepper updates the step size ( single / multi component)
             stepper.updateStepSize(state.stepping,
                                    *state.navigation.navSurfaceIter, true);
-            ACTS_VERBOSE(volInfo(state)
-                         << "Navigation stepSize updated to "
-                         << stepper.outputStepSize(state.stepping));
+            ACTS_VERBOSE(
+                volInfo(state)
+                << "Navigation stepSize updated to "
+                << stepper.outputStepSize(state.stepping) << "Position : "
+                << state.navigation.navSurfaceIter->intersection.position
+                << "pathLength : "
+                << state.navigation.navSurfaceIter->intersection.pathLength);
             return true;
           }
         }
