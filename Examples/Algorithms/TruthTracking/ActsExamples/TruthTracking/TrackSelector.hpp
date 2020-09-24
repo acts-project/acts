@@ -19,31 +19,41 @@ namespace ActsExamples {
 class TrackSelector final : public BareAlgorithm {
  public:
   struct Config {
-    /// The input collection
-    std::string input;
-    /// The output collection
-    std::string output;
-    /// Maximum distance from the origin in the transverse plane
-    double rhoMax = std::numeric_limits<double>::max();
-    /// Maximum absolute distance from the origin along z
-    double absZMax = std::numeric_limits<double>::max();
-    // Track cuts
-    double phiMin = std::numeric_limits<double>::lowest();
-    double phiMax = std::numeric_limits<double>::max();
-    double etaMin = std::numeric_limits<double>::lowest();
-    double etaMax = std::numeric_limits<double>::max();
-    double absEtaMin = std::numeric_limits<double>::lowest();
-    double absEtaMax = std::numeric_limits<double>::max();
+    /// Input track parameters collection.
+    std::string inputTrackParameters;
+    /// Output track parameters collection.
+    std::string outputTrackParameters;
+    /// Output track indices collection.
+    ///
+    /// This records for each output track the index in the input container.
+    std::string outputTrackIndices;
+    // Minimum/maximum local positions.
+    double loc0Min = -std::numeric_limits<double>::infinity();
+    double loc0Max = std::numeric_limits<double>::infinity();
+    double loc1Min = -std::numeric_limits<double>::infinity();
+    double loc1Max = std::numeric_limits<double>::infinity();
+    // Minimum/maximum track time.
+    double timeMin = -std::numeric_limits<double>::infinity();
+    double timeMax = std::numeric_limits<double>::infinity();
+    // Direction cuts.
+    double phiMin = -std::numeric_limits<double>::infinity();
+    double phiMax = std::numeric_limits<double>::infinity();
+    double etaMin = -std::numeric_limits<double>::infinity();
+    double etaMax = std::numeric_limits<double>::infinity();
+    double absEtaMin = 0.0;
+    double absEtaMax = std::numeric_limits<double>::infinity();
+    // Momentum cuts.
     double ptMin = 0.0;
-    double ptMax = std::numeric_limits<double>::max();
-    /// Keep neutral particles
-    bool keepNeutral = true;
+    double ptMax = std::numeric_limits<double>::infinity();
+    /// Remove charged particles.
+    bool removeCharged = false;
+    /// Remove neutral particles.
+    bool removeNeutral = false;
   };
 
-  TrackSelector(const Config& cfg,
-                Acts::Logging::Level level = Acts::Logging::INFO);
+  TrackSelector(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
   Config m_cfg;

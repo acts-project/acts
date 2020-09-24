@@ -1,14 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Vertexing/VertexFitAlgorithm.hpp"
+#include "ActsExamples/Vertexing/VertexFitterAlgorithm.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -20,29 +19,34 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
 
-#include <iostream>
+#include <stdexcept>
 
-ActsExamples::VertexFitAlgorithm::VertexFitAlgorithm(const Config& cfg,
-                                                     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("VertexFit", level), m_cfg(cfg) {}
+ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
+    const Config& cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("VertexFit", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameters collection");
+  }
+  if (m_cfg.inputProtoVertices.empty()) {
+    throw std::invalid_argument("Missing input proto vertices collection");
+  }
+}
 
-/// @brief Algorithm that receives a set of tracks belonging to a common
-/// vertex and fits the associated vertex to it
-ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
-  using TrackParameters = Acts::BoundTrackParameters;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using VertexFitter =
-      Acts::FullBilloirVertexFitter<TrackParameters, Linearizer>;
-  using VertexFitterOptions = Acts::VertexingOptions<TrackParameters>;
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using VertexFitterOptions =
+      Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   // Setup the magnetic field
   MagneticField bField(m_cfg.bField);
@@ -58,34 +62,30 @@ ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
   Linearizer::Config ltConfig(bField, propagator);
   Linearizer linearizer(ltConfig);
 
-  const auto& input =
-      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
-          m_cfg.trackCollection);
-  for (auto& vertexAndTracks : input) {
-    const auto& inputTrackCollection = vertexAndTracks.tracks;
+  const auto& trackParameters =
+      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& protoVertices =
+      ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
 
-    // Only fit vertices where true vertex is indeed close to beam line
-    // This removed secondaries and odd vertices that are not wanted in
-    // this example
-    if (std::sqrt(vertexAndTracks.vertex.position().x() *
-                      vertexAndTracks.vertex.position().x() +
-                  vertexAndTracks.vertex.position().y() *
-                      vertexAndTracks.vertex.position().y()) >
-        m_cfg.maxTransFitDistance) {
+  for (const auto& protoVertex : protoVertices) {
+    // un-constrained fit requires at least two tracks
+    if ((not m_cfg.doConstrainedFit) and (protoVertex.size() < 2)) {
+      ACTS_WARNING(
+          "Skip un-constrained vertex fit on proto-vertex with less than two "
+          "tracks");
       continue;
     }
 
-    std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
-    for (const auto& trk : inputTrackCollection) {
-      inputTrackPtrCollection.push_back(&trk);
+    // select input tracks for the input proto vertex
+    inputTrackPtrCollection.clear();
+    inputTrackPtrCollection.reserve(protoVertex.size());
+    for (const auto& trackIdx : protoVertex) {
+      inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
     }
 
-    Acts::Vertex<TrackParameters> fittedVertex;
+    Acts::Vertex<Acts::BoundTrackParameters> fittedVertex;
     if (!m_cfg.doConstrainedFit) {
-      if (inputTrackCollection.size() < 2) {
-        continue;
-      }
-      // Vertex fitter options
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
       auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
@@ -98,7 +98,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
       }
     } else {
       // Vertex constraint
-      Acts::Vertex<TrackParameters> theConstraint;
+      Acts::Vertex<Acts::BoundTrackParameters> theConstraint;
 
       theConstraint.setCovariance(m_cfg.constraintCov);
       theConstraint.setPosition(m_cfg.constraintPos);
@@ -117,15 +117,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitAlgorithm::execute(
       }
     }
 
-    ACTS_INFO("Fitted Vertex: "
-              << "(" << fittedVertex.position().x() << ","
-              << fittedVertex.position().y() << ","
-              << fittedVertex.position().z() << ")");
-    ACTS_INFO("Truth Vertex: "
-              << "(" << vertexAndTracks.vertex.position().x() << ","
-              << vertexAndTracks.vertex.position().y() << ","
-              << vertexAndTracks.vertex.position().z() << ")");
+    ACTS_INFO("Fitted Vertex " << fittedVertex.fullPosition().transpose());
   }
-
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }

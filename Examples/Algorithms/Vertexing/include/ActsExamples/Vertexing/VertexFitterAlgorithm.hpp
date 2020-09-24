@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,26 +9,35 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
-class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
+class VertexFitterAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input track parameters collection.
     std::string inputTrackParameters;
-    /// Output proto vertex collection.
-    std::string outputProtoVertices;
-    /// Magnetic field vector.
+    /// Input proto vertex collection.
+    std::string inputProtoVertices;
+    /// The magnetic field.
     Acts::Vector3D bField = Acts::Vector3D::Zero();
+    bool doConstrainedFit = false;
+    /// Vertex constraint position
+    Acts::Vector3D constraintPos = Acts::Vector3D(0, 0, 0);
+    /// Vertex constraint covariance matrix
+    Acts::SymMatrix3D constraintCov =
+        Acts::Vector3D(3 * Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm,
+                       10 * Acts::UnitConstants::mm)
+            .asDiagonal();
   };
 
-  IterativeVertexFinderAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
+  VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
-  /// Find vertices using iterative vertex finder algorithm.
+  /// Fit the input vertices.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure

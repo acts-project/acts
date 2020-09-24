@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,10 +25,10 @@ struct FixedMultiplicityGenerator {
 };
 
 struct PoissonMultiplicityGenerator {
-  size_t mu = 1;
+  double mean = 1;
 
   size_t operator()(RandomEngine& rng) const {
-    return (0 < mu) ? std::poisson_distribution<size_t>(mu)(rng) : 0;
+    return (0 < mean) ? std::poisson_distribution<size_t>(mean)(rng) : 0;
   }
 };
 
