@@ -54,7 +54,7 @@ find_dependency(Eigen3 @Eigen3_VERSION@ CONFIG EXACT)
 if(PluginDD4hep IN_LIST Acts_COMPONENTS)
   find_dependency(DD4hep @DD4hep_VERSION@ CONFIG EXACT)
 endif()
-if(PluginJson IN_LIST Acts_COMPONENTS)
+if(JsonPlugin IN_LIST Acts_COMPONENTS)
   # if nlohmann::json is compiled as part of the Acts build
   # then the version is undefined; can not search for exac match
   find_dependency(nlohmann_json @nlohman_json_VERSION@ CONFIG)

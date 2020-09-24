@@ -4,7 +4,7 @@
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
 add_component_if(Digitization PluginDigitization ACTS_BUILD_PLUGIN_DIGITIZATION)
 add_component_if(Identification PluginIdentification ACTS_BUILD_PLUGIN_IDENTIFICATION)
-add_component_if(Json PluginJson ACTS_BUILD_JSON_PLUGIN)
+add_component_if(Json JsonPlugin ACTS_BUILD_JSON_PLUGIN)
 add_component_if(Legacy PluginLegacy ACTS_BUILD_PLUGIN_LEGACY)
 add_component_if(Sycl PluginSycl ACTS_BUILD_PLUGIN_SYCL)
 # dependent plugins. depend either on a independent plugins or on one another

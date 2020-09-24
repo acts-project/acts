@@ -11,7 +11,7 @@ find_package(
     PluginDD4hep
     PluginDigitization
     PluginIdentification
-    PluginJson
+    JsonPlugin
     PluginLegacy
     PluginTGeo)
 
@@ -31,6 +31,6 @@ target_link_libraries(
     ActsPluginDD4hep
     ActsPluginDigitization
     ActsPluginIdentification
-    ActsPluginJson
+    ActsJsonPlugin
     ActsPluginLegacy
     ActsPluginTGeo)
