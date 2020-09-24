@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <string>
-
 namespace ActsExamples {
 class IBaseDetector;
 }
