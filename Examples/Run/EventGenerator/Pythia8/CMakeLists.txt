@@ -6,7 +6,7 @@ target_link_libraries(
   PRIVATE
     ActsExamplesFramework ActsExamplesCommon
     ActsExamplesGenerators ActsExamplesGeneratorsPythia8
-    ActsExamplesIoRoot ActsExamplesIoCsv ActsExamplesPrinters
+    ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters
     Boost::program_options)
 
 install(
