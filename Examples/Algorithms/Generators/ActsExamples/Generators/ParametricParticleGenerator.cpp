@@ -63,7 +63,7 @@ operator()(RandomEngine& rng) const {
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
     particle.setPosition4(d0 * std::sin(phi), d0 * -std::cos(phi), z0, t0);
     particle.setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta));
-    // TODO check that this actually computes abs p value
+    // see e.g. https://en.wikipedia.org/wiki/Pseudorapidity
     particle.setAbsMomentum(pt / std::cosh(eta));
 
     // generated particle ids are already ordered and should end up at the end
