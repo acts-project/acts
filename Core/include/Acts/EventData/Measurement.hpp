@@ -220,6 +220,19 @@ class Measurement {
     return m_oParameters.template getParameter<parameter>();
   }
 
+  /// @brief checks whether a given parameter is included in this set of
+  ///  parameters
+  ///
+  /// @tparam parameter identifier for the parameter to be retrieved
+  /// @remark @c parameter must be part of the template parameter pack @c
+  /// params. Otherwise a compile-time error is generated.
+  ///
+  /// @return @c true if the parameter is stored in this set, otherwise @c false
+  template <parameter_indices_t parameter>
+  bool contains() const {
+    return m_oParameters.template contains<parameter>();
+  }
+
   /// @brief access vector with measured parameter values
   ///
   /// @return column vector whose size is equal to the dimensionality of this

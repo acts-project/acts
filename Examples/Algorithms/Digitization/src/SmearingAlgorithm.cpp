@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include <Acts/Geometry/GeometryIdentifier.hpp>
+#include <Acts/Geometry/TrackingGeometry.hpp>
 
 #include <stdexcept>
 
@@ -27,6 +28,11 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
+
+  // fill the digitizables map to allow lookup by geometry id only
+  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
+    this->m_dSurfaces.insert_or_assign(surface->geometryId(), surface);
+  });
 }
 
 ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
@@ -49,26 +55,38 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     for (auto ih = moduleHits.begin(); ih != moduleHits.end(); ++ih) {
       const auto& hit = *ih;
 
-      auto surfaceRange = selectModule(m_digitizableSurfaces, moduleGeoId);
-      auto smearerRange = selectModule(m_cfg.smearers, moduleGeoId);
-      if (not surfaceRange.empty() and not smearerRange.empty()) {
-        // First one wins (there shouldn't be more than one smearer per) surface
-        auto& surface = surfaceRange.begin()->second;
-        auto& smearer = smearerRange.begin()->second;
-        ActsFatras::SmearInput sInput(hit, ctx.geoContext, surface);
-        // Run the visitor
-        std::visit(
-            [&](auto&& sm) {
-              auto sParSet = sm.first(sInput, rng, sm.second);
-              if (sParSet.ok()) {
-                auto measurement = createMeasurement(std::move(sParSet.value()),
-                                                     surface, {hit});
-                measurements.emplace_hint(measurements.end(),
-                                          surface->geometryId(),
-                                          std::move(measurement));
-              }
-            },
-            smearer);
+      // TODO replace by hierarchy search  (does not work yet)
+      auto vID = Acts::GeometryIdentifier().setVolume(moduleGeoId.volume());
+      auto smearItr = m_cfg.smearers.find(vID);
+
+      if (smearItr != m_cfg.smearers.end()) {
+        auto surfaceItr = m_dSurfaces.find(moduleGeoId);
+        if (surfaceItr != m_dSurfaces.end()) {
+          // First one wins (there shouldn't be more than one smearer per)
+          // surface
+          auto& surface = surfaceItr->second;
+          auto& smearer = smearItr->second;
+          ActsFatras::SmearInput sInput(hit, ctx.geoContext, surface);
+          // Run the visitor
+          std::visit(
+              [&](auto&& sm) {
+                auto sParSet = sm.first(sInput, rng, sm.second);
+                if (sParSet.ok()) {
+                  auto measurement = createMeasurement(
+                      std::move(sParSet.value()), *surface, {hit});
+                  measurements.emplace_hint(measurements.end(),
+                                            surface->geometryId(),
+                                            std::move(measurement));
+                }
+              },
+              smearer);
+        } else {
+          ACTS_WARNING("Could not find surface with geometry identifier "
+                       << moduleGeoId.value());
+        }
+      } else {
+        ACTS_DEBUG("No wmaring function present for volume "
+                   << moduleGeoId.volume());
       }
     }
   }

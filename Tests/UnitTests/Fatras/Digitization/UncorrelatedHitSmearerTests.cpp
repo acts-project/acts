@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   auto m4 = Hit::Vector4(1, 2, 1, 4);
   auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
-  SmearInput sInput{hit, geoCtx, tSurface};
+  SmearInput sInput{hit, geoCtx, tSurface.get()};
 
   AddSmearer tAddFnc;
   SterileSmearer tSterileFnc;

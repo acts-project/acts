@@ -32,6 +32,7 @@ void ActsExamples::setupDigitization(
   if (vars["digi-smearing"].as<bool>()) {
     ActsExamples::SmearingAlgorithm::Config smearCfg =
         ActsExamples::Options::readSmearingConfig(vars);
+    smearCfg.trackingGeometry = trackingGeometry;
     smearCfg.randomNumbers = randomNumbers;
 
     sequencer.addAlgorithm(

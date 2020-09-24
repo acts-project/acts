@@ -22,10 +22,14 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
+#include <Acts/Geometry/TrackingVolume.hpp>
+#include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
+#include <stdio.h>
 
 int processGeometry(int argc, char* argv[],
                     ActsExamples::IBaseDetector& detector) {

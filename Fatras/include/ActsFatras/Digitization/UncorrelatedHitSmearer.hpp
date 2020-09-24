@@ -37,14 +37,14 @@ struct SmearInput {
   /// the  and optionally the @param surface_
   SmearInput(std::reference_wrapper<const Hit> hit_,
              std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-             std::shared_ptr<const Acts::Surface> surface_ = nullptr)
+             const Acts::Surface* surface_ = nullptr)
       : hit(hit_), geoContext(geoContext_), surface(surface_) {}
 
   SmearInput() = delete;
 
   std::reference_wrapper<const Hit> hit;
   std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  std::shared_ptr<const Acts::Surface> surface = nullptr;
+  const Acts::Surface* surface = nullptr;
 };
 
 /// Parameter smearer for fast digitisation for bound parameters
@@ -58,6 +58,8 @@ struct SmearInput {
 ///
 template <Acts::BoundIndices... kParameters>
 struct BoundParametersSmearer {
+  using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
+
   /// Generic implementation of a smearing meathod for bound parameters
   ///
   /// @tparam random_gnerator_t The type of the random generator provided
@@ -73,7 +75,6 @@ struct BoundParametersSmearer {
   operator()(const SmearInput& sInput, random_generator_t& sRandom,
              const std::array<SmearFunction<random_generator_t>,
                               sizeof...(kParameters)>& sFunctions) const {
-    using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
         detail::ParametersSmearer<Acts::BoundIndices, kParameters...>;
@@ -83,7 +84,6 @@ struct BoundParametersSmearer {
     }
 
     const auto& hit = sInput.hit.get();
-
     auto dir = hit.unitDirection();
     auto gltResult =
         sInput.surface->globalToLocal(sInput.geoContext, hit.position(), dir);

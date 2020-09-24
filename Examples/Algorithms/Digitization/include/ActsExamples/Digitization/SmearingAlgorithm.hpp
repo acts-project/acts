@@ -22,6 +22,11 @@
 #include <string>
 #include <unordered_map>
 
+namespace Acts {
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
 
 /// @brief Digitization Algorithm that turns simulated
@@ -54,6 +59,8 @@ class SmearingAlgorithm final : public BareAlgorithm {
     std::string inputSimulatedHits;
     /// Output collection of measuremetns
     std::string outputMeasurements;
+    /// Tracking geometry required to access global-to-local transforms.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
     /// Random numbers tool.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
@@ -77,9 +84,11 @@ class SmearingAlgorithm final : public BareAlgorithm {
  private:
   /// The configuration struct containing the smearers
   Config m_cfg;
+
   /// All digitizable surfaces in the geometry
-  GeometryIdMultimap<std::shared_ptr<const Acts::Surface>>
-      m_digitizableSurfaces;
+  // TODO should be centrally done in the future
+  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+      m_dSurfaces;
 
   /// Create a fittable measurmement from a parameter set
   ///
@@ -90,11 +99,10 @@ class SmearingAlgorithm final : public BareAlgorithm {
   template <Acts::BoundIndices... kParameters>
   Acts::FittableMeasurement<DigitizedHit> createMeasurement(
       Acts::ParameterSet<Acts::BoundIndices, kParameters...>&& pset,
-      std::shared_ptr<const Acts::Surface> surface,
-      std::vector<SimHit> simHits) const {
-    DigitizedHit dhit(*surface, std::move(simHits));
+      const Acts::Surface& surface, std::vector<SimHit> simHits) const {
+    DigitizedHit dhit(surface, std::move(simHits));
     return Acts::Measurement<DigitizedHit, Acts::BoundIndices, kParameters...>(
-        std::move(surface), std::move(dhit), std::move(pset));
+        std::move(surface.getSharedPtr()), std::move(dhit), std::move(pset));
   }
 };
 
