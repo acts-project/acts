@@ -6,17 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Vertexing/TutorialAMVFAlgorithm.hpp"
+#include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
@@ -28,27 +24,33 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-ActsExamples::TutorialAMVFAlgorithm::TutorialAMVFAlgorithm(
-    const Config& cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("Tutorial AMVF Algorithm", level),
-      m_cfg(cfg) {}
+#include "VertexingHelpers.hpp"
 
-/// @brief Tutorial algorithm that receives all selected tracks from an event
-/// and finds and fits its vertices using the AMVF
-ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  using namespace Acts::UnitLiterals;
-
-  // Get the input track collection
-  auto allTracks = getInputTrackCollection(ctx);
-  // Create vector of track pointers for vertexing
-  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
-  for (const auto& trk : allTracks) {
-    inputTrackPtrCollection.push_back(&trk);
+ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
+    const Config& cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameters collection");
   }
+  if (m_cfg.outputProtoVertices.empty()) {
+    throw std::invalid_argument("Missing output proto vertices collection");
+  }
+}
+
+ActsExamples::ProcessCode ActsExamples::TutorialVertexFinderAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  // retrieve input tracks and convert into the expected format
+  const auto& inputTrackParameters =
+      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackPointers =
+      makeTrackParametersPointerContainer(inputTrackParameters);
   //* Do not change the code above this line *//
+
+  //* Remove following 2 lines. Only here to suppress unused variable errors *//
+  (void)(inputTrackParameters);
+  (void)(inputTrackPointers);
 
   //////////////////////////////////////////////////////////////////////////////
   /*****   Note: This is a skeleton file to be filled with tutorial code  *****/
@@ -67,22 +69,4 @@ ActsExamples::ProcessCode ActsExamples::TutorialAMVFAlgorithm::execute(
 
   //* Do not change the code below this line *//
   return ActsExamples::ProcessCode::SUCCESS;
-}
-
-std::vector<Acts::BoundTrackParameters>
-ActsExamples::TutorialAMVFAlgorithm::getInputTrackCollection(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  // Setup containers
-  const auto& input =
-      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
-          m_cfg.trackCollection);
-  std::vector<Acts::BoundTrackParameters> inputTrackCollection;
-
-  for (auto& vertexAndTracks : input) {
-    inputTrackCollection.insert(inputTrackCollection.end(),
-                                vertexAndTracks.tracks.begin(),
-                                vertexAndTracks.tracks.end());
-  }
-
-  return inputTrackCollection;
 }

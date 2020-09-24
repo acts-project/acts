@@ -1,26 +1,26 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Generators/ParametricProcessGenerator.hpp"
+#include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <random>
 
-ActsExamples::ParametricProcessGenerator::ParametricProcessGenerator(
-    const ActsExamples::ParametricProcessGenerator::Config& cfg)
+ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
+    const Config& cfg)
     : m_cfg(cfg),
       m_charge(ActsFatras::findCharge(m_cfg.pdg)),
       m_mass(ActsFatras::findMass(m_cfg.pdg)) {}
 
-std::vector<ActsExamples::SimVertex> ActsExamples::ParametricProcessGenerator::
-operator()(ActsExamples::RandomEngine& rng) const {
+ActsExamples::SimParticleContainer ActsExamples::ParametricParticleGenerator::
+operator()(RandomEngine& rng) const {
   using UniformReal = std::uniform_real_distribution<double>;
   using UniformIndex = std::uniform_int_distribution<size_t>;
 
@@ -37,10 +37,13 @@ operator()(ActsExamples::RandomEngine& rng) const {
       m_cfg.pdg,
       static_cast<Acts::PdgParticle>(-m_cfg.pdg),
   };
-  const double qChoices[] = {m_charge, -m_charge};
+  const double qChoices[] = {
+      m_charge,
+      -m_charge,
+  };
 
-  // create empty process vertex
-  SimVertex process(SimVertex::Vector4::Zero());
+  SimParticleContainer particles;
+  particles.reserve(m_cfg.numParticles);
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
@@ -60,11 +63,12 @@ operator()(ActsExamples::RandomEngine& rng) const {
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
     particle.setPosition4(d0 * std::sin(phi), d0 * -std::cos(phi), z0, t0);
     particle.setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta));
-    // TODO check abs p value
+    // see e.g. https://en.wikipedia.org/wiki/Pseudorapidity
     particle.setAbsMomentum(pt / std::cosh(eta));
 
-    process.outgoing.push_back(std::move(particle));
+    // generated particle ids are already ordered and should end up at the end
+    particles.insert(particles.end(), std::move(particle));
   }
 
-  return {process};
+  return particles;
 }

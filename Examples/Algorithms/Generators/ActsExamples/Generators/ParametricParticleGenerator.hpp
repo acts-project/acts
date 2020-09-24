@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
@@ -24,7 +24,7 @@ namespace ActsExamples {
 /// Generates a single process vertex with the given number of tracks. Each
 /// track's momentum and direction is drawn from uniform parameter
 /// distributions. Position and time are always set to zero.
-class ParametricProcessGenerator {
+class ParametricParticleGenerator {
  public:
   struct Config {
     /// Number of particles.
@@ -48,10 +48,10 @@ class ParametricProcessGenerator {
     bool randomizeCharge = false;
   };
 
-  ParametricProcessGenerator(const Config& cfg);
+  ParametricParticleGenerator(const Config& cfg);
 
-  /// Generate a single process vertex with the given number of particles.
-  std::vector<SimVertex> operator()(RandomEngine& rng) const;
+  /// Generate a single primary vertex with the given number of particles.
+  SimParticleContainer operator()(RandomEngine& rng) const;
 
  private:
   Config m_cfg;

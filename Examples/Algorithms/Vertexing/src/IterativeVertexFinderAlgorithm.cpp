@@ -8,8 +8,9 @@
 
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -26,39 +27,45 @@
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/TruthTracking/VertexAndTracks.hpp"
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/MagneticField/MagneticFieldContext.hpp>
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <iostream>
+#include "VertexingHelpers.hpp"
 
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
-    const Config& cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("VertexFinding", level), m_cfg(cfg) {}
+    const Config& cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("IterativeVertexFinder", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameters collection");
+  }
+  if (m_cfg.outputProtoVertices.empty()) {
+    throw std::invalid_argument("Missing output proto vertices collection");
+  }
+}
 
-/// @brief Algorithm that receives all selected tracks from an event
-/// and finds and fits its vertices
 ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  // retrieve input tracks and convert into the expected format
+  const auto& inputTrackParameters =
+      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackPointers =
+      makeTrackParametersPointerContainer(inputTrackParameters);
+
   using MagneticField = Acts::ConstantBField;
   using Stepper = Acts::EigenStepper<MagneticField>;
   using Propagator = Acts::Propagator<Stepper>;
   using PropagatorOptions = Acts::PropagatorOptions<>;
-  using TrackParameters = Acts::BoundTrackParameters;
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using VertexFitter =
-      Acts::FullBilloirVertexFitter<TrackParameters, Linearizer>;
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   using ImpactPointEstimator =
-      Acts::ImpactPointEstimator<TrackParameters, Propagator>;
+      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
   using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
   using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions = Acts::VertexingOptions<TrackParameters>;
-
-  static_assert(Acts::VertexFinderConcept<VertexSeeder>,
-                "VertexSeeder does not fulfill vertex finder concept.");
-  static_assert(Acts::VertexFinderConcept<VertexFinder>,
-                "VertexFinder does not fulfill vertex finder concept.");
+  using VertexFinderOptions =
+      Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   // Set up the magnetic field
   MagneticField bField(m_cfg.bField);
@@ -86,49 +93,24 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   VertexFinder::State state(ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
-  // Setup containers
-  const auto& input =
-      ctx.eventStore.get<std::vector<ActsExamples::VertexAndTracks>>(
-          m_cfg.trackCollection);
-  std::vector<Acts::BoundTrackParameters> inputTrackCollection;
+  // find vertices
+  auto result = finder.find(inputTrackPointers, finderOpts, state);
+  if (not result.ok()) {
+    ACTS_ERROR("Error in vertex finder: " << result.error().message());
+    return ProcessCode::ABORT;
+  }
+  auto vertices = *result;
 
-  ACTS_INFO("Truth vertices in event: " << input.size());
-
-  for (auto& vertexAndTracks : input) {
-    ACTS_INFO("\t True vertex at ("
-              << vertexAndTracks.vertex.position().x() << ","
-              << vertexAndTracks.vertex.position().y() << ","
-              << vertexAndTracks.vertex.position().z() << ") with "
-              << vertexAndTracks.tracks.size() << " tracks.");
-    inputTrackCollection.insert(inputTrackCollection.end(),
-                                vertexAndTracks.tracks.begin(),
-                                vertexAndTracks.tracks.end());
+  // show some debug output
+  ACTS_INFO("Found " << vertices.size() << " vertices in event");
+  for (const auto& vtx : vertices) {
+    ACTS_INFO("Found vertex at " << vtx.fullPosition().transpose() << " with "
+                                 << vtx.tracks().size() << " tracks.");
   }
 
-  std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
-  for (const auto& trk : inputTrackCollection) {
-    inputTrackPtrCollection.push_back(&trk);
-  }
-
-  // Find vertices
-  auto res = finder.find(inputTrackPtrCollection, finderOpts, state);
-
-  if (res.ok()) {
-    // Retrieve vertices found by vertex finder
-    auto vertexCollection = *res;
-
-    ACTS_INFO("Found " << vertexCollection.size() << " vertices in event.");
-
-    unsigned int count = 0;
-    for (const auto& vtx : vertexCollection) {
-      ACTS_INFO("\t" << ++count << ". vertex at "
-                     << "(" << vtx.position().x() << "," << vtx.position().y()
-                     << "," << vtx.position().z() << ") with "
-                     << vtx.tracks().size() << " tracks.");
-    }
-  } else {
-    ACTS_ERROR("Error in vertex finder.");
-  }
+  // store proto vertices extracted from the found vertices
+  ctx.eventStore.add(m_cfg.outputProtoVertices,
+                     makeProtoVertices(inputTrackParameters, vertices));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

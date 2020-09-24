@@ -13,7 +13,6 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
