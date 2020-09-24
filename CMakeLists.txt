@@ -29,7 +29,7 @@ option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
-option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
+option(ACTS_BUILD_JSON_PLUGIN "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
@@ -84,7 +84,7 @@ set_option_if(
   ACTS_BUILD_PLUGIN_DIGITIZATION
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
-  ACTS_BUILD_PLUGIN_JSON
+  ACTS_BUILD_JSON_PLUGIN
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(
   ACTS_BUILD_FATRAS
@@ -131,7 +131,7 @@ endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_dd4hep_version} CONFIG REQUIRED COMPONENTS DDCore)
 endif()
-if(ACTS_BUILD_PLUGIN_JSON)
+if(ACTS_BUILD_JSON_PLUGIN)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
     message(STATUS "Using system installation of nlohmann::json")
     find_package(nlohmann_json 3.2.0 CONFIG REQUIRED)
