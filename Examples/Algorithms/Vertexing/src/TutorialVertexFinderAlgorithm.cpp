@@ -48,7 +48,7 @@ ActsExamples::ProcessCode ActsExamples::TutorialVertexFinderAlgorithm::execute(
       makeTrackParametersPointerContainer(inputTrackParameters);
   //* Do not change the code above this line *//
 
-  //* Remove following 2 lines. Only here to suppres unused variable errors *//
+  //* Remove following 2 lines. Only here to suppress unused variable errors *//
   (void)(inputTrackParameters);
   (void)(inputTrackPointers);
 
