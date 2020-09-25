@@ -728,10 +728,9 @@ class Navigator {
             // The stepper updates the step size ( single / multi component)
             stepper.updateStepSize(state.stepping,
                                    *state.navigation.navSurfaceIter, true);
-            ACTS_VERBOSE(
-                volInfo(state)
-                << "Navigation stepSize updated to "
-                << stepper.outputStepSize(state.stepping)
+            ACTS_VERBOSE(volInfo(state)
+                         << "Navigation stepSize updated to "
+                         << stepper.outputStepSize(state.stepping));
             return true;
           }
         }
