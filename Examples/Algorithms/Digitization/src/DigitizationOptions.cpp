@@ -9,7 +9,7 @@
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "ActsExamples/Digitization/HitSmearers.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include <boost/program_options.hpp>
 
@@ -43,11 +43,12 @@ void ActsExamples::Options::addDigitizationOptions(
       "Smearing Input: smear binning values for this volume.");
   opt("digi-smear-types", value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: smear function types as 0 (gauss), 1 (truncated gauss), "
-      "2 "
-      "(clipped gauss), 3 (uniform).");
+      "2 (clipped gauss), 3 (uniform).");
   opt("digi-smear-parameters",
       value<read_range>()->multitoken()->default_value({}),
-      "Smearing Input: smear parameters depending on the smearing type.");
+      "Smearing Input: smear parameters depending on the smearing type, 1 "
+      "parameter for simple gauss, 4 for all others (1 parameter, 2 range "
+      "values, 1 range indicator: both neg < 0, pos/neg = 0, both pos > 0).");
 }
 
 ActsExamples::SmearingAlgorithm::Config
@@ -69,7 +70,7 @@ ActsExamples::Options::readSmearingConfig(
   // complex smearing setups
   auto volumes = variables["digi-smear-volume-id"].as<read_series>();
   if (not volumes.empty()) {
-    HitSmearers::FunctionGenerator sFnc;
+    Digitization::FunctionGenerator sFnc;
 
     auto vdims = variables["digi-smear-dimensions"].as<read_series>();
     auto bvalues = variables["digi-smear-binvalues"].as<read_series>();
@@ -78,16 +79,16 @@ ActsExamples::Options::readSmearingConfig(
 
     // Count the number of needed parameters
     // - type 0 needs 1 parameters
-    // - type 1-3 needs 3 parameters
+    // - type 1-4 needs 4 parameters:
+    //      1 principle parameter, 2 range parameters, 1 range indicator
     size_t sumpars = 0;
     std::for_each(types.begin(), types.end(),
-                  [&](int n) { sumpars += (n == 0) ? 1 : 3; });
+                  [&](int n) { sumpars += (n == 0) ? 1 : 4; });
 
     if (volumes.size() == vdims.size() and bvalues.size() == types.size() and
         parameters.size() == sumpars) {
       size_t vpos = 0;
       size_t ppos = 0;
-      size_t padd = 0;
 
       ACTS_DEBUG("Volume parameters properly read from command line.")
 
@@ -97,9 +98,19 @@ ActsExamples::Options::readSmearingConfig(
       ///
       /// @return an extracted vector
       auto extract = [&](int ftype) -> std::vector<double> {
-        padd = (ftype == 0) ? 1 : 3;
+        size_t padd = (ftype == 0) ? 1 : 3;
         std::vector<double> fpars = {parameters.begin() + ppos,
                                      parameters.begin() + ppos + padd};
+        // unfortunately boost::program_options can not deal with negative
+        // values within a sequence, we thus have to flag the range at defined
+        // with command line options:
+        //    < 0 (both negative), 0 (symmetric), > 0 both positive
+        if (padd == 3) {
+          double rangeIndic = parameters[ppos + padd];
+          fpars[1] *= (rangeIndic <= 0) ? -1. : 1.;
+          fpars[2] *= (rangeIndic < 0) ? -1. : 1.;
+          ++padd;
+        }
         ppos += padd;
         return fpars;
       };
@@ -212,8 +223,7 @@ ActsExamples::Options::readSmearingConfig(
           }
         }
         // fill the smearer into the configuration map
-        smearCfg.smearers.emplace_hint(smearCfg.smearers.end(),
-                                       volumeGeometryId, std::move(smearer));
+        smearCfg.smearers.insert({volumeGeometryId, std::move(smearer)});
       }
     }
   }
