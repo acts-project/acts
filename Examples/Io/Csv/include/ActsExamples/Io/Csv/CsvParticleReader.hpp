@@ -32,7 +32,7 @@ class CsvParticleReader final : public IReader {
     /// Where to read input files from.
     std::string inputDir;
     /// Input filename stem.
-    std::string inputStem = "particles";
+    std::string inputStem;
     /// Which particle collection to read into.
     std::string outputParticles;
   };
