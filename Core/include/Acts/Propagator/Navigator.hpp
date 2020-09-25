@@ -703,39 +703,36 @@ class Navigator {
                 stepper.direction(state.stepping), opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
-          if (state.navigation.currentSurface == nullptr) {
+          auto protoNavSurfacesIter = protoNavSurfaces.begin();
+          bool sameSurface = false;
+          double initialPathLength = state.navigation.navSurfaces.begin();
+          state.navigation.navSurfaceIter->intersection.pathLength;
+          while (protoNavSurfacesIter != protoNavSurfaces.end() &&
+                 fabs(protoNavSurfacesIter->intersection.pathLength -
+                      initialPathLength) < s_epsilon) {
+            if (state.navigation.currentSurface ==
+                protoNavSurfacesIter->object) {
+              sameSurface = true;
+            }
+            protoNavSurfacesIter++;
+          }
+          // Check: are we on the first surface?
+          if (state.navigation.currentSurface == nullptr || sameSurface) {
+            // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
             state.navigation.navSurfaceIter =
                 state.navigation.navSurfaces.begin();
-            // Check: are we on the first surface?
-            bool sameSurface = false;
-            double initialPathLength =
-                state.navigation.navSurfaceIter->intersection.pathLength;
-            while (
-                state.navigation.navSurfaceIter !=
-                    state.navigation.navSurfaces.end() &&
-                fabs(state.navigation.navSurfaceIter->intersection.pathLength -
-                     initialPathLength) < s_epsilon) {
-              if (state.navigation.currentSurface ==
-                  state.navigation.navSurfaceIter->object) {
-                sameSurface = true;
-              }
-              state.navigation.navSurfaceIter++;
-            }
-            state.navigation.navSurfaceIter =
-                state.navigation.navSurfaces.begin();
-            if (!sameSurface) {
-              // we are not, go on
-              state.navigation.navLayers = {};
-              state.navigation.navLayerIter = state.navigation.navLayers.end();
-              // The stepper updates the step size ( single / multi component)
-              stepper.updateStepSize(state.stepping,
-                                     *state.navigation.navSurfaceIter, true);
-              ACTS_VERBOSE(volInfo(state)
-                           << "Navigation stepSize updated to "
-                           << stepper.outputStepSize(state.stepping));
-              return true;
-            }
+
+            state.navigation.navLayers = {};
+            state.navigation.navLayerIter = state.navigation.navLayers.end();
+            // The stepper updates the step size ( single / multi component)
+            stepper.updateStepSize(state.stepping,
+                                   *state.navigation.navSurfaceIter, true);
+            ACTS_VERBOSE(
+                volInfo(state)
+                << "Navigation stepSize updated to "
+                << stepper.outputStepSize(state.stepping)
+            return true;
           }
         }
       }
