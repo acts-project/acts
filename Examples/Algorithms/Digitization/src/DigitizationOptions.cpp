@@ -225,6 +225,9 @@ ActsExamples::Options::readSmearingConfig(
         // fill the smearer into the configuration map
         smearCfg.smearers.insert({volumeGeometryId, std::move(smearer)});
       }
+    } else if (parameters.size() != sumpars) {
+      ACTS_ERROR("Expected " << sumpars << " parameters, but received "
+                             << parameters.size());
     }
   }
   return smearCfg;
