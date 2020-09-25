@@ -713,11 +713,12 @@ class Navigator {
             if (state.navigation.currentSurface ==
                 protoNavSurfacesIter->object) {
               sameSurface = true;
+              break;
             }
             protoNavSurfacesIter++;
           }
           // Check: are we on the first surface?
-          if (state.navigation.currentSurface == nullptr || sameSurface) {
+          if (state.navigation.currentSurface == nullptr || !sameSurface) {
             // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
             state.navigation.navSurfaceIter =
