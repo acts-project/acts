@@ -29,8 +29,11 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// @brief Digitization Algorithm that turns simulated
-/// hits into measuremetns for Fitting
+/// SmearingAlgorithm that turns simulated hits into measuremetns for Fitting
+///
+/// Different smearing functions can be configured for a list of supported
+/// smearers (see below).
+///
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
   template <Acts::BoundIndices... kParameters>
@@ -77,7 +80,8 @@ class SmearingAlgorithm final : public BareAlgorithm {
 
   /// Build measurement from simulation hits at input
   ///
-  /// @param txt is the algorithm context with event information
+  /// @param ctx is the algorithm context with event information
+  ///
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
@@ -86,7 +90,6 @@ class SmearingAlgorithm final : public BareAlgorithm {
   Config m_cfg;
 
   /// All digitizable surfaces in the geometry
-  // TODO should be centrally done in the future
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
       m_dSurfaces;
 

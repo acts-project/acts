@@ -19,7 +19,7 @@
 namespace ActsExamples {
 namespace Digitization {
 
-/// Gaussian smearing of a hit
+/// Gaussian smearing of a single parameter
 ///
 /// @note This smearer will smear over module boundaries
 /// it has no notion of a parameter range is assumed
@@ -42,7 +42,7 @@ struct Gauss {
   }
 };
 
-/// Gaussian smearing of a hit with truncation
+/// Gaussian smearing of a single parameter with truncation
 ///
 /// In case a hit is smeared outside the range, a DigitizationError
 /// indicating the truncation
@@ -72,7 +72,7 @@ struct GaussTrunc {
   }
 };
 
-/// Gaussian smearing of a hit with truncation
+/// Gaussian smearing of a single parameter with clipping
 ///
 /// In case a hit is smeared outside the range, the smearing will be
 /// repeated, until a maximum attempt number is reached
@@ -108,7 +108,7 @@ struct GaussClipped {
   }
 };
 
-/// Uniform smearing of a hit within bounds
+/// Uniform smearing of a single parameter within bounds
 ///
 /// It estimates the bin borders and smears uniformly between them
 struct Uniform {
@@ -147,7 +147,7 @@ struct Uniform {
   }
 };
 
-/// Digital readout emulation
+/// Digital emulation of a single parameter
 ///
 /// It estimates the bin and gives the bin center value
 struct Digital {
@@ -161,13 +161,13 @@ struct Digital {
 
   /// Constructor with a bin utility in order to get the bin borders
   ///
-  /// @param bu the bin utility which d
+  /// @param bu the bin utility within hich the parameter is allowed
   Digital(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
 
   /// Call operator for the SmearFunction caller interface
   ///
   /// @param value parameter to be smeared
-  /// @param rnd random generator to be used for the call
+  /// @param rnd random generator to be used for the call (unused)
   ///
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(double value,
@@ -195,12 +195,11 @@ using Parameters = std::array<std::vector<double>, DIM>;
 
 /// Struct to generate smearing functions from arguments
 ///
-/// @tparam indices_t The type of free/bound indices
-/// @tparam DIM The dimension of the smearing function array
 struct FunctionGenerator {
   /// Template unrolling
   ///
-  /// @pram ENTRY is the entry that is currently filled
+  /// @tparam DIM The dimension of the smearing function array
+  /// @tparam ENTRY is the entry that is currently filled
   ///
   /// @param functions[in,out] The smearing functions that are generated
   /// @param types The smearing function type (Gauss as default)
@@ -240,6 +239,8 @@ struct FunctionGenerator {
   }
 
   /// Generate call
+  ///
+  /// @tparam DIM The templated dimenstion type
   ///
   /// @param types The smearing function type (Gauss as default)
   /// @param pars The parameters for the smearing function

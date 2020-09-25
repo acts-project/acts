@@ -42,7 +42,6 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     return ProcessCode::ABORT;
   }
 
-  // Prepare the input and output collections
   const auto& hits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
 

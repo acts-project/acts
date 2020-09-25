@@ -19,7 +19,7 @@ namespace Options {
 /// @param desc The options description to add options to
 void addDigitizationOptions(Description& desc);
 
-/// Read Digitization Config from the options.
+/// Read SmearingAlgorithm Config from the options.
 ///
 /// @param variables The variables to read from
 SmearingAlgorithm::Config readSmearingConfig(const Variables& variables);
