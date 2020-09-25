@@ -707,7 +707,19 @@ class Navigator {
                 stepper.direction(state.stepping), opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
-
+          ACTS_VERBOSE(volInfo(state) << "epsilon : " << s_epsilon);
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "length : "
+              << fabs(protoNavSurfaces.front().intersection.pathLength));
+          ACTS_VERBOSE(volInfo(state)
+                       << "surface ? "
+                       << (state.navigation.currentSurface == nullptr));
+          ACTS_VERBOSE(
+              volInfo(state)
+              << "length > epsilon ? "
+              << (fabs(protoNavSurfaces.front().intersection.pathLength) >
+                  s_epsilon));
           // Check: are we on the first surface?
           if (state.navigation.currentSurface == nullptr ||
               fabs(protoNavSurfaces.front().intersection.pathLength) >
