@@ -21,6 +21,7 @@
 
 namespace ActsExamples {
 namespace detail {
+
 // extract the geometry identifier from a variety of types
 struct GeometryIdGetter {
   // explicit geometry identifier are just forwarded
@@ -56,6 +57,7 @@ struct CompareGeometryId {
     return GeometryIdGetter()(lhs) < GeometryIdGetter()(rhs);
   }
 };
+
 }  // namespace detail
 
 /// Store elements that know their detector geometry id, e.g. simulation hits.
