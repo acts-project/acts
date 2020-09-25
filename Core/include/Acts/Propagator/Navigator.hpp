@@ -705,8 +705,8 @@ class Navigator {
           // did we find any surfaces?
           auto protoNavSurfacesIter = protoNavSurfaces.begin();
           bool sameSurface = false;
-          double initialPathLength = state.navigation.navSurfaces.begin();
-          state.navigation.navSurfaceIter->intersection.pathLength;
+          double initialPathLength =
+              protoNavSurfacesIter->intersection.pathLength;
           while (protoNavSurfacesIter != protoNavSurfaces.end() &&
                  fabs(protoNavSurfacesIter->intersection.pathLength -
                       initialPathLength) < s_epsilon) {
