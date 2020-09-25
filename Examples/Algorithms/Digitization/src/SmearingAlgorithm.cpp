@@ -53,6 +53,8 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
 
   for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
     for (auto ih = moduleHits.begin(); ih != moduleHits.end(); ++ih) {
+      // Gather the hit index for further storage
+      unsigned int hitidx = ih - hits.begin();
       const auto& hit = *ih;
 
       // TODO replace by hierarchy search  (does not work yet)
@@ -73,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
                 auto sParSet = sm.first(sInput, rng, sm.second);
                 if (sParSet.ok()) {
                   auto measurement = createMeasurement(
-                      std::move(sParSet.value()), *surface, {hit});
+                      std::move(sParSet.value()), *surface, {hitidx});
                   measurements.emplace_hint(measurements.end(),
                                             surface->geometryId(),
                                             std::move(measurement));

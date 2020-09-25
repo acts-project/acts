@@ -94,15 +94,17 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ///
   /// @param pset The ParameterSet created from the smearer.
   /// @param surface The surface of the measurement.
+  /// @param hitIndices The index list of simulated hits.
   ///
   /// @return A Fittable measurement with a DigitizedHit source link
   template <Acts::BoundIndices... kParameters>
   Acts::FittableMeasurement<DigitizedHit> createMeasurement(
       Acts::ParameterSet<Acts::BoundIndices, kParameters...>&& pset,
-      const Acts::Surface& surface, std::vector<SimHit> simHits) const {
-    DigitizedHit dhit(surface, std::move(simHits));
+      const Acts::Surface& surface,
+      std::vector<unsigned int> hitIndices) const {
+    DigitizedHit dhit(surface, hitIndices);
     return Acts::Measurement<DigitizedHit, Acts::BoundIndices, kParameters...>(
-        std::move(surface.getSharedPtr()), std::move(dhit), std::move(pset));
+        std::move(surface.getSharedPtr()), dhit, std::move(pset));
   }
 };
 

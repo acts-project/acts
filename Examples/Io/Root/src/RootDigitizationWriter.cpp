@@ -82,10 +82,10 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
     const AlgorithmContext& ctx,
     const ActsExamples::GeometryIdMultimap<
         Acts::FittableMeasurement<ActsExamples::DigitizedHit>>& measurements) {
-  // TODO move to retrieved simulated hits container rather than object
   // composition
-  // const auto& simHitContainer =
-  //    ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
+
+  const auto& simHitContainer =
+      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
 
   for (auto& [key, value] : measurements) {
     std::visit(
@@ -99,8 +99,14 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
             auto& dTree = *(dTreeItr->second).get();
             // Fill the identification
             dTree.fillIdentification(ctx.eventNumber, sIdentifier);
-            // TODO change the contributed sim hits collection to indices
-            auto simHits = m.sourceLink().simulatedHits();
+            auto hitIndices = m.sourceLink().hitIndices();
+            std::vector<SimHit> simHits;
+            simHits.reserve(hitIndices.size());
+            for (auto& hi : hitIndices) {
+              auto nthhit = simHitContainer.nth(hi);
+              simHits.push_back(*nthhit);
+            }
+
             auto tParams = truthParameters(ctx.geoContext, surface, simHits);
             dTree.fillTruthParameters(std::get<0>(tParams),
                                       std::get<1>(tParams),
