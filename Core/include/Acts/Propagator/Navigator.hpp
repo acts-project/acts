@@ -703,22 +703,9 @@ class Navigator {
                 stepper.direction(state.stepping), opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
-          auto protoNavSurfacesIter = protoNavSurfaces.begin();
-          bool sameSurface = false;
-          double initialPathLength =
-              protoNavSurfacesIter->intersection.pathLength;
-          while (protoNavSurfacesIter != protoNavSurfaces.end() &&
-                 fabs(protoNavSurfacesIter->intersection.pathLength -
-                      initialPathLength) < s_epsilon) {
-            if (state.navigation.currentSurface ==
-                protoNavSurfacesIter->object) {
-              sameSurface = true;
-              break;
-            }
-            protoNavSurfacesIter++;
-          }
           // Check: are we on the first surface?
-          if (state.navigation.currentSurface == nullptr || !sameSurface) {
+          if (state.navigation.currentSurface == nullptr ||
+              protoNavSurfaces.front().intersection.pathLength > 1_um) {
             // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
             state.navigation.navSurfaceIter =
@@ -1207,6 +1194,6 @@ class Navigator {
                 : "No Volume") +
            " | ";
   }
-};
+};  // namespace Acts
 
 }  // namespace Acts
