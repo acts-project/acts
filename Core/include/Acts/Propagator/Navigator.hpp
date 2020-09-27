@@ -703,14 +703,15 @@ class Navigator {
                 stepper.direction(state.stepping), opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
+
           // Check: are we on the first surface?
           if (state.navigation.currentSurface == nullptr ||
               protoNavSurfaces.front().intersection.pathLength > 1_um) {
             // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
+
             state.navigation.navSurfaceIter =
                 state.navigation.navSurfaces.begin();
-
             state.navigation.navLayers = {};
             state.navigation.navLayerIter = state.navigation.navLayers.end();
             // The stepper updates the step size ( single / multi component)
@@ -1194,6 +1195,6 @@ class Navigator {
                 : "No Volume") +
            " | ";
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts
