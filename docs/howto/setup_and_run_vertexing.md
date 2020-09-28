@@ -1,7 +1,10 @@
 # ACTS Vertexing Tutorial - Example: Adaptive Multi-Vertex Finder (AMVF) - Pythia8
+
 This tutorial sets up and runs the ACTS Adaptive Multi-Vertex Finder on smeared ACTS Pythia8 truth tracks.
 *Note*: You have to have Pythia8 available on your machine for following this tutorial.
+
 ## Prerequisites
+
 For setting up and building ACTS, please refer to the general how-to ACTS guide. For this example you will need to enable Pythia8 in the examples by adding
 ```bash
 -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
@@ -17,13 +20,14 @@ to your cmake command will significantly speed up the execution time of the vert
 ## Setting up an ACTS Adaptive Multi-Vertex Finder Algorithm
 
 A template algorithm file with an (almost) empty ```execute()``` method to be filled in the following is provided here:
-```bash
-../Examples/Algorithms/Vertexing/src/ExampleAMVFAlgorithm.cpp
+```
+../Examples/Algorithms/Vertexing/src/TutorialVertexFinderAlgorithm.cpp
 ```
 Open the file in your editor and let's start setting up the AMVF. We will start setting up all necessary components in the ```execute()``` method.
 *Note:* You would normally **not** want to do all the following setup steps in the ```execute()``` method (that is run on every single event), but rather in e.g. the constructor. For the sake of this tutorial, however, everything will be set up and run in the ```execute()``` method.
 
 ### Setting up required tools: Magnetic field and propagator
+
 Let's start with setting up a constant magnetic field:
 ```cpp
 // Set up the magnetic field
@@ -37,7 +41,9 @@ Acts::EigenStepper<Acts::ConstantBField> stepper(bField);
 using Propagator = Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>>;
 auto propagator = std::make_shared<Propagator>(stepper);
 ```
+
 ### Setting up required tools for the vertex fitter
+
 Now, set up an impact point estimator...
 ```cpp
 // Set up ImpactPointEstimator
@@ -67,7 +73,9 @@ Fitter::Config fitterCfg(ipEstimator);
 fitterCfg.annealingTool = annealingUtility;
 Fitter fitter(fitterCfg);
 ```
+
 ### Setting up required tools: Vertex seed finder
+
 The last tool we need to set up (before finally setting up the AMVF) is a vertex seed finder:
 ```cpp
 // Set up the vertex seed finder
@@ -75,6 +83,7 @@ using SeedFinder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDen
 SeedFinder seedFinder;
 ```
 ### Setting up the AMVF tool
+
 Now we are ready to set up the Adaptive Multi-Vertex Finder. ACTS vertex finders are templated on the vertex fitter and vertex seed finder type:
 ```cpp
 // The vertex finder type
@@ -88,7 +97,7 @@ finderConfig.useBeamSpotConstraint = false;
 ```
 Create the AMVF instance and a finder state to be passed to the ```find()``` method below:
 ```cpp
-// Instantiate the finder 
+// Instantiate the finder
 Finder finder(finderConfig);
 // The vertex finder state
 Finder::State state;
@@ -99,8 +108,9 @@ Lastly, we need to provide vertexing options. Here, we could e.g. set a beam spo
 using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
- ### Deploying the vertex finder on the track collection
- Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The ```find()``` methods on ACTS vertex finders return an ```Acts::Result``` object that we can use to check if any errors occured and to retrieve the vertex collection:
+### Deploying the vertex finder on the track collection
+
+Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The ```find()``` methods on ACTS vertex finders return an ```Acts::Result``` object that we can use to check if any errors occured and to retrieve the vertex collection:
 ```cpp
 // Find vertices
 auto res = finder.find(inputTrackPtrCollection, finderOpts, state);
@@ -121,10 +131,12 @@ if (res.ok()) {
   ACTS_ERROR("Error in vertex finder: " << res.error().message());
 }
 ```
- For reference, the full tutorial code can also be found in a file called ```AdaptiveMultiVertexFinderAlgorithm.cpp``` in the same directory as ```ExampleAMVFAlgorithm.cpp```.
- ## Running the example algorithm
- In your build directory, recompile and run the example on three pileup-50 pythia events to get your first ACTS vertices:
+For reference, the full tutorial code can also be found in a file called ```AdaptiveMultiVertexFinderAlgorithm.cpp``` in the same directory as ```TutorialVertexFinderAlgorithm.cpp```.
+
+## Running the example algorithm
+
+In your build directory, recompile and run the example on three pileup-50 pythia events to get your first ACTS vertices:
 ```
 make -j4
-./bin/ActsTutorialAMVF --evg-pileup 50 -n 3
+./bin/ActsTutorialVertexFinder --evg-pileup 50 -n 3
 ```

@@ -1,3 +1,4 @@
+add_subdirectory(Digitization)
 add_subdirectory(EventData)
 add_subdirectory(Kernel)
 add_subdirectory(Physics)

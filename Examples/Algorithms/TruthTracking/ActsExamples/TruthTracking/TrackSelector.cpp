@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,71 +8,80 @@
 
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/TruthTracking/TruthVerticesToTracks.hpp"
 
-#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <stdexcept>
 #include <vector>
 
 ActsExamples::TrackSelector::TrackSelector(const Config& cfg,
-                                           Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("Selector", level), m_cfg(cfg) {
-  if (m_cfg.input.empty()) {
-    throw std::invalid_argument("Missing input collection");
+                                           Acts::Logging::Level lvl)
+    : BareAlgorithm("TrackSelector", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing input track parameters collection");
   }
-  if (m_cfg.output.empty()) {
-    throw std::invalid_argument("Missing output collection");
+  if (m_cfg.outputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing output track parameters collection");
+  }
+  if (m_cfg.outputTrackIndices.empty()) {
+    throw std::invalid_argument("Missing output track indices collection");
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  std::vector<VertexAndTracks> selected;
-
-  // get input tracks
-  const auto& input =
-      ctx.eventStore.get<std::vector<VertexAndTracks>>(m_cfg.input);
-
+  // helper functions to select tracks
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
   };
   auto isValidTrack = [&](const auto& trk) {
-    auto pos = trk.position(ctx.geoContext);
-    auto dir = trk.unitDirection();
-    auto rho = std::hypot(pos[Acts::eX], pos[Acts::eY]);
-    auto phi = std::atan2(dir[Acts::eY], dir[Acts::eX]);
-    auto eta = std::atanh(dir[Acts::eZ]);
-    auto pt = trk.transverseMomentum();
-    return within(rho, 0, m_cfg.rhoMax) and
-           within(std::abs(pos[Acts::eZ]), 0, m_cfg.absZMax) and
-           within(phi, m_cfg.phiMin, m_cfg.phiMax) and
+    const auto theta = trk.template get<Acts::eBoundTheta>();
+    const auto eta = -std::log(std::tan(theta / 2));
+    // define charge selection
+    const bool validNeutral = (trk.charge() == 0) and not m_cfg.removeNeutral;
+    const bool validCharged = (trk.charge() != 0) and not m_cfg.removeCharged;
+    const bool validCharge = validNeutral or validCharged;
+    return validCharge and
+           within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
+           within(std::abs(theta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(pt, m_cfg.ptMin, m_cfg.ptMax) and
-           (m_cfg.keepNeutral or (trk.charge() != 0));
+           within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
+                  m_cfg.phiMax) and
+           within(trk.template get<Acts::eBoundLoc0>(), m_cfg.loc0Min,
+                  m_cfg.loc0Max) and
+           within(trk.template get<Acts::eBoundLoc1>(), m_cfg.loc1Min,
+                  m_cfg.loc1Max) and
+           within(trk.template get<Acts::eBoundTime>(), m_cfg.timeMin,
+                  m_cfg.timeMax);
   };
 
-  for (const auto& vertexAndTracks : input) {
-    VertexAndTracks sel;
-    sel.vertex = vertexAndTracks.vertex;
+  // prepare input and output containers
+  const auto& inputTrackParameters =
+      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  TrackParametersContainer outputTrackParameters;
+  std::vector<uint32_t> outputTrackIndices;
+  outputTrackParameters.reserve(inputTrackParameters.size());
+  outputTrackIndices.reserve(inputTrackParameters.size());
 
-    // Copy selected tracks over
-    std::copy_if(vertexAndTracks.tracks.begin(), vertexAndTracks.tracks.end(),
-                 std::back_inserter(sel.tracks), isValidTrack);
-    // Only retain vertex if it still contains tracks
-    if (not sel.tracks.empty()) {
-      selected.push_back(std::move(sel));
+  // copy selected tracks and record initial track index
+  for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
+    const auto& trk = inputTrackParameters[i];
+    if (isValidTrack(trk)) {
+      outputTrackParameters.push_back(trk);
+      outputTrackIndices.push_back(i);
     }
   }
+  outputTrackParameters.shrink_to_fit();
+  outputTrackIndices.shrink_to_fit();
 
-  ACTS_DEBUG("event " << ctx.eventNumber << " selected " << selected.size()
-                      << " from " << input.size() << " vertices.");
+  ACTS_DEBUG("event " << ctx.eventNumber << " selected "
+                      << outputTrackParameters.size() << " from "
+                      << inputTrackParameters.size() << " tracks");
 
-  // write selected tracks
-  ctx.eventStore.add(m_cfg.output, std::move(selected));
-
+  ctx.eventStore.add(m_cfg.outputTrackParameters,
+                     std::move(outputTrackParameters));
+  ctx.eventStore.add(m_cfg.outputTrackIndices, std::move(outputTrackIndices));
   return ProcessCode::SUCCESS;
 }

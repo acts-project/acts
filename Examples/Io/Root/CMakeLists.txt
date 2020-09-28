@@ -9,9 +9,8 @@ add_library(
   src/RootPropagationStepsWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootTrackParameterWriter.cpp
-  src/RootVertexAndTracksWriter.cpp
-  src/RootVertexAndTracksReader.cpp
-  src/RootTrajectoryWriter.cpp)
+  src/RootTrajectoryWriter.cpp
+)
 target_include_directories(
   ActsExamplesIoRoot
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

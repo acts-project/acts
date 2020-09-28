@@ -8,42 +8,35 @@
 
 #pragma once
 
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/IterativeVertexFinder.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <memory>
+#include <string>
 
 namespace ActsExamples {
 
-class AdaptiveMultiVertexFinderAlgorithm : public ActsExamples::BareAlgorithm {
+class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track collection
-    std::string trackCollection;
+    /// Input track parameters collection.
+    std::string inputTrackParameters;
+    /// Output proto vertex collection.
+    std::string outputProtoVertices;
+    /// Magnetic field vector.
+    Acts::Vector3D bField = Acts::Vector3D::Zero();
   };
 
-  /// Constructor
-  AdaptiveMultiVertexFinderAlgorithm(
-      const Config& cfg, Acts::Logging::Level level = Acts::Logging::INFO);
+  AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
+                                     Acts::Logging::Level lvl);
 
-  /// Framework execute method
-  /// @param [in] context is the Algorithm context for event consistency
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& context) const final override;
+  /// Find vertices using the adapative multi vertex finder algorithm.
+  ///
+  /// @param ctx is the algorithm context with event information
+  /// @return a process code indication success or failure
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
-  /// The config class
   Config m_cfg;
-
-  std::vector<Acts::BoundTrackParameters> getInputTrackCollection(
-      const ActsExamples::AlgorithmContext& ctx) const;
 };
 
 }  // namespace ActsExamples

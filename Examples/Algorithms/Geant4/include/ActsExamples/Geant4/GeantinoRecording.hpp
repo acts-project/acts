@@ -13,11 +13,13 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "G4VUserDetectorConstruction.hh"
+#include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 
 #include <memory>
 #include <mutex>
 #include <string>
+
+#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 
@@ -41,10 +43,8 @@ class GeantinoRecording final : public BareAlgorithm {
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
     /// The number of tracks per event.
     size_t tracksPerEvent = 0;
-    /// random number seed 1.
-    unsigned int seed1 = 12345;
-    /// random number seed 2.
-    unsigned int seed2 = 45678;
+    /// Configuration of the generator action
+    PrimaryGeneratorAction::Config generationConfig;
   };
 
   GeantinoRecording(Config&& cfg, Acts::Logging::Level lvl);

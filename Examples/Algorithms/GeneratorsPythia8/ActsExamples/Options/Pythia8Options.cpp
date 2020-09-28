@@ -32,15 +32,14 @@ void ActsExamples::Options::addPythia8Options(
       "evg-pileup-process",
       value<std::string>()->default_value("SoftQCD:all = on"),
       "Pythi8 process string for the pile-up")(
-      "evg-pileup", value<size_t>()->default_value(200),
-      "Number of instantaneous pile-up events")(
+      "evg-pileup", value<double>()->default_value(200),
+      "Mean number of instantaneous pile-up events")(
       "evg-vertex-xy-std", value<double>()->default_value(0.015),
       "Transverse vertex standard deviation in mm")(
       "evg-vertex-z-std", value<double>()->default_value(55.5),
       "Longitudinal vertex standard deviation in mm")(
       "evg-vertex-t-std", value<double>()->default_value(0.08),
-      "Temporal vertex standard deviation in ns")(
-      "evg-shuffle", bool_switch(), "Randomnly shuffle the vertex order.");
+      "Temporal vertex standard deviation in ns");
 }
 
 ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
@@ -59,7 +58,7 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
   pileup.cmsEnergy = vm["evg-cms-energy"].as<double>();
   pileup.settings = {vm["evg-pileup-process"].as<std::string>()};
 
-  auto mu = vm["evg-pileup"].as<size_t>();
+  auto mu = vm["evg-pileup"].as<double>();
   auto vtxStdXY =
       vm["evg-vertex-xy-std"].as<double>() * Acts::UnitConstants::mm;
   auto vtxStdZ = vm["evg-vertex-z-std"].as<double>() * Acts::UnitConstants::mm;
@@ -74,7 +73,6 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
        GaussianVertexGenerator{{vtxStdXY, vtxStdXY, vtxStdZ, vtxStdT}},
        Pythia8Generator::makeFunction(pileup, lvl)},
   };
-  cfg.shuffle = vm["evg-shuffle"].as<bool>();
 
   return cfg;
 }
