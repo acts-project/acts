@@ -51,6 +51,7 @@ cmake_minimum_required( VERSION 3.13 )
 include( CheckIncludeFileCXX )
 include( CheckCXXSourceCompiles )
 include( CMakeParseArguments )
+include( FindPackageHandleStandardArgs )
 set( CMAKE_REQUIRED_QUIET TRUE )
 
 # Greet the user.
@@ -185,3 +186,7 @@ else()
       set( SYCL_FOUND FALSE )
    endif()
 endif()
+
+# Handle the standard find_package(...) arguments explicitly.
+find_package_handle_standard_args( SYCL
+   REQUIRED_VARS CMAKE_CXX_COMPILER SYCL_FOUND )
