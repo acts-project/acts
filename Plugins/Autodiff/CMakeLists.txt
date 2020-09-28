@@ -1,24 +1,22 @@
-include(ExternalProject)
-
 add_library(
-  ActsAutodiffPlugin INTERFACE)
+  ActsPluginAutodiff INTERFACE)
 
 add_dependencies(
-  ActsAutodiffPlugin autodiff)
+  ActsPluginAutodiff autodiff)
 
 target_include_directories(
-  ActsAutodiffPlugin
+  ActsPluginAutodiff
   INTERFACE
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/thirdparty/autodiff>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
     
 target_link_libraries(
-  ActsAutodiffPlugin INTERFACE ActsCore)
+  ActsPluginAutodiff INTERFACE ActsCore)
 
 install(
-  TARGETS ActsAutodiffPlugin
-  EXPORT ActsAutodiffPluginTargets
+  TARGETS ActsPluginAutodiff
+  EXPORT ActsPluginAutodiffTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
   
 install(

@@ -32,7 +32,8 @@ using MagneticField = Acts::ConstantBField;
 using EigenStepper = Acts::EigenStepper<MagneticField>;
 using EigenPropagator = Acts::Propagator<EigenStepper>;
 
-using Extension = Acts::AutodiffExtensionWrapper<Acts::GenericDefaultExtension>;
+using Extension =
+    Acts::AutodiffExtensionWrapper<Acts::detail::GenericDefaultExtension>;
 using AutodiffStepper =
     Acts::EigenStepper<MagneticField, Acts::StepperExtensionList<Extension>>;
 using AutodiffPropagator = Acts::Propagator<AutodiffStepper>;

@@ -29,7 +29,8 @@ namespace ds = ActsTests::PropagationDatasets;
 using namespace Acts::UnitLiterals;
 
 using MagneticField = Acts::ConstantBField;
-using Extension = Acts::AutodiffExtensionWrapper<Acts::GenericDefaultExtension>;
+using Extension =
+    Acts::AutodiffExtensionWrapper<Acts::detail::GenericDefaultExtension>;
 using Stepper =
     Acts::EigenStepper<MagneticField, Acts::StepperExtensionList<Extension>>;
 using Propagator = Acts::Propagator<Stepper>;

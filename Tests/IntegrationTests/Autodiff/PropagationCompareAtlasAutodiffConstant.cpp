@@ -33,7 +33,8 @@ using MagneticField = Acts::ConstantBField;
 using AtlasStepper = Acts::AtlasStepper<MagneticField>;
 using AtlasPropagator = Acts::Propagator<AtlasStepper>;
 
-using Extension = Acts::AutodiffExtensionWrapper<Acts::GenericDefaultExtension>;
+using Extension =
+    Acts::AutodiffExtensionWrapper<Acts::detail::GenericDefaultExtension>;
 using AutodiffStepper =
     Acts::EigenStepper<MagneticField, Acts::StepperExtensionList<Extension>>;
 using AutodiffPropagator = Acts::Propagator<AutodiffStepper>;

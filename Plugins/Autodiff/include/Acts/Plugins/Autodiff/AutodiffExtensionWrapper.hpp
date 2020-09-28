@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <autodiff/forward.hpp>
@@ -25,9 +26,9 @@ struct AutodiffExtensionWrapper {
   /// Some typedefs
   using AutodiffScalar = autodiff::dual;
 
-  using AutodiffVector3D = Eigen::Matrix<AutodiffScalar, 3, 1>;
-  using AutodiffFreeMatrix = Eigen::Matrix<AutodiffScalar, 8, 8>;
-  using AutodiffFreeVector = Eigen::Matrix<AutodiffScalar, 8, 1>;
+  using AutodiffVector3D = ActsMatrix<AutodiffScalar, 3, 1>;
+  using AutodiffFreeMatrix = ActsMatrix<AutodiffScalar, 8, 8>;
+  using AutodiffFreeVector = ActsMatrix<AutodiffScalar, 8, 1>;
 
   /// Instance of the base extension
   basic_extension_t<double> m_doubleExtension;
@@ -126,10 +127,10 @@ struct AutodiffExtensionWrapper {
     FakeStepper stepper;
 
     // Set dependent variables
-    state.stepping.pos = in.segment<3>(0);
-    state.stepping.t = in(3);
-    state.stepping.dir = in.segment<3>(4);
-    state.stepping.p = state.stepping.q / in(7);
+    state.stepping.pos = in.segment<3>(eFreePos0);
+    state.stepping.t = in(eFreeTime);
+    state.stepping.dir = in.segment<3>(eFreeDir0);
+    state.stepping.p = state.stepping.q / in(eFreeQOverP);
 
     std::array<AutodiffScalar, 4> kQoP;
     std::array<AutodiffVector3D, 4> k;
@@ -151,20 +152,20 @@ struct AutodiffExtensionWrapper {
     AutodiffFreeVector out;
 
     // position
-    out.segment<3>(0) = in.segment<3>(0) + h * in.segment<3>(4) +
+    out.segment<3>(eFreePos0) = in.segment<3>(eFreePos0) + h * in.segment<3>(eFreeDir0) +
                         h * h / 6. * (k[0] + k[1] + k[2]);
 
     // direction
     auto final_dir =
-        in.segment<3>(4) + h / 6. * (k[0] + 2. * (k[1] + k[2]) + k[3]);
+        in.segment<3>(eFreeDir0) + h / 6. * (k[0] + 2. * (k[1] + k[2]) + k[3]);
 
-    out.segment<3>(4) = final_dir / final_dir.norm();
+    out.segment<3>(eFreeDir0) = final_dir / final_dir.norm();
 
     // qop
-    out(7) = state.stepping.q / state.stepping.p;
+    out(eFreeQOverP) = state.stepping.q / state.stepping.p;
 
     // time
-    out(3) = state.stepping.t;
+    out(eFreeTime) = state.stepping.t;
 
     return out;
   }

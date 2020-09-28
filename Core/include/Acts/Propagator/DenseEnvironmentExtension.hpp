@@ -17,9 +17,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <functional>
 
 namespace Acts {
+namespace detail {
 
 /// @brief Evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This implementation involves energy loss due to
@@ -28,38 +30,35 @@ namespace Acts {
 /// propagation is in a TrackingVolume with attached material.
 /// @note This it templated on the floating point type because of the autodiff
 /// plugin.
-template <typename float_t>
+template <typename scalar_t>
 struct GenericDenseEnvironmentExtension {
-  /// @brief templated Vector3D replacement
-  template <typename T>
-  using Vector3D = Eigen::Matrix<T, 3, 1>;
-  /// @brief templated FreeVector replacement
-  template <typename T>
-  using FreeVector = Eigen::Matrix<T, 8, 1>;
+  using Scalar = scalar_t;
+  /// @brief Vector3D replacement for the custom scalar type
+  using ThisVector3D = Acts::ActsVector<Scalar, 3>;
 
   /// Momentum at a certain point
-  float_t currentMomentum = 0.;
+  scalar_t currentMomentum = 0.;
   /// Particles momentum at k1
-  float_t initialMomentum = 0.;
+  scalar_t initialMomentum = 0.;
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<float_t, 4> dLdl;
+  std::array<scalar_t, 4> dLdl;
   /// q/p at each sub-step
-  std::array<float_t, 4> qop;
+  std::array<scalar_t, 4> qop;
   /// Derivatives dPds at each sub-step
-  std::array<float_t, 4> dPds;
+  std::array<scalar_t, 4> dPds;
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
-  float_t dgdqopValue = 0.;
+  scalar_t dgdqopValue = 0.;
   /// Derivative dEds at the initial point
-  float_t g = 0.;
+  scalar_t g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<float_t, 4> tKi;
+  std::array<scalar_t, 4> tKi;
   /// Lambda''_i
-  std::array<float_t, 4> Lambdappi;
+  std::array<scalar_t, 4> Lambdappi;
   /// Energy at each sub-step
-  std::array<float_t, 4> energy;
+  std::array<scalar_t, 4> energy;
 
   /// @brief Default constructor
   GenericDenseEnvironmentExtension() = default;
@@ -101,14 +100,14 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3D<float_t>& knew, const Vector3D<double>& bField,
-         std::array<float_t, 4>& kQoP, const int i = 0, const double h = 0.,
-         const Vector3D<float_t>& kprev = Vector3D<float_t>()) {
+         ThisVector3D& knew, const Vector3D& bField,
+         std::array<scalar_t, 4>& kQoP, const int i = 0, const double h = 0.,
+         const ThisVector3D& kprev = ThisVector3D()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
-      Vector3D<float_t> position = stepper.position(state.stepping);
+      ThisVector3D position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
@@ -257,10 +256,10 @@ struct GenericDenseEnvironmentExtension {
     ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
     ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
 
-    Vector3D<double> dk1dL = Vector3D<double>::Zero();
-    Vector3D<double> dk2dL = Vector3D<double>::Zero();
-    Vector3D<double> dk3dL = Vector3D<double>::Zero();
-    Vector3D<double> dk4dL = Vector3D<double>::Zero();
+    Vector3D dk1dL = Vector3D::Zero();
+    Vector3D dk2dL = Vector3D::Zero();
+    Vector3D dk3dL = Vector3D::Zero();
+    Vector3D dk4dL = Vector3D::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
     std::array<double, 4> jdL;
@@ -433,6 +432,8 @@ struct GenericDenseEnvironmentExtension {
   }
 };
 
+}  // namespace detail
+
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
 struct DenseStepperPropagatorOptions
@@ -499,6 +500,7 @@ struct DenseStepperPropagatorOptions
 
 /// @brief A typedef for the default GenericDenseEnvironmentExtension with
 /// double.
-using DenseEnvironmentExtension = GenericDenseEnvironmentExtension<double>;
+using DenseEnvironmentExtension =
+    detail::GenericDenseEnvironmentExtension<double>;
 
 }  // namespace Acts

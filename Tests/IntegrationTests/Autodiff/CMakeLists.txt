@@ -1,4 +1,4 @@
-set(integrationtest_extra_libraries ActsAutodiffPlugin)
+set(integrationtest_extra_libraries ActsPluginAutodiff)
 
 add_integrationtest(PropagationAutodiffConstant PropagationAutodiffConstant.cpp)
 add_integrationtest(PropagationAutodiffDenseConstant PropagationAutodiffDenseConstant.cpp)

@@ -34,7 +34,7 @@ option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system 
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
-option(ACTS_BUILD_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 # fatras related options
 option(ACTS_BUILD_FATRAS "Build FAst TRAcking Simulation package" OFF)
 # examples related options
