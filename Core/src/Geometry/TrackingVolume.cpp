@@ -346,7 +346,8 @@ void Acts::TrackingVolume::interlinkLayers() {
 
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
-    std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) {
+    std::unordered_map<std::string, const TrackingVolume*>& volumeMap,
+    size_t& vol) {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 

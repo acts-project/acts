@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,9 +13,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
-#include <map>
 #include <memory>
-#include <vector>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -107,7 +106,7 @@ class TrackingGeometry {
   std::shared_ptr<const PerigeeSurface> m_beam;
 
   /// The Volumes in a map for string based search
-  std::map<std::string, const TrackingVolume*> m_trackingVolumes;
+  std::unordered_map<std::string, const TrackingVolume*> m_trackingVolumes;
 };
 
 }  // namespace Acts

@@ -27,6 +27,7 @@ Acts::TrackingGeometry::TrackingGeometry(
   // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_trackingVolumes, volumeID);
+  m_trackingVolumes.rehash(0);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry() = default;

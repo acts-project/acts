@@ -24,8 +24,8 @@
 #include "Acts/Utilities/Ray.hpp"
 
 #include <functional>
-#include <map>
 #include <string>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -412,9 +412,10 @@ class TrackingVolume : public Volume {
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
-  void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     std::map<std::string, const TrackingVolume*>& volumeMap,
-                     size_t& vol);
+  void closeGeometry(
+      const IMaterialDecorator* materialDecorator,
+      std::unordered_map<std::string, const TrackingVolume*>& volumeMap,
+      size_t& vol);
 
   /// interlink the layers in this TrackingVolume
   void interlinkLayers();
