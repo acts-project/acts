@@ -19,7 +19,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   }
 
   static const char* const names[] = {
-      "volume=", "boundary=", "layer=", "approach=", "sensitive=",
+      "vol=", "bnd=", "lay=", "apr=", "sen=",
   };
   const GeometryIdentifier::Value levels[] = {
       id.volume(), id.boundary(), id.layer(), id.approach(), id.sensitive(),
