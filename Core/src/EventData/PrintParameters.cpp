@@ -23,8 +23,8 @@ constexpr std::array<std::size_t, 8> kMonotonic = {
 constexpr std::array<const char*, Acts::eBoundSize> makeBoundNames() {
   std::array<const char*, Acts::eBoundSize> names = {nullptr};
   // must be set by index since the order is user-configurable
-  names[Acts::eBoundLoc0] = "l0:";
-  names[Acts::eBoundLoc1] = "l1:";
+  names[Acts::eBoundLoc0] = "loc0:";
+  names[Acts::eBoundLoc1] = "loc1:";
   names[Acts::eBoundTime] = "time:";
   names[Acts::eBoundPhi] = "phi:";
   names[Acts::eBoundTheta] = "theta:";
