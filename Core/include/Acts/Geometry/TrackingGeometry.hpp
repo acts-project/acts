@@ -14,6 +14,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace Acts {
@@ -64,13 +65,6 @@ class TrackingGeometry {
   const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
                                              const Vector3D& gp) const;
 
-  /// return the lowest tracking Volume
-  ///
-  /// @param name is the name for the volume search
-  ///
-  /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume* trackingVolume(const std::string& name) const;
-
   /// Forward the associated Layer information
   ///
   /// @paramn gctx is the context for this request (e.g. alignment)
@@ -100,13 +94,20 @@ class TrackingGeometry {
   void visitSurfaces(
       const std::function<void(const Acts::Surface*)>& visitor) const;
 
- private:
-  /// The known world - and the beamline
-  TrackingVolumePtr m_world;
-  std::shared_ptr<const PerigeeSurface> m_beam;
+  /// Search for a volume with the given identifier.
+  ///
+  /// @param id is the geometry identifier of the volume
+  /// @retval nullptr if no such volume exists
+  /// @retval pointer to the found volume otherwise.
+  const TrackingVolume* findVolume(GeometryIdentifier id) const;
 
-  /// The Volumes in a map for string based search
-  std::unordered_map<std::string, const TrackingVolume*> m_trackingVolumes;
+ private:
+  // the known world
+  TrackingVolumePtr m_world;
+  // beam line
+  std::shared_ptr<const PerigeeSurface> m_beam;
+  // lookup containers
+  std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
 };
 
 }  // namespace Acts

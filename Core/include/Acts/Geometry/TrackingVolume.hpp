@@ -407,14 +407,13 @@ class TrackingVolume : public Volume {
   ///
   /// @param materialDecorator is a dedicated decorator for the
   ///        material to be assigned (surface, volume based)
-  /// @param volumeMap is a map to find the a volume
-  ///        by a given name
+  /// @param volumeMap is a map to find the a volume by identifier
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
-      std::unordered_map<std::string, const TrackingVolume*>& volumeMap,
+      std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
       size_t& vol);
 
   /// interlink the layers in this TrackingVolume

@@ -346,16 +346,16 @@ void Acts::TrackingVolume::interlinkLayers() {
 
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
-    std::unordered_map<std::string, const TrackingVolume*>& volumeMap,
+    std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
     size_t& vol) {
-  // insert the volume into the map
-  volumeMap[volumeName()] = this;
-
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
+
+  // insert the volume into the map
+  volumeMap[volumeID] = thisVolume;
 
   // assign the material if you have a decorator
   if (materialDecorator != nullptr) {
