@@ -22,6 +22,13 @@ Acts::TrackingGeometry::TrackingGeometry(
   size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID);
   m_volumesById.rehash(0);
+  // fill surface lookup container
+  m_world->visitSurfaces([this](const Acts::Surface* srf) {
+    if (srf) {
+      m_surfacesById[srf->geometryId()] = srf;
+    }
+  });
+  m_surfacesById.rehash(0);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry() = default;
@@ -69,4 +76,13 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(
     return nullptr;
   }
   return vol->second;
+}
+
+const Acts::Surface* Acts::TrackingGeometry::findSurface(
+    GeometryIdentifier id) const {
+  auto srf = m_surfacesById.find(id);
+  if (srf == m_surfacesById.end()) {
+    return nullptr;
+  }
+  return srf->second;
 }

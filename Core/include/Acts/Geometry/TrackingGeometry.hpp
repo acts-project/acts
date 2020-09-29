@@ -101,6 +101,13 @@ class TrackingGeometry {
   /// @retval pointer to the found volume otherwise.
   const TrackingVolume* findVolume(GeometryIdentifier id) const;
 
+  /// Search for a surface with the given identifier.
+  ///
+  /// @param id is the geometry identifier of the surface
+  /// @retval nullptr if no such surface exists
+  /// @retval pointer to the found surface otherwise.
+  const Surface* findSurface(GeometryIdentifier id) const;
+
  private:
   // the known world
   TrackingVolumePtr m_world;
@@ -108,6 +115,7 @@ class TrackingGeometry {
   std::shared_ptr<const PerigeeSurface> m_beam;
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
+  std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
 };
 
 }  // namespace Acts
