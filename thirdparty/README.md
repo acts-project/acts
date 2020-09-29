@@ -31,13 +31,12 @@ following folders removed:
 
 ## autodiff
 
-A copy of [autodiff](https://github.com/autodiff/autodiff), revision eefd2f7.
-The following files/folders have been removed:
+A copy of [autodiff](https://github.com/autodiff/autodiff), revision 463ee8f.
+In the `CMakeLists.txt` the commands `add_subdirectory(tests)` and 
+`add_subdirectory(examples)` have been commented out. All folders/files have been 
+removed except the following ones:
 
--   art
--   benchmarks
--   ci
+-   autodiff (contains the header files)
 -   cmake
--   docs
--   test
--   most files except headers
+-   CMakeLists.txt
+-   .clang-format
