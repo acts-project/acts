@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,10 +12,30 @@
 #include <ostream>
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
-  os << "[ " << std::setw(3) << id.volume();
-  os << " | " << std::setw(3) << id.boundary();
-  os << " | " << std::setw(3) << id.layer();
-  os << " | " << std::setw(3) << id.approach();
-  os << " | " << std::setw(4) << id.sensitive() << " ]";
+  // zero represents an invalid/undefined identifier
+  if (not id.value()) {
+    os << "(undefined)";
+    return os;
+  }
+
+  static const char* const names[] = {
+      "vol=", "bnd=", "lay=", "apr=", "sen=",
+  };
+  const GeometryIdentifier::Value levels[] = {
+      id.volume(), id.boundary(), id.layer(), id.approach(), id.sensitive(),
+  };
+
+  os << '(';
+  bool writeSeparator = false;
+  for (auto i = 0u; i < 5u; ++i) {
+    if (levels[i]) {
+      if (writeSeparator) {
+        os << '|';
+      }
+      os << names[i] << levels[i];
+      writeSeparator = true;
+    }
+  }
+  os << ')';
   return os;
 }

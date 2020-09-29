@@ -138,10 +138,12 @@ class MultiIndex {
   }
   friend inline std::ostream& operator<<(std::ostream& os, MultiIndex idx) {
     // one level is always defined
+    os << '(';
     os << idx.level(0u);
     for (std::size_t lvl = 1; lvl < NumLevels; ++lvl) {
       os << '|' << idx.level(lvl);
     }
+    os << ')';
     return os;
   }
 };
