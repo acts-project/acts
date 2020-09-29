@@ -186,9 +186,6 @@ template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
           typename outlier_finder_t = VoidOutlierFinder>
 class KalmanFitter {
- public:
-  /// Shorthand definition
-  using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
   /// The navigator type
   using KalmanNavigator = typename propagator_t::Navigator;
 
@@ -196,7 +193,7 @@ class KalmanFitter {
   static constexpr bool isDirectNavigator =
       std::is_same<KalmanNavigator, DirectNavigator>::value;
 
-  /// Constructor from arguments
+ public:
   KalmanFitter(propagator_t pPropagator)
       : m_propagator(std::move(pPropagator)) {}
 
