@@ -39,9 +39,9 @@ void ActsExamples::Options::addDigitizationOptions(
   opt("digi-smear-dimensions",
       value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: smear parameters for this volume.");
-  opt("digi-smear-binvalues",
+  opt("digi-smear-parIndices",
       value<read_series>()->multitoken()->default_value({}),
-      "Smearing Input: smear binning values for this volume.");
+      "Smearing Input: smear parameter indices for this volume.");
   opt("digi-smear-types", value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: smear function types as 0 (gauss), 1 (truncated gauss), "
       "2 (clipped gauss), 3 (uniform).");
@@ -74,7 +74,7 @@ ActsExamples::Options::readSmearingConfig(
     Digitization::FunctionGenerator sFnc;
 
     auto vdims = variables["digi-smear-dimensions"].as<read_series>();
-    auto bvalues = variables["digi-smear-binvalues"].as<read_series>();
+    auto bvalues = variables["digi-smear-parIndices"].as<read_series>();
     auto types = variables["digi-smear-types"].as<read_series>();
     auto parameters = variables["digi-smear-parameters"].as<read_range>();
 
