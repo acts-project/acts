@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <autodiff/forward.hpp>
 #include <autodiff/forward/eigen.hpp>
@@ -152,8 +152,9 @@ struct AutodiffExtensionWrapper {
     AutodiffFreeVector out;
 
     // position
-    out.segment<3>(eFreePos0) = in.segment<3>(eFreePos0) + h * in.segment<3>(eFreeDir0) +
-                        h * h / 6. * (k[0] + k[1] + k[2]);
+    out.segment<3>(eFreePos0) = in.segment<3>(eFreePos0) +
+                                h * in.segment<3>(eFreeDir0) +
+                                h * h / 6. * (k[0] + k[1] + k[2]);
 
     // direction
     auto final_dir =
