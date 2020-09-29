@@ -1,11 +1,11 @@
 {
     "volumes": {
         "2": {
-            "Geoid": "[   2 |   0 |   2 |   0 |    0 ]",
+            "Geoid": "(vol=2|lay=2)",
             "Name": "",
             "layers": {
                 "2": {
-                    "Geoid": "[   2 |   0 |   2 |   0 |    0 ]",
+                    "Geoid": "(vol=2|lay=2)",
                     "representing": {
                         "bin0": [
                             "binR",
@@ -45,7 +45,7 @@
                     }
                 },
                 "4": {
-                    "Geoid": "[   2 |   0 |   4 |   0 |    0 ]",
+                    "Geoid": "(vol=2|lay=4)",
                     "representing": {
                         "bin0": [
                             "binR",
