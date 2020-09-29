@@ -18,17 +18,12 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
-#include <iostream>
-#include <map>
-#include <random>
-#include <stdexcept>
-
-#include <boost/program_options.hpp>
-
 namespace {
+
 template <typename Fitter>
 struct FitterFunctionImpl {
   Fitter fitter;
@@ -38,10 +33,12 @@ struct FitterFunctionImpl {
   ActsExamples::FittingAlgorithm::FitterResult operator()(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
+      const Acts::KalmanFitterOptions<ActsExamples::SimSourceLinkCalibrator,
+                                      Acts::VoidOutlierFinder>& options) const {
     return fitter.fit(sourceLinks, initialParameters, options);
   };
 };
+
 }  // namespace
 
 ActsExamples::FittingAlgorithm::FitterFunction

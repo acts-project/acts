@@ -28,7 +28,8 @@ class FittingAlgorithm final : public BareAlgorithm {
   /// options and returns some fit-specific result.
   using FitterFunction = std::function<FitterResult(
       const std::vector<SimSourceLink>&, const TrackParameters&,
-      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>&)>;
+      const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
+                                      Acts::VoidOutlierFinder>&)>;
 
   /// Create the fitter function implementation.
   ///

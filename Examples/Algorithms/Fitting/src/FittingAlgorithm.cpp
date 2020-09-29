@@ -59,10 +59,11 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
       Acts::Vector3D{0., 0., 0.});
 
   // Set the KalmanFitter options
-  Acts::KalmanFitterOptions<Acts::VoidOutlierFinder> kfOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      Acts::VoidOutlierFinder(), Acts::LoggerWrapper{logger()},
-      Acts::PropagatorPlainOptions(), &(*pSurface));
+  Acts::KalmanFitterOptions<SimSourceLinkCalibrator, Acts::VoidOutlierFinder>
+      kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+                SimSourceLinkCalibrator(), Acts::VoidOutlierFinder(),
+                Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
+                &(*pSurface));
 
   // Perform the fit for each input track
   std::vector<SimSourceLink> trackSourceLinks;

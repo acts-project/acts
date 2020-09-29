@@ -260,9 +260,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   KalmanFitter kFitter(rPropagator);
 
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-  KalmanFitterOptions<VoidOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, VoidOutlierFinder(),
-      LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
+  KalmanFitterOptions<MinimalSourceLinkCalibrator, VoidOutlierFinder> kfOptions(
+      tgContext, mfContext, calContext, MinimalSourceLinkCalibrator(),
+      VoidOutlierFinder(), LoggerWrapper{*logger}, PropagatorPlainOptions(),
+      rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
