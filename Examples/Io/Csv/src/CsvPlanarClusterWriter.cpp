@@ -11,7 +11,6 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
