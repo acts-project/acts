@@ -155,9 +155,10 @@ class DiscSurface : public Surface {
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
-                                 const Vector3D& position,
-                                 const Vector3D& momentum) const final;
+  Result<Vector2D> globalToLocal(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian

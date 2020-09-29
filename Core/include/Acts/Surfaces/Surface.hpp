@@ -295,9 +295,10 @@ class Surface : public virtual GeometryObject,
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  virtual Result<Vector2D> globalToLocal(const GeometryContext& gctx,
-                                         const Vector3D& position,
-                                         const Vector3D& momentum) const = 0;
+  virtual Result<Vector2D> globalToLocal(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum,
+      double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Return mehtod for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized

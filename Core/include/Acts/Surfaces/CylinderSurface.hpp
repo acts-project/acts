@@ -160,9 +160,10 @@ class CylinderSurface : public Surface {
   /// @param momentum is the global momentum (ignored in this operation)
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
-                                 const Vector3D& position,
-                                 const Vector3D& momentum) const final;
+  Result<Vector2D> globalToLocal(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
   ///
