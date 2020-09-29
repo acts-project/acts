@@ -146,7 +146,7 @@ ActsExamples::Options::readSmearingConfig(
                     ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0>(),
                     std::move(smearFunctions));
           } else if ((Acts::BoundIndices)bvalues[vpos - 1] ==
-                     Acts::eBoundLoc0) {
+                     Acts::eBoundLoc1) {
             smearCfg.configured = true;
             smearer =
                 std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1>,

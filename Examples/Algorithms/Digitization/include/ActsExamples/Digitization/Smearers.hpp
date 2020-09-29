@@ -14,6 +14,7 @@
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include <climits>
 #include <cmath>
+#include <exception>
 #include <random>
 
 namespace ActsExamples {
@@ -206,28 +207,48 @@ struct FunctionGenerator {
   /// @param pars The parameters for the smearing function
   template <size_t DIM, size_t ENTRY>
   void generateFunction(Functions<DIM>& functions, const Types<DIM>& types,
-                        const Parameters<DIM>& pars) {
+                        const Parameters<DIM>& pars) noexcept(false) {
     switch (types[ENTRY]) {
       case 0: {
+        if (pars[ENTRY].empty()) {
+          throw std::invalid_argument(
+              "Smearers: invalid input for Gauss smearing.");
+        }
         functions[ENTRY] = Gauss(pars[ENTRY][0]);
       } break;
 
       case 1: {
+        if (pars[ENTRY].size() < 3) {
+          throw std::invalid_argument(
+              "Smearers: invalid input for truncated Gauss smearing.");
+        }
         functions[ENTRY] =
             GaussTrunc(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
       } break;
 
       case 2: {
+        if (pars[ENTRY].size() < 3) {
+          throw std::invalid_argument(
+              "Smearers: invalid input for clipped Gauss smearing.");
+        }
         functions[ENTRY] =
             GaussClipped(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
       } break;
 
       case 3: {
+        if (pars[ENTRY].size() < 3) {
+          throw std::invalid_argument(
+              "Smearers: invalid input for Uniform smearing.");
+        }
         functions[ENTRY] =
             Uniform(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
       } break;
 
       case 4: {
+        if (pars[ENTRY].size() < 3) {
+          throw std::invalid_argument(
+              "Smearers: invalid input for Digital smearing.");
+        }
         functions[ENTRY] =
             Digital(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
       } break;
