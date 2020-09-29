@@ -1,22 +1,19 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Utilities/Definitions.hpp"
 
-#include <iostream>
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell
 struct DigitizationCell {
-  virtual ~DigitizationCell() = default;
-
   // identification and data
   size_t channel0 = 0;
   size_t channel1 = 1;
@@ -39,6 +36,7 @@ struct DigitizationCell {
       data += dc.data;
     }
   }
+
   /// the deposited energy
   /// @param analogueReadout flag indicating if we have analgue readout
   /// @note this function is needed because possible derived classes may
@@ -89,4 +87,5 @@ struct DigitizationStep {
         stepReadoutProjected(projectedPosition),
         stepCellCenter(cellPosition) {}
 };
+
 }  // namespace Acts
