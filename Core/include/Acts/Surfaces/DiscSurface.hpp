@@ -153,6 +153,8 @@ class DiscSurface : public Surface {
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param tolerance optional tolerance within which a point is considered
+  /// valid on surface
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
   Result<Vector2D> globalToLocal(

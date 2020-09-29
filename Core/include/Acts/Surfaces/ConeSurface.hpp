@@ -150,6 +150,8 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
+  /// @param tolerance optional tolerance within which a point is considered
+  /// valid on surface
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
   Result<Vector2D> globalToLocal(
