@@ -8,7 +8,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(CCache)
 
 # Name and details of the project
-project(autodiff VERSION 0.5.9 LANGUAGES CXX)
+project(autodiff VERSION 0.5.11 LANGUAGES CXX)
 
 # Include the cmake variables with values for installation directories
 include(GNUInstallDirs)
@@ -28,8 +28,8 @@ message(STATUS "Using Eigen3 library found at ${EIGEN3_INCLUDE_DIR}")
 set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(autodiff)
-# add_subdirectory(examples)
-# add_subdirectory(test)
+add_subdirectory(examples)
+add_subdirectory(test)
 
 # Install the cmake config files that permit users to use find_package(Reaktoro)
 include(autodiffInstallCMakeConfigFiles)

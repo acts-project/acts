@@ -31,7 +31,7 @@ following folders removed:
 
 ## autodiff
 
-A copy of [autodiff](https://github.com/autodiff/autodiff), revision 463ee8f.
+A copy of [autodiff](https://github.com/autodiff/autodiff), revision 430a0f3.
 In the `CMakeLists.txt` the commands `add_subdirectory(tests)` and 
 `add_subdirectory(examples)` have been commented out. All folders/files have been 
 removed except the following ones:
