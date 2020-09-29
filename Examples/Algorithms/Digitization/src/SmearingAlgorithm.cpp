@@ -56,17 +56,14 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
       unsigned int hitidx = ih - hits.begin();
       const auto& hit = *ih;
 
-      // TODO replace by hierarchy search  (does not work yet)
-      auto vID = Acts::GeometryIdentifier().setVolume(moduleGeoId.volume());
-      auto smearItr = m_cfg.smearers.find(vID);
-
+      auto smearItr = m_cfg.smearers.find(moduleGeoId);
       if (smearItr != m_cfg.smearers.end()) {
         auto surfaceItr = m_dSurfaces.find(moduleGeoId);
         if (surfaceItr != m_dSurfaces.end()) {
           // First one wins (there shouldn't be more than one smearer per)
           // surface
           auto& surface = surfaceItr->second;
-          auto& smearer = smearItr->second;
+          auto& smearer = *smearItr;
           ActsFatras::SmearInput sInput(hit, ctx.geoContext, surface);
           // Run the visitor
           std::visit(

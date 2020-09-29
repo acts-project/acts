@@ -44,30 +44,36 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
   m_outputFile->cd();
 
   // Analyze the smearers
+  std::vector<
+      std::pair<Acts::GeometryIdentifier, std::unique_ptr<DigitizationTree>>>
+      dTrees;
   if (not m_cfg.smearers.empty()) {
     ACTS_DEBUG("Smearers are present, preparing trees.");
-    for (auto& [key, value] : m_cfg.smearers) {
-      auto& geoID = key;
+    for (size_t ikv = 0; ikv < m_cfg.smearers.size(); ++ikv) {
+      auto geoID = m_cfg.smearers.idAt(ikv);
+      auto value = m_cfg.smearers.valueAt(ikv);
       std::visit(
           [&](auto&& smearer) {
             auto dTree = std::make_unique<DigitizationTree>(geoID);
             typename decltype(smearer.first)::ParSet::ParametersVector pv;
             typename decltype(smearer.first)::ParSet pset(std::nullopt, pv);
             dTree->setupBoundRecBranches(pset);
-            m_outputTrees.emplace_hint(m_outputTrees.end(), geoID,
-                                       std::move(dTree));
+            dTrees.push_back({geoID, std::move(dTree)});
           },
           value);
     }
   }
+  m_outputTrees = Acts::GeometryHierarchyMap<std::unique_ptr<DigitizationTree>>(
+      std::move(dTrees));
 }
 
 ActsExamples::RootDigitizationWriter::~RootDigitizationWriter() {
   /// Close the file if it's yours
   if (m_cfg.rootFile == nullptr) {
     m_outputFile->cd();
-    for (auto& [key, value] : m_outputTrees) {
-      value->tree->Write();
+    for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
+         ++dTree) {
+      (*dTree)->tree->Write();
     }
     m_outputFile->Close();
   }
@@ -92,13 +98,11 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
         [&](auto&& m) {
           const auto& surface = m.referenceObject();
           Acts::GeometryIdentifier sIdentifier = surface.geometryId();
-          // TODO fix the dedicated search on volume to hiearachical one
-          auto dTreeItr = m_outputTrees.find(
-              Acts::GeometryIdentifier().setVolume(sIdentifier.volume()));
+          auto dTreeItr = m_outputTrees.find(sIdentifier);
           if (dTreeItr != m_outputTrees.end()) {
-            auto& dTree = *(dTreeItr->second).get();
+            auto& dTree = *dTreeItr;
             // Fill the identification
-            dTree.fillIdentification(ctx.eventNumber, sIdentifier);
+            dTree->fillIdentification(ctx.eventNumber, sIdentifier);
             auto hitIndices = m.sourceLink().hitIndices();
             std::vector<SimHit> simHits;
             simHits.reserve(hitIndices.size());
@@ -108,11 +112,11 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
             }
 
             auto tParams = truthParameters(ctx.geoContext, surface, simHits);
-            dTree.fillTruthParameters(std::get<0>(tParams),
-                                      std::get<1>(tParams),
-                                      std::get<2>(tParams));
-            dTree.fillBoundMeasurement(m);
-            dTree.tree->Fill();
+            dTree->fillTruthParameters(std::get<0>(tParams),
+                                       std::get<1>(tParams),
+                                       std::get<2>(tParams));
+            dTree->fillBoundMeasurement(m);
+            dTree->tree->Fill();
           }
         },
         value);

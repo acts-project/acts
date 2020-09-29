@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include <Acts/Utilities/Logger.hpp>
+#include <Acts/Utilities/ParameterDefinitions.hpp>
+
 #include <boost/program_options.hpp>
 
 #include <string>
@@ -115,6 +116,9 @@ ActsExamples::Options::readSmearingConfig(
         return fpars;
       };
 
+      std::vector<std::pair<Acts::GeometryIdentifier,
+                            SmearingAlgorithm::SupportedSmearer> >
+          smearers;
       for (unsigned int iv = 0; iv < volumes.size(); ++iv) {
         SmearingAlgorithm::SupportedSmearer smearer;
 
@@ -223,8 +227,12 @@ ActsExamples::Options::readSmearingConfig(
           }
         }
         // fill the smearer into the configuration map
-        smearCfg.smearers.insert({volumeGeometryId, std::move(smearer)});
+        smearers.push_back({volumeGeometryId, std::move(smearer)});
       }
+      smearCfg.smearers =
+          Acts::GeometryHierarchyMap<SmearingAlgorithm::SupportedSmearer>(
+              std::move(smearers));
+
     } else if (parameters.size() != sumpars) {
       ACTS_ERROR("Expected " << sumpars << " parameters, but received "
                              << parameters.size());

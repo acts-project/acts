@@ -9,13 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/EventData/DigitizedHit.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+#include <Acts/Geometry/GeometryHierarchyMap.hpp>
+#include <Acts/Geometry/GeometryIdentifier.hpp>
+#include <Acts/Utilities/ParameterDefinitions.hpp>
 
 #include <array>
 #include <memory>
@@ -67,7 +68,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
     /// Random numbers tool.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
-    ActsExamples::GeometryIdMultimap<SupportedSmearer> smearers;
+    Acts::GeometryHierarchyMap<SupportedSmearer> smearers;
     /// flag misconfiguration
     bool configured = false;
   };

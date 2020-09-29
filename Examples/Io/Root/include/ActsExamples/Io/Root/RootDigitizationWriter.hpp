@@ -10,10 +10,10 @@
 
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/DigitizedHit.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include <Acts/EventData/Measurement.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
+#include <Acts/Geometry/GeometryHierarchyMap.hpp>
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Utilities/Helpers.hpp>
 #include <Acts/Utilities/ParameterDefinitions.hpp>
@@ -53,8 +53,7 @@ class RootDigitizationWriter
 
     TFile* rootFile = nullptr;  ///< common root file
     /// Optional the smearFunctions
-    ActsExamples::GeometryIdMultimap<SmearingAlgorithm::SupportedSmearer>
-        smearers;
+    Acts::GeometryHierarchyMap<SmearingAlgorithm::SupportedSmearer> smearers;
   };
 
   struct DigitizationTree {
@@ -229,7 +228,7 @@ class RootDigitizationWriter
   Config m_cfg;
   std::mutex m_writeMutex;  ///< protect multi-threaded writes
   TFile* m_outputFile;      ///< the output file
-  GeometryIdMultimap<std::unique_ptr<DigitizationTree>>
+  Acts::GeometryHierarchyMap<std::unique_ptr<DigitizationTree>>
       m_outputTrees;  ///< the output trees
 
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
