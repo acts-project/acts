@@ -8,7 +8,8 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
   ActsExamplesGenerators
-  PUBLIC ActsCore ActsExamplesFramework Boost::program_options)
+  PUBLIC ActsCore ActsExamplesFramework
+  PRIVATE Boost::program_options)
 
 install(
   TARGETS ActsExamplesGenerators
