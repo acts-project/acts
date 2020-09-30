@@ -116,7 +116,6 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsProperties) {
   //
   // clone already tested
   //
-  /// Test distanceToBoundary
   Vector2D origin(0., 0.);
   Vector2D outsideBy15(0., 30.);
   Vector2D inRectangle(17., 11.);

@@ -113,7 +113,6 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsProperties) {
   BOOST_CHECK_EQUAL(DiscTrapezoidBoundsObject.type(),
                     SurfaceBounds::eDiscTrapezoid);
   //
-  /// Test distanceToBoundary
   Vector2D origin(0., 0.);
   Vector2D outside(30., 0.);
   Vector2D inSurface(2., 0.0);

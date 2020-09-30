@@ -89,7 +89,6 @@ BOOST_AUTO_TEST_CASE(RadialBoundsProperties) {
   RadialBounds radialBoundsObject(minRadius, maxRadius, halfPhiSector);
   BOOST_CHECK_EQUAL(radialBoundsObject.type(), SurfaceBounds::eDisc);
   //
-  /// Test distanceToBoundary
   Vector2D outside(30., 0.);
   Vector2D inSurface(2., 0.0);
 

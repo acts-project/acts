@@ -94,7 +94,6 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsProperties, *utf::expected_failures(3)) {
   BOOST_CHECK_EQUAL(trapezoidBoundsObject.get(TrapezoidBounds::eHalfLengthY),
                     halfY);
   //
-  /// Test distanceToBoundary
   Vector2D outside(30., 0.);
   Vector2D inRectangle(2., 0.5);
 

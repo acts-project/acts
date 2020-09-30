@@ -83,7 +83,6 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   //
   // clone already tested
   //
-  /// Test distanceToBoundary
   Vector2D origin(0., 0.);
   Vector2D outsideBy10(0., 30.);
   Vector2D inRectangle(15., 0.);
