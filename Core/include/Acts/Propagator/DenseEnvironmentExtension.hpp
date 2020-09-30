@@ -34,31 +34,31 @@ template <typename scalar_t>
 struct GenericDenseEnvironmentExtension {
   using Scalar = scalar_t;
   /// @brief Vector3D replacement for the custom scalar type
-  using ThisVector3D = Acts::ActsVector<Scalar, 3>;
+  using ThisVector3 = Acts::ActsVector<Scalar, 3>;
 
   /// Momentum at a certain point
-  scalar_t currentMomentum = 0.;
+  Scalar currentMomentum = 0.;
   /// Particles momentum at k1
-  scalar_t initialMomentum = 0.;
+  Scalar initialMomentum = 0.;
   /// Material that will be passed
   /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<scalar_t, 4> dLdl;
+  std::array<Scalar, 4> dLdl;
   /// q/p at each sub-step
-  std::array<scalar_t, 4> qop;
+  std::array<Scalar, 4> qop;
   /// Derivatives dPds at each sub-step
-  std::array<scalar_t, 4> dPds;
+  std::array<Scalar, 4> dPds;
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
-  scalar_t dgdqopValue = 0.;
+  Scalar dgdqopValue = 0.;
   /// Derivative dEds at the initial point
-  scalar_t g = 0.;
+  Scalar g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<scalar_t, 4> tKi;
+  std::array<Scalar, 4> tKi;
   /// Lambda''_i
-  std::array<scalar_t, 4> Lambdappi;
+  std::array<Scalar, 4> Lambdappi;
   /// Energy at each sub-step
-  std::array<scalar_t, 4> energy;
+  std::array<Scalar, 4> energy;
 
   /// @brief Default constructor
   GenericDenseEnvironmentExtension() = default;
@@ -100,14 +100,14 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3D& knew, const Vector3D& bField,
-         std::array<scalar_t, 4>& kQoP, const int i = 0, const double h = 0.,
-         const ThisVector3D& kprev = ThisVector3D()) {
+         ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
+         const int i = 0, const double h = 0.,
+         const ThisVector3& kprev = ThisVector3()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
-      ThisVector3D position = stepper.position(state.stepping);
+      ThisVector3 position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;

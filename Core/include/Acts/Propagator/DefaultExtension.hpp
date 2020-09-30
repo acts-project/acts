@@ -23,7 +23,7 @@ template <typename scalar_t>
 struct GenericDefaultExtension {
   using Scalar = scalar_t;
   /// @brief Vector3D replacement for the custom scalar type
-  using ThisVector3D = Acts::ActsVector<Scalar, 3>;
+  using ThisVector3 = Acts::ActsVector<Scalar, 3>;
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -52,9 +52,9 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3D& knew, const Vector3D& bField,
-         std::array<scalar_t, 4>& kQoP, const int i = 0, const double h = 0.,
-         const ThisVector3D& kprev = ThisVector3D()) {
+         ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
+         const int i = 0, const double h = 0.,
+         const ThisVector3& kprev = ThisVector3()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data

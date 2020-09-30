@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,7 +26,7 @@ struct AutodiffExtensionWrapper {
   /// Some typedefs
   using AutodiffScalar = autodiff::dual;
 
-  using AutodiffVector3D = ActsMatrix<AutodiffScalar, 3, 1>;
+  using AutodiffVector3 = ActsMatrix<AutodiffScalar, 3, 1>;
   using AutodiffFreeMatrix = ActsMatrix<AutodiffScalar, 8, 8>;
   using AutodiffFreeVector = ActsMatrix<AutodiffScalar, 8, 1>;
 
@@ -67,7 +67,7 @@ struct AutodiffExtensionWrapper {
   // A fake stepper-state
   struct FakeStepperState {
     AutodiffScalar t, p;
-    AutodiffVector3D pos, dir;
+    AutodiffVector3 pos, dir;
     AutodiffFreeVector derivative;
     double q;
     bool covTransport = false;
@@ -104,8 +104,10 @@ struct AutodiffExtensionWrapper {
 
     // Init dependent values for autodiff
     AutodiffFreeVector initial_params;
-    initial_params << stepper.position(state.stepping),
-        stepper.time(state.stepping), stepper.direction(state.stepping),
+    initial_params.segment<3>(eFreePos0) = stepper.position(state.stepping);
+    initial_params(eFreeTime) = stepper.time(state.stepping);
+    initial_params.segment<3>(eFreeDir0) = stepper.direction(state.stepping);
+    initial_params(eFreeQOverP) =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
 
     const auto& sd = state.stepping.stepData;
@@ -133,7 +135,7 @@ struct AutodiffExtensionWrapper {
     state.stepping.p = state.stepping.q / in(eFreeQOverP);
 
     std::array<AutodiffScalar, 4> kQoP;
-    std::array<AutodiffVector3D, 4> k;
+    std::array<AutodiffVector3, 4> k;
 
     // Autodiff instance of the extension
     basic_extension_t<AutodiffScalar> ext;

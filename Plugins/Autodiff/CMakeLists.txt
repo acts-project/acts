@@ -6,16 +6,9 @@ target_include_directories(
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include>)
- 
-# the target name is different when using find_package(...) or add_subdirectory(...)
-if(ACTS_USE_SYSTEM_AUTODIFF)
-    set(AUTODIFF_TARGET autodiff::autodiff)
-else()
-    set(AUTODIFF_TARGET autodiff)
-endif()
     
 target_link_libraries(
-  ActsPluginAutodiff INTERFACE ActsCore ${AUTODIFF_TARGET})
+  ActsPluginAutodiff INTERFACE ActsCore autodiff::autodiff)
 
 install(
   TARGETS ActsPluginAutodiff
