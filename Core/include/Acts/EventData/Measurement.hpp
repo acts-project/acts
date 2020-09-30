@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -130,6 +129,22 @@ class Measurement {
     assert(m_pReferenceObject);
   }
 
+  /// @brief standard constructor for surface/volume measurements
+  ///
+  /// Concrete class for all possible measurements, built from properly
+  /// formatted parameter set
+  ///
+  /// @param referenceObject surface/volume origin of the measurement
+  /// @param source object for this measurement
+  /// @param pset parameter set of the measurement
+  Measurement(std::shared_ptr<const RefObject> referenceObject,
+              const source_link_t& source, ParamSet pset)
+      : m_oParameters(std::move(pset)),
+        m_pReferenceObject(std::move(referenceObject)),
+        m_sourceLink(source) {
+    assert(m_pReferenceObject);
+  }
+
   virtual ~Measurement() = default;
 
   /// @brief copy constructor
@@ -203,6 +218,19 @@ class Measurement {
   template <parameter_indices_t parameter>
   Scalar get() const {
     return m_oParameters.template getParameter<parameter>();
+  }
+
+  /// @brief checks whether a given parameter is included in this set of
+  ///  parameters
+  ///
+  /// @tparam parameter identifier for the parameter to be retrieved
+  /// @remark @c parameter must be part of the template parameter pack @c
+  /// params. Otherwise a compile-time error is generated.
+  ///
+  /// @return @c true if the parameter is stored in this set, otherwise @c false
+  template <parameter_indices_t parameter>
+  bool contains() const {
+    return m_oParameters.template contains<parameter>();
   }
 
   /// @brief access vector with measured parameter values
