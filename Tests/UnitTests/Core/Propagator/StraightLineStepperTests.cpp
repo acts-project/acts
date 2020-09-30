@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK(!slsState.covTransport);
   BOOST_CHECK_EQUAL(slsState.pos , pos);
   CHECK_CLOSE_ABS(slsState.dir, dir.normalized(), 1e-8);
-  BOOST_CHECK_EQUAL(slsState.p , dir.norm());
+  CHECK_CLOSE_OR_SMALL(slsState.p , dir.norm(), eps, eps);
   BOOST_CHECK_EQUAL(slsState.q , charge);
   BOOST_CHECK_EQUAL(slsState.t , time);
   BOOST_CHECK_EQUAL(slsState.navDir, ndir);
