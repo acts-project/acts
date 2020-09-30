@@ -28,19 +28,17 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
     const ActsExamples::RootDigitizationWriter::Config& cfg,
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputMeasurements, "RootDigitizationWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
-  // inputClusters is already checked by base constructor
+      m_cfg(cfg) {
+  // Input container for measurements is already checked by base constructor
   if (m_cfg.inputSimulatedHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  // Setup ROOT I/O
+  // Setup ROOT File
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
-    }
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
+
   m_outputFile->cd();
 
   // Analyze the smearers
@@ -69,14 +67,12 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
 
 ActsExamples::RootDigitizationWriter::~RootDigitizationWriter() {
   /// Close the file if it's yours
-  if (m_cfg.rootFile == nullptr) {
-    m_outputFile->cd();
-    for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
-         ++dTree) {
-      (*dTree)->tree->Write();
-    }
-    m_outputFile->Close();
+  m_outputFile->cd();
+  for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
+       ++dTree) {
+    (*dTree)->tree->Write();
   }
+  m_outputFile->Close();
 }
 
 ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::endRun() {
@@ -88,8 +84,6 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
     const AlgorithmContext& ctx,
     const ActsExamples::GeometryIdMultimap<
         Acts::FittableMeasurement<ActsExamples::DigitizedHit>>& measurements) {
-  // composition
-
   const auto& simHitContainer =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
 
@@ -145,24 +139,28 @@ ActsExamples::RootDigitizationWriter::truthParameters(
 
   } else if (simulatedHits.size() > 1) {
     Acts::Vector4D avePos(0., 0., 0., 0.);
-    if (simulatedHits.size() > 1) {
-      for (const auto& hit : simulatedHits) {
-        avePos += hit.position4();
-        direction += hit.unitDirection();
-      }
-      double denom = 1. / simulatedHits.size();
-      avePos *= denom;
-      direction *= denom;
-      direction = direction.normalized();
+    for (const auto& hit : simulatedHits) {
+      avePos += hit.position4();
+      direction += hit.unitDirection();
     }
+    double denom = 1. / simulatedHits.size();
+    avePos *= denom;
+    direction *= denom;
+    direction = direction.normalized();
     auto sIntersection =
         surface.intersect(gCtx, avePos.segment<3>(0), direction, false);
 
     position = sIntersection.intersection.position;
     ctime = avePos[Acts::eTime];
   }
-  const auto& lposition =
-      surface.globalToLocal(gCtx, position, direction).value();
+  auto lpResult = surface.globalToLocal(gCtx, position, direction);
+  Acts::Vector2D lposition(0., 0.);
+  if (not lpResult.ok()) {
+    ACTS_WARNING(
+        "GlobalToLocal did not succeed, will fill (0.,0.) for local position.");
+  } else {
+    lposition = lpResult.value();
+  }
 
   return {lposition, Acts::VectorHelpers::makeVector4(position, ctime),
           direction};

@@ -20,13 +20,13 @@ namespace detail {
 
 /// Smearing functions definition:
 ///
-/// @tparam The type of the random number generator
+/// @tparam generator_t The type of the random number generator
 ///
 /// - it takes the unsmeared parameter, and a random number generator
 /// - it returns the smeared parameter and a covariance
-template <typename random_generator_t>
+template <typename generator_t>
 using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
-    double, random_generator_t&)>;
+    double, generator_t&)>;
 
 /// Single component smearing struct.
 ///
@@ -42,12 +42,12 @@ using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
 /// @param[in,out] result a recursive smearing result trigger
 ///        if a single component is not ok, this will be communicated
 ///        upstream to the caller
-template <typename values_t, typename covariance_t, typename random_generator_t>
+template <typename values_t, typename covariance_t, typename generator_t>
 struct SingleComponentSmearer {
   void operator()(size_t idx, Eigen::MatrixBase<values_t>& values,
                   Eigen::MatrixBase<covariance_t>& covariances,
-                  random_generator_t& sRandom,
-                  const SmearFunction<random_generator_t>& sFunction,
+                  generator_t& sRandom,
+                  const SmearFunction<generator_t>& sFunction,
                   Acts::Result<void>& result) {
     auto sResult = sFunction(values[idx], sRandom);
     if (sResult.ok()) {
@@ -79,23 +79,22 @@ struct ParametersSmearer {
   /// @param[in] sFunctions the smearing functions to be applied
   ///
   /// @return a Result object that may carry a DigitizationError
-  template <typename values_t, typename covariance_t,
-            typename random_generator_t>
+  template <typename values_t, typename covariance_t, typename generator_t>
   static Acts::Result<void> run(
       Eigen::MatrixBase<values_t>& values,
-      Eigen::MatrixBase<covariance_t>& covariances, random_generator_t& sRandom,
-      const std::array<SmearFunction<random_generator_t>,
-                       sizeof...(kParameters)>& sFunctions) {
+      Eigen::MatrixBase<covariance_t>& covariances, generator_t& sRandom,
+      const std::array<SmearFunction<generator_t>, sizeof...(kParameters)>&
+          sFunctions) {
     return runImpl(values, covariances, sRandom, sFunctions, StorageSequence{});
   }
 
-  template <typename values_t, typename covariance_t,
-            typename random_generator_t, std::size_t... kStorage>
+  template <typename values_t, typename covariance_t, typename generator_t,
+            std::size_t... kStorage>
   static Acts::Result<void> runImpl(
       Eigen::MatrixBase<values_t>& values,
-      Eigen::MatrixBase<covariance_t>& covariances, random_generator_t& sRandom,
-      const std::array<SmearFunction<random_generator_t>,
-                       sizeof...(kParameters)>& sFunctions,
+      Eigen::MatrixBase<covariance_t>& covariances, generator_t& sRandom,
+      const std::array<SmearFunction<generator_t>, sizeof...(kParameters)>&
+          sFunctions,
       std::index_sequence<kStorage...>) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(values_t, sizeof...(kParameters));
     EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(
@@ -104,7 +103,7 @@ struct ParametersSmearer {
                   "Parameters and storage index packs must have the same size");
 
     Acts::Result<void> result;
-    SingleComponentSmearer<values_t, covariance_t, random_generator_t> scs;
+    SingleComponentSmearer<values_t, covariance_t, generator_t> scs;
     ((scs(kStorage, values, covariances, sRandom, sFunctions[kStorage],
           result)),
      ...);

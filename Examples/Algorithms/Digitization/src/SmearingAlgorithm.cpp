@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,6 +47,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
 
   ActsExamples::GeometryIdMultimap<Acts::FittableMeasurement<DigitizedHit>>
       measurements;
+  measurements.reserve(hits.size());
 
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
@@ -83,7 +84,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
                        << moduleGeoId.value());
         }
       } else {
-        ACTS_DEBUG("No wmaring function present for volume "
+        ACTS_DEBUG("No smearingm function present for this module in volume "
                    << moduleGeoId.volume());
       }
     }

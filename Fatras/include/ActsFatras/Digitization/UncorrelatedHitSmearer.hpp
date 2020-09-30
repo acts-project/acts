@@ -23,11 +23,14 @@
 namespace ActsFatras {
 
 /// Smearing functions definition:
+///
+/// @tparam generator_t The type of the random generator.
+///
 /// - it takes the unsmeared parameter
 /// - it returns the smeared parameter and a covariance
-template <typename random_generator_t>
+template <typename generator_t>
 using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
-    double, random_generator_t&)>;
+    double, generator_t&)>;
 
 /// Smearing input to be used by the smearers
 /// - this struct helps to harmonize the interface between
@@ -62,7 +65,7 @@ struct BoundParametersSmearer {
 
   /// Generic implementation of a smearing meathod for bound parameters
   ///
-  /// @tparam random_gnerator_t The type of the random generator provided
+  /// @tparam generator_t The type of the random generator provided
   /// @tparam kParameters parameter pack describing the parameters to smear
   ///
   /// @param sInput The smearing input struct: surface and simulated hit
@@ -70,10 +73,10 @@ struct BoundParametersSmearer {
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @return Smeared bound parameter set wrapped in a Result<...> object
-  template <typename random_generator_t>
+  template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  operator()(const SmearInput& sInput, random_generator_t& sRandom,
-             const std::array<SmearFunction<random_generator_t>,
+  operator()(const SmearInput& sInput, generator_t& sRandom,
+             const std::array<SmearFunction<generator_t>,
                               sizeof...(kParameters)>& sFunctions) const {
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
@@ -131,10 +134,10 @@ struct FreeParametersSmearer {
   ///       is not recommended
   ///
   /// @return Smeared free parameter set wrapped in a Result<...> object
-  template <typename random_generator_t>
+  template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  operator()(const SmearInput& sInput, random_generator_t& sRandom,
-             const std::array<SmearFunction<random_generator_t>,
+  operator()(const SmearInput& sInput, generator_t& sRandom,
+             const std::array<SmearFunction<generator_t>,
                               sizeof...(kParameters)>& sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;

@@ -44,11 +44,12 @@ void ActsExamples::Options::addDigitizationOptions(
       "Smearing Input: smear parameter indices for this volume.");
   opt("digi-smear-types", value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: smear function types as 0 (gauss), 1 (truncated gauss), "
-      "2 (clipped gauss), 3 (uniform).");
+      "2 (clipped gauss), 3 (uniform), 4 (digital).");
   opt("digi-smear-parameters",
       value<read_range>()->multitoken()->default_value({}),
       "Smearing Input: smear parameters depending on the smearing type, 1 "
-      "parameter for simple gauss, 4 for all others (1 parameter, 2 range "
+      "parameter for simple gauss, 4 for all others (1 parameter, 2 absolute "
+      "range "
       "values, 1 range indicator: both neg < 0, pos/neg = 0, both pos > 0).");
 }
 
@@ -71,10 +72,10 @@ ActsExamples::Options::readSmearingConfig(
   // complex smearing setups
   auto volumes = variables["digi-smear-volume-id"].as<read_series>();
   if (not volumes.empty()) {
-    Digitization::FunctionGenerator sFnc;
+    Digitization::SmearingFunctionGenerator sFnc;
 
     auto vdims = variables["digi-smear-dimensions"].as<read_series>();
-    auto bvalues = variables["digi-smear-parIndices"].as<read_series>();
+    auto pindices = variables["digi-smear-parIndices"].as<read_series>();
     auto types = variables["digi-smear-types"].as<read_series>();
     auto parameters = variables["digi-smear-parameters"].as<read_range>();
 
@@ -86,7 +87,7 @@ ActsExamples::Options::readSmearingConfig(
     std::for_each(types.begin(), types.end(),
                   [&](int n) { sumpars += (n == 0) ? 1 : 4; });
 
-    if (volumes.size() == vdims.size() and bvalues.size() == types.size() and
+    if (volumes.size() == vdims.size() and pindices.size() == types.size() and
         parameters.size() == sumpars) {
       size_t vpos = 0;
       size_t ppos = 0;
@@ -138,14 +139,14 @@ ActsExamples::Options::readSmearingConfig(
           fparameters[0] = extract(ftype);
           OneFnc smearFunctions = sFnc.generate<1>(ftypes, fparameters);
           // Create and fill
-          if ((Acts::BoundIndices)bvalues[vpos - 1] == Acts::eBoundLoc0) {
+          if ((Acts::BoundIndices)pindices[vpos - 1] == Acts::eBoundLoc0) {
             smearCfg.configured = true;
             smearer =
                 std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0>,
                           OneFnc>(
                     ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0>(),
                     std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)bvalues[vpos - 1] ==
+          } else if ((Acts::BoundIndices)pindices[vpos - 1] ==
                      Acts::eBoundLoc1) {
             smearCfg.configured = true;
             smearer =
@@ -165,8 +166,8 @@ ActsExamples::Options::readSmearingConfig(
             fparameters[idim] = extract(ftype);
           }
           TwoFnc smearFunctions = sFnc.generate<2>(ftypes, fparameters);
-          if ((Acts::BoundIndices)bvalues[vpos - 2] == Acts::eBoundLoc0 and
-              (Acts::BoundIndices) bvalues[vpos - 1] == Acts::eBoundTime) {
+          if ((Acts::BoundIndices)pindices[vpos - 2] == Acts::eBoundLoc0 and
+              (Acts::BoundIndices) pindices[vpos - 1] == Acts::eBoundTime) {
             smearCfg.configured = true;
             smearer =
                 std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
@@ -175,10 +176,10 @@ ActsExamples::Options::readSmearingConfig(
                     ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
                                                        Acts::eBoundTime>(),
                     std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)bvalues[vpos - 2] ==
+          } else if ((Acts::BoundIndices)pindices[vpos - 2] ==
                          Acts::eBoundLoc1 and
                      (Acts::BoundIndices)
-                             bvalues[vpos - 1] == Acts::eBoundTime) {
+                             pindices[vpos - 1] == Acts::eBoundTime) {
             smearCfg.configured = true;
             smearer =
                 std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1,
@@ -187,10 +188,10 @@ ActsExamples::Options::readSmearingConfig(
                     ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1,
                                                        Acts::eBoundTime>(),
                     std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)bvalues[vpos - 2] ==
+          } else if ((Acts::BoundIndices)pindices[vpos - 2] ==
                          Acts::eBoundLoc0 and
                      (Acts::BoundIndices)
-                             bvalues[vpos - 1] == Acts::eBoundLoc1) {
+                             pindices[vpos - 1] == Acts::eBoundLoc1) {
             smearCfg.configured = true;
             smearer =
                 std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
@@ -213,9 +214,9 @@ ActsExamples::Options::readSmearingConfig(
             fparameters[idim] = extract(ftype);
           }
           ThreeFnc smearFunctions = sFnc.generate<3>(ftypes, fparameters);
-          if ((Acts::BoundIndices)bvalues[vpos - 3] == Acts::eBoundLoc0 and
-              (Acts::BoundIndices) bvalues[vpos - 2] == Acts::eBoundLoc1 and
-              (Acts::BoundIndices) bvalues[vpos - 1] == Acts::eBoundTime) {
+          if ((Acts::BoundIndices)pindices[vpos - 3] == Acts::eBoundLoc0 and
+              (Acts::BoundIndices) pindices[vpos - 2] == Acts::eBoundLoc1 and
+              (Acts::BoundIndices) pindices[vpos - 1] == Acts::eBoundTime) {
             smearCfg.configured = true;
             smearer = std::pair<
                 ActsFatras::BoundParametersSmearer<

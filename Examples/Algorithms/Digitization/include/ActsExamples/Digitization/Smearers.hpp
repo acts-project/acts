@@ -20,7 +20,7 @@
 namespace ActsExamples {
 namespace Digitization {
 
-/// Gaussian smearing of a single parameter
+/// Gaussian smearing of a single parameter.
 ///
 /// @note This smearer will smear over module boundaries
 /// it has no notion of a parameter range is assumed
@@ -30,7 +30,7 @@ struct Gauss {
   /// Construct with a @param sigma standard deviation
   Gauss(double sigma) : dist(std::normal_distribution<>(0., sigma)) {}
 
-  /// Call operator for the SmearFunction caller interface
+  /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
   /// @param rnd random generator to be used for the call
@@ -43,7 +43,7 @@ struct Gauss {
   }
 };
 
-/// Gaussian smearing of a single parameter with truncation
+/// Gaussian smearing of a single parameter with truncation.
 ///
 /// In case a hit is smeared outside the range, a DigitizationError
 /// indicating the truncation
@@ -56,7 +56,7 @@ struct GaussTrunc {
   GaussTrunc(double sigma, const std::pair<double, double>& range_)
       : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
 
-  /// Call operator for the SmearFunction caller interface
+  /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
   /// @param rnd random generator to be used for the call
@@ -73,12 +73,15 @@ struct GaussTrunc {
   }
 };
 
-/// Gaussian smearing of a single parameter with clipping
+/// Gaussian smearing of a single parameter with clipping.
 ///
 /// In case a hit is smeared outside the range, the smearing will be
 /// repeated, until a maximum attempt number is reached
 struct GaussClipped {
   std::normal_distribution<> dist{0., 1.};
+
+  size_t maxAttemps = 1000;
+
   std::pair<double, double> range = {std::numeric_limits<double>::lowest(),
                                      std::numeric_limits<double>::max()};
 
@@ -86,9 +89,7 @@ struct GaussClipped {
   GaussClipped(double sigma, const std::pair<double, double>& range_)
       : dist(std::normal_distribution<>(0., sigma)), range(range_) {}
 
-  size_t maxAttemps = 1000;
-
-  /// Call operator for the SmearFunction caller interface
+  /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
   /// @param rnd random generator to be used for the call
@@ -109,7 +110,7 @@ struct GaussClipped {
   }
 };
 
-/// Uniform smearing of a single parameter within bounds
+/// Uniform smearing of a single parameter within bounds.
 ///
 /// It estimates the bin borders and smears uniformly between them
 struct Uniform {
@@ -123,12 +124,12 @@ struct Uniform {
                     (range_.second - range_.first) / pitch, range_.first,
                     range_.second) {}
 
-  /// Constructor with a bin utility in order to get the bin borders
+  /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility which d
   Uniform(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
 
-  /// Call operator for the SmearFunction caller interface
+  /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
   /// @param rnd random generator to be used for the call
@@ -148,7 +149,7 @@ struct Uniform {
   }
 };
 
-/// Digital emulation of a single parameter
+/// Digital emulation of a single parameter.
 ///
 /// It estimates the bin and gives the bin center value
 struct Digital {
@@ -160,12 +161,12 @@ struct Digital {
                     (range_.second - range_.first) / pitch, range_.first,
                     range_.second) {}
 
-  /// Constructor with a bin utility in order to get the bin borders
+  /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
   Digital(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
 
-  /// Call operator for the SmearFunction caller interface
+  /// Call operator for the SmearFunction caller interface.
   ///
   /// @param value parameter to be smeared
   /// @param rnd random generator to be used for the call (unused)
@@ -185,93 +186,95 @@ struct Digital {
   }
 };
 
-template <size_t DIM>
-using Functions = std::array<ActsFatras::SmearFunction<RandomEngine>, DIM>;
+template <size_t kSize>
+using SmearFunctions =
+    std::array<ActsFatras::SmearFunction<RandomEngine>, kSize>;
 
-template <size_t DIM>
-using Types = std::array<int, DIM>;
+template <size_t kSize>
+using FncTypes = std::array<int, kSize>;
 
-template <size_t DIM>
-using Parameters = std::array<std::vector<double>, DIM>;
+template <size_t kSize>
+using FncParameters = std::array<std::vector<double>, kSize>;
 
-/// Struct to generate smearing functions from arguments
+/// Struct to generate smearing functions from arguments.
 ///
-struct FunctionGenerator {
-  /// Template unrolling
+struct SmearingFunctionGenerator {
+  /// Generate function that unrolls the templated kSizeension.
   ///
-  /// @tparam DIM The dimension of the smearing function array
-  /// @tparam ENTRY is the entry that is currently filled
+  /// @tparam kSize The kSizeension of the smearing function array
+  /// @tparam kIndex is the entry that is currently filled
   ///
   /// @param functions[in,out] The smearing functions that are generated
   /// @param types The smearing function type (Gauss as default)
   /// @param pars The parameters for the smearing function
-  template <size_t DIM, size_t ENTRY>
-  void generateFunction(Functions<DIM>& functions, const Types<DIM>& types,
-                        const Parameters<DIM>& pars) noexcept(false) {
-    switch (types[ENTRY]) {
+  template <size_t kSize, size_t kIndex>
+  void generateFunction(SmearFunctions<kSize>& functions,
+                        const FncTypes<kSize>& types,
+                        const FncParameters<kSize>& pars) noexcept(false) {
+    switch (types[kIndex]) {
       case 0: {
-        if (pars[ENTRY].empty()) {
+        if (pars[kIndex].empty()) {
           throw std::invalid_argument(
               "Smearers: invalid input for Gauss smearing.");
         }
-        functions[ENTRY] = Gauss(pars[ENTRY][0]);
+        functions[kIndex] = Gauss(pars[kIndex][0]);
       } break;
 
       case 1: {
-        if (pars[ENTRY].size() < 3) {
+        if (pars[kIndex].size() < 3) {
           throw std::invalid_argument(
               "Smearers: invalid input for truncated Gauss smearing.");
         }
-        functions[ENTRY] =
-            GaussTrunc(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+        functions[kIndex] =
+            GaussTrunc(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
       } break;
 
       case 2: {
-        if (pars[ENTRY].size() < 3) {
+        if (pars[kIndex].size() < 3) {
           throw std::invalid_argument(
               "Smearers: invalid input for clipped Gauss smearing.");
         }
-        functions[ENTRY] =
-            GaussClipped(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+        functions[kIndex] =
+            GaussClipped(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
       } break;
 
       case 3: {
-        if (pars[ENTRY].size() < 3) {
+        if (pars[kIndex].size() < 3) {
           throw std::invalid_argument(
               "Smearers: invalid input for Uniform smearing.");
         }
-        functions[ENTRY] =
-            Uniform(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+        functions[kIndex] =
+            Uniform(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
       } break;
 
       case 4: {
-        if (pars[ENTRY].size() < 3) {
+        if (pars[kIndex].size() < 3) {
           throw std::invalid_argument(
               "Smearers: invalid input for Digital smearing.");
         }
-        functions[ENTRY] =
-            Digital(pars[ENTRY][0], {pars[ENTRY][1], pars[ENTRY][2]});
+        functions[kIndex] =
+            Digital(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
       } break;
     }
 
-    if constexpr (ENTRY > 0) {
-      generateFunction<DIM, ENTRY - 1>(functions, types, pars);
+    if constexpr (kIndex > 0) {
+      generateFunction<kSize, kIndex - 1>(functions, types, pars);
     }
   }
 
-  /// Generate call
+  /// Generate call for simear function generation.
   ///
-  /// @tparam DIM The templated dimenstion type
+  /// @tparam kSize The templated kSizeenstion type
   ///
   /// @param types The smearing function type (Gauss as default)
   /// @param pars The parameters for the smearing function
   ///
-  /// @return a properly dimensioned resultion function array
-  template <size_t DIM>
-  Functions<DIM> generate(const Types<DIM>& types,
-                          const Parameters<DIM>& pars) {
-    Functions<DIM> sFunctions;
-    generateFunction<DIM, DIM - 1>(sFunctions, types, pars);
+  /// @return a properly kSizeensioned resultion function array
+  template <size_t kSize>
+  SmearFunctions<kSize> generate(const FncTypes<kSize>& types,
+                                 const FncParameters<kSize>& pars) {
+    SmearFunctions<kSize> sFunctions;
+    generateFunction<kSize, kSize - 1>(sFunctions, types, pars);
     return sFunctions;
   }
 };

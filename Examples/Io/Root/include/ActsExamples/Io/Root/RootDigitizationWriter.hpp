@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,15 +50,13 @@ class RootDigitizationWriter
     std::string inputSimulatedHits;
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
-
-    TFile* rootFile = nullptr;  ///< common root file
     /// Optional the smearFunctions
     Acts::GeometryHierarchyMap<SmearingAlgorithm::SupportedSmearer> smearers;
   };
 
   struct DigitizationTree {
     const std::array<std::string, Acts::eBoundSize> bNames = {
-        "l0", "l1", "phi", "theta", "qop", "time"};
+        "loc0", "loc1", "phi", "theta", "qop", "time"};
 
     TTree* tree = nullptr;
     // Identification parameters
