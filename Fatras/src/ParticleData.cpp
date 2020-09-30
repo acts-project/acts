@@ -63,9 +63,10 @@ std::string_view ActsFatras::findName(Acts::PdgParticle pdg) {
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
   const auto name = ActsFatras::findName(pdg);
-  os << static_cast<int32_t>(pdg);
   if (not name.empty()) {
-    os << '|' << name;
+    os << name;
+  } else {
+    os << static_cast<int32_t>(pdg);
   }
   return os;
 }

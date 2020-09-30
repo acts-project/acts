@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,19 +20,22 @@
 namespace ActsExamples {
 
 /// Select particles by applying some selection cuts.
-class ParticleSelector : public BareAlgorithm {
+class ParticleSelector final : public BareAlgorithm {
  public:
   struct Config {
-    /// The input event collection.
-    std::string inputEvent;
-    /// The output event collection.
-    std::string outputEvent;
+    /// The input particles collection.
+    std::string inputParticles;
+    /// The output particles collection.
+    std::string outputParticles;
     // Minimum/maximum distance from the origin in the tranverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
     // Minimum/maximum absolute distance from the origin along z.
     double absZMin = 0;
     double absZMax = std::numeric_limits<double>::infinity();
+    // Minimum/maximum particle time.
+    double timeMin = -std::numeric_limits<double>::infinity();
+    double timeMax = std::numeric_limits<double>::infinity();
     // Direction cuts.
     double phiMin = -std::numeric_limits<double>::infinity();
     double phiMax = std::numeric_limits<double>::infinity();
@@ -41,7 +44,7 @@ class ParticleSelector : public BareAlgorithm {
     double absEtaMin = 0;
     double absEtaMax = std::numeric_limits<double>::infinity();
     // Momentum cuts.
-    double ptMin = 0.0;
+    double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
     /// Remove charged particles.
     bool removeCharged = false;
@@ -56,7 +59,7 @@ class ParticleSelector : public BareAlgorithm {
 
   ParticleSelector(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
   Config m_cfg;

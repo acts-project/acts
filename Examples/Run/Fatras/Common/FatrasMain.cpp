@@ -9,17 +9,18 @@
 #include "FatrasMain.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Fatras/FatrasOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Generators/ParticleSelector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
@@ -46,6 +47,7 @@ int ActsExamples::fatrasMain(
   ActsExamples::Options::addBFieldOptions(desc);
   ActsExamples::ParticleSelector::addOptions(desc);
   ActsExamples::Options::addFatrasOptions(desc);
+  ActsExamples::Options::addDigitizationOptions(desc);
   ActsExamples::Options::addOutputOptions(desc);
   desc.add_options()("evg-input-type",
                      value<std::string>()->default_value("pythia8"),

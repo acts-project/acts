@@ -6,8 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// System include(s)
 #include <iostream>
 
+// SYCL plugin include(s)
+#include "Acts/Plugins/Sycl/Utilities/ListPlatforms.hpp"
+
+// SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {

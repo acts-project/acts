@@ -89,8 +89,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
-  ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                        << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
+                                       << m_cfg.filePath << "'");
   return ProcessCode::SUCCESS;
 }
 

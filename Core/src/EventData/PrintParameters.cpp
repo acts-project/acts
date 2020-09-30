@@ -10,49 +10,140 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <array>
+#include <iomanip>
 #include <ostream>
+
+namespace {
+
+constexpr std::array<std::size_t, 8> kMonotonic = {
+    0, 1, 2, 3, 4, 5, 6, 7,
+};
+
+constexpr std::array<const char*, Acts::eBoundSize> makeBoundNames() {
+  std::array<const char*, Acts::eBoundSize> names = {nullptr};
+  // must be set by index since the order is user-configurable
+  names[Acts::eBoundLoc0] = "loc0:";
+  names[Acts::eBoundLoc1] = "loc1:";
+  names[Acts::eBoundTime] = "time:";
+  names[Acts::eBoundPhi] = "phi:";
+  names[Acts::eBoundTheta] = "theta:";
+  names[Acts::eBoundQOverP] = "q/p:";
+  return names;
+}
+
+constexpr std::array<const char*, Acts::eFreeSize> makeFreeNames() {
+  std::array<const char*, Acts::eFreeSize> names = {nullptr};
+  // must be set by index since the order is user-configurable
+  names[Acts::eFreePos0] = "pos0:";
+  names[Acts::eFreePos1] = "pos1:";
+  names[Acts::eFreePos2] = "pos2:";
+  names[Acts::eFreeTime] = "time:";
+  names[Acts::eFreeDir0] = "dir0:";
+  names[Acts::eFreeDir1] = "dir1:";
+  names[Acts::eFreeDir2] = "dir2:";
+  names[Acts::eFreeQOverP] = "q/p:";
+  return names;
+}
+
+constexpr std::size_t kNamesMaxSize = 6;
+
+/// Print parameters and associated covariance.
+///
+/// The output format format is
+///
+///     name0: value0 +- stddev0  corr00
+///     name1: value1 +- stddev1  corr10 corr11
+///     name2: value2 +- stddev2  corr20 corr21 corr22
+///     ...
+///
+template <typename indices_container_t, typename names_container_t,
+          typename parameters_t, typename covariance_t>
+void printParametersCovariance(std::ostream& os,
+                               const indices_container_t& indices,
+                               const names_container_t& names,
+                               const Eigen::MatrixBase<parameters_t>& params,
+                               const Eigen::MatrixBase<covariance_t>* cov) {
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(parameters_t);
+
+  // save stream formatting state
+  auto flags = os.flags();
+  auto precision = os.precision();
+
+  // compute the standard deviations
+  typename parameters_t::PlainObject stddev;
+  if (cov) {
+    stddev = cov->diagonal().cwiseSqrt();
+  }
+
+  for (Eigen::Index i = 0; i < params.size(); ++i) {
+    // no newline after the last line. e.g. the log macros automatically add a
+    // newline and having a finishing newline would lead to empty lines.
+    if (0 < i) {
+      os << '\n';
+    }
+
+    // show name
+    os << std::setw(kNamesMaxSize) << std::left << names[indices[i]];
+    // show value
+    os << " ";
+    os << std::defaultfloat << std::setprecision(4);
+    os << std::setw(10) << std::right << params[i];
+
+    if (cov) {
+      // show standard deviation
+      os << " +- ";
+      os << std::setw(10) << std::left << stddev[i];
+      // show lower-triangular part of the correlation matrix
+      os << " ";
+      os << std::fixed << std::setprecision(3);
+      for (Eigen::Index j = 0; j <= i; ++j) {
+        auto corr = (*cov)(i, j) / (stddev[i] * stddev[j]);
+        os << " " << std::setw(6) << std::right << corr;
+      }
+    }
+  }
+
+  // restore previous stream formatting state
+  os.flags(flags);
+  os.precision(precision);
+}
+
+/// Print parameters only.
+template <typename indices_container_t, typename names_container_t,
+          typename parameters_t>
+void printParameters(std::ostream& os, const indices_container_t& indices,
+                     const names_container_t& names,
+                     const Eigen::MatrixBase<parameters_t>& params) {
+  EIGEN_STATIC_ASSERT_VECTOR_ONLY(parameters_t);
+
+  const Eigen::Matrix<typename parameters_t::Scalar,
+                      parameters_t::SizeAtCompileTime,
+                      parameters_t::SizeAtCompileTime>* cov = nullptr;
+  printParametersCovariance(os, indices, names, params, cov);
+}
+
+}  // namespace
 
 void Acts::detail::printBoundParameters(std::ostream& os,
                                         const Acts::Surface& surface,
                                         const Acts::BoundVector& params,
                                         const Acts::BoundSymMatrix* cov) {
-  // Set stream output format
-  auto oldPrecision = os.precision(7);
-  auto oldFlags = os.setf(std::ios::fixed);
-
-  os << "BoundTrackParameters:\n";
-  os << "  parameters: " << params.transpose() << '\n';
   if (cov) {
-    os << "  covariance:\n";
-    os << *cov << '\n';
+    printParametersCovariance(os, kMonotonic, makeBoundNames(), params, cov);
   } else {
-    os << "  no covariance stored\n";
+    printParameters(os, kMonotonic, makeBoundNames(), params);
   }
-  os << "  on surface: " << surface.geometryId() << ' ' << surface.name()
-     << '\n';
-
-  // Reset stream format
-  os.setf(oldFlags);
-  os.precision(oldPrecision);
+  os << "\non surface " << surface.geometryId() << " of type "
+     << surface.name();
 }
 
 void Acts::detail::printFreeParameters(std::ostream& os,
                                        const Acts::FreeVector& params,
                                        const Acts::FreeMatrix* cov) {
-  // Set stream output format
-  auto oldPrecision = os.precision(7);
-  auto oldFlags = os.setf(std::ios::fixed);
-
-  os << "FreeTrackParameters:\n";
-  os << "  parameters: " << params.transpose() << '\n';
   if (cov) {
-    os << "  covariance:\n";
-    os << *cov << '\n';
+    printParametersCovariance(os, kMonotonic, makeFreeNames(), params, cov);
   } else {
-    os << "  no covariance stored\n";
+    printParameters(os, kMonotonic, makeFreeNames(), params);
   }
-
-  // Reset stream format
-  os.setf(oldFlags);
-  os.precision(oldPrecision);
 }

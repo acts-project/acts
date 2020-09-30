@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <boost/container/flat_set.hpp>
@@ -29,6 +30,21 @@ struct CompareParticleId {
     return lhs.particleId() < rhs;
   }
 };
+struct PrimaryVertexIdGetter {
+  constexpr ActsFatras::Barcode operator()(
+      const ActsFatras::Particle& particle) const {
+    return ActsFatras::Barcode(0u).setVertexPrimary(
+        particle.particleId().vertexPrimary());
+  }
+};
+struct SecondaryVertexIdGetter {
+  constexpr ActsFatras::Barcode operator()(
+      const ActsFatras::Particle& particle) const {
+    return ActsFatras::Barcode(0u)
+        .setVertexPrimary(particle.particleId().vertexPrimary())
+        .setVertexSecondary(particle.particleId().vertexSecondary());
+  }
+};
 }  // namespace detail
 
 using SimParticle = ::ActsFatras::Particle;
@@ -37,4 +53,22 @@ using SimParticleContainer =
     ::boost::container::flat_set<::ActsFatras::Particle,
                                  detail::CompareParticleId>;
 
-}  // end of namespace ActsExamples
+/// Iterate over groups of particles belonging to the same primary vertex.
+inline GroupBy<SimParticleContainer::const_iterator,
+               detail::PrimaryVertexIdGetter>
+groupByPrimaryVertex(const SimParticleContainer& container) {
+  return makeGroupBy(container, detail::PrimaryVertexIdGetter());
+}
+
+/// Iterate over groups of particles belonging to the same secondary vertex.
+///
+/// For each primary vertex, this yields one group of particles belonging
+/// directly to the primary vertex (secondary vertex id 0) and a group for
+/// each secondary vertex.
+inline GroupBy<SimParticleContainer::const_iterator,
+               detail::SecondaryVertexIdGetter>
+groupBySecondaryVertex(const SimParticleContainer& container) {
+  return makeGroupBy(container, detail::SecondaryVertexIdGetter());
+}
+
+}  // namespace ActsExamples

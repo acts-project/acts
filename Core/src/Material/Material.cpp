@@ -99,11 +99,11 @@ std::ostream& Acts::operator<<(std::ostream& os, const Material& material) {
   if (!material) {
     os << "vacuum";
   } else {
-    os << "X0=" << material.X0();
-    os << "|L0=" << material.L0();
-    os << "|Ar=" << material.Ar();
-    os << "|Z=" << material.Z();
-    os << "|MolarRho=" << material.molarDensity();
+    os << "x0=" << material.X0();
+    os << "|l0=" << material.L0();
+    os << "|ar=" << material.Ar();
+    os << "|z=" << material.Z();
+    os << "|molar_rho=" << material.molarDensity();
   }
   return os;
 }

@@ -308,8 +308,12 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   auto currentRecMaterial = mState.recordedMaterial.end();
 
   // store end position of the last material slab
-  Acts::Vector3D lastPositionEnd = volIter->position;
-  Acts::Vector3D direction;
+  Acts::Vector3D lastPositionEnd = {0, 0, 0};
+  Acts::Vector3D direction = {0, 0, 0};
+
+  if (volIter != mappingVolumes.end()) {
+    lastPositionEnd = volIter->position;
+  }
 
   // loop over all the material hit in the track or until there no more volume
   // to map onto

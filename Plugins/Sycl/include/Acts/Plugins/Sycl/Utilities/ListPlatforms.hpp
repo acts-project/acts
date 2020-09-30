@@ -10,6 +10,9 @@
 
 namespace Acts::Sycl {
 /// @brief This function allows us to list availabe SYCL platforms and devices.
+///
+/// Available platforms and devices only include previously linked targets by
+/// CMake, which can optionally be altered by environment variable SYCL_BE.
 void listPlatforms();
 
 }  // namespace Acts::Sycl

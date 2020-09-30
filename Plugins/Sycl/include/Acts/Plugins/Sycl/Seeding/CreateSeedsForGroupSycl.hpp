@@ -8,19 +8,29 @@
 
 #pragma once
 
+// System include(s)
+#include <vector>
+
+// SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 
-#include <vector>
-
 namespace Acts::Sycl {
 
-/// @brief Seedfinding algorithm implemented with SYCL to offload computations
-/// to GPUs.
+/// @brief Seedfinding algorithm implemented in SYCL.
+///
+/// @param[in] wrappedQueue is a wrapper object of the SYCL queue
+/// @param[in] seedfinderConfig includes the required configuration
+/// parameters for the algorithm
+/// @param[in] deviceCuts is an experiment specific object with customizable
+/// seed weight altering and seed cutting member functions
+/// @param[in] {bottom, middle, top} SPs are arrays of simplified internal space
+/// point structures of {bottom, middle, top} space points
+/// @param[out] seeds holds of the generated seed indices and weight
 void createSeedsForGroupSycl(
     const QueueWrapper& wrappedQueue,
-    const detail::DeviceSeedfinderConfig& configData,
+    const detail::DeviceSeedfinderConfig& seedfinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     const std::vector<detail::DeviceSpacePoint>& bottomSPs,
     const std::vector<detail::DeviceSpacePoint>& middleSPs,

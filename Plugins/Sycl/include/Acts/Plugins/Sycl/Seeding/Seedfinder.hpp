@@ -14,7 +14,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
-// Sycl plugin include(s).
+// SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
@@ -50,9 +50,13 @@ class Seedfinder {
  private:
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 
-  // members necessary for the GPU algorithm
+  /// Experiment specific cuts
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
+
+  /// Configuration object for the device side.
   Acts::Sycl::detail::DeviceSeedfinderConfig m_deviceConfig;
+
+  /// Wrapper around a SYCL queue object.
   QueueWrapper m_wrappedQueue;
 };
 

@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesIoRoot SHARED
+  src/RootDigitizationWriter.cpp
   src/RootMaterialDecorator.cpp
   src/RootMaterialWriter.cpp
   src/RootMaterialTrackReader.cpp
@@ -9,16 +10,15 @@ add_library(
   src/RootPropagationStepsWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootTrackParameterWriter.cpp
-  src/RootVertexAndTracksWriter.cpp
-  src/RootVertexAndTracksReader.cpp
-  src/RootTrajectoryWriter.cpp)
+  src/RootTrajectoryWriter.cpp
+)
 target_include_directories(
   ActsExamplesIoRoot
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginIdentification
+    ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization
     ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)

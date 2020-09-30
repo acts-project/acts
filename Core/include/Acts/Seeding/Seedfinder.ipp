@@ -201,7 +201,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         if (S2 < B2 * m_config.minHelixDiameter2) {
           continue;
         }
-        // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
+        // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
         float pT2scatter = 4 * iHelixDiameter2 * m_config.pT2perRadius;

@@ -7,20 +7,29 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+// System include(s)
 #include <cstddef>
 #include <cstdint>
 
 namespace Acts::Sycl::detail {
+/// Simplified internal space point object with parameters required for the
+/// seeding algorithm on the device side.
 struct DeviceSpacePoint {
   float x;
   float y;
   float z;
+  /// radius
   float r;
+  /// variance R
   float varR;
+  /// variance Z
   float varZ;
 };
 
-// Parameters required to calculate circle with linear equation.
+/// Simple structure holding information about duplet circles (middle-bottom and
+/// middle-top) in linear equation form.
+/// They are used on the device side in SYCL kernels.
 struct DeviceLinEqCircle {
   float zo;
   float cotTheta;
@@ -30,7 +39,8 @@ struct DeviceLinEqCircle {
   float v;
 };
 
-// Predefined parameters for Seedfinder and SeedFilter classes
+/// Config parameters of Seedfinder and SeedFilter classes
+/// needed for the seeding algorithm on the device side.
 struct DeviceSeedfinderConfig {
   float deltaRMin;
   float deltaRMax;
@@ -49,12 +59,19 @@ struct DeviceSeedfinderConfig {
   size_t compatSeedLimit;
 };
 
-// For SYCL
-struct TripletData {
+/// Struct holding information about triplets that are calculated in the triplet
+/// search kernel and needed in the next kernel (triplet filter).
+struct DeviceTriplet {
   float curvature;
   float impact;
+  int32_t topSPIndex;
 };
 
+/// Struct returned from the SYCL seeding algorithm to the host
+///
+/// Stores the indices of the space points and the weight of the seed.
+/// They index arrays on the host side, constructed in
+/// @c Acts::Sycl::Seedfinder::createSeedsForGroup(...).
 struct SeedData {
   uint32_t bottom;
   uint32_t top;
