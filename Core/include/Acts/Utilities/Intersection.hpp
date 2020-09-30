@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// Intersection.hpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 #include <limits>
 
@@ -20,7 +16,7 @@ namespace Acts {
 ///  @struct Intersection
 ///
 ///  Intersection struct used for position
-template <unsigned int DIM>
+template <unsigned int kSize>
 struct Intersection {
   /// Nested Status enum
   enum class Status : int {
@@ -31,7 +27,7 @@ struct Intersection {
   };
 
   /// Position of the intersection
-  ActsVector<double, DIM> position = ActsVector<double, DIM>::Zero();
+  ActsVector<double, kSize> position = ActsVector<double, kSize>::Zero();
   /// Signed path length to the intersection (if valid)
   double pathLength{std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
@@ -42,7 +38,7 @@ struct Intersection {
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  Intersection(const ActsVector<double, DIM>& sinter, double slength,
+  Intersection(const ActsVector<double, kSize>& sinter, double slength,
                Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
@@ -55,7 +51,7 @@ struct Intersection {
   /// Smaller operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator<(const Intersection<DIM>& si) const {
+  bool operator<(const Intersection<kSize>& si) const {
     if (status == Status::unreachable) {
       return false;
     }
@@ -70,7 +66,7 @@ struct Intersection {
   /// Greater operator for sorting,
   /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
-  bool operator>(const Intersection<DIM>& si) const {
+  bool operator>(const Intersection<kSize>& si) const {
     if (status == Status::unreachable) {
       return false;
     }
