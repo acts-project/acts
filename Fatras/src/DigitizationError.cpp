@@ -16,9 +16,9 @@ const char* ActsFatras::detail::DigitizationErrorCategory::name() const
 std::string ActsFatras::detail::DigitizationErrorCategory::message(
     int c) const {
   switch (static_cast<DigitizationError>(c)) {
-    case DigitizationError::SmearOutOfBounds:
+    case DigitizationError::SmearingOutOfRange:
       return "Digitization: smeared out of surface bounds.";
-    case DigitizationError::SmearError:
+    case DigitizationError::SmearingError:
       return "Digitization: smearing error occured.";
     case DigitizationError::NoSurfaceDefined:
       return "Digitization: no surface for bound measurement defined.";

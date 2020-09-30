@@ -9,10 +9,13 @@
 #include "FatrasDigitizationBase.hpp"
 
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
+#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -26,40 +29,71 @@ void ActsExamples::setupDigitization(
   // Read the standard options
   auto logLevel = ActsExamples::Options::readLogLevel(vars);
 
-  // Configure the digitizer
-  ActsExamples::DigitizationAlgorithm::Config digi;
-  digi.inputSimulatedHits = "hits";
-  digi.outputClusters = "clusters";
-  digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
-      Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
-  digi.randomNumbers = randomNumbers;
-  digi.trackingGeometry = trackingGeometry;
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::DigitizationAlgorithm>(digi, logLevel));
+  if (vars["digi-smearing"].as<bool>()) {
+    ActsExamples::SmearingAlgorithm::Config smearCfg =
+        ActsExamples::Options::readSmearingConfig(vars);
+    smearCfg.trackingGeometry = trackingGeometry;
+    smearCfg.randomNumbers = randomNumbers;
 
-  // Output directory
-  std::string outputDir = vars["output-dir"].template as<std::string>();
+    sequencer.addAlgorithm(
+        std::make_shared<ActsExamples::SmearingAlgorithm>(smearCfg, logLevel));
 
-  // Write digitisation output as Csv files
-  if (vars["output-csv"].template as<bool>()) {
-    // clusters as root
-    ActsExamples::CsvPlanarClusterWriter::Config clusterWriterCsv;
-    clusterWriterCsv.inputClusters = digi.outputClusters;
-    clusterWriterCsv.inputSimulatedHits = digi.inputSimulatedHits;
-    clusterWriterCsv.outputDir = outputDir;
-    sequencer.addWriter(std::make_shared<ActsExamples::CsvPlanarClusterWriter>(
-        clusterWriterCsv, logLevel));
-  }
+    // Output directory
+    std::string outputDir = vars["output-dir"].template as<std::string>();
 
-  // Write digitsation output as ROOT files
-  if (vars["output-root"].template as<bool>()) {
-    // clusters as root
-    ActsExamples::RootPlanarClusterWriter::Config clusterWriterRoot;
-    clusterWriterRoot.inputClusters = digi.outputClusters;
-    clusterWriterRoot.inputSimulatedHits = digi.inputSimulatedHits;
-    clusterWriterRoot.filePath =
-        ActsExamples::joinPaths(outputDir, digi.outputClusters + ".root");
-    sequencer.addWriter(std::make_shared<ActsExamples::RootPlanarClusterWriter>(
-        clusterWriterRoot, logLevel));
+    // Write digitsation output as ROOT files
+    if (vars["output-root"].template as<bool>()) {
+      // clusters as root
+      ActsExamples::RootDigitizationWriter::Config smearWriterRoot;
+      smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
+      smearWriterRoot.inputSimulatedHits = smearCfg.inputSimulatedHits;
+      smearWriterRoot.filePath = ActsExamples::joinPaths(
+          outputDir, smearCfg.outputMeasurements + ".root");
+      smearWriterRoot.smearers = smearCfg.smearers;
+      sequencer.addWriter(
+          std::make_shared<ActsExamples::RootDigitizationWriter>(
+              smearWriterRoot, logLevel));
+    }
+
+  } else if (vars["digi-geometric-3d"].as<bool>()) {
+    // Configure the digitizer
+    ActsExamples::PlanarSteppingAlgorithm::Config digi;
+    digi.inputSimulatedHits = "hits";
+    digi.outputClusters = "clusters";
+    digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
+        Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
+    digi.randomNumbers = randomNumbers;
+    digi.trackingGeometry = trackingGeometry;
+    sequencer.addAlgorithm(
+        std::make_shared<ActsExamples::PlanarSteppingAlgorithm>(digi,
+                                                                logLevel));
+
+    // Output directory
+    std::string outputDir = vars["output-dir"].template as<std::string>();
+
+    // Write digitisation output as Csv files
+    if (vars["output-csv"].template as<bool>()) {
+      // clusters as root
+      ActsExamples::CsvPlanarClusterWriter::Config clusterWriterCsv;
+      clusterWriterCsv.inputClusters = digi.outputClusters;
+      clusterWriterCsv.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterCsv.outputDir = outputDir;
+      sequencer.addWriter(
+          std::make_shared<ActsExamples::CsvPlanarClusterWriter>(
+              clusterWriterCsv, logLevel));
+    }
+
+    // Write digitsation output as ROOT files
+    if (vars["output-root"].template as<bool>()) {
+      // clusters as root
+      ActsExamples::RootPlanarClusterWriter::Config clusterWriterRoot;
+      clusterWriterRoot.inputClusters = digi.outputClusters;
+      clusterWriterRoot.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterRoot.filePath =
+          ActsExamples::joinPaths(outputDir, digi.outputClusters + ".root");
+      sequencer.addWriter(
+          std::make_shared<ActsExamples::RootPlanarClusterWriter>(
+              clusterWriterRoot, logLevel));
+    }
   }
 }

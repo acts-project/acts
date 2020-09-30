@@ -27,7 +27,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Create planar clusters from simulation hits.
-class DigitizationAlgorithm final : public BareAlgorithm {
+class PlanarSteppingAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input collection of simulated hits.
@@ -46,7 +46,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  DigitizationAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  PlanarSteppingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Build clusters from input simulation hits.
   ///

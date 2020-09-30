@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
+#include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
@@ -28,9 +28,9 @@
 #include <iostream>
 #include <stdexcept>
 
-ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    ActsExamples::DigitizationAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
+ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
+    ActsExamples::PlanarSteppingAlgorithm::Config cfg, Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("PlanarSteppingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSimulatedHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
@@ -71,7 +71,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   });
 }
 
-ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Prepare the input and output collections
   const auto& hits =
