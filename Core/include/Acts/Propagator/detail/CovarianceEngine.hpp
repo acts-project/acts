@@ -71,7 +71,7 @@ ActsMatrixD<8, 7> jacobianAnglesToDirections(const Vector3D& dir);
 ///   - the parameters at the surface
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
-std::tuple<BoundTrackParameters, JacobianToBoundPars, double> boundState(
+std::tuple<BoundTrackParameters, Jacobian, double> boundState(
     std::reference_wrapper<const GeometryContext> geoContext,
     Covariance& covarianceMatrix, Jacobian& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,

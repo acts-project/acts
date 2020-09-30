@@ -380,7 +380,7 @@ class StraightLineStepper {
   /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
-  template <typename end_parameters_t = CurvilinearParameters>
+  template <typename end_parameters_t = CurvilinearTrackParameters>
   void covarianceTransport(State& state) const {
     detail::covarianceTransport(
         state.cov, state.jacobian, state.jacTransport, state.derivative,

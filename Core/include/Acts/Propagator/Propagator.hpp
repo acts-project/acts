@@ -367,7 +367,7 @@ class Propagator final {
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename return_parameters_t = CurvilinearParameters,
+  template <typename return_parameters_t = CurvilinearTrackParameters,
             typename parameters_t, typename propagator_options_t,
             typename path_aborter_t = PathLimitReached>
   Result<action_list_t_result_t<

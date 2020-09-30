@@ -158,7 +158,7 @@ class SingleFreeTrackParameters {
   /// @brief Sets a covariance matrix
   ///
   /// @param [in] cov Covariance that will be set
-  void covariance(const CovMatrix_t& cov) { m_paramSet.setCovariance(cov); }
+  void covariance(const CovarianceMatrix& cov) { m_paramSet.setCovariance(cov); }
   
   /// Spatial position three-vector.
   Vector3D position() const {

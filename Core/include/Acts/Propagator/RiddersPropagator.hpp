@@ -83,7 +83,7 @@ class RiddersPropagator {
   /// @param [in] options Options of the propagations
   ///
   /// @return Result of the propagation
-  template <typename return_parameters_t = CurvilinearParameters,
+  template <typename return_parameters_t = CurvilinearTrackParameters,
             typename parameters_t, typename propagator_options_t>
   Result<action_list_t_result_t<
       return_parameters_t, typename propagator_options_t::action_list_type>>

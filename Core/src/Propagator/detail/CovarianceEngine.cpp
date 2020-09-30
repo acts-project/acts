@@ -463,7 +463,7 @@ FreeState freeState(Covariance& covarianceMatrix, Jacobian& jacobian,
     cov = std::get<FreeSymMatrix>(covarianceMatrix);
   }
   // Create the free parameters
-  FreeTrackParameters freeParameters(std::move(cov), parameters);
+  FreeTrackParameters freeParameters(parameters, std::move(cov));
 
   return std::make_tuple(std::move(freeParameters), jacobian, accumulatedPath);
 }

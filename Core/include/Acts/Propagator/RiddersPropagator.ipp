@@ -301,19 +301,19 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     } else {
       if (param == 4 || param == 5) {
-        double phi0 = nominal(Acts::ePHI);
-        double phi1 = r.endParameters->parameters()(Acts::ePHI);
+        double phi0 = nominal(Acts::eBoundPhi);
+        double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
         if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-          derivatives.back()[Acts::ePHI] = (phi1 + 2. * M_PI - phi0) / h;
+          derivatives.back()[Acts::eBoundPhi] = (phi1 + 2. * M_PI - phi0) / h;
         else if (std::abs(phi1 - 2. * M_PI - phi0) < std::abs(phi1 - phi0))
-          derivatives.back()[Acts::ePHI] = (phi1 - 2. * M_PI - phi0) / h;
+          derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
 
-        double theta0 = nominal(Acts::eTHETA);
-        double theta1 = r.endParameters->parameters()(Acts::eTHETA);
+        double theta0 = nominal(Acts::eBoundTheta);
+        double theta1 = r.endParameters->parameters()(Acts::eBoundTheta);
         if (std::abs(theta1 + M_PI - theta0) < std::abs(theta1 - theta0))
-          derivatives.back()[Acts::eTHETA] = (theta1 + M_PI - theta0) / h;
+          derivatives.back()[Acts::eBoundTheta] = (theta1 + M_PI - theta0) / h;
         else if (std::abs(theta1 - M_PI - theta0) < std::abs(theta1 - theta0))
-          derivatives.back()[Acts::eTHETA] = (theta1 - M_PI - theta0) / h;
+          derivatives.back()[Acts::eBoundTheta] = (theta1 - M_PI - theta0) / h;
       }
     }
   }
@@ -362,11 +362,11 @@ parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
 template <typename propagator_t>
 template <typename parameters_t>
 void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
-    std::reference_wrapper<const GeometryContext> geoContext, double h,
+    std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
     const unsigned int param, parameters_t& tp) const {
   // Treatment for theta
-  if (param == eTHETA) {
-    const double current_theta = tp.template get<eTHETA>();
+  if (param == eBoundTheta) {
+    const double current_theta = tp.template get<eBoundTheta>();
     if (current_theta + h > M_PI) {
       h = M_PI - current_theta;
     }
@@ -376,32 +376,34 @@ void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
   }
 
   // Modify start parameter
+  auto parametersVector = tp.parameters();
   switch (param) {
     case 0: {
-      tp.template set<eLOC_0>(geoContext, tp.template get<eLOC_0>() + h);
+	  parametersVector[eBoundLoc0] += h;
       break;
     }
     case 1: {
-      tp.template set<eLOC_1>(geoContext, tp.template get<eLOC_1>() + h);
+			  parametersVector[eBoundLoc1] += h;
       break;
     }
     case 2: {
-      tp.template set<ePHI>(geoContext, tp.template get<ePHI>() + h);
+			  parametersVector[eBoundPhi] += h;
       break;
     }
     case 3: {
-      tp.template set<eTHETA>(geoContext, tp.template get<eTHETA>() + h);
+			  parametersVector[eBoundTheta] += h;
       break;
     }
     case 4: {
-      tp.template set<eQOP>(geoContext, tp.template get<eQOP>() + h);
+			  parametersVector[eBoundQOverP] += h;
       break;
     }
     case 5: {
-      tp.template set<eT>(geoContext, tp.template get<eT>() + h);
+			  parametersVector[eBoundTime] += h;
       break;
     }
   }
+  tp = parameters_t(parametersVector.template segment<4>(eFreePos0), parametersVector.template segment<3>(eFreeDir0), parametersVector[eFreeQOverP], std::nullopt);
 }
 
 template <typename propagator_t>
@@ -506,7 +508,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::variant<Acts::BoundSymMatrix, Acts::FreeSymMatrix>& startCov,
     const std::vector<double>& deviations, const Vector3D direction) const
     -> const Covariance {
-  ActsMatrixD<eBoundParametersSize, 7> jac;
+  ActsMatrixD<eBoundSize, 7> jac;
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     jac.col(i) = fitLinear(derivatives[i], deviations);
   }

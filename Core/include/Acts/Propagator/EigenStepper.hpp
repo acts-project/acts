@@ -411,7 +411,7 @@ class EigenStepper {
   /// derivation
   ///
   /// @param [in,out] state State of the stepper
-  template <typename end_parameters_t = CurvilinearParameters>
+  template <typename end_parameters_t = CurvilinearTrackParameters>
   void covarianceTransport(State& state) const;
 
   /// Method for on-demand transport of the covariance

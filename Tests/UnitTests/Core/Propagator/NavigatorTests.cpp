@@ -175,11 +175,10 @@ struct PropagatorState {
     FreeState freeState(State& state) const {
       // Create the free parameters
       FreeVector pars;
-      pars.template head<3>() = state.pos;
-      pars(3) = state.t;
-      pars.template segment<3>(4) = state.dir;
-      pars(7) = (state.q == 0. ? 1. : state.q) / state.p;
-      FreeTrackParameters parameters(std::nullopt, pars);
+      pars.template segment<4>(eFreePos0) = state.pos4;
+      pars.template segment<3>(eFreeDir0) = state.dir;
+      pars(eFreeQOverP) = (state.q == 0. ? 1. : state.q) / state.p;
+      FreeTrackParameters parameters(pars, std::nullopt);
 
       Jacobian jacobian = FreeMatrix(FreeMatrix::Identity());
 

@@ -153,7 +153,7 @@ class LineSurface : public Surface {
   /// @param jacobian is the transport jacobian
   ///
   /// @return a 7-dim vector
-  const ActsVectorD<7> derivativeFactors(
+  ActsVectorD<7> derivativeFactors(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const RotationMatrix3D& rft,
       const ActsMatrixD<8, 7>& jacobian) const final;

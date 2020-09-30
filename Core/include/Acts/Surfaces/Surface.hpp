@@ -387,7 +387,7 @@ class Surface : public virtual GeometryObject,
   /// @param jacobian is the transport jacobian
   ///
   /// @return a 7-dim vector
-  virtual const ActsVectorD<7> derivativeFactors(
+  virtual ActsVectorD<7> derivativeFactors(
       const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction, const RotationMatrix3D& rft,
       const ActsMatrixD<8, 7>& jacobian) const;

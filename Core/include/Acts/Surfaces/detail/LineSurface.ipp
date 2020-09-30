@@ -262,7 +262,7 @@ LineSurface::localCartesianToBoundLocalDerivative(
   return loc3DToLocBound;
 }
 
-inline const ActsVectorD<7> LineSurface::derivativeFactors(
+inline ActsVectorD<7> LineSurface::derivativeFactors(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction, const RotationMatrix3D& rft,
     const ActsMatrixD<8, 7>& jacobian) const {
