@@ -25,7 +25,6 @@
 class TFile;
 class TTree;
 
-
 namespace ActsExamples {
 
 class SeedingPerformanceWriter final
