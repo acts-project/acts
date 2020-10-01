@@ -19,9 +19,10 @@ namespace ActsExamples {
 
 /// Create track states by smearing truth particle information.
 ///
-/// A curvilinear track state is constructed at the vertex position for
-/// each input particle. They are stored in the same order as the input
-/// particles.
+/// Particles are smeared in the perigee frame anchored at their true vertex
+/// position. The `d0` and `z0` parameters are always defined within that
+/// perigee frame and not globally. The generated bound parameters are stored in
+/// the same order as the input particles.
 class ParticleSmearing final : public BareAlgorithm {
  public:
   struct Config {
