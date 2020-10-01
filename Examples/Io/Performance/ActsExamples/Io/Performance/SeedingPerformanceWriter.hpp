@@ -17,7 +17,6 @@
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Seeding/SimSpacePoint.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
 #include <set>
