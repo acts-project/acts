@@ -260,7 +260,7 @@ class AtlasStepper {
                        const Parameters& /*unused*/,
                        NavigationDirection /*unused*/, double /*unused*/,
                        double /*unused*/)
-        : geoContext(gctx), fieldCache(mctx) {
+        : fieldCache(mctx), geoContext(gctx) {
       throw std::runtime_error(
           "AtlasStepper::State with FreeTrackParameters is not implemented");
     }
