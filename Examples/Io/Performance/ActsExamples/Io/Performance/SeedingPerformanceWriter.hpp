@@ -16,9 +16,7 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Seeding/SimSpacePoint.hpp"
-#include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
-#include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include <mutex>
@@ -27,7 +25,6 @@
 class TFile;
 class TTree;
 
-// using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 
@@ -50,8 +47,8 @@ class SeedingPerformanceWriter final
 
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
-    FakeRatePlotTool::Config fakeRatePlotToolConfig;
-    DuplicationPlotTool::Config duplicationPlotToolConfig;
+    // FakeRatePlotTool::Config fakeRatePlotToolConfig;
+    // DuplicationPlotTool::Config duplicationPlotToolConfig;
   };
 
   /// @brief Finds all the particles that are in common to all space points in
@@ -79,15 +76,12 @@ class SeedingPerformanceWriter final
   /// Plot tool for efficiency
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
-  // /// Plot tool for fake rate
-  // FakeRatePlotTool m_fakeRatePlotTool;
-  // FakeRatePlotTool::FakeRatePlotCache m_fakeRatePlotCache{};
-  // // /// Plot tool for duplication rate
-  // DuplicationPlotTool m_duplicationPlotTool;
-  // DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
-  // /// Plot tool for track hit info
-  // TrackSummaryPlotTool m_trackSummaryPlotTool;
-  // TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+
+  size_t m_nTotalSeeds;
+  size_t m_nTotalMatchedSeeds;
+  size_t m_nTotalParticles;
+  size_t m_nTotalMatchedParticles;
+  size_t m_nTotalDuplicatedParticles;
 };
 
 }  // namespace ActsExamples

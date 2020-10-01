@@ -7,31 +7,26 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "SeedingPerformanceWriter.hpp"
-
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <numeric>
-#include <stdexcept>
-
 #include <set>
+#include <stdexcept>
 #include <TFile.h>
-#include <TTree.h>
-
-namespace {
-using Acts::VectorHelpers::eta;
-using SimParticleContainer = ActsExamples::SimParticleContainer;
-using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
-using ProtoTrack = ActsExamples::ProtoTrack;
-}  // namespace
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config cfg,
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
+      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
+      m_nTotalSeeds(0),
+      m_nTotalMatchedSeeds(0),
+      m_nTotalParticles(0),
+      m_nTotalMatchedParticles(0),
+      m_nTotalDuplicatedParticles(0) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing input seeds collection");
   }
@@ -50,7 +45,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (not m_outputFile) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
-  // initialize the efficiency plots tool
+  // initialize the plot tools
   m_effPlotTool.book(m_effPlotCache);
 }
 
@@ -63,6 +58,17 @@ ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
+  float eff = float(m_nTotalMatchedParticles) / m_nTotalParticles;
+  float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
+  float duplicationRate =
+      float(m_nTotalDuplicatedParticles) / m_nTotalMatchedParticles;
+
+  ACTS_INFO("Efficiency (nMatchedParticles / nAllParticles) = " << eff);
+  ACTS_INFO("Fake rate (nUnMatchedSeeds / nAllSeeds) =" << fakeRate);
+  ACTS_INFO(
+      "Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) ="
+      << duplicationRate);
+
   if (m_outputFile) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
@@ -103,15 +109,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
   // Read truth particles from input collection
   const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
+          m_cfg.inputParticles);
 
-  // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
   size_t nSeeds = 0;
-  // Set that helps keep track of the number of duplicate seeds. i.e. if there
-  // are three seeds for one particle, this is counted as two duplicate seeds.
-  std::set<ActsFatras::Barcode> particlesFoundBySeeds;
-
+  size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
 
@@ -127,22 +129,37 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
           auto it = truthCount.try_emplace(prt, 0u).first;
           it->second += 1;
         }
+        nMatchedSeeds++;
       }
     }
   }
-  ACTS_INFO("Number of seeds: " << nSeeds);
 
+  int nMatchedParticles = 0;
+  int nDuplicatedParticles = 0;
   // Fill the effeciency and fake rate plots
   for (const auto& particle : particles) {
     const auto it1 = truthCount.find(particle.particleId());
     bool isMatched = false;
-
+    bool isDuplicated = false;
+    int nMatchedSeedsForParticle = 0;
     if (it1 != truthCount.end()) {
       isMatched = true;
+      nMatchedParticles++;
+      nMatchedSeedsForParticle = truthCount[particle.particleId()];
+      if (nMatchedSeedsForParticle > 1)
+        isDuplicated = true;
     }
-
+    if (isDuplicated)
+      nDuplicatedParticles++;
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }
+
+  ACTS_INFO("Number of seeds: " << nSeeds);
+  m_nTotalSeeds += nSeeds;
+  m_nTotalMatchedSeeds += nMatchedSeeds;
+  m_nTotalParticles += particles.size();
+  m_nTotalMatchedParticles += nMatchedParticles;
+  m_nTotalDuplicatedParticles += nDuplicatedParticles;
 
   return ProcessCode::SUCCESS;
 }
