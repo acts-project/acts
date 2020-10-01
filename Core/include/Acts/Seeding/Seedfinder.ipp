@@ -205,12 +205,13 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
         float pT2scatter = 4 * iHelixDiameter2 * m_config.pT2perRadius;
-        // TODO: include upper pT limit for scatter calc
         // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
         // from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if ((deltaCotTheta2 - error2 > 0) &&
+        if ((m_config.pTPerHelixRadius * std::sqrt(S2 / B2) <
+             2 * m_config.maxPtScattering) &&
+            (deltaCotTheta2 - error2 > 0) &&
             (dCotThetaMinusError2 >
              p2scatter * m_config.sigmaScattering * m_config.sigmaScattering)) {
           continue;
