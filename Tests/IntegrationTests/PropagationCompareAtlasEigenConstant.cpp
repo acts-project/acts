@@ -58,7 +58,7 @@ BOOST_DATA_TEST_CASE(Forward,
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   auto [atlasPropagator, eigenPropagator] = makePropagators(bz);
-  runForwardComparisonTest(atlasPropagator, eigenPropagator, geoCtx, magCtx,
+  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(atlasPropagator, eigenPropagator, geoCtx, magCtx,
                            makeParametersCurvilinear(phi, theta, p, q), s,
                            epsPos, epsDir, epsMom, epsCov);
 }

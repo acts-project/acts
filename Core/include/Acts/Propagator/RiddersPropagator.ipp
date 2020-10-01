@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+
 template <typename propagator_t>
 template <typename return_parameters_t, typename parameters_t,
           typename propagator_options_t>
@@ -363,7 +365,7 @@ parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
 template <typename propagator_t>
 template <typename parameters_t>
 void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
-    std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
+    std::reference_wrapper<const GeometryContext> geoContext, double h,
     const unsigned int param, parameters_t& tp) const {
   // Treatment for theta
   if (param == eBoundTheta) {
@@ -377,7 +379,7 @@ void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
   }
 
   // Modify start parameter
-  auto parametersVector = tp.parameters();
+  BoundVector parametersVector = tp.parameters();
   switch (param) {
     case 0: {
 	  parametersVector[eBoundLoc0] += h;
@@ -404,59 +406,72 @@ void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
       break;
     }
   }
-  tp = parameters_t(parametersVector.template segment<4>(eFreePos0), parametersVector.template segment<3>(eFreeDir0), parametersVector[eFreeQOverP], std::nullopt);
+  FreeVector freeParametersVector = detail::transformBoundToFreeParameters(tp.referenceSurface(), geoContext, parametersVector);
+  tp = parameters_t(freeParametersVector.template segment<4>(eFreePos0), parametersVector.template segment<3>(eFreeDir0), freeParametersVector[eFreeQOverP], std::nullopt);
 }
 
 template <typename propagator_t>
 template <typename parameters_t>
 void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
-    std::reference_wrapper<const GeometryContext> geoContext, double h,
+    std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
     const unsigned int param, parameters_t& tp) const {
   // Modify start parameter
+  FreeVector parametersVector = tp.parameters();
   switch (param) {
     case 0: {
-      tp.template set<eFreePos0>(geoContext, tp.template get<eFreePos0>() + h);
+	  parametersVector[eFreePos0] += h;
+      //~ tp.template set<eFreePos0>(geoContext, tp.template get<eFreePos0>() + h);
       break;
     }
     case 1: {
-      tp.template set<eFreePos1>(geoContext, tp.template get<eFreePos1>() + h);
+		parametersVector[eFreePos1] += h;
+      //~ tp.template set<eFreePos1>(geoContext, tp.template get<eFreePos1>() + h);
       break;
     }
     case 2: {
-      tp.template set<eFreePos2>(geoContext, tp.template get<eFreePos2>() + h);
+		parametersVector[eFreePos2] += h;
+      //~ tp.template set<eFreePos2>(geoContext, tp.template get<eFreePos2>() + h);
       break;
     }
     case 3: {
-      tp.template set<eFreeTime>(geoContext, tp.template get<eFreeTime>() + h);
+		parametersVector[eFreeTime] += h;
+      //~ tp.template set<eFreeTime>(geoContext, tp.template get<eFreeTime>() + h);
       break;
     }
     case 4: {
       const double phi = std::atan2(tp.template get<eFreeDir1>(),
                                     tp.template get<eFreeDir0>());
       const double theta = std::acos(tp.template get<eFreeDir2>());
-      tp.template set<eFreeDir0>(geoContext,
-                                 std::cos(phi + h) * std::sin(theta));
-      tp.template set<eFreeDir1>(geoContext,
-                                 std::sin(phi + h) * std::sin(theta));
+      parametersVector[eFreeDir0] = std::cos(phi + h) * std::sin(theta);
+      parametersVector[eFreeDir1] = std::sin(phi + h) * std::sin(theta);
+      //~ tp.template set<eFreeDir0>(geoContext,
+                                 //~ std::cos(phi + h) * std::sin(theta));
+      //~ tp.template set<eFreeDir1>(geoContext,
+                                 //~ std::sin(phi + h) * std::sin(theta));
       break;
     }
     case 5: {
       const double phi = std::atan2(tp.template get<eFreeDir1>(),
                                     tp.template get<eFreeDir0>());
       const double theta = std::acos(tp.template get<eFreeDir2>());
-      tp.template set<eFreeDir0>(geoContext,
-                                 std::cos(phi) * std::sin(theta + h));
-      tp.template set<eFreeDir1>(geoContext,
-                                 std::sin(phi) * std::sin(theta + h));
-      tp.template set<eFreeDir2>(geoContext, std::cos(theta + h));
+      parametersVector[eFreeDir0] = std::cos(phi) * std::sin(theta + h);
+      parametersVector[eFreeDir1] = std::sin(phi) * std::sin(theta + h);
+      parametersVector[eFreeDir2] = std::cos(theta + h);
+      //~ tp.template set<eFreeDir0>(geoContext,
+                                 //~ std::cos(phi) * std::sin(theta + h));
+      //~ tp.template set<eFreeDir1>(geoContext,
+                                 //~ std::sin(phi) * std::sin(theta + h));
+      //~ tp.template set<eFreeDir2>(geoContext, std::cos(theta + h));
       break;
     }
     case 6: {
-      tp.template set<eFreeQOverP>(geoContext,
-                                   tp.template get<eFreeQOverP>() + h);
+		parametersVector[eFreeQOverP] += h;
+      //~ tp.template set<eFreeQOverP>(geoContext,
+                                   //~ tp.template get<eFreeQOverP>() + h);
       break;
     }
   }
+  tp = parameters_t(parametersVector, std::nullopt);
 }
 
 template <typename propagator_t>

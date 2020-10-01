@@ -121,6 +121,8 @@ class SingleFreeTrackParameters {
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
+  /// Access the parameter set holding the parameters vector and covariance.
+  const FullFreeParameterSet& getParameterSet() const { return m_paramSet; }
   /// Parameters vector.
   ParametersVector parameters() const { return m_paramSet.getParameters(); }
   /// Optional covariance matrix.

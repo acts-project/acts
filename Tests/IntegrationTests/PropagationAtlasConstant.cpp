@@ -63,7 +63,16 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runForwardBackwardTest(makePropagator(bz), geoCtx, magCtx,
+  runForwardBackwardTest<Acts::FreeTrackParameters>(makePropagator(bz), geoCtx, magCtx,
+                         makeParametersFree(phi, theta, p, q), s, epsPos,
+                         epsDir, epsMom);
+  runForwardBackwardTest<Acts::FreeTrackParameters>(makePropagator(bz), geoCtx, magCtx,
+                         makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
+                         epsDir, epsMom);
+  runForwardBackwardTest<Acts::CurvilinearTrackParameters>(makePropagator(bz), geoCtx, magCtx,
+                         makeParametersFree(phi, theta, p, q), s, epsPos,
+                         epsDir, epsMom);
+  runForwardBackwardTest<Acts::CurvilinearTrackParameters>(makePropagator(bz), geoCtx, magCtx,
                          makeParametersCurvilinear(phi, theta, p, q), s, epsPos,
                          epsDir, epsMom);
 }
@@ -114,7 +123,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runForwardComparisonTest(
+  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s, epsPos,
       epsDir, epsMom, epsCov);
