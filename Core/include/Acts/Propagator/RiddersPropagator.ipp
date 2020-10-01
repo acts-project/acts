@@ -420,25 +420,25 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     case 0: {
       parametersVector[eFreePos0] += h;
       //~ tp.template set<eFreePos0>(geoContext, tp.template get<eFreePos0>() +
-      //h);
+      // h);
       break;
     }
     case 1: {
       parametersVector[eFreePos1] += h;
       //~ tp.template set<eFreePos1>(geoContext, tp.template get<eFreePos1>() +
-      //h);
+      // h);
       break;
     }
     case 2: {
       parametersVector[eFreePos2] += h;
       //~ tp.template set<eFreePos2>(geoContext, tp.template get<eFreePos2>() +
-      //h);
+      // h);
       break;
     }
     case 3: {
       parametersVector[eFreeTime] += h;
       //~ tp.template set<eFreeTime>(geoContext, tp.template get<eFreeTime>() +
-      //h);
+      // h);
       break;
     }
     case 4: {
