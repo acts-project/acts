@@ -8,15 +8,16 @@
 
 #pragma once
 
-#include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/Result.hpp"
+#include "ActsFatras/Digitization/DigitizationData.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/detail/ParametersSmearer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
+#include <Acts/EventData/ParameterSet.hpp>
+#include <Acts/Surfaces/Surface.hpp>
+#include <Acts/Surfaces/SurfaceError.hpp>
+#include <Acts/Utilities/Helpers.hpp>
+#include <Acts/Utilities/ParameterDefinitions.hpp>
+#include <Acts/Utilities/Result.hpp>
 
 #include <functional>
 
@@ -32,26 +33,9 @@ template <typename generator_t>
 using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
     double, generator_t&)>;
 
-/// Smearing input to be used by the smearers
-/// - this struct helps to harmonize the interface between
-///   free and bound smearers
-struct SmearInput {
-  /// Only valid constructor, wraps the @param hit_,
-  /// the  and optionally the @param surface_
-  SmearInput(std::reference_wrapper<const Hit> hit_,
-             std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-             const Acts::Surface* surface_ = nullptr)
-      : hit(hit_), geoContext(geoContext_), surface(surface_) {}
-
-  SmearInput() = delete;
-
-  std::reference_wrapper<const Hit> hit;
-  std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  const Acts::Surface* surface = nullptr;
-};
-
 /// Parameter smearer for fast digitisation for bound parameters
 ///
+/// @tparam kParameters The parameter pack
 ///
 /// The logic of this smearer is the following:
 /// - Input is a single simulated ActsFatras::Hit which is wrapped into
@@ -75,7 +59,7 @@ struct BoundParametersSmearer {
   /// @return Smeared bound parameter set wrapped in a Result<...> object
   template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  operator()(const SmearInput& sInput, generator_t& sRandom,
+  operator()(const DigitizationInput& sInput, generator_t& sRandom,
              const std::array<SmearFunction<generator_t>,
                               sizeof...(kParameters)>& sFunctions) const {
     using Result = Acts::Result<ParSet>;
@@ -136,7 +120,7 @@ struct FreeParametersSmearer {
   /// @return Smeared free parameter set wrapped in a Result<...> object
   template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  operator()(const SmearInput& sInput, generator_t& sRandom,
+  operator()(const DigitizationInput& sInput, generator_t& sRandom,
              const std::array<SmearFunction<generator_t>,
                               sizeof...(kParameters)>& sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;

@@ -6,20 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <boost/test/unit_test.hpp>
-
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Volume.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp>
+#include <Acts/Geometry/CuboidVolumeBounds.hpp>
+#include <Acts/Geometry/GeometryContext.hpp>
+#include <Acts/Geometry/Volume.hpp>
+#include <Acts/Surfaces/PlaneSurface.hpp>
+#include <Acts/Surfaces/RectangleBounds.hpp>
+#include <Acts/Tests/CommonHelpers/FloatComparisons.hpp>
+#include <Acts/Utilities/Helpers.hpp>
+#include <Acts/Utilities/ParameterDefinitions.hpp>
+
+#include <boost/test/unit_test.hpp>
 #include <system_error>
 #include <variant>
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   auto m4 = Hit::Vector4(1, 2, 1, 4);
   auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
-  SmearInput sInput{hit, geoCtx, tSurface.get()};
+  DigitizationInput sInput{hit, geoCtx, tSurface.get()};
 
   AddSmearer tAddFnc;
   SterileSmearer tSterileFnc;

@@ -65,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
           // surface
           auto& surface = surfaceItr->second;
           auto& smearer = *smearItr;
-          ActsFatras::SmearInput sInput(hit, ctx.geoContext, surface);
+          ActsFatras::DigitizationInput sInput(hit, ctx.geoContext, surface);
           // Run the visitor
           std::visit(
               [&](auto&& sm) {
