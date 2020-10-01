@@ -115,13 +115,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   config.collisionRegionMax = 250.;
   config.zMin = -500.;
   config.zMax = 500.;
-  config.maxSeedsPerSpM = 5;
+  config.maxSeedsPerSpM = 1;
   config.cotThetaMax = 7.40627;  // 2.7 eta
   config.sigmaScattering = 2.25;
+  config.radLengthPerSeed = 0.1;
   config.minPt = 500.;
   config.bFieldInZ = 0.00199724;
-  config.beamPos = {-.5, -.5};
-  config.impactMax = 1.;
+  config.beamPos = {0., 0.};
+  config.impactMax = 3.;
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
@@ -138,6 +139,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   Acts::SeedFilterConfig sfconf;
+  sfconf.maxSeedsPerSpM = config.maxSeedsPerSpM;
   Acts::GenericDetectorCuts<SimSpacePoint> detectorCuts =
       Acts::GenericDetectorCuts<SimSpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
@@ -171,7 +173,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     std::size_t volumeId = geoId.volume();
 
     if (volumeId >= 7 and volumeId <= 9) {  // pixel detector
-
       SimSpacePoint* SP =
           transformSP(hit_id, geoId, cluster, hitParticlesMap, ctx);
       spVec.push_back(SP);

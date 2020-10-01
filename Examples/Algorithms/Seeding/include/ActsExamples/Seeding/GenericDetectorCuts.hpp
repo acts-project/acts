@@ -49,10 +49,10 @@ float GenericDetectorCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
-  if (bottom.radius() > 150) {
+  if (bottom.radius() > 200) {
     weight = 400;
   }
-  if (top.radius() < 150) {
+  if (top.radius() < 200) {
     weight = 200;
   }
   return weight;
@@ -63,7 +63,7 @@ bool GenericDetectorCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>&) const {
-  return !(b.radius() > 150. && weight < 380.);
+  return !(b.radius() > 200. && weight < 380.);
 }
 
 template <typename SpacePoint>
