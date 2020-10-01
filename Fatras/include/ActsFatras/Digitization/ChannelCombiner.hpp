@@ -30,9 +30,9 @@ struct ChannelCombiner {
   /// @param channels The channels from one cluster
   ///
   /// @return A cluster containing the parameter set and cluster size
-  template <Acts::BoundIndices... kParameters>
-  Cluster<kParameters...> combine(
-      const std::vector<const Channel<kParameters...>>& channels) const {
+  template <typename signal_t, Acts::BoundIndices... kParameters>
+  Cluster<signal_t, kParameters...> combine(
+      const std::vector<Channel<signal_t, kParameters...>>& channels) const {
     std::array<unsigned int, sizeof...(kParameters)> cSize;
     using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
 
@@ -40,11 +40,11 @@ struct ChannelCombiner {
     cVec.setZero();
     typename ParSet::CovarianceMatrix cCov;
 
-    detail::WeightedChannelCombiner<kParameters...> combiner;
+    detail::WeightedChannelCombiner<signal_t, kParameters...> combiner;
     combiner.run(cVec, cSize, channels);
 
-    return Cluster<kParameters...>(ParSet(std::move(cCov), std::move(cVec)),
-                                   std::move(cSize), channels);
+    return Cluster<signal_t, kParameters...>(
+        ParSet(std::move(cCov), std::move(cVec)), std::move(cSize), channels);
   }
 };
 

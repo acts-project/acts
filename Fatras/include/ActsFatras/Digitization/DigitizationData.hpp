@@ -13,6 +13,7 @@
 #include <Acts/Utilities/ParameterDefinitions.hpp>
 
 #include <functional>
+#include <unordered_set>
 
 namespace Acts {
 class Surface;
@@ -41,27 +42,52 @@ struct DigitizationInput {
   DigitizationInput() = delete;
 };
 
-/// A single cell definition: index, value
+/// A single cell definition: index, cell value
 using Cell = std::pair<unsigned int, double>;
 
 /// A channel definition: Cell idenficiation, readout word
-template <Acts::BoundIndices... kParameters>
-using Channel = std::pair<std::array<Cell, sizeof...(kParameters)>, double>;
+template <typename signal_t, Acts::BoundIndices... kParameters>
+struct Channel {
+  /// The cell identification in sizeof..(kParameters) dimensions
+  std::array<Cell, sizeof...(kParameters)> cellId;
+  /// The signal value, as complex as possible,
+  /// but need += operator and double() cast for the weight
+  signal_t value = 0.;
+  /// The potential (truth) linke
+  std::unordered_set<unsigned int> links = {};
 
-/// A Cluster definition: List of cells, parameter set, size
-template <Acts::BoundIndices... kParameters>
+  /// Channel constructor
+  ///
+  /// @param cellId_ The Cell idenficiation and position
+  /// @param value_ The Cell value
+  /// @param links_ The (optional) links to e.g. truth indices
+  Channel(std::array<Cell, sizeof...(kParameters)> cellId_, signal_t value_,
+          std::unordered_set<unsigned int> links_ = {})
+      : cellId(cellId_), value(value_), links(links_) {}
+};
+
+/// A Cluster definition.
+///
+/// @tparam signal_t Type of the signal carried
+/// @tparam kParameters Parameters pack for th cluster
+///
+template <typename signal_t, Acts::BoundIndices... kParameters>
 struct Cluster {
   /// The parameters
   Acts::ParameterSet<Acts::BoundIndices, kParameters...> parameterSet;
   /// The resulting cluster size
   std::array<unsigned int, sizeof...(kParameters)> clusterSize;
   /// The contained Channels
-  std::vector<const Channel<kParameters...> > channels;
+  std::vector<Channel<signal_t, kParameters...> > channels;
 
   /// Cluster constructor
+  ///
+  /// @param pSet The parameter set repesenting cluster position and error
+  /// @param cSize The cluster size definition
+  /// @param cChannels The channel
   Cluster(Acts::ParameterSet<Acts::BoundIndices, kParameters...> pSet,
           std::array<unsigned int, sizeof...(kParameters)> cSize,
-          std::vector<const Channel<kParameters...> > cChannels)
+          std::vector<Channel<signal_t, kParameters...> > cChannels)
       : parameterSet(pSet), clusterSize(cSize), channels(cChannels) {}
 };
 

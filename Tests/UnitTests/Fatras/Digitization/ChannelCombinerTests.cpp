@@ -30,10 +30,10 @@ BOOST_AUTO_TEST_CASE(ChannelCombiner1D) {
   Cell cell2(7, 12.5);
 
   // Digital clustering test
-  std::vector<const Channel<Acts::eBoundLoc0>> channelsD = {
+  std::vector<Channel<double, Acts::eBoundLoc0>> channelsD = {
       {{cell0}, 1.}, {{cell1}, 1.}, {{cell2}, 1.}};
 
-  auto digitalCluster = cc.combine<Acts::eBoundLoc0>(channelsD);
+  auto digitalCluster = cc.combine<double, Acts::eBoundLoc0>(channelsD);
 
   CHECK_CLOSE_ABS(
       digitalCluster.parameterSet.template getParameter<Acts::eBoundLoc0>(),
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(ChannelCombiner1D) {
   CHECK_CLOSE_ABS(digitalCluster.clusterSize[loc0Index], 3, Acts::s_epsilon);
 
   // Analog clustering test
-  std::vector<const Channel<Acts::eBoundLoc0>> channelsA = {
+  std::vector<Channel<double, Acts::eBoundLoc0>> channelsA = {
       {{cell0}, 0.5}, {{cell1}, 1.}, {{cell2}, 0.25}};
 
-  auto analogCluster = cc.combine<Acts::eBoundLoc0>(channelsA);
+  auto analogCluster = cc.combine<double, Acts::eBoundLoc0>(channelsA);
 
   CHECK_CLOSE_ABS(
       analogCluster.parameterSet.template getParameter<Acts::eBoundLoc0>(),
@@ -70,11 +70,11 @@ BOOST_AUTO_TEST_CASE(ChannelCombiner2D) {
   Cell cell12(3, -3.7);
 
   // Digital clustering test (analog is test in 1D already)
-  std::vector<const Channel<Acts::eBoundLoc0, Acts::eBoundLoc1>> channelsD = {
+  std::vector<Channel<double, Acts::eBoundLoc0, Acts::eBoundLoc1>> channelsD = {
       {{cell00, cell10}, 1.}, {{cell01, cell11}, 1.}, {{cell02, cell12}, 1.}};
 
   auto digitalCluster =
-      cc.combine<Acts::eBoundLoc0, Acts::eBoundLoc1>(channelsD);
+      cc.combine<double, Acts::eBoundLoc0, Acts::eBoundLoc1>(channelsD);
   CHECK_CLOSE_ABS(
       digitalCluster.parameterSet.template getParameter<Acts::eBoundLoc0>(),
       11.5, Acts::s_epsilon);

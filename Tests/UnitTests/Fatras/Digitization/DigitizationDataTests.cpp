@@ -19,12 +19,13 @@ BOOST_AUTO_TEST_CASE(CellChannelCluster) {
   // A single cell - loc0
   Cell cell0(5, 10.5);
   // One-dimensional channel
-  Channel<Acts::eBoundLoc0> ch0 = {{cell0}, 0.5};
+  Channel<double, Acts::eBoundLoc0> ch0 = {{cell0}, 0.5};
 
   // A second cell - loc1
   Cell cell1(6, -0.45);
   // Two-dimensional channel
-  Channel<Acts::eBoundLoc0, Acts::eBoundLoc1> ch01 = {{cell0, cell1}, 0.75};
+  Channel<double, Acts::eBoundLoc0, Acts::eBoundLoc1> ch01 = {{cell0, cell1},
+                                                              0.75};
 
   // Creating a cluster
   Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0,
@@ -36,8 +37,8 @@ BOOST_AUTO_TEST_CASE(CellChannelCluster) {
   Acts::ParameterSet<Acts::BoundIndices, Acts::eBoundLoc0, Acts::eBoundLoc1>
       pSet(std::move(pCov), pVec);
 
-  Cluster<Acts::eBoundLoc0, Acts::eBoundLoc1> cluster(std::move(pSet), {1, 1},
-                                                      {ch01});
+  Cluster<double, Acts::eBoundLoc0, Acts::eBoundLoc1> cluster(std::move(pSet),
+                                                              {1, 1}, {ch01});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

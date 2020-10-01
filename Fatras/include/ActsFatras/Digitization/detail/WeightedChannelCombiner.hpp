@@ -23,7 +23,7 @@ namespace detail {
 /// Combine the channels
 ///
 /// @tparam kParameters Parameter indices pack that defines the used parameter
-template <Acts::BoundIndices... kParameters>
+template <typename signal_t, Acts::BoundIndices... kParameters>
 struct WeightedChannelCombiner {
   using StorageSequence = std::make_index_sequence<sizeof...(kParameters)>;
 
@@ -42,9 +42,10 @@ struct WeightedChannelCombiner {
   /// At the same time the cluster size is estimated by finding the channel
   /// extremas min/max and fill the difference
   template <typename values_t>
-  static void run(Eigen::MatrixBase<values_t>& values,
-                  std::array<unsigned int, sizeof...(kParameters)>& cSize,
-                  const std::vector<const Channel<kParameters...>>& channels) {
+  static void run(
+      Eigen::MatrixBase<values_t>& values,
+      std::array<unsigned int, sizeof...(kParameters)>& cSize,
+      const std::vector<Channel<signal_t, kParameters...>>& channels) {
     runImpl(values, cSize, channels, StorageSequence{});
   }
 
@@ -52,7 +53,7 @@ struct WeightedChannelCombiner {
   static void runImpl(
       Eigen::MatrixBase<values_t>& values,
       std::array<unsigned int, sizeof...(kParameters)>& cSize,
-      const std::vector<const Channel<kParameters...>>& channels,
+      const std::vector<Channel<signal_t, kParameters...>>& channels,
       std::index_sequence<kStorage...>) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(values_t, sizeof...(kParameters));
     static_assert(sizeof...(kParameters) == sizeof...(kStorage),
@@ -65,15 +66,15 @@ struct WeightedChannelCombiner {
      ...);
 
     for (auto& ch : channels) {
-      double weight = ch.second;
-      ((values[kStorage] += weight * ch.first[kStorage].second), ...);
+      double weight = ch.value;
+      ((values[kStorage] += weight * ch.cellId[kStorage].second), ...);
       ((cExtremas[kStorage].first =
             std::min(cExtremas[kStorage].first,
-                     static_cast<int>(ch.first[kStorage].first))),
+                     static_cast<int>(ch.cellId[kStorage].first))),
        ...);
       ((cExtremas[kStorage].second =
             std::max(cExtremas[kStorage].second,
-                     static_cast<int>(ch.first[kStorage].first))),
+                     static_cast<int>(ch.cellId[kStorage].first))),
        ...);
       fullWeight += weight;
     }
