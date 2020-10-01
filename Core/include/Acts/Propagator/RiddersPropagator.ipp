@@ -109,6 +109,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         mParSet->setCovariance(std::get<FreeSymMatrix>(calculateCovariance(
             derivatives, *start.covariance(), deviations, Vector3D())));
       }
+  }
     // Case IV: We start and end free
     else {
       // Derivations of each parameter around the nominal parameters

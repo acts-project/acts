@@ -226,7 +226,7 @@ class RiddersPropagator {
   /// std::array<std::vector<BoundVector>, BoundParsDim>&, const Covariance&,
   /// const std::vector<double>&)
   const Covariance calculateCovariance(
-      const std::array<std::vector<FreeVector>, eBoundParametersSize>&
+      const std::array<std::vector<FreeVector>, eBoundSize>&
           derivatives,
       const Covariance& startCov, const std::vector<double>& deviations,
       const Vector3D direction) const;
