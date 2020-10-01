@@ -108,7 +108,8 @@ struct AutodiffExtensionWrapper {
     initial_params(eFreeTime) = stepper.time(state.stepping);
     initial_params.segment<3>(eFreeDir0) = stepper.direction(state.stepping);
     initial_params(eFreeQOverP) =
-        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
+        (fstate.stepping.q != 0. ? fstate.stepping.q : 1.) /
+        stepper.momentum(state.stepping);
 
     const auto& sd = state.stepping.stepData;
 
@@ -132,7 +133,8 @@ struct AutodiffExtensionWrapper {
     state.stepping.pos = in.segment<3>(eFreePos0);
     state.stepping.t = in(eFreeTime);
     state.stepping.dir = in.segment<3>(eFreeDir0);
-    state.stepping.p = state.stepping.q / in(eFreeQOverP);
+    state.stepping.p =
+        (state.stepping.q != 0. ? state.stepping.q : 1.) / in(eFreeQOverP);
 
     std::array<AutodiffScalar, 4> kQoP;
     std::array<AutodiffVector3, 4> k;
@@ -165,7 +167,8 @@ struct AutodiffExtensionWrapper {
     out.segment<3>(eFreeDir0) = final_dir / final_dir.norm();
 
     // qop
-    out(eFreeQOverP) = state.stepping.q / state.stepping.p;
+    out(eFreeQOverP) =
+        (state.stepping.q != 0. ? state.stepping.q : 1.) / state.stepping.p;
 
     // time
     out(eFreeTime) = state.stepping.t;
