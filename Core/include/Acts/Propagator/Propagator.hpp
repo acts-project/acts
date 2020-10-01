@@ -224,7 +224,8 @@ class Propagator final {
                                 BoundToFreeMatrix>;
   using JacobianToBoundPars = std::variant<BoundMatrix, FreeToBoundMatrix>;
   using JacobianToFreePars = std::variant<FreeMatrix, BoundToFreeMatrix>;
-  using BoundState = std::tuple<BoundTrackParameters, JacobianToBoundPars, double>;
+  using BoundState =
+      std::tuple<BoundTrackParameters, JacobianToBoundPars, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, JacobianToBoundPars, double>;
   using FreeState = std::tuple<FreeTrackParameters, JacobianToFreePars, double>;

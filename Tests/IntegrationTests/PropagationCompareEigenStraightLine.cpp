@@ -79,18 +79,20 @@ BOOST_DATA_TEST_CASE(
     ChargedZeroMagneticField,
     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero* ds::pathLength, phi,
     theta, p, q, s) {
-  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(eigenPropagatorZero, straightPropagator, geoCtx,
-                           magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov);
-  runForwardComparisonTest<Acts::FreeTrackParameters>(eigenPropagatorZero, straightPropagator, geoCtx,
-                           magCtx, makeParametersCurvilinear(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov);
-  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(eigenPropagatorZero, straightPropagator, geoCtx,
-                           magCtx, makeParametersFree(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov);
-  runForwardComparisonTest<Acts::FreeTrackParameters>(eigenPropagatorZero, straightPropagator, geoCtx,
-                           magCtx, makeParametersFree(phi, theta, p, q),
-                           s, epsPos, epsDir, epsMom, epsCov);
+  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(
+      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
+      epsCov);
+  runForwardComparisonTest<Acts::FreeTrackParameters>(
+      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
+      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom,
+      epsCov);
+  runForwardComparisonTest<Acts::CurvilinearTrackParameters>(
+      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
+      makeParametersFree(phi, theta, p, q), s, epsPos, epsDir, epsMom, epsCov);
+  runForwardComparisonTest<Acts::FreeTrackParameters>(
+      eigenPropagatorZero, straightPropagator, geoCtx, magCtx,
+      makeParametersFree(phi, theta, p, q), s, epsPos, epsDir, epsMom, epsCov);
 }
 
 // TODO add comparison tests between the straight line and eigen propagator for

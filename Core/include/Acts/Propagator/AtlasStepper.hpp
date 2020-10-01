@@ -39,7 +39,8 @@ class AtlasStepper {
   using Jacobian = std::variant<BoundMatrix, FreeToBoundMatrix,
                                 BoundToFreeMatrix, FreeMatrix>;
   using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
-  using CurvilinearState = std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+  using CurvilinearState =
+      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using FreeState = std::tuple<FreeTrackParameters, Jacobian, double>;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using BField = bfield_t;

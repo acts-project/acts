@@ -17,7 +17,8 @@ namespace {
 /// Some type defs
 using Covariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
 using BoundState = std::tuple<BoundTrackParameters, detail::Jacobian, double>;
-using CurvilinearState = std::tuple<CurvilinearTrackParameters, detail::Jacobian, double>;
+using CurvilinearState =
+    std::tuple<CurvilinearTrackParameters, detail::Jacobian, double>;
 using FreeState = std::tuple<FreeTrackParameters, detail::Jacobian, double>;
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters
@@ -171,8 +172,7 @@ const FreeToBoundMatrix surfaceDerivative(
     const FreeVector& derivatives) {
   const ActsRowVectorD<3> normVec(direction);
   const BoundRowVector sfactors =
-      normVec *
-      jacobianLocalToGlobal.template topLeftCorner<3, eBoundSize>();
+      normVec * jacobianLocalToGlobal.template topLeftCorner<3, eBoundSize>();
   jacobianLocalToGlobal -= derivatives * sfactors;
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here

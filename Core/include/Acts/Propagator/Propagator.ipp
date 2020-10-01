@@ -149,8 +149,8 @@ auto Acts::Propagator<S, N>::propagate(
       auto finalState = m_stepper.curvilinearState(state.stepping);
       auto& finalParameters = std::get<ReturnParameterType>(finalState);
       // Fill the end parameters
-      propRes.endParameters =
-          std::make_unique<const ReturnParameterType>(std::move(finalParameters));
+      propRes.endParameters = std::make_unique<const ReturnParameterType>(
+          std::move(finalParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         propRes.transportJacobian = std::get<1>(finalState);
@@ -159,8 +159,8 @@ auto Acts::Propagator<S, N>::propagate(
       auto finalState = m_stepper.freeState(state.stepping);
       auto& finalParameters = std::get<ReturnParameterType>(finalState);
       // Fill the end parameters
-      propRes.endParameters =
-          std::make_unique<const ReturnParameterType>(std::move(finalParameters));
+      propRes.endParameters = std::make_unique<const ReturnParameterType>(
+          std::move(finalParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         propRes.transportJacobian = std::get<1>(finalState);
@@ -227,15 +227,15 @@ auto Acts::Propagator<S, N>::propagate(
   if (result.ok()) {
     auto& propRes = *result;
     // Compute the final results and mark the propagation as successful
-	auto bs = m_stepper.boundState(state.stepping, target);
-	auto& boundParameters = std::get<BoundTrackParameters>(bs);
-	// Fill the end parameters
-	propRes.endParameters =
-		std::make_unique<const BoundTrackParameters>(std::move(boundParameters));
-	// Only fill the transport jacobian when covariance transport was done
-	if (state.stepping.covTransport) {
-	  propRes.transportJacobian = std::get<1>(bs);
-	}
+    auto bs = m_stepper.boundState(state.stepping, target);
+    auto& boundParameters = std::get<BoundTrackParameters>(bs);
+    // Fill the end parameters
+    propRes.endParameters = std::make_unique<const BoundTrackParameters>(
+        std::move(boundParameters));
+    // Only fill the transport jacobian when covariance transport was done
+    if (state.stepping.covTransport) {
+      propRes.transportJacobian = std::get<1>(bs);
+    }
     return result;
   } else {
     return result.error();

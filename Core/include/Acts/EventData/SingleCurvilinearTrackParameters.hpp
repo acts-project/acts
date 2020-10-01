@@ -88,7 +88,7 @@ class SingleCurvilinearTrackParameters
              q, std::move(cov)) {
     assert((0 <= p) and "Absolute momentum must be positive");
   }
-  
+
   /// Construct from four-position, angles, and charge-over-momentum.
   ///
   /// @param pos4 Track position/time four-vector

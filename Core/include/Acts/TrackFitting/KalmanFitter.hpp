@@ -578,7 +578,8 @@ class KalmanFitter {
             trackStateProxy.predicted() = std::move(boundParams.parameters());
             trackStateProxy.predictedCovariance() =
                 std::move(*boundParams.covariance());
-            trackStateProxy.jacobian() = std::move(std::get<BoundMatrix>(jacobian));
+            trackStateProxy.jacobian() =
+                std::move(std::get<BoundMatrix>(jacobian));
             trackStateProxy.pathLength() = std::move(pathLength);
           } else {
             ACTS_VERBOSE("Detected in-sensitive surface "
@@ -593,7 +594,8 @@ class KalmanFitter {
                 std::move(curvilinearParams.parameters());
             trackStateProxy.predictedCovariance() =
                 std::move(*curvilinearParams.covariance());
-            trackStateProxy.jacobian() = std::move(std::get<BoundMatrix>(jacobian));
+            trackStateProxy.jacobian() =
+                std::move(std::get<BoundMatrix>(jacobian));
             trackStateProxy.pathLength() = std::move(pathLength);
           }
 

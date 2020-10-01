@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <functional>
-#include <variant>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -17,6 +15,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
+#include <functional>
+#include <variant>
 
 namespace Acts {
 class Surface;
@@ -85,7 +85,7 @@ using geo_context_t = decltype(std::declval<T>().geoContext);
                 has_member<S, tolerance_t, double>,
                 has_member<S, geo_context_t, std::reference_wrapper<const GeometryContext>>
                >;
-  // clang-format on
+// clang-format on
 
 // clang-format off
     template <typename S, typename state = typename S::State>
