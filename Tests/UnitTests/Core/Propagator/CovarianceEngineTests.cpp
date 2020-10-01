@@ -51,10 +51,10 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   /// Coordinate transformations
   ///
   auto jacDirToAngle = detail::jacobianDirectionsToAngles(direction);
-  BOOST_TEST(jacDirToAngle != decltype(jacDirToAngle)::Zero());
+  BOOST_CHECK_NE(jacDirToAngle, decltype(jacDirToAngle)::Zero());
 
   auto jacAngleToDir = detail::jacobianAnglesToDirections(direction);
-  BOOST_TEST(jacAngleToDir != decltype(jacAngleToDir)::Zero());
+  BOOST_CHECK_NE(jacAngleToDir, decltype(jacAngleToDir)::Zero());
 
   auto product = jacDirToAngle * jacAngleToDir;
   CHECK_CLOSE_ABS(product, decltype(product)::Identity(),
@@ -94,15 +94,15 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Tests to see that the right components are (un-)changed
   BOOST_REQUIRE_NO_THROW(std::get<BoundSymMatrix>(covariance));
-  BOOST_TEST(std::get<BoundSymMatrix>(covariance) !=
+  BOOST_CHECK_NE(std::get<BoundSymMatrix>(covariance),
              BoundSymMatrix::Identity());
   BOOST_REQUIRE_NO_THROW(std::get<FreeToBoundMatrix>(jacobian));
-  BOOST_TEST(std::get<FreeToBoundMatrix>(jacobian) !=
+  BOOST_CHECK_NE(std::get<FreeToBoundMatrix>(jacobian),
              FreeToBoundMatrix(2. * FreeToBoundMatrix::Identity()));
-  BOOST_TEST(transportJacobian == FreeMatrix::Identity());
-  BOOST_TEST(derivatives == FreeVector::Zero());
-  BOOST_TEST(jacobianLocalToGlobal.has_value());
-  BOOST_TEST(direction ==
+  BOOST_CHECK_EQUAL(transportJacobian, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(derivatives, FreeVector::Zero());
+  BOOST_CHECK(jacobianLocalToGlobal.has_value());
+  BOOST_CHECK_EQUAL(direction,
              Vector3D(sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)));
 
   // Reset
@@ -120,14 +120,14 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Tests to see that the right components are (un-)changed
   BOOST_REQUIRE_NO_THROW(std::get<FreeSymMatrix>(covariance));
-  BOOST_TEST(std::get<FreeSymMatrix>(covariance) != FreeSymMatrix::Identity());
+  BOOST_CHECK_NE(std::get<FreeSymMatrix>(covariance), FreeSymMatrix::Identity());
   BOOST_REQUIRE_NO_THROW(std::get<FreeMatrix>(jacobian));
-  BOOST_TEST(std::get<FreeMatrix>(jacobian) !=
+  BOOST_CHECK_NE(std::get<FreeMatrix>(jacobian),
              FreeMatrix(2. * FreeMatrix::Identity()));
-  BOOST_TEST(transportJacobian == FreeMatrix::Identity());
-  BOOST_TEST(derivatives == FreeVector::Zero());
-  BOOST_TEST(!jacobianLocalToGlobal.has_value());
-  BOOST_TEST(direction ==
+  BOOST_CHECK_EQUAL(transportJacobian, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(derivatives, FreeVector::Zero());
+  BOOST_CHECK(!jacobianLocalToGlobal.has_value());
+  BOOST_CHECK_EQUAL(direction,
              Vector3D(sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)));
 
   // Reset
@@ -144,14 +144,14 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
 
   // Tests to see that the right components are (un-)changed
   BOOST_REQUIRE_NO_THROW(std::get<FreeSymMatrix>(covariance));
-  BOOST_TEST(std::get<FreeSymMatrix>(covariance) != FreeSymMatrix::Identity());
+  BOOST_CHECK_NE(std::get<FreeSymMatrix>(covariance), FreeSymMatrix::Identity());
   BOOST_REQUIRE_NO_THROW(std::get<BoundToFreeMatrix>(jacobian));
-  BOOST_TEST(std::get<BoundToFreeMatrix>(jacobian) !=
+  BOOST_CHECK_NE(std::get<BoundToFreeMatrix>(jacobian),
              BoundToFreeMatrix(2. * BoundToFreeMatrix::Identity()));
-  BOOST_TEST(transportJacobian == FreeMatrix::Identity());
-  BOOST_TEST(derivatives == FreeVector::Zero());
-  BOOST_TEST(!jacobianLocalToGlobal.has_value());
-  BOOST_TEST(direction ==
+  BOOST_CHECK_EQUAL(transportJacobian, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(derivatives, FreeVector::Zero());
+  BOOST_CHECK(!jacobianLocalToGlobal.has_value());
+  BOOST_CHECK_EQUAL(direction,
              Vector3D(sqrt(5. / 22.), 3. * sqrt(2. / 55.), 7. / sqrt(110.)));
 
   // Reset
@@ -189,15 +189,15 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
                               jacAngleToDir, parameters, *surface);
 
   BOOST_REQUIRE_NO_THROW(std::get<BoundSymMatrix>(covariance));
-  BOOST_TEST(std::get<BoundSymMatrix>(covariance) !=
+  BOOST_CHECK_NE(std::get<BoundSymMatrix>(covariance),
              BoundSymMatrix::Identity());
   BOOST_REQUIRE_NO_THROW(std::get<FreeToBoundMatrix>(jacobian));
-  BOOST_TEST(std::get<FreeToBoundMatrix>(jacobian) !=
+  BOOST_CHECK_NE(std::get<FreeToBoundMatrix>(jacobian),
              FreeToBoundMatrix(2. * FreeToBoundMatrix::Identity()));
-  BOOST_TEST(transportJacobian == FreeMatrix::Identity());
-  BOOST_TEST(derivatives == FreeVector::Zero());
-  BOOST_TEST(jacobianLocalToGlobal.has_value());
-  BOOST_TEST(parameters == startParameters);
+  BOOST_CHECK_EQUAL(transportJacobian, FreeMatrix::Identity());
+  BOOST_CHECK_EQUAL(derivatives, FreeVector::Zero());
+  BOOST_CHECK(jacobianLocalToGlobal.has_value());
+  BOOST_CHECK_EQUAL(parameters, startParameters);
 
   ///
   /// State construction tests
