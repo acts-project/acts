@@ -282,7 +282,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   for (double h : deviations) {
     if constexpr (start_parameters_t::is_local_representation) {
       BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
-          options.geoContext, h, param, startPars);
+          h, param, startPars);
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
@@ -298,7 +298,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     } else {
       FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
-          options.geoContext, h, param, startPars);
+          h, param, startPars);
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
@@ -337,7 +337,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   for (double h : deviations) {
     if constexpr (parameters_t::is_local_representation) {
       BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
-          options.geoContext, h, param, startPars);
+          h, param, startPars);
 
       const auto& r =
           m_propagator.template propagate<FreeTrackParameters>(tp, options)
@@ -347,7 +347,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     } else {
       FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
-          options.geoContext, h, param, startPars);
+          h, param, startPars);
 
       const auto& r =
           m_propagator.template propagate<FreeTrackParameters>(tp, options)
@@ -363,13 +363,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
 template <typename propagator_t>
 template <typename return_parameters_t, typename parameters_t>
-return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
-    std::reference_wrapper<const GeometryContext> geoContext, double h,
+return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(double h,
     const unsigned int param, const parameters_t& tp) const {
   if constexpr (parameters_t::is_local_representation) {
     return wiggleBoundStartVector(h, param, tp);
   } else {
-    return wiggleFreeStartVector(geoContext, h, param, tp);
+    return wiggleFreeStartVector(h, param, tp);
   }
 }
 
@@ -424,8 +423,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
 template <typename propagator_t>
 template <typename parameters_t>
 Acts::FreeTrackParameters
-Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
-    std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
+Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(double h,
     const unsigned int param, parameters_t& tp) const {
   // Modify start parameter
   FreeVector parametersVector = tp.parameters();

@@ -173,24 +173,21 @@ class RiddersPropagator {
   ///
   /// @return The changed start parameters
   template <typename return_parameters_t, typename parameters_t>
-  return_parameters_t wiggleStartVector(
-      std::reference_wrapper<const GeometryContext> geoContext, double h,
+  return_parameters_t wiggleStartVector(double h,
       const unsigned int param, const parameters_t& tp) const;
 
   /// @copydoc
   /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
   /// GeometryContext>, double, const unsigned int, parameters_t)
   template <typename parameters_t>
-  BoundTrackParameters wiggleBoundStartVector(
-      std::reference_wrapper<const GeometryContext> geoContext, double h,
+  BoundTrackParameters wiggleBoundStartVector(double h,
       const unsigned int param, parameters_t& tp) const;
 
   /// @copydoc
   /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
   /// GeometryContext>, double, const unsigned int, parameters_t)
   template <typename parameters_t>
-  FreeTrackParameters wiggleFreeStartVector(
-      std::reference_wrapper<const GeometryContext> geoContext, double h,
+  FreeTrackParameters wiggleFreeStartVector(double h,
       const unsigned int param, parameters_t& tp) const;
 
   /// @brief Constructs a jacobian to transform from (x,y,z,t,phi,theta,q/p) to
