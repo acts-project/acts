@@ -172,16 +172,16 @@ class RiddersPropagator {
   /// @param [in] tp Copy of the unchanged start parameters
   ///
   /// @return The changed start parameters
-  template <typename parameters_t>
-  parameters_t wiggleStartVector(
+  template <typename return_parameters_t, typename parameters_t>
+  return_parameters_t wiggleStartVector(
       std::reference_wrapper<const GeometryContext> geoContext, double h,
-      const unsigned int param, parameters_t tp) const;
+      const unsigned int param, const parameters_t& tp) const;
 
   /// @copydoc
   /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
   /// GeometryContext>, double, const unsigned int, parameters_t)
   template <typename parameters_t>
-  void wiggleBoundStartVector(
+  BoundTrackParameters wiggleBoundStartVector(
       std::reference_wrapper<const GeometryContext> geoContext, double h,
       const unsigned int param, parameters_t& tp) const;
 
@@ -189,7 +189,7 @@ class RiddersPropagator {
   /// RiddersPropagator<propagator_t>::wiggleStartVector(std::reference_wrapper<const
   /// GeometryContext>, double, const unsigned int, parameters_t)
   template <typename parameters_t>
-  void wiggleFreeStartVector(
+  FreeTrackParameters wiggleFreeStartVector(
       std::reference_wrapper<const GeometryContext> geoContext, double h,
       const unsigned int param, parameters_t& tp) const;
 

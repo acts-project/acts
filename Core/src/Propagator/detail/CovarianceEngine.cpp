@@ -484,7 +484,6 @@ void covarianceTransport(
       const FreeToBoundMatrix jacToLocal =
           surfaceDerivative(direction, *jacobianLocalToGlobal, derivatives);
       const BoundMatrix jacFull = jacToLocal * (*jacobianLocalToGlobal);
-
       // Apply the actual covariance transport
       covarianceMatrix =
           BoundSymMatrix(jacFull * std::get<BoundSymMatrix>(covarianceMatrix) *

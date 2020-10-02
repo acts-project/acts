@@ -203,9 +203,9 @@ inline void checkParametersConsistency(const parameters_t& cmp,
 /// Check that two parameters covariances are consistent within the tolerances.
 ///
 /// \warning Does not check that the parameters value itself are consistent.
-template <typename paramters_t>
-inline void checkCovarianceConsistency(const paramters_t& cmp,
-                                       const paramters_t& ref,
+template <typename parameters_t>
+inline void checkCovarianceConsistency(const parameters_t& cmp,
+                                       const parameters_t& ref,
                                        double relativeTolerance) {
   // either both or none have covariance set
   if (cmp.covariance().has_value()) {
@@ -217,8 +217,26 @@ inline void checkCovarianceConsistency(const paramters_t& cmp,
     BOOST_CHECK(cmp.covariance().has_value());
   }
   if (cmp.covariance().has_value() and ref.covariance().has_value()) {
+	  if constexpr (parameters_t::is_local_representation)
     CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
                            relativeTolerance);
+                           else
+                           {
+							   Acts::FreeSymMatrix cmpCov = cmp.covariance().value();
+							   Acts::FreeSymMatrix refCov = ref.covariance().value();
+							   for(unsigned int i = 0; i < Acts::eFreeSize; i++)
+								for(unsigned int j = 0; j < Acts::eFreeSize; j++)
+								{
+									if (std::abs(cmpCov(i, j)) <
+                std::numeric_limits<double>::epsilon() ||
+            std::abs(refCov(i, j)) <
+                std::numeric_limits<double>::epsilon()) {
+          cmpCov(i, j) = 1.;
+          refCov(i, j) = 1.;
+}
+							   }
+							   CHECK_CLOSE_COVARIANCE(cmpCov, refCov, relativeTolerance);
+							  }
   }
 }
 

@@ -201,7 +201,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
             // TODO: This should be changed to indicate that something went
             // wrong
             mParSet->setCovariance(BoundSymMatrix::Zero());
-            return nominalResult;
+            return ThisResult::failure(nominalRet.error());
           }
         }
       }
@@ -234,7 +234,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
             // TODO: This should be changed to indicate that something went
             // wrong
             mParSet->setCovariance(BoundSymMatrix::Zero());
-            return nominalResult;
+            return ThisResult::failure(nominalRet.error());
           }
         }
       }
@@ -280,15 +280,13 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   std::vector<BoundVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-    start_parameters_t tp =
-        wiggleStartVector(options.geoContext, h, param, startPars);
-
+    if constexpr (start_parameters_t::is_local_representation) {
+		    BoundTrackParameters tp =
+        wiggleStartVector<BoundTrackParameters>(options.geoContext, h, param, startPars);
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-
-    // Correct angular results
-    if constexpr (start_parameters_t::is_local_representation) {
+    
       // Correct for a possible variation of phi around
       if (param == 2) {
         double phi0 = nominal(Acts::eBoundPhi);
@@ -299,6 +297,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
           derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
       }
     } else {
+		    FreeTrackParameters tp =
+        wiggleStartVector<FreeTrackParameters>(options.geoContext, h, param, startPars);
+    const auto& r = m_propagator.propagate(tp, target, options).value();
+    // Collect the slope
+    derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    
       if (param == 4 || param == 5) {
         double phi0 = nominal(Acts::eBoundPhi);
         double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
@@ -331,36 +335,45 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   std::vector<FreeVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-    parameters_t tp =
-        wiggleStartVector(options.geoContext, h, param, startPars);
+	      if constexpr (parameters_t::is_local_representation) {
+    BoundTrackParameters tp =
+        wiggleStartVector<BoundTrackParameters>(options.geoContext, h, param, startPars);
 
     const auto& r =
         m_propagator.template propagate<FreeTrackParameters>(tp, options)
             .value();
 
     // Collect the slope
-    derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    derivatives.push_back((r.endParameters->parameters() - nominal) / h); }else{
+    FreeTrackParameters tp =
+        wiggleStartVector<FreeTrackParameters>(options.geoContext, h, param, startPars);
+
+    const auto& r =
+        m_propagator.template propagate<FreeTrackParameters>(tp, options)
+            .value();
+
+    // Collect the slope
+    derivatives.push_back((r.endParameters->parameters() - nominal) / h);}
   }
 
   return derivatives;
 }
 
 template <typename propagator_t>
-template <typename parameters_t>
-parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
+template <typename return_parameters_t, typename parameters_t>
+return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
     std::reference_wrapper<const GeometryContext> geoContext, double h,
-    const unsigned int param, parameters_t tp) const {
+    const unsigned int param, const parameters_t& tp) const {
   if constexpr (parameters_t::is_local_representation) {
-    wiggleBoundStartVector(geoContext, h, param, tp);
+    return wiggleBoundStartVector(geoContext, h, param, tp);
   } else {
-    wiggleFreeStartVector(geoContext, h, param, tp);
+    return wiggleFreeStartVector(geoContext, h, param, tp);
   }
-  return tp;
 }
 
 template <typename propagator_t>
 template <typename parameters_t>
-void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
+Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
     std::reference_wrapper<const GeometryContext> geoContext, double h,
     const unsigned int param, parameters_t& tp) const {
   // Treatment for theta
@@ -402,16 +415,17 @@ void Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
       break;
     }
   }
-  FreeVector freeParametersVector = detail::transformBoundToFreeParameters(
-      tp.referenceSurface(), geoContext, parametersVector);
-  tp = parameters_t(freeParametersVector.template segment<4>(eFreePos0),
-                    parametersVector.template segment<3>(eFreeDir0),
-                    freeParametersVector[eFreeQOverP], std::nullopt);
+  //~ FreeVector freeParametersVector = detail::transformBoundToFreeParameters(
+      //~ tp.referenceSurface(), geoContext, parametersVector);
+  //~ tp = parameters_t(freeParametersVector.template segment<4>(eFreePos0),
+                    //~ parametersVector.template segment<3>(eFreeDir0),
+                    //~ freeParametersVector[eFreeQOverP], std::nullopt);
+  return BoundTrackParameters(tp.referenceSurface().getSharedPtr(), parametersVector, std::nullopt);
 }
 
 template <typename propagator_t>
 template <typename parameters_t>
-void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
+Acts::FreeTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
     const unsigned int param, parameters_t& tp) const {
   // Modify start parameter
@@ -474,7 +488,7 @@ void Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
       break;
     }
   }
-  tp = parameters_t(parametersVector, std::nullopt);
+  return parameters_t(parametersVector, std::nullopt);
 }
 
 template <typename propagator_t>

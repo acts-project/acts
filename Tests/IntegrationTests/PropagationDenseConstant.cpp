@@ -191,7 +191,7 @@ BOOST_DATA_TEST_CASE(ToStrawAlongZ,
 // check covariance transport using the ridders propagator for comparison
 
 BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runForwardComparisonTest<Acts::CurvilinearTrackParameters, Propagator,
@@ -258,7 +258,7 @@ BOOST_DATA_TEST_CASE(CovarianceToDisc,
 }
 
 BOOST_DATA_TEST_CASE(CovarianceToPlane,
-                     ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
+                     ds::phi* ds::thetaWithoutBeam* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
   runToSurfaceComparisonTest<
