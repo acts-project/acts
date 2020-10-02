@@ -281,8 +281,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
     if constexpr (start_parameters_t::is_local_representation) {
-      BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
-          h, param, startPars);
+      BoundTrackParameters tp =
+          wiggleStartVector<BoundTrackParameters>(h, param, startPars);
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
@@ -297,8 +297,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
           derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
       }
     } else {
-      FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
-          h, param, startPars);
+      FreeTrackParameters tp =
+          wiggleStartVector<FreeTrackParameters>(h, param, startPars);
       const auto& r = m_propagator.propagate(tp, target, options).value();
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
@@ -336,8 +336,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
     if constexpr (parameters_t::is_local_representation) {
-      BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
-          h, param, startPars);
+      BoundTrackParameters tp =
+          wiggleStartVector<BoundTrackParameters>(h, param, startPars);
 
       const auto& r =
           m_propagator.template propagate<FreeTrackParameters>(tp, options)
@@ -346,8 +346,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       // Collect the slope
       derivatives.push_back((r.endParameters->parameters() - nominal) / h);
     } else {
-      FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
-          h, param, startPars);
+      FreeTrackParameters tp =
+          wiggleStartVector<FreeTrackParameters>(h, param, startPars);
 
       const auto& r =
           m_propagator.template propagate<FreeTrackParameters>(tp, options)
@@ -363,8 +363,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
 
 template <typename propagator_t>
 template <typename return_parameters_t, typename parameters_t>
-return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(double h,
-    const unsigned int param, const parameters_t& tp) const {
+return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
+    double h, const unsigned int param, const parameters_t& tp) const {
   if constexpr (parameters_t::is_local_representation) {
     return wiggleBoundStartVector(h, param, tp);
   } else {
@@ -423,8 +423,8 @@ Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
 template <typename propagator_t>
 template <typename parameters_t>
 Acts::FreeTrackParameters
-Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(double h,
-    const unsigned int param, parameters_t& tp) const {
+Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
+    double h, const unsigned int param, parameters_t& tp) const {
   // Modify start parameter
   FreeVector parametersVector = tp.parameters();
   switch (param) {
