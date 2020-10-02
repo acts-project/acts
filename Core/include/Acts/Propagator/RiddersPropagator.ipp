@@ -320,7 +320,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     }
   }
-
+      
   return derivatives;
 }
 
@@ -417,7 +417,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
     }
   }
   return BoundTrackParameters(tp.referenceSurface().getSharedPtr(),
-                              parametersVector, std::nullopt);
+                              parametersVector, tp.charge(), std::nullopt);
 }
 
 template <typename propagator_t>
@@ -466,7 +466,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
       break;
     }
   }
-  return parameters_t(parametersVector, std::nullopt);
+  return FreeTrackParameters(parametersVector, tp.charge(), std::nullopt);
 }
 
 template <typename propagator_t>

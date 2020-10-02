@@ -543,7 +543,6 @@ void covarianceTransport(
     const FreeToBoundMatrix jacToLocal = surfaceDerivative(
         geoContext, parameters, *jacobianLocalToGlobal, derivatives, surface);
     const BoundMatrix jacFull = jacToLocal * (*jacobianLocalToGlobal);
-
     // Apply the actual covariance transport
     covarianceMatrix =
         BoundSymMatrix(jacFull * std::get<BoundSymMatrix>(covarianceMatrix) *

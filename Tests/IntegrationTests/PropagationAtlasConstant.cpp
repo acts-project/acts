@@ -63,15 +63,6 @@ BOOST_DATA_TEST_CASE(ForwardBackward,
                      ds::phi* ds::theta* ds::absMomentum* ds::chargeNonZero*
                          ds::pathLength* ds::magneticField,
                      phi, theta, p, q, s, bz) {
-  runForwardBackwardTest<Acts::FreeTrackParameters>(
-      makePropagator(bz), geoCtx, magCtx, makeParametersFree(phi, theta, p, q),
-      s, epsPos, epsDir, epsMom);
-  runForwardBackwardTest<Acts::FreeTrackParameters>(
-      makePropagator(bz), geoCtx, magCtx,
-      makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom);
-  runForwardBackwardTest<Acts::CurvilinearTrackParameters>(
-      makePropagator(bz), geoCtx, magCtx, makeParametersFree(phi, theta, p, q),
-      s, epsPos, epsDir, epsMom);
   runForwardBackwardTest<Acts::CurvilinearTrackParameters>(
       makePropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinear(phi, theta, p, q), s, epsPos, epsDir, epsMom);
