@@ -281,12 +281,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
     if constexpr (start_parameters_t::is_local_representation) {
-		    BoundTrackParameters tp =
-        wiggleStartVector<BoundTrackParameters>(options.geoContext, h, param, startPars);
-    const auto& r = m_propagator.propagate(tp, target, options).value();
-    // Collect the slope
-    derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-    
+      BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
+          options.geoContext, h, param, startPars);
+      const auto& r = m_propagator.propagate(tp, target, options).value();
+      // Collect the slope
+      derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+
       // Correct for a possible variation of phi around
       if (param == 2) {
         double phi0 = nominal(Acts::eBoundPhi);
@@ -297,12 +297,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
           derivatives.back()[Acts::eBoundPhi] = (phi1 - 2. * M_PI - phi0) / h;
       }
     } else {
-		    FreeTrackParameters tp =
-        wiggleStartVector<FreeTrackParameters>(options.geoContext, h, param, startPars);
-    const auto& r = m_propagator.propagate(tp, target, options).value();
-    // Collect the slope
-    derivatives.push_back((r.endParameters->parameters() - nominal) / h);
-    
+      FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
+          options.geoContext, h, param, startPars);
+      const auto& r = m_propagator.propagate(tp, target, options).value();
+      // Collect the slope
+      derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+
       if (param == 4 || param == 5) {
         double phi0 = nominal(Acts::eBoundPhi);
         double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
@@ -335,25 +335,27 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   std::vector<FreeVector> derivatives;
   derivatives.reserve(deviations.size());
   for (double h : deviations) {
-	      if constexpr (parameters_t::is_local_representation) {
-    BoundTrackParameters tp =
-        wiggleStartVector<BoundTrackParameters>(options.geoContext, h, param, startPars);
+    if constexpr (parameters_t::is_local_representation) {
+      BoundTrackParameters tp = wiggleStartVector<BoundTrackParameters>(
+          options.geoContext, h, param, startPars);
 
-    const auto& r =
-        m_propagator.template propagate<FreeTrackParameters>(tp, options)
-            .value();
+      const auto& r =
+          m_propagator.template propagate<FreeTrackParameters>(tp, options)
+              .value();
 
-    // Collect the slope
-    derivatives.push_back((r.endParameters->parameters() - nominal) / h); }else{
-    FreeTrackParameters tp =
-        wiggleStartVector<FreeTrackParameters>(options.geoContext, h, param, startPars);
+      // Collect the slope
+      derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    } else {
+      FreeTrackParameters tp = wiggleStartVector<FreeTrackParameters>(
+          options.geoContext, h, param, startPars);
 
-    const auto& r =
-        m_propagator.template propagate<FreeTrackParameters>(tp, options)
-            .value();
+      const auto& r =
+          m_propagator.template propagate<FreeTrackParameters>(tp, options)
+              .value();
 
-    // Collect the slope
-    derivatives.push_back((r.endParameters->parameters() - nominal) / h);}
+      // Collect the slope
+      derivatives.push_back((r.endParameters->parameters() - nominal) / h);
+    }
   }
 
   return derivatives;
@@ -365,7 +367,7 @@ return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
     std::reference_wrapper<const GeometryContext> geoContext, double h,
     const unsigned int param, const parameters_t& tp) const {
   if constexpr (parameters_t::is_local_representation) {
-    return wiggleBoundStartVector( h, param, tp);
+    return wiggleBoundStartVector(h, param, tp);
   } else {
     return wiggleFreeStartVector(geoContext, h, param, tp);
   }
@@ -373,8 +375,9 @@ return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
 
 template <typename propagator_t>
 template <typename parameters_t>
-Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector( double h,
-    const unsigned int param, parameters_t& tp) const {
+Acts::BoundTrackParameters
+Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
+    double h, const unsigned int param, parameters_t& tp) const {
   // Treatment for theta
   if (param == eBoundTheta) {
     const double current_theta = tp.template get<eBoundTheta>();
@@ -414,12 +417,14 @@ Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundSta
       break;
     }
   }
-  return BoundTrackParameters(tp.referenceSurface().getSharedPtr(), parametersVector, std::nullopt);
+  return BoundTrackParameters(tp.referenceSurface().getSharedPtr(),
+                              parametersVector, std::nullopt);
 }
 
 template <typename propagator_t>
 template <typename parameters_t>
-Acts::FreeTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
+Acts::FreeTrackParameters
+Acts::RiddersPropagator<propagator_t>::wiggleFreeStartVector(
     std::reference_wrapper<const GeometryContext> /*geoContext*/, double h,
     const unsigned int param, parameters_t& tp) const {
   // Modify start parameter

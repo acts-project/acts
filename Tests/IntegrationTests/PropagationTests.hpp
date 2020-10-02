@@ -217,26 +217,22 @@ inline void checkCovarianceConsistency(const parameters_t& cmp,
     BOOST_CHECK(cmp.covariance().has_value());
   }
   if (cmp.covariance().has_value() and ref.covariance().has_value()) {
-	  if constexpr (parameters_t::is_local_representation)
-    CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
-                           relativeTolerance);
-                           else
-                           {
-							   Acts::FreeSymMatrix cmpCov = cmp.covariance().value();
-							   Acts::FreeSymMatrix refCov = ref.covariance().value();
-							   for(unsigned int i = 0; i < Acts::eFreeSize; i++)
-								for(unsigned int j = 0; j < Acts::eFreeSize; j++)
-								{
-									if (std::abs(cmpCov(i, j)) <
-                std::numeric_limits<double>::epsilon() ||
-            std::abs(refCov(i, j)) <
-                std::numeric_limits<double>::epsilon()) {
-          cmpCov(i, j) = 1.;
-          refCov(i, j) = 1.;
-}
-							   }
-							   CHECK_CLOSE_COVARIANCE(cmpCov, refCov, relativeTolerance);
-							  }
+    if constexpr (parameters_t::is_local_representation)
+      CHECK_CLOSE_COVARIANCE(cmp.covariance().value(), ref.covariance().value(),
+                             relativeTolerance);
+    else {
+      Acts::FreeSymMatrix cmpCov = cmp.covariance().value();
+      Acts::FreeSymMatrix refCov = ref.covariance().value();
+      for (unsigned int i = 0; i < Acts::eFreeSize; i++)
+        for (unsigned int j = 0; j < Acts::eFreeSize; j++) {
+          if (std::abs(cmpCov(i, j)) < std::numeric_limits<double>::epsilon() ||
+              std::abs(refCov(i, j)) < std::numeric_limits<double>::epsilon()) {
+            cmpCov(i, j) = 1.;
+            refCov(i, j) = 1.;
+          }
+        }
+      CHECK_CLOSE_COVARIANCE(cmpCov, refCov, relativeTolerance);
+    }
   }
 }
 
