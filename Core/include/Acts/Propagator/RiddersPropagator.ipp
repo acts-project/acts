@@ -365,7 +365,7 @@ return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
     std::reference_wrapper<const GeometryContext> geoContext, double h,
     const unsigned int param, const parameters_t& tp) const {
   if constexpr (parameters_t::is_local_representation) {
-    return wiggleBoundStartVector(geoContext, h, param, tp);
+    return wiggleBoundStartVector( h, param, tp);
   } else {
     return wiggleFreeStartVector(geoContext, h, param, tp);
   }
@@ -373,8 +373,7 @@ return_parameters_t Acts::RiddersPropagator<propagator_t>::wiggleStartVector(
 
 template <typename propagator_t>
 template <typename parameters_t>
-Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector(
-    std::reference_wrapper<const GeometryContext> geoContext, double h,
+Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundStartVector( double h,
     const unsigned int param, parameters_t& tp) const {
   // Treatment for theta
   if (param == eBoundTheta) {
@@ -415,11 +414,6 @@ Acts::BoundTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleBoundSta
       break;
     }
   }
-  //~ FreeVector freeParametersVector = detail::transformBoundToFreeParameters(
-      //~ tp.referenceSurface(), geoContext, parametersVector);
-  //~ tp = parameters_t(freeParametersVector.template segment<4>(eFreePos0),
-                    //~ parametersVector.template segment<3>(eFreeDir0),
-                    //~ freeParametersVector[eFreeQOverP], std::nullopt);
   return BoundTrackParameters(tp.referenceSurface().getSharedPtr(), parametersVector, std::nullopt);
 }
 
@@ -433,26 +427,18 @@ Acts::FreeTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleFreeStart
   switch (param) {
     case 0: {
       parametersVector[eFreePos0] += h;
-      //~ tp.template set<eFreePos0>(geoContext, tp.template get<eFreePos0>() +
-      // h);
       break;
     }
     case 1: {
       parametersVector[eFreePos1] += h;
-      //~ tp.template set<eFreePos1>(geoContext, tp.template get<eFreePos1>() +
-      // h);
       break;
     }
     case 2: {
       parametersVector[eFreePos2] += h;
-      //~ tp.template set<eFreePos2>(geoContext, tp.template get<eFreePos2>() +
-      // h);
       break;
     }
     case 3: {
       parametersVector[eFreeTime] += h;
-      //~ tp.template set<eFreeTime>(geoContext, tp.template get<eFreeTime>() +
-      // h);
       break;
     }
     case 4: {
@@ -461,10 +447,6 @@ Acts::FreeTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleFreeStart
       const double theta = std::acos(tp.template get<eFreeDir2>());
       parametersVector[eFreeDir0] = std::cos(phi + h) * std::sin(theta);
       parametersVector[eFreeDir1] = std::sin(phi + h) * std::sin(theta);
-      //~ tp.template set<eFreeDir0>(geoContext,
-      //~ std::cos(phi + h) * std::sin(theta));
-      //~ tp.template set<eFreeDir1>(geoContext,
-      //~ std::sin(phi + h) * std::sin(theta));
       break;
     }
     case 5: {
@@ -474,17 +456,10 @@ Acts::FreeTrackParameters Acts::RiddersPropagator<propagator_t>::wiggleFreeStart
       parametersVector[eFreeDir0] = std::cos(phi) * std::sin(theta + h);
       parametersVector[eFreeDir1] = std::sin(phi) * std::sin(theta + h);
       parametersVector[eFreeDir2] = std::cos(theta + h);
-      //~ tp.template set<eFreeDir0>(geoContext,
-      //~ std::cos(phi) * std::sin(theta + h));
-      //~ tp.template set<eFreeDir1>(geoContext,
-      //~ std::sin(phi) * std::sin(theta + h));
-      //~ tp.template set<eFreeDir2>(geoContext, std::cos(theta + h));
       break;
     }
     case 6: {
       parametersVector[eFreeQOverP] += h;
-      //~ tp.template set<eFreeQOverP>(geoContext,
-      //~ tp.template get<eFreeQOverP>() + h);
       break;
     }
   }
