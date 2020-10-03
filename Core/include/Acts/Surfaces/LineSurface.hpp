@@ -132,21 +132,17 @@ class LineSurface : public Surface {
                             const Vector3D& position, const Vector3D& direction,
                             const BoundVector& pars) const final;
 
-  /// Calculate the form factors for the derivatives
-  /// the calculation is identical for all surfaces where the
-  /// reference frame does not depend on the direction
+  /// Calculate the derivative of path length at the geometry contraint w.r.t.
+  /// free parameter.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the position of the paramters in global
   /// @param direction is the direction of the track
-  /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jacobian is the transport jacobian
   ///
   /// @return a five-dim vector
-  BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const RotationMatrix3D& rft,
-      const BoundToFreeMatrix& jacobian) const final;
+  FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
+                                     const Vector3D& position,
+                                     const Vector3D& direction) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift

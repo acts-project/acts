@@ -183,30 +183,29 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian.block<3, 1>(0, eBoundTheta) = dDThetaY * pars[eBoundLoc0] * ipdn;
 }
 
-inline BoundRowVector LineSurface::derivativeFactors(
+inline FreeRowVector LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const RotationMatrix3D& rft,
-    const BoundToFreeMatrix& jacobian) const {
-  // the vector between position and center
-  ActsRowVectorD<3> pc = (position - center(gctx)).transpose();
-  // the longitudinal component vector (alogn local z)
-  ActsRowVectorD<3> locz = rft.block<1, 3>(1, 0);
-  // build the norm vector comonent by subtracting the longitudinal one
-  double long_c = locz * direction;
-  ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
-  // calculate the s factors for the dependency on X
-  const BoundRowVector s_vec =
-      norm_vec * jacobian.topLeftCorner<3, eBoundSize>();
-  // calculate the d factors for the dependency on Tx
-  const BoundRowVector d_vec = locz * jacobian.block<3, eBoundSize>(4, 0);
-  // normalisation of normal & longitudinal components
-  double norm = 1. / (1. - long_c * long_c);
-  // create a matrix representation
-  ActsMatrixD<3, eBoundSize> long_mat = ActsMatrixD<3, eBoundSize>::Zero();
-  long_mat.colwise() += locz.transpose();
-  // build the combined normal & longitudinal components
-  return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                                jacobian.block<3, eBoundSize>(4, 0))));
+    const Vector3D& direction) const {
+  // The vector between position and center
+  const ActsRowVector<double, 3> pcRowVec =
+      (position - center(gctx)).transpose();
+  // The local frame z axis
+  const Vector3D localZAxis = transform(gctx).matrix().block<3, 1>(0, 2);
+  // The local z coordinate
+  const double localZ = pcRowVec * localZAxis;
+  // Cosine of angle between momentum direction and local frame z axis
+  const double dirZ = localZAxis.dot(direction);
+  const double norm = 1. / (1. - dirZ * dirZ);
+  // Initialize the derivative of propagation path w.r.t. free parameter
+  FreeRowVector freeToPath = FreeRowVector::Zero();
+  // The derivative of path w.r.t. position
+  freeToPath.segment<3>(eFreePos0) =
+      norm * (dirZ * localZAxis.transpose() - direction.transpose());
+  // The derivative of path w.r.t. direction
+  freeToPath.segment<3>(eFreeDir0) =
+      norm * (localZ * localZAxis.transpose() - pcRowVec);
+
+  return freeToPath;
 }
 
 inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
@@ -215,11 +214,8 @@ inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
-  // The local frame transform
-  const auto& sTransform = transform(gctx);
-  const auto& rotation = sTransform.rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3D localZAxis = transform(gctx).matrix().block<3, 1>(0, 2);
   // The local z coordinate
   const double localZ = pcRowVec * localZAxis;
 
