@@ -172,8 +172,9 @@ struct GenericDenseEnvironmentExtension {
     state.stepping.derivative(7) =
         -sqrt(state.options.mass * state.options.mass +
               newMomentum * newMomentum) *
-        g / (newMomentum * newMomentum * newMomentum);
-
+        g / (newMomentum * newMomentum * newMomentum) *
+        stepper.charge(state.stepping);
+        
     // Update momentum
     state.stepping.p = newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})

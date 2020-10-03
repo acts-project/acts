@@ -320,7 +320,6 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     }
   }
-      
   return derivatives;
 }
 

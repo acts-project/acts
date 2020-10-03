@@ -231,7 +231,6 @@ BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
       makePropagator(bz), makeRiddersPropagator(bz), geoCtx, magCtx,
       makeParametersCurvilinearWithCovariance(phi, theta, p, q), s,
       ZCylinderSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
-  if(p > 0.5_GeV || (p == 0.5_GeV && s < 10_cm))
   runToSurfaceComparisonTest<Propagator, RiddersPropagator,
                              Acts::FreeTrackParameters, ZCylinderSurfaceBuilder,
                              Acts::DenseStepperPropagatorOptions>(
