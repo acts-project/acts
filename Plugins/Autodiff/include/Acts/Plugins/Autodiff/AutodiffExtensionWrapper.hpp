@@ -23,14 +23,19 @@ struct AutodiffExtensionWrapper {
   /// @brief Default constructor
   AutodiffExtensionWrapper() = default;
 
-  /// Some typedefs
+  // Some typedefs
   using AutodiffScalar = autodiff::dual;
 
   using AutodiffVector3 = ActsMatrix<AutodiffScalar, 3, 1>;
   using AutodiffFreeMatrix = ActsMatrix<AutodiffScalar, 8, 8>;
   using AutodiffFreeVector = ActsMatrix<AutodiffScalar, 8, 1>;
 
-  /// Instance of the base extension
+  // The double-extension is needed to communicate with the "outer world" (the
+  // stepper) and ensures it behaves exactly as the underlying extension, with
+  // the exception of the computation of the transport-matrix. The corresponding
+  // autodiff-extension can be found in the RKN4step-member-function (since it
+  // is only needed locally). Another advantage of this approach is, that we do
+  // not differentiate through the adaptive stepsize estimation in the stepper.
   basic_extension_t<double> m_doubleExtension;
 
   // Just call underlying extension
