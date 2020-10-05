@@ -10,24 +10,24 @@
 #include <fstream>
 #include <chrono>
 #include <boost/program_options.hpp>
-#include "ACTFW/DD4hepDetector/DD4hepDetectorOptions.hpp"
-#include "ACTFW/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ACTFW/Framework/Sequencer.hpp"
-#include "ACTFW/MaterialMapping/OutcomeRecording.hpp"
-#include "ACTFW/Options/CommonOptions.hpp"
-#include "ACTFW/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
-#include "ACTFW/Plugins/Root/RootMaterialTrackWriter.hpp"
-#include "ACTFW/Framework/RandomNumbers.hpp"
-#include "ACTFW/Utilities/Paths.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Geant4/InteractionProcessRecording.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
+#include "ActsExamples/Plugins/Root/RootMaterialTrackWriter.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/Paths.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include "ACTFW/Plugins/Geant4/OREventAction.hpp"
-#include "ACTFW/Framework/WriterT.hpp"
-#include "ACTFW/EventData/Barcode.hpp"
+#include "ActsExamples/Plugins/Geant4/OREventAction.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/EventData/Barcode.hpp"
 
-#include "ACTFW/DD4hepDetector/DD4hepDetector.hpp"
-#include "ACTFW/Geometry/CommonGeometry.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/Geometry/CommonGeometry.hpp"
 
 
 namespace po = boost::program_options;
@@ -185,7 +185,7 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   // ---------------------------------------------------------------------------------
 
   // set up the algorithm writing out the material map
-  FW::OutcomeRecording::Config g4rConfig = FW::Options::readOutcomeRecordingConfig(vm); // TODO: add this to the fatras sequencer
+  FW::InteractionProcessRecording::Config g4rConfig = FW::Options::readInteractionProcessRecordingConfig(vm);
   g4rConfig.geant4Service  = dd4hepToG4Svc;
   g4rConfig.seed1          = randomSeed1;
   g4rConfig.seed2          = randomSeed2;
@@ -193,7 +193,7 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   
   // create the geant4 algorithm
   auto g4rAlgorithm
-      = std::make_shared<FW::OutcomeRecording>(g4rConfig, Acts::Logging::INFO);
+      = std::make_shared<FW::InteractionProcessRecording>(g4rConfig, Acts::Logging::INFO);
 
   // Output directory
   std::string particleCollection = g4rConfig.particleCollection;
