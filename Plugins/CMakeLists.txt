@@ -1,6 +1,7 @@
 # plugins are manually ordered such that dependent plugins appear after their
 # dependencies in the component list.
 # independent plugins
+add_component_if(Autodiff PluginAutodiff ACTS_BUILD_PLUGIN_AUTODIFF)
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
 add_component_if(Digitization PluginDigitization ACTS_BUILD_PLUGIN_DIGITIZATION)
 add_component_if(Identification PluginIdentification ACTS_BUILD_PLUGIN_IDENTIFICATION)
