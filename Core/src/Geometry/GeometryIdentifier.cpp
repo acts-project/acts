@@ -14,8 +14,7 @@
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   // zero represents an invalid/undefined identifier
   if (not id.value()) {
-    os << "(undefined)";
-    return os;
+    return (os << "undefined");
   }
 
   static const char* const names[] = {
@@ -25,7 +24,6 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
       id.volume(), id.boundary(), id.layer(), id.approach(), id.sensitive(),
   };
 
-  os << '(';
   bool writeSeparator = false;
   for (auto i = 0u; i < 5u; ++i) {
     if (levels[i]) {
@@ -36,6 +34,5 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
       writeSeparator = true;
     }
   }
-  os << ')';
   return os;
 }

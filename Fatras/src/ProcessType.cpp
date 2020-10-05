@@ -13,7 +13,12 @@
 namespace ActsFatras {
 
 std::ostream &operator<<(std::ostream &os, ProcessType processType) {
-  os << static_cast<uint32_t>(processType);
+  switch (processType) {
+    case ProcessType::eUndefined:
+      return (os << "undefined");
+    default:
+      return (os << static_cast<uint32_t>(processType));
+  }
   return os;
 }
 
