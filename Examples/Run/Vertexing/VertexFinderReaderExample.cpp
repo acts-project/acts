@@ -17,6 +17,7 @@
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
@@ -48,6 +49,7 @@ int main(int argc, char* argv[]) {
   // setup particle reader generator
   CsvParticleReader::Config readParticles =
       Options::readCsvParticleReaderConfig(vars);
+  readParticles.inputStem = "particles";
   readParticles.outputParticles = "particles";
   sequencer.addReader(
       std::make_shared<CsvParticleReader>(readParticles, logLevel));
@@ -68,6 +70,12 @@ int main(int argc, char* argv[]) {
   smearParticles.randomNumbers = rnd;
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(smearParticles, logLevel));
+
+  // print input track parameters
+  TrackParametersPrinter::Config printTracks;
+  printTracks.inputTrackParameters = smearParticles.outputTrackParameters;
+  sequencer.addAlgorithm(
+      std::make_shared<TrackParametersPrinter>(printTracks, logLevel));
 
   // find vertices
   IterativeVertexFinderAlgorithm::Config findVertices;
