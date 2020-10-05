@@ -78,13 +78,13 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
       Acts::GeometryIdentifier prevGeoId;
       for (; ihit < nend; ++ihit) {
-        auto hitId = hitIds.at(ihit);
+        // ihit is already known to be within the available cluster range.
+        // the `ic` iterator does not need to be checked for validity.
         auto ic = clusters.nth(ihit);
-        if (ic == clusters.end()) {
-          break;
-        }
         Acts::GeometryIdentifier geoId = ic->first;
         const Acts::PlanarModuleCluster& c = ic->second;
+        auto hitId = hitIds.at(ihit);
+
         if (geoId != prevGeoId) {
           ACTS_INFO("on geometry id " << geoId);
           prevGeoId = geoId;
