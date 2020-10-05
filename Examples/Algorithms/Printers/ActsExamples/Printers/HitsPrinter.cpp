@@ -58,14 +58,23 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
   // print hits selected by index
   if (0 < m_cfg.selectIndexLength) {
     size_t ihit = m_cfg.selectIndexStart;
-    size_t nend = std::min(clusters.size(), ihit + m_cfg.selectIndexLength);
+    // Saturated addition that does not overflow and exceed SIZE_MAX.
+    // From http://locklessinc.com/articles/sat_arithmetic/
+    size_t nend = ihit + m_cfg.selectIndexLength;
+    nend |= -(nend < ihit);
+    // restrict to available hits
+    nend = std::min(clusters.size(), nend);
 
     if (nend <= ihit) {
       ACTS_WARNING("event "
                    << ctx.eventNumber << " collection '" << m_cfg.inputClusters
                    << " hit index selection is outside the available range");
     } else {
-      ACTS_INFO("event " << ctx.eventNumber << " hits by index selection");
+      ACTS_INFO("event " << ctx.eventNumber << " collection '"
+                         << m_cfg.inputClusters << "' contains "
+                         << (nend - ihit) << " hits in index selection ["
+                         << m_cfg.selectIndexStart << ", "
+                         << m_cfg.selectIndexLength << ")");
 
       Acts::GeometryIdentifier prevGeoId;
       for (; ihit < nend; ++ihit) {
