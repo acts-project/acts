@@ -6,17 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Geant4/OREventAction.hpp"
+#include "OREventAction.hpp"
 #include <stdexcept>
-#include "ActsExamples/Geant4/ORPrimaryGeneratorAction.hpp"
-#include "ActsExamples/Geant4/ORSteppingAction.hpp"
+#include "ORPrimaryGeneratorAction.hpp"
+#include "ORSteppingAction.hpp"
 #include <G4Event.hh>
 #include <G4RunManager.hh>
 
 ActsExamples::OREventAction* ActsExamples::OREventAction::s_instance = nullptr;
 
 ActsExamples::OREventAction*
-ActsExamples::OREventAction::Instance()
+ActsExamples::OREventAction::instance()
 {
   // Static acces function via G4RunManager
   return fgInstance;

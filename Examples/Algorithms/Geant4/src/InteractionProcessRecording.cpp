@@ -16,58 +16,50 @@
 #include "ORSteppingAction.hpp"
 #include "RunAction.hpp"
 #include "FTFP_BERT.hh"
-#include "ActsExamples/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
-
 
 ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
-    const ActsExamples::InteractionProcessRecording::Config& cnf,
+    ActsExamples::InteractionProcessRecording::Config&& cnf,
     Acts::Logging::Level                 level)
   : ActsExamples::BareAlgorithm("InteractionProcessRecording", level)
-  , m_cfg(cnf)
+  , m_cfg(std::move(cnf))
   , m_runManager(std::make_unique<G4RunManager>())
 {
-  /// Check if the geometry should be accessed over the geant4 service
-  if (m_cfg.geant4Service) {
-    m_runManager->SetUserInitialization(m_cfg.geant4Service->geant4Geometry());
-  } else if (!m_cfg.gdmlFile.empty()) {
-    /// Access the geometry from the gdml file
-    ACTS_INFO(
-        "received Geant4 geometry from GDML file: " << m_cfg.gdmlFile.c_str());
-    ActsExamples::GdmlDetectorConstruction* detConstruction
-        = new ActsExamples::GdmlDetectorConstruction();
-    detConstruction->setGdmlInput(m_cfg.gdmlFile.c_str());
-    m_runManager->SetUserInitialization(
-        detConstruction);  // constructs detector (calls Construct in
-                           // Geant4DetectorConstruction)
-  } else {
-    throw std::invalid_argument("Missing geometry input for Geant4");
-  }
+	if(m_cfg.eventCollection.empty())
+	{
+		throw std::invalid_argument("Missing output event collection");
+	}
+	if(!m_cfg.detectorConstruction)
+	{
+		throw std::invalid_argument("Missing detector construction object");
+	}
 
   /// Now set up the Geant4 simulation
+  m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new ActsExamples::Geant4::ORPrimaryGeneratorAction(
+  m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(
       cnf.pdg, cnf.momentum * 1000., cnf.lockAngle, cnf.phi, cnf.theta, cnf.lockPosition, {cnf.pos.x(), cnf.pos.y(), cnf.pos.z()}, m_cfg.seed1, m_cfg.seed2));
-  ActsExamples::RunAction* runaction = new ActsExamples::MMRunAction();
-  m_runManager->SetUserAction(runaction);
-  ActsExamples::OREventAction* evtAct = new ActsExamples::OREventAction();
-  m_runManager->SetUserAction(evtAct);
-  m_runManager->SetUserAction(new ActsExamples::ORSteppingAction(evtAct));
+  m_runManager->SetUserAction(new ActsExamples::RunAction());
+  m_runManager->SetUserAction(new ActsExamples::OREventAction());
+  m_runManager->SetUserAction(new ActsExamples::ORSteppingAction());
   m_runManager->Initialize();
 }
 
 ActsExamples::ProcessCode
 ActsExamples::InteractionProcessRecording::execute(const ActsExamples::AlgorithmContext& context) const
 {
+  // ensure exclusive access to the geant run manager
+  std::lock_guard<std::mutex> guard(m_runManagerLock);
+  
   // Begin with the simulation
   m_runManager->BeamOn(m_cfg.tracksPerEvent);
   // Retrieve the track material tracks from Geant4
   auto recordedParticles
-      = ActsExamples::OREventAction::Instance()->outcomingParticles(m_cfg.pdg, m_cfg.momentum, m_cfg.phi, m_cfg.theta); // Keeping momentum in Acts units
-  ACTS_INFO("Received " << recordedParticles.particles.size()
-                        << " particles. Writing them now onto file...");
+      = ActsExamples::OREventAction::instance()->processTracks(m_cfg.pdg, m_cfg.momentum, m_cfg.phi, m_cfg.theta); // Keeping momentum in Acts units
+  //~ ACTS_INFO("Received " << recordedParticles.particles.size()
+                        //~ << " particles. Writing them now onto file...");
 
   // Write the recorded material to the event store
-  context.eventStore.add(m_cfg.particleCollection,
+  context.eventStore.add(m_cfg.eventCollection,
                          std::move(recordedParticles));
 
   return ActsExamples::ProcessCode::SUCCESS;

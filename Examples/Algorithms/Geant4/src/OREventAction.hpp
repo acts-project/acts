@@ -19,7 +19,7 @@ namespace ActsExamples {
 	
 	struct Collection
 	{
-		std::map<int, std::vector<ParticleRecord>> particles;
+		//~ std::map<int, std::vector<ParticleRecord>> particles;
 		int pdg;
 		double momentum, phi, theta;
 	};
@@ -32,14 +32,14 @@ namespace ActsExamples {
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
 /// entities needed for material mapping once per event.
 ///
-class EventAction final : public G4UserEventAction {
+class OREventAction final : public G4UserEventAction {
  public:
   /// Static access method
-  static EventAction* instance();
+  static OREventAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  EventAction();
-  ~EventAction() final override;
+  OREventAction();
+  ~OREventAction() final override;
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
@@ -55,7 +55,11 @@ class EventAction final : public G4UserEventAction {
   void clear();
 	
 	Collection
-	processTracks() const;
+	processTracks(const int pdg, const double momentum, const double phi, const double theta) const
+	{
+		// TODO
+		return m_processTracks;
+	}
 	
 	//~ Collection	
 	//~ outcomingParticles(const int pdg, const double momentum, const double phi, const double theta) const
@@ -71,7 +75,7 @@ class EventAction final : public G4UserEventAction {
     
 	private:
 	/// Instance of the EventAction
-	static OREventAction* fgInstance;
+	static OREventAction* s_instance;
 
 	Collection m_processTracks;	
 };
