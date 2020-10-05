@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticlesCfg, logLevel));
 
-  // print event data
+  // print selected particles
   ParticlesPrinter::Config printParticlesCfg;
   printParticlesCfg.inputParticles = selectParticlesCfg.outputParticles;
   sequencer.addAlgorithm(
