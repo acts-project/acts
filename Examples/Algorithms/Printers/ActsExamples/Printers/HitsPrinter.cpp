@@ -24,7 +24,7 @@ ActsExamples::HitsPrinter::HitsPrinter(
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument("Input clusters collection is not configured");
   }
-  if (m_cfg.inputClusters.empty()) {
+  if (m_cfg.inputHitParticlesMap.empty()) {
     throw std::invalid_argument(
         "Input hit-particles map collection is not configured");
   }
