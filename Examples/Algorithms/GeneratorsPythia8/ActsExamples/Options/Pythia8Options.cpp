@@ -24,29 +24,29 @@ void ActsExamples::Options::addPythia8Options(Description& desc) {
   using boost::program_options::value;
 
   auto opt = desc.add_options();
-  opt("evg-nhard", value<size_t>()->default_value(1u),
+  opt("gen-nhard", value<size_t>()->default_value(1u),
       "Number of hard interactions, zero to disable");
-  opt("evg-npileup", value<double>()->default_value(200.0),
+  opt("gen-npileup", value<double>()->default_value(200.0),
       "Mean number of pile-up interactions, zero to disable");
-  opt("evg-vertex-xy-std-mm", value<double>()->default_value(0.0125),
+  opt("gen-vertex-xy-std-mm", value<double>()->default_value(0.0125),
       "Transverse vertex standard deviation in mm");
-  opt("evg-vertex-z-std-mm", value<double>()->default_value(55.5),
+  opt("gen-vertex-z-std-mm", value<double>()->default_value(55.5),
       "Longitudinal vertex standard deviation in mm");
-  opt("evg-vertex-t-std-ns", value<double>()->default_value(5.0),
+  opt("gen-vertex-t-std-ns", value<double>()->default_value(5.0),
       "Temporal vertex standard deviation in ns");
-  opt("evg-cms-energy-gev", value<double>()->default_value(14000.0),
+  opt("gen-cms-energy-gev", value<double>()->default_value(14000.0),
       "Center-of-mass energy collision in GeV");
-  opt("evg-pdg-beam0",
+  opt("gen-pdg-beam0",
       value<int32_t>()->default_value(Acts::PdgParticle::eProton),
       "PDG number of the first beam particle");
-  opt("evg-pdg-beam1",
+  opt("gen-pdg-beam1",
       value<int32_t>()->default_value(Acts::PdgParticle::eProton),
       "PDG number of the second beam particle");
-  opt("evg-hard-process",
+  opt("gen-hard-process",
       value<std::vector<std::string>>()->default_value({"HardQCD:all = on"}),
       "Pythia8 process string for the hard interactions. Can be given multiple "
       "times.");
-  opt("evg-pileup-process",
+  opt("gen-pileup-process",
       value<std::vector<std::string>>()->default_value({"SoftQCD:all = on"}),
       "Pythi8 process string for the pile-up interactions. Can be given "
       "multiple times.");
@@ -56,23 +56,23 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
     const Variables& vars, Acts::Logging::Level lvl) {
   using namespace Acts::UnitLiterals;
 
-  const auto nhard = vars["evg-nhard"].as<size_t>();
-  const auto npileup = vars["evg-npileup"].as<double>();
+  const auto nhard = vars["gen-nhard"].as<size_t>();
+  const auto npileup = vars["gen-npileup"].as<double>();
   const auto pdgBeam0 = static_cast<Acts::PdgParticle>(
-      vars["evg-pdg-beam0"].template as<int32_t>());
+      vars["gen-pdg-beam0"].template as<int32_t>());
   const auto pdgBeam1 = static_cast<Acts::PdgParticle>(
-      vars["evg-pdg-beam1"].template as<int32_t>());
-  const auto cmsEnergy = vars["evg-cms-energy-gev"].as<double>() * 1_GeV;
+      vars["gen-pdg-beam1"].template as<int32_t>());
+  const auto cmsEnergy = vars["gen-cms-energy-gev"].as<double>() * 1_GeV;
 
   GaussianVertexGenerator vertexGen;
   vertexGen.stddev[Acts::ePos0] =
-      vars["evg-vertex-xy-std-mm"].as<double>() * 1_mm;
+      vars["gen-vertex-xy-std-mm"].as<double>() * 1_mm;
   vertexGen.stddev[Acts::ePos1] =
-      vars["evg-vertex-xy-std-mm"].as<double>() * 1_mm;
+      vars["gen-vertex-xy-std-mm"].as<double>() * 1_mm;
   vertexGen.stddev[Acts::ePos2] =
-      vars["evg-vertex-z-std-mm"].as<double>() * 1_mm;
+      vars["gen-vertex-z-std-mm"].as<double>() * 1_mm;
   vertexGen.stddev[Acts::eTime] =
-      vars["evg-vertex-t-std-ns"].as<double>() * 1_ns;
+      vars["gen-vertex-t-std-ns"].as<double>() * 1_ns;
 
   EventGenerator::Config cfg;
   if (0u < nhard) {
@@ -80,7 +80,7 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
     hard.pdgBeam0 = pdgBeam0;
     hard.pdgBeam1 = pdgBeam1;
     hard.cmsEnergy = cmsEnergy;
-    hard.settings = vars["evg-hard-process"].as<std::vector<std::string>>();
+    hard.settings = vars["gen-hard-process"].as<std::vector<std::string>>();
 
     cfg.generators.push_back({FixedMultiplicityGenerator{nhard}, vertexGen,
                               Pythia8Generator::makeFunction(hard, lvl)});
@@ -90,7 +90,7 @@ ActsExamples::EventGenerator::Config ActsExamples::Options::readPythia8Options(
     pileup.pdgBeam0 = pdgBeam0;
     pileup.pdgBeam1 = pdgBeam1;
     pileup.cmsEnergy = cmsEnergy;
-    pileup.settings = vars["evg-pileup-process"].as<std::vector<std::string>>();
+    pileup.settings = vars["gen-pileup-process"].as<std::vector<std::string>>();
 
     cfg.generators.push_back({PoissonMultiplicityGenerator{npileup}, vertexGen,
                               Pythia8Generator::makeFunction(pileup, lvl)});
