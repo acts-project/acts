@@ -13,10 +13,11 @@
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Definitions.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include <G4RunManager.hh>
-
+#include "G4RunManager.hh"
+#include <mutex>
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "G4VUserDetectorConstruction.hh"
 
 namespace ActsExamples {
 
@@ -32,11 +33,9 @@ public:
   /// @class Config
   struct Config
   {
-    std::string particleCollection = "geant-outcome-tracks";
+    std::string eventCollection = "geant-outcome-tracks";
 
-    /// The service possibly providing the Geant4 geometry (optional)
-    /// @note If this is not set, the geometry should be given by gdml file
-    std::shared_ptr<DD4hepG4::DD4hepToG4Svc> geant4Service = nullptr;
+    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
 
     /// The possible gmdl input (optional)
     std::string gdmlFile;
@@ -60,7 +59,7 @@ public:
   };
 
   /// Constructor
-  InteractionProcessRecording(const Config&        cnf,
+  InteractionProcessRecording(Config&&        cnf,
                     Acts::Logging::Level level = Acts::Logging::INFO);
 
   ActsExamples::ProcessCode
@@ -71,5 +70,8 @@ private:
   Config m_cfg;
   /// G4 run manager
   std::unique_ptr<G4RunManager> m_runManager;
+  
+  // has to be mutable; algorithm interface enforces object constness
+  mutable std::mutex m_runManagerLock;
 };
 }

@@ -15,20 +15,16 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geant4/InteractionProcessRecording.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/DD4hepG4/DD4hepToG4Svc.hpp"
-#include "ActsExamples/Plugins/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include "ActsExamples/Plugins/Geant4/OREventAction.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/EventData/Barcode.hpp"
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-
 
 namespace po = boost::program_options;
 
@@ -151,7 +147,7 @@ public:
 void
 g4SequencerBuild(boost::program_options::variables_map& vm)
 {
-  FW::Sequencer g4Sequencer(FW::Options::readSequencerConfig(vm));
+  ActsExamples::Sequencer g4Sequencer(ActsExamples::Options::readSequencerConfig(vm));
   
   using namespace std::chrono;
   milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
@@ -165,18 +161,18 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   // DD4Hep detector definition
   // read the detector config & dd4hep detector
   auto dd4HepDetectorConfig
-      = FW::Options::readDD4hepConfig<po::variables_map>(vm);
-  auto geometrySvc = std::make_shared<FW::DD4hep::DD4hepGeometryService>(
+      = ActsExamples::Options::readDD4hepConfig<po::variables_map>(vm);
+  auto geometrySvc = std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(
       dd4HepDetectorConfig);
   std::shared_ptr<const Acts::TrackingGeometry> tGeometry
       = geometrySvc->trackingGeometry(geoContext);
 
-  // DD4Hep to Geant4 conversion
-  //
-  FW::DD4hepG4::DD4hepToG4Svc::Config dgConfig("DD4hepToG4",
-                                               Acts::Logging::INFO);
-  dgConfig.dd4hepService = geometrySvc;
-  auto dd4hepToG4Svc = std::make_shared<FW::DD4hepG4::DD4hepToG4Svc>(dgConfig);
+  // Setup the DD4hep detector
+  auto dd4hepCfg = Options::readDD4hepConfig<po::variables_map>(vm);
+  auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
+
+  std::unique_ptr<G4VUserDetectorConstruction> g4detector =
+      std::make_unique<ActsExamples::DD4hepDetectorConstruction>(*geometrySvc->lcdd());
 
   // --------------------------------------------------------------------------------
   // Geant4 JOB:
@@ -185,24 +181,24 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   // ---------------------------------------------------------------------------------
 
   // set up the algorithm writing out the material map
-  FW::InteractionProcessRecording::Config g4rConfig = FW::Options::readInteractionProcessRecordingConfig(vm);
-  g4rConfig.geant4Service  = dd4hepToG4Svc;
+  ActsExamples::InteractionProcessRecording::Config g4rConfig = ActsExamples::Options::readInteractionProcessRecordingConfig(vm);
+  g4rConfig.geant4Service  = g4detector;
   g4rConfig.seed1          = randomSeed1;
   g4rConfig.seed2          = randomSeed2;
   g4rConfig.particleCollection = "geant-outcome-tracks";
   
   // create the geant4 algorithm
   auto g4rAlgorithm
-      = std::make_shared<FW::InteractionProcessRecording>(g4rConfig, Acts::Logging::INFO);
+      = std::make_shared<ActsExamples::InteractionProcessRecording>(g4rConfig, Acts::Logging::INFO);
 
   // Output directory
   std::string particleCollection = g4rConfig.particleCollection;
 
   // Write the propagation steps as ROOT TTree
-  FW::ParticleRecordWriting::Config config;
+  ActsExamples::ParticleRecordWriting::Config config;
   config.collection  = particleCollection;
   auto writer
-	= std::make_shared<FW::ParticleRecordWriting>(
+	= std::make_shared<ActsExamples::ParticleRecordWriting>(
 		config);
   g4Sequencer.addWriter(writer);
 
@@ -220,23 +216,23 @@ main(int argc, char* argv[])
 
   // Declare the supported program options.
   // Setup and parse options
-  auto desc = FW::Options::makeDefaultOptions();
-  FW::Options::addSequencerOptions(desc);
-  FW::Options::addOutputOptions(desc);
-  FW::Options::addGeometryOptions(desc);
-  FW::Options::addParticleGunOptions(desc); // TODO: Replace whatever is given here and in outcomerecoptions
-  FW::Options::addBFieldOptions(desc);
-  FW::Options::addFatrasOptions(desc);
-  FW::Options::addRandomNumbersOptions(desc);
-  FW::Options::addMaterialOptions(desc);
-  FW::Options::addDigitizationOptions(desc);
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addGeometryOptions(desc);
+  ActsExamples::Options::addParticleGunOptions(desc); // TODO: Replace whatever is given here and in outcomerecoptions
+  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addFatrasOptions(desc);
+  ActsExamples::Options::addRandomNumbersOptions(desc);
+  ActsExamples::Options::addMaterialOptions(desc);
+  ActsExamples::Options::addDigitizationOptions(desc);
   desc.add_options()("evg-input-type",
                      value<std::string>()->default_value("gun"),
                      "Type of evgen input 'gun', 'pythia8'");
                      
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = FW::Options::parse(desc, argc, argv);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
