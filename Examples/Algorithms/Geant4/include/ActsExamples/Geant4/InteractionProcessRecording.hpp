@@ -38,20 +38,10 @@ public:
 
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
 
-    /// The number of tracks per event
-    size_t tracksPerEvent = 0;
-
     /// random number seed 1
     int seed1 = 12345;
     /// random number seed 2
     int seed2 = 45678;
-
-	//~ int pdg = 211;
-	//~ double momentum = 1000.;
-	//~ bool lockAngle = false;
-	//~ double phi = 0.;
-	//~ double theta = 0.5 * M_PI;
-	//~ Acts::Vector3D pos = {0., 0., 0.};
   };
 
   /// Constructor

@@ -11,7 +11,6 @@
 #include <memory>
 #include <map>
 #include <string>
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 

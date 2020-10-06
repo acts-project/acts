@@ -12,7 +12,7 @@
 
 #include <G4Run.hh>
 
-#include "EventAction.hpp"
+#include "OREventAction.hpp"
 
 using namespace ActsExamples;
 
@@ -37,7 +37,7 @@ RunAction::~RunAction() {
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   // initialize event cumulative quantities
-  EventAction::instance()->clear();
+  OREventAction::instance()->clear();
 }
 
 void RunAction::EndOfRunAction(const G4Run* aRun) {

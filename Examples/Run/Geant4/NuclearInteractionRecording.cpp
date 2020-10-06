@@ -18,22 +18,15 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
-
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 
 namespace po = boost::program_options;
-
-//~ using PartRec = FW::Geant4::Collection;
-//~ using PartRec = std::map<int, std::vector<FW::Geant4::ParticleRecord>>;
-//~ using PartRec = 	std::map<int, std::vector<FW::Data::SimVertex<FW::Data::SimParticle>>;
-//~ using WriteIt = FW::WriterT<PartRec>;
 
 namespace ActsExamples
 {
@@ -151,15 +144,12 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
 {
 	  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
-
   ActsExamples::Sequencer sequencer(ActsExamples::Options::readSequencerConfig(vm));
   
   using namespace std::chrono;
   milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
   int    randomSeed1 = ms.count();
   int    randomSeed2 = ms.count() + 10;
-  
-  Acts::GeometryContext geoContext;
 
   // Read particles (initial states) and clusters from CSV files
   auto particleReader = ActsExamples::Options::readCsvParticleReaderConfig(vm);
@@ -182,43 +172,16 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   // --------------------------------------------------------------------------------
   // set up the writer for
   // ---------------------------------------------------------------------------------
-
-  // set up the algorithm writing out the material map
-  //~ ActsExamples::EventGenerator::Config evtGenCfg = FW::Options::readParticleGunOptions(vm); // TODO: add this to the fatras sequencer
-  
   ActsExamples::InteractionProcessRecording::Config g4rConfig;
-  //~ g4rConfig.geant4Service  = g4detector;
   g4rConfig.eventInput = particleReader.outputParticles;
   g4rConfig.eventOutput = "geant-event";
   g4rConfig.detectorConstruction = std::move(g4detector);
   g4rConfig.seed1          = randomSeed1;
   g4rConfig.seed2          = randomSeed2;
-
-  // TODO: make configurable
-  //~ g4rConfig.tracksPerEvent = 1;
-	//~ int pdg = 211;
-	//~ double momentum = 1000.;
-	//~ bool lockAngle = false;
-	//~ double phi = 0.;
-	//~ double theta = 0.5 * M_PI;
-	//~ bool lockPosition = false;
-	//~ Acts::Vector3D pos = {0., 0., 0.};
 	
-	  
   // create the geant4 algorithm
   auto g4rAlgorithm
       = std::make_shared<ActsExamples::InteractionProcessRecording>(std::move(g4rConfig), logLevel);
-
-  // Output directory
-  //~ std::string particleCollection = g4rConfig.particleCollection;
-
-  // Write the propagation steps as ROOT TTree
-  //~ ActsExamples::ParticleRecordWriting::Config config;
-  //~ config.collection  = particleCollection;
-  //~ auto writer
-	//~ = std::make_shared<ActsExamples::ParticleRecordWriting>(
-		//~ config);
-  //~ sequencer.addWriter(writer);
 
   // Append the algorithm and run
   sequencer.addAlgorithm(g4rAlgorithm);
@@ -237,15 +200,6 @@ main(int argc, char* argv[])
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
   ActsExamples::Options::addOutputOptions(desc);
-  ActsExamples::Options::addGeometryOptions(desc);
-  //~ ActsExamples::Options::addParticleGunOptions(desc); // TODO: Replace whatever is given here and in outcomerecoptions
-  //~ ActsExamples::Options::addBFieldOptions(desc);
-  ActsExamples::Options::addRandomNumbersOptions(desc);
-  //~ ActsExamples::Options::addMaterialOptions(desc);
-  //~ ActsExamples::Options::addDigitizationOptions(desc);
-  desc.add_options()("evg-input-type",
-                     value<std::string>()->default_value("gun"),
-                     "Type of evgen input 'gun', 'pythia8'");
                      
   // Add specific options for this geometry
   detector.addOptions(desc);
