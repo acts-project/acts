@@ -39,7 +39,7 @@ class CsvParticleWriter final : public WriterT<SimParticleContainer> {
     /// Where to place output files.
     std::string outputDir;
     /// Output filename stem.
-    std::string outputStem = "particles";
+    std::string outputStem;
     /// Number of decimal digits for floating point precision in output.
     size_t outputPrecision = std::numeric_limits<float>::max_digits10;
   };

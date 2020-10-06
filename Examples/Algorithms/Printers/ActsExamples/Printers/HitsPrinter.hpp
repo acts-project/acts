@@ -16,7 +16,7 @@
 namespace ActsExamples {
 
 /// Print hits within some geometric region-of-interest.
-class PrintHits : public BareAlgorithm {
+class HitsPrinter : public BareAlgorithm {
  public:
   struct Config {
     /// Input cluster collection.
@@ -25,17 +25,16 @@ class PrintHits : public BareAlgorithm {
     std::string inputHitParticlesMap;
     /// Input hit id collection
     std::string inputHitIds;
-    // the following values are (invalid) defaults; should be set by user
-    /// Hit id range which should be printed.
-    size_t hitIdStart = 0u;
-    size_t hitIdLength = 0u;
-    /// Detector selection for which input will be printed.
-    size_t volumeId = 0u;
-    size_t layerId = 0u;
-    size_t moduleId = 0u;
+    // Print hits selected by their indices (zero length to disable).
+    size_t selectIndexStart = 0u;
+    size_t selectIndexLength = 0u;
+    // Print hits within a certain geometry range (zero to disable).
+    size_t selectVolume = 0u;
+    size_t selectLayer = 0u;
+    size_t selectModule = 0u;
   };
 
-  PrintHits(const Config& cfg, Acts::Logging::Level level);
+  HitsPrinter(const Config& cfg, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const;
 

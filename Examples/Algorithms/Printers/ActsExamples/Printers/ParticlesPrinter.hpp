@@ -15,14 +15,14 @@
 namespace ActsExamples {
 
 /// Print all particles.
-class PrintParticles : public BareAlgorithm {
+class ParticlesPrinter : public BareAlgorithm {
  public:
   struct Config {
     /// Input particles collection.
     std::string inputParticles;
   };
 
-  PrintParticles(const Config& cfg, Acts::Logging::Level lvl);
+  ParticlesPrinter(const Config& cfg, Acts::Logging::Level lvl);
 
   ProcessCode execute(const AlgorithmContext& ctx) const;
 

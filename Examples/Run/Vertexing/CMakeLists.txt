@@ -11,7 +11,7 @@ add_executable(
   VertexFinderReaderExample.cpp)
 target_link_libraries(
   ActsExampleVertexFinderReader
-  PRIVATE ${_common_libraries} ActsExamplesIoCsv)
+  PRIVATE ${_common_libraries} ActsExamplesIoCsv ActsExamplesPrinters)
 
 install(
   TARGETS
