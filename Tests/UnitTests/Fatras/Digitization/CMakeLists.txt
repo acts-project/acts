@@ -2,5 +2,7 @@ set(unittest_extra_libraries ActsFatras)
 
 add_unittest(DigitizationData DigitizationDataTests.cpp)
 add_unittest(ChannelCombiner ChannelCombinerTests.cpp)
+add_unittest(ChannelCreator ChannelCreatorTests.cpp)
 add_unittest(ChannelMerger ChannelMergerTests.cpp)
+add_unittest(PlanarSurfaceMask PlanarSurfaceMaskTests.cpp)
 add_unittest(FatrasUncorrelatedHitSmearer UncorrelatedHitSmearerTests.cpp)

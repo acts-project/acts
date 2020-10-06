@@ -17,7 +17,7 @@
 
 namespace Acts {
 class Surface;
-};  // namespace Acts
+}  // namespace Acts
 
 namespace ActsFatras {
 
@@ -42,10 +42,13 @@ struct DigitizationInput {
   DigitizationInput() = delete;
 };
 
-/// A single cell definition: index, cell value
+/// A single cell definition: index, cell central value
 using Cell = std::pair<unsigned int, double>;
 
-/// A channel definition: Cell idenficiation, readout word
+/// A channel definition: Cell idenficiation, readout word, links
+///
+/// @tparam signal_t Type of the signal, requires += operator
+/// @tparam kParameters ... The parameters pack
 template <typename signal_t, Acts::BoundIndices... kParameters>
 struct Channel {
   /// The cell identification in sizeof..(kParameters) dimensions
@@ -64,12 +67,14 @@ struct Channel {
   Channel(std::array<Cell, sizeof...(kParameters)> cellId_, signal_t value_,
           std::unordered_set<unsigned int> links_ = {})
       : cellId(cellId_), value(value_), links(links_) {}
+
+  Channel() = delete;
 };
 
 /// A Cluster definition.
 ///
-/// @tparam signal_t Type of the signal carried
-/// @tparam kParameters Parameters pack for th cluster
+/// @tparam signal_t Type of the signal carried, see above
+/// @tparam kParameters Parameters pack for the cluster
 ///
 template <typename signal_t, Acts::BoundIndices... kParameters>
 struct Cluster {
@@ -89,6 +94,8 @@ struct Cluster {
           std::array<unsigned int, sizeof...(kParameters)> cSize,
           std::vector<Channel<signal_t, kParameters...> > cChannels)
       : parameterSet(pSet), clusterSize(cSize), channels(cChannels) {}
+
+  Cluster() = delete;
 };
 
 }  // namespace ActsFatras
