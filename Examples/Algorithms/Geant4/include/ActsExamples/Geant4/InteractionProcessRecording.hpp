@@ -33,12 +33,11 @@ public:
   /// @class Config
   struct Config
   {
-    std::string eventCollection = "geant-outcome-tracks";
+	std::string eventInput = "";
+    std::string eventOutput = "geant-outcome-tracks";
 
-    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
+    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
 
-    /// The possible gmdl input (optional)
-    std::string gdmlFile;
     /// The number of tracks per event
     size_t tracksPerEvent = 0;
 
@@ -47,15 +46,12 @@ public:
     /// random number seed 2
     int seed2 = 45678;
 
-	int pdg = 211;
-	double momentum = 1000.;
-
-	bool lockAngle = false;
-	double phi = 0.;
-	double theta = 0.5 * M_PI;
-
-	bool lockPosition = false;
-	Acts::Vector3D pos = {0., 0., 0.};
+	//~ int pdg = 211;
+	//~ double momentum = 1000.;
+	//~ bool lockAngle = false;
+	//~ double phi = 0.;
+	//~ double theta = 0.5 * M_PI;
+	//~ Acts::Vector3D pos = {0., 0., 0.};
   };
 
   /// Constructor

@@ -17,7 +17,7 @@ add_executable(
 target_link_libraries(
   ActsNuclearInteractionRecording
   PRIVATE
-  ActsExamplesCommon
+    ActsExamplesCommon
     ActsExamplesDetectorDD4hep
     ActsExamplesFramework
     ActsExamplesGeant4

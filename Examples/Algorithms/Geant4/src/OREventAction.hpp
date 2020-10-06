@@ -55,7 +55,8 @@ class OREventAction final : public G4UserEventAction {
   void clear();
 	
 	Collection
-	processTracks(const int pdg, const double momentum, const double phi, const double theta) const
+	//~ processTracks(const int pdg, const double momentum, const double phi, const double theta) const
+	processTracks() const
 	{
 		// TODO
 		return m_processTracks;

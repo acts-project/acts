@@ -19,7 +19,7 @@ ActsExamples::OREventAction*
 ActsExamples::OREventAction::instance()
 {
   // Static acces function via G4RunManager
-  return fgInstance;
+  return s_instance;
 }
 
 ActsExamples::OREventAction::OREventAction() : G4UserEventAction()
@@ -41,7 +41,7 @@ ActsExamples::OREventAction::BeginOfEventAction(const G4Event*)
 {
   // reset the collection of material steps
   //~ m_particles.clear(); // TODO: Is this one required?
-  ORSteppingAction::Instance()->Reset();
+  ORSteppingAction::instance()->clear();
 }
 
 void
@@ -53,7 +53,7 @@ ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 void
 ActsExamples::OREventAction::clear()
 {
-	m_particles.clear();
+	// TODO | m_processTracks.clear();
 }
 
 //~ void EventAction::EndOfEventAction(const G4Event* event) {
@@ -71,12 +71,3 @@ ActsExamples::OREventAction::clear()
   //~ // write out the RecordedMaterialTrack of one event
   //~ m_materialTracks.push_back(mtrecord);
 //~ }
-
-/// Access the recorded material tracks.
-///
-/// This only contains valid data after the end-of-event action has been
-/// executed.
-const std::vector<Acts::RecordedMaterialTrack>& EventAction::materialTracks()
-    const {
-  return m_materialTracks;
-}
