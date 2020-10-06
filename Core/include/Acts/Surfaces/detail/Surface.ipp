@@ -104,14 +104,14 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
 }
 
 inline FreeRowVector Surface::freeToPathDerivative(
-    const GeometryContext& gctx, const Vector3D& /*unused*/,
-    const Vector3D& direction) const {
-  // The local frame z axis
-  const Vector3D localZAxis = transform(gctx).matrix().block<3, 1>(0, 2);
-  // The normalization factor
-  const double norm = -1.0 / (localZAxis.dot(direction));
+    const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
+    const Vector3D& direction, const RotationMatrix3D& rft) const {
+  // Create the normal and scale it with the projection onto the direction
+  ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
+  norm_vec /= (norm_vec * direction);
+
   FreeRowVector freeToPath = FreeRowVector::Zero();
-  freeToPath.head<3>() = norm * localZAxis.transpose();
+  freeToPath.head<3>() = -1.0 * norm_vec;
 
   return freeToPath;
 }

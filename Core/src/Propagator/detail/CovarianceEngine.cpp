@@ -94,13 +94,13 @@ FreeToBoundMatrix surfaceDerivative(
   // Initialize the transport final frame jacobian
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Initalize the jacobian to local, returns the transposed ref frame
-  surface.initJacobianToLocal(geoContext, jacToLocal,
-                              parameters.segment<3>(eFreePos0),
-                              parameters.segment<3>(eFreeDir0));
+  auto rframeT = surface.initJacobianToLocal(geoContext, jacToLocal,
+                                             parameters.segment<3>(eFreePos0),
+                                             parameters.segment<3>(eFreeDir0));
   // Calculate the form factors for the derivatives
   const FreeRowVector freeToPath =
       surface.freeToPathDerivative(geoContext, parameters.segment<3>(eFreePos0),
-                                   parameters.segment<3>(eFreeDir0));
+                                   parameters.segment<3>(eFreeDir0), rframeT);
   jacobianLocalToGlobal += derivatives * freeToPath * jacobianLocalToGlobal;
   // Return the jacobian to local
   return jacToLocal;

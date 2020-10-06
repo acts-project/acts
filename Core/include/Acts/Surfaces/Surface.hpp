@@ -361,7 +361,6 @@ class Surface : public virtual GeometryObject,
   /// free parameter. The calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
   ///
-  ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
@@ -369,11 +368,13 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the position of the paramters in global
   /// @param direction is the direction of the track
+  /// @param rft is the transposed reference frame (avoids recalculation)
   ///
-  /// @return a five-dim vector
+  /// @return a free vector
   virtual FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
                                              const Vector3D& position,
-                                             const Vector3D& direction) const;
+                                             const Vector3D& direction,
+                                             const RotationMatrix3D& rft) const;
 
   /// Calucation of the path correction for incident
   ///
