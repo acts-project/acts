@@ -663,7 +663,8 @@ class Navigator {
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
 
-    if (state.navigation.navigationBreak || lastHierarchySurfaceReached) {
+    if (state.navigation.navigationBreak ||
+        state.navigation.lastHierarchySurfaceReached) {
       return false;
     }
 
