@@ -711,7 +711,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
         boundarySurfaces = avol->boundarySurfaces();
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
-      auto sfi = srf.intersect(gctx, position, sdir, options.boundaryCheck);
+      auto sfi = srf.intersect(gctx, position, sdir, false);
       if (sfi and sfi.intersection.pathLength > oLimit and
           sfi.intersection.pathLength <= pLimit) {
         sIntersections.push_back(std::move(sfi));
