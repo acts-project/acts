@@ -7,6 +7,9 @@ add_library(
   src/InteractionProcessRecording.cpp
   src/PrimaryGeneratorAction.cpp
   src/RunAction.cpp
+  src/OREventAction.cpp
+  src/ORPrimaryGeneratorAction.cpp
+  src/ORSteppingAction.cpp
   src/SteppingAction.cpp)
 target_compile_definitions(
   ActsExamplesGeant4

@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTFW/Plugins/Geant4/ORSteppingAction.hpp"
-#include "ACTFW/Plugins/Geant4/OREventAction.hpp"
+#include "ORSteppingAction.hpp"
+#include "OREventAction.hpp"
 #include <stdexcept>
 #include "Acts/Utilities/Units.hpp"
 #include "G4Step.hh"

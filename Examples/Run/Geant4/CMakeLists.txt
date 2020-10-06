@@ -17,7 +17,7 @@ add_executable(
 target_link_libraries(
   ActsNuclearInteractionRecording
   PRIVATE
-  ActsExamplesCommon
+    ActsExamplesCommon
     ActsExamplesDetectorDD4hep
     ActsExamplesFramework
     ActsExamplesGeant4
@@ -25,7 +25,9 @@ target_link_libraries(
     Boost::program_options)
     
 install(
-  TARGETS ActsExampleGeantinoRecordingGdml ActsNuclearInteractionRecording
+  TARGETS 
+    ActsExampleGeantinoRecordingGdml 
+    ActsNuclearInteractionRecording
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)

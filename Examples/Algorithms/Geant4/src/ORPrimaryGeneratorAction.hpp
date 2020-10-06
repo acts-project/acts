@@ -32,13 +32,16 @@ namespace ActsExamples {
   {
   public:
     /// Constructor
-    ORPrimaryGeneratorAction(const G4int& pdg = 211,
-                             G4double        momentum       = 1000. * MeV,
-                             G4bool lockAngle = false,
-                             G4double phi = 0.,
-                             G4double theta = 0.5 * M_PI,
-                             G4bool lockPosition = true,
-                             G4ThreeVector pos = {0., 0., 0.},
+    //~ ORPrimaryGeneratorAction(const G4int& pdg = 211,
+                             //~ G4double        momentum       = 1000. * MeV,
+                             //~ G4bool lockAngle = false,
+                             //~ G4double phi = 0.,
+                             //~ G4double theta = 0.5 * M_PI,
+                             //~ G4bool lockPosition = true,
+                             //~ G4ThreeVector pos = {0., 0., 0.},
+                             //~ G4int           randomSeed1  = 12345,
+                             //~ G4int           randomSeed2  = 23456);
+    ORPrimaryGeneratorAction(
                              G4int           randomSeed1  = 12345,
                              G4int           randomSeed2  = 23456);
     /// Destructor
@@ -46,26 +49,32 @@ namespace ActsExamples {
 
     /// Static access method
     static ORPrimaryGeneratorAction*
-    Instance();
+    instance();
 
     /// Interface method to generate the primary
     void
     GeneratePrimaries(G4Event*) final override;
 
-    /// Access method to get the initial direction
-    G4ThreeVector
-    direction()
-    {
-      return m_direction;
-    }
+    //~ /// Access method to get the initial direction
+    //~ G4ThreeVector
+    //~ direction()
+    //~ {
+      //~ return m_direction;
+    //~ }
 
-    /// Access method to get the start position
-    G4ThreeVector
-    startPosition()
-    {
-      return m_position;
-    }
+    //~ /// Access method to get the start position
+    //~ G4ThreeVector
+    //~ startPosition()
+    //~ {
+      //~ return m_position;
+    //~ }
 
+    void prepareParticleGun(G4int pdg,
+    G4double        momentum,
+	 G4double phi,
+	 G4double theta,
+	 G4ThreeVector pos);
+	 
   private:
     /// Instance of the PrimaryGeneratorAction
     static ORPrimaryGeneratorAction* fgInstance;
@@ -73,16 +82,15 @@ namespace ActsExamples {
     /// Pointer to the G4 particle gun
     std::unique_ptr<G4ParticleGun> fParticleGun;
 
-    /// position to be returned
-    G4ThreeVector m_position;
-    /// direction to be returned
-    G4ThreeVector m_direction;
-    
-    G4bool m_lockAngle = false;
-	G4double m_phi = 0.;
-	G4double m_theta = 0.5 * M_PI;
-	G4bool m_lockPosition = true;
-	G4ThreeVector m_pos = {0., 0., 0.};
+    //~ /// position to be returned
+    //~ G4ThreeVector m_position;
+    //~ /// direction to be returned
+    //~ G4ThreeVector m_direction;
+    //~ G4bool m_lockAngle = false;
+	//~ G4double m_phi = 0.;
+	//~ G4double m_theta = 0.5 * M_PI;
+	//~ G4bool m_lockPosition = true;
+	//~ G4ThreeVector m_pos = {0., 0., 0.};
   };
 
 }  // namespace ActsExamples
