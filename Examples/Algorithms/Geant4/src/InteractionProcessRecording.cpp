@@ -15,10 +15,6 @@
 #include <stdexcept>
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
-//~ #include "OREventAction.hpp"
-//~ #include "ORPrimaryGeneratorAction.hpp"
-//~ #include "ORSteppingAction.hpp"
-//~ #include "RunAction.hpp"
 #include "FTFP_BERT.hh"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
@@ -45,8 +41,6 @@ ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  //~ m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(
-      //~ cnf.pdg, cnf.momentum * 1000., cnf.lockAngle, cnf.phi, cnf.theta, cnf.lockPosition, {cnf.pos.x(), cnf.pos.y(), cnf.pos.z()}, m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(new ActsExamples::RunAction());
   m_runManager->SetUserAction(new ActsExamples::OREventAction());
@@ -62,17 +56,22 @@ ActsExamples::InteractionProcessRecording::execute(const ActsExamples::Algorithm
   
   // TODO: params lesen
   const auto initialParticles = context.eventStore.get<ActsExamples::SimParticleContainer>(m_cfg.eventInput);
-std::cout << typeid(initialParticles).name() << std::endl;
-      
-  //~ ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(G4int pdg,
-     //~ G4double        momentum,
-	 //~ G4double phi,
-	 //~ G4double theta,
-	 //~ G4ThreeVector pos);
+std::cout << typeid(initialParticles).name() << " | " << initialParticles.size() << " | " << std::endl;
   
+  
+  for(const auto& part : initialParticles)
+  {
+  
+  const auto pos = part.position();
+  const auto dir = part.unitDirection();
+  //~ ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
+     //~ part.absMomentum(),
+	 //~ {pos[0], pos[1], pos[2]}, {dir[0], dir[1], dir[2]});
+	   
   // Begin with the simulation
-  m_runManager->BeamOn(m_cfg.tracksPerEvent);
-    
+  m_runManager->BeamOn(1);
+  
+}
   // Retrieve the track material tracks from Geant4
   //~ auto recordedParticles
       //~ = ActsExamples::OREventAction::instance()->processTracks(); // TODO: might need to store initial parameters additionally | m_cfg.pdg, m_cfg.momentum, m_cfg.phi, m_cfg.theta); // Keeping momentum in Acts units

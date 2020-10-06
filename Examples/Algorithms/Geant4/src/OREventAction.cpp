@@ -40,7 +40,6 @@ void
 ActsExamples::OREventAction::BeginOfEventAction(const G4Event*)
 {
   // reset the collection of material steps
-  //~ m_particles.clear(); // TODO: Is this one required?
   ORSteppingAction::instance()->clear();
 }
 
