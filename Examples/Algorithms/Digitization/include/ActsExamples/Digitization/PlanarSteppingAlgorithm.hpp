@@ -31,9 +31,17 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input collection of simulated hits.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Output collection of clusters.
     std::string outputClusters;
+    /// Output measurements collection.
+    std::string outputMeasurements;
+    /// Output source links collection.
+    std::string outputSourceLinks;
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputHitParticlesMap;
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputHitSimHitsMap;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Module stepper for geometric clustering.
@@ -52,7 +60,7 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
   struct Digitizable {
