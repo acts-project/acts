@@ -20,11 +20,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+//~ #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
+#include "ActsExamples/Geant4/Geant4Options.hpp"
 
 namespace po = boost::program_options;
 
@@ -139,18 +140,28 @@ namespace ActsExamples
 //~ };
 }
 
-void
-g4SequencerBuild(boost::program_options::variables_map& vm)
+int
+main(int argc, char* argv[])
 {
-	  auto logLevel = ActsExamples::Options::readLogLevel(vm);
+	//~ using po::value;
+
+  // Declare the supported program options.
+  // Setup and parse options
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addSequencerOptions(desc);
+  ActsExamples::Options::addOutputOptions(desc);
+  ActsExamples::Options::addDD4hepOptions(desc);
+  ActsExamples::Options::addGeant4Options(desc); // TODO: use it to provide rng seeds
+  
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
+  if (vm.empty()) {
+    return EXIT_FAILURE;
+  }
+
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   ActsExamples::Sequencer sequencer(ActsExamples::Options::readSequencerConfig(vm));
   
-  using namespace std::chrono;
-  milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
-  int    randomSeed1 = ms.count();
-  int    randomSeed2 = ms.count() + 10;
-
   // Read particles (initial states) and clusters from CSV files
   auto particleReader = ActsExamples::Options::readCsvParticleReaderConfig(vm);
   particleReader.inputStem = "particles";
@@ -176,9 +187,9 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   g4rConfig.eventInput = particleReader.outputParticles;
   g4rConfig.eventOutput = "geant-event";
   g4rConfig.detectorConstruction = std::move(g4detector);
-  g4rConfig.seed1          = randomSeed1;
-  g4rConfig.seed2          = randomSeed2;
-	
+  g4rConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
+  g4rConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
+
   // create the geant4 algorithm
   auto g4rAlgorithm
       = std::make_shared<ActsExamples::InteractionProcessRecording>(std::move(g4rConfig), logLevel);
@@ -186,29 +197,4 @@ g4SequencerBuild(boost::program_options::variables_map& vm)
   // Append the algorithm and run
   sequencer.addAlgorithm(g4rAlgorithm);
   sequencer.run();
-}
-
-int
-main(int argc, char* argv[])
-{
-	using po::value;
-
-  DD4hepDetector detector;
-
-  // Declare the supported program options.
-  // Setup and parse options
-  auto desc = ActsExamples::Options::makeDefaultOptions();
-  ActsExamples::Options::addSequencerOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
-                     
-  // Add specific options for this geometry
-  detector.addOptions(desc);
-  auto vm = ActsExamples::Options::parse(desc, argc, argv);
-  if (vm.empty()) {
-    return EXIT_FAILURE;
-  }
-
-std::cout << "Building g4 sequencer" << std::endl;
-  g4SequencerBuild(vm);
-std::cout << "Done" << std::endl;
 }
