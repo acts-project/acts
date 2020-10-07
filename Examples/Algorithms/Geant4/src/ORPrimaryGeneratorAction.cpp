@@ -11,7 +11,6 @@
 #include "G4Event.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleGun.hh"
-#include "G4ParticleTable.hh"
 #include "G4RandomDirection.hh"
 #include "G4UnitsTable.hh"
 #include "Randomize.hh"
@@ -34,6 +33,8 @@ ActsExamples::ORPrimaryGeneratorAction::ORPrimaryGeneratorAction(G4int          
   G4int nofParticles = 1;
   fParticleGun       = std::make_unique<G4ParticleGun>(nofParticles);
 
+  particleTable = G4ParticleTable::GetParticleTable();
+  
   // set the random seeds
   CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
 }
@@ -55,7 +56,6 @@ void ActsExamples::ORPrimaryGeneratorAction::prepareParticleGun(G4int pdg,
 	 G4ThreeVector pos, G4ThreeVector dir)
 {
 	// Particle type
-  G4ParticleTable*      particleTable = G4ParticleTable::GetParticleTable();
   G4ParticleDefinition* particle = particleTable->FindParticle(pdg);
   fParticleGun->SetParticleDefinition(particle);
   

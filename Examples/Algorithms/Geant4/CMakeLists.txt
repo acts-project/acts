@@ -19,10 +19,10 @@ target_include_directories(
   SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
 target_include_directories(
   ActsExamplesGeant4
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> ${HEPMC3_INCLUDE_DIR})
 target_link_libraries(
   ActsExamplesGeant4
-  PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesIoHepMC3 ${Geant4_LIBRARIES} ${HEPMC3_LIBRARIES} HepPID
   PRIVATE Boost::program_options)
 
 install(

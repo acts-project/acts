@@ -8,7 +8,6 @@
 
 #include <string>
 #include <fstream>
-#include <chrono>
 #include <boost/program_options.hpp>
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
@@ -20,14 +19,11 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "Acts/Utilities/Units.hpp"
-//~ #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
-
-namespace po = boost::program_options;
 
 namespace ActsExamples
 {
@@ -143,15 +139,13 @@ namespace ActsExamples
 int
 main(int argc, char* argv[])
 {
-	//~ using po::value;
-
   // Declare the supported program options.
   // Setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   ActsExamples::Options::addSequencerOptions(desc);
   ActsExamples::Options::addOutputOptions(desc);
   ActsExamples::Options::addDD4hepOptions(desc);
-  ActsExamples::Options::addGeant4Options(desc); // TODO: use it to provide rng seeds
+  ActsExamples::Options::addGeant4Options(desc);
   
   auto vm = ActsExamples::Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -172,7 +166,8 @@ main(int argc, char* argv[])
   // DETECTOR:
   // --------------------------------------------------------------------------------
   // Setup the DD4hep detector
-  auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig<po::variables_map>(vm);
+  //~ auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig<boost::program_options::variables_map>(vm);
+  auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig(vm);
   auto geometrySvc = std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(dd4hepCfg);
 
   std::unique_ptr<G4VUserDetectorConstruction> g4detector =
@@ -191,10 +186,6 @@ main(int argc, char* argv[])
   g4rConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
 
   // create the geant4 algorithm
-  auto g4rAlgorithm
-      = std::make_shared<ActsExamples::InteractionProcessRecording>(std::move(g4rConfig), logLevel);
-
-  // Append the algorithm and run
-  sequencer.addAlgorithm(g4rAlgorithm);
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::InteractionProcessRecording>(std::move(g4rConfig), logLevel));
   sequencer.run();
 }

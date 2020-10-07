@@ -13,6 +13,7 @@
 #include "G4ThreeVector.hh"
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
+#include "G4ParticleTable.hh"
 
 class G4ParticleGun;
 class G4Event;
@@ -56,6 +57,8 @@ namespace ActsExamples {
 
     /// Pointer to the G4 particle gun
     std::unique_ptr<G4ParticleGun> fParticleGun;
+    
+    G4ParticleTable*      particleTable;
   };
 
 }  // namespace ActsExamples

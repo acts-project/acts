@@ -14,6 +14,8 @@
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 
+//~ #include <HepMC3/GenEvent.h>
+
 namespace ActsExamples {
 	
 	struct Collection
@@ -54,7 +56,6 @@ class OREventAction final : public G4UserEventAction {
   void clear();
 	
 	Collection
-	//~ processTracks(const int pdg, const double momentum, const double phi, const double theta) const
 	processTracks() const
 	{
 		// TODO
