@@ -64,9 +64,9 @@ std::cout << typeid(initialParticles).name() << " | " << initialParticles.size()
   
   const auto pos = part.position();
   const auto dir = part.unitDirection();
-  //~ ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
-     //~ part.absMomentum(),
-	 //~ {pos[0], pos[1], pos[2]}, {dir[0], dir[1], dir[2]});
+  ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
+     part.absMomentum(),
+	 {pos[0], pos[1], pos[2]}, {dir[0], dir[1], dir[2]});
 	   
   // Begin with the simulation
   m_runManager->BeamOn(1);
