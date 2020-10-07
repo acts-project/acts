@@ -136,13 +136,13 @@ Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
   const Vector3D localZAxis = rotation.col(2);
 
   // Cosine of angle between momentum direction and local frame z axis
-  const double dirZ = localZAxis.dot(direction);
+  const double dz = localZAxis.dot(direction);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
-  alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dirZ;
+  alignToPath.segment<3>(eAlignmentCenter0) = localZAxis.transpose() / dz;
   alignToPath.segment<3>(eAlignmentRotation0) =
-      -pcRowVec * rotToLocalZAxis / dirZ;
+      -pcRowVec * rotToLocalZAxis / dz;
 
   return alignToPath;
 }

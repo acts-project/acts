@@ -132,8 +132,8 @@ class LineSurface : public Surface {
                             const Vector3D& position, const Vector3D& direction,
                             const BoundVector& pars) const final;
 
-  /// Calculate the derivative of path length at the geometry contraint w.r.t.
-  /// free parameter.
+  /// Calculate the derivative of path length at the geometry constraint or POCA
+  /// w.r.t. free parameter.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the position of the paramters in global
@@ -254,9 +254,10 @@ class LineSurface : public Surface {
   /// Return properly formatted class name for screen output */
   std::string name() const override;
 
-  /// Calculate the derivative of path length w.r.t. alignment parameters of the
-  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
-  /// its rotation represented with extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or POCA
+  /// w.r.t. alignment parameters of the surface (i.e. local frame origin in
+  /// global 3D Cartesian coordinates and its rotation represented with
+  /// extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.

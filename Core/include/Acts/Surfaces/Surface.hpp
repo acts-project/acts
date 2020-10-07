@@ -357,9 +357,9 @@ class Surface : public virtual GeometryObject,
                                                const Vector3D& position,
                                                const Vector3D& direction) const;
 
-  /// Calculate the derivative of path length at the geometry contraint w.r.t.
-  /// free parameter. The calculation is identical for all surfaces where the
-  /// reference frame does not depend on the direction
+  /// Calculate the derivative of path length at the geometry constraint or POCA
+  /// w.r.t. free parameter. The calculation is identical for all surfaces where
+  /// the reference frame does not depend on the direction
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
@@ -473,9 +473,10 @@ class Surface : public virtual GeometryObject,
       const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
       const Vector3D& direction) const;
 
-  /// Calculate the derivative of path length w.r.t. alignment parameters of the
-  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
-  /// its rotation represented with extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or POCA
+  /// w.r.t. alignment parameters of the surface (i.e. local frame origin in
+  /// global 3D Cartesian coordinates and its rotation represented with
+  /// extrinsic Euler angles)
   ///
   /// @note Re-implementation is needed for surface whose intersection with
   /// track is not its local xy plane, e.g. LineSurface, CylinderSurface and
