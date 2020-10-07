@@ -8,12 +8,13 @@ add_library(
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
+  src/Validation/DuplicationPlotTool.cpp
   src/Validation/EffPlotTool.cpp
   src/Validation/FakeRatePlotTool.cpp
-  src/Validation/DuplicationPlotTool.cpp
+  src/Validation/ResPlotTool.cpp
+  src/Validation/TrackClassification.cpp
   src/Validation/TrackSummaryPlotTool.cpp
-  src/Validation/ProtoTrackClassification.cpp
-  src/Validation/ResPlotTool.cpp)
+)
 target_include_directories(
   ActsExamplesFramework
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
