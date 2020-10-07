@@ -273,7 +273,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
     m_trajNr = iTraj;
 
     // The trajectory entry indices and the multiTrajectory
-    const auto& [trackTips, mj] = traj.trajectory();
+    const auto& trackTips = traj.tips();
+    const auto& mj = traj.multiTrajectory();
     if (trackTips.empty()) {
       ACTS_WARNING("Empty multiTrajectory.");
       continue;

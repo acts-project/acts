@@ -96,7 +96,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Loop over all trajectories
   for (const auto& traj : trajectories) {
     // The trajectory entry indices and the multiTrajectory
-    const auto& [trackTips, mj] = traj.trajectory();
+    const auto& trackTips = traj.tips();
+    const auto& mj = traj.multiTrajectory();
     if (trackTips.empty()) {
       ACTS_WARNING("Empty multiTrajectory.");
       continue;

@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesFramework SHARED
-  src/EventData/SimMultiTrajectory.cpp
   src/EventData/DigitizedHit.cpp
   src/Framework/BareAlgorithm.cpp
   src/Framework/BareService.cpp
