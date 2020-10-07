@@ -101,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // initialize OnnxRuntime plugin
-  Ort::Env env(ORT_LOGGING_LEVEL_ERROR, "MLTrackClassifier");
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
   Acts::MLTrackClassifier neuralNetworkClassifier(
       env, m_cfg.onnxModelFilename.c_str());
 
