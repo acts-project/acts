@@ -47,7 +47,8 @@ public:
   /// Constructor
   InteractionProcessRecording(Config&&        cnf,
                     Acts::Logging::Level level = Acts::Logging::INFO);
-
+  ~InteractionProcessRecording() {m_runManager = nullptr; std::cout << "Recording destructor" << std::endl;}
+  
   ActsExamples::ProcessCode
   execute(const AlgorithmContext& context) const final override;
 
