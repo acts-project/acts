@@ -206,6 +206,9 @@ class Navigator {
     bool startLayerResolved = false;
     /// Indicator if the target is reached
     bool targetReached = false;
+    /// Indicator that the last VolumeHierarchy surface was reached
+    /// skip the next layer targeting to the next boundary/volume
+    bool lastHierarchySurfaceReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
     // The navigation stage (@todo: integrate break, target)
@@ -310,6 +313,7 @@ class Navigator {
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
         state.navigation.navLayers.clear();
         state.navigation.navLayerIter = state.navigation.navLayers.end();
+        state.navigation.lastHierarchySurfaceReached = false;
         // Update volume information
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
@@ -615,13 +619,23 @@ class Navigator {
 
     // Reached the end of the surface iteration
     if (state.navigation.navSurfaceIter == state.navigation.navSurfaces.end()) {
-      ACTS_VERBOSE(volInfo(state)
-                   << "Last surface on layer reached, switching layer.");
       // first clear the surface cache
       state.navigation.navSurfaces.clear();
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
-      // now switch to the next layer
-      ++state.navigation.navLayerIter;
+
+      if (state.navigation.navLayerIter != state.navigation.navLayers.end()) {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Last surface on layer reached, switching layer.");
+        // now switch to the next layer
+        ++state.navigation.navLayerIter;
+      } else {
+        ACTS_VERBOSE(volInfo(state)
+                     << "Last surface on layer reached, and no layer.");
+        // first clear the surface cache
+        state.navigation.lastHierarchySurfaceReached = true;
+        state.navigation.navigationBreak =
+            (state.navigation.currentVolume == state.navigation.targetVolume);
+      }
     }
     // Do not return to the propagator
     return false;
@@ -649,7 +663,8 @@ class Navigator {
   bool targetLayers(propagator_state_t& state, const stepper_t& stepper) const {
     const auto& logger = state.options.logger;
 
-    if (state.navigation.navigationBreak) {
+    if (state.navigation.navigationBreak ||
+        state.navigation.lastHierarchySurfaceReached) {
       return false;
     }
 
@@ -705,7 +720,8 @@ class Navigator {
           // did we find any surfaces?
 
           // Check: are we on the first surface?
-          if (state.navigation.currentSurface == nullptr ||
+          if ((state.navigation.currentSurface == nullptr &&
+               state.navigation.navSurfaces.empty()) ||
               protoNavSurfaces.front().intersection.pathLength > 1_um) {
             // we are not, go on
             state.navigation.navSurfaces = std::move(protoNavSurfaces);
