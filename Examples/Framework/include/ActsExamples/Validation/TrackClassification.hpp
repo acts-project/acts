@@ -10,6 +10,7 @@
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimMultiTrajectory.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
@@ -21,13 +22,38 @@ namespace ActsExamples {
 /// Associate a particle to its hit count within a proto track.
 struct ParticleHitCount {
   ActsFatras::Barcode particleId;
-  std::size_t hitCount;
+  size_t hitCount;
 };
 
-/// Identify all particles that contribute to the proto track and count hits.
+/// Identify all particles that contribute to the proto track.
+///
+/// @param[in] hitParticlesMap Map hit indices to contributing particles
+/// @param[in] protoTrack The proto track to classify
+/// @param[out] particleHitCount List of contributing particles
+///
+/// The list of contributing particles is ordered according to their hit count,
+/// i.e. the first element is the majority particle that contributes the most
+/// hits to the track. There can be both hits without a generating particle
+/// (noise hits) and hits that have more than one generating particle. The sum
+/// of the particle hit count must not be identical to the size of the proto
+/// track.
 void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
+    std::vector<ParticleHitCount>& particleHitCount);
+
+/// Identify all particles that contribute to a trajectory.
+///
+/// @param[in] hitParticlesMap Map hit indices to contributing particles
+/// @param[in] trajectory The multi trajectory to classify
+/// @param[in] trajectoryTip Which trajectory in the multi trajectory to use
+/// @param[out] particleHitCount List of contributing particles
+///
+/// See `identifyContributingParticles` for proto tracks for further
+/// information.
+void identifyContributingParticles(
+    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+    const SimMultiTrajectory& trajectory, size_t trajectoryTip,
     std::vector<ParticleHitCount>& particleHitCount);
 
 }  // namespace ActsExamples
