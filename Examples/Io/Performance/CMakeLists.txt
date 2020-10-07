@@ -3,7 +3,8 @@ if(ACTS_BUILD_PLUGIN_ONNX)
     ActsExamplesIoPerformance SHARED
     ActsExamples/Io/Performance/TrackFinderPerformanceWriter.cpp
     ActsExamples/Io/Performance/TrackFitterPerformanceWriter.cpp
-    ActsExamples/Io/Performance/CKFPerformanceWriter.cpp)
+    ActsExamples/Io/Performance/CKFPerformanceWriter.cpp
+    ActsExamples/Io/Performance/CKFPerformanceWriterOptions.cpp)
 else()
   add_library(
     ActsExamplesIoPerformance SHARED
@@ -18,7 +19,7 @@ target_include_directories(
 if(ACTS_BUILD_PLUGIN_ONNX)
   target_link_libraries(
     ActsExamplesIoPerformance
-    PUBLIC ActsExamplesFramework ActsPluginOnnx
+    PUBLIC ActsExamplesFramework ActsPluginOnnx Boost::program_options
     PRIVATE ActsCore ROOT::Core ROOT::Tree)
 else()
   target_link_libraries(

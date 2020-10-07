@@ -15,8 +15,7 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
+#include "ActsExamples/Io/Performance/CKFPerformanceWriterOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -45,6 +44,7 @@ int runRecCKFTracks(int argc, char* argv[],
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
+  Options::addCKFPerformanceWriterOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -183,7 +183,8 @@ int runRecCKFTracks(int argc, char* argv[],
       trackParamsWriter, logLevel));
 
   // Write CKF performance data
-  CKFPerformanceWriter::Config perfWriterCfg;
+  auto perfWriterCfg = Options::readCKFPerformanceWriterConfig(vm);
+  perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputMeasurementParticlesMap =
