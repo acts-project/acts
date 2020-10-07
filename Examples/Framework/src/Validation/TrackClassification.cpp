@@ -16,25 +16,25 @@ namespace {
 
 /// Increase the hit count for the given particle id by one.
 inline void increaseHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCount,
+    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts,
     ActsFatras::Barcode particleId) {
   // linear search since there is no ordering
-  auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
+  auto it = std::find_if(particleHitCounts.begin(), particleHitCounts.end(),
                          [=](const ActsExamples::ParticleHitCount& phc) {
                            return (phc.particleId == particleId);
                          });
   // either increase count if we saw the particle before or add it
-  if (it != particleHitCount.end()) {
+  if (it != particleHitCounts.end()) {
     it->hitCount += 1u;
   } else {
-    particleHitCount.push_back({particleId, 1u});
+    particleHitCounts.push_back({particleId, 1u});
   }
 }
 
 /// Sort hit counts by decreasing values, i.e. majority particle comes first.
 inline void sortHitCount(
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCount) {
-  std::sort(particleHitCount.begin(), particleHitCount.end(),
+    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+  std::sort(particleHitCounts.begin(), particleHitCounts.end(),
             [](const ActsExamples::ParticleHitCount& lhs,
                const ActsExamples::ParticleHitCount& rhs) {
               return (lhs.hitCount > rhs.hitCount);
@@ -46,23 +46,23 @@ inline void sortHitCount(
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCount) {
-  particleHitCount.clear();
+    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
+  particleHitCounts.clear();
 
   for (auto hitIndex : protoTrack) {
     // register all particles that generated this hit
     for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCount, hitParticle.second);
+      increaseHitCount(particleHitCounts, hitParticle.second);
     }
   }
-  sortHitCount(particleHitCount);
+  sortHitCount(particleHitCounts);
 }
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const SimMultiTrajectory& trajectory, size_t tip,
-    std::vector<ParticleHitCount>& particleHitCount) {
-  particleHitCount.clear();
+    std::vector<ParticleHitCount>& particleHitCounts) {
+  particleHitCounts.clear();
 
   if (not trajectory.hasTrajectory(tip)) {
     return;
@@ -76,9 +76,9 @@ void ActsExamples::identifyContributingParticles(
     // register all particles that generated this hit
     auto hitIndex = state.uncalibrated().index();
     for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCount, hitParticle.second);
+      increaseHitCount(particleHitCounts, hitParticle.second);
     }
     return true;
   });
-  sortHitCount(particleHitCount);
+  sortHitCount(particleHitCounts);
 }
