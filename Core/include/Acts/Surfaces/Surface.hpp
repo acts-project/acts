@@ -444,12 +444,42 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& derivatives,
       const Vector3D& position, const Vector3D& direction) const;
 
+  /// Calculate the derivative of bound local w.r.t.
+  /// alignment parameters of the surface (i.e. origin in global 3D Cartesian
+  /// coordinates and its rotation represented with extrinsic Euler angles)
+  /// without any path correction
+  ///
+  /// @note This function should be used together with alignment to path
+  /// derivative to get the full alignment to bound derivative. Here, only the
+  /// derivatives of bound local (eBoundLoc0, eBoundLoc1) are calculated is
+  /// because other bound parameters (eBoundPhi, eBoundTheta, eBoundQOverP,
+  /// eBoundTime) are not relevant to the alignment parameters when the path
+  /// correction is not considered.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
+  /// its rotation
+  /// @param rotToLocalYAxis The derivative of local frame y axis vector w.r.t.
+  /// its rotation
+  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
+  /// its rotation
+  /// @param position The position of the paramters in global
+  /// @param direction The direction of the track
+  ///
+  /// @return Derivative of bound local w.r.t. alignment parameters
+  AlignmentToBoundLocalMatrix alignmentToBoundLocalDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
+      const RotationMatrix3D& rotToLocalYAxis,
+      const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+      const Vector3D& direction) const;
+
   /// Calculate the derivative of path length w.r.t. alignment parameters of the
   /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
   /// its rotation represented with extrinsic Euler angles)
   ///
-  /// Re-implementation is needed for surface whose intersection with track is
-  /// not its local xy plane, e.g. LineSurface, CylinderSurface and ConeSurface
+  /// @note Re-implementation is needed for surface whose intersection with
+  /// track is not its local xy plane, e.g. LineSurface, CylinderSurface and
+  /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.

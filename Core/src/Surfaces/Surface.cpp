@@ -50,6 +50,49 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& derivatives,
     const Vector3D& position, const Vector3D& direction) const {
+  // The local frame rotation
+  const auto& rotation = transform(gctx).rotation();
+  // 1) Calcuate the derivative of local frame axes w.r.t its rotation
+  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
+  // 2) Calculate the derivative of bound parameter local position w.r.t.
+  // alignment parameters without path length correction
+  const auto& alignToBoundLocalWithoutCorrection =
+      alignmentToBoundLocalDerivativeWithoutCorrection(
+          gctx, rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis, position,
+          direction);
+  // 3) Calculate the derivative of path length w.r.t. alignment parameters
+  const auto& alignToPath =
+      alignmentToPathDerivative(gctx, rotToLocalXAxis, rotToLocalYAxis,
+                                rotToLocalZAxis, position, direction);
+  // 4) Calculate the jacobian from free parameters to bound parameters
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+  initJacobianToLocal(gctx, jacToLocal, position, direction);
+  // 5) Initialize the derivative of bound parameters w.r.t. alignment
+  // parameters
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
+  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
+  // loc3DToLocBound*alignToLoc3D +
+  // jacToLocal*derivatives*alignToPath
+  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
+      alignToBoundLocalWithoutCorrection +
+      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
+          alignToPath;
+  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
+  // eBoundTime, it's jacToLocal*derivatives*alignToPath
+  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
+      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
+      alignToPath;
+
+  return alignToBound;
+}
+
+Acts::AlignmentToBoundLocalMatrix
+Acts::Surface::alignmentToBoundLocalDerivativeWithoutCorrection(
+    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
+    const RotationMatrix3D& rotToLocalYAxis,
+    const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+    const Vector3D& /*unused*/) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
@@ -59,11 +102,7 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   const Vector3D localXAxis = rotation.col(0);
   const Vector3D localYAxis = rotation.col(1);
   const Vector3D localZAxis = rotation.col(2);
-
-  // 1) Calcuate the derivative of local frame axes w.r.t its rotation
-  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
-  // 2) Calculate the derivative of local 3D Cartesian coordinates w.r.t.
+  // Calculate the derivative of local 3D Cartesian coordinates w.r.t.
   // alignment parameters (without path correction)
   AlignmentToLocalCartesianMatrix alignToLoc3D =
       AlignmentToLocalCartesianMatrix::Zero();
@@ -76,38 +115,12 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
       pcRowVec * rotToLocalYAxis;
   alignToLoc3D.block<1, 3>(eZ, eAlignmentRotation0) =
       pcRowVec * rotToLocalZAxis;
-  // 3) Calculate the derivative of track position represented in
-  // (local) bound track parameters (could be in non-Cartesian coordinates)
-  // w.r.t. track position represented in local 3D Cartesian coordinates.
-  const auto& loc3DToLocBound =
+  // The derivative of bound local w.r.t. local 3D Cartesian coordinates
+  LocalCartesianToBoundLocalMatrix loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
-  // 4) Calculate the derivative of path length w.r.t. alignment parameters
-  const auto& alignToPath =
-      alignmentToPathDerivative(gctx, rotToLocalXAxis, rotToLocalYAxis,
-                                rotToLocalZAxis, position, direction);
-  // 5) Calculate the jacobian from free parameters to bound parameters
-  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  initJacobianToLocal(gctx, jacToLocal, position, direction);
-  // 6) Initialize the derivative of bound parameters w.r.t. alignment
-  // parameters
-  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
-  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
-  // loc3DToLocBound*alignToLoc3D +
-  // jacToLocal*derivatives*alignToPath
-  // @note For line surface, the alignment to bound local without path
-  // correction cannot be decomposed into the alignment->loca3D and
-  // local3D->localBond. Thus, reimplementation is needed.
-  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
-      loc3DToLocBound * alignToLoc3D +
-      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
-          alignToPath;
-  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
-  // eBoundTime, it's jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
-      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
-      alignToPath;
-
-  return alignToBound;
+  // @todo For line surface, this derivative cannot be decomposed into the
+  // alignment->loca3D and local3D->boundLocal?
+  return loc3DToBoundLoc * alignToLoc3D;
 }
 
 Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
