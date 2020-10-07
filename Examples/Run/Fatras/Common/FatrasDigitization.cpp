@@ -51,7 +51,7 @@ void setupDigitization(
       // clusters as root
       RootDigitizationWriter::Config smearWriterRoot;
       smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
-      smearWriterRoot.inputSimulatedHits = smearCfg.inputSimulatedHits;
+      smearWriterRoot.inputSimulatedHits = smearCfg.inputSimHits;
       smearWriterRoot.filePath =
           joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
       smearWriterRoot.smearers = smearCfg.smearers;
@@ -62,7 +62,7 @@ void setupDigitization(
   } else if (vars["digi-geometric-3d"].as<bool>()) {
     // Configure the digitizer
     PlanarSteppingAlgorithm::Config digi;
-    digi.inputSimulatedHits = "hits";
+    digi.inputSimHits = "hits";
     digi.outputClusters = "clusters";
     digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
         Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
@@ -76,7 +76,7 @@ void setupDigitization(
       // clusters as root
       CsvPlanarClusterWriter::Config clusterWriterCsv;
       clusterWriterCsv.inputClusters = digi.outputClusters;
-      clusterWriterCsv.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterCsv.inputSimulatedHits = digi.inputSimHits;
       clusterWriterCsv.outputDir = outputDir;
       sequencer.addWriter(
           std::make_shared<CsvPlanarClusterWriter>(clusterWriterCsv, logLevel));
@@ -87,7 +87,7 @@ void setupDigitization(
       // clusters as root
       RootPlanarClusterWriter::Config clusterWriterRoot;
       clusterWriterRoot.inputClusters = digi.outputClusters;
-      clusterWriterRoot.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterRoot.inputSimulatedHits = digi.inputSimHits;
       clusterWriterRoot.filePath =
           joinPaths(outputDir, digi.outputClusters + ".root");
       sequencer.addWriter(std::make_shared<RootPlanarClusterWriter>(
