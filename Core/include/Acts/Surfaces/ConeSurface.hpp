@@ -199,6 +199,27 @@ class ConeSurface : public Surface {
   /// Return properly formatted class name for screen output
   std::string name() const override;
 
+  /// Calculate the derivative of path length w.r.t. alignment parameters of the
+  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
+  /// its rotation represented with extrinsic Euler angles)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
+  /// its rotation
+  /// @param rotToLocalYAxis The derivative of local frame y axis vector w.r.t.
+  /// its rotation
+  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
+  /// its rotation
+  /// @param position The position of the paramters in global
+  /// @param direction The direction of the track
+  ///
+  /// @return Derivative of path length w.r.t. the alignment parameters
+  AlignmentRowVector alignmentToPathDerivative(
+      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
+      const RotationMatrix3D& rotToLocalYAxis,
+      const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+      const Vector3D& direction) const final;
+
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
   ///

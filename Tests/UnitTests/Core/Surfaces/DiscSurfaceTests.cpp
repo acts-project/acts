@@ -272,8 +272,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      discSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
-                                                   globalPosition, direction);
+      discSurfaceObject->alignmentToPathDerivative(
+          tgContext, rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis,
+          globalPosition, direction);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;

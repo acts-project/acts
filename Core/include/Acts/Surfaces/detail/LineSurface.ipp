@@ -205,7 +205,8 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
 }
 
 inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
+    const GeometryContext& gctx, const RotationMatrix3D& /*unused*/,
+    const RotationMatrix3D& /*unused*/, const RotationMatrix3D& rotToLocalZAxis,
     const Vector3D& position, const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =

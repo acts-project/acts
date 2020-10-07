@@ -452,6 +452,10 @@ class Surface : public virtual GeometryObject,
   /// not its local xy plane, e.g. LineSurface, CylinderSurface and ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
+  /// its rotation
+  /// @param rotToLocalYAxis The derivative of local frame y axis vector w.r.t.
+  /// its rotation
   /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
   /// its rotation
   /// @param position The position of the paramters in global
@@ -459,8 +463,10 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-      const Vector3D& position, const Vector3D& direction) const;
+      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
+      const RotationMatrix3D& rotToLocalYAxis,
+      const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+      const Vector3D& direction) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
