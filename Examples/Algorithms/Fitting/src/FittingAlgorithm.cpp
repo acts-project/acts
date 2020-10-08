@@ -10,6 +10,7 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -18,6 +19,9 @@ ActsExamples::FittingAlgorithm::FittingAlgorithm(Config cfg,
                                                  Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("FittingAlgorithm", level),
       m_cfg(std::move(cfg)) {
+  if (m_cfg.inputMeasurements.empty()) {
+    throw std::invalid_argument("Missing input measurement collection");
+  }
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing input source links collection");
   }
@@ -36,8 +40,10 @@ ActsExamples::FittingAlgorithm::FittingAlgorithm(Config cfg,
 ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
+  const auto& measurements =
+      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
   const auto& sourceLinks =
-      ctx.eventStore.get<SimSourceLinkContainer>(m_cfg.inputSourceLinks);
+      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   const auto& protoTracks =
       ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
   const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
@@ -50,7 +56,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
   }
 
   // Prepare the output data with MultiTrajectory
-  TrajectoryContainer trajectories;
+  TrajectoriesContainer trajectories;
   trajectories.reserve(protoTracks.size());
 
   // Construct a perigee surface as the target surface
@@ -58,14 +64,14 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
       Acts::Vector3D{0., 0., 0.});
 
   // Set the KalmanFitter options
-  Acts::KalmanFitterOptions<SimSourceLinkCalibrator, Acts::VoidOutlierFinder>
+  Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>
       kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-                SimSourceLinkCalibrator(), Acts::VoidOutlierFinder(),
+                MeasurementCalibrator(measurements), Acts::VoidOutlierFinder(),
                 Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
                 &(*pSurface));
 
   // Perform the fit for each input track
-  std::vector<SimSourceLink> trackSourceLinks;
+  std::vector<IndexSourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -74,7 +80,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      trajectories.push_back(SimMultiTrajectory());
+      trajectories.push_back(Trajectories());
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
@@ -104,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
       trackTips.reserve(1);
       trackTips.emplace_back(fitOutput.trackTip);
       // The fitted parameters container. One element (at most) here.
-      IndexedParams indexedParams;
+      Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
@@ -122,7 +128,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
                                            << result.error());
       // Fit failed. Add an empty result so the output container has
       // the same number of entries as the input.
-      trajectories.push_back(SimMultiTrajectory());
+      trajectories.push_back(Trajectories());
     }
   }
 

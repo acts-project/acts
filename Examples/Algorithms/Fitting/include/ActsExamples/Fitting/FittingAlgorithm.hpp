@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "ActsExamples/EventData/SimSourceLink.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
@@ -26,13 +27,14 @@ namespace ActsExamples {
 
 class FittingAlgorithm final : public BareAlgorithm {
  public:
-  using FitterResult = Acts::Result<Acts::KalmanFitterResult<SimSourceLink>>;
+  using FitterOptions =
+      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
+  using FitterResult = Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
-  using FitterFunction = std::function<FitterResult(
-      std::vector<SimSourceLink>&, const TrackParameters&,
-      const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
-                                      Acts::VoidOutlierFinder>&)>;
+  using FitterFunction =
+      std::function<FitterResult(const std::vector<IndexSourceLink>&,
+                                 const TrackParameters&, const FitterOptions&)>;
 
   /// Create the fitter function implementation.
   ///
@@ -43,6 +45,8 @@ class FittingAlgorithm final : public BareAlgorithm {
       Options::BFieldVariant magneticField);
 
   struct Config {
+    /// Input measurements collection.
+    std::string inputMeasurements;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.

@@ -31,10 +31,9 @@ struct FitterFunctionImpl {
   FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
   ActsExamples::FittingAlgorithm::FitterResult operator()(
-      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<ActsExamples::SimSourceLinkCalibrator,
-                                      Acts::VoidOutlierFinder>& options) const {
+      const ActsExamples::FittingAlgorithm::FitterOptions& options) const {
     return fitter.fit(sourceLinks, initialParameters, options);
   };
 };
