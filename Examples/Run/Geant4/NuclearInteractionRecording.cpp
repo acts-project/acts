@@ -12,7 +12,7 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/InteractionProcessRecording.hpp"
+#include "ActsExamples/Plugins/HepMC3/InteractionProcessRecording.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"

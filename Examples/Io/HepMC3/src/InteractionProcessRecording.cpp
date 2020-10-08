@@ -12,8 +12,8 @@
 //~ #include "EventAction.hpp"
 //~ #include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
 //~ #include "SteppingAction.hpp"
-#include "RunAction.hpp"
-#include "ActsExamples/Geant4/InteractionProcessRecording.hpp"
+#include "ORRunAction.hpp"
+#include "ActsExamples/Plugins/HepMC3/InteractionProcessRecording.hpp"
 #include <iostream>
 #include <stdexcept>
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -44,10 +44,10 @@ ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  //~ m_runManager->SetUserAction(new ActsExamples::RunAction());
-  //~ m_runManager->SetUserAction(new ActsExamples::OREventAction());
-  //~ m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
-  //~ m_runManager->SetUserAction(new ActsExamples::ORSteppingAction());
+  m_runManager->SetUserAction(new ActsExamples::ORRunAction());
+  m_runManager->SetUserAction(new ActsExamples::OREventAction());
+  m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
+  m_runManager->SetUserAction(new ActsExamples::ORSteppingAction());
   m_runManager->Initialize();
 }
 

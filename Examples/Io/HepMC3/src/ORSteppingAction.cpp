@@ -61,7 +61,8 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 	p.parentid = step->GetTrack()->GetParentID();
 	p.volume = (step->GetPostStepPoint()->GetPhysicalVolume() != nullptr) ? step->GetPostStepPoint()->GetPhysicalVolume()->GetName() : "No volume";
 	p.process = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-//~ std::cout << p.process << std::endl;	
+std::cout << step->GetTrack()->GetParentID() << " | " << step->GetTrack()->GetTrackLength() << " | " << step->GetPreStepPoint()->GetLocalTime() 
+	<< " | " << step->GetPreStepPoint()->GetProcessDefinedStep()->GetProcessName() << " | " << step->GetTrack()->GetCreatorProcess()->GetProcessName() << std::endl;	
 	
 	m_particles[p.trackid].push_back(p);
 }
