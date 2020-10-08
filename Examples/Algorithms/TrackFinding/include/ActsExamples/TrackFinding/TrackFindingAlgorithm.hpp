@@ -11,6 +11,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
@@ -25,12 +26,12 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// Track finding function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finding-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<SimSourceLinkCalibrator,
+      Acts::CombinatorialKalmanFilterOptions<MeasurementCalibrator,
                                              Acts::CKFSourceLinkSelector>;
   using TrackFinderResult =
-      Acts::Result<Acts::CombinatorialKalmanFilterResult<SimSourceLink>>;
+      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const SimSourceLinkContainer&, const TrackParameters&,
+      const IndexSourceLinkContainer&, const TrackParameters&,
       const TrackFinderOptions&)>;
 
   /// Create the track finder function implementation.
@@ -42,6 +43,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       Options::BFieldVariant magneticField);
 
   struct Config {
+    std::string inputMeasurements;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input initial track parameter estimates for for each proto track.
