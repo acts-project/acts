@@ -48,19 +48,33 @@ namespace Test {
 
 struct ExtendedMinimalSourceLink {
   size_t sourceID = 0;
+  const FittableMeasurement<ExtendedMinimalSourceLink>* measurement = nullptr;
 
-  const FittableMeasurement<ExtendedMinimalSourceLink>* meas{nullptr};
-
-  bool operator==(const ExtendedMinimalSourceLink& rhs) const {
-    return meas == rhs.meas;
-  }
+  ExtendedMinimalSourceLink() = default;
+  ExtendedMinimalSourceLink(
+      size_t sid, const FittableMeasurement<ExtendedMinimalSourceLink>* m)
+      : sourceID(sid), measurement(m) {}
 
   const Surface& referenceSurface() const {
-    return *MeasurementHelpers::getSurface(*meas);
+    return *MeasurementHelpers::getSurface(*measurement);
   }
 
-  const FittableMeasurement<ExtendedMinimalSourceLink>& operator*() const {
-    return *meas;
+  friend bool operator==(const ExtendedMinimalSourceLink& lhs,
+                         const ExtendedMinimalSourceLink& rhs) {
+    return (lhs.measurement == rhs.measurement);
+  }
+  friend bool operator!=(const ExtendedMinimalSourceLink& lhs,
+                         const ExtendedMinimalSourceLink& rhs) {
+    return (lhs.measurement != rhs.measurement);
+  }
+};  // namespace Test
+
+struct ExtendedCalibrator {
+  template <typename parameters_t>
+  const FittableMeasurement<ExtendedMinimalSourceLink>& operator()(
+      const ExtendedMinimalSourceLink& sourceLink,
+      const parameters_t& /* parameters */) const {
+    return *sourceLink.measurement;
   }
 };
 
@@ -283,8 +297,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   using Smoother = GainMatrixSmoother;
   using SourceLinkSelector = CKFSourceLinkSelector;
   using CombinatorialKalmanFilter =
-      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,
-                                SourceLinkSelector>;
+      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother>;
 
   // Implement different chi2/nSourceLinks cutoff at different detector level
   // NB: pixel volumeID = 2, strip volumeID= 3
@@ -321,9 +334,10 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
     auto logger =
         getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE);
-    CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, sourcelinkSelectorConfig,
-        LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
+    CombinatorialKalmanFilterOptions<ExtendedCalibrator, SourceLinkSelector>
+        ckfOptions(tgContext, mfContext, calContext, ExtendedCalibrator(),
+                   SourceLinkSelector(sourcelinkSelectorConfig),
+                   LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
