@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 namespace {
+
 template <typename TrackFinder>
 struct TrackFinderFunctionImpl {
   TrackFinder trackFinder;
@@ -30,11 +31,12 @@ struct TrackFinderFunctionImpl {
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::SimSourceLinkContainer& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>&
-          options) const {
+      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
+      const {
     return trackFinder.findTracks(sourceLinks, initialParameters, options);
   };
 };
+
 }  // namespace
 
 ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
@@ -56,10 +58,8 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
         using Stepper = Acts::EigenStepper<MagneticField>;
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
-        using SourceLinkSelector = Acts::CKFSourceLinkSelector;
-        using CKF =
-            Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother,
-                                            SourceLinkSelector>;
+        using Ckf =
+            Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
         // construct all components for the track finder
         MagneticField field(std::move(inputField));
@@ -69,10 +69,10 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        CKF trackFinder(std::move(propagator));
+        Ckf trackFinder(std::move(propagator));
 
         // build the track finder functions. owns the track finder object.
-        return TrackFinderFunctionImpl<CKF>(std::move(trackFinder));
+        return TrackFinderFunctionImpl<Ckf>(std::move(trackFinder));
       },
       std::move(magneticField));
 }
