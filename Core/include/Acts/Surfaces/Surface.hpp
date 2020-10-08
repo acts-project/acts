@@ -426,23 +426,27 @@ class Surface : public virtual GeometryObject,
   virtual Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                               size_t lseg) const = 0;
 
-  /// The derivative of bound track parameters w.r.t. alignment
+  /// The derivative of bound local (eBoundLoc0, eBoundLoc1) w.r.t. alignment
   /// parameters of its reference surface (i.e. local frame origin in
   /// global 3D Cartesian coordinates and its rotation represented with
   /// extrinsic Euler angles)
   ///
+  /// @note Here, only the derivatives of bound local are calculated is
+  /// because other bound parameters (eBoundPhi, eBoundTheta, eBoundQOverP,
+  /// eBoundTime) are not changing with the alignment parameters assuming a
+  /// linerized track model with limited mis-alignment. Also, the residual used
+  /// to the calculate the chi2 are only relevant to the bound local
+  ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param derivatives Path length derivatives of the free, nominal
-  /// parameters to help evaluate change of free track parameters caused by
   /// change of alignment parameters
   /// @param position The position of the paramters in global
   /// @param direction The direction of the track
   ///
-  /// @return Derivative of bound track parameters w.r.t. local frame
+  /// @return Derivative of bound local position w.r.t. local frame
   /// alignment parameters
-  AlignmentToBoundMatrix alignmentToBoundDerivative(
-      const GeometryContext& gctx, const FreeVector& derivatives,
-      const Vector3D& position, const Vector3D& direction) const;
+  AlignmentToBoundLocalMatrix alignmentToLocalDerivative(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& direction) const;
 
   /// Calculate the derivative of bound local w.r.t.
   /// alignment parameters of the surface (i.e. origin in global 3D Cartesian
@@ -450,11 +454,7 @@ class Surface : public virtual GeometryObject,
   /// without any path correction
   ///
   /// @note This function should be used together with alignment to path
-  /// derivative to get the full alignment to bound derivative. Here, only the
-  /// derivatives of bound local (eBoundLoc0, eBoundLoc1) are calculated is
-  /// because other bound parameters (eBoundPhi, eBoundTheta, eBoundQOverP,
-  /// eBoundTime) are not relevant to the alignment parameters when the path
-  /// correction is not considered.
+  /// derivative to get the full alignment to bound local derivative.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
@@ -467,7 +467,7 @@ class Surface : public virtual GeometryObject,
   /// @param direction The direction of the track
   ///
   /// @return Derivative of bound local w.r.t. alignment parameters
-  AlignmentToBoundLocalMatrix alignmentToBoundLocalDerivativeWithoutCorrection(
+  AlignmentToBoundLocalMatrix alignmentToLocalDerivativeWithoutCorrection(
       const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
       const RotationMatrix3D& rotToLocalYAxis,
       const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,

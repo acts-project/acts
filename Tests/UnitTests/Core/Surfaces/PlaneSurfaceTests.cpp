@@ -304,13 +304,11 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
-  FreeVector derivatives = FreeVector::Zero();
-  derivatives.segment<3>(0) = momentum;
-  const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, derivatives,
-                                                     globalPosition, direction);
-  const AlignmentRowVector& alignToloc0 = alignToBound.block<1, 6>(0, 0);
-  const AlignmentRowVector& alignToloc1 = alignToBound.block<1, 6>(1, 0);
+  const AlignmentToBoundLocalMatrix& alignToLocal =
+      planeSurfaceObject->alignmentToLocalDerivative(tgContext, globalPosition,
+                                                     direction);
+  const AlignmentRowVector& alignToloc0 = alignToLocal.block<1, 6>(0, 0);
+  const AlignmentRowVector& alignToloc1 = alignToLocal.block<1, 6>(1, 0);
   // The expected results
   AlignmentRowVector expAlignToloc0;
   expAlignToloc0 << -1, 0, 0, 0, 0, 2;

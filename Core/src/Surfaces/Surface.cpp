@@ -47,9 +47,9 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   return false;
 }
 
-Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
-    const GeometryContext& gctx, const FreeVector& derivatives,
-    const Vector3D& position, const Vector3D& direction) const {
+Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction) const {
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
   // 1) Calcuate the derivative of local frame axes w.r.t its rotation
@@ -57,8 +57,8 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
       detail::rotationToLocalAxesDerivative(rotation);
   // 2) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
-  const auto& alignToBoundLocalWithoutCorrection =
-      alignmentToBoundLocalDerivativeWithoutCorrection(
+  const auto& alignToLocalWithoutCorrection =
+      alignmentToLocalDerivativeWithoutCorrection(
           gctx, rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis, position,
           direction);
   // 3) Calculate the derivative of path length w.r.t. alignment parameters
@@ -70,25 +70,15 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   initJacobianToLocal(gctx, jacToLocal, position, direction);
   // 5) Initialize the derivative of bound parameters w.r.t. alignment
   // parameters
-  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
-  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
-  // loc3DToLocBound*alignToLoc3D +
-  // jacToLocal*derivatives*alignToPath
-  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
-      alignToBoundLocalWithoutCorrection +
-      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
-          alignToPath;
-  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
-  // eBoundTime, it's jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
-      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
-      alignToPath;
+  AlignmentToBoundLocalMatrix alignToLocal =
+      alignToLocalWithoutCorrection +
+      jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) * direction * alignToPath;
 
-  return alignToBound;
+  return alignToLocal;
 }
 
 Acts::AlignmentToBoundLocalMatrix
-Acts::Surface::alignmentToBoundLocalDerivativeWithoutCorrection(
+Acts::Surface::alignmentToLocalDerivativeWithoutCorrection(
     const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
     const RotationMatrix3D& rotToLocalYAxis,
     const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
