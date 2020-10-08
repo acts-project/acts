@@ -39,21 +39,21 @@
 
 namespace Acts {
 
-/// @brief Options struct how the Fitter is called
+/// Combined options for the Kalman fitter.
 ///
-/// It contains the context of the fitter call, the outlier finder, the
-/// optional surface where to express the fit result and configurations for
-/// material effects and smoothing options
-///
-///
-/// @note the context objects must be provided
+/// @tparam calibrator_t Type of the source link calibrator
+/// @tparam outlier_finder_t Type of the outlier finder
 template <typename calibrator_t, typename outlier_finder_t>
 struct KalmanFitterOptions {
-  /// PropagatorOptions with context
+  using Calibrator = calibrator_t;
+  using OutlierFinder = outlier_finder_t;
+
+  /// PropagatorOptions with context.
   ///
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
+  /// @param calibrator_t The source link calibrator
   /// @param outlierFinder_ The outlier finder
   /// @param logger_ The logger wrapper
   /// @param pOPtions The plain propagator options
@@ -64,8 +64,8 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      calibrator_t&& calibrator_,
-                      outlier_finder_t&& outlierFinder_, LoggerWrapper logger_,
+                      Calibrator&& calibrator_, OutlierFinder&& outlierFinder_,
+                      LoggerWrapper logger_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
@@ -81,6 +81,8 @@ struct KalmanFitterOptions {
         energyLoss(eLoss),
         backwardFiltering(bwdFiltering),
         logger(logger_) {}
+  /// Contexts are required and the options must not be default-constructible.
+  KalmanFitterOptions() = delete;
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -89,11 +91,11 @@ struct KalmanFitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  /// The source link calibrator
-  calibrator_t calibrator;
+  /// The source link calibrator.
+  Calibrator calibrator;
 
-  /// The outlier finder
-  outlier_finder_t outlierFinder;
+  /// The outlier finder.
+  OutlierFinder outlierFinder;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -906,6 +908,7 @@ class KalmanFitter {
   /// @tparam source_link_t Source link type identifying uncalibrated input
   /// measurements.
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
