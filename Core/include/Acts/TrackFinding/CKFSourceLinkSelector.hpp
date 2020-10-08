@@ -17,7 +17,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <limits>
-#include <map>
 
 namespace Acts {
 
@@ -43,7 +42,6 @@ struct SourceLinkSelectorCuts {
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
 struct CKFSourceLinkSelector {
- public:
   /// Geometry-dependent cut configuration.
   ///
   /// Different components on the geometry can require different cut settings.
@@ -188,7 +186,7 @@ struct CKFSourceLinkSelector {
     return Result<void>::success();
   }
 
-  /// The config
+ private:
   Config m_config;
 };
 

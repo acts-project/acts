@@ -67,7 +67,6 @@ template <typename calibrator_t, typename source_link_selector_t>
 struct CombinatorialKalmanFilterOptions {
   using Calibrator = calibrator_t;
   using SourceLinkSelector = source_link_selector_t;
-  using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
 
   /// PropagatorOptions with context
   ///
@@ -88,7 +87,7 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
-      Calibrator&& calibrator_, const SourceLinkSelectorConfig& slsCfg,
+      Calibrator&& calibrator_, SourceLinkSelector&& sourceLinkSelector_,
       LoggerWrapper logger_, const PropagatorPlainOptions& pOptions,
       const Surface* rSurface = nullptr, bool mScattering = true,
       bool eLoss = true, bool rSmoothing = true)
@@ -96,7 +95,7 @@ struct CombinatorialKalmanFilterOptions {
         magFieldContext(mctx),
         calibrationContext(cctx),
         calibrator(std::move(calibrator_)),
-        sourcelinkSelectorConfig(slsCfg),
+        sourcelinkSelector(std::move(sourceLinkSelector_)),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -117,7 +116,7 @@ struct CombinatorialKalmanFilterOptions {
   Calibrator calibrator;
 
   /// The config for the source link selector
-  SourceLinkSelectorConfig sourcelinkSelectorConfig;
+  SourceLinkSelector sourcelinkSelector;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -1136,8 +1135,7 @@ class CombinatorialKalmanFilter {
 
     // copy calibrator and source link selector
     combKalmanActor.m_calibrator = tfOptions.calibrator;
-    combKalmanActor.m_sourcelinkSelector.m_config =
-        tfOptions.sourcelinkSelectorConfig;
+    combKalmanActor.m_sourcelinkSelector = tfOptions.sourcelinkSelector;
 
     // Run the CombinatorialKalmanFilter
     auto result = m_propagator.template propagate(sParameters, propOptions);
