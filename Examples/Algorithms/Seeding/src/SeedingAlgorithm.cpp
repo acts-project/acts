@@ -113,8 +113,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   config.deltaRMax = 60.;
   config.collisionRegionMin = -250;
   config.collisionRegionMax = 250.;
-  config.zMin = -500.;
-  config.zMax = 500.;
+  config.zMin = -2000.;
+  config.zMax = 2000.;
   config.maxSeedsPerSpM = 1;
   config.cotThetaMax = 7.40627;  // 2.7 eta
   config.sigmaScattering = 2.25;
