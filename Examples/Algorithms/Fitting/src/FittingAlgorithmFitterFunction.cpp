@@ -1,12 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
@@ -18,7 +19,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
