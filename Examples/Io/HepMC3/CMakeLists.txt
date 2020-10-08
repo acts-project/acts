@@ -14,7 +14,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoHepMC3
-  PUBLIC ActsCore ActsExamplesFramework ${HEPMC3_LIBRARIES} HepPID)
+  PUBLIC ActsCore ActsExamplesFramework ${HepMC3_LIBRARIES} HepPID)
 
 install(
   TARGETS ActsExamplesIoHepMC3
