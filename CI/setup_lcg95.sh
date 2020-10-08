@@ -22,4 +22,7 @@ lcg=/cvmfs/sft.cern.ch/lcg/views/${release}/${platform}
 source ${lcg}/setup.sh
 # extra variables required to build acts
 export DD4hep_DIR=${lcg}
-#~ export HepMC3_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_96/x86_64-${ACTS_OS}-${ACTS_COMPILER}
+#~ export HepMC3_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-${ACTS_OS}-${ACTS_COMPILER}/share/HepMC3/cmake/
+export HepMC3_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-${ACTS_OS}-${ACTS_COMPILER}/
+#~ export HepMC3_INCLUDE_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-${ACTS_OS}-${ACTS_COMPILER}/include/HepMC3/
+#~ export HepMC3_INCLUDE_DIR=/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-${ACTS_OS}-${ACTS_COMPILER}/include/
