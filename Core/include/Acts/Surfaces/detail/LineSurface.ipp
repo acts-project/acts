@@ -24,21 +24,21 @@ inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
 inline Result<Vector2D> LineSurface::globalToLocal(const GeometryContext& gctx,
                                                    const Vector3D& position,
                                                    const Vector3D& momentum,
-                                                   double tolerance) const {
+                                                   double /*tolerance*/) const {
+  using VectorHelpers::perp;
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
+  Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  // Bring the global position into the local frame
+  Vector3D loc3Dframe = sTransform.inverse() * position;
+  // construct localPosition with sign*perp(candidate) and z.()
+  Vector2D lposition(perp(loc3Dframe), loc3Dframe.z());
   Vector3D sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-  // The vector from center to position
-  Vector3D pcVec = position - sCenter;
-  // The measurement reference frame
-  RotationMatrix3D rframe = referenceFrame(gctx, position, momentum);
-  // The position coordinates in the measurement reference frame
-  Vector3D rframePos = rframe.transpose() * pcVec;
-  // Check if the position is on the track POCA
-  if (rframePos.z() * rframePos.z() > tolerance * tolerance) {
-    return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
-  }
-  return Result<Vector2D>::success({rframePos.x(), rframePos.y()});
+  Vector3D decVec(position - sCenter);
+  // assign the right sign
+  double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
+  lposition[eBoundLoc0] *= sign;
+  return Result<Vector2D>::success(lposition);
 }
 
 inline std::string LineSurface::name() const {
