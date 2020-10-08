@@ -26,6 +26,8 @@
 #include <TFile.h>
 #include <TString.h>
 
+#include "detail/AverageSimHits.hpp"
+
 ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
     const ActsExamples::RootDigitizationWriter::Config& cfg,
     Acts::Logging::Level lvl)
@@ -92,8 +94,6 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
   const auto& hitSimHitsMap =
       ctx.eventStore.get<IndexMultimap<Index>>(m_cfg.inputHitSimHitsMap);
 
-  std::vector<Index> simHitIndices;
-
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
@@ -116,15 +116,10 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
           dTree->fillIdentification(ctx.eventNumber, geoId);
 
           // Find the contributing simulated hits
-          auto simHitsRange = makeRange(hitSimHitsMap.equal_range(hitIdx));
-          simHitIndices.clear();
-          simHitIndices.reserve(simHitsRange.size());
-          for (auto [_, simHitIdx] : simHitsRange) {
-            simHitIndices.push_back(simHitIdx);
-          }
-
-          auto [local, pos4, dir] = extractAverageTruthParameters(
-              ctx.geoContext, surface, simHits, simHitIndices);
+          auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+          // Use average truth in the case of multiple contributing sim hits
+          auto [local, pos4, dir] =
+              detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
           dTree->fillTruthParameters(local, pos4, dir);
           dTree->fillBoundMeasurement(m);
           dTree->tree->Fill();
@@ -133,46 +128,4 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
-}
-
-std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D>
-ActsExamples::RootDigitizationWriter::extractAverageTruthParameters(
-    const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const SimHitContainer& simHits, const std::vector<Index>& simHitIndices) {
-  Acts::Vector2D avgLocal = Acts::Vector2D::Zero();
-  Acts::Vector4D avgPos4 = Acts::Vector4D::Zero();
-  Acts::Vector3D avgDir = Acts::Vector3D::Zero();
-
-  for (Index simHitIdx : simHitIndices) {
-    // we assume that the indices are within valid ranges so we do not need to
-    // check their validity again.
-    const auto& simHit = *simHits.nth(simHitIdx);
-
-    // transforming first to local positions and average that ensures that the
-    // averaged position is still on the surface. the averaged global position
-    // might not be on the surface anymore.
-    auto result =
-        surface.globalToLocal(gCtx, simHit.position(), simHit.unitDirection());
-    if (result.ok()) {
-      avgLocal += result.value();
-    } else {
-      ACTS_WARNING("Simulated hit "
-                   << simHitIdx << " is not on the corresponding surface "
-                   << surface.geometryId() << "; use [0,0] as local position");
-    }
-    // global position should already be at the intersection. no need to perform
-    // an additional intersection call.
-    avgPos4 += simHit.position4();
-    avgDir += simHit.unitDirection();
-  }
-
-  // only need to average if there are at least two inputs
-  if (2 <= simHitIndices.size()) {
-    double scale = 1 / simHitIndices.size();
-    avgLocal *= scale;
-    avgPos4 *= scale;
-    avgDir.normalize();
-  }
-
-  return {avgLocal, avgPos4, avgDir};
 }

@@ -211,22 +211,6 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const MeasurementContainer& measurements) final;
 
-  /// Create unique truth represenation for simulated hits.
-  ///
-  /// @param gCtx The geometry context for this
-  /// @param surface The reference surface of the measurement
-  /// @param simHits The simulated hits container
-  /// @param simHitIndices Selection of simulated hits from the container
-  /// @return a local position, a 4D global position, a direction
-  ///
-  /// If more than one hit contributes to a measurement, the average truth
-  /// information is returned.
-  std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D>
-  extractAverageTruthParameters(const Acts::GeometryContext& gCtx,
-                                const Acts::Surface& surface,
-                                const SimHitContainer& simHits,
-                                const std::vector<Index>& simHitIndices);
-
  private:
   Config m_cfg;
   std::mutex m_writeMutex;  ///< protect multi-threaded writes
