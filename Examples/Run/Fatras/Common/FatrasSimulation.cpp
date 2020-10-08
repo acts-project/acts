@@ -182,7 +182,7 @@ void setupSimulationAlgorithms(
 
     // write simulated hits
     ActsExamples::RootSimHitWriter::Config writeHits;
-    writeHits.inputSimulatedHits = fatras.outputSimHits;
+    writeHits.inputSimHits = fatras.outputSimHits;
     writeHits.filePath =
         ActsExamples::joinPaths(outputDir, fatras.outputSimHits + ".root");
     sequencer.addWriter(

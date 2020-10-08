@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   clusterReaderCfg.outputClusters = "clusters";
   clusterReaderCfg.outputHitIds = "hit_ids";
   clusterReaderCfg.outputHitParticlesMap = "hit_particles_map";
-  clusterReaderCfg.outputSimulatedHits = "hits";
+  clusterReaderCfg.outputSimHits = "hits";
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
 
@@ -102,8 +102,11 @@ int main(int argc, char* argv[]) {
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimulatedHits = clusterReaderCfg.outputSimulatedHits;
+  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
+  hitSmearingCfg.outputHitParticlesMap = "digi_hit_particles_map";
+  hitSmearingCfg.outputHitSimHitsMap = "digi_hit_simhits_map";
   hitSmearingCfg.sigmaLoc0 = 25_um;
   hitSmearingCfg.sigmaLoc1 = 100_um;
   hitSmearingCfg.randomNumbers = rnd;
@@ -143,6 +146,7 @@ int main(int argc, char* argv[]) {
 
   // setup the fitter
   FittingAlgorithm::Config fitter;
+  fitter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   fitter.inputInitialTrackParameters =
@@ -164,15 +168,16 @@ int main(int argc, char* argv[]) {
 
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
-  perfFinder.inputParticles = inputParticles;
-  perfFinder.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  perfFinder.inputParticles = inputParticles;
+  perfFinder.inputHitParticlesMap = hitSmearingCfg.outputHitParticlesMap;
   perfFinder.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputParticles = inputParticles;
   perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputParticles = inputParticles;
+  perfFitter.inputHitParticlesMap = hitSmearingCfg.outputHitParticlesMap;
   perfFitter.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));

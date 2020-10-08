@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
   clusterReaderCfg.outputClusters = "clusters";
   clusterReaderCfg.outputHitIds = "hit_ids";
   clusterReaderCfg.outputHitParticlesMap = "hit_particles_map";
-  clusterReaderCfg.outputSimulatedHits = "hits";
+  clusterReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
 
@@ -102,8 +102,11 @@ int main(int argc, char* argv[]) {
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimulatedHits = clusterReaderCfg.outputSimulatedHits;
+  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
+  hitSmearingCfg.outputHitParticlesMap = "digi_hit_particles_map";
+  hitSmearingCfg.outputHitSimHitsMap = "digi_hit_simhits_map";
   hitSmearingCfg.sigmaLoc0 = 25_um;
   hitSmearingCfg.sigmaLoc1 = 100_um;
   hitSmearingCfg.randomNumbers = rnd;
@@ -135,6 +138,7 @@ int main(int argc, char* argv[]) {
   // It takes all the source links created from truth hit smearing, seeds from
   // truth particle smearing and source link selection config
   auto trackFindingCfg = Options::readTrackFindingConfig(vm);
+  trackFindingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackFindingCfg.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
@@ -146,8 +150,9 @@ int main(int argc, char* argv[]) {
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
-  perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
+  perfWriterCfg.inputParticles = inputParticles;
+  perfWriterCfg.inputHitParticlesMap = hitSmearingCfg.outputHitParticlesMap;
   perfWriterCfg.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));

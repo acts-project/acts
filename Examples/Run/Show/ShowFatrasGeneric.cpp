@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
   readClustersCfg.outputClusters = "clusters";
   readClustersCfg.outputHitParticlesMap = "hit_particle_map";
   readClustersCfg.outputHitIds = "hit_ids";
-  readClustersCfg.outputSimulatedHits = "simulated_hits";
+  readClustersCfg.outputSimHits = "simulated_hits";
   readClustersCfg.trackingGeometry = trackingGeometry;
   sequencer.addReader(std::make_shared<ActsExamples::CsvPlanarClusterReader>(
       readClustersCfg, logLevel));
