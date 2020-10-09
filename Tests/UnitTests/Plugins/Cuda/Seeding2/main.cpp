@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
   // Set up the seedfinder objects.
   Acts::Seedfinder<TestSpacePoint> seedfinder_host(sfConfig);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedfinder_device(
-      sfConfig, filterConfig, deviceCuts);
+      sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.
