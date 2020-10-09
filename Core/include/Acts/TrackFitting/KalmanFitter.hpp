@@ -257,14 +257,17 @@ class KalmanFitter {
       // Stage::boundaryTarget after navigator status call which means the extra
       // layers on the reversed-propagation starting volume won't be targeted.
       // @Todo: Let the navigator do all the re-initialization
-      if (result.reset and state.navigation.navSurfaceIter ==
-                               state.navigation.navSurfaces.end()) {
-        // So the navigator target call will target layers
-        state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
-        // We only do this after the reversed-propagation starting layer has
-        // been processed
-        result.reset = false;
-      }
+      if constexpr (not isDirectNavigator) {
+	  if (result.reset and state.navigation.navSurfaceIter ==
+	      state.navigation.navSurfaces.end()) {
+	    // So the navigator target call will target layers
+	    state.navigation.navigationStage = 
+	      KalmanNavigator::Stage::layerTarget;
+	    // We only do this after the backward-propagation 
+	    // starting layer has been processed
+	    result.reset = false;
+	  }
+	}
 
       // Update:
       // - Waiting for a current surface
@@ -412,8 +415,9 @@ class KalmanFitter {
           // Set the navigation state
           state.navigation.startSurface = &st.referenceSurface();
           if (state.navigation.startSurface->associatedLayer() != nullptr) {
-            state.navigation.startLayer =
-                state.navigation.startSurface->associatedLayer();
+	    state.navigation.startLayer =
+	      state.navigation.startSurface->associatedLayer();
+	       
           }
           state.navigation.startVolume =
               state.navigation.startLayer->trackingVolume();
@@ -1110,7 +1114,7 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+	  kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
     // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1123,12 +1127,13 @@ class KalmanFitter {
     kalmanActor.energyLoss = kfOptions.energyLoss;
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
+    // Set config for outlier finder
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
     // Set the surface sequence
     auto& dInitializer =
         kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
-    dInitializer.surfaceSequence = sSequence;
+    dInitializer.navSurfaces = sSequence;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);
