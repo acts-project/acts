@@ -24,25 +24,24 @@
 
 namespace {
 
-template <typename Fitter>
-struct FitterFunctionImpl {
-  Fitter fitter;
+template <typename track_fitter_t>
+struct TrackFitterFunctionImpl {
+  track_fitter_t trackFitter;
 
-  FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
+  TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
 
-  ActsExamples::FittingAlgorithm::FitterResult operator()(
+  ActsExamples::FittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<ActsExamples::SimSourceLinkCalibrator,
-                                      Acts::VoidOutlierFinder>& options) const {
-    return fitter.fit(sourceLinks, initialParameters, options);
+      const ActsExamples::FittingAlgorithm::TrackFitterOptions& options) const {
+    return trackFitter.fit(sourceLinks, initialParameters, options);
   };
 };
 
 }  // namespace
 
-ActsExamples::FittingAlgorithm::FitterFunction
-ActsExamples::FittingAlgorithm::makeFitterFunction(
+ActsExamples::FittingAlgorithm::TrackFitterFunction
+ActsExamples::FittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
@@ -50,7 +49,7 @@ ActsExamples::FittingAlgorithm::makeFitterFunction(
 
   // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
-      [trackingGeometry](auto&& inputField) -> FitterFunction {
+      [trackingGeometry](auto&& inputField) -> TrackFitterFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -69,10 +68,10 @@ ActsExamples::FittingAlgorithm::makeFitterFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter fitter(std::move(propagator));
+        Fitter trackFitter(std::move(propagator));
 
         // build the fitter functions. owns the fitter object.
-        return FitterFunctionImpl<Fitter>(std::move(fitter));
+        return TrackFitterFunctionImpl<Fitter>(std::move(trackFitter));
       },
       std::move(magneticField));
 }
