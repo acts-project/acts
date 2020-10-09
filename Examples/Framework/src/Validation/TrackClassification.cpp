@@ -60,15 +60,15 @@ void ActsExamples::identifyContributingParticles(
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const SimMultiTrajectory& trajectory, size_t tip,
+    const Trajectories& trajectories, size_t tip,
     std::vector<ParticleHitCount>& particleHitCounts) {
   particleHitCounts.clear();
 
-  if (not trajectory.hasTrajectory(tip)) {
+  if (not trajectories.hasTrajectory(tip)) {
     return;
   }
 
-  trajectory.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
+  trajectories.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
     // no truth info with non-measurement state
     if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       return true;

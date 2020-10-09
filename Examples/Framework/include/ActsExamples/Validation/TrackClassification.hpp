@@ -10,7 +10,7 @@
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimMultiTrajectory.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstddef>
@@ -45,15 +45,15 @@ void identifyContributingParticles(
 /// Identify all particles that contribute to a trajectory.
 ///
 /// @param[in] hitParticlesMap Map hit indices to contributing particles
-/// @param[in] trajectory The multi trajectory to classify
-/// @param[in] trajectoryTip Which trajectory in the multi trajectory to use
+/// @param[in] trajectories The input trajectories to classify
+/// @param[in] trajectoryTip Which trajectory in the trajectories to use
 /// @param[out] particleHitCounts List of contributing particles
 ///
 /// See `identifyContributingParticles` for proto tracks for further
 /// information.
 void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const SimMultiTrajectory& trajectory, size_t trajectoryTip,
+    const Trajectories& trajectories, size_t trajectoryTip,
     std::vector<ParticleHitCount>& particleHitCounts);
 
 }  // namespace ActsExamples
