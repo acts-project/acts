@@ -18,9 +18,8 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
-  PUBLIC
-    ActsCore ActsExamplesDetectorDD4hep ActsExamplesFramework
-    ${Geant4_LIBRARIES})
+  PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}
+  PRIVATE Boost::program_options)
 
 install(
   TARGETS ActsExamplesGeant4

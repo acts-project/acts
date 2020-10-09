@@ -122,6 +122,20 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
+  Vector3D globalPositionOff =
+      globalPosition +
+      planeSurfaceObject->normal(tgContext, localPosition) * 0.1;
+
+  BOOST_CHECK(
+      planeSurfaceObject->globalToLocal(tgContext, globalPositionOff, momentum)
+          .error());
+  BOOST_CHECK(planeSurfaceObject
+                  ->globalToLocal(tgContext, globalPositionOff, momentum, 0.05)
+                  .error());
+  BOOST_CHECK(planeSurfaceObject
+                  ->globalToLocal(tgContext, globalPositionOff, momentum, 0.2)
+                  .ok());
+
   /// Test isOnSurface
   Vector3D offSurface{0, 1, -2.};
   BOOST_CHECK(planeSurfaceObject->isOnSurface(tgContext, globalPosition,

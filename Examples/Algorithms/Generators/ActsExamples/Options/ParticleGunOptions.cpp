@@ -10,7 +10,7 @@
 
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Generators/MultiplicityGenerators.hpp"
-#include "ActsExamples/Generators/ParametricProcessGenerator.hpp"
+#include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -59,7 +59,7 @@ ActsExamples::Options::readParticleGunOptions(
   auto eta = vm["pg-eta-range"].template as<read_range>();
   auto pt = vm["pg-pt-range"].template as<read_range>();
 
-  ParametricProcessGenerator::Config pgCfg;
+  ParametricParticleGenerator::Config pgCfg;
   pgCfg.numParticles = vm["pg-nparticles"].template as<size_t>();
   pgCfg.d0Range = {{d0[0] * 1_mm, d0[1] * 1_mm}};
   pgCfg.z0Range = {{z0[0] * 1_mm, z0[1] * 1_mm}};
@@ -75,7 +75,7 @@ ActsExamples::Options::readParticleGunOptions(
   cfg.generators = {
       {FixedMultiplicityGenerator{1},
        FixedVertexGenerator{{0.0, 0.0, 0.0, 0.0}},
-       ParametricProcessGenerator{pgCfg}},
+       ParametricParticleGenerator{pgCfg}},
   };
 
   return cfg;

@@ -127,13 +127,15 @@ class PlaneSurface : public Surface {
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
-  /// @param lposition local 2D position to be filled (given by reference for
   /// method symmetry)
+  /// @param tolerance optional tolerance within which a point is considered
+  /// valid on surface
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
-                                 const Vector3D& position,
-                                 const Vector3D& momentum) const override;
+  Result<Vector2D> globalToLocal(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum,
+      double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
   ///

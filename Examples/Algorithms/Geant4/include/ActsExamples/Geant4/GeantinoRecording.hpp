@@ -14,11 +14,12 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
-#include "G4VUserDetectorConstruction.hh"
 
 #include <memory>
 #include <mutex>
 #include <string>
+
+#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 

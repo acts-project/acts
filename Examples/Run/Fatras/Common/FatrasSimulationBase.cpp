@@ -24,14 +24,13 @@
 #include "ActsExamples/Fatras/FatrasOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Generators/FlattenEvent.hpp"
-#include "ActsExamples/Generators/ParticleSelector.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
@@ -93,15 +92,10 @@ void setupSimulationAlgorithms(
 
   // Convert generated events to selected particles
   auto select = ActsExamples::ParticleSelector::readConfig(variables);
-  select.inputEvent = "event_generated";
-  select.outputEvent = "event_selected";
+  select.inputParticles = "particles_generated";
+  select.outputParticles = "particles_selected";
   sequencer.addAlgorithm(
       std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
-  ActsExamples::FlattenEvent::Config flatten;
-  flatten.inputEvent = select.outputEvent;
-  flatten.outputParticles = "particles_selected";
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::FlattenEvent>(flatten, logLevel));
 
   // setup propagator-related types
   // use the default navigation
@@ -148,7 +142,7 @@ void setupSimulationAlgorithms(
   // construct/add the simulation algorithm
   auto fatras =
       ActsExamples::Options::readFatrasConfig(variables, std::move(simulator));
-  fatras.inputParticles = flatten.outputParticles;
+  fatras.inputParticles = select.outputParticles;
   fatras.outputParticlesInitial = "particles_initial";
   fatras.outputParticlesFinal = "particles_final";
   fatras.outputHits = "hits";

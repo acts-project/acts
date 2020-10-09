@@ -8,12 +8,11 @@
 
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Generators/FlattenEvent.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
-#include "ActsExamples/Printers/PrintParticles.hpp"
+#include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
 
@@ -43,38 +42,35 @@ int main(int argc, char* argv[]) {
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
 
   // event generation w/ particle gun
-  EventGenerator::Config evgenCfg = Options::readParticleGunOptions(vm);
-  evgenCfg.output = "event";
-  evgenCfg.randomNumbers = rnd;
-  sequencer.addReader(std::make_shared<EventGenerator>(evgenCfg, logLevel));
-
-  // flatten event to just particles
-  FlattenEvent::Config flatten;
-  flatten.inputEvent = evgenCfg.output;
-  flatten.outputParticles = "particles";
-  sequencer.addAlgorithm(std::make_shared<FlattenEvent>(flatten, logLevel));
+  EventGenerator::Config evgen = Options::readParticleGunOptions(vm);
+  evgen.outputParticles = "particles";
+  evgen.randomNumbers = rnd;
+  sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
   // print generated particles
-  PrintParticles::Config printCfg;
-  printCfg.inputParticles = flatten.outputParticles;
-  sequencer.addAlgorithm(std::make_shared<PrintParticles>(printCfg, logLevel));
+  if ((logLevel == Acts::Logging::VERBOSE) or
+      (logLevel == Acts::Logging::DEBUG)) {
+    ParticlesPrinter::Config print;
+    print.inputParticles = evgen.outputParticles;
+    sequencer.addAlgorithm(std::make_shared<ParticlesPrinter>(print, logLevel));
+  }
 
   // different output modes
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   if (vm["output-csv"].as<bool>()) {
-    CsvParticleWriter::Config csvWriterCfg;
-    csvWriterCfg.inputParticles = flatten.outputParticles;
-    csvWriterCfg.outputDir = outputDir;
-    csvWriterCfg.outputStem = "particles";
+    CsvParticleWriter::Config csvWriter;
+    csvWriter.inputParticles = evgen.outputParticles;
+    csvWriter.outputDir = outputDir;
+    csvWriter.outputStem = "particles";
     sequencer.addWriter(
-        std::make_shared<CsvParticleWriter>(csvWriterCfg, logLevel));
+        std::make_shared<CsvParticleWriter>(csvWriter, logLevel));
   }
   if (vm["output-root"].as<bool>()) {
-    RootParticleWriter::Config rootWriterCfg;
-    rootWriterCfg.inputParticles = flatten.outputParticles;
-    rootWriterCfg.filePath = joinPaths(outputDir, "particles.root");
+    RootParticleWriter::Config rootWriter;
+    rootWriter.inputParticles = evgen.outputParticles;
+    rootWriter.filePath = joinPaths(outputDir, "particles.root");
     sequencer.addWriter(
-        std::make_shared<RootParticleWriter>(rootWriterCfg, logLevel));
+        std::make_shared<RootParticleWriter>(rootWriter, logLevel));
   }
 
   return sequencer.run();

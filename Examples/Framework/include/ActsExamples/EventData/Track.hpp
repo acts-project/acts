@@ -21,14 +21,13 @@
 namespace ActsExamples {
 
 /// (Reconstructed) track parameters e.g. close to the vertex.
-using TrackParameters = Acts::CurvilinearTrackParameters;
+using TrackParameters = Acts::BoundTrackParameters;
 /// Container of reconstructed track states for multiple tracks.
 using TrackParametersContainer = std::vector<TrackParameters>;
 
-/// MultiTrajectory definition
+/// Single track trajectory with multiple states
 using Trajectory = Acts::MultiTrajectory<SimSourceLink>;
-
-/// Container for the truth fitting/finding track(s)
+/// Container of reconstructed trajectories
 using TrajectoryContainer = std::vector<SimMultiTrajectory>;
 
 }  // namespace ActsExamples

@@ -25,24 +25,23 @@ struct FrameworkRndmEngine : public Pythia8::RndmEngine {
 };
 }  // namespace
 
-std::function<std::vector<ActsExamples::SimVertex>(ActsExamples::RandomEngine&)>
-ActsExamples::Pythia8Generator::makeFunction(
-    const ActsExamples::Pythia8Generator::Config& cfg,
-    Acts::Logging::Level lvl) {
+std::function<ActsExamples::SimParticleContainer(ActsExamples::RandomEngine&)>
+ActsExamples::Pythia8Generator::makeFunction(const Config& cfg,
+                                             Acts::Logging::Level lvl) {
   auto gen = std::make_shared<Pythia8Generator>(cfg, lvl);
   return [=](RandomEngine& rng) { return (*gen)(rng); };
 }
 
-ActsExamples::Pythia8Generator::Pythia8Generator(
-    const ActsExamples::Pythia8Generator::Config& cfg, Acts::Logging::Level lvl)
+ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
+                                                 Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
       m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
   // disable all output by default but allow reenable via config
   m_pythia8->settings.flag("Print:quiet", true);
-  for (const auto& str : m_cfg.settings) {
-    ACTS_VERBOSE("use Pythia8 setting '" << str << "'");
-    m_pythia8->readString(str.c_str());
+  for (const auto& setting : m_cfg.settings) {
+    ACTS_VERBOSE("use Pythia8 setting '" << setting << "'");
+    m_pythia8->readString(setting.c_str());
   }
   m_pythia8->settings.mode("Beams:idA", m_cfg.pdgBeam0);
   m_pythia8->settings.mode("Beams:idB", m_cfg.pdgBeam1);
@@ -55,14 +54,12 @@ ActsExamples::Pythia8Generator::Pythia8Generator(
 // needed to allow unique_ptr of forward-declared Pythia class
 ActsExamples::Pythia8Generator::~Pythia8Generator() {}
 
-std::vector<ActsExamples::SimVertex> ActsExamples::Pythia8Generator::operator()(
-    ActsExamples::RandomEngine& rng) {
+ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
+    RandomEngine& rng) {
   using namespace Acts::UnitLiterals;
 
-  // first process vertex is the primary one at origin with time=0
-  std::vector<SimVertex> vertices = {
-      SimVertex(SimVertex::Vector4::Zero()),
-  };
+  SimParticleContainer::sequence_type generated;
+  std::vector<SimParticle::Vector4> vertexPositions;
 
   // pythia8 is not thread safe and generation needs to be protected
   std::lock_guard<std::mutex> lock(m_pythia8Mutex);
@@ -88,41 +85,37 @@ std::vector<ActsExamples::SimVertex> ActsExamples::Pythia8Generator::operator()(
     }
 
     // production vertex. Pythia8 time uses units mm/c, and we use c=1
-    SimVertex::Vector4 pos4(
+    SimParticle::Vector4 pos4(
         genParticle.xProd() * 1_mm, genParticle.yProd() * 1_mm,
         genParticle.zProd() * 1_mm, genParticle.tProd() * 1_mm);
-    // identify vertex
-    std::vector<SimVertex>::iterator vertex;
-    if (not genParticle.hasVertex()) {
-      // w/o defined vertex, must belong to the first (primary) process vertex
-      vertex = vertices.begin();
-    } else {
+
+    // define the particle identifier including possible secondary vertices
+    ActsFatras::Barcode particleId(0u);
+    // ensure particle identifier component is non-zero
+    particleId.setParticle(1u + generated.size());
+    // only secondaries have a defined vertex position
+    if (genParticle.hasVertex()) {
       // either add to existing secondary vertex if exists or create new one
       // TODO can we do this w/o the manual search and position check?
-      vertex = std::find_if(
-          vertices.begin(), vertices.end(),
-          [=](const SimVertex& v) { return (v.position4 == pos4); });
-      if (vertex == vertices.end()) {
+      auto it = std::find_if(
+          vertexPositions.begin(), vertexPositions.end(),
+          [=](const SimParticle::Vector4& pos) { return (pos == pos4); });
+      if (it == vertexPositions.end()) {
         // no matching secondary vertex exists -> create new one
-        vertices.emplace_back(pos4);
-        vertex = std::prev(vertices.end());
-
+        vertexPositions.emplace_back(pos4);
+        particleId.setVertexSecondary(vertexPositions.size());
         ACTS_VERBOSE("created new secondary vertex " << pos4.transpose());
+      } else {
+        particleId.setVertexSecondary(
+            1u + std::distance(vertexPositions.begin(), it));
       }
     }
 
-    // Ensure particle identifier components are defaulted to zero.
-    ActsFatras::Barcode particleId(0u);
-    // first vertex w/ distance=0 contains all direct particles
-    particleId.setVertexSecondary(std::distance(vertices.begin(), vertex));
-    // ensure particle identifier component is non-zero
-    particleId.setParticle(1u + vertex->outgoing.size());
-    // reuse PDG id from generator
-    const auto pdg = static_cast<Acts::PdgParticle>(genParticle.id());
-
     // construct internal particle
-    ActsFatras::Particle particle(particleId, pdg, genParticle.charge() * 1_e,
-                                  genParticle.m0() * 1_GeV);
+    const auto pdg = static_cast<Acts::PdgParticle>(genParticle.id());
+    const auto charge = genParticle.charge() * 1_e;
+    const auto mass = genParticle.m0() * 1_GeV;
+    ActsFatras::Particle particle(particleId, pdg, charge, mass);
     particle.setPosition4(pos4);
     // normalization/ units are not import for the direction
     particle.setDirection(genParticle.px(), genParticle.py(), genParticle.pz());
@@ -130,7 +123,10 @@ std::vector<ActsExamples::SimVertex> ActsExamples::Pythia8Generator::operator()(
         std::hypot(genParticle.px(), genParticle.py(), genParticle.pz()) *
         1_GeV);
 
-    vertex->outgoing.push_back(std::move(particle));
+    generated.push_back(std::move(particle));
   }
-  return vertices;
+
+  SimParticleContainer out;
+  out.adopt_sequence(std::move(generated));
+  return out;
 }

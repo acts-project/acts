@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
@@ -27,10 +28,14 @@ namespace ActsFatras {
 BOOST_AUTO_TEST_SUITE(Digitization)
 
 namespace {
-struct AddSmearer {
-  unsigned int stats = 0;
 
-  Acts::Result<std::pair<double, double>> operator()(double value) {
+struct Random {};
+
+struct AddSmearer {
+  unsigned int stats = 0;  // dummy seed / stats
+
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     Random& /*unused*/) {
     ++stats;
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 1., 3.));
@@ -38,16 +43,18 @@ struct AddSmearer {
 };
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double value) {
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     Random& /*unused*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 0., 0.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/) {
+  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
+                                                     Random& /*unused*/) {
     return Acts::Result<std::pair<double, double>>(
-        ActsFatras::DigitizationError::SmearError);
+        ActsFatras::DigitizationError::SmearingError);
   }
 };
 
@@ -64,20 +71,22 @@ auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
 BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   Acts::GeometryContext geoCtx = Acts::GeometryContext();
 
+  Random sRandom;
+
   // some hit position
   auto p4 = Hit::Vector4(3, 2, 0, 10.);
   // before/after four-momenta are the same
   auto m4 = Hit::Vector4(1, 2, 1, 4);
   auto hit = Hit(gid, pid, p4, m4, m4, 12u);
 
-  SmearInput sInput{hit, geoCtx, tSurface};
+  SmearInput sInput{hit, geoCtx, tSurface.get()};
 
   AddSmearer tAddFnc;
   SterileSmearer tSterileFnc;
   InvalidSmearer tInvalidFnc;
 
   BoundParametersSmearer<Acts::eBoundLoc0> oneDimSmearer;
-  auto oneDim = oneDimSmearer(sInput, {tAddFnc});
+  auto oneDim = oneDimSmearer(sInput, sRandom, {tAddFnc});
 
   BOOST_CHECK(oneDim.ok());
 
@@ -91,7 +100,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   CHECK_CLOSE_ABS(sCovarianceOne(0, 0), 9., Acts::s_epsilon);
 
   BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1> twoDimSmearer;
-  auto twoDim = twoDimSmearer(sInput, {tAddFnc, tAddFnc});
+  auto twoDim = twoDimSmearer(sInput, sRandom, {tAddFnc, tAddFnc});
 
   BOOST_CHECK(twoDim.ok());
   const auto& smearedTwo = twoDim.value();
@@ -108,7 +117,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
 
   // Check smearing of time
   BoundParametersSmearer<Acts::eBoundLoc1, Acts::eBoundTime> locYTimeSmearer;
-  auto locYTime = locYTimeSmearer(sInput, {tAddFnc, tAddFnc});
+  auto locYTime = locYTimeSmearer(sInput, sRandom, {tAddFnc, tAddFnc});
   BOOST_CHECK(locYTime.ok());
   const auto& smearedLocyTime = locYTime.value();
   BOOST_CHECK(smearedLocyTime.contains<Acts::eBoundLoc1>());
@@ -121,7 +130,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   // Use sterile BoundParametersSmearer to check if direction is properly
   // translated
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta> phiThetaSmearer;
-  auto phiTheta = phiThetaSmearer(sInput, {tSterileFnc, tSterileFnc});
+  auto phiTheta = phiThetaSmearer(sInput, sRandom, {tSterileFnc, tSterileFnc});
   BOOST_CHECK(phiTheta.ok());
   auto phiThetaParSet = phiTheta.value();
   BOOST_CHECK(phiThetaParSet.contains<Acts::eBoundPhi>());
@@ -137,7 +146,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
       invalidHitFirstSmearer;
   auto invalidHitFirst =
-      invalidHitFirstSmearer(sInput, {tInvalidFnc, tSterileFnc});
+      invalidHitFirstSmearer(sInput, sRandom, {tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitFirst.ok());
 
   BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
@@ -145,22 +154,22 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
       invalidHitMiddleSmearer;
 
   auto invalidHitMiddle = invalidHitMiddleSmearer(
-      sInput, {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
+      sInput, sRandom, {tSterileFnc, tSterileFnc, tInvalidFnc, tSterileFnc});
   BOOST_CHECK(not invalidHitMiddle.ok());
 
   BoundParametersSmearer<Acts::eBoundPhi, Acts::eBoundTheta>
       invalidHitLastSmearer;
   auto invalidHitLast =
-      invalidHitLastSmearer(sInput, {tSterileFnc, tInvalidFnc});
+      invalidHitLastSmearer(sInput, sRandom, {tSterileFnc, tInvalidFnc});
   BOOST_CHECK(not invalidHitLast.ok());
 
   // Test the variant approach for smearers
   using StripSmearer = std::pair<BoundParametersSmearer<Acts::eBoundLoc0>,
-                                 std::array<SmearFunction, 1>>;
+                                 std::array<SmearFunction<Random>, 1>>;
 
   using PixelSmearer =
       std::pair<BoundParametersSmearer<Acts::eBoundLoc0, Acts::eBoundLoc1>,
-                std::array<SmearFunction, 2>>;
+                std::array<SmearFunction<Random>, 2>>;
 
   using SiliconSmearer = std::variant<StripSmearer, PixelSmearer>;
 
@@ -186,7 +195,7 @@ BOOST_AUTO_TEST_CASE(BoundParameterSmeering) {
     std::string key_id = key;
     std::visit(
         [&](auto&& sm) {
-          auto sParSet = sm.first(sInput, sm.second);
+          auto sParSet = sm.first(sInput, sRandom, sm.second);
           if (sParSet.ok()) {
             siParSets.push_back(sParSet.value());
             // siParSets.push_Back(sParSet);
@@ -211,6 +220,8 @@ BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
 
   Acts::GeometryContext geoCtx = Acts::GeometryContext();
 
+  Random sRandom;
+
   FreeSmearer freeSmearer;
 
   // some hit position
@@ -223,7 +234,7 @@ BOOST_AUTO_TEST_CASE(FreeParameterSmeering) {
   SterileSmearer tSterileFnc;
 
   auto freeSmearing =
-      freeSmearer({hit, geoCtx}, {tSterileFnc, tAddFnc, tSterileFnc});
+      freeSmearer({hit, geoCtx}, sRandom, {tSterileFnc, tAddFnc, tSterileFnc});
 
   BOOST_CHECK(freeSmearing.ok());
   const auto& freeSet = freeSmearing.value();

@@ -1,0 +1,38 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2020 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include "TrackParametersPrinter.hpp"
+
+ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
+    const Config& cfg, Acts::Logging::Level lvl)
+    : BareAlgorithm("TrackParametersPrinter", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty()) {
+    throw std::invalid_argument(
+        "Input track parameters collection is not configured");
+  }
+}
+
+ActsExamples::ProcessCode ActsExamples::TrackParametersPrinter::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  const auto& trackParameters =
+      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+
+  ACTS_INFO("event " << ctx.eventNumber << " collection '"
+                     << m_cfg.inputTrackParameters << "' contains "
+                     << trackParameters.size() << " track parameters");
+  std::size_t i = 0;
+  for (const auto& params : trackParameters) {
+    ACTS_INFO("  track " << i++ << "\n" << params);
+  }
+  return ProcessCode::SUCCESS;
+}
