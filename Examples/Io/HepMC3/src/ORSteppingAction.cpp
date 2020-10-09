@@ -88,8 +88,8 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 		{
 			auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
 			vertex->add_particle_out(postParticle);
-			vertex->add_attribute("Process", process);
 			OREventAction::instance()->event()->add_vertex(vertex);
+			vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
 		}
 		else
 			// Search for an existing vertex
@@ -98,16 +98,15 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 				if(vertex->position() == prePos)
 				{
 					vertex->add_particle_out(postParticle);
-					vertex->add_attribute("Process", process); // TODO: what about additional particles from this vertex?
+					vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process); // TODO: what about additional particles from this vertex?
 				}
 			}
-		std::cout << track->GetDynamicParticle()->GetPDGcode() << " | " << (track->GetCreatorProcess() ? track->GetCreatorProcess()->GetProcessName() : "---") << std::endl;
 	}
 	else
 	{
 		// Add particle from same track to vertex
 		m_previousVertex->add_particle_out(postParticle);
-		m_previousVertex->add_attribute("Process", process);
+		m_previousVertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
 	}
 
 	// Build the vertex after this step
@@ -127,7 +126,7 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 	if(track->GetTrackStatus() != fAlive)
 	{
 		process = std::make_shared<HepMC3::StringAttribute>("Death");
-		m_previousVertex->add_attribute("Process", process);
+		m_previousVertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
 		m_previousVertex = nullptr;
 	}
 	
