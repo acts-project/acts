@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -20,25 +21,26 @@
 
 namespace Acts {
 
-/// Selection cuts for associating source links on a surface.
+/// Selection cuts for associating calibrated measurements with predicted track
+/// parameters on a surface.
 ///
-/// The default configuration only takes the best matching source link without
-/// a cut on the local chi2.
+/// The default configuration only takes the best matching calibrated
+/// measurement without a cut on the local chi2.
 struct SourceLinkSelectorCuts {
   /// Maximum local chi2 contribution.
   double chi2CutOff = std::numeric_limits<double>::max();
-  /// Maximum number of associated source links on a single surface.
+  /// Maximum number of associated measurements on a single surface.
   size_t numSourcelinksCutOff = 1;
 };
 
-/// @brief Source link selection struct selecting those source links
-/// compatible with the given track parameter against provided criteria on one
-/// surface
+/// @brief Calibrated measurement selection struct selecting those calibrated
+/// measurements compatible with the given track parameter against provided
+/// criteria on one surface
 ///
 /// The selection criteria could be allowed maximum chi2
-/// and allowed maximum number of source links on one surface
+/// and allowed maximum number of measurements on one surface
 ///
-/// If there is no compatible source link, the source link with the mininum
+/// If there is no compatible measurement, the measurement with the mininum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
 class CKFSourceLinkSelector {
@@ -58,33 +60,29 @@ class CKFSourceLinkSelector {
   /// @param logger a logger instance
   CKFSourceLinkSelector(Config cfg) : m_config(std::move(cfg)) {}
 
-  /// @brief Operater that select the source links compatible with
+  /// @brief Operater that select the calibrated measurements compatible with
   /// the given track parameter on a surface
   ///
-  /// @tparam calibrator_t The type of calibrator
-  /// @tparam source_link_t The type of source link
+  /// @tparam measurement_t The type of calibrated measurement
   ///
-  /// @param calibrator The measurement calibrator
   /// @param predictedParams The predicted track parameter on a surface
-  /// @param sourcelinks The pool of source links
-  /// @param sourcelinkChi2 The container for index and chi2 of intermediate
-  /// source link candidates
-  /// @param sourcelinkCandidateIndices The container for index of final source
-  /// link candidates
+  /// @param measurements The pool of calibrated measurements
+  /// @param measChi2 The container for index and chi2 of intermediate
+  /// measurement candidates
+  /// @param measCandidateIndices The container for index of final measurement
+  /// candidates
   /// @param isOutlier The indicator for outlier or not
   ///
-  template <typename calibrator_t, typename source_link_t>
-  Result<void> operator()(
-      const calibrator_t& calibrator,
-      const BoundTrackParameters& predictedParams,
-      const std::vector<source_link_t>& sourcelinks,
-      std::vector<std::pair<size_t, double>>& sourcelinkChi2,
-      std::vector<size_t>& sourcelinkCandidateIndices, bool& isOutlier,
-      LoggerWrapper logger) const {
+  template <typename measurement_t>
+  Result<void> operator()(const BoundTrackParameters& predictedParams,
+                          const std::vector<measurement_t>& measurements,
+                          std::vector<std::pair<size_t, double>>& measChi2,
+                          std::vector<size_t>& measCandidateIndices,
+                          bool& isOutlier, LoggerWrapper logger) const {
     ACTS_VERBOSE("Invoked CKFSourceLinkSelector");
 
-    // Return error if no source link
-    if (sourcelinks.empty()) {
+    // Return error if no measurement
+    if (measurements.empty()) {
       return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
     }
 
@@ -96,7 +94,7 @@ class CKFSourceLinkSelector {
     auto cuts = m_config.find(geoID);
     if (cuts == m_config.end()) {
       // for now we consider missing cuts an unrecoverable error
-      // TODO consider other options e.g. do not add source links at all (not
+      // TODO consider other options e.g. do not add measurements at all (not
       // even as outliers)
       return CombinatorialKalmanFilterError::SourcelinkSelectionFailed;
     }
@@ -104,15 +102,15 @@ class CKFSourceLinkSelector {
     const auto numSourcelinksCutOff = cuts->numSourcelinksCutOff;
     ACTS_VERBOSE("Allowed maximum chi2: " << chi2CutOff);
     ACTS_VERBOSE(
-        "Allowed maximum number of source links: " << numSourcelinksCutOff);
+        "Allowed maximum number of measurements: " << numSourcelinksCutOff);
 
-    sourcelinkChi2.resize(sourcelinks.size());
+    measChi2.resize(measurements.size());
     double minChi2 = std::numeric_limits<double>::max();
     size_t minIndex = 0;
     size_t index = 0;
     size_t nInitialCandidates = 0;
-    // Loop over all source links to select the compatible source links
-    for (const auto& sourcelink : sourcelinks) {
+    // Loop over all measurements to select the compatible measurements
+    for (const auto& measurement : measurements) {
       std::visit(
           [&](const auto& calibrated) {
             // Take the projector (measurement mapping function)
@@ -131,53 +129,52 @@ class CKFSourceLinkSelector {
                               .eval()(0, 0);
 
             ACTS_VERBOSE("Chi2: " << chi2);
-            // Push the source link index and chi2 if satisfying the criteria
+            // Push the measurement index and chi2 if satisfying the criteria
             if (chi2 < chi2CutOff) {
-              sourcelinkChi2.at(nInitialCandidates) = {index, chi2};
+              measChi2.at(nInitialCandidates) = {index, chi2};
               nInitialCandidates++;
             }
-            // Search for the source link with the min chi2
+            // Search for the measurement with the min chi2
             if (chi2 < minChi2) {
               minChi2 = chi2;
               minIndex = index;
             }
           },
-          calibrator(sourcelink, predictedParams));
+          measurement);
       index++;
     }
 
-    // Get the number of source link candidates with provided constraint
+    // Get the number of measurement candidates with provided constraint
     // considered
     size_t nFinalCandidates =
         std::min(nInitialCandidates, numSourcelinksCutOff);
 
-    // If there is no selected source link, return the source link with the best
+    // If there is no selected measurement, return the measurement with the best
     // chi2 and tag it as an outlier
     if (nFinalCandidates == 0) {
-      sourcelinkCandidateIndices.resize(1);
-      sourcelinkCandidateIndices.at(0) = minIndex;
-      ACTS_DEBUG("No measurement candidate. Return an outlier source link.");
+      measCandidateIndices.resize(1);
+      measCandidateIndices.at(0) = minIndex;
+      ACTS_DEBUG("No measurement candidate. Return an outlier measurement.");
       isOutlier = true;
       return Result<void>::success();
     }
 
     ACTS_VERBOSE("Number of measurement candidates: " << nFinalCandidates);
-    sourcelinkCandidateIndices.resize(nFinalCandidates);
-    // Sort the initial source link candidates based on chi2 in ascending order
-    std::sort(sourcelinkChi2.begin(),
-              sourcelinkChi2.begin() + nInitialCandidates,
+    measCandidateIndices.resize(nFinalCandidates);
+    // Sort the initial measurement candidates based on chi2 in ascending order
+    std::sort(measChi2.begin(), measChi2.begin() + nInitialCandidates,
               [](const std::pair<size_t, double>& lchi2,
                  const std::pair<size_t, double>& rchi2) {
                 return lchi2.second < rchi2.second;
               });
-    // Get only allowed number of source link candidates, i.e. nFinalCandidates,
+    // Get only allowed number of measurement candidates, i.e. nFinalCandidates,
     // from the front and reset the values in the container
     size_t nRecorded = 0;
-    for (const auto& [id, chi2] : sourcelinkChi2) {
+    for (const auto& [id, chi2] : measChi2) {
       if (nRecorded >= nFinalCandidates) {
         break;
       }
-      sourcelinkCandidateIndices.at(nRecorded) = id;
+      measCandidateIndices.at(nRecorded) = id;
       nRecorded++;
     }
     isOutlier = false;

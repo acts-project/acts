@@ -170,12 +170,12 @@ struct CombinatorialKalmanFilterResult {
   // Indicator if track finding has been done
   bool finished = false;
 
-  // Temporary container for index and chi2 of intermediate source link
+  // Temporary container for index and chi2 of intermediate measurement
   // candidates
-  std::vector<std::pair<size_t, double>> sourcelinkChi2;
+  std::vector<std::pair<size_t, double>> measurementChi2;
 
-  // Temporary container for index of final source link candidates
-  std::vector<size_t> sourcelinkCandidateIndices;
+  // Temporary container for index of final measurement candidates
+  std::vector<size_t> measurementCandidateIndices;
 
   Result<void> result{Result<void>::success()};
 };
@@ -488,7 +488,8 @@ class CombinatorialKalmanFilter {
     /// - store selected track states in multiTrajectory
     /// - update propagator state to the (last) selected track state
     ///
-    /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam propagator_state_t is the BoundVariantMeasurementtype of
+    /// Propagagor state
     /// @tparam stepper_t Type of the stepper
     ///
     /// @param surface The surface where the update happens
@@ -522,16 +523,23 @@ class CombinatorialKalmanFilter {
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
 
-        // Invoke the source link selector to select source links for either
-        // measurements or outlier.
-        // Calibrator is passed to the selector because
-        // selection has to be done based on calibrated measurement
+        // Calibrate all the source links on the surface since the selection has
+        // to be done based on calibrated measurement
+        std::vector<BoundVariantMeasurement<source_link_t>> measurements;
+        std::transform(sourcelinks.begin(), sourcelinks.end(),
+                       std::back_inserter(measurements), [&](const auto& sl) {
+                         return m_calibrator(sl, boundParams);
+                       });
+
+        // Invoke the measurement selector to select compatible measurements
+        // with the predicted track parameter. It could return either the
+        // compatible measurement indices or an outlier index.
         bool isOutlier = false;
         auto sourcelinkSelectionRes = m_sourcelinkSelector(
-            m_calibrator, boundParams, sourcelinks, result.sourcelinkChi2,
-            result.sourcelinkCandidateIndices, isOutlier, logger);
+            boundParams, measurements, result.measurementChi2,
+            result.measurementCandidateIndices, isOutlier, logger);
         if (!sourcelinkSelectionRes.ok()) {
-          ACTS_ERROR("Selection of source links failed: "
+          ACTS_ERROR("Selection of calibrated measurements failed: "
                      << sourcelinkSelectionRes.error());
           return sourcelinkSelectionRes.error();
         }
@@ -550,7 +558,7 @@ class CombinatorialKalmanFilter {
         // Remember the tip of the neighbor state on this surface
         size_t neighborTip = SIZE_MAX;
         // Loop over the selected source links
-        for (const auto& index : result.sourcelinkCandidateIndices) {
+        for (const auto& index : result.measurementCandidateIndices) {
           // Determine if predicted parameter is already contained in
           // neighboring state
           bool isPredictedShared = (neighborTip != SIZE_MAX);
@@ -583,10 +591,10 @@ class CombinatorialKalmanFilter {
                          : TrackStatePropMask::All);
 
           // Add measurement/outlier track state to the multitrajectory
-          auto addStateRes =
-              addSourcelinkState(stateMask, boundState, sourcelinks.at(index),
-                                 isOutlier, result, state.geoContext, prevTip,
-                                 prevTipState, neighborTip, sharedTip, logger);
+          auto addStateRes = addSourcelinkState(
+              stateMask, boundState, sourcelinks.at(index),
+              measurements.at(index), isOutlier, result, state.geoContext,
+              prevTip, prevTipState, neighborTip, sharedTip, logger);
           if (addStateRes.ok()) {
             const auto& [currentTip, tipState] = addStateRes.value();
             // Remember the track state tip for this stored source link
@@ -736,7 +744,9 @@ class CombinatorialKalmanFilter {
     /// @return The tip of added state and its state
     Result<std::pair<size_t, TipState>> addSourcelinkState(
         const TrackStatePropMask& stateMask, const BoundState& boundState,
-        const source_link_t& sourcelink, bool isOutlier, result_type& result,
+        const source_link_t& sourcelink,
+        const BoundVariantMeasurement<source_link_t>& measurement,
+        bool isOutlier, result_type& result,
         std::reference_wrapper<const GeometryContext> geoContext,
         const size_t& prevTip, const TipState& prevTipState,
         size_t neighborTip = SIZE_MAX, size_t sharedTip = SIZE_MAX,
@@ -784,8 +794,7 @@ class CombinatorialKalmanFilter {
           [&](const auto& calibrated) {
             trackStateProxy.setCalibrated(calibrated);
           },
-          m_calibrator(trackStateProxy.uncalibrated(),
-                       trackStateProxy.predicted()));
+          measurement);
 
       // Get and set the type flags
       auto& typeFlags = trackStateProxy.typeFlags();
