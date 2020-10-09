@@ -40,18 +40,24 @@ void
 ActsExamples::OREventAction::BeginOfEventAction(const G4Event*)
 {
   // reset the collection of material steps
-  ORSteppingAction::instance()->clear();
+  ORSteppingAction::instance()->clear(); // TODO: will this remain?
+  
+  m_event = std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
 void
 ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 {
 	// TODO: Wrap up tracks to build collection
+	std::cout << "Particles: " << m_event->particles().size() << " | " << "Vertices: " << m_event->vertices().size() << std::endl;
+	std::cout << "Number of steps: " << ORSteppingAction::instance()->counter() << std::endl;
+	ORSteppingAction::instance()->counter() = 0;
 }
 
 void
 ActsExamples::OREventAction::clear()
 {
+	m_event = nullptr;
 	// TODO | m_processTracks.clear();
 }
 
