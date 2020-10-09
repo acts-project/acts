@@ -185,8 +185,7 @@ struct KalmanFitterResult {
 ///
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
-          typename smoother_t = VoidKalmanSmoother,
-          typename outlier_finder_t = VoidOutlierFinder>
+          typename smoother_t = VoidKalmanSmoother>
 class KalmanFitter {
   /// The navigator type
   using KalmanNavigator = typename propagator_t::Navigator;
@@ -211,7 +210,7 @@ class KalmanFitter {
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t>
+            typename calibrator_t, typename outlier_finder_t>
   class Actor {
    public:
     /// Broadcast the result_type
@@ -884,11 +883,12 @@ class KalmanFitter {
   };
 
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t>
+            typename calibrator_t, typename outlier_finder_t>
   class Aborter {
    public:
     /// Broadcast the result_type
-    using action_type = Actor<source_link_t, parameters_t, calibrator_t>;
+    using action_type =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -905,10 +905,10 @@ class KalmanFitter {
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam calibrator_t Type of the source link calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -921,7 +921,8 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename calibrator_t, typename parameters_t = BoundTrackParameters>
+            typename calibrator_t, typename outlier_finder_t,
+            typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions)
@@ -941,8 +942,10 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t, parameters_t, calibrator_t>;
-    using KalmanActor = Actor<source_link_t, parameters_t, calibrator_t>;
+    using KalmanAborter =
+        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanActor =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
@@ -995,9 +998,10 @@ class KalmanFitter {
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam calibrator_t Type of the source link calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1011,7 +1015,8 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
-            typename calibrator_t, typename parameters_t = BoundTrackParameters>
+            typename calibrator_t, typename outlier_finder_t,
+            typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions,
@@ -1031,8 +1036,10 @@ class KalmanFitter {
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t, parameters_t, calibrator_t>;
-    using KalmanActor = Actor<source_link_t, parameters_t, calibrator_t>;
+    using KalmanAborter =
+        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanActor =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
