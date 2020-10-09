@@ -13,11 +13,12 @@
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell
-struct DigitizationCell {
+struct DigitizationCell final {
   // identification and data
   size_t channel0 = 0;
   size_t channel1 = 1;
   float data = 0.;
+
   // connstruct them
   DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
       : channel0(ch0), channel1(ch1), data(d) {}
@@ -31,7 +32,7 @@ struct DigitizationCell {
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
-  virtual void addCell(const DigitizationCell& dc, bool analogueReadout) {
+  void addCell(const DigitizationCell& dc, bool analogueReadout) {
     if (analogueReadout) {
       data += dc.data;
     }
@@ -43,11 +44,11 @@ struct DigitizationCell {
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
-  virtual double depositedEnergy() const { return data; }
+  double depositedEnergy() const { return data; }
 };
 
 /// @brief DigitizationStep for further handling
-struct DigitizationStep {
+struct DigitizationStep final {
   double stepLength{0.};   /// this is the path length within the cell
   double driftLength{0.};  /// this is the path length of the setp center to the
                            /// readout surface
