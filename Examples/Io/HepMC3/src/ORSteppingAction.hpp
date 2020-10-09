@@ -12,6 +12,9 @@
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"
 
+#include <HepMC3/GenParticle.h>
+#include <HepMC3/GenVertex.h>
+
 namespace ActsExamples {
 
 	/// @brief Data container of a particle
@@ -51,9 +54,13 @@ namespace ActsExamples {
     
     const std::map<int, std::vector<ParticleRecord>> processSteps() const {return m_particles;}
 
+unsigned int& counter() {return testCounter;} 
+unsigned int testCounter = 0;
   private:	
     /// Instance of the SteppingAction
     static ORSteppingAction* s_instance;
+        
+    std::shared_ptr<HepMC3::GenVertex> m_previousVertex = nullptr;    
         
 	std::map<int, std::vector<ParticleRecord>> m_particles;	
   };

@@ -14,7 +14,7 @@
 #include "G4UserEventAction.hh"
 #include "globals.hh"
 
-//~ #include <HepMC3/GenEvent.h>
+#include <HepMC3/GenEvent.h>
 
 namespace ActsExamples {
 	
@@ -54,7 +54,13 @@ class OREventAction final : public G4UserEventAction {
 
   /// Clear the recorded data.
   void clear();
-	
+  
+  std::shared_ptr<HepMC3::GenEvent>
+  event()
+  {
+	  return m_event;
+  }
+  
 	Collection
 	processTracks() const
 	{
@@ -77,6 +83,8 @@ class OREventAction final : public G4UserEventAction {
 	private:
 	/// Instance of the EventAction
 	static OREventAction* s_instance;
+    
+    std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
 
 	Collection m_processTracks;	
 };

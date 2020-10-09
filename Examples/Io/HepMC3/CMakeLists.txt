@@ -11,9 +11,6 @@ add_library(
   src/OREventAction.cpp
   src/ORPrimaryGeneratorAction.cpp
   src/ORSteppingAction.cpp)
-#~ target_compile_definitions(
-  #~ ActsExamplesIoHepMC3
-  #~ PUBLIC ${Geant4_DEFINITIONS})
 target_include_directories(
   ActsExamplesIoHepMC3
   SYSTEM PUBLIC ${HEPMC3_INCLUDE_DIR})
@@ -22,7 +19,6 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoHepMC3
-  #~ PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 ${Geant4_LIBRARIES} ${HepMC3_LIBRARIES} HepPID)
   PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 ${HepMC3_LIBRARIES} HepPID)
 
 install(
