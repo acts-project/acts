@@ -16,17 +16,6 @@
 #include <HepMC3/GenVertex.h>
 
 namespace ActsExamples {
-
-	/// @brief Data container of a particle
-	// TODO: maybe replace this by an Acts particle
-	struct ParticleRecord
-	{
-		std::array<double, 3> position, momentum, vertex;
-		int pdg;
-		double energy, mass, globalTime;
-		int charge, trackid, parentid;
-		std::string volume, process;
-	};
 	
   /// @class ORSteppingAction
   ///
@@ -52,8 +41,6 @@ namespace ActsExamples {
     void
     clear();
     
-    const std::map<int, std::vector<ParticleRecord>> processSteps() const {return m_particles;}
-
 unsigned int& counter() {return testCounter;} 
 unsigned int testCounter = 0;
   private:	
@@ -61,7 +48,5 @@ unsigned int testCounter = 0;
     static ORSteppingAction* s_instance;
         
     std::shared_ptr<HepMC3::GenVertex> m_previousVertex = nullptr;    
-        
-	std::map<int, std::vector<ParticleRecord>> m_particles;	
   };
 }  // namespace ActsExamples

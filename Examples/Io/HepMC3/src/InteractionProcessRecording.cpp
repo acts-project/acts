@@ -9,9 +9,6 @@
 #include "OREventAction.hpp"
 #include "ORPrimaryGeneratorAction.hpp"
 #include "ORSteppingAction.hpp"
-//~ #include "EventAction.hpp"
-//~ #include "ActsExamples/Geant4/PrimaryGeneratorAction.hpp"
-//~ #include "SteppingAction.hpp"
 #include "ORRunAction.hpp"
 #include "ActsExamples/Plugins/HepMC3/InteractionProcessRecording.hpp"
 #include <iostream>

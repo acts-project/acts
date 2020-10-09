@@ -14,7 +14,7 @@
 #include "G4VProcess.hh"
 //~ #include "SystemOfUnits.h"
 
-
+#include <HepMC3/Attribute.h>
 
 ActsExamples::ORSteppingAction* ActsExamples::ORSteppingAction::s_instance
     = nullptr;
@@ -44,91 +44,103 @@ ActsExamples::ORSteppingAction::~ORSteppingAction()
 void
 ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 {
-	ParticleRecord p;
-	p.position[0] = step->GetPostStepPoint()->GetPosition().x() / CLHEP::mm;
-	p.position[1] = step->GetPostStepPoint()->GetPosition().y() / CLHEP::mm;
-	p.position[2] = step->GetPostStepPoint()->GetPosition().z() / CLHEP::mm;
-	p.momentum[0] = step->GetPostStepPoint()->GetMomentum().x() / CLHEP::GeV;
-	p.momentum[1] = step->GetPostStepPoint()->GetMomentum().y() / CLHEP::GeV;
-	p.momentum[2] = step->GetPostStepPoint()->GetMomentum().z() / CLHEP::GeV;
-	p.globalTime = step->GetPostStepPoint()->GetGlobalTime();
-	p.pdg = step->GetTrack()->GetDynamicParticle()->GetPDGcode();
-	p.vertex[0] = step->GetTrack()->GetVertexPosition().x();
-	p.vertex[1] = step->GetTrack()->GetVertexPosition().y();
-	p.vertex[2] = step->GetTrack()->GetVertexPosition().z();
-	p.energy = step->GetPostStepPoint()->GetTotalEnergy() / CLHEP::GeV;
-	p.mass = step->GetPostStepPoint()->GetMass();
-	p.charge = step->GetPostStepPoint()->GetCharge();
-	p.trackid = step->GetTrack()->GetTrackID();
-	p.parentid = step->GetTrack()->GetParentID();
-	p.volume = (step->GetPostStepPoint()->GetPhysicalVolume() != nullptr) ? step->GetPostStepPoint()->GetPhysicalVolume()->GetName() : "No volume";
-	p.process = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+	//~ ParticleRecord p;
+	//~ p.position[0] = step->GetPostStepPoint()->GetPosition().x() / CLHEP::mm;
+	//~ p.position[1] = step->GetPostStepPoint()->GetPosition().y() / CLHEP::mm;
+	//~ p.position[2] = step->GetPostStepPoint()->GetPosition().z() / CLHEP::mm;
+	//~ p.momentum[0] = step->GetPostStepPoint()->GetMomentum().x() / CLHEP::GeV;
+	//~ p.momentum[1] = step->GetPostStepPoint()->GetMomentum().y() / CLHEP::GeV;
+	//~ p.momentum[2] = step->GetPostStepPoint()->GetMomentum().z() / CLHEP::GeV;
+	//~ p.globalTime = step->GetPostStepPoint()->GetGlobalTime();
+	//~ p.pdg = step->GetTrack()->GetDynamicParticle()->GetPDGcode();
+	//~ p.vertex[0] = step->GetTrack()->GetVertexPosition().x();
+	//~ p.vertex[1] = step->GetTrack()->GetVertexPosition().y();
+	//~ p.vertex[2] = step->GetTrack()->GetVertexPosition().z();
+	//~ p.energy = step->GetPostStepPoint()->GetTotalEnergy() / CLHEP::GeV;
+	//~ p.mass = step->GetPostStepPoint()->GetMass();
+	//~ p.charge = step->GetPostStepPoint()->GetCharge();
+	//~ p.trackid = step->GetTrack()->GetTrackID();
+	//~ p.parentid = step->GetTrack()->GetParentID();
+	//~ p.volume = (step->GetPostStepPoint()->GetPhysicalVolume() != nullptr) ? step->GetPostStepPoint()->GetPhysicalVolume()->GetName() : "No volume";
+	//~ p.process = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 	
 	auto* track = step->GetTrack();
+
+	// The particle after the step
+	auto postStepMomentum = track->GetMomentum();
+	auto postStepEnergy = track->GetTotalEnergy();
+	HepMC3::FourVector mom4{postStepMomentum[0], postStepMomentum[1], postStepMomentum[2], postStepEnergy};
+	auto postParticle = std::make_shared<HepMC3::GenParticle>(mom4, track->GetDynamicParticle()->GetPDGcode());
 	
-	auto momentum = track->GetMomentum();
-	auto energy = track->GetTotalEnergy();
-	HepMC3::FourVector mom4{momentum[0], momentum[1], momentum[2], energy};
-	auto particle = std::make_shared<HepMC3::GenParticle>(mom4, track->GetDynamicParticle()->GetPDGcode());
+	auto process = std::make_shared<HepMC3::StringAttribute>(step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName());
 	
-	
+	// Assign particle to production vertex
 	if(!m_previousVertex)
 	{
+		// Get the production position of the particle
+		auto* preStep = step->GetPreStepPoint();
+		auto prePosition = preStep->GetPosition();
+		auto preTime = preStep->GetGlobalTime();
+		HepMC3::FourVector prePos{prePosition[0], prePosition[1], prePosition[2], preTime};
+	
 		// Handle the first step
 		if(OREventAction::instance()->event()->vertices().empty())
 		{
-			std::shared_ptr<HepMC3::GenVertex> vertex;
-			auto position = track->GetVertexPosition();
-			auto time = step->GetPreStepPoint()->GetGlobalTime();
-			HepMC3::FourVector posOut{position[0], position[1], position[2], time};
-			vertex = std::make_shared<HepMC3::GenVertex>(posOut);
-			vertex->add_particle_out(particle);
+			auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
+			vertex->add_particle_out(postParticle);
+			vertex->add_attribute("Process", process);
 			OREventAction::instance()->event()->add_vertex(vertex);
 		}
-		
-		// Search for an existing vertex
-		auto position = step->GetPreStepPoint()->GetPosition();
-		auto time = step->GetPreStepPoint()->GetGlobalTime();	
-		HepMC3::FourVector posOut{position[0], position[1], position[2], time};
-		for(const auto& vertex : OREventAction::instance()->event()->vertices())
-		{
-			if(vertex->position() == posOut)
-				vertex->add_particle_out(particle);
-		}
+		else
+			// Search for an existing vertex
+			for(const auto& vertex : OREventAction::instance()->event()->vertices())
+			{
+				if(vertex->position() == prePos)
+				{
+					vertex->add_particle_out(postParticle);
+					vertex->add_attribute("Process", process); // TODO: what about additional particles from this vertex?
+				}
+			}
+		std::cout << track->GetDynamicParticle()->GetPDGcode() << " | " << (track->GetCreatorProcess() ? track->GetCreatorProcess()->GetProcessName() : "---") << std::endl;
 	}
 	else
 	{
-		m_previousVertex->add_particle_out(particle);
-		OREventAction::instance()->event()->add_vertex(m_previousVertex);
+		// Add particle from same track to vertex
+		m_previousVertex->add_particle_out(postParticle);
+		m_previousVertex->add_attribute("Process", process);
 	}
+
+	// Build the vertex after this step
+	auto* postStep = step->GetPostStepPoint();	
+	auto postPosition = postStep->GetPosition();
+	auto postTime = postStep->GetGlobalTime();
+	HepMC3::FourVector postPos{postPosition[0], postPosition[1], postPosition[2], postTime};
+	m_previousVertex = std::make_shared<HepMC3::GenVertex>(postPos);
 	
-	auto position = step->GetPostStepPoint()->GetPosition();
-	auto time = step->GetPostStepPoint()->GetGlobalTime();
-	HepMC3::FourVector pos{position[0], position[1], position[2], time};
-	m_previousVertex = std::make_shared<HepMC3::GenVertex>(pos);
+	// Add properties to the vertex
+	m_previousVertex->add_particle_in(postParticle);
 	
-	m_previousVertex->add_particle_in(particle);
+	// Store the vertex
+	OREventAction::instance()->event()->add_vertex(m_previousVertex);
 	
+	// Stop tracking the vertex if the particle dies
 	if(track->GetTrackStatus() != fAlive)
 	{
-		OREventAction::instance()->event()->add_vertex(m_previousVertex);
+		process = std::make_shared<HepMC3::StringAttribute>("Death");
+		m_previousVertex->add_attribute("Process", process);
 		m_previousVertex = nullptr;
 	}
 	
-//~ std::cout << "pos: " << testCounter << " | " << track->GetPosition() << " | " << step->GetPostStepPoint()->GetPosition() << " | " << step->GetPreStepPoint()->GetPosition() <<
-  //~ " | " << track->GetVertexPosition() << std::endl;
 testCounter++;	
 //~ std::cout << "energy: " << track->GetKineticEnergy() << " | " << track->GetVertexKineticEnergy() << std::endl;
 //~ std::cout << track->GetParentID() << " | " << track->GetTrackID() << " | " << track->GetDynamicParticle()->GetPDGcode() 
     //~ << " | " << track->GetTrackLength() << " | " << step->GetPreStepPoint()->GetLocalTime() 
 	//~ << " | " << (step->GetPreStepPoint()->GetProcessDefinedStep() ? step->GetPreStepPoint()->GetProcessDefinedStep()->GetProcessName() : "---") 
 	//~ << " | " << (track->GetCreatorProcess() ? track->GetCreatorProcess()->GetProcessName() : "---") << " | " << track->GetCurrentStepNumber() << std::endl;	
-	
-	m_particles[p.trackid].push_back(p);
 }
 
 void
 ActsExamples::ORSteppingAction::clear()
 {
-	m_particles.clear();
+	m_previousVertex = nullptr;
 }
