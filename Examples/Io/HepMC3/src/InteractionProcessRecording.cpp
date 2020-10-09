@@ -18,6 +18,8 @@
 #include "FTFP_BERT.hh"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <HepMC3/GenEvent.h>
+
 ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
     ActsExamples::InteractionProcessRecording::Config&& cnf,
     Acts::Logging::Level                 level)
@@ -57,9 +59,13 @@ ActsExamples::InteractionProcessRecording::execute(const ActsExamples::Algorithm
   // Retrieve the initial particles
   const auto initialParticles = context.eventStore.get<ActsExamples::SimParticleContainer>(m_cfg.eventInput);
   
+  // Storage of events that will be produced
+  std::vector<std::shared_ptr<HepMC3::GenEvent>> events;
+  events.reserve(initialParticles.size());
+  
   for(const auto& part : initialParticles)
   {
-  
+	  // Prepare the particle gun
 	  const auto pos = part.position();
 	  const auto dir = part.unitDirection();
 	  ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
@@ -69,18 +75,15 @@ ActsExamples::InteractionProcessRecording::execute(const ActsExamples::Algorithm
 	  // Begin with the simulation
 	  m_runManager->BeamOn(1);
   
-}
-  // Retrieve the track material tracks from Geant4
-  //~ auto recordedParticles
-      //~ = ActsExamples::OREventAction::instance()->processTracks(); // TODO: might need to store initial parameters additionally | m_cfg.pdg, m_cfg.momentum, m_cfg.phi, m_cfg.theta); // Keeping momentum in Acts units
+	  // Store the result
+	  events.push_back(ActsExamples::OREventAction::instance()->event());
+	}
   
-  
-  //~ ACTS_INFO("Received " << recordedParticles.particles.size()
-                        //~ << " particles. Writing them now onto file...");
+  ACTS_INFO(events.size() << " events generated");
 
-  //~ // Write the recorded material to the event store
-  //~ context.eventStore.add(m_cfg.eventOutput,
-                         //~ std::move(recordedParticles));
+  // Write the recorded material to the event store
+  context.eventStore.add(m_cfg.eventOutput,
+                         std::move(events));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

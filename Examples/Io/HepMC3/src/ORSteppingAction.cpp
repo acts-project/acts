@@ -97,8 +97,8 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 			{
 				if(vertex->position() == prePos)
 				{
-					vertex->add_particle_out(postParticle);
-					vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process); // TODO: what about additional particles from this vertex?
+					vertex->add_particle_out(postParticle); // TODO: the initial parameters need to be stored additionally
+					vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
 				}
 			}
 	}
