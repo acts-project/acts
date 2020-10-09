@@ -11,6 +11,10 @@
 #include <cmath>
 #include <utility>
 
+// Acts include(s).
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
+
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 #include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
@@ -78,21 +82,21 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
       middleSPvec;
   std::vector<const Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (auto SP : bottomSPs) {
+  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : bottomSPs) {
     bottomSPvec.push_back(SP);
     deviceBottomSPs.push_back(
         detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                                  SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : middleSPs) {
+  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : middleSPs) {
     middleSPvec.push_back(SP);
     deviceMiddleSPs.push_back(
         detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
                                  SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : topSPs) {
+  for (const Acts::InternalSpacePoint<external_spacepoint_t>* SP : topSPs) {
     topSPvec.push_back(SP);
     deviceTopSPs.push_back(
         detail::DeviceSpacePoint{SP->x(), SP->y(), SP->z(), SP->radius(),
