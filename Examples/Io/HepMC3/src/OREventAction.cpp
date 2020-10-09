@@ -8,7 +8,6 @@
 
 #include "OREventAction.hpp"
 #include <stdexcept>
-#include "ORPrimaryGeneratorAction.hpp"
 #include "ORSteppingAction.hpp"
 #include <G4Event.hh>
 #include <G4RunManager.hh>
@@ -39,40 +38,39 @@ ActsExamples::OREventAction::~OREventAction()
 void
 ActsExamples::OREventAction::BeginOfEventAction(const G4Event*)
 {
-  // reset the collection of material steps
-  ORSteppingAction::instance()->clear(); // TODO: will this remain?
-  
+  ORSteppingAction::instance()->clear();
   m_event = std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
 void
 ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 {
-	// TODO: Wrap up tracks to build collection
 	std::cout << "Particles: " << m_event->particles().size() << " | " << "Vertices: " << m_event->vertices().size() << std::endl;
 	std::cout << "Number of steps: " << ORSteppingAction::instance()->counter() << std::endl;
 	ORSteppingAction::instance()->counter() = 0;
+	
+	for(const auto& part : m_event->particles())
+	{	
+		if(!part->production_vertex())
+			std::cout << "Production vertex missing" << std::endl;
+		if(!part->end_vertex())
+			std::cout << "End vertex missing" << std::endl;
+	}
+	for(const auto& vert : m_event->vertices())
+	{
+		auto proc = vert->attribute<HepMC3::StringAttribute>("Process");
+		if(proc && (proc->value() == "Transportation" || proc->value() == "Death"))
+			continue;
+		if(vert->particles_out().size() > 1)
+		std::cout << (proc ? proc->value() : "") << ": " << vert->particles_in().size() << "(" 
+			<< (vert->particles_in().size() > 0 ? vert->particles_in()[0]->pid() : 0) << ") -> " << vert->particles_out().size() << std::endl;
+	}
+	std::cout << "Checks done" << std::endl;
 }
 
 void
 ActsExamples::OREventAction::clear()
 {
 	m_event = nullptr;
-	// TODO | m_processTracks.clear();
+	ORSteppingAction::instance()->clear();
 }
-
-//~ void EventAction::EndOfEventAction(const G4Event* event) {
-  //~ const auto* rawPos = event->GetPrimaryVertex();
-  //~ // access the initial direction of the track
-  //~ G4ThreeVector rawDir = PrimaryGeneratorAction::instance()->direction();
-  //~ // create the RecordedMaterialTrack
-  //~ Acts::RecordedMaterialTrack mtrecord;
-  //~ mtrecord.first.first =
-      //~ Acts::Vector3D(rawPos->GetX0(), rawPos->GetY0(), rawPos->GetZ0());
-  //~ mtrecord.first.second = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
-  //~ mtrecord.second.materialInteractions =
-      //~ SteppingAction::instance()->materialSteps();
-
-  //~ // write out the RecordedMaterialTrack of one event
-  //~ m_materialTracks.push_back(mtrecord);
-//~ }

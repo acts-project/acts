@@ -18,13 +18,6 @@
 
 namespace ActsExamples {
 	
-	struct Collection
-	{
-		//~ std::map<int, std::vector<ParticleRecord>> particles;
-		int pdg;
-		double momentum, phi, theta;
-	};
-	
 /// @class EventAction
 ///
 /// @brief Writes out material track records
@@ -60,32 +53,11 @@ class OREventAction final : public G4UserEventAction {
   {
 	  return m_event;
   }
-  
-	Collection
-	processTracks() const
-	{
-		// TODO
-		return m_processTracks;
-	}
-	
-	//~ Collection	
-	//~ outcomingParticles(const int pdg, const double momentum, const double phi, const double theta) const
-	//~ {
-		//~ Collection c;
-		//~ c.particles = m_particles;
-		//~ c.pdg = pdg;
-		//~ c.momentum = momentum;
-		//~ c.phi = phi;
-		//~ c.theta = theta;
-		//~ return c;
-	//~ }
     
 	private:
 	/// Instance of the EventAction
 	static OREventAction* s_instance;
     
     std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
-
-	Collection m_processTracks;	
 };
 }  // namespace ActsExamples
