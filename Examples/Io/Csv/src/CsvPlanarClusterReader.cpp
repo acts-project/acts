@@ -41,7 +41,7 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (m_cfg.outputHitParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map output collection");
   }
-  if (m_cfg.outputSimulatedHits.empty()) {
+  if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
   if (not m_cfg.trackingGeometry) {
@@ -293,7 +293,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputHitIds, std::move(hitIds));
   ctx.eventStore.add(m_cfg.outputHitParticlesMap, std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputSimulatedHits, std::move(simHits));
+  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

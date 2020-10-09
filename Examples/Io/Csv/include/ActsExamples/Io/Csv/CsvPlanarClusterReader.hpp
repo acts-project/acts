@@ -48,7 +48,7 @@ class CsvPlanarClusterReader final : public IReader {
     /// Output hit-particles mapping collection.
     std::string outputHitParticlesMap;
     /// Output simulated (truth) hits collection.
-    std::string outputSimulatedHits;
+    std::string outputSimHits;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
