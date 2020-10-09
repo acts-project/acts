@@ -33,11 +33,12 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedfinderConfig<external_spacepoint_t> commonConfig,
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
-    Acts::Logging::Level loggerLevel)
+    std::unique_ptr<const Logger> incomingLogger)
     : m_commonConfig(std::move(commonConfig)),
       m_seedFilterConfig(seedFilterConfig),
       m_tripletFilterConfig(tripletFilterConfig),
-      m_device(device) {
+      m_device(device),
+      m_logger(std::move(incomingLogger)) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_commonConfig.highland =
@@ -56,8 +57,6 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       std::pow(m_commonConfig.highland / m_commonConfig.pTPerHelixRadius, 2);
 
   // Tell the user what CUDA device will be used by the object.
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("Acts::Cuda::SeedFinder", loggerLevel));
   if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
     ACTS_DEBUG("Will be using device:\n"
                << Info::instance().devices()[m_device]);
@@ -213,6 +212,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Return the collected spacepoints.
   return outputVec;
+}
+
+template <typename external_spacepoint_t>
+void SeedFinder<external_spacepoint_t>::setLogger(
+    std::unique_ptr<const Logger> newLogger) {
+  return m_logger.swap(newLogger);
 }
 
 }  // namespace Cuda
