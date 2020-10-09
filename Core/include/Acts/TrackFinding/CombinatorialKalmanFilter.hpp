@@ -180,16 +180,13 @@ struct CombinatorialKalmanFilterResult {
   Result<void> result{Result<void>::success()};
 };
 
-/// @brief CombinatorialKalmanFilter implementation of Acts as a plugin
+/// Combinatorial Kalman filter to find tracks.
 ///
-/// to the Propgator
 ///
-/// @tparam propagator_t Type of the propagation class
-/// @tparam updater_t Type of the kalman updater class
-/// @tparam smoother_t Type of the kalman smoother class
-/// @tparam source_link_selector_t Type of the source link selector class
-/// @tparam branch_stopper_t Type of the branch stopper class
-/// @tparam calibrator_t Type of the calibrator class
+/// @tparam propagator_t Type of the propagator
+/// @tparam updater_t Type of the Kalman
+/// @tparam smoother_t Type of the Kalman smoother
+/// @tparam branch_stopper_t Type of the branch stopper
 ///
 /// The CombinatorialKalmanFilter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -214,12 +211,9 @@ struct CombinatorialKalmanFilterResult {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
-          typename source_link_selector_t = CKFSourceLinkSelector,
           typename branch_stopper_t = VoidBranchStopper>
 class CombinatorialKalmanFilter {
  public:
-  using KalmanNavigator = typename propagator_t::Navigator;
-
   /// Default constructor is deleted
   CombinatorialKalmanFilter() = delete;
   /// Constructor from arguments
@@ -227,6 +221,8 @@ class CombinatorialKalmanFilter {
       : m_propagator(std::move(pPropagator)) {}
 
  private:
+  using KalmanNavigator = typename propagator_t::Navigator;
+
   /// The propgator for the transport and material update
   propagator_t m_propagator;
 
@@ -238,7 +234,7 @@ class CombinatorialKalmanFilter {
   /// The CombinatorialKalmanFilterActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t>
+            typename calibrator_t, typename source_link_selector_t>
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
@@ -1048,11 +1044,12 @@ class CombinatorialKalmanFilter {
   };
 
   template <typename source_link_t, typename parameters_t,
-            typename calibrator_t>
+            typename calibrator_t, typename source_link_selector_t>
   class Aborter {
    public:
     /// Broadcast the result_type
-    using action_type = Actor<source_link_t, parameters_t, calibrator_t>;
+    using action_type = Actor<source_link_t, parameters_t, calibrator_t,
+                              source_link_selector_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -1085,7 +1082,8 @@ class CombinatorialKalmanFilter {
   ///
   /// @return the output as an output track
   template <typename source_link_container_t, typename start_parameters_t,
-            typename calibrator_t, typename parameters_t = BoundTrackParameters>
+            typename calibrator_t, typename source_link_selector_t,
+            typename parameters_t = BoundTrackParameters>
   Result<CombinatorialKalmanFilterResult<
       typename source_link_container_t::value_type>>
   findTracks(const source_link_container_t& sourcelinks,
@@ -1109,9 +1107,9 @@ class CombinatorialKalmanFilter {
 
     // Create the ActionList and AbortList
     using CombinatorialKalmanFilterAborter =
-        Aborter<SourceLink, parameters_t, calibrator_t>;
+        Aborter<SourceLink, parameters_t, calibrator_t, source_link_selector_t>;
     using CombinatorialKalmanFilterActor =
-        Actor<SourceLink, parameters_t, calibrator_t>;
+        Actor<SourceLink, parameters_t, calibrator_t, source_link_selector_t>;
     using CombinatorialKalmanFilterResult =
         typename CombinatorialKalmanFilterActor::result_type;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
