@@ -58,12 +58,28 @@ ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 	}
 	for(const auto& vert : m_event->vertices())
 	{
-		auto proc = vert->attribute<HepMC3::StringAttribute>("Process");
-		if(proc && (proc->value() == "Transportation" || proc->value() == "Death"))
-			continue;
 		if(vert->particles_out().size() > 1)
-		std::cout << (proc ? proc->value() : "") << ": " << vert->particles_in().size() << "(" 
-			<< (vert->particles_in().size() > 0 ? vert->particles_in()[0]->pid() : 0) << ") -> " << vert->particles_out().size() << std::endl;
+		{
+			if(!vert->particles_in().empty())
+			{
+				auto partIn = vert->particles_in()[0];
+				auto prodVertex = partIn->production_vertex();
+				for(const auto& s : prodVertex->attribute_names())
+					std::cout << s << " ";
+				std::cout << "Wanted: " << partIn->id() << std::endl;
+				if(!prodVertex->attribute_names().empty())
+					std::cout << prodVertex->attribute<HepMC3::StringAttribute>("Process-" + std::to_string(partIn->id()))->value() << " leads to: ";
+			}
+			for(const auto& s : vert->attribute_names())
+				std::cout << vert->attribute<HepMC3::StringAttribute>(s)->value() << " ";
+
+			std::cout << ": " << vert->particles_in().size() << "(" 
+				<< (vert->particles_in().size() > 0 ? vert->particles_in()[0]->pid() : 0) << ") -> " << vert->particles_out().size() << " ";
+			for(const auto& part : vert->particles_out())
+				std::cout << "(" << part->pid() << ") ";
+				
+			std::cout << "| (" 	<< vert->position().x() << ", " << vert->position().y() << ", " << vert->position().z() << ")" << std::endl;
+		}
 	}
 	std::cout << "Checks done" << std::endl;
 }
