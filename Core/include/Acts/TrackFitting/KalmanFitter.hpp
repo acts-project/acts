@@ -261,17 +261,17 @@ class KalmanFitter {
       // layers on the backward-propagation starting volume won't be targeted.
       // @Todo: Let the navigator do all the re-initialization
       if constexpr (not isDirectNavigator) {
-        if (result.reset and state.navigation.navSurfaceIter ==
-                                 state.navigation.navSurfaces.end()) {
-          // So the navigator target call will target layers
-
-          state.navigation.navigationStage =
-              KalmanNavigator::Stage::layerTarget;
-          // We only do this after the backward-propagation
-          // starting layer has been processed
-          result.reset = false;
-        }
-      }
+	  if (result.reset and state.navigation.navSurfaceIter ==
+	      state.navigation.navSurfaces.end()) {
+	    // So the navigator target call will target layers
+	    
+	    state.navigation.navigationStage = 
+	      KalmanNavigator::Stage::layerTarget;
+	    // We only do this after the backward-propagation 
+	    // starting layer has been processed
+	    result.reset = false;
+	  }
+	}
       // Update:
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
@@ -411,8 +411,9 @@ class KalmanFitter {
           // Set the navigation state
           state.navigation.startSurface = &st.referenceSurface();
           if (state.navigation.startSurface->associatedLayer() != nullptr) {
-            state.navigation.startLayer =
-                state.navigation.startSurface->associatedLayer();
+	    state.navigation.startLayer =
+	      state.navigation.startSurface->associatedLayer();
+	       
           }
           state.navigation.startVolume =
               state.navigation.startLayer->trackingVolume();

@@ -75,6 +75,7 @@ class DirectNavigator {
         // Initialize the surface sequence
         state.navigation.navSurfaces = navSurfaces;
         state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+
         r.initialized = true;
       }
     }
