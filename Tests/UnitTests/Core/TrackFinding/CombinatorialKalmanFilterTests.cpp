@@ -55,8 +55,8 @@ struct ExtendedMinimalSourceLink {
       size_t sid, const FittableMeasurement<ExtendedMinimalSourceLink>* m)
       : sourceID(sid), meas(m) {}
 
-  const Surface& referenceSurface() const {
-    return *MeasurementHelpers::getSurface(*meas);
+  GeometryIdentifier geometryId() const {
+    return MeasurementHelpers::getSurface(*meas)->geometryId();
   }
 };
 
