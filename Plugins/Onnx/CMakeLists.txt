@@ -1,8 +1,10 @@
 add_library(
   ActsPluginOnnx SHARED
   # header files
+  include/Acts/Plugins/Onnx/OnnxRuntimeBase.hpp
   include/Acts/Plugins/Onnx/MLTrackClassifier.hpp
   # source files
+  src/OnnxRuntimeBase.cpp
   src/MLTrackClassifier.cpp)
 
 target_include_directories(
