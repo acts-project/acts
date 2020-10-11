@@ -9,14 +9,14 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 
 /// @brief Gaussian-like function for weight calculation
-/// Note: Factor 2 in denominator is included in temperature
+/// Note: Factor 2 in denominator is included in inverse temperature
 ///
 /// @param chi2 Chi^2 value
-/// @param temp Temperature value
+/// @param invTemp Denominator 1/(2 * temperature)
 ///
-/// @return exp(-chi2 / temp)
-static double gaussFunc(double chi2, double temp) {
-  return std::exp(-chi2 / temp);
+/// @return exp(-chi2 * invTemp)
+static double gaussFunc(double chi2, double invTemp) {
+  return std::exp(-chi2 * invTemp);
 }
 
 void Acts::AnnealingUtility::anneal(State& state) const {
@@ -30,22 +30,24 @@ void Acts::AnnealingUtility::anneal(State& state) const {
 double Acts::AnnealingUtility::getWeight(
     State& state, double chi2, const std::vector<double>& allChi2) const {
   unsigned int idx = state.currentTemperatureIndex;
-  const double currentTemp = 2. * m_cfg.setOfTemperatures[idx];
+  // Calculate 1/denominator in exp function already here
+  const double currentInvTemp = 1. / (2. * m_cfg.setOfTemperatures[idx]);
 
-  double num = gaussFunc(chi2, currentTemp);
+  double num = gaussFunc(chi2, currentInvTemp);
 
   double denom = m_cfg.gaussCutTempVec[idx];
 
   for (double val : allChi2) {
-    denom += gaussFunc(val, currentTemp);
+    denom += gaussFunc(val, currentInvTemp);
   }
 
   return num / denom;
 }
 
 double Acts::AnnealingUtility::getWeight(State& state, double chi2) const {
-  const double currentTemp =
-      m_cfg.setOfTemperatures[state.currentTemperatureIndex];
+  // Calculate 1/denominator in exp function
+  const double currentInvTemp =
+      1. / (2 * m_cfg.setOfTemperatures[state.currentTemperatureIndex]);
 
-  return 1. / (1. + gaussFunc(m_cfg.cutOff - chi2, 2. * currentTemp));
+  return 1. / (1. + gaussFunc(m_cfg.cutOff - chi2, currentInvTemp));
 }
