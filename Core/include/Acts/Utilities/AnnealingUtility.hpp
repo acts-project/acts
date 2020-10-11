@@ -32,7 +32,12 @@ class AnnealingUtility {
     // Config constructor with default temperature list: {64.,16.,4.,2.,1.5,1.}
     Config(const std::vector<double>& temperatures = {64., 16., 4., 2., 1.5,
                                                       1.})
-        : setOfTemperatures(temperatures) {}
+        : setOfTemperatures(temperatures) {
+      // Set Gaussian cut-off terms for each temperature
+      for (double temp : temperatures) {
+        gaussCutTempVec.push_back(std::exp(-cutOff / (2. * temp)));
+      }
+    }
 
     // Insensitivity of calculated weight at cutoff
     double cutOff{9.};
@@ -40,6 +45,10 @@ class AnnealingUtility {
     // Set of temperatures, annealing starts at setOfTemperatures[0]
     // and anneals towards setOfTemperatures[last]
     std::vector<double> setOfTemperatures;
+
+    // For each temperature, a Gaussian term with the chi2 cut-off value
+    // is calculated and stored here
+    std::vector<double> gaussCutTempVec;
   };
 
   /// Constructor
