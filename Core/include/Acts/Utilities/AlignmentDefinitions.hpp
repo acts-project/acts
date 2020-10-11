@@ -37,7 +37,7 @@ using AlignmentScalar = double;
 // Matrix and vector types related to alignment parameters.
 using AlignmentVector = ActsVector<AlignmentScalar, eAlignmentSize>;
 using AlignmentRowVector = ActsRowVector<AlignmentScalar, eAlignmentSize>;
-using AlingmentMatrix =
+using AlignmentMatrix =
     ActsMatrix<AlignmentScalar, eAlignmentSize, eAlignmentSize>;
 using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentScalar, 3, eAlignmentSize>;
