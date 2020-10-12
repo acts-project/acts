@@ -15,6 +15,7 @@
 //~ #include "SystemOfUnits.h"
 
 #include <HepMC3/Attribute.h>
+#include <HepMC3/Units.h>
 
 ActsExamples::ORSteppingAction* ActsExamples::ORSteppingAction::s_instance
     = nullptr;
@@ -89,7 +90,7 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 			auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
 			vertex->add_particle_out(postParticle);
 			OREventAction::instance()->event()->add_vertex(vertex);
-			vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
+			vertex->add_attribute("NextProcessOf" + std::to_string(track->GetTrackID()), process);
 		}
 		else
 			// Search for an existing vertex
@@ -98,7 +99,11 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 				if(vertex->position() == prePos)
 				{
 					vertex->add_particle_out(postParticle); // TODO: the initial parameters need to be stored additionally
-					vertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
+					vertex->add_attribute("NextProcessOf-" + std::to_string(track->GetTrackID()), process);
+					auto preStepMomentum = step->GetPreStepPoint()->GetMomentum();
+					auto preStepEnergy = step->GetPreStepPoint()->GetTotalEnergy();
+					auto preMom4 = std::make_shared<HepMC3::VectorDoubleAttribute>(std::vector<double>{preStepMomentum[0], preStepMomentum[1], preStepMomentum[2], preStepEnergy});
+					vertex->add_attribute("InitialParametersOf-" + std::to_string(track->GetTrackID()), preMom4);
 				}
 			}
 	}
@@ -106,7 +111,7 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 	{
 		// Add particle from same track to vertex
 		m_previousVertex->add_particle_out(postParticle);
-		m_previousVertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
+		m_previousVertex->add_attribute("NextProcessOf-" + std::to_string(track->GetTrackID()), process);
 	}
 
 	// Build the vertex after this step
@@ -121,21 +126,29 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 	
 	// Store the vertex
 	OREventAction::instance()->event()->add_vertex(m_previousVertex);
+
+	// Store additional data in the particle
+	postParticle->add_attribute("TrackID", std::make_shared<HepMC3::IntAttribute>(track->GetTrackID()));
+	postParticle->add_attribute("ParentID", std::make_shared<HepMC3::IntAttribute>(track->GetParentID()));
+	
+	const double X0 = (track->GetMaterial()->GetRadlen() / CLHEP::mm) * HepMC3::Units::LengthUnit::MM; // TODO: units
+    const double L0 = (track->GetMaterial()->GetNuclearInterLength() / CLHEP::mm) *
+                HepMC3::Units::LengthUnit::MM;                
+	postParticle->add_attribute("NextX0Of-" + std::to_string(track->GetTrackID()), std::make_shared<HepMC3::DoubleAttribute>(X0));
+	postParticle->add_attribute("NextL0Of-" + std::to_string(track->GetTrackID()), std::make_shared<HepMC3::DoubleAttribute>(L0));
+	postParticle->add_attribute("StepLengthOf-" + std::to_string(track->GetTrackID()), std::make_shared<HepMC3::DoubleAttribute>(track->GetStepLength()));
+	if(track->GetCreatorProcess())
+		postParticle->add_attribute("CreatorProcessOf-" + std::to_string(track->GetTrackID()), std::make_shared<HepMC3::StringAttribute>(track->GetCreatorProcess()->GetProcessName()));
 	
 	// Stop tracking the vertex if the particle dies
 	if(track->GetTrackStatus() != fAlive)
 	{
-		process = std::make_shared<HepMC3::StringAttribute>("Death");
-		m_previousVertex->add_attribute("Process-" + std::to_string(postParticle->id()), process);
+		process = std::make_shared<HepMC3::StringAttribute>("DeathOf-" + std::to_string(track->GetTrackID()));
+		m_previousVertex->add_attribute("NextProcessOf-" + std::to_string(track->GetTrackID()), process);
 		m_previousVertex = nullptr;
 	}
 	
-testCounter++;	
-//~ std::cout << "energy: " << track->GetKineticEnergy() << " | " << track->GetVertexKineticEnergy() << std::endl;
-//~ std::cout << track->GetParentID() << " | " << track->GetTrackID() << " | " << track->GetDynamicParticle()->GetPDGcode() 
-    //~ << " | " << track->GetTrackLength() << " | " << step->GetPreStepPoint()->GetLocalTime() 
-	//~ << " | " << (step->GetPreStepPoint()->GetProcessDefinedStep() ? step->GetPreStepPoint()->GetProcessDefinedStep()->GetProcessName() : "---") 
-	//~ << " | " << (track->GetCreatorProcess() ? track->GetCreatorProcess()->GetProcessName() : "---") << " | " << track->GetCurrentStepNumber() << std::endl;	
+testCounter++;
 }
 
 void

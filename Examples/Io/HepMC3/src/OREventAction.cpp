@@ -68,10 +68,11 @@ ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 					std::cout << s << " ";
 				std::cout << "Wanted: " << partIn->id() << std::endl;
 				if(!prodVertex->attribute_names().empty())
-					std::cout << prodVertex->attribute<HepMC3::StringAttribute>("Process-" + std::to_string(partIn->id()))->value() << " leads to: ";
+					std::cout << prodVertex->attribute<HepMC3::StringAttribute>("NextProcessOf-" + std::to_string(partIn->id()))->value() << " leads to: ";
 			}
 			for(const auto& s : vert->attribute_names())
-				std::cout << vert->attribute<HepMC3::StringAttribute>(s)->value() << " ";
+				std::cout << typeid(vert->attribute<HepMC3::StringAttribute>(s)).name() << std::endl;
+				//~ std::cout << vert->attribute<HepMC3::StringAttribute>(s)->value() << " ";
 
 			std::cout << ": " << vert->particles_in().size() << "(" 
 				<< (vert->particles_in().size() > 0 ? vert->particles_in()[0]->pid() : 0) << ") -> " << vert->particles_out().size() << " ";
