@@ -41,7 +41,8 @@ struct SourceLinkSelectorCuts {
 /// If there is no compatible source link, the source link with the mininum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-struct CKFSourceLinkSelector {
+class CKFSourceLinkSelector {
+ public:
   /// Geometry-dependent cut configuration.
   ///
   /// Different components on the geometry can require different cut settings.
