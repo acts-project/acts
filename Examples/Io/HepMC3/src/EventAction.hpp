@@ -18,20 +18,20 @@
 
 namespace ActsExamples {
 	
-/// @class OREventAction
+/// @class EventAction
 ///
 /// The EventAction class is the realization of the Geant4 class
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
 /// entities needed for material mapping once per event.
 ///
-class OREventAction final : public G4UserEventAction {
+class EventAction final : public G4UserEventAction {
  public:
   /// Static access method
-  static OREventAction* instance();
+  static EventAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  OREventAction();
-  ~OREventAction() final override;
+  EventAction();
+  ~EventAction() final override;
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
@@ -51,7 +51,7 @@ class OREventAction final : public G4UserEventAction {
     
 	private:
 	/// Instance of the EventAction
-	static OREventAction* s_instance;
+	static EventAction* s_instance;
     /// The current HepMC3 event
     std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
 };

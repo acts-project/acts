@@ -17,19 +17,19 @@ class G4Run;
 
 namespace ActsExamples {
 
-/// @class ORRunAction
+/// @class RunAction
 ///
-/// The ORRunAction class is the implementation of the
+/// The RunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
 /// an resets the EventAction
-class ORRunAction final : public G4UserRunAction {
+class RunAction final : public G4UserRunAction {
  public:
   /// Static access method
-  static ORRunAction* instance();
+  static RunAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  ORRunAction();
-  ~ORRunAction() final override;
+  RunAction();
+  ~RunAction() final override;
 
   /// Interface method at the begin of the run
   /// @note resets the event action
@@ -40,7 +40,7 @@ class ORRunAction final : public G4UserRunAction {
 
  private:
   /// Instance of the EventAction
-  static ORRunAction* s_instance;
+  static RunAction* s_instance;
 };
 
 }  // namespace ActsExamples

@@ -6,22 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "OREventAction.hpp"
+#include "EventAction.hpp"
 #include <stdexcept>
-#include "ORSteppingAction.hpp"
+#include "SteppingAction.hpp"
 #include <G4Event.hh>
 #include <G4RunManager.hh>
 
-ActsExamples::OREventAction* ActsExamples::OREventAction::s_instance = nullptr;
+ActsExamples::EventAction* ActsExamples::EventAction::s_instance = nullptr;
 
-ActsExamples::OREventAction*
-ActsExamples::OREventAction::instance()
+ActsExamples::EventAction*
+ActsExamples::EventAction::instance()
 {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-ActsExamples::OREventAction::OREventAction() : G4UserEventAction()
+ActsExamples::EventAction::EventAction() : G4UserEventAction()
 {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
@@ -30,24 +30,24 @@ ActsExamples::OREventAction::OREventAction() : G4UserEventAction()
   }
 }
 
-ActsExamples::OREventAction::~OREventAction()
+ActsExamples::EventAction::~EventAction()
 {
   s_instance = nullptr;
 }
 
 void
-ActsExamples::OREventAction::BeginOfEventAction(const G4Event*)
+ActsExamples::EventAction::BeginOfEventAction(const G4Event*)
 {
-  ORSteppingAction::instance()->clear();
+  SteppingAction::instance()->clear();
   m_event = std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
 void
-ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
+ActsExamples::EventAction::EndOfEventAction(const G4Event*)
 {
 	//~ std::cout << "Particles: " << m_event->particles().size() << " | " << "Vertices: " << m_event->vertices().size() << std::endl;
-	//~ std::cout << "Number of steps: " << ORSteppingAction::instance()->counter() << std::endl;
-	//~ ORSteppingAction::instance()->counter() = 0;
+	//~ std::cout << "Number of steps: " << SteppingAction::instance()->counter() << std::endl;
+	//~ SteppingAction::instance()->counter() = 0;
 	
 	//~ for(const auto& part : m_event->particles())
 	//~ {	
@@ -85,14 +85,14 @@ ActsExamples::OREventAction::EndOfEventAction(const G4Event*)
 }
 
 void
-ActsExamples::OREventAction::clear()
+ActsExamples::EventAction::clear()
 {
 	m_event = nullptr;
-	ORSteppingAction::instance()->clear();
+	SteppingAction::instance()->clear();
 }
 
 std::shared_ptr<HepMC3::GenEvent>
-ActsExamples::OREventAction::event() const
+ActsExamples::EventAction::event() const
 {
   return m_event;
 }

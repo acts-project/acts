@@ -20,23 +20,23 @@ class G4Event;
 
 namespace ActsExamples {
 
-  /// @class ORPrimaryGeneratorAction
+  /// @class PrimaryGeneratorAction
   ///
-  /// The ORPrimaryGeneratorAction is the implementation of the Geant4
+  /// The PrimaryGeneratorAction is the implementation of the Geant4
   /// class G4VUserPrimaryGeneratorAction. It generates a random direction
   /// and shoots a particle.
-  class ORPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
+  class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
   {
   public:
     /// Constructor
-    ORPrimaryGeneratorAction(
+    PrimaryGeneratorAction(
                              G4int           randomSeed1  = 12345,
                              G4int           randomSeed2  = 23456);
     /// Destructor
-    ~ORPrimaryGeneratorAction() override;
+    ~PrimaryGeneratorAction() override;
 
     /// Static access method
-    static ORPrimaryGeneratorAction*
+    static PrimaryGeneratorAction*
     instance();
 
     /// Interface method to generate the primary
@@ -50,7 +50,7 @@ namespace ActsExamples {
 	 
   private:
     /// Instance of the PrimaryGeneratorAction
-    static ORPrimaryGeneratorAction* s_instance;
+    static PrimaryGeneratorAction* s_instance;
 
     /// Pointer to the G4 particle gun
     std::unique_ptr<G4ParticleGun> m_particleGun;

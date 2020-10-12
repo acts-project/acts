@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "OREventAction.hpp"
-#include "ORPrimaryGeneratorAction.hpp"
-#include "ORSteppingAction.hpp"
-#include "ORRunAction.hpp"
-#include "ActsExamples/Plugins/HepMC3/InteractionProcessRecording.hpp"
+#include "EventAction.hpp"
+#include "PrimaryGeneratorAction.hpp"
+#include "SteppingAction.hpp"
+#include "RunAction.hpp"
+#include "ActsExamples/Plugins/HepMC3/EventRecording.hpp"
 #include <iostream>
 #include <stdexcept>
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -20,10 +20,10 @@
 
 #include <HepMC3/GenEvent.h>
 
-ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
-    ActsExamples::InteractionProcessRecording::Config&& cnf,
+ActsExamples::EventRecording::EventRecording(
+    ActsExamples::EventRecording::Config&& cnf,
     Acts::Logging::Level                 level)
-  : ActsExamples::BareAlgorithm("InteractionProcessRecording", level)
+  : ActsExamples::BareAlgorithm("EventRecording", level)
   , m_cfg(std::move(cnf))
   , m_runManager(std::make_unique<G4RunManager>())
 {
@@ -43,15 +43,15 @@ ActsExamples::InteractionProcessRecording::InteractionProcessRecording(
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
-  m_runManager->SetUserAction(new ActsExamples::ORRunAction());
-  m_runManager->SetUserAction(new ActsExamples::OREventAction());
-  m_runManager->SetUserAction(new ActsExamples::ORPrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new ActsExamples::ORSteppingAction());
+  m_runManager->SetUserAction(new ActsExamples::RunAction());
+  m_runManager->SetUserAction(new ActsExamples::EventAction());
+  m_runManager->SetUserAction(new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
+  m_runManager->SetUserAction(new ActsExamples::SteppingAction());
   m_runManager->Initialize();
 }
 
 ActsExamples::ProcessCode
-ActsExamples::InteractionProcessRecording::execute(const ActsExamples::AlgorithmContext& context) const
+ActsExamples::EventRecording::execute(const ActsExamples::AlgorithmContext& context) const
 {
   // ensure exclusive access to the geant run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
@@ -68,7 +68,7 @@ ActsExamples::InteractionProcessRecording::execute(const ActsExamples::Algorithm
 	  // Prepare the particle gun
 	  const auto pos = part.position();
 	  const auto dir = part.unitDirection();
-	  ActsExamples::ORPrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
+	  ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part.pdg(),
 		 part.absMomentum(),
 		 {pos[0], pos[1], pos[2]}, {dir[0], dir[1], dir[2]});
 		   
@@ -76,7 +76,7 @@ ActsExamples::InteractionProcessRecording::execute(const ActsExamples::Algorithm
 	  m_runManager->BeamOn(1);
   
 	  // Store the result
-	  events.push_back(ActsExamples::OREventAction::instance()->event());
+	  events.push_back(ActsExamples::EventAction::instance()->event());
 	}
   
   ACTS_INFO(events.size() << " events generated");

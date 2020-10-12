@@ -27,7 +27,7 @@ namespace DD4hepG4
 class DD4hepToG4Svc;	
 }
 
-class InteractionProcessRecording : public ActsExamples::BareAlgorithm
+class EventRecording : public ActsExamples::BareAlgorithm
 {
 public:
   /// @class Config
@@ -45,9 +45,9 @@ public:
   };
 
   /// Constructor
-  InteractionProcessRecording(Config&&        cnf,
+  EventRecording(Config&&        cnf,
                     Acts::Logging::Level level = Acts::Logging::INFO);
-  ~InteractionProcessRecording() {m_runManager = nullptr; std::cout << "Recording destructor" << std::endl;}
+  virtual ~EventRecording();
   
   ActsExamples::ProcessCode
   execute(const AlgorithmContext& context) const final override;
