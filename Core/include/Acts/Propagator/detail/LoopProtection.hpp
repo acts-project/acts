@@ -42,7 +42,7 @@ struct LoopProtection {
             state.options.abortList.template get<path_arborter_t>();
         double loopLimit = state.options.loopFraction * helixPath;
         double pathLimit = pathAborter.internalLimit;
-        if (loopLimit * loopLimit < pathLimit * pathLimit) {
+        if (std::abs(loopLimit) < std::abs(pathLimit)) {
           pathAborter.internalLimit = loopLimit;
 
           ACTS_VERBOSE("Path aborter limit set to "
