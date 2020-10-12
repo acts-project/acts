@@ -21,7 +21,6 @@
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
-
 #include "ActsExamples/Plugins/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Plugins/HepMC3/HepMC3Writer.hpp"
 
@@ -53,29 +52,19 @@ main(int argc, char* argv[])
   sequencer.addReader(
       std::make_shared<ActsExamples::CsvParticleReader>(particleReader, logLevel));
       
-  // DETECTOR:
-  // --------------------------------------------------------------------------------
-  // Setup the DD4hep detector
-  //~ auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig<boost::program_options::variables_map>(vm);
+  // Prepare the detector
   auto dd4hepCfg = ActsExamples::Options::readDD4hepConfig(vm);
   auto geometrySvc = std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(dd4hepCfg);
-
   std::unique_ptr<G4VUserDetectorConstruction> g4detector =
       std::make_unique<ActsExamples::DD4hepDetectorConstruction>(*geometrySvc->lcdd());
 
-  // --------------------------------------------------------------------------------
-  // Geant4 JOB:
-  // --------------------------------------------------------------------------------
-  // set up the writer for
-  // ---------------------------------------------------------------------------------
+  // Prepare the recording
   ActsExamples::EventRecording::Config erConfig;
   erConfig.eventInput = particleReader.outputParticles;
   erConfig.eventOutput = "geant-event";
   erConfig.detectorConstruction = std::move(g4detector);
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
-
-  // create the geant4 algorithm
   sequencer.addAlgorithm(std::make_shared<ActsExamples::EventRecording>(std::move(erConfig), logLevel));
   
   // Create the writer
