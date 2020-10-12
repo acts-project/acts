@@ -8,8 +8,8 @@
 
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
 
-#include "FatrasMain.hpp"
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return ActsExamples::fatrasMain(argc, argv, std::make_shared<TGeoDetector>());
+  return runFatras(argc, argv, std::make_shared<TGeoDetector>());
 }
