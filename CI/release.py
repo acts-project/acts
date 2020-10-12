@@ -136,7 +136,7 @@ def markdown_changelog(version: str, changelog: dict, header: bool = False) -> s
     return output
 
 
-async def main(draft):
+async def main(draft, dry_run):
     token = os.environ["GH_TOKEN"]
     async with aiohttp.ClientSession(loop=asyncio.get_event_loop()) as session:
         gh = GitHubAPI(session, __name__, oauth_token=token)
@@ -184,50 +184,52 @@ async def main(draft):
 
         print(md)
 
-        version_file.write_text(next_version)
+        if not dry_run:
+          version_file.write_text(next_version)
 
-        git.add(version_file)
-        git.commit(m=f"Bump to version {next_tag}")
+          git.add(version_file)
+          git.commit(m=f"Bump to version {next_tag}")
 
-        # git.tag(next_tag)
-        target_hash = str(git("rev-parse", "HEAD")).strip()
-        print("target_hash:", target_hash)
+          # git.tag(next_tag)
+          target_hash = str(git("rev-parse", "HEAD")).strip()
+          print("target_hash:", target_hash)
 
-        git.push()
+          git.push()
 
-        commit_ok = False
-        print("Waiting for commit", target_hash[:8], "to be received")
-        for _ in range(10):
-            try:
-              url = f"/repos/{repo}/commits/{target_hash}"
-              await gh.getitem(url)
-              commit_ok = True
-              break
-            except InvalidField as e:
-                print("Commit", target_hash[:8], "not received yet")
-                pass # this is what we want
-            await asyncio.sleep(0.5)
+          commit_ok = False
+          print("Waiting for commit", target_hash[:8], "to be received")
+          for _ in range(10):
+              try:
+                url = f"/repos/{repo}/commits/{target_hash}"
+                await gh.getitem(url)
+                commit_ok = True
+                break
+              except InvalidField as e:
+                  print("Commit", target_hash[:8], "not received yet")
+                  pass # this is what we want
+              await asyncio.sleep(0.5)
 
-        if not commit_ok:
-            print("Commit", target_hash[:8], "was not created on remote")
-            sys.exit(1)
+          if not commit_ok:
+              print("Commit", target_hash[:8], "was not created on remote")
+              sys.exit(1)
 
-        print("Commit", target_hash[:8], "received")
+          print("Commit", target_hash[:8], "received")
 
-        await gh.post(
-            f"/repos/{repo}/releases",
-            data={
-                "body": md,
-                "tag_name": next_tag,
-                "name": next_tag,
-                "draft": draft,
-                "target_commitish": target_hash,
-            },
-        )
+          await gh.post(
+              f"/repos/{repo}/releases",
+              data={
+                  "body": md,
+                  "tag_name": next_tag,
+                  "name": next_tag,
+                  "draft": draft,
+                  "target_commitish": target_hash,
+              },
+          )
 
 
 @click.command()
-@click.option("--draft/--no-draft")
+@click.option("--draft/--no-draft", default=True)
+@click.option("--dry-run/--no-dry-run", default=False)
 def main_sync(*args, **kwargs):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(*args, **kwargs))
