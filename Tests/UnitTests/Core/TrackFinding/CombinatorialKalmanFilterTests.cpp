@@ -58,16 +58,17 @@ struct ExtendedMinimalSourceLink {
   const Surface& referenceSurface() const {
     return *MeasurementHelpers::getSurface(*meas);
   }
+};
 
-  friend bool operator==(const ExtendedMinimalSourceLink& lhs,
-                         const ExtendedMinimalSourceLink& rhs) {
-    return (lhs.sourceID == rhs.sourceID) and (lhs.meas == rhs.meas);
-  }
-  friend bool operator!=(const ExtendedMinimalSourceLink& lhs,
-                         const ExtendedMinimalSourceLink& rhs) {
-    return (lhs.meas != rhs.meas);
-  }
-};  // namespace Test
+inline bool operator==(const ExtendedMinimalSourceLink& lhs,
+                       const ExtendedMinimalSourceLink& rhs) {
+  return (lhs.sourceID == rhs.sourceID) and (lhs.meas == rhs.meas);
+}
+
+inline bool operator!=(const ExtendedMinimalSourceLink& lhs,
+                       const ExtendedMinimalSourceLink& rhs) {
+  return (lhs.meas != rhs.meas);
+}
 
 struct ExtendedCalibrator {
   template <typename parameters_t>
