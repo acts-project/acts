@@ -181,20 +181,18 @@ endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
   # must be version 3.1+. version 3.0 uses HepMC w/o number as module name.
   # version 3.1.0 misses the version variable so we can not check for it
-  find_package(HepMC3 REQUIRED)
-  set(HepMC3_LIBRARIES "/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc8-opt/lib64/libHepMC3.so.3")
-  set(HepMC3_INCLUDE_DIR "/cvmfs/sft.cern.ch/lcg/views/LCG_97/x86_64-centos7-gcc8-opt/include/")
+  find_package(HepMC3 CONFIG REQUIRED)
   find_package(HepPID REQUIRED)
   # HepMC version 3.1.0 has a broken cmake config: it searches for the
   # HepMC libray instead of the correct HepMC3 one and sets HEPMC_LIBRARIES
   # instead of the expected HEPMC3_LIBRARIES. fix manually.
-  if(NOT HepMC3_LIBRARIES)
+  if(NOT HEPMC3_LIBRARIES)
     message(STATUS "Workaround for HepMC3. Search in $ENV{HepMC3_DIR}")
     find_library(
-      HepMC3_LIB Names HepMC
+      HEPMC3_LIB Names HepMC3
       PATHS $ENV{HepMC3_DIR}/lib $ENV{HepMC3_DIR}/lib64 NO_DEFAULT_PATH)
-    set(HepMC3_INCLUDE_DIR ${HepMC_INCLUDE_DIR})
-    set(HepMC3_LIBRARIES ${HepMC3_LIB})
+    set(HEPMC3_INCLUDE_DIR ${HEPMC_INCLUDE_DIR})
+    set(HEPMC3_LIBRARIES ${HEPMC3_LIB})
   endif()
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
