@@ -58,7 +58,7 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
         using Stepper = Acts::EigenStepper<MagneticField>;
         using Navigator = Acts::Navigator;
         using Propagator = Acts::Propagator<Stepper, Navigator>;
-        using Ckf =
+        using CKF =
             Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
 
         // construct all components for the track finder
@@ -69,10 +69,10 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        Ckf trackFinder(std::move(propagator));
+        CKF trackFinder(std::move(propagator));
 
         // build the track finder functions. owns the track finder object.
-        return TrackFinderFunctionImpl<Ckf>(std::move(trackFinder));
+        return TrackFinderFunctionImpl<CKF>(std::move(trackFinder));
       },
       std::move(magneticField));
 }
