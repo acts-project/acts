@@ -53,8 +53,10 @@ Acts::GaussianTrackDensity<input_track_t>::globalMaximumWithWidth(
                       maxDensity, maxSecondDerivative);
   }
 
-  return std::make_pair(maxPosition,
-                        std::sqrt(-(maxDensity / maxSecondDerivative)));
+  return (maxSecondDerivative == 0.)
+             ? std::make_pair(0., 0.)
+             : std::make_pair(maxPosition,
+                              std::sqrt(-(maxDensity / maxSecondDerivative)));
 }
 
 template <typename input_track_t>
