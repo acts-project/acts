@@ -1,9 +1,9 @@
 add_library(
   ActsExamplesFatrasCommon SHARED
-  FatrasDigitizationBase.cpp
-  FatrasEvgenBase.cpp
-  FatrasMain.cpp
-  FatrasSimulationBase.cpp)
+  Fatras.cpp
+  FatrasDigitization.cpp
+  FatrasInput.cpp
+  FatrasSimulation.cpp)
 target_include_directories(
   ActsExamplesFatrasCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
@@ -13,7 +13,7 @@ target_link_libraries(
     ActsCore ActsFatras
     ActsExamplesFramework
     ActsExamplesCommon
-    ActsExamplesGenerators ActsExamplesGeneratorsPythia8
+    ActsExamplesGenerators
     ActsExamplesMagneticField ActsExamplesDetectorsCommon
     ActsExamplesFatras ActsExamplesDigitization
     ActsExamplesIoCsv ActsExamplesIoRoot
