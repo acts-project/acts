@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ORPrimaryGeneratorAction.hpp"
+#include "PrimaryGeneratorAction.hpp"
 #include <stdexcept>
 #include "G4Event.hh"
 #include "G4ParticleDefinition.hh"
@@ -15,11 +15,11 @@
 #include "G4UnitsTable.hh"
 #include "Randomize.hh"
 
-ActsExamples::ORPrimaryGeneratorAction*
-    ActsExamples::ORPrimaryGeneratorAction::s_instance
+ActsExamples::PrimaryGeneratorAction*
+    ActsExamples::PrimaryGeneratorAction::s_instance
     = nullptr;
 
-ActsExamples::ORPrimaryGeneratorAction::ORPrimaryGeneratorAction(G4int           randomSeed1,
+ActsExamples::PrimaryGeneratorAction::PrimaryGeneratorAction(G4int           randomSeed1,
     G4int           randomSeed2)
   : G4VUserPrimaryGeneratorAction(), m_particleGun(nullptr)
 {
@@ -41,19 +41,19 @@ ActsExamples::ORPrimaryGeneratorAction::ORPrimaryGeneratorAction(G4int          
   CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
 }
 
-ActsExamples::ORPrimaryGeneratorAction::~ORPrimaryGeneratorAction()
+ActsExamples::PrimaryGeneratorAction::~PrimaryGeneratorAction()
 {
   s_instance = nullptr;
 }
 
-ActsExamples::ORPrimaryGeneratorAction*
-ActsExamples::ORPrimaryGeneratorAction::instance()
+ActsExamples::PrimaryGeneratorAction*
+ActsExamples::PrimaryGeneratorAction::instance()
 {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-void ActsExamples::ORPrimaryGeneratorAction::prepareParticleGun(G4int pdg,
+void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(G4int pdg,
     G4double        momentum,
 	 G4ThreeVector pos, G4ThreeVector dir)
 {
@@ -67,7 +67,7 @@ void ActsExamples::ORPrimaryGeneratorAction::prepareParticleGun(G4int pdg,
 }
 
 void
-ActsExamples::ORPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
+ActsExamples::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
 	// Produce the event
   m_particleGun->GeneratePrimaryVertex(anEvent);

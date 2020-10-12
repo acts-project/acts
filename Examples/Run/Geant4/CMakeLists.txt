@@ -11,20 +11,6 @@ target_link_libraries(
     ActsExamplesIoRoot
     Boost::program_options)
 
-add_executable(
-  ActsNuclearInteractionRecording
-  NuclearInteractionRecording.cpp)
-target_link_libraries(
-  ActsNuclearInteractionRecording
-  PRIVATE
-    ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
-    ActsExamplesFramework
-    ActsExamplesGeant4
-    ActsExamplesGeant4DD4hep
-    ActsExamplesIoHepMC3
-    Boost::program_options)
-    
 install(
   TARGETS 
     ActsExampleGeantinoRecordingGdml 

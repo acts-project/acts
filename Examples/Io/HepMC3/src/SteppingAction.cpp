@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ORSteppingAction.hpp"
-#include "OREventAction.hpp"
+#include "SteppingAction.hpp"
+#include "EventAction.hpp"
 #include <stdexcept>
 #include "G4Step.hh"
 #include "G4VProcess.hh"
@@ -15,17 +15,17 @@
 #include <HepMC3/Attribute.h>
 #include <HepMC3/Units.h>
 
-ActsExamples::ORSteppingAction* ActsExamples::ORSteppingAction::s_instance
+ActsExamples::SteppingAction* ActsExamples::SteppingAction::s_instance
     = nullptr;
 
-ActsExamples::ORSteppingAction*
-ActsExamples::ORSteppingAction::instance()
+ActsExamples::SteppingAction*
+ActsExamples::SteppingAction::instance()
 {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-ActsExamples::ORSteppingAction::ORSteppingAction()
+ActsExamples::SteppingAction::SteppingAction()
   : G4UserSteppingAction()
 {
   if (s_instance) {
@@ -35,17 +35,17 @@ ActsExamples::ORSteppingAction::ORSteppingAction()
   }
 }
 
-ActsExamples::ORSteppingAction::~ORSteppingAction()
+ActsExamples::SteppingAction::~SteppingAction()
 {
   s_instance = nullptr;
 }
 
 void
-ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
+ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step)
 {
 	/// Store the step such that a vertex knows the position and upcoming process for a particle. The particle properties are stored as ingoing before and as outgoing after the step with the process was performed. Therefore the vertex defines the starting point of a process while the next vertex describes the state after the process, including all particles produced along the step. In total the entire event is represented by vertices which describe each step in Geant4.
 	
-	auto event = OREventAction::instance()->event();
+	auto event = EventAction::instance()->event();
 	
 	// Unit conversions G4->HepMC3
 	constexpr double convertLength = HepMC3::Units::LengthUnit::MM / CLHEP::mm;
@@ -138,7 +138,7 @@ ActsExamples::ORSteppingAction::UserSteppingAction(const G4Step* step)
 }
 
 void
-ActsExamples::ORSteppingAction::clear()
+ActsExamples::SteppingAction::clear()
 {
 	m_previousVertex = nullptr;
 }

@@ -17,17 +17,17 @@
 
 namespace ActsExamples {
 	
-  /// @class ORSteppingAction
+  /// @class SteppingAction
   ///
   /// @brief Collects the particles history
-  class ORSteppingAction : public G4UserSteppingAction
+  class SteppingAction : public G4UserSteppingAction
   {
   public:
-    ORSteppingAction();
-    ~ORSteppingAction() override;
+    SteppingAction();
+    ~SteppingAction() override;
 
     /// Static access method to the instance
-    static ORSteppingAction*
+    static SteppingAction*
     instance();
 
     /// @brief Interface Method doing the step and records the data
@@ -41,7 +41,7 @@ namespace ActsExamples {
     
   private:	
     /// Instance of the SteppingAction
-    static ORSteppingAction* s_instance;
+    static SteppingAction* s_instance;
     /// The end vertex of the previous step
     std::shared_ptr<HepMC3::GenVertex> m_previousVertex = nullptr;    
   };
