@@ -42,8 +42,8 @@ namespace Acts {
 
 /// Combined options for the Kalman fitter.
 ///
-/// @tparam calibrator_t Type of the source link calibrator
-/// @tparam outlier_finder_t Type of the outlier finder
+/// @tparam calibrator_t Source link type, should be semiregular.
+/// @tparam outlier_finder_t Outlier finder type, shoule be semiregular.
 template <typename calibrator_t, typename outlier_finder_t>
 struct KalmanFitterOptions {
   using Calibrator = calibrator_t;
@@ -65,7 +65,7 @@ struct KalmanFitterOptions {
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      Calibrator&& calibrator_, OutlierFinder&& outlierFinder_,
+                      Calibrator calibrator_, OutlierFinder outlierFinder_,
                       LoggerWrapper logger_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
