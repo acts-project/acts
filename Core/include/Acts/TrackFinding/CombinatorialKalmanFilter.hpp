@@ -115,7 +115,7 @@ struct CombinatorialKalmanFilterOptions {
   /// The source link calibrator
   Calibrator calibrator;
 
-  /// The config for the source link selector
+  /// The source link selector
   SourceLinkSelector sourcelinkSelector;
 
   /// The trivial propagator options
