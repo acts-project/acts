@@ -37,8 +37,7 @@ void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
       std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
-void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
-}
+void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {}
 
 void ActsExamples::EventAction::clear() {
   m_event = nullptr;
