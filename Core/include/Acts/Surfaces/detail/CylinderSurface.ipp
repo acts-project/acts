@@ -113,9 +113,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
 }
 
 inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
-    const RotationMatrix3D& rotToLocalYAxis,
-    const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+    const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
@@ -145,6 +143,9 @@ inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
   const ActsRowVector<double, 3> localZAxisToPath =
       -4.0 * norm * norm * (dx * localPos.x() + dy * localPos.y()) * dz *
       dirRowVec;
+  // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();

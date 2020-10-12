@@ -277,16 +277,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   Vector3D globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
 
-  // Call the function to calculate the derivative of local frame axes w.r.t its
-  // rotation
-  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
-
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(
-          tgContext, rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis,
-          globalPosition, direction);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
+                                                    direction);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;

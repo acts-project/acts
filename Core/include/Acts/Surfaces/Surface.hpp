@@ -466,9 +466,7 @@ class Surface : public virtual GeometryObject,
   ///
   /// @return Derivative of bound local w.r.t. alignment parameters
   AlignmentToBoundLocalMatrix alignmentToLocalDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
-      const RotationMatrix3D& rotToLocalYAxis,
-      const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+      const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or POCA
@@ -481,20 +479,12 @@ class Surface : public virtual GeometryObject,
   /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
-  /// its rotation
-  /// @param rotToLocalYAxis The derivative of local frame y axis vector w.r.t.
-  /// its rotation
-  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
-  /// its rotation
   /// @param position The position of the paramters in global
   /// @param direction The direction of the track
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalXAxis,
-      const RotationMatrix3D& rotToLocalYAxis,
-      const RotationMatrix3D& rotToLocalZAxis, const Vector3D& position,
+      const GeometryContext& gctx, const Vector3D& position,
       const Vector3D& direction) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.

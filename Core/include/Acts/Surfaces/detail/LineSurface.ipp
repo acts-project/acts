@@ -210,20 +210,23 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
 }
 
 inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& /*unused*/,
-    const RotationMatrix3D& /*unused*/, const RotationMatrix3D& rotToLocalZAxis,
-    const Vector3D& position, const Vector3D& direction) const {
+    const GeometryContext& gctx, const Vector3D& position,
+    const Vector3D& direction) const {
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
+  // The rotation
+  const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const Vector3D localZAxis = transform(gctx).matrix().block<3, 1>(0, 2);
+  const Vector3D localZAxis = rotation.block<3, 1>(0, 2);
   // The local z coordinate
   const double pz = pcRowVec * localZAxis;
-
   // Cosine of angle between momentum direction and local frame z axis
   const double dz = localZAxis.dot(direction);
   const double norm = 1. / (1. - dz * dz);
+  // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();

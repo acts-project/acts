@@ -173,15 +173,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   Vector3D momentum{-1, 1, 1};
   Vector3D direction = momentum.normalized();
 
-  // Call the function to calculate the derivative of local frame axes w.r.t its
-  // rotation
-  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
-
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath = line.alignmentToPathDerivative(
-      tgContext, rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis,
-      globalPosition, direction);
+  const AlignmentRowVector& alignToPath =
+      line.alignmentToPathDerivative(tgContext, globalPosition, direction);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   const double value = std::sqrt(3) / 2;
