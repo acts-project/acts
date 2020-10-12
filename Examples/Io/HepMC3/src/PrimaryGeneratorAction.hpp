@@ -9,53 +9,47 @@
 #pragma once
 
 #include <memory>
+#include "G4ParticleTable.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
-#include "G4ParticleTable.hh"
 
 class G4ParticleGun;
 class G4Event;
 
 namespace ActsExamples {
 
-  /// @class PrimaryGeneratorAction
-  ///
-  /// The PrimaryGeneratorAction is the implementation of the Geant4
-  /// class G4VUserPrimaryGeneratorAction. It generates a random direction
-  /// and shoots a particle.
-  class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
-  {
-  public:
-    /// Constructor
-    PrimaryGeneratorAction(
-                             G4int           randomSeed1  = 12345,
-                             G4int           randomSeed2  = 23456);
-    /// Destructor
-    ~PrimaryGeneratorAction() override;
+/// @class PrimaryGeneratorAction
+///
+/// The PrimaryGeneratorAction is the implementation of the Geant4
+/// class G4VUserPrimaryGeneratorAction. It generates a random direction
+/// and shoots a particle.
+class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
+ public:
+  /// Constructor
+  PrimaryGeneratorAction(G4int randomSeed1 = 12345, G4int randomSeed2 = 23456);
+  /// Destructor
+  ~PrimaryGeneratorAction() override;
 
-    /// Static access method
-    static PrimaryGeneratorAction*
-    instance();
+  /// Static access method
+  static PrimaryGeneratorAction* instance();
 
-    /// Interface method to generate the primary
-    void
-    GeneratePrimaries(G4Event*) final override;
+  /// Interface method to generate the primary
+  void GeneratePrimaries(G4Event*) final override;
 
-	/// Prepare the particle gun with initial parameters
-    void prepareParticleGun(G4int pdg,
-    G4double        momentum,
-	 G4ThreeVector pos, G4ThreeVector dir);
-	 
-  private:
-    /// Instance of the PrimaryGeneratorAction
-    static PrimaryGeneratorAction* s_instance;
+  /// Prepare the particle gun with initial parameters
+  void prepareParticleGun(G4int pdg, G4double momentum, G4ThreeVector pos,
+                          G4ThreeVector dir);
 
-    /// Pointer to the G4 particle gun
-    std::unique_ptr<G4ParticleGun> m_particleGun;
-    /// The Geant4 particle table
-    G4ParticleTable*      m_particleTable;
-  };
+ private:
+  /// Instance of the PrimaryGeneratorAction
+  static PrimaryGeneratorAction* s_instance;
+
+  /// Pointer to the G4 particle gun
+  std::unique_ptr<G4ParticleGun> m_particleGun;
+  /// The Geant4 particle table
+  G4ParticleTable* m_particleTable;
+};
 
 }  // namespace ActsExamples

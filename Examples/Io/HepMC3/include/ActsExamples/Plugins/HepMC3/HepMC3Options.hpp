@@ -10,8 +10,8 @@
 
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
-#include "HepMC3Writer.hpp"
 #include "HepMC3Reader.hpp"
+#include "HepMC3Writer.hpp"
 
 namespace ActsExamples {
 
@@ -27,9 +27,8 @@ void addHepMC3WriterOptions(Description& desc);
 /// @param variables is the parameter map for the options
 ///
 /// @returns a Config object for the HepMC3WriterAscii
-HepMC3WriterAscii::Config readHepMC3WriterOptions(
-    const Variables& variables);
-    
+HepMC3WriterAscii::Config readHepMC3WriterOptions(const Variables& variables);
+
 /// @brief HepMC3 specific reader options
 ///
 /// @param desc The option description forward
@@ -40,7 +39,6 @@ void addHepMC3ReaderOptions(Description& desc);
 /// @param variables is the parameter map for the options
 ///
 /// @returns a Config object for the HepMC3ReaderAscii
-HepMC3ReaderAscii::Config readHepMC3ReaderOptions(
-    const Variables& variables);
+HepMC3ReaderAscii::Config readHepMC3ReaderOptions(const Variables& variables);
 }  // namespace Options
 }  // namespace ActsExamples

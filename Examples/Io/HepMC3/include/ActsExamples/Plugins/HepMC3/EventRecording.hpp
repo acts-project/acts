@@ -10,30 +10,27 @@
 
 #include <memory>
 
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Definitions.hpp>
 #include <Acts/Utilities/Logger.hpp>
-#include "G4RunManager.hh"
 #include <mutex>
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "G4RunManager.hh"
 #include "G4VUserDetectorConstruction.hh"
 
 namespace ActsExamples {
 
 class WhiteBoard;
-namespace DD4hepG4
-{
-class DD4hepToG4Svc;	
+namespace DD4hepG4 {
+class DD4hepToG4Svc;
 }
 
-class EventRecording final : public ActsExamples::BareAlgorithm
-{
-public:
+class EventRecording final : public ActsExamples::BareAlgorithm {
+ public:
   /// @class Config
-  struct Config
-  {
-	std::string eventInput = "";
+  struct Config {
+    std::string eventInput = "";
     std::string eventOutput = "geant-outcome-tracks";
 
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
@@ -45,20 +42,20 @@ public:
   };
 
   /// Constructor
-  EventRecording(Config&&        cnf,
-                    Acts::Logging::Level level = Acts::Logging::INFO);
-  ~EventRecording() {m_runManager = nullptr;};
-  
-  ActsExamples::ProcessCode
-  execute(const AlgorithmContext& context) const final override;
+  EventRecording(Config&& cnf,
+                 Acts::Logging::Level level = Acts::Logging::INFO);
+  ~EventRecording() { m_runManager = nullptr; };
 
-private:
+  ActsExamples::ProcessCode execute(
+      const AlgorithmContext& context) const final override;
+
+ private:
   /// The config object
   Config m_cfg;
   /// G4 run manager
   std::unique_ptr<G4RunManager> m_runManager;
-  
+
   // has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;
 };
-}
+}  // namespace ActsExamples
