@@ -61,8 +61,8 @@ struct CombinatorialKalmanFilterTipState {
 
 /// Combined options for the combinatorial Kalman filter.
 ///
-/// @tparam calibrator_t Type of the source link calibrator
-/// @tparam source_link_selector_t Type of the source link selector
+/// @tparam calibrator_t Source link calibrator type, should be semiregular.
+/// @tparam source_link_selector_t Selector type, should be semiregular.
 template <typename calibrator_t, typename source_link_selector_t>
 struct CombinatorialKalmanFilterOptions {
   using Calibrator = calibrator_t;
@@ -87,7 +87,7 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
-      Calibrator&& calibrator_, SourceLinkSelector&& sourceLinkSelector_,
+      Calibrator calibrator_, SourceLinkSelector sourceLinkSelector_,
       LoggerWrapper logger_, const PropagatorPlainOptions& pOptions,
       const Surface* rSurface = nullptr, bool mScattering = true,
       bool eLoss = true, bool rSmoothing = true)
