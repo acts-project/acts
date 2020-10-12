@@ -19,8 +19,6 @@ namespace ActsExamples {
 
 /// @class ORRunAction
 ///
-/// @brief The material mapping run action
-///
 /// The ORRunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
 /// an resets the EventAction

@@ -19,7 +19,7 @@ namespace ActsExamples {
 	
   /// @class ORSteppingAction
   ///
-  /// @brief Collects the particle
+  /// @brief Collects the particles history
   class ORSteppingAction : public G4UserSteppingAction
   {
   public:
@@ -30,23 +30,19 @@ namespace ActsExamples {
     static ORSteppingAction*
     instance();
 
-    /// @brief Interface Method doing the step
-    /// @note it creates and collects the MaterialInteraction entities
+    /// @brief Interface Method doing the step and records the data
     /// @param step is the Geant4 step of the particle
     void
     UserSteppingAction(const G4Step* step) final override;
 
     /// Interface reset method
-    /// @note it clears the collected step vector
     void
     clear();
     
-unsigned int& counter() {return testCounter;} 
-unsigned int testCounter = 0;
   private:	
     /// Instance of the SteppingAction
     static ORSteppingAction* s_instance;
-        
+    /// The end vertex of the previous step
     std::shared_ptr<HepMC3::GenVertex> m_previousVertex = nullptr;    
   };
 }  // namespace ActsExamples

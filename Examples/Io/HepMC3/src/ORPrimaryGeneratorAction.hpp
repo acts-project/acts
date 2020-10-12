@@ -22,13 +22,9 @@ namespace ActsExamples {
 
   /// @class ORPrimaryGeneratorAction
   ///
-  /// @brief configures the run
-  ///
   /// The ORPrimaryGeneratorAction is the implementation of the Geant4
   /// class G4VUserPrimaryGeneratorAction. It generates a random direction
-  /// and shoots a geantino.
-  ///
-  /// @todo tempate with RandomService
+  /// and shoots a particle.
   class ORPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
   {
   public:
@@ -47,18 +43,19 @@ namespace ActsExamples {
     void
     GeneratePrimaries(G4Event*) final override;
 
+	/// Prepare the particle gun with initial parameters
     void prepareParticleGun(G4int pdg,
     G4double        momentum,
 	 G4ThreeVector pos, G4ThreeVector dir);
 	 
   private:
     /// Instance of the PrimaryGeneratorAction
-    static ORPrimaryGeneratorAction* fgInstance;
+    static ORPrimaryGeneratorAction* s_instance;
 
     /// Pointer to the G4 particle gun
-    std::unique_ptr<G4ParticleGun> fParticleGun;
-    
-    G4ParticleTable*      particleTable;
+    std::unique_ptr<G4ParticleGun> m_particleGun;
+    /// The Geant4 particle table
+    G4ParticleTable*      m_particleTable;
   };
 
 }  // namespace ActsExamples

@@ -18,9 +18,7 @@
 
 namespace ActsExamples {
 	
-/// @class EventAction
-///
-/// @brief Writes out material track records
+/// @class OREventAction
 ///
 /// The EventAction class is the realization of the Geant4 class
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
@@ -37,27 +35,24 @@ class OREventAction final : public G4UserEventAction {
 
   /// Interface method for begin of the event
   /// @param event is the G4Event to be processed
-  /// @note resets the material step action
+  /// @note resets the event and step action
   void BeginOfEventAction(const G4Event* event) final override;
 
   /// Interface method for end of event
   /// @param event is the G4Event to be processed
-  /// @note this method is writing out the material track records
   void EndOfEventAction(const G4Event* event) final override;
 
   /// Clear the recorded data.
   void clear();
   
+  /// Getter of the created HepMC3 event
   std::shared_ptr<HepMC3::GenEvent>
-  event()
-  {
-	  return m_event;
-  }
+  event() const;
     
 	private:
 	/// Instance of the EventAction
 	static OREventAction* s_instance;
-    
+    /// The current HepMC3 event
     std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
 };
 }  // namespace ActsExamples
