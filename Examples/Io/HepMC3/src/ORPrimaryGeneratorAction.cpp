@@ -16,39 +16,41 @@
 #include "Randomize.hh"
 
 ActsExamples::ORPrimaryGeneratorAction*
-    ActsExamples::ORPrimaryGeneratorAction::fgInstance
+    ActsExamples::ORPrimaryGeneratorAction::s_instance
     = nullptr;
 
 ActsExamples::ORPrimaryGeneratorAction::ORPrimaryGeneratorAction(G4int           randomSeed1,
     G4int           randomSeed2)
-  : G4VUserPrimaryGeneratorAction(), fParticleGun(nullptr)
+  : G4VUserPrimaryGeneratorAction(), m_particleGun(nullptr)
 {
-  // configure the run
-  if (fgInstance) {
+  // Configure the run
+  if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
-    fgInstance = this;
+    s_instance = this;
   }
   
+  // Configure the gun
   G4int nofParticles = 1;
-  fParticleGun       = std::make_unique<G4ParticleGun>(nofParticles);
+  m_particleGun       = std::make_unique<G4ParticleGun>(nofParticles);
 
-  particleTable = G4ParticleTable::GetParticleTable();
+  // Prepare the particle table
+  m_particleTable = G4ParticleTable::GetParticleTable();
   
-  // set the random seeds
+  // Set the random seeds
   CLHEP::HepRandom::getTheEngine()->setSeed(randomSeed1, randomSeed2);
 }
 
 ActsExamples::ORPrimaryGeneratorAction::~ORPrimaryGeneratorAction()
 {
-  fgInstance = nullptr;
+  s_instance = nullptr;
 }
 
 ActsExamples::ORPrimaryGeneratorAction*
 ActsExamples::ORPrimaryGeneratorAction::instance()
 {
   // Static acces function via G4RunManager
-  return fgInstance;
+  return s_instance;
 }
 
 void ActsExamples::ORPrimaryGeneratorAction::prepareParticleGun(G4int pdg,
@@ -56,16 +58,17 @@ void ActsExamples::ORPrimaryGeneratorAction::prepareParticleGun(G4int pdg,
 	 G4ThreeVector pos, G4ThreeVector dir)
 {
 	// Particle type
-  G4ParticleDefinition* particle = particleTable->FindParticle(pdg);
-  fParticleGun->SetParticleDefinition(particle);
-  
-  fParticleGun->SetParticlePosition(pos); 
-  fParticleGun->SetParticleMomentum(momentum);
-  fParticleGun->SetParticleMomentumDirection(dir);
+  G4ParticleDefinition* particle = m_particleTable->FindParticle(pdg);
+  m_particleGun->SetParticleDefinition(particle);
+  // Particle properties
+  m_particleGun->SetParticlePosition(pos); 
+  m_particleGun->SetParticleMomentum(momentum);
+  m_particleGun->SetParticleMomentumDirection(dir);
 }
 
 void
 ActsExamples::ORPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
-  fParticleGun->GeneratePrimaryVertex(anEvent);
+	// Produce the event
+  m_particleGun->GeneratePrimaryVertex(anEvent);
 }
