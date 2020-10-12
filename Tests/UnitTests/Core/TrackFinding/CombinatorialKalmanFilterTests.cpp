@@ -48,24 +48,24 @@ namespace Test {
 
 struct ExtendedMinimalSourceLink {
   size_t sourceID = 0;
-  const FittableMeasurement<ExtendedMinimalSourceLink>* measurement = nullptr;
+  const FittableMeasurement<ExtendedMinimalSourceLink>* meas{nullptr};
 
   ExtendedMinimalSourceLink() = default;
   ExtendedMinimalSourceLink(
       size_t sid, const FittableMeasurement<ExtendedMinimalSourceLink>* m)
-      : sourceID(sid), measurement(m) {}
+      : sourceID(sid), meas(m) {}
 
   const Surface& referenceSurface() const {
-    return *MeasurementHelpers::getSurface(*measurement);
+    return *MeasurementHelpers::getSurface(*meas);
   }
 
   friend bool operator==(const ExtendedMinimalSourceLink& lhs,
                          const ExtendedMinimalSourceLink& rhs) {
-    return (lhs.measurement == rhs.measurement);
+    return (lhs.sourceID == rhs.sourceID) and (lhs.meas == rhs.meas);
   }
   friend bool operator!=(const ExtendedMinimalSourceLink& lhs,
                          const ExtendedMinimalSourceLink& rhs) {
-    return (lhs.measurement != rhs.measurement);
+    return (lhs.meas != rhs.meas);
   }
 };  // namespace Test
 
@@ -74,7 +74,7 @@ struct ExtendedCalibrator {
   const FittableMeasurement<ExtendedMinimalSourceLink>& operator()(
       const ExtendedMinimalSourceLink& sourceLink,
       const parameters_t& /* parameters */) const {
-    return *sourceLink.measurement;
+    return *sourceLink.meas;
   }
 };
 
