@@ -80,11 +80,10 @@ Acts::Vector3D Acts::DiscSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2D> Acts::DiscSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& /*gmom*/) const {
+    const Vector3D& /*gmom*/, double tolerance) const {
   // transport it to the globalframe
   Vector3D loc3Dframe = (transform(gctx).inverse()) * position;
-  if (loc3Dframe.z() * loc3Dframe.z() >
-      s_onSurfaceTolerance * s_onSurfaceTolerance) {
+  if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
     return Result<Vector2D>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Acts::Vector2D>::success({perp(loc3Dframe), phi(loc3Dframe)});

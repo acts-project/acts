@@ -48,7 +48,7 @@ struct ConstrainedStep {
     }
     // The check the current value and set it if appropriate
     double cValue = values[type];
-    values[type] = cValue * cValue < value * value ? cValue : value;
+    values[type] = std::abs(cValue) < std::abs(value) ? cValue : value;
   }
 
   /// release a certain constraint value

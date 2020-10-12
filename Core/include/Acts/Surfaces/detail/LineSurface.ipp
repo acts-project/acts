@@ -21,9 +21,10 @@ inline Vector3D LineSurface::localToGlobal(const GeometryContext& gctx,
                   lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
 }
 
-inline Result<Vector2D> LineSurface::globalToLocal(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& momentum) const {
+inline Result<Vector2D> LineSurface::globalToLocal(const GeometryContext& gctx,
+                                                   const Vector3D& position,
+                                                   const Vector3D& momentum,
+                                                   double /*tolerance*/) const {
   using VectorHelpers::perp;
 
   const auto& sTransform = transform(gctx);

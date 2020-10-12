@@ -12,7 +12,7 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
-#include "ActsExamples/Printers/PrintParticles.hpp"
+#include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Utilities/Units.hpp>
@@ -52,9 +52,9 @@ int main(int argc, char* argv[]) {
   // print generated particles
   if ((logLevel == Acts::Logging::VERBOSE) or
       (logLevel == Acts::Logging::DEBUG)) {
-    PrintParticles::Config print;
+    ParticlesPrinter::Config print;
     print.inputParticles = evgen.outputParticles;
-    sequencer.addAlgorithm(std::make_shared<PrintParticles>(print, logLevel));
+    sequencer.addAlgorithm(std::make_shared<ParticlesPrinter>(print, logLevel));
   }
 
   // different output modes

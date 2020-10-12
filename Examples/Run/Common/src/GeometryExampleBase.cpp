@@ -22,6 +22,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
+#include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
 #include <string>
