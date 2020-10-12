@@ -8,6 +8,7 @@
 
 #pragma once
 
+// Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/Measurement.hpp"
