@@ -8,9 +8,8 @@
 
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
-#include "FatrasMain.hpp"
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return ActsExamples::fatrasMain(argc, argv,
-                                  std::make_shared<AlignedDetector>());
+  return runFatras(argc, argv, std::make_shared<AlignedDetector>());
 }

@@ -8,9 +8,8 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
-#include "FatrasMain.hpp"
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return ActsExamples::fatrasMain(argc, argv,
-                                  std::make_shared<DD4hepDetector>());
+  return runFatras(argc, argv, std::make_shared<DD4hepDetector>());
 }
