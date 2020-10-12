@@ -50,8 +50,6 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position,
     const Vector3D& direction) const {
-  // The local frame rotation
-  const auto& rotation = transform(gctx).rotation();
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
   const auto alignToLocalWithoutCorrection =
