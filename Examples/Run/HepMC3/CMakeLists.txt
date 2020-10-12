@@ -8,20 +8,8 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesIoHepMC3
     Boost::program_options)
 
-add_executable(
-  ActsExampleEventRecording
-  EventRecordingExample.cpp)
-target_link_libraries(
-  ActsExampleEventRecording
-  PRIVATE
-    ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
-    ActsExamplesFramework
-    ActsExamplesGeant4
-    ActsExamplesGeant4DD4hep
-    ActsExamplesIoHepMC3
-    Boost::program_options)
-    
 install(
-  TARGETS ActsExampleHepMC3 ActsExampleEventRecording
+  TARGETS ActsExampleHepMC3
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
