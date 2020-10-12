@@ -8,9 +8,8 @@
 
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
-#include "FatrasMain.hpp"
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return ActsExamples::fatrasMain(argc, argv,
-                                  std::make_shared<GenericDetector>());
+  return runFatras(argc, argv, std::make_shared<GenericDetector>());
 }

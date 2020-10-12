@@ -1,12 +1,10 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-#include "FatrasSimulationBase.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -30,7 +28,6 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
-#include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
@@ -44,6 +41,8 @@
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <boost/program_options.hpp>
+
+#include "FatrasInternal.hpp"
 
 namespace {
 
@@ -68,34 +67,25 @@ struct HitSurfaceSelector {
   }
 };
 
-/// @brief Simulation setup for the FatrasAlgorithm
+/// Setup Fatras simulation algorithms
 ///
-/// @tparam bfield_t Type of the bfield for the simulation to be set up
+/// @tparam magnetic_field_t Concrete magnetic field type
 ///
-/// @param fieldMap The field map for the simulation setup
+/// @param variables The configuration variables
 /// @param sequencer The framework sequencer
-/// @param variables The boost variable map to resolve
-/// @param tGeometry The TrackingGeometry for the tracking setup
-/// @param barcodesSvc The barcode service to be used for the simulation
-/// @param randomNumberSvc The random number service to be used for the
-/// simulation
+/// @param randomNumbers The random number service
+/// @param trackingGeometry The TrackingGeometry for the tracking setup
 template <typename magnetic_field_t>
 void setupSimulationAlgorithms(
-    const ActsExamples::Options::Variables& variables,
+    const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     magnetic_field_t&& magneticField) {
-  // Read the log level
-  Acts::Logging::Level logLevel =
-      ActsExamples::Options::readLogLevel(variables);
+  using namespace ActsExamples;
 
-  // Convert generated events to selected particles
-  auto select = ActsExamples::ParticleSelector::readConfig(variables);
-  select.inputParticles = "particles_generated";
-  select.outputParticles = "particles_selected";
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
+  // Read the log level
+  auto logLevel = Options::readLogLevel(vars);
 
   // setup propagator-related types
   // use the default navigation
@@ -141,27 +131,29 @@ void setupSimulationAlgorithms(
 
   // construct/add the simulation algorithm
   auto fatras =
-      ActsExamples::Options::readFatrasConfig(variables, std::move(simulator));
-  fatras.inputParticles = select.outputParticles;
+      ActsExamples::Options::readFatrasConfig(vars, std::move(simulator));
+  fatras.inputParticles = kFatrasCollectionParticles;
   fatras.outputParticlesInitial = "particles_initial";
   fatras.outputParticlesFinal = "particles_final";
-  fatras.outputHits = "hits";
+  fatras.outputHits = kFatrasCollectionHits;
   fatras.randomNumbers = randomNumbers;
   sequencer.addAlgorithm(
       std::make_shared<SimulationAlgorithm>(fatras, logLevel));
 
   // Output directory
-  const auto outputDir = ActsExamples::ensureWritableDirectory(
-      variables["output-dir"].template as<std::string>());
+  auto outputDir = vars["output-dir"].template as<std::string>();
 
   // Write simulation information as CSV files
-  if (variables["output-csv"].template as<bool>()) {
+  if (vars["output-csv"].template as<bool>()) {
+    // write initial simulated particles
     ActsExamples::CsvParticleWriter::Config writeInitial;
     writeInitial.inputParticles = fatras.outputParticlesInitial;
     writeInitial.outputDir = outputDir;
     writeInitial.outputStem = fatras.outputParticlesInitial;
     sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
         writeInitial, logLevel));
+
+    // write final simulated particles
     ActsExamples::CsvParticleWriter::Config writeFinal;
     writeFinal.inputParticles = fatras.outputParticlesFinal;
     writeFinal.outputDir = outputDir;
@@ -171,7 +163,7 @@ void setupSimulationAlgorithms(
   }
 
   // Write simulation information as ROOT files
-  if (variables["output-root"].template as<bool>()) {
+  if (vars["output-root"].template as<bool>()) {
     // write initial simulated particles
     ActsExamples::RootParticleWriter::Config writeInitial;
     writeInitial.inputParticles = fatras.outputParticlesInitial;
@@ -200,18 +192,23 @@ void setupSimulationAlgorithms(
 
 }  // namespace
 
-void ActsExamples::setupSimulation(
-    const ActsExamples::Options::Variables& variables,
+void addSimulationOptions(ActsExamples::Options::Description& desc) {
+  ActsExamples::Options::addBFieldOptions(desc);
+  ActsExamples::Options::addFatrasOptions(desc);
+}
+
+void setupSimulation(
+    const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<const RandomNumbers> randomNumbers,
+    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
-  auto magneticFieldVariant = ActsExamples::Options::readBField(variables);
+  auto magneticFieldVariant = ActsExamples::Options::readBField(vars);
   std::visit(
       [&](auto&& inputField) {
         using magnetic_field_t =
             typename std::decay_t<decltype(inputField)>::element_type;
         Acts::SharedBField<magnetic_field_t> magneticField(inputField);
-        setupSimulationAlgorithms(variables, sequencer, randomNumbers,
+        setupSimulationAlgorithms(vars, sequencer, randomNumbers,
                                   trackingGeometry, std::move(magneticField));
       },
       magneticFieldVariant);
