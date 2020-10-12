@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <memory>
 #include <map>
+#include <memory>
 #include <string>
 #include "G4UserEventAction.hh"
 #include "globals.hh"
@@ -17,7 +17,7 @@
 #include <HepMC3/GenEvent.h>
 
 namespace ActsExamples {
-	
+
 /// @class EventAction
 ///
 /// The EventAction class is the realization of the Geant4 class
@@ -44,15 +44,14 @@ class EventAction final : public G4UserEventAction {
 
   /// Clear the recorded data.
   void clear();
-  
+
   /// Getter of the created HepMC3 event
-  std::shared_ptr<HepMC3::GenEvent>
-  event() const;
-    
-	private:
-	/// Instance of the EventAction
-	static EventAction* s_instance;
-    /// The current HepMC3 event
-    std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
+  std::shared_ptr<HepMC3::GenEvent> event() const;
+
+ private:
+  /// Instance of the EventAction
+  static EventAction* s_instance;
+  /// The current HepMC3 event
+  std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
 };
 }  // namespace ActsExamples
