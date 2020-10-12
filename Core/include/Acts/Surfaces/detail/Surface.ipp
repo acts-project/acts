@@ -104,8 +104,10 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
 }
 
 inline FreeRowVector Surface::freeToPathDerivative(
-    const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
-    const Vector3D& direction, const RotationMatrix3D& rft) const {
+    const GeometryContext& /*unused*/, const FreeVector& parameters,
+    const RotationMatrix3D& rft) const {
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // Create the normal and scale it with the projection onto the direction
   ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
   norm_vec /= (norm_vec * direction);

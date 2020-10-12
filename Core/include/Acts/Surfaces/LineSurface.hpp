@@ -136,14 +136,12 @@ class LineSurface : public Surface {
   /// w.r.t. free parameter.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the position of the paramters in global
-  /// @param direction is the direction of the track
+  /// @param parameters is the free parameters
   /// @param rft is the transposed reference frame (avoids recalculation)
   ///
   /// @return a free vector
   FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                     const Vector3D& position,
-                                     const Vector3D& direction,
+                                     const FreeVector& parameters,
                                      const RotationMatrix3D& rft) const final;
 
   /// Local to global transformation

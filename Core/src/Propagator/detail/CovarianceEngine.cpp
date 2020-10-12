@@ -99,8 +99,7 @@ FreeToBoundMatrix surfaceDerivative(
                                              parameters.segment<3>(eFreeDir0));
   // Calculate the form factors for the derivatives
   const FreeRowVector freeToPath =
-      surface.freeToPathDerivative(geoContext, parameters.segment<3>(eFreePos0),
-                                   parameters.segment<3>(eFreeDir0), rframeT);
+      surface.freeToPathDerivative(geoContext, parameters, rframeT);
   jacobianLocalToGlobal += derivatives * freeToPath * jacobianLocalToGlobal;
   // Return the jacobian to local
   return jacToLocal;

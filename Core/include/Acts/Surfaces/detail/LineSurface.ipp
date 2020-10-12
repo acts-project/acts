@@ -183,8 +183,12 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
 }
 
 inline FreeRowVector LineSurface::freeToPathDerivative(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const RotationMatrix3D& rft) const {
+    const GeometryContext& gctx, const FreeVector& parameters,
+    const RotationMatrix3D& rft) const {
+  // The global posiiton
+  const auto position = parameters.segment<3>(eFreePos0);
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
