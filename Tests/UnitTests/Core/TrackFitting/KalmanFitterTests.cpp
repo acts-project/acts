@@ -387,16 +387,16 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   using Updater = GainMatrixUpdater;
   using Smoother = GainMatrixSmoother;
-  using KalmanFitter =
-      KalmanFitter<RecoPropagator, Updater, Smoother, MinimalOutlierFinder>;
+  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
   MinimalOutlierFinder outlierFinder;
   outlierFinder.measurementSignificanceCutoff = 0.05;
   auto kfLogger = getDefaultLogger("KalmanFilter", Logging::VERBOSE);
 
-  KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
-      PropagatorPlainOptions(), rSurface);
+  KalmanFitterOptions<MinimalSourceLinkCalibrator, MinimalOutlierFinder>
+      kfOptions(tgContext, mfContext, calContext, MinimalSourceLinkCalibrator(),
+                std::move(outlierFinder), LoggerWrapper{*kfLogger},
+                PropagatorPlainOptions(), rSurface);
 
   KalmanFitter kFitter(rPropagator);
 
