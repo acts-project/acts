@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -19,6 +18,10 @@
 #include <memory>
 #include <vector>
 
+namespace Acts {
+class TrackingGeometry;
+}
+
 namespace ActsExamples {
 
 class FittingAlgorithm final : public BareAlgorithm {
@@ -27,8 +30,9 @@ class FittingAlgorithm final : public BareAlgorithm {
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
   using FitterFunction = std::function<FitterResult(
-      const std::vector<SimSourceLink>&, const TrackParameters&,
-      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>&)>;
+      std::vector<SimSourceLink>&, const TrackParameters&,
+      const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
+                                      Acts::VoidOutlierFinder>&)>;
 
   /// Create the fitter function implementation.
   ///
@@ -61,8 +65,7 @@ class FittingAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
-  ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
   Config m_cfg;

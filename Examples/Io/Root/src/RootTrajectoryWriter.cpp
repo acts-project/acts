@@ -355,7 +355,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
         return true;
       }
 
-      auto meas = std::get<Measurement>(*state.uncalibrated());
+      auto meas = std::get<Measurement>(state.uncalibrated().makeMeasurement());
       auto& surface = meas.referenceObject();
 
       // get the geometry ID

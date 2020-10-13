@@ -44,7 +44,7 @@ class SimSourceLink {
   constexpr const Acts::Surface& referenceSurface() const { return *m_surface; }
   constexpr const ActsFatras::Hit& truthHit() const { return *m_truthHit; }
 
-  Acts::FittableMeasurement<SimSourceLink> operator*() const {
+  Acts::FittableMeasurement<SimSourceLink> makeMeasurement() const {
     if (m_dim == 0) {
       throw std::runtime_error("Cannot create dim 0 measurement");
     } else if (m_dim == 1) {
@@ -81,5 +81,20 @@ class SimSourceLink {
 
 /// Store source links ordered by geometry identifier.
 using SimSourceLinkContainer = GeometryIdMultiset<SimSourceLink>;
+
+/// A calibrator to extract the measurement from a SimSourceLink.
+struct SimSourceLinkCalibrator final {
+  /// Extract the measurement.
+  ///
+  /// @tparam track_parameters_t Type of the track parameters
+  /// @param sourceLink Input source link
+  /// @param parameters Input track parameters (unused)
+  template <typename track_parameters_t>
+  const Acts::FittableMeasurement<SimSourceLink> operator()(
+      const SimSourceLink& sourceLink,
+      const track_parameters_t& /* parameters */) const {
+    return sourceLink.makeMeasurement();
+  }
+};
 
 }  // end of namespace ActsExamples

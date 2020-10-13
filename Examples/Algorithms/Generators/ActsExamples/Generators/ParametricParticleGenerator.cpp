@@ -8,30 +8,33 @@
 
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 
-#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
+#include <limits>
 #include <random>
 
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
       m_charge(ActsFatras::findCharge(m_cfg.pdg)),
-      m_mass(ActsFatras::findMass(m_cfg.pdg)) {}
+      m_mass(ActsFatras::findMass(m_cfg.pdg)),
+      // since we want to draw the direction uniform on the unit sphere, we must
+      // draw from cos(theta) instead of theta. see e.g.
+      // https://mathworld.wolfram.com/SpherePointPicking.html
+      m_cosThetaMin(std::cos(m_cfg.thetaMin)),
+      // ensure upper bound is included. see e.g.
+      // https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
+      m_cosThetaMax(std::nextafter(std::cos(m_cfg.thetaMax),
+                                   std::numeric_limits<double>::max())) {}
 
 ActsExamples::SimParticleContainer ActsExamples::ParametricParticleGenerator::
 operator()(RandomEngine& rng) const {
+  using UniformIndex = std::uniform_int_distribution<unsigned int>;
   using UniformReal = std::uniform_real_distribution<double>;
-  using UniformIndex = std::uniform_int_distribution<size_t>;
 
-  UniformReal d0Dist(m_cfg.d0Range[0], m_cfg.d0Range[1]);
-  UniformReal z0Dist(m_cfg.z0Range[0], m_cfg.z0Range[1]);
-  UniformReal t0Dist(m_cfg.t0Range[0], m_cfg.t0Range[1]);
-  UniformReal phiDist(m_cfg.phiRange[0], m_cfg.phiRange[1]);
-  UniformReal etaDist(m_cfg.etaRange[0], m_cfg.etaRange[1]);
-  UniformReal ptDist(m_cfg.ptRange[0], m_cfg.ptRange[1]);
   // choose between particle/anti-particle if requested
-  UniformIndex particleTypeChoice(0u, m_cfg.randomizeCharge ? 1u : -0u);
+  // the upper limit of the distribution is inclusive
+  UniformIndex particleTypeChoice(0u, m_cfg.randomizeCharge ? 1u : 0u);
   // (anti-)particle choice is one random draw but defines two properties
   const Acts::PdgParticle pdgChoices[] = {
       m_cfg.pdg,
@@ -41,30 +44,37 @@ operator()(RandomEngine& rng) const {
       m_charge,
       -m_charge,
   };
+  UniformReal phiDist(m_cfg.phiMin, m_cfg.phiMax);
+  UniformReal cosThetaDist(m_cosThetaMin, m_cosThetaMax);
+  UniformReal pDist(m_cfg.pMin, m_cfg.pMax);
 
   SimParticleContainer particles;
   particles.reserve(m_cfg.numParticles);
 
   // counter will be reused as barcode particle number which must be non-zero.
   for (size_t ip = 1; ip <= m_cfg.numParticles; ++ip) {
-    const auto d0 = d0Dist(rng);
-    const auto z0 = z0Dist(rng);
-    const auto t0 = t0Dist(rng);
-    const auto phi = phiDist(rng);
-    const auto eta = etaDist(rng);
-    const auto pt = ptDist(rng);
-    const auto type = particleTypeChoice(rng);
-    const auto pdg = pdgChoices[type];
-    const auto q = qChoices[type];
-
     // all particles are treated as originating from the same primary vertex
     const auto pid = ActsFatras::Barcode(0u).setParticle(ip);
+
+    // draw parameters
+    const unsigned int type = particleTypeChoice(rng);
+    const Acts::PdgParticle pdg = pdgChoices[type];
+    const double q = qChoices[type];
+    const double phi = phiDist(rng);
+    const double cosTheta = cosThetaDist(rng);
+    const double sinTheta = std::sqrt(1 - cosTheta * cosTheta);
+    const double p = pDist(rng);
+
+    // we already have sin/cos theta. they can be used directly to
+    Acts::Vector3D dir;
+    dir[Acts::eMom0] = sinTheta * std::cos(phi);
+    dir[Acts::eMom1] = sinTheta * std::sin(phi);
+    dir[Acts::eMom2] = cosTheta;
+
     // construct the particle;
     ActsFatras::Particle particle(pid, pdg, q, m_mass);
-    particle.setPosition4(d0 * std::sin(phi), d0 * -std::cos(phi), z0, t0);
-    particle.setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta));
-    // see e.g. https://en.wikipedia.org/wiki/Pseudorapidity
-    particle.setAbsMomentum(pt / std::cosh(eta));
+    particle.setDirection(dir);
+    particle.setAbsMomentum(p);
 
     // generated particle ids are already ordered and should end up at the end
     particles.insert(particles.end(), std::move(particle));
