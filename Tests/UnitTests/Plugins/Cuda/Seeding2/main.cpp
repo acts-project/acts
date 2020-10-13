@@ -15,6 +15,8 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
+#include "Acts/Plugins/Cuda/Utilities/Info.hpp"
+#include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
 #include "Acts/Seeding/BinFinder.hpp"
@@ -106,6 +108,27 @@ int main(int argc, char* argv[]) {
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
+  // Allocate memory on the selected CUDA device.
+  if (Acts::Cuda::Info::instance().devices().size() <=
+      static_cast<std::size_t>(cmdl.cudaDevice)) {
+    std::cerr << "Invalid CUDA device (" << cmdl.cudaDevice << ") requested"
+              << std::endl;
+    return 1;
+  }
+  static constexpr std::size_t MEGABYTES = 1024l * 1024l;
+  std::size_t deviceMemoryAllocation = cmdl.cudaDeviceMemory * MEGABYTES;
+  if (deviceMemoryAllocation == 0) {
+    deviceMemoryAllocation =
+        Acts::Cuda::Info::instance().devices()[cmdl.cudaDevice].totalMemory *
+        0.8;
+  }
+  std::cout << "Allocating " << deviceMemoryAllocation / MEGABYTES
+            << " MB memory on device:\n"
+            << Acts::Cuda::Info::instance().devices()[cmdl.cudaDevice]
+            << std::endl;
+  Acts::Cuda::MemoryManager::instance().setMemorySize(deviceMemoryAllocation,
+                                                      cmdl.cudaDevice);
+
   // Set up the seedfinder configuration objects.
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
@@ -116,7 +139,7 @@ int main(int argc, char* argv[]) {
   // Set up the seedfinder objects.
   Acts::Seedfinder<TestSpacePoint> seedfinder_host(sfConfig);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedfinder_device(
-      sfConfig, filterConfig, deviceCuts);
+      sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.

@@ -8,9 +8,6 @@
 
 #pragma once
 
-// System include(s).
-#include <cstddef>
-
 namespace Acts {
 namespace Cuda {
 namespace Details {
@@ -28,9 +25,9 @@ struct SpacePoint {
 /// Helper struct summarising the results of the dublet search
 struct DubletCounts {
   /// The total number of dublets (M-B and M-T) found
-  std::size_t nDublets = 0;
+  unsigned int nDublets = 0;
   /// The total number of triplet candidates found
-  std::size_t nTriplets = 0;
+  unsigned int nTriplets = 0;
   /// The maximal number of middle-bottom dublets
   unsigned int maxMBDublets = 0;
   /// The maximal number of middle-top dublets
@@ -51,8 +48,9 @@ struct LinCircle {
 
 /// Structure used in the CUDA-based triplet finding
 struct Triplet {
-  std::size_t bottomIndex = static_cast<std::size_t>(-1);
-  std::size_t topIndex = static_cast<std::size_t>(-1);
+  unsigned int bottomIndex = static_cast<unsigned int>(-1);
+  unsigned int middleIndex = static_cast<unsigned int>(-1);
+  unsigned int topIndex = static_cast<unsigned int>(-1);
   float impactParameter = 0.0f;
   float invHelixDiameter = 0.0f;
   float weight = 0.0f;
