@@ -19,8 +19,8 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 namespace {
 
@@ -30,18 +30,19 @@ struct TrackFitterFunctionImpl {
 
   TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
 
-  ActsExamples::FittingAlgorithm::TrackFitterResult operator()(
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::FittingAlgorithm::TrackFitterOptions& options) const {
+      const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
+      const {
     return trackFitter.fit(sourceLinks, initialParameters, options);
   };
 };
 
 }  // namespace
 
-ActsExamples::FittingAlgorithm::TrackFitterFunction
-ActsExamples::FittingAlgorithm::makeTrackFitterFunction(
+ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
+ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;

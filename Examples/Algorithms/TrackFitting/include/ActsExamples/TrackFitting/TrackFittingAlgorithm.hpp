@@ -24,7 +24,7 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class FittingAlgorithm final : public BareAlgorithm {
+class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
@@ -61,7 +61,7 @@ class FittingAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorihtm
   /// @param level is the logging level
-  FittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Framework execute method of the fitting algorithm
   ///

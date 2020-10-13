@@ -1,17 +1,17 @@
 add_library(
-  ActsExamplesFitting SHARED
-  src/FittingAlgorithm.cpp
-  src/FittingAlgorithmFitterFunction.cpp)
+  ActsExamplesTrackFitting SHARED
+  src/TrackFittingAlgorithm.cpp
+  src/TrackFittingAlgorithmFunction.cpp)
 target_include_directories(
-  ActsExamplesFitting
+  ActsExamplesTrackFitting
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
-  ActsExamplesFitting
+  ActsExamplesTrackFitting
   PUBLIC
     ActsCore
     ActsExamplesFramework ActsExamplesMagneticField
     Boost::program_options)
 
 install(
-  TARGETS ActsExamplesFitting
+  TARGETS ActsExamplesTrackFitting
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

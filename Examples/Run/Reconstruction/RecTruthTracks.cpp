@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/HitSmearing.hpp"
-#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
@@ -20,6 +19,7 @@
 #include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -142,15 +142,16 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
   // setup the fitter
-  FittingAlgorithm::Config fitter;
+  TrackFittingAlgorithm::Config fitter;
   fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
-  fitter.fit = FittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                         magneticField);
-  sequencer.addAlgorithm(std::make_shared<FittingAlgorithm>(fitter, logLevel));
+  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
+                                                              magneticField);
+  sequencer.addAlgorithm(
+      std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
   // write tracks from fitting
   RootTrajectoryWriter::Config trackWriter;
