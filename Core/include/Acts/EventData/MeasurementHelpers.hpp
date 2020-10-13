@@ -1,15 +1,17 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 
+#include <cassert>
 #include <variant>
 
 namespace Acts {
@@ -51,6 +53,22 @@ inline std::ostream& operator<<(std::ostream& os, const MinimalSourceLink& sl) {
 
 static_assert(SourceLinkConcept<MinimalSourceLink>,
               "MinimalSourceLink does not fulfill SourceLinkConcept");
+
+/// A calibrator to extract the measurement from a SimSourceLink.
+struct MinimalSourceLinkCalibrator final {
+  /// Extract the measurement.
+  ///
+  /// @tparam track_parameters_t Type of the track parameters
+  /// @param sourceLink Input source link
+  /// @param parameters Input track parameters (unused)
+  template <typename track_parameters_t>
+  const FittableMeasurement<MinimalSourceLink>& operator()(
+      MinimalSourceLink sourceLink,
+      const track_parameters_t& /* parameters */) const {
+    assert(sourceLink.meas and "Invalid MinimalSourceLink");
+    return *sourceLink.meas;
+  }
+};
 
 namespace detail {
 

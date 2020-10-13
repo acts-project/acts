@@ -1,12 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
@@ -21,14 +22,8 @@
 #include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 
-#include <iostream>
-#include <map>
-#include <random>
-#include <stdexcept>
-
-#include <boost/program_options.hpp>
-
 namespace {
+
 template <typename Fitter>
 struct FitterFunctionImpl {
   Fitter fitter;
@@ -38,10 +33,12 @@ struct FitterFunctionImpl {
   ActsExamples::FittingAlgorithm::FitterResult operator()(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options) const {
+      const Acts::KalmanFitterOptions<ActsExamples::SimSourceLinkCalibrator,
+                                      Acts::VoidOutlierFinder>& options) const {
     return fitter.fit(sourceLinks, initialParameters, options);
   };
 };
+
 }  // namespace
 
 ActsExamples::FittingAlgorithm::FitterFunction
