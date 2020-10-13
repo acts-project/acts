@@ -66,6 +66,7 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
 
   // Perform the fit for each input track
   std::vector<SimSourceLink> trackSourceLinks;
+  std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -92,10 +93,13 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
         return ProcessCode::ABORT;
       }
       trackSourceLinks.push_back(*sourceLink);
+      surfSequence.push_back(&sourceLink->referenceSurface());
     }
 
     ACTS_DEBUG("Invoke fitter");
-    auto result = m_cfg.fit(trackSourceLinks, initialParams, kfOptions);
+    auto result =
+        fitTrack(trackSourceLinks, initialParams, kfOptions, surfSequence);
+
     if (result.ok()) {
       // Get the fit output object
       const auto& fitOutput = result.value();
@@ -128,4 +132,16 @@ ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+ActsExamples::FittingAlgorithm::FitterResult
+ActsExamples::FittingAlgorithm::fitTrack(
+    const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+    const ActsExamples::TrackParameters& initialParameters,
+    const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options,
+    const std::vector<const Acts::Surface*>& surfSequence) const {
+  if (m_cfg.directNavigation)
+    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
+
+  return m_cfg.fit(sourceLinks, initialParameters, options);
 }

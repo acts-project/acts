@@ -27,6 +27,7 @@ namespace ActsExamples {
 class FittingAlgorithm final : public BareAlgorithm {
  public:
   using FitterResult = Acts::Result<Acts::KalmanFitterResult<SimSourceLink>>;
+
   /// Fit function that takes input measurements, initial trackstate and fitter
   /// options and returns some fit-specific result.
   using FitterFunction = std::function<FitterResult(
@@ -34,7 +35,14 @@ class FittingAlgorithm final : public BareAlgorithm {
       const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
                                       Acts::VoidOutlierFinder>&)>;
 
-  /// Create the fitter function implementation.
+  /// Fit function that takes the above parameters plus a sorted surface
+  /// sequence for the DirectNavigator to follow
+  using DirectedFitterFunction = std::function<FitterResult(
+      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>&,
+      const std::vector<const Acts::Surface*>&)>;
+
+  /// Create the fitter function implementations.
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
@@ -42,7 +50,12 @@ class FittingAlgorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       Options::BFieldVariant magneticField);
 
+  static DirectedFitterFunction makeFitterFunction(
+      Options::BFieldVariant magneticField);
+
   struct Config {
+    /// Boolean determining to use DirectNavigator or standard Navigator
+    bool directNavigation;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.
@@ -53,6 +66,8 @@ class FittingAlgorithm final : public BareAlgorithm {
     std::string outputTrajectories;
     /// Type erased fitter function.
     FitterFunction fit;
+    /// Type erased direct navigation fitter function
+    DirectedFitterFunction dFit;
   };
 
   /// Constructor of the fitting algorithm
@@ -68,6 +83,13 @@ class FittingAlgorithm final : public BareAlgorithm {
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
+  /// Helper function to call correct FitterFunction
+  FitterResult fitTrack(
+      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const Acts::KalmanFitterOptions<Acts::VoidOutlierFinder>& options,
+      const std::vector<const Acts::Surface*>& surfSequence) const;
+
   Config m_cfg;
 };
 

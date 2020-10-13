@@ -1,7 +1,6 @@
 add_library(
   ActsExamplesFitting SHARED
   src/FittingAlgorithm.cpp
-  src/DirectedFittingAlgorithmFitterFunction.cpp
   src/FittingAlgorithmFitterFunction.cpp)
 target_include_directories(
   ActsExamplesFitting

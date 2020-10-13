@@ -43,6 +43,9 @@ void addInputOptions(boost::program_options::options_description& opt);
 /// Add common output-related options.
 void addOutputOptions(boost::program_options::options_description& opt);
 
+/// Add common fitted related options
+void addFittingOptions(boost::program_options::options_description& opt);
+
 /// Parse options and return the resulting variables map.
 ///
 /// Automatically prints the help text if requested.
