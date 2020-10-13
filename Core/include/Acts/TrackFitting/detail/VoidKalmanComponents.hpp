@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,38 +29,6 @@ struct VoidKalmanComponents {
   Result<measurement_t> operator()(measurement_t measurement,
                                    const parameters_t& /* parameters */) const {
     return measurement;
-  }
-};
-
-/// @brief Void measurement calibrator for filtering
-struct VoidMeasurementCalibrator {
-  /// Main calibration call. In this implementation, it will dereference the
-  /// given source link and expect it to result in something convertible to
-  /// @c FittableMeasurement<source_link_t>.
-  /// @tparam source_link_t Source link type which identifier the uncalibrated
-  /// measurement
-  /// @tparam parameters_t Parameters type (unused)
-  /// @param sl Source link to turn into a measurement
-  /// @param pars The parameters to calibrate with (unused)
-  /// @note If the deref operator on @c source_link_t returns a reference, this
-  /// will copy it before returning. If it is already returned by-value (for
-  /// instance for a newly created measurement instance), return value
-  /// optimizitaion should auto-move the result.
-  /// @note This will not make the "calibrated" measurement point to the
-  /// uncalibrated measurement via sourcelink, it's just a copy.
-  template <typename source_link_t, typename parameters_t>
-  FittableMeasurement<source_link_t> operator()(
-      const source_link_t& sourceLink,
-      const parameters_t& /* parameters */) const {
-    static_assert(SourceLinkConcept<source_link_t>,
-                  "Source link does fulfill SourceLinkConcept.");
-    static_assert(
-        Concepts ::converts_to<FittableMeasurement<source_link_t>,
-                               Concepts ::detail_slc::dereferenceable_t,
-                               source_link_t>,
-        "For DefaultMeasurementCalibrator, source link needs to implement "
-        "dereference operator");
-    return *sourceLink;
   }
 };
 
