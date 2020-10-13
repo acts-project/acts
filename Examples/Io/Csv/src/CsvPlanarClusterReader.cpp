@@ -12,7 +12,7 @@
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"

@@ -8,38 +8,46 @@
 
 #pragma once
 
-#include <cstddef>
-#include <utility>
+#include <cstdint>
 
 #include <boost/container/flat_map.hpp>
 
 namespace ActsExamples {
+
+/// Index type to reference elements in a container.
+///
+/// We do not expect to have more than 2^32 elements in any given container so a
+/// fixed sized integer type is sufficient.
+using Index = uint32_t;
 
 /// Store elements that are identified by an index, e.g. in another container.
 ///
 /// Each index can have zero or more associated elements. A typical case could
 /// be to store all generating particles for a hit where the hit is identified
 /// by its index in the hit container.
-template <typename Value, typename Key = std::size_t>
-using IndexMultimap = boost::container::flat_multimap<Key, Value>;
+template <typename value_t>
+using IndexMultimap = boost::container::flat_multimap<Index, value_t>;
 
 /// Invert the multimap, i.e. from a -> {b...} to b -> {a...}.
 ///
 /// @note This assumes that the value in the initial multimap is itself a
-///       sortable index-like object, as would be the case when mapping e.g.
-///       hit ids to particle ids/ barcodes.
-template <typename Value, typename Key>
-inline IndexMultimap<Key, Value> invertIndexMultimap(
-    const IndexMultimap<Value, Key>& multimap) {
+///   sortable index-like object, as would be the case when mapping e.g.
+///   hit ids to particle ids/ barcodes.
+template <typename value_t>
+inline boost::container::flat_multimap<value_t, Index> invertIndexMultimap(
+    const IndexMultimap<value_t>& multimap) {
+  using InverseMultimap = boost::container::flat_multimap<value_t, Index>;
+
   // switch key-value without enforcing the new ordering (linear copy)
-  typename IndexMultimap<Key, Value>::sequence_type unordered;
+  typename InverseMultimap::sequence_type unordered;
   unordered.reserve(multimap.size());
-  for (const auto& keyValue : multimap) {
-    // value is now the key and the key is now the value
-    unordered.emplace_back(keyValue.second, keyValue.first);
+  for (auto&& [index, value] : multimap) {
+    // value is now the key and the index is now the value
+    unordered.emplace_back(value, index);
   }
+
   // adopting the unordered sequence will reestablish the correct order
-  IndexMultimap<Key, Value> inverse;
+  InverseMultimap inverse;
   inverse.adopt_sequence(std::move(unordered));
   return inverse;
 }

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 

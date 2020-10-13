@@ -11,7 +11,7 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
