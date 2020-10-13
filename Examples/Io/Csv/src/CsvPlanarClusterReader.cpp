@@ -181,16 +181,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   for (const HitData& hit : hits) {
     Acts::GeometryIdentifier geoId = extractGeometryId(hit);
 
-    // identify hit surface
-    auto it = m_surfaces.find(geoId);
-    if (it == m_surfaces.end() or not it->second) {
-      ACTS_FATAL("Could not retrieve the surface for hit " << hit);
-      return ProcessCode::ABORT;
-    }
-    const Acts::Surface& surface = *(it->second);
-
     // find associated truth/ simulation hits
-    bool simHitValid = true;
     std::vector<std::size_t> simHitIndices;
     {
       auto range = makeRange(std::equal_range(truths.begin(), truths.end(),
@@ -220,35 +211,20 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
             truth.deltae * Acts::UnitConstants::GeV,
         };
 
-        // Construct a sim hit
-        ActsFatras::Hit simHit(simGeometryId, simParticleId, simPos4, simMom4,
-                               simMom4 + simDelta4, simIndex);
-        // check if the sim hit is on surface
-        auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
-                                              simHit.unitDirection());
-        if (not lpResult.ok()) {
-          ACTS_WARNING("Global to local transformation did not succeed.");
-          simHitValid = false;
-          break;
-        }
-
         // the cluster stores indices to the underlying simulation hits. thus
         // their position in the container must be stable. the preordering of
         // hits by geometry id should ensure that new sim hits are always added
         // at the end and previously created ones rest at their existing
         // locations.
-        auto inserted = simHits.emplace_hint(simHits.end(), simHit);
+        auto inserted = simHits.emplace_hint(simHits.end(), simGeometryId,
+                                             simParticleId, simPos4, simMom4,
+                                             simMom4 + simDelta4, simIndex);
         if (std::next(inserted) != simHits.end()) {
           ACTS_FATAL("Truth hit sorting broke for input hit id " << hit.hit_id);
           return ProcessCode::ABORT;
         }
         simHitIndices.push_back(simHits.index_of(inserted));
       }
-    }
-
-    // If invalid sim hit found, skip this hit
-    if (not simHitValid) {
-      continue;
     }
 
     // find matching pixel cell information
@@ -260,6 +236,14 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
         digitizationCells.emplace_back(c.ch0, c.ch1, c.value);
       }
     }
+
+    // identify hit surface
+    auto it = m_surfaces.find(geoId);
+    if (it == m_surfaces.end() or not it->second) {
+      ACTS_FATAL("Could not retrieve the surface for hit " << hit);
+      return ProcessCode::ABORT;
+    }
+    const Acts::Surface& surface = *(it->second);
 
     // transform global hit coordinates into local coordinates on the surface
     Acts::Vector3D pos(hit.x * Acts::UnitConstants::mm,

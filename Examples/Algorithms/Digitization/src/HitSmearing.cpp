@@ -10,11 +10,13 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimSourceLink.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+using namespace Acts::UnitLiterals;
 ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
                                        Acts::Logging::Level lvl)
     : BareAlgorithm("HitSmearing", lvl), m_cfg(cfg) {
@@ -73,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
     for (const auto& hit : moduleHits) {
       // transform global position into local coordinates
       auto lpResult = surface->globalToLocal(ctx.geoContext, hit.position(),
-                                             hit.unitDirection());
+                                             hit.unitDirection(), 0.5_um);
       Acts::Vector2D lp{0., 0.};
       if (not lpResult.ok()) {
         ACTS_ERROR("Global to local transformation did not succeed.");
