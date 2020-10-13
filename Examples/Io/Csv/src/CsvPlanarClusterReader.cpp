@@ -264,7 +264,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     // create the planar cluster
     Acts::PlanarModuleCluster cluster(
         surface.getSharedPtr(),
-        Identifier(identifier_type(geoId.value()), std::move(simHitIndices)),
+        Acts::DigitizationSourceLink(surface, std::move(simHitIndices)),
         std::move(cov), local[0], local[1], time, std::move(digitizationCells));
 
     // due to the previous sorting of the raw hit data by geometry id, new
