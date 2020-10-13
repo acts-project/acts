@@ -9,7 +9,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
