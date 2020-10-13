@@ -45,6 +45,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addOutputOptions(desc);
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
+  Options::addFittingOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -59,6 +60,8 @@ int runRecTruthTracks(int argc, char* argv[],
   auto outputDir = ensureWritableDirectory(vm["output-dir"].as<std::string>());
   auto rnd = std::make_shared<ActsExamples::RandomNumbers>(
       Options::readRandomNumbersConfig(vm));
+
+  auto dirNav = vm["directed-navigation"].as<bool>();
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -151,10 +154,12 @@ int runRecTruthTracks(int argc, char* argv[],
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                              magneticField);
-  sequencer.addAlgorithm(
-      std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
+  fitter.directNavigation = dirNav;
+  fitter.dFit = FittingAlgorithm::makeFitterFunction(magneticField);
+  fitter.fit =
+      FittingAlgorithm::makeFitterFunction(trackingGeometry, magneticField);
+
+  sequencer.addAlgorithm(std::make_shared<FittingAlgorithm>(fitter, logLevel));
 
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;

@@ -37,6 +37,13 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       const std::vector<IndexSourceLink>&, const TrackParameters&,
       const TrackFitterOptions&)>;
 
+  /// Fit function that takes the above parameters plus a sorted surface
+  /// sequence for the DirectNavigator to follow
+  using DirectedTackFitterFunction = std::function<FitterResult(
+      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const TrackFitterOptions&,
+      const std::vector<const Acts::Surface*>&)>;
+
   /// Create the track fitter function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
@@ -45,9 +52,14 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       Options::BFieldVariant magneticField);
 
+  static DirectedTrackFitterFunction makeTrackFitterFunction(
+      Options::BFieldVariant magneticField);
+
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
+    /// Boolean determining to use DirectNavigator or standard Navigator
+    bool directNavigation;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.
@@ -56,8 +68,10 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
-    /// Type erased track fitter function.
+    /// Type erased fitter function.
     TrackFitterFunction fit;
+    /// Type erased direct navigation fitter function
+    DirectedTrackFitterFunction dFit;
   };
 
   /// Constructor of the fitting algorithm
@@ -73,6 +87,13 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
 
  private:
+  /// Helper function to call correct FitterFunction
+  FitterResult fitTrack(
+      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const TrackFitterOptions& options,
+      const std::vector<const Acts::Surface*>& surfSequence) const;
+
   Config m_cfg;
 };
 

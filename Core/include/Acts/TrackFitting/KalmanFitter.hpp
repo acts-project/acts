@@ -415,9 +415,8 @@ class KalmanFitter {
           // Set the navigation state
           state.navigation.startSurface = &st.referenceSurface();
           if (state.navigation.startSurface->associatedLayer() != nullptr) {
-	    state.navigation.startLayer =
-	      state.navigation.startSurface->associatedLayer();
-	       
+            state.navigation.startLayer =
+                state.navigation.startSurface->associatedLayer();
           }
           state.navigation.startVolume =
               state.navigation.startLayer->trackingVolume();
@@ -1114,7 +1113,7 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-	  kfOptions.geoContext, kfOptions.magFieldContext, logger);
+        kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
     // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
