@@ -11,6 +11,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
 #include "Acts/Plugins/Cuda/Utilities/Arrays.hpp"
+#include "Acts/Plugins/Cuda/Utilities/Info.hpp"
 
 // System include(s).
 #include <cstddef>
@@ -34,6 +35,7 @@ namespace Details {
 /// that still need to be filtered through
 /// @c Acts::SeedFilter::filterSeeds_1SpFixed before returning it to the user.
 ///
+/// @param[in] device Properties of the device that the code will be running on
 /// @param[in] maxBlockSize The maximum block size to use on the GPU
 /// @param[in] dubletCounts The output object from
 ///            @c Acts::Cuda::Details::countDublets
@@ -70,11 +72,12 @@ namespace Details {
 ///         for each middle spacepoint
 ///
 std::vector<std::vector<Triplet> > findTriplets(
-    std::size_t maxBlockSize, const DubletCounts& dubletCounts,
-    const SeedFilterConfig& seedConfig, const TripletFilterConfig& filterConfig,
-    std::size_t nBottomSPs, const device_array<SpacePoint>& bottomSPs,
-    std::size_t nMiddleSPs, const device_array<SpacePoint>& middleSPs,
-    std::size_t nTopSPs, const device_array<SpacePoint>& topSPs,
+    const Info::Device& device, std::size_t maxBlockSize,
+    const DubletCounts& dubletCounts, const SeedFilterConfig& seedConfig,
+    const TripletFilterConfig& filterConfig, std::size_t nBottomSPs,
+    const device_array<SpacePoint>& bottomSPs, std::size_t nMiddleSPs,
+    const device_array<SpacePoint>& middleSPs, std::size_t nTopSPs,
+    const device_array<SpacePoint>& topSPs,
     const device_array<unsigned int>& middleBottomCounts,
     const device_array<std::size_t>& middleBottomDublets,
     const device_array<unsigned int>& middleTopCounts,
