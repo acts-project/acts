@@ -151,8 +151,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       // create the planar cluster
       Acts::PlanarModuleCluster pCluster(
-          dg.surface->getSharedPtr(), Identifier(identifier_type(idx), {idx}),
-          std::move(cov), localX, localY, hit.time(), std::move(usedCells));
+          dg.surface->getSharedPtr(),
+          Acts::DigitizationSourceLink(*dg.surface, {idx}), std::move(cov),
+          localX, localY, hit.time(), std::move(usedCells));
 
       // insert into the cluster container. since the input data is already
       // sorted by geoId, we should always be able to add at the end.
