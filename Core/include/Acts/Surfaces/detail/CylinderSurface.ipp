@@ -113,8 +113,11 @@ inline SurfaceIntersection CylinderSurface::intersect(
 }
 
 inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global position
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();

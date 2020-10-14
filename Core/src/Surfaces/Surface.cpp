@@ -48,14 +48,17 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 }
 
 Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global posiiton
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
   const auto alignToLocalWithoutCorrection =
-      alignmentToLocalDerivativeWithoutCorrection(gctx, position, direction);
+      alignmentToLocalDerivativeWithoutCorrection(gctx, parameters);
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
-  const auto alignToPath = alignmentToPathDerivative(gctx, position, direction);
+  const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
   // 3) Calculate the jacobian from free parameters to bound parameters
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   initJacobianToLocal(gctx, jacToLocal, position, direction);
@@ -70,8 +73,9 @@ Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
 
 Acts::AlignmentToBoundLocalMatrix
 Acts::Surface::alignmentToLocalDerivativeWithoutCorrection(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& /*unused*/) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global posiiton
+  const auto position = parameters.segment<3>(eFreePos0);
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();
@@ -106,8 +110,11 @@ Acts::Surface::alignmentToLocalDerivativeWithoutCorrection(
 }
 
 Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global posiiton
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
   const ActsRowVector<double, 3> pcRowVec =
       (position - center(gctx)).transpose();

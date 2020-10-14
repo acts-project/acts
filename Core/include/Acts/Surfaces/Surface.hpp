@@ -437,14 +437,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// change of alignment parameters
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of bound local position w.r.t. local frame
   /// alignment parameters
   AlignmentToBoundLocalMatrix alignmentToLocalDerivative(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction) const;
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of bound local w.r.t.
   /// alignment parameters of the surface (i.e. origin in global 3D Cartesian
@@ -455,19 +453,11 @@ class Surface : public virtual GeometryObject,
   /// derivative to get the full alignment to bound local derivative.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param rotToLocalXAxis The derivative of local frame x axis vector w.r.t.
-  /// its rotation
-  /// @param rotToLocalYAxis The derivative of local frame y axis vector w.r.t.
-  /// its rotation
-  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
-  /// its rotation
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of bound local w.r.t. alignment parameters
   AlignmentToBoundLocalMatrix alignmentToLocalDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction) const;
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of path length at the geometry constraint or POCA
   /// w.r.t. alignment parameters of the surface (i.e. local frame origin in
@@ -479,13 +469,11 @@ class Surface : public virtual GeometryObject,
   /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction) const;
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

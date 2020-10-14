@@ -212,13 +212,11 @@ class CylinderSurface : public Surface {
   /// extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction) const final;
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

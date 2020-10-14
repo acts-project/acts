@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
-  /// Test clone method
+  // Test clone method
   Translation3D translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
@@ -269,18 +269,21 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
 
-  /// Define the track (local) position and direction
+  // Define the track (local) position and direction
   Vector2D localPosition{1, 2};
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
-  /// Get the global position
+  // Get the global position
   Vector3D globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
+  // Construct a free parameters
+  FreeVector parameters;
+  parameters << globalPosition.x(), globalPosition.y(), globalPosition.z(), 0,
+      direction.x(), direction.y(), direction.z(), 1;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, globalPosition,
-                                                    direction);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
@@ -299,8 +302,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
   const AlignmentToBoundLocalMatrix& alignToLocal =
-      planeSurfaceObject->alignmentToLocalDerivative(tgContext, globalPosition,
-                                                     direction);
+      planeSurfaceObject->alignmentToLocalDerivative(tgContext, parameters);
   const AlignmentRowVector& alignToloc0 = alignToLocal.block<1, 6>(0, 0);
   const AlignmentRowVector& alignToloc1 = alignToLocal.block<1, 6>(1, 0);
   // The expected results
