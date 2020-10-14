@@ -199,10 +199,10 @@ class ConeSurface : public Surface {
   /// Return properly formatted class name for screen output
   std::string name() const override;
 
-  /// Calculate the derivative of path length at the geometry constraint or POCA
-  /// w.r.t. alignment parameters of the surface (i.e. local frame origin in
-  /// global 3D Cartesian coordinates and its rotation represented with
-  /// extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters is the free parameters

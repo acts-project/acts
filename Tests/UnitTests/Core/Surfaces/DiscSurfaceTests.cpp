@@ -265,9 +265,9 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
   // Construct a free parameters
-  FreeVector parameters;
-  parameters << globalPosition.x(), globalPosition.y(), globalPosition.z(), 0,
-      direction.x(), direction.y(), direction.z(), 1;
+  FreeVector parameters = FreeVector::Zero();
+  parameters.head<3>() = globalPosition;
+  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =

@@ -190,7 +190,7 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The longitudinal component vector (along local z axis)
   ActsRowVectorD<3> locZ = rft.block<1, 3>(1, 0);
@@ -216,12 +216,12 @@ inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
-  const Vector3D localZAxis = rotation.block<3, 1>(0, 2);
+  const Vector3D localZAxis = rotation.col(2);
   // The local z coordinate
   const double pz = pcRowVec * localZAxis;
   // Cosine of angle between momentum direction and local frame z axis

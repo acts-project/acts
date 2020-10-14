@@ -357,9 +357,10 @@ class Surface : public virtual GeometryObject,
                                                const Vector3D& position,
                                                const Vector3D& direction) const;
 
-  /// Calculate the derivative of path length at the geometry constraint or POCA
-  /// w.r.t. free parameter. The calculation is identical for all surfaces where
-  /// the reference frame does not depend on the direction
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. free parameter. The calculation is
+  /// identical for all surfaces where the reference frame does not depend on
+  /// the direction
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
@@ -369,7 +370,7 @@ class Surface : public virtual GeometryObject,
   /// @param parameters is the free parameters
   /// @param rft is the transposed reference frame (avoids recalculation)
   ///
-  /// @return a free vector
+  /// @return Derivative of path length w.r.t. free parameters
   virtual FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
                                              const FreeVector& parameters,
                                              const RotationMatrix3D& rft) const;
@@ -432,18 +433,19 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// change of alignment parameters
   /// @param parameters is the free parameters
-  /// @param derivatives is the derivative of free parameters w.r.t. path length
+  /// @param pathDerivative is the derivative of free parameters w.r.t. path
+  /// length
   ///
-  /// @return Derivative of bound local position w.r.t. local frame
+  /// @return Derivative of bound track parameters w.r.t. local frame
   /// alignment parameters
   AlignmentToBoundMatrix alignmentToBoundDerivative(
       const GeometryContext& gctx, const FreeVector& parameters,
-      const FreeVector& derivatives) const;
+      const FreeVector& pathDerivative) const;
 
-  /// Calculate the derivative of bound local w.r.t.
-  /// alignment parameters of the surface (i.e. origin in global 3D Cartesian
-  /// coordinates and its rotation represented with extrinsic Euler angles)
-  /// without any path correction
+  /// Calculate the derivative of bound track parameters w.r.t.
+  /// alignment parameters of its reference surface (i.e. origin in global 3D
+  /// Cartesian coordinates and its rotation represented with extrinsic Euler
+  /// angles) without any path correction
   ///
   /// @note This function should be used together with alignment to path
   /// derivative to get the full alignment to bound derivatives
@@ -451,14 +453,15 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters is the free parameters
   ///
-  /// @return Derivative of bound local w.r.t. alignment parameters
-  AlignmentToBoundLocalMatrix alignmentToLocalDerivativeWithoutCorrection(
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
-  /// Calculate the derivative of path length at the geometry constraint or POCA
-  /// w.r.t. alignment parameters of the surface (i.e. local frame origin in
-  /// global 3D Cartesian coordinates and its rotation represented with
-  /// extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
   ///
   /// @note Re-implementation is needed for surface whose intersection with
   /// track is not its local xy plane, e.g. LineSurface, CylinderSurface and

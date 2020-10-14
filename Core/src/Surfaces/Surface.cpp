@@ -49,45 +49,36 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 
 Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& parameters,
-    const FreeVector& derivatives) const {
+    const FreeVector& pathDerivative) const {
   // The global posiiton
   const auto position = parameters.head<3>();
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
-  const auto alignToLocalWithoutCorrection =
-      alignmentToLocalDerivativeWithoutCorrection(gctx, parameters);
+  const auto alignToBoundWithoutCorrection =
+      alignmentToBoundDerivativeWithoutCorrection(gctx, parameters);
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
   const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
   // 3) Calculate the jacobian from free parameters to bound parameters
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   initJacobianToLocal(gctx, jacToLocal, position, direction);
-  // 4) Initialize the derivative of bound parameters w.r.t. alignment
-  // parameters
-  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
-  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
-  // alignToLocalWithoutCorrection + jacToLocal*derivatives*alignToPath
-  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
-      alignToLocalWithoutCorrection +
-      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
-          alignToPath;
-  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
-  // eBoundTime, it's jacToLocal*derivatives*alignToPath
-  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
-      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
-      alignToPath;
+  // 4) The derivative of bound parameters w.r.t. alignment
+  // parameters is alignToBoundWithoutCorrection +
+  // jacToLocal*pathDerivative*alignToPath
+  AlignmentToBoundMatrix alignToBound =
+      alignToBoundWithoutCorrection + jacToLocal * pathDerivative * alignToPath;
 
   return alignToBound;
 }
 
-Acts::AlignmentToBoundLocalMatrix
-Acts::Surface::alignmentToLocalDerivativeWithoutCorrection(
+Acts::AlignmentToBoundMatrix
+Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();
@@ -114,9 +105,13 @@ Acts::Surface::alignmentToLocalDerivativeWithoutCorrection(
   // The derivative of bound local w.r.t. local 3D Cartesian coordinates
   LocalCartesianToBoundLocalMatrix loc3DToBoundLoc =
       localCartesianToBoundLocalDerivative(gctx, position);
-  // @todo For line surface, this derivative cannot be decomposed into the
-  // alignment->loca3D and local3D->boundLocal?
-  return loc3DToBoundLoc * alignToLoc3D;
+  // Initialize the derivative of bound parameters w.r.t. alignment
+  // parameters without path correction
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
+  // It's only relevant with the bound local position without path correction
+  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
+      loc3DToBoundLoc * alignToLoc3D;
+  return alignToBound;
 }
 
 Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
@@ -126,7 +121,7 @@ Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The local frame rotation
   const auto& rotation = transform(gctx).rotation();

@@ -119,14 +119,14 @@ inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame x/y/z axis
-  const Vector3D localXAxis = rotation.block<3, 1>(0, 0);
-  const Vector3D localYAxis = rotation.block<3, 1>(0, 1);
-  const Vector3D localZAxis = rotation.block<3, 1>(0, 2);
+  const Vector3D localXAxis = rotation.col(0);
+  const Vector3D localYAxis = rotation.col(1);
+  const Vector3D localZAxis = rotation.col(2);
   // The local coordinates
   const Vector3D localPos = rotation.transpose() * position;
   const double dx = direction.dot(localXAxis);
@@ -135,15 +135,15 @@ inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
   // The normalization factor
   const double norm = 1. / (1. - dz * dz);
   // The direction transpose
-  const ActsRowVector<double, 3> dirRowVec = direction.transpose();
+  const ActsRowVector<AlignmentScalar, 3> dirRowVec = direction.transpose();
   // The derivative of path w.r.t. the local axes
   // @note The following calculations assume that the intersection of the track
   // with the cylinder always satisfy: perp(localPos) = R
-  const ActsRowVector<double, 3> localXAxisToPath =
+  const ActsRowVector<AlignmentScalar, 3> localXAxisToPath =
       -2.0 * norm * (dx * pcRowVec + localPos.x() * dirRowVec);
-  const ActsRowVector<double, 3> localYAxisToPath =
+  const ActsRowVector<AlignmentScalar, 3> localYAxisToPath =
       -2.0 * norm * (dy * pcRowVec + localPos.y() * dirRowVec);
-  const ActsRowVector<double, 3> localZAxisToPath =
+  const ActsRowVector<AlignmentScalar, 3> localZAxisToPath =
       -4.0 * norm * norm * (dx * localPos.x() + dy * localPos.y()) * dz *
       dirRowVec;
   // Calculate the derivative of local frame axes w.r.t its rotation
