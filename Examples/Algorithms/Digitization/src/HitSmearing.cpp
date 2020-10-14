@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -56,6 +57,7 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
 
 ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
     const AlgorithmContext& ctx) const {
+  using namespace Acts::UnitLiterals;
   using ConcreteMeasurement =
       Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
                         Acts::eBoundLoc1>;
@@ -97,7 +99,7 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
 
       // transform global position into local coordinates
       auto lpResult = surface->globalToLocal(ctx.geoContext, simHit.position(),
-                                             simHit.unitDirection());
+                                             simHit.unitDirection(), 0.5_um);
       if (not lpResult.ok()) {
         ACTS_ERROR("Global to local transformation did not succeed.");
         return ProcessCode::ABORT;
