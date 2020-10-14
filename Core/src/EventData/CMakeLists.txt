@@ -1,7 +1,6 @@
 target_sources_local(
   ActsCore
   PRIVATE
-    MinimalSourceLink.cpp
     NeutralTrackParameters.cpp
     PrintParameters.cpp
     TrackParameters.cpp
