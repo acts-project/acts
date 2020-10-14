@@ -556,7 +556,7 @@ void Acts::JsonGeometryConverter::convertToRep(
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
       // Ignore if the volumeID is not correct (i.e. shared boundary)
-      if (boundaryID.volume() == vid){
+      if (boundaryID.volume() == vid) {
         volRep.boundaries[bid] = bssfRep.surfaceMaterial();
         volRep.boundarySurfaces[bid] = &bssfRep;
       }
@@ -565,7 +565,7 @@ void Acts::JsonGeometryConverter::convertToRep(
       // configuration
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
-      if (boundaryID.volume() == vid){
+      if (boundaryID.volume() == vid) {
         Acts::BinUtility bUtility = DefaultBin(bssfRep);
         Acts::ISurfaceMaterial* bMaterial =
             new Acts::ProtoSurfaceMaterial(bUtility);
