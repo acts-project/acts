@@ -39,7 +39,7 @@ void setupDigitization(
 
   if (vars["digi-smearing"].as<bool>()) {
     SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
-    smearCfg.inputSimulatedHits = kFatrasCollectionHits;
+    smearCfg.inputSimHits = kFatrasCollectionHits;
     smearCfg.outputMeasurements = "measurements";
     smearCfg.trackingGeometry = trackingGeometry;
     smearCfg.randomNumbers = randomNumbers;
