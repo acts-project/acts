@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -15,9 +15,9 @@
 
 #include <stdexcept>
 
-ActsExamples::FittingAlgorithm::FittingAlgorithm(Config cfg,
-                                                 Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("FittingAlgorithm", level),
+ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
+    Config cfg, Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -37,7 +37,7 @@ ActsExamples::FittingAlgorithm::FittingAlgorithm(Config cfg,
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::FittingAlgorithm::execute(
+ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& measurements =

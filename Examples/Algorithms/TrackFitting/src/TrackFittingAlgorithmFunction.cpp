@@ -19,29 +19,30 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "ActsExamples/Fitting/FittingAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
+#include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 namespace {
 
-template <typename Fitter>
-struct FitterFunctionImpl {
-  Fitter fitter;
+template <typename track_fitter_t>
+struct TrackFitterFunctionImpl {
+  track_fitter_t trackFitter;
 
-  FitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
+  TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
 
-  ActsExamples::FittingAlgorithm::FitterResult operator()(
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::FittingAlgorithm::FitterOptions& options) const {
-    return fitter.fit(sourceLinks, initialParameters, options);
+      const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
+      const {
+    return trackFitter.fit(sourceLinks, initialParameters, options);
   };
 };
 
 }  // namespace
 
-ActsExamples::FittingAlgorithm::FitterFunction
-ActsExamples::FittingAlgorithm::makeFitterFunction(
+ActsExamples::TrackFittingAlgorithm::TrackFitterFunction
+ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
@@ -49,7 +50,7 @@ ActsExamples::FittingAlgorithm::makeFitterFunction(
 
   // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
-      [trackingGeometry](auto&& inputField) -> FitterFunction {
+      [trackingGeometry](auto&& inputField) -> TrackFitterFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
@@ -68,10 +69,10 @@ ActsExamples::FittingAlgorithm::makeFitterFunction(
         navigator.resolveMaterial = true;
         navigator.resolveSensitive = true;
         Propagator propagator(std::move(stepper), std::move(navigator));
-        Fitter fitter(std::move(propagator));
+        Fitter trackFitter(std::move(propagator));
 
         // build the fitter functions. owns the fitter object.
-        return FitterFunctionImpl<Fitter>(std::move(fitter));
+        return TrackFitterFunctionImpl<Fitter>(std::move(trackFitter));
       },
       std::move(magneticField));
 }

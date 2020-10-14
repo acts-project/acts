@@ -88,7 +88,7 @@ jobID=0
          # Archive with Job ID
          mv reco_${detector}_e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}/timing.tsv timing_${jobID}.tsv
          # Extract the fitting time
-         fit_time_str=`grep "Algorithm:FittingAlgorithm" timing_${jobID}.tsv | awk '{print $3}'`
+         fit_time_str=`grep "Algorithm:TrackFittingAlgorithm" timing_${jobID}.tsv | awk '{print $3}'`
 	 # Make sure the fit time is fixed-point for calculation with bc
 	 fit_time_per_event=$(echo ${fit_time_str} | awk '{printf("%.10f\n", $1)}')
          fit_time_per_track=$(echo "${fit_time_per_event}/${numTracksPerEvent}"|bc -l)

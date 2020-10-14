@@ -25,22 +25,23 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class FittingAlgorithm final : public BareAlgorithm {
+class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
-  using FitterOptions =
+  /// Track fitter function that takes input measurements, initial trackstate
+  /// and fitter options and returns some track-fitter-specific result.
+  using TrackFitterOptions =
       Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
-  using FitterResult = Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
-  /// Fit function that takes input measurements, initial trackstate and fitter
-  /// options and returns some fit-specific result.
-  using FitterFunction =
-      std::function<FitterResult(const std::vector<IndexSourceLink>&,
-                                 const TrackParameters&, const FitterOptions&)>;
+  using TrackFitterResult =
+      Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
+  using TrackFitterFunction = std::function<TrackFitterResult(
+      const std::vector<IndexSourceLink>&, const TrackParameters&,
+      const TrackFitterOptions&)>;
 
-  /// Create the fitter function implementation.
+  /// Create the track fitter function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
   /// contains shared_ptr anyways.
-  static FitterFunction makeFitterFunction(
+  static TrackFitterFunction makeTrackFitterFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       Options::BFieldVariant magneticField);
 
@@ -55,15 +56,15 @@ class FittingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
-    /// Type erased fitter function.
-    FitterFunction fit;
+    /// Type erased track fitter function.
+    TrackFitterFunction fit;
   };
 
   /// Constructor of the fitting algorithm
   ///
   /// @param cfg is the config struct to configure the algorihtm
   /// @param level is the logging level
-  FittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Framework execute method of the fitting algorithm
   ///

@@ -22,11 +22,11 @@
 
 namespace {
 
-template <typename TrackFinder>
+template <typename track_finder_t>
 struct TrackFinderFunctionImpl {
-  TrackFinder trackFinder;
+  track_finder_t trackFinder;
 
-  TrackFinderFunctionImpl(TrackFinder&& f) : trackFinder(std::move(f)) {}
+  TrackFinderFunctionImpl(track_finder_t&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::IndexSourceLinkContainer& sourceLinks,
