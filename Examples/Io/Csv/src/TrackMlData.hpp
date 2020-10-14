@@ -25,15 +25,15 @@ struct ParticleData {
   /// Production process type. Not available in the TrackML datasets.
   uint32_t process = 0u;
   /// Production position components in mm.
-  double vx, vy, vz;
+  float vx, vy, vz;
   // Production time in ns. Not available in the TrackML datasets.
-  double vt = 0.0f;
+  float vt = 0.0f;
   /// Momentum components in GeV.
-  double px, py, pz;
+  float px, py, pz;
   /// Mass in GeV. Not available in the TrackML datasets
-  double m = 0.0f;
+  float m = 0.0f;
   /// Charge in e.
-  double q;
+  float q;
 
   DFE_NAMEDTUPLE(ParticleData, particle_id, particle_type, process, vx, vy, vz,
                  vt, px, py, pz, m, q);
@@ -49,20 +49,20 @@ struct TruthHitData {
   /// Event-unique particle identifier of the generating particle.
   uint64_t particle_id;
   /// True global hit position components in mm.
-  double tx, ty, tz;
+  float tx, ty, tz;
   // True global hit time in ns. Not available in the TrackML datasets.
-  double tt = 0.0f;
+  float tt = 0.0f;
   /// True particle momentum in GeV before interaction.
-  double tpx, tpy, tpz;
+  float tpx, tpy, tpz;
   /// True particle energy in GeV before interaction.
   /// Not available in the TrackML datasets.
-  double te = 0.0f;
+  float te = 0.0f;
   /// True four-momentum change in GeV due to interaction.
   /// Not available in the TrackML datasets.
-  double deltapx = 0.0f;
-  double deltapy = 0.0f;
-  double deltapz = 0.0f;
-  double deltae = 0.0f;
+  float deltapx = 0.0f;
+  float deltapy = 0.0f;
+  float deltapz = 0.0f;
+  float deltae = 0.0f;
   // Hit index along the trajectory. Not available in the TrackML datasets.
   int32_t index = -1;
 
@@ -78,9 +78,9 @@ struct HitData {
   /// Partially decoded hit surface identifier components.
   uint32_t volume_id, layer_id, module_id;
   /// Global hit position components in mm.
-  double x, y, z;
+  float x, y, z;
   /// Global hit time in ns. Not available in the TrackML datasets.
-  double t = 0.0f;
+  float t = 0.0f;
 
   DFE_NAMEDTUPLE(HitData, hit_id, geometry_id, volume_id, layer_id, module_id,
                  x, y, z, t);
@@ -109,18 +109,18 @@ struct SurfaceData {
   /// Partially decoded surface identifier components.
   uint32_t volume_id, layer_id, module_id;
   /// Center position components in mm.
-  double cx, cy, cz;
+  float cx, cy, cz;
   /// Rotation matrix components.
-  double rot_xu, rot_xv, rot_xw;
-  double rot_yu, rot_yv, rot_yw;
-  double rot_zu, rot_zv, rot_zw;
+  float rot_xu, rot_xv, rot_xw;
+  float rot_yu, rot_yv, rot_yw;
+  float rot_zu, rot_zv, rot_zw;
   /// Limits and pitches in mm. Not always available.
-  double module_t = -1;
-  double module_minhu = -1;
-  double module_maxhu = -1;
-  double module_hv = -1;
-  double pitch_u = -1;
-  double pitch_v = -1;
+  float module_t = -1;
+  float module_minhu = -1;
+  float module_maxhu = -1;
+  float module_hv = -1;
+  float pitch_u = -1;
+  float pitch_v = -1;
 
   DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, layer_id, module_id, cx,
                  cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv, rot_yw, rot_zu,
