@@ -39,10 +39,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   /// Fit function that takes the above parameters plus a sorted surface
   /// sequence for the DirectNavigator to follow
-  using DirectedTackFitterFunction = std::function<FitterResult(
+  using DirectedTrackFitterFunction = std::function<TrackFitterResult(
       const std::vector<SimSourceLink>&, const TrackParameters&,
-      const TrackFitterOptions&,
-      const std::vector<const Acts::Surface*>&)>;
+      const TrackFitterOptions&, const std::vector<const Acts::Surface*>&)>;
 
   /// Create the track fitter function implementation.
   ///
@@ -88,7 +87,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
  private:
   /// Helper function to call correct FitterFunction
-  FitterResult fitTrack(
+  TrackFitterResult fitTrack(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const TrackFitterOptions& options,
@@ -96,5 +95,18 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   Config m_cfg;
 };
+
+inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
+ActsExamples::TrackFittingAlgorithm::fitTrack(
+    const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+    const ActsExamples::TrackParameters& initialParameters,
+    const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
+                                    Acts::VoidOutlierFinder>& options,
+    const std::vector<const Acts::Surface*>& surfSequence) const {
+  if (m_cfg.directNavigation)
+    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
+
+  return m_cfg.fit(sourceLinks, initialParameters, options);
+}
 
 }  // namespace ActsExamples

@@ -155,11 +155,12 @@ int runRecTruthTracks(int argc, char* argv[],
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
-  fitter.dFit = FittingAlgorithm::makeFitterFunction(magneticField);
-  fitter.fit =
-      FittingAlgorithm::makeFitterFunction(trackingGeometry, magneticField);
+  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
+  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
+                                                              magneticField);
 
-  sequencer.addAlgorithm(std::make_shared<FittingAlgorithm>(fitter, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;

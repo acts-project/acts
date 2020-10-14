@@ -139,16 +139,3 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;
 }
-
-ActsExamples::FittingAlgorithm::FitterResult
-ActsExamples::FittingAlgorithm::fitTrack(
-    const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
-    const ActsExamples::TrackParameters& initialParameters,
-    const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
-                                    Acts::VoidOutlierFinder>& options,
-    const std::vector<const Acts::Surface*>& surfSequence) const {
-  if (m_cfg.directNavigation)
-    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
-
-  return m_cfg.fit(sourceLinks, initialParameters, options);
-}

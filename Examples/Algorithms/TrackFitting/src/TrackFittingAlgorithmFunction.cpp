@@ -44,11 +44,10 @@ struct DirectedFitterFunctionImpl {
   Fitter fitter;
   DirectedFitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
-  ActsExamples::FittingAlgorithm::FitterResult operator()(
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
       const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::KalmanFitterOptions<ActsExamples::SimSourceLinkCalibrator,
-                                      Acts::VoidOutlierFinder>& options,
+      const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options,
       const std::vector<const Acts::Surface*>& sSequence) const {
     return fitter.fit(sourceLinks, initialParameters, options, sSequence);
   };
@@ -91,15 +90,15 @@ ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
       std::move(magneticField));
 }
 
-ActsExamples::FittingAlgorithm::DirectedFitterFunction
-ActsExamples::FittingAlgorithm::makeFitterFunction(
+ActsExamples::TrackFittingAlgorithm::DirectedTrackFitterFunction
+ActsExamples::TrackFittingAlgorithm::makeTrackFitterFunction(
     Options::BFieldVariant magneticField) {
   using Updater = Acts::GainMatrixUpdater;
   using Smoother = Acts::GainMatrixSmoother;
 
   // unpack the magnetic field variant and instantiate the corresponding fitter.
   return std::visit(
-      [](auto&& inputField) -> DirectedFitterFunction {
+      [](auto&& inputField) -> DirectedTrackFitterFunction {
         // each entry in the variant is already a shared_ptr
         // need ::element_type to get the real magnetic field type
         using InputMagneticField =
