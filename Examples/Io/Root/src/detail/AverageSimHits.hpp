@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -37,6 +38,8 @@ inline std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D>
 averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
                const SimHitContainer& simHits,
                const detail::HitSimHitsRange& hitSimHitsRange) {
+  using namespace Acts::UnitLiterals;
+
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("averageSimHits", Acts::Logging::INFO));
 
@@ -55,8 +58,8 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     // transforming first to local positions and average that ensures that the
     // averaged position is still on the surface. the averaged global position
     // might not be on the surface anymore.
-    auto result =
-        surface.globalToLocal(gCtx, simHit.position(), simHit.unitDirection());
+    auto result = surface.globalToLocal(gCtx, simHit.position(),
+                                        simHit.unitDirection(), 0.5_um);
     if (result.ok()) {
       avgLocal += result.value();
     } else {
