@@ -22,8 +22,8 @@ namespace ActsExamples {
 
 class TrackFindingAlgorithm final : public BareAlgorithm {
  public:
-  /// Track finding function that takes input measurements, initial trackstate
-  /// and track finder options and returns some track-finding-specific result.
+  /// Track finder function that takes input measurements, initial trackstate
+  /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<SimSourceLinkCalibrator,
                                              Acts::CKFSourceLinkSelector>;
