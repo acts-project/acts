@@ -548,12 +548,10 @@ void Acts::JsonGeometryConverter::convertToRep(
       }
     }
   }
-  std::cout << "vol id : " << tVolume.geometryId() << std::endl;
   // Let's finally check the boundaries
   for (auto& bsurf : tVolume.boundarySurfaces()) {
     // the surface representation
     auto& bssfRep = bsurf->surfaceRepresentation();
-    std::cout << "bnd id : " << bssfRep.geometryId() << std::endl;
     if (bssfRep.surfaceMaterial() != nullptr) {
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
@@ -573,7 +571,6 @@ void Acts::JsonGeometryConverter::convertToRep(
             new Acts::ProtoSurfaceMaterial(bUtility);
         volRep.boundaries[bid] = bMaterial;
         volRep.boundarySurfaces[bid] = &bssfRep;
-        std::cout << "bip :" << std::endl;
       }
     }
   }
