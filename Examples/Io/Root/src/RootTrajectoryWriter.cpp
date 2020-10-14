@@ -14,6 +14,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Units.hpp"
+
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -23,6 +25,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
+using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -388,7 +391,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       // get local truth position
       Acts::Vector2D truthlocal{0., 0.};
       auto lpResult = surface.globalToLocal(gctx, truthHit.position(),
-                                            truthHit.unitDirection());
+                                            truthHit.unitDirection(), 0.5_um);
       if (not lpResult.ok()) {
         ACTS_FATAL("Global to local transformation did not succeed.");
       }
