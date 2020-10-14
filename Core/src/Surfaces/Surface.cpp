@@ -47,8 +47,9 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
   return false;
 }
 
-Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters) const {
+Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
+    const GeometryContext& gctx, const FreeVector& parameters,
+    const FreeVector& derivatives) const {
   // The global posiiton
   const auto position = parameters.head<3>();
   // The direction
@@ -64,11 +65,20 @@ Acts::AlignmentToBoundLocalMatrix Acts::Surface::alignmentToLocalDerivative(
   initJacobianToLocal(gctx, jacToLocal, position, direction);
   // 4) Initialize the derivative of bound parameters w.r.t. alignment
   // parameters
-  AlignmentToBoundLocalMatrix alignToLocal =
+  AlignmentToBoundMatrix alignToBound = AlignmentToBoundMatrix::Zero();
+  // -> For bound track parameters eBoundLoc0, eBoundLoc1, it's
+  // alignToLocalWithoutCorrection + jacToLocal*derivatives*alignToPath
+  alignToBound.block<2, eAlignmentSize>(eBoundLoc0, eAlignmentCenter0) =
       alignToLocalWithoutCorrection +
-      jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) * direction * alignToPath;
+      jacToLocal.block<2, eFreeSize>(eBoundLoc0, eFreePos0) * derivatives *
+          alignToPath;
+  // -> For bound track parameters eBoundPhi, eBoundTheta, eBoundQOverP,
+  // eBoundTime, it's jacToLocal*derivatives*alignToPath
+  alignToBound.block<4, eAlignmentSize>(eBoundPhi, eAlignmentCenter0) =
+      jacToLocal.block<4, eFreeSize>(eBoundPhi, eFreePos0) * derivatives *
+      alignToPath;
 
-  return alignToLocal;
+  return alignToBound;
 }
 
 Acts::AlignmentToBoundLocalMatrix

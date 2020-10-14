@@ -41,6 +41,8 @@ using AlingmentMatrix =
     ActsMatrix<AlignmentScalar, eAlignmentSize, eAlignmentSize>;
 using AlignmentToLocalCartesianMatrix =
     ActsMatrix<AlignmentScalar, 3, eAlignmentSize>;
+using AlignmentToBoundMatrix =
+    ActsMatrix<BoundScalar, eBoundSize, eAlignmentSize>;
 using AlignmentToBoundLocalMatrix = ActsMatrix<BoundScalar, 2, eAlignmentSize>;
 
 }  // namespace Acts
