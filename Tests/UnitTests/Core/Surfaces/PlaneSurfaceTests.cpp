@@ -306,8 +306,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const AlignmentToBoundMatrix& alignToBound =
       planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
                                                      derivatives);
-  const AlignmentRowVector alignToloc0 = alignToBound.block<1, 6>(0, 0);
-  const AlignmentRowVector alignToloc1 = alignToBound.block<1, 6>(1, 0);
+  const AlignmentRowVector alignToloc0 =
+      alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
+  const AlignmentRowVector alignToloc1 =
+      alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentRowVector expAlignToloc0;
   expAlignToloc0 << -1, 0, 0, 0, 0, 2;
