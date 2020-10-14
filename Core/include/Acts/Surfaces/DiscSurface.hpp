@@ -233,12 +233,10 @@ class DiscSurface : public Surface {
   /// @param jacobian The jacobian to be initialized
   /// @param position The global position of the parameters
   /// @param direction The direction at of the parameters
-  ///
-  /// @return the transposed reference frame (avoids recalculation)
-  RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
-                                       FreeToBoundMatrix& jacobian,
-                                       const Vector3D& position,
-                                       const Vector3D& direction) const final;
+  void initJacobianToLocal(const GeometryContext& gctx,
+                           FreeToBoundMatrix& jacobian,
+                           const Vector3D& position,
+                           const Vector3D& direction) const final;
 
   /// Path correction due to incident of the track
   ///

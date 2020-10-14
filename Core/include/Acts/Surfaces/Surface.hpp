@@ -350,15 +350,13 @@ class Surface : public virtual GeometryObject,
   /// @param position is the global position of the parameters
   /// @param direction is the direction at of the parameters
   /// @param gctx The current geometry context object, e.g. alignment
-  ///
-  /// @return the transposed reference frame (avoids recalculation)
-  virtual RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
-                                               FreeToBoundMatrix& jacobian,
-                                               const Vector3D& position,
-                                               const Vector3D& direction) const;
+  virtual void initJacobianToLocal(const GeometryContext& gctx,
+                                   FreeToBoundMatrix& jacobian,
+                                   const Vector3D& position,
+                                   const Vector3D& direction) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
-  /// point-of-closest-approach w.r.t. free parameter. The calculation is
+  /// point-of-closest-approach w.r.t. free parameters. The calculation is
   /// identical for all surfaces where the reference frame does not depend on
   /// the direction
   ///
@@ -368,12 +366,10 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters is the free parameters
-  /// @param rft is the transposed reference frame (avoids recalculation)
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  virtual FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                             const FreeVector& parameters,
-                                             const RotationMatrix3D& rft) const;
+  virtual FreeRowVector freeToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calucation of the path correction for incident
   ///

@@ -183,8 +183,7 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
 }
 
 inline FreeRowVector LineSurface::freeToPathDerivative(
-    const GeometryContext& gctx, const FreeVector& parameters,
-    const RotationMatrix3D& rft) const {
+    const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.head<3>();
   // The direction
@@ -192,19 +191,23 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
   // The vector between position and center
   const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
-  // The longitudinal component vector (along local z axis)
-  ActsRowVectorD<3> locZ = rft.block<1, 3>(1, 0);
-  // Cosine of angle between momentum direction and local z axis
-  const double dz = locZ * direction;
-  const double norm = 1. / (1. - dz * dz);
+  // The rotation
+  const auto& rotation = transform(gctx).rotation();
+  // The local frame z axis
+  const Vector3D localZAxis = rotation.col(2);
   // The local z coordinate
-  const double pz = locZ.dot(pcRowVec);
+  const double pz = pcRowVec * localZAxis;
+  // Cosine of angle between momentum direction and local frame z axis
+  const double dz = localZAxis.dot(direction);
+  const double norm = 1. / (1. - dz * dz);
   // Initialize the derivative of propagation path w.r.t. free parameter
   FreeRowVector freeToPath = FreeRowVector::Zero();
   // The derivative of path w.r.t. position
-  freeToPath.segment<3>(eFreePos0) = norm * (dz * locZ - direction.transpose());
+  freeToPath.segment<3>(eFreePos0) =
+      norm * (dz * localZAxis.transpose() - direction.transpose());
   // The derivative of path w.r.t. direction
-  freeToPath.segment<3>(eFreeDir0) = norm * (pz * locZ - pcRowVec);
+  freeToPath.segment<3>(eFreeDir0) =
+      norm * (pz * localZAxis.transpose() - pcRowVec);
 
   return freeToPath;
 }

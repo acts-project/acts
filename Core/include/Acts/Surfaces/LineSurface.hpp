@@ -133,16 +133,14 @@ class LineSurface : public Surface {
                             const BoundVector& pars) const final;
 
   /// Calculate the derivative of path length at the geometry constraint or
-  /// point-of-closest-approach w.r.t. free parameter.
+  /// point-of-closest-approach w.r.t. free parameters
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters is the free parameters
-  /// @param rft is the transposed reference frame (avoids recalculation)
   ///
   /// @return Derivative of path length w.r.t. free parameters
   FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                     const FreeVector& parameters,
-                                     const RotationMatrix3D& rft) const final;
+                                     const FreeVector& parameters) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
