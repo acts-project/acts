@@ -197,10 +197,10 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
   RootDigitizationWriter(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Virtual destructor
-  ~RootDigitizationWriter() final;
+  ~RootDigitizationWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final;
+  ProcessCode endRun() final override;
 
  protected:
   /// This implementation holds the actual writing method
@@ -209,7 +209,7 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final;
+                     const MeasurementContainer& measurements) final override;
 
  private:
   Config m_cfg;

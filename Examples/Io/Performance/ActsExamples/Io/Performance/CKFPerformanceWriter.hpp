@@ -61,14 +61,14 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
   /// Construct from configuration and log level.
   CKFPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~CKFPerformanceWriter() final;
+  ~CKFPerformanceWriter() final override;
 
   /// Finalize plots.
-  ProcessCode endRun() final;
+  ProcessCode endRun() final override;
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final;
+                     const TrajectoriesContainer& trajectories) final override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

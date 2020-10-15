@@ -84,7 +84,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
   /// The configuration struct containing the smearers

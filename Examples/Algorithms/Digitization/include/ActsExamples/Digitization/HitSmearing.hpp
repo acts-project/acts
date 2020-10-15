@@ -57,7 +57,7 @@ class HitSmearing final : public BareAlgorithm {
 
   HitSmearing(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;

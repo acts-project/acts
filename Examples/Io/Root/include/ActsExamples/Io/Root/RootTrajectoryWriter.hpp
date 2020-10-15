@@ -67,17 +67,17 @@ class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   RootTrajectoryWriter(const Config& cfg, Acts::Logging::Level lvl);
-  ~RootTrajectoryWriter() final;
+  ~RootTrajectoryWriter() final override;
 
   /// End-of-run hook
-  ProcessCode endRun() final;
+  ProcessCode endRun() final override;
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final;
+                     const TrajectoriesContainer& trajectories) final override;
 
  private:
   Config m_cfg;             ///< The config class
