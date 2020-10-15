@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Plugins/HepMC3/HepMC3Vertex.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
-#include "ActsExamples/Plugins/HepMC3/HepMC3Particle.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
 std::vector<ActsExamples::SimParticle>
 ActsExamples::HepMC3Vertex::genParticlesToActs(
