@@ -438,22 +438,6 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters,
       const FreeVector& pathDerivative) const;
 
-  /// Calculate the derivative of bound track parameters w.r.t.
-  /// alignment parameters of its reference surface (i.e. origin in global 3D
-  /// Cartesian coordinates and its rotation represented with extrinsic Euler
-  /// angles) without any path correction
-  ///
-  /// @note This function should be used together with alignment to path
-  /// derivative to get the full alignment to bound derivatives
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param parameters is the free parameters
-  ///
-  /// @return Derivative of bound track parameters w.r.t. local frame alignment
-  /// parameters without path correction
-  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
-      const GeometryContext& gctx, const FreeVector& parameters) const;
-
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
   /// local frame origin in global 3D Cartesian coordinates and its rotation
@@ -499,6 +483,23 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material descrption
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+ private:
+  /// Calculate the derivative of bound track parameters w.r.t.
+  /// alignment parameters of its reference surface (i.e. origin in global 3D
+  /// Cartesian coordinates and its rotation represented with extrinsic Euler
+  /// angles) without any path correction
+  ///
+  /// @note This function should be used together with alignment to path
+  /// derivative to get the full alignment to bound derivatives
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param parameters is the free parameters
+  ///
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
 #include "Acts/Surfaces/detail/Surface.ipp"
