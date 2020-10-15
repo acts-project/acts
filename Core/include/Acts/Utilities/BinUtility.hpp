@@ -7,18 +7,20 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <vector>
 
 namespace Acts {
 
-///  @class BinUtility
+/// @class BinUtility
 ///
 /// The BinUtility class that translated global and local position into a bins
 /// of a BinnedArray, most performant is equidistant binning without a
