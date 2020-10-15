@@ -9,13 +9,12 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
-#include <memory>
-#include <string>
+#include <iosfwd>
 #include <unordered_map>
+#include <memory>
 
 namespace Acts {
 

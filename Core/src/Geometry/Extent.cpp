@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 
+#include <iomanip>
 #include <ostream>
 
 std::ostream& Acts::Extent::toStream(std::ostream& sl) const {

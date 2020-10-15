@@ -8,7 +8,6 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
-#include <iomanip>
 #include <ostream>
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
