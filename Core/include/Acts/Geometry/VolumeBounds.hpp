@@ -7,20 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <memory>
-#include <utility>
-#include <vector>
 
 namespace Acts {
 
 class Surface;
+class Volume;
 
 class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;

@@ -7,18 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
-#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <memory>
+#include <algorithm>
 
 namespace Acts {
 
-class PlanarBounds;
+class ApproachDescriptor;
 
 /// @class PlaneLayer
 ///

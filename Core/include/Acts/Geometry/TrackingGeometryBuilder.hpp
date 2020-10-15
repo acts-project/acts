@@ -10,7 +10,9 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
@@ -19,14 +21,14 @@
 
 namespace Acts {
 
-class TrackingVolume;
 class TrackingGeometry;
 class IMaterialDecorator;
 
 /// The Acts::TrackingGeometry Builder for volumes that wrap around another
 ///
-/// It retrieves an array of std::functions that build the TrackingGeometry
-/// sequentially in order, with the following options:
+/// It retrieves an array of ITrackingVolumeBuilder tools that are configured
+/// to be built in sequence, where the output of one volume builder is provided
+/// to the next volume volume builder and accordingly
 /// - contained (e.g. a final insertion of a beam pipe of longer extend)
 /// - wrapped (e.g. an outer detector wrapping an inner one)
 /// - attached (e.g. a neighbor detector attaching to the previous one)

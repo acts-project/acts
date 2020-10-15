@@ -10,14 +10,16 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <memory>
-#include <utility>
+#include <algorithm>
 
 namespace Acts {
+
+class Layer;
+class TrackingVolume;
 
 using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 

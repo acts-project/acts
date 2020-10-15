@@ -13,16 +13,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <memory>
-#include <utility>
-#include <vector>
+#include <map>
 
 namespace Acts {
 
@@ -33,7 +31,6 @@ class Volume;
 class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
-class IMaterialDecorator;
 
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;

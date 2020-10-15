@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
+<<<<<<< HEAD
 <<<<<<< HEAD
 #include <memory>
 #include <string>
@@ -21,6 +23,11 @@
 #include <map>
 #include <memory>
 >>>>>>> aa42b1464... iwyu geometry
+=======
+#include <map>
+#include <memory>
+#include <vector>
+>>>>>>> a8749fcde... Revert "iwyu geometry"
 
 namespace Acts {
 

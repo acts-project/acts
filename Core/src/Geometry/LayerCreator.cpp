@@ -10,22 +10,17 @@
 
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Units.hpp"
 
-#include <algorithm>
-#include <iterator>
+#include <cmath>
 #include <set>
-#include <utility>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

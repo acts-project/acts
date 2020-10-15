@@ -8,17 +8,17 @@
 
 #pragma once
 
-#include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <memory>
+#include <algorithm>
 
 namespace Acts {
 
 class DiscBounds;
+class ApproachDescriptor;
 
 /// @class DiscLayer
 ///

@@ -12,10 +12,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <iosfwd>
-#include <limits>
 #include <utility>
 #include <vector>
 

@@ -10,11 +10,10 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <iosfwd>
 #include <memory>
 
 namespace Acts {

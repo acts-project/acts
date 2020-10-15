@@ -8,11 +8,13 @@
 
 #include "Acts/Geometry/ProtoLayer.hpp"
 
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 using Acts::VectorHelpers::perp;

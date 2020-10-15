@@ -9,19 +9,14 @@
 #pragma once
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <memory>
-#include <vector>
+#include <algorithm>
 
 namespace Acts {
-
-class Layer;
-class Surface;
 
 /// @class GenericApproachDescriptor
 ///

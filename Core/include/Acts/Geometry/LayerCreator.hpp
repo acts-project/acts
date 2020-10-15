@@ -10,16 +10,12 @@
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryStatics.hpp"
-#include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <memory>
 #include <optional>
-#include <vector>
 
 namespace Acts {
 
@@ -27,9 +23,7 @@ namespace Test {
 struct LayerCreatorFixture;
 }
 class Surface;
-class SurfaceArrayCreator;
 class Layer;
-
 using MutableLayerPtr = std::shared_ptr<Layer>;
 
 /// @class LayerCreator

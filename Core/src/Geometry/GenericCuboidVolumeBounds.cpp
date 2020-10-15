@@ -12,17 +12,12 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
-#include <cmath>
-#include <cstddef>
-#include <memory>
 #include <ostream>
-#include <stdexcept>
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3D, 8>& vertices) noexcept(false)
