@@ -21,7 +21,6 @@
 #include <array>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace Acts {
 class Surface;
@@ -89,10 +88,6 @@ class SmearingAlgorithm final : public BareAlgorithm {
  private:
   /// The configuration struct containing the smearers
   Config m_cfg;
-
-  /// All digitizable surfaces in the geometry
-  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
-      m_dSurfaces;
 
   /// Create a fittable measurmement from a parameter set
   ///
