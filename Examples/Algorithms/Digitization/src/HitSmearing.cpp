@@ -49,7 +49,7 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
   // fill the surface map to allow lookup by geometry id only
   m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
     // for now we just require a valid surface
-    if (not surface) {
+    if (surface) {
       this->m_surfaces.insert_or_assign(surface->geometryId(), surface);
     }
   });
