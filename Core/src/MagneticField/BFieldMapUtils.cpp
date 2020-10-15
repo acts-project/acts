@@ -10,10 +10,12 @@
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <tuple>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

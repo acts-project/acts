@@ -11,6 +11,8 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <functional>
+
 namespace Acts {
 
 /// @ingroup MagneticField
