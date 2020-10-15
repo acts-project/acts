@@ -47,10 +47,6 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  // fill the geo id to surface map once to speed up lookups later on
-  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    this->m_surfaces[surface->geometryId()] = surface;
-  });
 }
 
 std::string ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader::name()
@@ -238,12 +234,11 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     }
 
     // identify hit surface
-    auto it = m_surfaces.find(geoId);
-    if (it == m_surfaces.end() or not it->second) {
+    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    if (not surface) {
       ACTS_FATAL("Could not retrieve the surface for hit " << hit);
       return ProcessCode::ABORT;
     }
-    const Acts::Surface& surface = *(it->second);
 
     // transform global hit coordinates into local coordinates on the surface
     Acts::Vector3D pos(hit.x * Acts::UnitConstants::mm,
@@ -252,7 +247,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     double time = hit.t * Acts::UnitConstants::ns;
     Acts::Vector3D mom(1, 1, 1);  // fake momentum
     Acts::Vector2D local(0, 0);
-    auto lpResult = surface.globalToLocal(ctx.geoContext, pos, mom);
+    auto lpResult = surface->globalToLocal(ctx.geoContext, pos, mom);
     if (not lpResult.ok()) {
       ACTS_FATAL("Global to local transformation did not succeed.");
       return ProcessCode::ABORT;
@@ -263,8 +258,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     Acts::ActsSymMatrixD<3> cov = Acts::ActsSymMatrixD<3>::Identity();
     // create the planar cluster
     Acts::PlanarModuleCluster cluster(
-        surface.getSharedPtr(),
-        Acts::DigitizationSourceLink(surface, std::move(simHitIndices)),
+        surface->getSharedPtr(),
+        Acts::DigitizationSourceLink(*surface, std::move(simHitIndices)),
         std::move(cov), local[0], local[1], time, std::move(digitizationCells));
 
     // due to the previous sorting of the raw hit data by geometry id, new
