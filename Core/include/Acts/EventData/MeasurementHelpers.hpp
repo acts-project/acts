@@ -8,10 +8,12 @@
 
 #pragma once
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
-
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include <cassert>
+#include <cstddef>
+#include <ostream>
 #include <variant>
 
 namespace Acts {

@@ -7,10 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/detail/PrintParameters.hpp"
-
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <array>
+#include <cstddef>
 #include <iomanip>
 #include <ostream>
 
