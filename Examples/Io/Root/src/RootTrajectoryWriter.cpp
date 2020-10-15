@@ -50,7 +50,7 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (cfg.inputHitParticlesMap.empty()) {
+  if (cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (cfg.inputHitSimHitsMap.empty()) {
@@ -285,7 +285,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
   const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   const auto& hitSimHitsMap =
       ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputHitSimHitsMap);
 

@@ -83,7 +83,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     if (cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
-    if (cfg.inputHitParticlesMap.empty()) {
+    if (cfg.inputMeasurementParticlesMap.empty()) {
       throw std::invalid_argument("Missing hit-particles map input collection");
     }
     if (cfg.inputProtoTracks.empty()) {
@@ -250,8 +250,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::ProtoTrackContainer& tracks) {
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_impl->cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_impl->cfg.inputHitParticlesMap);
+  const auto& hitParticlesMap = ctx.eventStore.get<HitParticlesMap>(
+      m_impl->cfg.inputMeasurementParticlesMap);
   m_impl->write(ctx.eventNumber, particles, hitParticlesMap, tracks);
   return ProcessCode::SUCCESS;
 }

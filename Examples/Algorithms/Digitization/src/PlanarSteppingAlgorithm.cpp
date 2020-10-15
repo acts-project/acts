@@ -46,11 +46,11 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
   if (m_cfg.outputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source links output collection");
   }
-  if (m_cfg.outputHitParticlesMap.empty()) {
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-particles map output collection");
   }
-  if (m_cfg.outputHitSimHitsMap.empty()) {
+  if (m_cfg.outputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map output collection");
   }
@@ -213,7 +213,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputHitParticlesMap, std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputHitSimHitsMap, std::move(hitSimHitsMap));
+  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
+                     std::move(hitParticlesMap));
+  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
+                     std::move(hitSimHitsMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

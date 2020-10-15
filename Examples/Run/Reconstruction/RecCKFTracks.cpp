@@ -80,7 +80,8 @@ int main(int argc, char* argv[]) {
   clusterReaderCfg.trackingGeometry = trackingGeometry;
   clusterReaderCfg.outputClusters = "clusters";
   clusterReaderCfg.outputHitIds = "hit_ids";
-  clusterReaderCfg.outputHitParticlesMap = "hit_particles_map";
+  // only simhits are used and the map will be re-created by the digitizer
+  clusterReaderCfg.outputMeasurementParticlesMap = "unused-hit_particles_map";
   clusterReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
@@ -92,8 +93,8 @@ int main(int argc, char* argv[]) {
   // @TODO: add options for truth particle selection criteria
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputHitParticlesMap =
-      clusterReaderCfg.outputHitParticlesMap;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      clusterReaderCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.ptMin = 1_GeV;
   particleSelectorCfg.nHitsMin = 9;
@@ -105,8 +106,8 @@ int main(int argc, char* argv[]) {
   hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
   hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.outputHitParticlesMap = "digi_hit_particles_map";
-  hitSmearingCfg.outputHitSimHitsMap = "digi_hit_simhits_map";
+  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
   hitSmearingCfg.sigmaLoc0 = 25_um;
   hitSmearingCfg.sigmaLoc1 = 100_um;
   hitSmearingCfg.randomNumbers = rnd;
@@ -152,7 +153,8 @@ int main(int argc, char* argv[]) {
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputHitParticlesMap = hitSmearingCfg.outputHitParticlesMap;
+  perfWriterCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));

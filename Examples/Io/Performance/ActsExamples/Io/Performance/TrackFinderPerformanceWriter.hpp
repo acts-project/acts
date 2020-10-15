@@ -28,7 +28,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
-    std::string inputHitParticlesMap;
+    std::string inputMeasurementParticlesMap;
     /// Output directory.
     std::string outputDir;
     /// Output filename

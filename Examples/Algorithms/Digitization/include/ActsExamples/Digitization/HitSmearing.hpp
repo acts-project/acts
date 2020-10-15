@@ -43,9 +43,9 @@ class HitSmearing final : public BareAlgorithm {
     /// Output source links collection.
     std::string outputSourceLinks;
     /// Output collection to map measured hits to contributing particles.
-    std::string outputHitParticlesMap;
+    std::string outputMeasurementParticlesMap;
     /// Output collection to map measured hits to simulated hits.
-    std::string outputHitSimHitsMap;
+    std::string outputMeasurementSimHitsMap;
     /// Width of the Gaussian smearing, i.e. resolution; must be positive.
     double sigmaLoc0 = -1;
     double sigmaLoc1 = -1;

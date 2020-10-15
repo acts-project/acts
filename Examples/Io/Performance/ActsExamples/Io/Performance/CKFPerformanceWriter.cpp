@@ -32,7 +32,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (cfg.inputHitParticlesMap.empty()) {
+  if (cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.outputFilename.empty()) {
@@ -87,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
