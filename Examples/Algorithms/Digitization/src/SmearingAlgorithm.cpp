@@ -85,12 +85,12 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
 
   // prepare output containers
-  MeasurementContainer measurements;
   IndexSourceLinkContainer sourceLinks;
+  MeasurementContainer measurements;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
-  measurements.reserve(simHits.size());
   sourceLinks.reserve(simHits.size());
+  measurements.reserve(simHits.size());
   hitParticlesMap.reserve(simHits.size());
   hitSimHitsMap.reserve(simHits.size());
 
@@ -136,11 +136,11 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
                                         std::move(smearResult.value()));
 
             // add to output containers
-            measurements.emplace_back(std::move(meas));
             // index map and source link container are geometry-ordered.
             // since the input is also geometry-ordered, new items can
             // be added at the end.
             sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+            measurements.emplace_back(std::move(meas));
             // this digitization does not do hit merging so there is only one
             // mapping entry for each digitized hit.
             hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
@@ -151,8 +151,8 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,

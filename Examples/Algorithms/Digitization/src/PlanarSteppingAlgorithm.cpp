@@ -40,11 +40,11 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
   if (m_cfg.outputClusters.empty()) {
     throw std::invalid_argument("Missing output clusters collection");
   }
-  if (m_cfg.outputMeasurements.empty()) {
-    throw std::invalid_argument("Missing measurements output collection");
-  }
   if (m_cfg.outputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source links output collection");
+  }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
   }
   if (m_cfg.outputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument(
@@ -100,13 +100,13 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
   // prepare output containers
   ClusterContainer clusters;
-  MeasurementContainer measurements;
   IndexSourceLinkContainer sourceLinks;
+  MeasurementContainer measurements;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
   clusters.reserve(simHits.size());
-  measurements.reserve(simHits.size());
   sourceLinks.reserve(simHits.size());
+  measurements.reserve(simHits.size());
   hitParticlesMap.reserve(simHits.size());
   hitSimHitsMap.reserve(simHits.size());
 
@@ -198,8 +198,8 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
       clusters.emplace_hint(clusters.end(), moduleGeoId, std::move(cluster));
-      measurements.emplace_back(std::move(meas));
       sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+      measurements.emplace_back(std::move(meas));
       // no hit merging -> only one mapping per digitized hit.
       hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
                                    simHit.particleId());
@@ -211,8 +211,8 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
                           << " clusters");
 
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,

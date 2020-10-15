@@ -34,10 +34,10 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
     std::string inputSimHits;
     /// Output collection of clusters.
     std::string outputClusters;
-    /// Output measurements collection.
-    std::string outputMeasurements;
     /// Output source links collection.
     std::string outputSourceLinks;
+    /// Output measurements collection.
+    std::string outputMeasurements;
     /// Output collection to map measured hits to contributing particles.
     std::string outputMeasurementParticlesMap;
     /// Output collection to map measured hits to simulated hits.

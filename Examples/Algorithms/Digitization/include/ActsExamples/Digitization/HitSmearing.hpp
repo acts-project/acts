@@ -38,10 +38,10 @@ class HitSmearing final : public BareAlgorithm {
   struct Config {
     /// Input collection of simulated hits.
     std::string inputSimHits;
-    /// Output measurements collection.
-    std::string outputMeasurements;
     /// Output source links collection.
     std::string outputSourceLinks;
+    /// Output measurements collection.
+    std::string outputMeasurements;
     /// Output collection to map measured hits to contributing particles.
     std::string outputMeasurementParticlesMap;
     /// Output collection to map measured hits to simulated hits.

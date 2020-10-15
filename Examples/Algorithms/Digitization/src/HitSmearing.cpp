@@ -23,11 +23,11 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  if (m_cfg.outputMeasurements.empty()) {
-    throw std::invalid_argument("Missing measurements output collection");
-  }
   if (m_cfg.outputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source links output collection");
+  }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
   }
   if (m_cfg.outputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument(
@@ -66,12 +66,12 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
 
   // prepare output containers
-  MeasurementContainer measurements;
   IndexSourceLinkContainer sourceLinks;
+  MeasurementContainer measurements;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
-  measurements.reserve(simHits.size());
   sourceLinks.reserve(simHits.size());
+  measurements.reserve(simHits.size());
   hitParticlesMap.reserve(simHits.size());
   hitSimHitsMap.reserve(simHits.size());
 
@@ -118,8 +118,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
-      measurements.emplace_back(std::move(meas));
       sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+      measurements.emplace_back(std::move(meas));
       // no hit merging -> only one mapping per digitized hit.
       hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
                                    simHit.particleId());
@@ -127,8 +127,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
                      std::move(hitParticlesMap));
   ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
