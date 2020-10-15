@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -30,7 +30,7 @@ namespace ActsExamples {
 ///     ...
 ///
 /// and each line in the file corresponds to one simhit.
-class CsvSimHitWriter final : public WriterT<SimHitContainer>> {
+class CsvSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.

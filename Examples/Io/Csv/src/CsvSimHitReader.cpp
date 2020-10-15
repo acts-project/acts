@@ -60,35 +60,35 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   };
   dfe::NamedTupleCsvReader<SimHitData> reader(path, optionalColumns);
 
-  std::vector<ActsFatras::Hit> unordered;
+  SimHitContainer::sequence_type unordered;
   SimHitData data;
 
   while (reader.read(data)) {
-    const auto geometryId  = Acts::GeometryIdentifier(simhit.geometry_id);
+    const auto geometryId  = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
-    const auto particleId  = ActsFatras::Barcode(simhit.particle_id);
+    const auto particleId  = ActsFatras::Barcode(data.particle_id);
 
     ActsFatras::Hit::Vector4 pos4{
-      simhit.tx * Acts::UnitConstants::mm,
-      simhit.ty * Acts::UnitConstants::mm,
-      simhit.tz * Acts::UnitConstants::mm,
-      simhit.tt * Acts::UnitConstants::ns,
+      data.tx * Acts::UnitConstants::mm,
+      data.ty * Acts::UnitConstants::mm,
+      data.tz * Acts::UnitConstants::mm,
+      data.tt * Acts::UnitConstants::ns,
     };
     ActsFatras::Hit::Vector4 mom4{
-      simhit.tpx * Acts::UnitConstants::GeV,
-      simhit.tpy * Acts::UnitConstants::GeV,
-      simhit.tpz * Acts::UnitConstants::GeV,
-      simhit.te  * Acts::UnitConstants::GeV,
+      data.tpx * Acts::UnitConstants::GeV,
+      data.tpy * Acts::UnitConstants::GeV,
+      data.tpz * Acts::UnitConstants::GeV,
+      data.te  * Acts::UnitConstants::GeV,
     };
     ActsFatras::Hit::Vector4 delta4{
-      simhit.deltapx * Acts::UnitConstants::GeV,
-      simhit.deltapy * Acts::UnitConstants::GeV,
-      simhit.deltapz * Acts::UnitConstants::GeV,
-      simhit.deltae  * Acts::UnitConstants::GeV,
+      data.deltapx * Acts::UnitConstants::GeV,
+      data.deltapy * Acts::UnitConstants::GeV,
+      data.deltapz * Acts::UnitConstants::GeV,
+      data.deltae  * Acts::UnitConstants::GeV,
     };
 
     ActsFatras::Hit hit(geometryId, particleId, pos4, mom4, mom4 + delta4,
-                        simhit.index());
+                        data.index);
     unordered.push_back(std::move(hit));
   }
 

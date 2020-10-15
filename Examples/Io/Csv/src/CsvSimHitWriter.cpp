@@ -43,10 +43,10 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
   SimHitData simhit;
   // Write data from internal impl. to output-side struct
   for (const auto& simHit : simHits) {
-    Acts::GeometryIdentifier geoId       = simHit.geometryId();
+    Acts::GeometryIdentifier geoId        = simHit.geometryId();
     // local simhit information in global coord.
-    const Acts::Vector4D& globalPos4     = simHit.position4()
-    const Acts::Vector4& momentum4Before = simhit.momentum4Before();
+    const Acts::Vector4D& globalPos4      = simHit.position4();
+    const Acts::Vector4D& momentum4Before = simHit.momentum4Before();
 
     simhit.geometry_id = geoId.value();
     simhit.particle_id = simHit.particleId().value();
@@ -54,7 +54,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     simhit.tx = globalPos4.x() / Acts::UnitConstants::mm;
     simhit.ty = globalPos4.y() / Acts::UnitConstants::mm;
     simhit.tz = globalPos4.z() / Acts::UnitConstants::mm;
-    simhit.tt = globalPos4.time() / Acts::UnitConstants::ns;
+    simhit.tt = globalPos4.w() / Acts::UnitConstants::ns;
     // particle four-momentum before interaction
     simhit.tpx = momentum4Before.x() / Acts::UnitConstants::GeV;
     simhit.tpy = momentum4Before.y() / Acts::UnitConstants::GeV;
@@ -70,8 +70,6 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     simhit.index = simHit.index();
     writerSimHit.append(simhit);
     } // end simHit loop
-
-  }
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
