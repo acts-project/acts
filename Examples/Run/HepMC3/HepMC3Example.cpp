@@ -8,8 +8,8 @@
 
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
-#include "ActsExamples/Plugins/HepMC3/HepMC3Event.hpp"
-#include "ActsExamples/Plugins/HepMC3/HepMC3Reader.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 
 #include <fstream>
 

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Plugins/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 
 bool ActsExamples::HepMC3WriterAscii::writeEvent(
     HepMC3::WriterAscii& writer, std::shared_ptr<HepMC3::GenEvent> event) {
