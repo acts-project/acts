@@ -156,7 +156,7 @@ void setupSimulationAlgorithms(
         writeInitial, logLevel));
 
     //--------------------------------------------------------------------------
-    // SimHit rw test
+    // SimHit write test
     //--------------------------------------------------------------------------
 
     // write simulated hits collection
@@ -166,24 +166,6 @@ void setupSimulationAlgorithms(
     writeSimHits.outputStem = "sim" + fatras.outputHits;
     sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
         writeSimHits, logLevel));
-
-    // read simulated hits collection
-    ActsExamples::CsvSimHitReader::Config readSimHits;
-    readSimHits.inputDir = outputDir;
-    readSimHits.inputStem = "sim" + fatras.outputHits;
-    readSimHits.outputSimulatedHits = "sim" + fatras.outputHits + "_readTest";
-    sequencer.addReader(std::make_shared<ActsExamples::CsvSimHitReader>(
-        readSimHits, logLevel));
-
-    // write simulated hits collection that was read in to disk again
-    ActsExamples::CsvSimHitWriter::Config writeSimHits_readTest;
-    writeSimHits_readTest.inputSimulatedHits = "sim" + fatras.outputHits + "_readTest";
-    writeSimHits_readTest.outputDir = outputDir;
-    writeSimHits_readTest.outputStem = "sim" + fatras.outputHits + "_readTest";
-    sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
-        writeSimHits_readTest, logLevel));
-
-    //--------------------------------------------------------------------------
 
     // write final simulated particles
     ActsExamples::CsvParticleWriter::Config writeFinal;
