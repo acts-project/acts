@@ -24,7 +24,7 @@ namespace detail {
 /// A range within a hit-simhits map.
 using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 
-/// Create (average) truth represenation for selected simulated hits.
+/// Create (average) truth representation for selected simulated hits.
 ///
 /// @param gCtx The geometry context for this
 /// @param surface The reference surface of the measurement
