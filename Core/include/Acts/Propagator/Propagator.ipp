@@ -134,8 +134,9 @@ auto Acts::Propagator<S, N>::propagate(
   auto result = propagate_impl<ResultType>(state);
   if (result.ok()) {
     auto& propRes = *result;
+        bool covarianceTransport = start.covariance().has_value();
     /// Convert into return type and fill the result object
-    auto curvState = m_stepper.curvilinearState(state.stepping);
+    auto curvState = m_stepper.curvilinearState(state.stepping, covarianceTransport, covarianceTransport);
     auto& curvParameters = std::get<CurvilinearTrackParameters>(curvState);
     // Fill the end parameters
     propRes.endParameters = std::make_unique<const CurvilinearTrackParameters>(
@@ -202,8 +203,9 @@ auto Acts::Propagator<S, N>::propagate(
 
   if (result.ok()) {
     auto& propRes = *result;
+    bool covarianceTransport = start.covariance().has_value();
     // Compute the final results and mark the propagation as successful
-    auto bs = m_stepper.boundState(state.stepping, target);
+    auto bs = m_stepper.boundState(state.stepping, target, covarianceTransport, covarianceTransport);
     auto& boundParams = std::get<BoundTrackParameters>(bs);
     // Fill the end parameters
     propRes.endParameters =
