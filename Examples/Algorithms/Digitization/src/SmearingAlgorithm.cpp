@@ -10,11 +10,10 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
@@ -50,12 +49,6 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
   if (not m_cfg.configured) {
     throw std::invalid_argument("Smearing Algorithm is misconfigured");
   }
-  // fill the digitizables map to allow lookup by geometry id only
-  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    if (surface) {
-      this->m_surfaces.insert_or_assign(surface->geometryId(), surface);
-    }
-  });
 }
 
 namespace {
@@ -103,15 +96,15 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
       ACTS_DEBUG("No smearing function present for module " << moduleGeoId);
       continue;
     }
-    auto surfaceItr = m_surfaces.find(moduleGeoId);
-    if (surfaceItr == m_surfaces.end()) {
+    const Acts::Surface* surface =
+        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    if (not surface) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
                                            << " for configured smearer");
       return ProcessCode::ABORT;
     }
-    const Acts::Surface* surfacePtr = surfaceItr->second;
 
     for (auto ih = moduleSimHits.begin(); ih != moduleSimHits.end(); ++ih) {
       const auto& simHit = *ih;
@@ -120,8 +113,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
       // run the smearer
       std::visit(
           [&](auto&& smearer) {
-            ActsFatras::SmearInput smearInput(simHit, ctx.geoContext,
-                                              surfacePtr);
+            ActsFatras::SmearInput smearInput(simHit, ctx.geoContext, surface);
             auto smearResult = smearer.first(smearInput, rng, smearer.second);
             if (not smearResult.ok()) {
               // do not store un-smearable measurements
@@ -131,8 +123,8 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
             // the measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index hitIdx = measurements.size();
-            IndexSourceLink sourceLink(*surfacePtr, hitIdx);
-            auto meas = makeMeasurement(sourceLink, *surfacePtr,
+            IndexSourceLink sourceLink(*surface, hitIdx);
+            auto meas = makeMeasurement(sourceLink, *surface,
                                         std::move(smearResult.value()));
 
             // add to output containers

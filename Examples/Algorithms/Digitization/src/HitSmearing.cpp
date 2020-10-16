@@ -46,13 +46,6 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
   if (not m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
-  // fill the surface map to allow lookup by geometry id only
-  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    // for now we just require a valid surface
-    if (surface) {
-      this->m_surfaces.insert_or_assign(surface->geometryId(), surface);
-    }
-  });
 }
 
 ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
@@ -86,11 +79,11 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
 
   for (auto&& [moduleGeoId, moduleSimHits] : groupByModule(simHits)) {
     // check if we should create hits for this surface
-    auto surfaceItr = m_surfaces.find(moduleGeoId);
-    if (surfaceItr == m_surfaces.end()) {
+    const Acts::Surface* surface =
+        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    if (not surface) {
       continue;
     }
-    const Acts::Surface* surface = surfaceItr->second;
 
     // use iterators manually so we can retrieve the hit index in the container
     for (auto ih = moduleSimHits.begin(); ih != moduleSimHits.end(); ++ih) {

@@ -13,7 +13,6 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <string>
-#include <unordered_map>
 
 namespace Acts {
 class Surface;
@@ -61,8 +60,6 @@ class HitSmearing final : public BareAlgorithm {
 
  private:
   Config m_cfg;
-  // Lookup container for hit surfaces that generate smeared hits
-  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> m_surfaces;
 };
 
 }  // namespace ActsExamples
