@@ -44,7 +44,8 @@ namespace detail {
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
-/// @param [in[ covTransportUser Decision whether the covariance should be attached to the BoundTrackParameters
+/// @param [in[ covTransportUser Decision whether the covariance should be
+/// attached to the BoundTrackParameters
 /// @param [in] accumulatedPath Propagated distance
 /// @param [in] surface Target surface on which the state is represented
 ///
@@ -57,7 +58,8 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, bool attachCov, double accumulatedPath, const Surface& surface);
+    bool covTransport, bool attachCov, double accumulatedPath,
+    const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///
@@ -73,7 +75,8 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] covTransport Decision whether the covariance transport should be
 /// performed
-/// @param [in[ attachCov Decision whether the covariance should be attached to the CurvilinearTrackParameters
+/// @param [in[ attachCov Decision whether the covariance should be attached to
+/// the CurvilinearTrackParameters
 /// @param [in] accumulatedPath Propagated distance
 ///
 /// @return A curvilinear state:
