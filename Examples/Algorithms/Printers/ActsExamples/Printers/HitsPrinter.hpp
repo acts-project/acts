@@ -22,7 +22,7 @@ class HitsPrinter : public BareAlgorithm {
     /// Input cluster collection.
     std::string inputClusters;
     /// Input hit-particles map.
-    std::string inputHitParticlesMap;
+    std::string inputMeasurementParticlesMap;
     /// Input hit id collection
     std::string inputHitIds;
     // Print hits selected by their indices (zero length to disable).

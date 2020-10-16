@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,12 +23,12 @@ namespace ActsExamples {
 class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
  public:
   struct Config {
-    /// True set of input particles.
-    std::string inputParticles;
-    /// True hit-particles mapping.
-    std::string inputHitParticlesMap;
-    /// Reconstructed input proto tracks.
+    /// Input reconstructed proto tracks collection.
     std::string inputProtoTracks;
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
     /// Output directory.
     std::string outputDir;
     /// Output filename
@@ -36,7 +36,7 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   };
 
   TrackFinderPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~TrackFinderPerformanceWriter();
+  ~TrackFinderPerformanceWriter() final override;
 
   ProcessCode endRun() final override;
 

@@ -8,20 +8,23 @@
 
 #pragma once
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
-#include "ActsExamples/EventData/DigitizedHit.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include <Acts/EventData/Measurement.hpp>
-#include <Acts/Geometry/GeometryContext.hpp>
-#include <Acts/Geometry/GeometryHierarchyMap.hpp>
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Utilities/Helpers.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
-
-#include <TTree.h>
 
 #include <memory>
 #include <mutex>
+#include <vector>
+
+#include <TTree.h>
 
 class TFile;
 class TTree;
@@ -39,15 +42,15 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootDigitizationWriter
-    : public WriterT<GeometryIdMultimap<
-          Acts::FittableMeasurement<ActsExamples::DigitizedHit>>> {
+class RootDigitizationWriter : public WriterT<MeasurementContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which simulated (truth) hits collection to use.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
+    /// Input collection to map measured hits to simulated hits.
+    std::string inputMeasurementSimHitsMap;
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     /// Optional the smearFunctions
@@ -194,7 +197,7 @@ class RootDigitizationWriter
   RootDigitizationWriter(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Virtual destructor
-  ~RootDigitizationWriter() override;
+  ~RootDigitizationWriter() final override;
 
   /// End-of-run hook
   ProcessCode endRun() final override;
@@ -206,21 +209,7 @@ class RootDigitizationWriter
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<
-                         Acts::FittableMeasurement<ActsExamples::DigitizedHit>>&
-                         measurements) final override;
-
-  /// Helper function to create a unique true represenation
-  /// for truth parameters from simulated hits
-  ///
-  /// @param gCtx The geometry context for this
-  /// @param surface The reference surface of the measurement
-  /// @param simulatedHits The simulated hits used for this measurement
-  ///
-  /// @return a local position, a 4D global position, a direction
-  std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D> truthParameters(
-      const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-      const std::vector<SimHit>& simulatedHits);
+                     const MeasurementContainer& measurements) final override;
 
  private:
   Config m_cfg;
@@ -228,7 +217,6 @@ class RootDigitizationWriter
   TFile* m_outputFile;      ///< the output file
   Acts::GeometryHierarchyMap<std::unique_ptr<DigitizationTree>>
       m_outputTrees;  ///< the output trees
-
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
       m_dSurfaces;  ///< All surfaces that could carry measurements
 };
