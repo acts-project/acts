@@ -4,7 +4,7 @@ add_executable(
 target_link_libraries(
   ActsExampleHepMC3
   PRIVATE
-    ActsCore
+    ActsCore ActsExamplesCommon
     ActsExamplesFramework ActsExamplesIoHepMC3
     Boost::program_options)
 
