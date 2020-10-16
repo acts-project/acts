@@ -1,10 +1,12 @@
 add_library(
   ActsFatras SHARED
+  src/Channelizer.cpp
   src/DigitizationError.cpp
   src/LandauDistribution.cpp
   src/Particle.cpp
   src/ParticleData.cpp
   src/PlanarSurfaceMask.cpp
+  src/ReadoutProjector.cpp
   src/ProcessType.cpp
   src/SimulatorError.cpp
   src/StandardPhysicsLists.cpp)
