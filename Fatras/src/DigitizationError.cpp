@@ -8,8 +8,8 @@
 
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
-const char* ActsFatras::detail::DigitizationErrorCategory::name()
-    const noexcept {
+const char* ActsFatras::detail::DigitizationErrorCategory::name() const
+    noexcept {
   return "DigitizationError";
 }
 
