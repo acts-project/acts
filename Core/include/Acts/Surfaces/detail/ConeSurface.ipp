@@ -87,6 +87,59 @@ inline SurfaceIntersection ConeSurface::intersect(
   return cIntersection;
 }
 
+inline AlignmentRowVector ConeSurface::alignmentToPathDerivative(
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global position
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
+  // The vector between position and center
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
+      (position - center(gctx)).transpose();
+  // The rotation
+  const auto& rotation = transform(gctx).rotation();
+  // The local frame x/y/z axis
+  const Vector3D localXAxis = rotation.col(0);
+  const Vector3D localYAxis = rotation.col(1);
+  const Vector3D localZAxis = rotation.col(2);
+  // The local coordinates
+  const Vector3D localPos = rotation.transpose() * position;
+  const double dx = direction.dot(localXAxis);
+  const double dy = direction.dot(localYAxis);
+  const double dz = direction.dot(localZAxis);
+  // The normalization factor
+  const double tanAlpha2 = bounds().tanAlpha() * bounds().tanAlpha();
+  const double norm = 1. / (1. - dz * dz * (1 + tanAlpha2));
+  // The direction transpose
+  const ActsRowVector<AlignmentScalar, 3> dirRowVec = direction.transpose();
+  // The derivative of path w.r.t. the local axes
+  // @note The following calculations assume that the intersection of the track
+  // with the cone always satisfy: localPos.z()*tanAlpha =perp(localPos)
+  const ActsRowVector<AlignmentScalar, 3> localXAxisToPath =
+      -2.0 * norm * (dx * pcRowVec + localPos.x() * dirRowVec);
+  const ActsRowVector<AlignmentScalar, 3> localYAxisToPath =
+      -2.0 * norm * (dy * pcRowVec + localPos.y() * dirRowVec);
+  const ActsRowVector<AlignmentScalar, 3> localZAxisToPath =
+      2.0 * norm * tanAlpha2 * (dz * pcRowVec + localPos.z() * dirRowVec) -
+      4.0 * norm * norm * (1 + tanAlpha2) *
+          (dx * localPos.x() + dy * localPos.y() -
+           dz * localPos.z() * tanAlpha2) *
+          dz * dirRowVec;
+  // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
+  // Initialize the derivative of propagation path w.r.t. local frame
+  // translation (origin) and rotation
+  AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
+  alignToPath.segment<3>(eAlignmentCenter0) =
+      2.0 * norm * (dx * localXAxis.transpose() + dy * localYAxis.transpose());
+  alignToPath.segment<3>(eAlignmentRotation0) =
+      localXAxisToPath * rotToLocalXAxis + localYAxisToPath * rotToLocalYAxis +
+      localZAxisToPath * rotToLocalZAxis;
+
+  return alignToPath;
+}
+
 inline LocalCartesianToBoundLocalMatrix
 ConeSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
