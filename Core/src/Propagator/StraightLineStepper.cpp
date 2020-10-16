@@ -14,7 +14,7 @@
 namespace Acts {
 
 std::tuple<BoundTrackParameters, BoundMatrix, double>
-StraightLineStepper::boundState(State& state, const Surface& surface,
+StraightLineStepper::boundState(State& state, const Surface& surface, bool transportCov,
                                 bool attachCov) const {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
@@ -28,12 +28,12 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   return detail::boundState(state.geoContext, state.cov, state.jacobian,
                             state.jacTransport, state.derivative,
                             state.jacToGlobal, parameters,
-                            state.covTransport, attachCov,
+                            state.covTransport && transportCov, attachCov,
                             state.pathAccumulated, surface);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
-StraightLineStepper::curvilinearState(State& state,
+StraightLineStepper::curvilinearState(State& state, bool transportCov,
                                       bool attachCov) const {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
@@ -46,7 +46,7 @@ StraightLineStepper::curvilinearState(State& state,
   parameters[eFreeQOverP] = state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport, attachCov,
+      state.jacToGlobal, parameters, state.covTransport && transportCov, attachCov,
       state.pathAccumulated);
 }
 

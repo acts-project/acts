@@ -464,10 +464,8 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Transport & bind the state to the current surface
-        state.stepping.covTransport = false;
         auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
-        state.stepping.covTransport = true;
+            stepper.boundState(state.stepping, *surface, false);
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -650,10 +648,8 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Transport & bind the state to the current surface
-        state.stepping.covTransport = false;
         auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
-		state.stepping.covTransport = true;
+            stepper.boundState(state.stepping, *surface, false);
 
         // Create a detached track state proxy
         auto tempTrackTip =

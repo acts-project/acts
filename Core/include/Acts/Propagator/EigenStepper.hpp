@@ -297,14 +297,15 @@ class EigenStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCovariance Flag steering covariance transport
+  /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in[ attachCov Decision whether the covariance should be attached to the BoundTrackParameters
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   BoundState boundState(State& state, const Surface& surface,
-                        bool attachCov = true) const;
+                        bool transportCov = true, bool attachCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -312,13 +313,14 @@ class EigenStepper {
   /// to the current position and creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCovariance Flag steering covariance transport
+  /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in[ attachCov Decision whether the covariance should be attached to the CurvilinearTrackParameters
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
+  CurvilinearState curvilinearState(State& state, bool transportCov = true, 
                                     bool attachCov = true) const;
 
   /// Method to update a stepper state to the some parameters

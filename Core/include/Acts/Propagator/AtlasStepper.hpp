@@ -558,13 +558,14 @@ class AtlasStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
-  /// @param [in] transportCovariance Flag steering covariance transport
+  /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in[ attachCov Decision whether the covariance should be attached to the BoundTrackParameters
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface,
+  BoundState boundState(State& state, const Surface& surface, bool transportCov = true,
                         bool attachCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
@@ -582,7 +583,7 @@ class AtlasStepper {
 
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport) {
+    if (state.covTransport && transportCov) {
       covarianceTransport(state, surface);
     }
     if(attachCov) {
@@ -601,13 +602,14 @@ class AtlasStepper {
   ///
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] transportCovariance Flag steering covariance transport
+  /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in[ attachCov Decision whether the covariance should be attached to the CurvilinearTrackParameters
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state,
+  CurvilinearState curvilinearState(State& state, bool transportCov = true,
                                     bool attachCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
@@ -624,7 +626,7 @@ class AtlasStepper {
     const auto qOverP = state.pVector[7];
 
     std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport) {
+    if (state.covTransport && transportCov) {
       covarianceTransport(state);
     }
     if(attachCov) {
