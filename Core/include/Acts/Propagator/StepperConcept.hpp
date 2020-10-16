@@ -107,9 +107,9 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(time_exists, "time method not found");
         constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
         static_assert(overstep_exists, "overstepLimit method not found");
-        constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&>;
+        constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
         static_assert(bound_state_method_exists, "boundState method not found");
-        constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&>;
+        constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
                                                              has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;

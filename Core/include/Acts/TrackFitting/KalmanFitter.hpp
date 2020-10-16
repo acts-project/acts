@@ -457,13 +457,16 @@ class KalmanFitter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
+		// Transport the covariance to the surface
+        stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
+		// Transport & bind the state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, false);
+            
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
         result.trackTip = result.fittedStates.addTrackState(
@@ -478,8 +481,7 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-        trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+        trackStateProxy.predictedCovariance() = state.stepping.cov;
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
@@ -638,13 +640,16 @@ class KalmanFitter {
           return Result<void>::success();
         }
 
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
+		// Transport the covariance to the surface
+        stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
+		// Transport & bind the state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, false);
+            
         // Create a detached track state proxy
         auto tempTrackTip =
             result.fittedStates.addTrackState(TrackStatePropMask::All);
@@ -657,8 +662,7 @@ class KalmanFitter {
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
-        trackStateProxy.predictedCovariance() =
-            std::move(*boundParams.covariance());
+        trackStateProxy.predictedCovariance() = state.stepping.cov;
         trackStateProxy.jacobian() = std::move(jacobian);
         trackStateProxy.pathLength() = std::move(pathLength);
 
