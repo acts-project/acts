@@ -6,22 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrackingGeometry.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-<<<<<<< HEAD
-=======
-#include <functional>
-
->>>>>>> aa42b1464... iwyu geometry
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator)
