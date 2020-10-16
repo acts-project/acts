@@ -13,6 +13,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -24,6 +25,17 @@
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <array>
+#include <map>
+#include <memory>
+
+namespace Acts {
+class ISurfaceMaterial;
+}
+namespace Acts {
+class IVolumeMaterial;
+}
 
 namespace Acts {
 

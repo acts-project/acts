@@ -13,21 +13,28 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/VolumeCollector.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
+
+#include <map>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+
+class ISurfaceMaterial;
+class IVolumeMaterial;
+class TrackingGeometry;
 
 /// list of point used in the mapping of a volume
 using RecordedMaterialVolumePoint =

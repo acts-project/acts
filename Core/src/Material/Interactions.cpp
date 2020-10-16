@@ -8,6 +8,7 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 
 #include <cassert>
