@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,18 +9,34 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 
 #include <fstream>
 
-#include "HepMC3/ReaderAscii.h"
-#include "HepPID/ParticleName.hh"
+#include <HepMC3/GenEvent.h>
+#include <HepMC3/ReaderAscii.h>
+#include <HepPID/ParticleName.hh>
 
 ///
 /// Straight forward example of reading a HepMC3 file.
 ///
-int main(int /*argc*/, char** /*argv*/) {
-  ActsExamples::HepMC3ReaderAscii simReader;
+int main(int argc, char** argv) {
+  // Declare the supported program options.
+  // Setup and parse options
+  auto desc = ActsExamples::Options::makeDefaultOptions();
+  ActsExamples::Options::addHepMC3ReaderOptions(desc);
+  auto vm = ActsExamples::Options::parse(desc, argc, argv);
+  if (vm.empty()) {
+    return EXIT_FAILURE;
+  }
+
+  auto logLevel = ActsExamples::Options::readLogLevel(vm);
+
+  // Create the reader
+  auto hepMC3ReaderConfig = ActsExamples::Options::readHepMC3ReaderOptions(vm);
+  ActsExamples::HepMC3AsciiReader simReader(hepMC3ReaderConfig, logLevel);
 
   std::cout << "Preparing reader " << std::flush;
   HepMC3::ReaderAscii reader("test.hepmc3");
@@ -30,7 +46,7 @@ int main(int /*argc*/, char** /*argv*/) {
     std::cout << "failed" << std::endl;
   }
 
-  std::shared_ptr<HepMC3::GenEvent> genevt(new HepMC3::GenEvent());
+  HepMC3::GenEvent genevt;
 
   std::cout << "Reading event " << std::flush;
   if (simReader.readEvent(reader, genevt)) {
