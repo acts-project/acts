@@ -227,19 +227,20 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                       Covariance& covarianceMatrix, Jacobian& jacobian,
                       FreeMatrix& transportJacobian, FreeVector& derivatives,
                       BoundToFreeMatrix& jacobianLocalToGlobal,
-                      const FreeVector& parameters, bool covTransport, bool attachCov,
-                      double accumulatedPath, const Surface& surface) {
+                      const FreeVector& parameters, bool covTransport,
+                      bool attachCov, double accumulatedPath,
+                      const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
-	  if (covTransport) {
-	    covarianceTransport(geoContext, covarianceMatrix, jacobian,
-	                        transportJacobian, derivatives, jacobianLocalToGlobal,
-	                        parameters, surface);
-	  }
-  if(attachCov) {
-     cov = covarianceMatrix;
+  if (covTransport) {
+    covarianceTransport(geoContext, covarianceMatrix, jacobian,
+                        transportJacobian, derivatives, jacobianLocalToGlobal,
+                        parameters, surface);
   }
-  
+  if (attachCov) {
+    cov = covarianceMatrix;
+  }
+
   // Create the bound parameters
   BoundVector bv =
       detail::transformFreeToBoundParameters(parameters, surface, geoContext);
@@ -249,25 +250,23 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
       jacobian, accumulatedPath);
 }
 
-CurvilinearState curvilinearState(Covariance& covarianceMatrix,
-                                  Jacobian& jacobian,
-                                  FreeMatrix& transportJacobian,
-                                  FreeVector& derivatives,
-                                  BoundToFreeMatrix& jacobianLocalToGlobal,
-                                  const FreeVector& parameters,
-                                  bool covTransport, bool attachCov, double accumulatedPath) {
+CurvilinearState curvilinearState(
+    Covariance& covarianceMatrix, Jacobian& jacobian,
+    FreeMatrix& transportJacobian, FreeVector& derivatives,
+    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    bool covTransport, bool attachCov, double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
-	  if (covTransport) {
-	    covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
-	                        derivatives, jacobianLocalToGlobal, direction);
-	  }
-	  if(attachCov) {
-     cov = covarianceMatrix;
+  if (covTransport) {
+    covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
+                        derivatives, jacobianLocalToGlobal, direction);
   }
-  
+  if (attachCov) {
+    cov = covarianceMatrix;
+  }
+
   // Create the curvilinear parameters
   Vector4D pos4 = Vector4D::Zero();
   pos4[ePos0] = parameters[eFreePos0];
