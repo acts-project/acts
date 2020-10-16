@@ -20,8 +20,6 @@ void ActsExamples::Options::addHepMC3WriterOptions(
 
   auto opt = desc.add_options();
 
-  opt("hepmc3-output-directory", value<std::string>()->default_value(""),
-      "The output directory");
   opt("hepmc3-stem", value<std::string>()->default_value("events"),
       "The stem of file names of the output");
 }
@@ -31,7 +29,7 @@ ActsExamples::Options::readHepMC3WriterOptions(
     const ActsExamples::Options::Variables& variables) {
   ActsExamples::HepMC3AsciiWriter::Config writerConfig;
   writerConfig.outputDir =
-      variables["hepmc3-output-directory"].as<std::string>();
+      variables["output-dir"].as<std::string>();
   writerConfig.outputStem = variables["hepmc3-stem"].as<std::string>();
 
   return writerConfig;
@@ -43,8 +41,6 @@ void ActsExamples::Options::addHepMC3ReaderOptions(
 
   auto opt = desc.add_options();
 
-  opt("hepmc3-input-directory", value<std::string>()->default_value(""),
-      "The input directory");
   opt("hepmc3-stem", value<std::string>()->default_value("events"),
       "The stem of file names of the input");
 }
@@ -53,7 +49,7 @@ ActsExamples::HepMC3AsciiReader::Config
 ActsExamples::Options::readHepMC3ReaderOptions(
     const ActsExamples::Options::Variables& variables) {
   ActsExamples::HepMC3AsciiReader::Config readerConfig;
-  readerConfig.inputDir = variables["hepmc3-input-directory"].as<std::string>();
+  readerConfig.inputDir = variables["input-dir"].as<std::string>();
   readerConfig.inputStem = variables["hepmc3-stem"].as<std::string>();
 
   return readerConfig;
