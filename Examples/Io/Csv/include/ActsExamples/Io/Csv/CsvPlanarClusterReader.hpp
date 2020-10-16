@@ -69,7 +69,6 @@ class CsvPlanarClusterReader final : public IReader {
 
  private:
   Config m_cfg;
-  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> m_surfaces;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

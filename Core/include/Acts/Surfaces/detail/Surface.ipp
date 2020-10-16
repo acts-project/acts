@@ -72,9 +72,10 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline RotationMatrix3D Surface::initJacobianToLocal(
-    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& position, const Vector3D& direction) const {
+inline void Surface::initJacobianToLocal(const GeometryContext& gctx,
+                                         FreeToBoundMatrix& jacobian,
+                                         const Vector3D& position,
+                                         const Vector3D& direction) const {
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
@@ -99,19 +100,24 @@ inline RotationMatrix3D Surface::initJacobianToLocal(
   jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
   jacobian(eBoundTheta, 6) = -sinTheta;
   jacobian(eBoundQOverP, 7) = 1;
-  // return the frame where this happened
-  return rframeT;
 }
 
-inline BoundRowVector Surface::derivativeFactors(
-    const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
-    const Vector3D& direction, const RotationMatrix3D& rft,
-    const BoundToFreeMatrix& jacobian) const {
-  // Create the normal and scale it with the projection onto the direction
-  ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
-  norm_vec /= (norm_vec * direction);
-  // calculate the s factors
-  return (norm_vec * jacobian.topLeftCorner<3, eBoundSize>());
+inline FreeRowVector Surface::freeToPathDerivative(
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global position
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
+  // The measurement frame of the surface
+  const RotationMatrix3D rframe = referenceFrame(gctx, position, direction);
+  // The measurement frame z axis
+  const Vector3D refZAxis = rframe.col(2);
+  // Cosine of angle between momentum direction and measurement frame z axis
+  const double dz = refZAxis.dot(direction);
+  // Initialize the derivative
+  FreeRowVector freeToPath = FreeRowVector::Zero();
+  freeToPath.head<3>() = -1.0 * refZAxis.transpose() / dz;
+  return freeToPath;
 }
 
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {
