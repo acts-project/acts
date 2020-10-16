@@ -161,8 +161,14 @@ int main(int argc, char* argv[]) {
 
   // write tracks from fitting
   RootTrajectoryWriter::Config trackWriter;
-  trackWriter.inputParticles = inputParticles;
   trackWriter.inputTrajectories = fitter.outputTrajectories;
+  trackWriter.inputParticles = inputParticles;
+  trackWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  trackWriter.inputMeasurementsParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  trackWriter.inputMeasurementsSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
   trackWriter.outputDir = outputDir;
   trackWriter.outputFilename = "tracks.root";
   trackWriter.outputTreename = "tracks";

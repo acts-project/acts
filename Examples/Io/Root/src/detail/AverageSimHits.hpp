@@ -29,7 +29,7 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 /// @param gCtx The geometry context for this
 /// @param surface The reference surface of the measurement
 /// @param simHits The simulated hits container
-/// @param simHitIndices Selection of simulated hits from the container
+/// @param hitSimHitsRange Selection of simulated hits from the container
 /// @return a local position, a 4D global position, a direction
 ///
 /// If more than one simulated hit is selected, the average truth information is

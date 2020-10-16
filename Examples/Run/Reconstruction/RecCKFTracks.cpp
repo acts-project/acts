@@ -86,21 +86,6 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
 
-  // Pre-select particles
-  // The pre-selection will select truth particles satisfying provided criteria
-  // from all particles read in by particle reader for further processing. It
-  // has no impact on the truth hits read-in by the cluster reader.
-  // @TODO: add options for truth particle selection criteria
-  TruthSeedSelector::Config particleSelectorCfg;
-  particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputMeasurementParticlesMap =
-      clusterReaderCfg.outputMeasurementParticlesMap;
-  particleSelectorCfg.outputParticles = "particles_selected";
-  particleSelectorCfg.ptMin = 1_GeV;
-  particleSelectorCfg.nHitsMin = 9;
-  sequencer.addAlgorithm(
-      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
-
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
   hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
@@ -114,6 +99,21 @@ int main(int argc, char* argv[]) {
   hitSmearingCfg.trackingGeometry = trackingGeometry;
   sequencer.addAlgorithm(
       std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
+
+  // Pre-select particles
+  // The pre-selection will select truth particles satisfying provided criteria
+  // from all particles read in by particle reader for further processing. It
+  // has no impact on the truth hits read-in by the cluster reader.
+  // @TODO: add options for truth particle selection criteria
+  TruthSeedSelector::Config particleSelectorCfg;
+  particleSelectorCfg.inputParticles = particleReader.outputParticles;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  particleSelectorCfg.outputParticles = "particles_selected";
+  particleSelectorCfg.ptMin = 1_GeV;
+  particleSelectorCfg.nHitsMin = 9;
+  sequencer.addAlgorithm(
+      std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
 
   const auto& inputParticles = particleSelectorCfg.outputParticles;
   // Create smeared particles states

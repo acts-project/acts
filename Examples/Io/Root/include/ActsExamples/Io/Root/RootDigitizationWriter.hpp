@@ -50,7 +50,7 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
-    std::string inputHitSimHitsMap;
+    std::string inputMeasurementSimHitsMap;
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     /// Optional the smearFunctions

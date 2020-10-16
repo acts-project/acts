@@ -37,7 +37,7 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
-  if (m_cfg.inputHitSimHitsMap.empty()) {
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
@@ -91,8 +91,8 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::endRun() {
 ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitSimHitsMap =
-      ctx.eventStore.get<IndexMultimap<Index>>(m_cfg.inputHitSimHitsMap);
+  const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
+      m_cfg.inputMeasurementSimHitsMap);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);

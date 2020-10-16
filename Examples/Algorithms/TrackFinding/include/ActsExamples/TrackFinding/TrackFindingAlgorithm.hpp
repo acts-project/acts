@@ -43,6 +43,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       Options::BFieldVariant magneticField);
 
   struct Config {
+    /// Input measurements collection.
     std::string inputMeasurements;
     /// Input source links collection.
     std::string inputSourceLinks;

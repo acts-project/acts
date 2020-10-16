@@ -53,7 +53,7 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
   if (cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (cfg.inputHitSimHitsMap.empty()) {
+  if (cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-simulated-hits map input collection");
   }
@@ -287,7 +287,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
   const auto& hitParticlesMap =
       ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   const auto& hitSimHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputHitSimHitsMap);
+      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;

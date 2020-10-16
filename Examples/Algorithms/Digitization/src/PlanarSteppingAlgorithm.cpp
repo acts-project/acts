@@ -177,7 +177,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // size_t bin1 = binUtility.bin(localPosition, 1);
       // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
-      // the covariance is currently set to 0.
+      // the covariance is currently set to some arbitrary value.
       Acts::SymMatrix3D cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
