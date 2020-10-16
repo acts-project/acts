@@ -65,9 +65,10 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline RotationMatrix3D DiscSurface::initJacobianToLocal(
-    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const Vector3D& position, const Vector3D& direction) const {
+inline void DiscSurface::initJacobianToLocal(const GeometryContext& gctx,
+                                             FreeToBoundMatrix& jacobian,
+                                             const Vector3D& position,
+                                             const Vector3D& direction) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // Optimized trigonometry on the propagation direction
@@ -103,8 +104,6 @@ inline RotationMatrix3D DiscSurface::initJacobianToLocal(
   jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
   jacobian(eBoundTheta, 6) = -sinTheta;
   jacobian(eBoundQOverP, 7) = 1;
-  // return the transposed reference frame
-  return rframeT;
 }
 
 inline SurfaceIntersection DiscSurface::intersect(
