@@ -152,7 +152,7 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state, bool /*unused*/
+    CurvilinearState curvilinearState(State& state, bool /*unused*/,
                                       bool /*unused*/) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
