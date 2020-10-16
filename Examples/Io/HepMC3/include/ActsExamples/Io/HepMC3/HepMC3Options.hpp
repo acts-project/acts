@@ -17,7 +17,7 @@ namespace ActsExamples {
 
 namespace Options {
 
-/// @brief HepMC3 specific writer options
+/// Add HepMC3 specific writer options.
 ///
 /// @param desc The option description forward
 void addHepMC3WriterOptions(Description& desc);
@@ -29,7 +29,7 @@ void addHepMC3WriterOptions(Description& desc);
 /// @returns a Config object for the HepMC3WriterAscii
 HepMC3AsciiWriter::Config readHepMC3WriterOptions(const Variables& variables);
 
-/// @brief HepMC3 specific reader options
+/// Add HepMC3 specific reader options.
 ///
 /// @param desc The option description forward
 void addHepMC3ReaderOptions(Description& desc);

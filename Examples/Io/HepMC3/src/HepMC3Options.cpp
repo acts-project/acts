@@ -28,8 +28,7 @@ ActsExamples::HepMC3AsciiWriter::Config
 ActsExamples::Options::readHepMC3WriterOptions(
     const ActsExamples::Options::Variables& variables) {
   ActsExamples::HepMC3AsciiWriter::Config writerConfig;
-  writerConfig.outputDir =
-      variables["output-dir"].as<std::string>();
+  writerConfig.outputDir = variables["output-dir"].as<std::string>();
   writerConfig.outputStem = variables["hepmc3-stem"].as<std::string>();
 
   return writerConfig;
