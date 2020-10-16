@@ -11,13 +11,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-namespace Acts {
+#include <memory>
 
-class Surface;
-class BinUtility;
+namespace Acts {
 
 /// @class NavigationLayer
 ///

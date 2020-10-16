@@ -9,13 +9,18 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
+<<<<<<< HEAD
 #include <memory>
 #include <string>
 #include <unordered_map>
+=======
+#include <iosfwd>
+#include <map>
+#include <memory>
+>>>>>>> aa42b1464... iwyu geometry
 
 namespace Acts {
 

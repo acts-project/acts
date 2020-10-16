@@ -8,11 +8,19 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+<<<<<<< HEAD
+=======
+#include <functional>
+#include <string>
+#include <utility>
+
+>>>>>>> aa42b1464... iwyu geometry
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
     const IMaterialDecorator* materialDecorator)
