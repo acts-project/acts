@@ -23,7 +23,8 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
     : m_cfg(cfg)
       // TODO check that all files (hits,cells,truth) exists
       ,
-      m_eventsRange(determineEventFilesRange(cfg.inputDir, "hits.csv")),
+      m_eventsRange(
+          determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".csv")),
       m_logger(Acts::getDefaultLogger("CsvSimHitReader", lvl)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");

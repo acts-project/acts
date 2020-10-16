@@ -23,6 +23,8 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -152,6 +154,36 @@ void setupSimulationAlgorithms(
     writeInitial.outputStem = fatras.outputParticlesInitial;
     sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
         writeInitial, logLevel));
+
+    //--------------------------------------------------------------------------
+    // SimHit rw test
+    //--------------------------------------------------------------------------
+
+    // write simulated hits collection
+    ActsExamples::CsvSimHitWriter::Config writeSimHits;
+    writeSimHits.inputSimulatedHits = fatras.outputHits;
+    writeSimHits.outputDir = outputDir;
+    writeSimHits.outputStem = "sim" + fatras.outputHits;
+    sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
+        writeSimHits, logLevel));
+
+    // read simulated hits collection
+    ActsExamples::CsvSimHitReader::Config readSimHits;
+    readSimHits.inputDir = outputDir;
+    readSimHits.inputStem = "sim" + fatras.outputHits;
+    readSimHits.outputSimulatedHits = "sim" + fatras.outputHits + "_readTest";
+    sequencer.addReader(std::make_shared<ActsExamples::CsvSimHitReader>(
+        readSimHits, logLevel));
+
+    // write simulated hits collection that was read in to disk again
+    ActsExamples::CsvSimHitWriter::Config writeSimHits_readTest;
+    writeSimHits_readTest.inputSimulatedHits = "sim" + fatras.outputHits + "_readTest";
+    writeSimHits_readTest.outputDir = outputDir;
+    writeSimHits_readTest.outputStem = "sim" + fatras.outputHits + "_readTest";
+    sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
+        writeSimHits_readTest, logLevel));
+
+    //--------------------------------------------------------------------------
 
     // write final simulated particles
     ActsExamples::CsvParticleWriter::Config writeFinal;
