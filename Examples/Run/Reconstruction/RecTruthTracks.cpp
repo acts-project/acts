@@ -165,9 +165,9 @@ int main(int argc, char* argv[]) {
   trackWriter.inputParticles = inputParticles;
   trackWriter.inputSimHits = clusterReaderCfg.outputSimHits;
   trackWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  trackWriter.inputMeasurementsParticlesMap =
+  trackWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
-  trackWriter.inputMeasurementsSimHitsMap =
+  trackWriter.inputMeasurementSimHitsMap =
       hitSmearingCfg.outputMeasurementSimHitsMap;
   trackWriter.outputDir = outputDir;
   trackWriter.outputFilename = "tracks.root";
