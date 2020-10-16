@@ -260,20 +260,18 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
 
-  /// Define the track (global) position and direction
+  // Define the track (global) position and direction
   Vector3D globalPosition{0, 4, 2};
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
-
-  // Call the function to calculate the derivative of local frame axes w.r.t its
-  // rotation
-  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
+  // Construct a free parameters
+  FreeVector parameters = FreeVector::Zero();
+  parameters.head<3>() = globalPosition;
+  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      discSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
-                                                   globalPosition, direction);
+      discSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 3, 0, 0;

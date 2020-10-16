@@ -206,6 +206,18 @@ class CylinderSurface : public Surface {
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       size_t lseg) const override;
 
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param parameters is the free parameters
+  ///
+  /// @return Derivative of path length w.r.t. the alignment parameters
+  AlignmentRowVector alignmentToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
+
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
   ///

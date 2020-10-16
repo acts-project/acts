@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
-  /// Test clone method
+  // Test clone method
   Translation3D translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
@@ -269,23 +269,21 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // Check the local z axis is aligned to global z axis
   CHECK_CLOSE_ABS(localZAxis, Vector3D(0., 0., 1.), 1e-15);
 
-  /// Define the track (local) position and direction
+  // Define the track (local) position and direction
   Vector2D localPosition{1, 2};
   Vector3D momentum{0, 0, 1};
   Vector3D direction = momentum.normalized();
-  /// Get the global position
+  // Get the global position
   Vector3D globalPosition =
       planeSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
-
-  // Call the function to calculate the derivative of local frame axes w.r.t its
-  // rotation
-  const auto& [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
+  // Construct a free parameters
+  FreeVector parameters = FreeVector::Zero();
+  parameters.head<3>() = globalPosition;
+  parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
   const AlignmentRowVector& alignToPath =
-      planeSurfaceObject->alignmentToPathDerivative(tgContext, rotToLocalZAxis,
-                                                    globalPosition, direction);
+      planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
   AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
@@ -304,12 +302,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)
   // w.r.t. alignment parameters
   FreeVector derivatives = FreeVector::Zero();
-  derivatives.segment<3>(0) = momentum;
+  derivatives.head<3>() = direction;
   const AlignmentToBoundMatrix& alignToBound =
-      planeSurfaceObject->alignmentToBoundDerivative(tgContext, derivatives,
-                                                     globalPosition, direction);
-  const AlignmentRowVector& alignToloc0 = alignToBound.block<1, 6>(0, 0);
-  const AlignmentRowVector& alignToloc1 = alignToBound.block<1, 6>(1, 0);
+      planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
+                                                     derivatives);
+  const AlignmentRowVector alignToloc0 =
+      alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
+  const AlignmentRowVector alignToloc1 =
+      alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
   AlignmentRowVector expAlignToloc0;
   expAlignToloc0 << -1, 0, 0, 0, 0, 2;
