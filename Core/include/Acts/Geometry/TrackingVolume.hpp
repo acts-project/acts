@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Geometry/AbstractVolume.hpp"
-#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -22,7 +20,6 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
@@ -34,11 +31,6 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
-class IMaterialDecorator;
-class ISurfaceMaterial;
-class IVolumeMaterial;
-class Surface;
-class TrackingVolume;
 
 template <typename object_t>
 struct NavigationOptions;

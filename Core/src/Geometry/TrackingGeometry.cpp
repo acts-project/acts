@@ -8,7 +8,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
-#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
