@@ -8,6 +8,7 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/Info.hpp"
+
 #include "ErrorCheck.cuh"
 
 // System include(s).

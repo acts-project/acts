@@ -152,8 +152,8 @@ class MultiIndex {
 namespace std {
 template <typename Storage, std::size_t... BitsPerLevel>
 struct hash<Acts::MultiIndex<Storage, BitsPerLevel...>> {
-  auto operator()(Acts::MultiIndex<Storage, BitsPerLevel...> idx) const
-      noexcept {
+  auto operator()(
+      Acts::MultiIndex<Storage, BitsPerLevel...> idx) const noexcept {
     return std::hash<Storage>()(idx.value());
   }
 };

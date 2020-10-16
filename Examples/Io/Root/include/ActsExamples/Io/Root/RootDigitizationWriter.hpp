@@ -18,10 +18,10 @@
 #include <Acts/Utilities/Helpers.hpp>
 #include <Acts/Utilities/ParameterDefinitions.hpp>
 
-#include <TTree.h>
-
 #include <memory>
 #include <mutex>
+
+#include <TTree.h>
 
 class TFile;
 class TTree;
