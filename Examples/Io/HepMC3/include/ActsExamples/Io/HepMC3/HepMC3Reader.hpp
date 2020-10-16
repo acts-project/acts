@@ -9,21 +9,22 @@
 #pragma once
 
 #include "ActsExamples/Framework/IReader.hpp"
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Utilities/Logger.hpp"
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/ReaderAscii.h>
 
 namespace ActsExamples {
 
 /// HepMC3 event reader.
-struct HepMC3ReaderAscii : public IReader {
+class HepMC3AsciiReader final : public IReader {
+public:
   struct Config {
     // The input directory
-    std::string inputDir = "";
+    std::string inputDir;
     // The stem of input file names
-    std::string inputStemFileName = "";
+    std::string inputStem;
     // The output collection
-    std::string outputCollection = "";
+    std::string outputEvents;
   };
 
   /// @brief Reads an event from file
@@ -31,7 +32,7 @@ struct HepMC3ReaderAscii : public IReader {
   /// @param event storage of the read event
   /// @return boolean indicator if the reading was successful
   bool readEvent(HepMC3::ReaderAscii& reader,
-                 std::shared_ptr<HepMC3::GenEvent> event);
+                 HepMC3::GenEvent& event);
 
   /// @brief Reports the status of the reader
   /// @param reader reader of run files
@@ -42,7 +43,7 @@ struct HepMC3ReaderAscii : public IReader {
   ///
   /// @param [in] cfg The configuration object
   /// @param [in] lvl The logging level
-  HepMC3ReaderAscii(const Config& cfg, Acts::Logging::Level lvl);
+  HepMC3AsciiReader(const Config& cfg, Acts::Logging::Level lvl);
 
   std::string name() const final override;
 

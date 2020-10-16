@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 
   // Create the reader
   auto hepMC3ReaderConfig = ActsExamples::Options::readHepMC3ReaderOptions(vm);
-  ActsExamples::HepMC3ReaderAscii simReader(hepMC3ReaderConfig, logLevel);
+  ActsExamples::HepMC3AsciiReader simReader(hepMC3ReaderConfig, logLevel);
 
   std::cout << "Preparing reader " << std::flush;
   HepMC3::ReaderAscii reader("test.hepmc3");
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     std::cout << "failed" << std::endl;
   }
 
-  std::shared_ptr<HepMC3::GenEvent> genevt(new HepMC3::GenEvent());
+  HepMC3::GenEvent genevt;
 
   std::cout << "Reading event " << std::flush;
   if (simReader.readEvent(reader, genevt)) {

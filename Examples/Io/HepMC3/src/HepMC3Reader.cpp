@@ -11,56 +11,60 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <HepMC3/Units.h>
 
-bool ActsExamples::HepMC3ReaderAscii::readEvent(
-    HepMC3::ReaderAscii& reader, std::shared_ptr<HepMC3::GenEvent> event) {
+bool ActsExamples::HepMC3AsciiReader::readEvent(
+    HepMC3::ReaderAscii& reader, HepMC3::GenEvent& event) {
   // Read event and store it
-  return reader.read_event(*event);
+  return reader.read_event(event);
 }
 
-bool ActsExamples::HepMC3ReaderAscii::status(HepMC3::ReaderAscii& reader) {
+bool ActsExamples::HepMC3AsciiReader::status(HepMC3::ReaderAscii& reader) {
   return !reader.failed();
 }
 
-ActsExamples::HepMC3ReaderAscii::HepMC3ReaderAscii(
-    const ActsExamples::HepMC3ReaderAscii::Config& cfg,
+ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader(
+    const ActsExamples::HepMC3AsciiReader::Config& cfg,
     Acts::Logging::Level lvl)
     : m_cfg(cfg),
       m_eventsRange(determineEventFilesRange(
-          cfg.inputDir, cfg.inputStemFileName + ".hepmc3")),
-      m_logger(Acts::getDefaultLogger("HepMC3ReaderAscii", lvl)) {
-  if (m_cfg.inputStemFileName.empty()) {
+          cfg.inputDir, cfg.inputStem + ".hepmc3")),
+      m_logger(Acts::getDefaultLogger("HepMC3AsciiReader", lvl)) {
+  if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
-  if (m_cfg.outputCollection.empty()) {
+  if (m_cfg.outputEvents.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
 }
 
-std::string ActsExamples::HepMC3ReaderAscii::HepMC3ReaderAscii::name() const {
-  return "HepMC3ReaderAscii";
+std::string ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader::name() const {
+  return "HepMC3AsciiReader";
 }
 
-std::pair<size_t, size_t> ActsExamples::HepMC3ReaderAscii::availableEvents()
+std::pair<size_t, size_t> ActsExamples::HepMC3AsciiReader::availableEvents()
     const {
   return m_eventsRange;
 }
 
-ActsExamples::ProcessCode ActsExamples::HepMC3ReaderAscii::read(
+ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
-  std::vector<std::shared_ptr<HepMC3::GenEvent>> events;
+  std::vector<HepMC3::GenEvent> events;
   HepMC3::GenEvent event(HepMC3::Units::GEV, HepMC3::Units::MM);
 
-  auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStemFileName + ".csv",
+  auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".hepmc3",
                                ctx.eventNumber);
+                               
+  ACTS_DEBUG("Attempting to write event to " << path);
   HepMC3::ReaderAscii reader(path);
 
   while (reader.read_event(event)) {
-    events.push_back(std::make_shared<HepMC3::GenEvent>(event));
+    events.push_back(std::move(event));
     event.clear();
   }
 
-  ctx.eventStore.add(m_cfg.outputCollection, std::move(events));
+  if(reader.failed())
+	return ActsExamples::ProcessCode::ABORT;
+  
+  ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
 
-  return reader.failed() ? ActsExamples::ProcessCode::ABORT
-                         : ActsExamples::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }

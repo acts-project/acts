@@ -17,22 +17,23 @@
 namespace ActsExamples {
 
 /// HepMC3 event writer.
-struct HepMC3WriterAscii final
-    : public WriterT<std::vector<std::shared_ptr<HepMC3::GenEvent>>> {
+class HepMC3AsciiWriter final
+    : public WriterT<std::vector<HepMC3::GenEvent>> {
+public:
   struct Config {
     // The output directory
-    std::string outputDir = "";
+    std::string outputDir;
     // The stem of output file names
-    std::string outputStemFileName = "";
+    std::string outputStem;
     // The input collection
-    std::string inputCollection = "";
+    std::string inputEvents;
   };
 
   /// @brief Constructor
   ///
   /// @param [in] cfg Config of the writer
   /// @param [in] lvl The level of the logger
-  HepMC3WriterAscii(const Config&& cfg, Acts::Logging::Level lvl);
+  HepMC3AsciiWriter(const Config&& cfg, Acts::Logging::Level lvl);
 
   /// @brief Writing method
   ///
@@ -41,7 +42,7 @@ struct HepMC3WriterAscii final
   ///
   /// @return Code describing whether the writing was successful
   ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const std::vector<std::shared_ptr<HepMC3::GenEvent>>&
+                     const std::vector<HepMC3::GenEvent>&
                          events) final override;
 
  private:

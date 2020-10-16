@@ -9,25 +9,29 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-ActsExamples::HepMC3WriterAscii::HepMC3WriterAscii(const Config&& cfg,
+ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config&& cfg,
                                                    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputCollection, "HepMC3EventWriter", lvl), m_cfg(cfg) {
-  if (m_cfg.outputStemFileName.empty())
+    : WriterT(cfg.inputEvents, "HepMC3EventWriter", lvl), m_cfg(cfg) {
+  if (m_cfg.outputStem.empty())
     throw std::invalid_argument("Missing output stem file name");
 }
 
-ActsExamples::ProcessCode ActsExamples::HepMC3WriterAscii::writeT(
+ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
-    const std::vector<std::shared_ptr<HepMC3::GenEvent>>& events) {
+    const std::vector<HepMC3::GenEvent>& events) {
   auto path = perEventFilepath(
-      m_cfg.outputDir, m_cfg.outputStemFileName + ".hepmc3", ctx.eventNumber);
-  std::cout << "Path: " << path << std::endl;
+      m_cfg.outputDir, m_cfg.outputStem + ".hepmc3", ctx.eventNumber);
+  
+  ACTS_DEBUG("Attempting to write event to " << path);
   HepMC3::WriterAscii writer(path);
 
   for (const auto& event : events)
-    writer.write_event(*event);
-
+  {
+    writer.write_event(event);
+	if(writer.failed())
+		return ActsExamples::ProcessCode::ABORT;
+  }
+  
   writer.close();
-  return writer.failed() ? ActsExamples::ProcessCode::ABORT
-                         : ActsExamples::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
