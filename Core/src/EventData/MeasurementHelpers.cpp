@@ -18,6 +18,6 @@ const Acts::Surface& Acts::MinimalSourceLink::referenceSurface() const {
 }
 
 const Acts::FittableMeasurement<Acts::MinimalSourceLink>&
-Acts::MinimalSourceLink::operator*() const {
+    Acts::MinimalSourceLink::operator*() const {
   return *meas;
 }
