@@ -32,8 +32,7 @@ ActsExamples::Options::readHepMC3WriterOptions(
   ActsExamples::HepMC3AsciiWriter::Config writerConfig;
   writerConfig.outputDir =
       variables["hepmc3-output-directory"].as<std::string>();
-  writerConfig.outputStem =
-      variables["hepmc3-stem"].as<std::string>();
+  writerConfig.outputStem = variables["hepmc3-stem"].as<std::string>();
 
   return writerConfig;
 }
@@ -55,8 +54,7 @@ ActsExamples::Options::readHepMC3ReaderOptions(
     const ActsExamples::Options::Variables& variables) {
   ActsExamples::HepMC3AsciiReader::Config readerConfig;
   readerConfig.inputDir = variables["hepmc3-input-directory"].as<std::string>();
-  readerConfig.inputStem =
-      variables["hepmc3-stem"].as<std::string>();
+  readerConfig.inputStem = variables["hepmc3-stem"].as<std::string>();
 
   return readerConfig;
 }

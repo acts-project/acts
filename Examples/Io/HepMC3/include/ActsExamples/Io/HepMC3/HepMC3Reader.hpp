@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IReader.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/ReaderAscii.h>
 
@@ -17,7 +17,7 @@ namespace ActsExamples {
 
 /// HepMC3 event reader.
 class HepMC3AsciiReader final : public IReader {
-public:
+ public:
   struct Config {
     // The input directory
     std::string inputDir;
@@ -31,8 +31,7 @@ public:
   /// @param reader reader of run files
   /// @param event storage of the read event
   /// @return boolean indicator if the reading was successful
-  bool readEvent(HepMC3::ReaderAscii& reader,
-                 HepMC3::GenEvent& event);
+  bool readEvent(HepMC3::ReaderAscii& reader, HepMC3::GenEvent& event);
 
   /// @brief Reports the status of the reader
   /// @param reader reader of run files

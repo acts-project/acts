@@ -17,9 +17,8 @@
 namespace ActsExamples {
 
 /// HepMC3 event writer.
-class HepMC3AsciiWriter final
-    : public WriterT<std::vector<HepMC3::GenEvent>> {
-public:
+class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
+ public:
   struct Config {
     // The output directory
     std::string outputDir;
@@ -41,9 +40,9 @@ public:
   /// @param [in] events The recorded HepMC3 events
   ///
   /// @return Code describing whether the writing was successful
-  ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const std::vector<HepMC3::GenEvent>&
-                         events) final override;
+  ProcessCode writeT(
+      const ActsExamples::AlgorithmContext& ctx,
+      const std::vector<HepMC3::GenEvent>& events) final override;
 
  private:
   /// The configuration of this writer

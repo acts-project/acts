@@ -31,41 +31,37 @@ struct HepMC3Event {
   /// @note The allowed units are MeV and Gev
   /// @param event event in HepMC data type
   /// @param momentumUnit new unit of momentum
-  void momentumUnit(HepMC3::GenEvent& event,
-                    const double momentumUnit);
+  void momentumUnit(HepMC3::GenEvent& event, const double momentumUnit);
 
   /// @brief Sets new units for lengths
   /// @note The allowed units are mm and cm
   /// @param event event in HepMC data type
   /// @param lengthUnit new unit of length
-  void lengthUnit(HepMC3::GenEvent& event,
-                  const double lengthUnit);
+  void lengthUnit(HepMC3::GenEvent& event, const double lengthUnit);
 
   /// @brief Shifts the positioning of an event in space and time
   /// @param event event in HepMC data type
   /// @param deltaPos relative spatial shift that will be applied
   /// @param deltaTime relative time shift that will be applied
-  void shiftPositionBy(HepMC3::GenEvent& event,
-                       const Acts::Vector3D& deltaPos, const double deltaTime);
+  void shiftPositionBy(HepMC3::GenEvent& event, const Acts::Vector3D& deltaPos,
+                       const double deltaTime);
 
   /// @brief Shifts the positioning of an event to a paint in space and time
   /// @param event event in HepMC data type
   /// @param pos new position of the event
   /// @param time new time of the event
-  void shiftPositionTo(HepMC3::GenEvent& event,
-                       const Acts::Vector3D& pos, const double time);
+  void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3D& pos,
+                       const double time);
 
   /// @brief Shifts the positioning of an event to a paint in space
   /// @param event event in HepMC data type
   /// @param pos new position of the event
-  void shiftPositionTo(HepMC3::GenEvent& event,
-                       const Acts::Vector3D& pos);
+  void shiftPositionTo(HepMC3::GenEvent& event, const Acts::Vector3D& pos);
 
   /// @brief Shifts the positioning of an event to a paint in time
   /// @param event event in HepMC data type
   /// @param time new time of the event
-  void shiftPositionTo(HepMC3::GenEvent& event,
-                       const double time);
+  void shiftPositionTo(HepMC3::GenEvent& event, const double time);
 
   ///
   /// Adder

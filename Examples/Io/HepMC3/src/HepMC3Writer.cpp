@@ -19,19 +19,18 @@ ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config&& cfg,
 ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
     const std::vector<HepMC3::GenEvent>& events) {
-  auto path = perEventFilepath(
-      m_cfg.outputDir, m_cfg.outputStem + ".hepmc3", ctx.eventNumber);
-  
+  auto path = perEventFilepath(m_cfg.outputDir, m_cfg.outputStem + ".hepmc3",
+                               ctx.eventNumber);
+
   ACTS_DEBUG("Attempting to write event to " << path);
   HepMC3::WriterAscii writer(path);
 
-  for (const auto& event : events)
-  {
+  for (const auto& event : events) {
     writer.write_event(event);
-	if(writer.failed())
-		return ActsExamples::ProcessCode::ABORT;
+    if (writer.failed())
+      return ActsExamples::ProcessCode::ABORT;
   }
-  
+
   writer.close();
   return ActsExamples::ProcessCode::SUCCESS;
 }

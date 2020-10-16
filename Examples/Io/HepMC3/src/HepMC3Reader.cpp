@@ -11,8 +11,8 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <HepMC3/Units.h>
 
-bool ActsExamples::HepMC3AsciiReader::readEvent(
-    HepMC3::ReaderAscii& reader, HepMC3::GenEvent& event) {
+bool ActsExamples::HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,
+                                                HepMC3::GenEvent& event) {
   // Read event and store it
   return reader.read_event(event);
 }
@@ -25,8 +25,8 @@ ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader(
     const ActsExamples::HepMC3AsciiReader::Config& cfg,
     Acts::Logging::Level lvl)
     : m_cfg(cfg),
-      m_eventsRange(determineEventFilesRange(
-          cfg.inputDir, cfg.inputStem + ".hepmc3")),
+      m_eventsRange(
+          determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".hepmc3")),
       m_logger(Acts::getDefaultLogger("HepMC3AsciiReader", lvl)) {
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
@@ -52,7 +52,7 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
 
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".hepmc3",
                                ctx.eventNumber);
-                               
+
   ACTS_DEBUG("Attempting to write event to " << path);
   HepMC3::ReaderAscii reader(path);
 
@@ -61,9 +61,9 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
     event.clear();
   }
 
-  if(reader.failed())
-	return ActsExamples::ProcessCode::ABORT;
-  
+  if (reader.failed())
+    return ActsExamples::ProcessCode::ABORT;
+
   ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
 
   return ActsExamples::ProcessCode::SUCCESS;
