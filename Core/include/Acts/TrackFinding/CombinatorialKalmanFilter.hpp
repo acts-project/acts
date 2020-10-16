@@ -510,8 +510,10 @@ class CombinatorialKalmanFilter {
         materialInteractor(surface, state, stepper, preUpdate);
 
         // Transport & bind the state to the current surface
-        auto boundState = stepper.boundState(state.stepping, *surface, false);
+        state.stepping.covTransport = false;
+        auto boundState = stepper.boundState(state.stepping, *surface);
         auto boundParams = std::get<BoundTrackParameters>(boundState);
+		state.stepping.covTransport = true;
 
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;

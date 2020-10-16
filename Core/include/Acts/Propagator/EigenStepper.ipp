@@ -40,7 +40,7 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface,
-                                             bool transportCovariance) const
+                                             bool attachCov) const
     -> BoundState {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
@@ -48,19 +48,19 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
   return detail::boundState(state.geoContext, state.cov, state.jacobian,
                             state.jacTransport, state.derivative,
                             state.jacToGlobal, parameters,
-                            state.covTransport && transportCovariance,
+                            state.covTransport, attachCov,
                             state.pathAccumulated, surface);
 }
 
 template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(
-    State& state, bool transportCovariance) const -> CurvilinearState {
+    State& state, bool attachCov) const -> CurvilinearState {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport && transportCovariance,
+      state.jacToGlobal, parameters, state.covTransport, attachCov,
       state.pathAccumulated);
 }
 
