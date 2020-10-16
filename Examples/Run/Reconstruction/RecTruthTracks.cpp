@@ -81,10 +81,25 @@ int main(int argc, char* argv[]) {
   clusterReaderCfg.trackingGeometry = trackingGeometry;
   clusterReaderCfg.outputClusters = "clusters";
   clusterReaderCfg.outputHitIds = "hit_ids";
-  clusterReaderCfg.outputHitParticlesMap = "hit_particles_map";
-  clusterReaderCfg.outputSimulatedHits = "hits";
+  // only simhits are used and the map will be re-created by the digitizer
+  clusterReaderCfg.outputMeasurementParticlesMap = "unused-hit_particles_map";
+  clusterReaderCfg.outputSimHits = "hits";
   sequencer.addReader(
       std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
+
+  // Create smeared measurements
+  HitSmearing::Config hitSmearingCfg;
+  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.outputMeasurements = "measurements";
+  hitSmearingCfg.outputSourceLinks = "sourcelinks";
+  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+  hitSmearingCfg.sigmaLoc0 = 25_um;
+  hitSmearingCfg.sigmaLoc1 = 100_um;
+  hitSmearingCfg.randomNumbers = rnd;
+  hitSmearingCfg.trackingGeometry = trackingGeometry;
+  sequencer.addAlgorithm(
+      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
 
   // Pre-select particles
   // The pre-selection will select truth particles satisfying provided criteria
@@ -93,23 +108,12 @@ int main(int argc, char* argv[]) {
   // @TODO: add options for truth particle selection criteria
   TruthSeedSelector::Config particleSelectorCfg;
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
-  particleSelectorCfg.inputHitParticlesMap =
-      clusterReaderCfg.outputHitParticlesMap;
+  particleSelectorCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   particleSelectorCfg.outputParticles = "particles_selected";
   particleSelectorCfg.nHitsMin = 1;
   sequencer.addAlgorithm(
       std::make_shared<TruthSeedSelector>(particleSelectorCfg, logLevel));
-
-  // Create smeared measurements
-  HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimulatedHits = clusterReaderCfg.outputSimulatedHits;
-  hitSmearingCfg.outputSourceLinks = "sourcelinks";
-  hitSmearingCfg.sigmaLoc0 = 25_um;
-  hitSmearingCfg.sigmaLoc1 = 100_um;
-  hitSmearingCfg.randomNumbers = rnd;
-  hitSmearingCfg.trackingGeometry = trackingGeometry;
-  sequencer.addAlgorithm(
-      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
 
   // The fitter needs the measurements (proto tracks) and initial
   // track states (proto states). The elements in both collections
@@ -118,7 +122,8 @@ int main(int argc, char* argv[]) {
   // Create truth tracks
   TruthTrackFinder::Config trackFinderCfg;
   trackFinderCfg.inputParticles = inputParticles;
-  trackFinderCfg.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
+  trackFinderCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   trackFinderCfg.outputProtoTracks = "prototracks";
   sequencer.addAlgorithm(
       std::make_shared<TruthTrackFinder>(trackFinderCfg, logLevel));
@@ -143,6 +148,7 @@ int main(int argc, char* argv[]) {
 
   // setup the fitter
   TrackFittingAlgorithm::Config fitter;
+  fitter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
   fitter.inputInitialTrackParameters =
@@ -155,8 +161,14 @@ int main(int argc, char* argv[]) {
 
   // write tracks from fitting
   RootTrajectoryWriter::Config trackWriter;
-  trackWriter.inputParticles = inputParticles;
   trackWriter.inputTrajectories = fitter.outputTrajectories;
+  trackWriter.inputParticles = inputParticles;
+  trackWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  trackWriter.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  trackWriter.inputMeasurementSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
   trackWriter.outputDir = outputDir;
   trackWriter.outputFilename = "tracks.root";
   trackWriter.outputTreename = "tracks";
@@ -165,15 +177,18 @@ int main(int argc, char* argv[]) {
 
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
-  perfFinder.inputParticles = inputParticles;
-  perfFinder.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
   perfFinder.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  perfFinder.inputParticles = inputParticles;
+  perfFinder.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   perfFinder.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputParticles = inputParticles;
   perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputParticles = inputParticles;
+  perfFitter.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   perfFitter.outputDir = outputDir;
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));

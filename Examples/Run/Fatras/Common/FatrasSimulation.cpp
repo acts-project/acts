@@ -135,7 +135,7 @@ void setupSimulationAlgorithms(
   fatras.inputParticles = kFatrasCollectionParticles;
   fatras.outputParticlesInitial = "particles_initial";
   fatras.outputParticlesFinal = "particles_final";
-  fatras.outputHits = kFatrasCollectionHits;
+  fatras.outputSimHits = kFatrasCollectionHits;
   fatras.randomNumbers = randomNumbers;
   sequencer.addAlgorithm(
       std::make_shared<SimulationAlgorithm>(fatras, logLevel));
@@ -182,9 +182,9 @@ void setupSimulationAlgorithms(
 
     // write simulated hits
     ActsExamples::RootSimHitWriter::Config writeHits;
-    writeHits.inputSimulatedHits = fatras.outputHits;
+    writeHits.inputSimHits = fatras.outputSimHits;
     writeHits.filePath =
-        ActsExamples::joinPaths(outputDir, fatras.outputHits + ".root");
+        ActsExamples::joinPaths(outputDir, fatras.outputSimHits + ".root");
     sequencer.addWriter(
         std::make_shared<ActsExamples::RootSimHitWriter>(writeHits, logLevel));
   }

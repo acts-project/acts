@@ -7,15 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
+
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Helpers.hpp>
-#include <Acts/Utilities/Intersection.hpp>
-#include <Acts/Utilities/Units.hpp>
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <ios>
 #include <optional>
@@ -24,14 +26,20 @@
 #include <TFile.h>
 #include <TString.h>
 
+#include "detail/AverageSimHits.hpp"
+
 ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
     const ActsExamples::RootDigitizationWriter::Config& cfg,
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputMeasurements, "RootDigitizationWriter", lvl),
       m_cfg(cfg) {
   // Input container for measurements is already checked by base constructor
-  if (m_cfg.inputSimulatedHits.empty()) {
+  if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-simulated-hits map input collection");
   }
   // Setup ROOT File
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
@@ -81,87 +89,43 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
-    const AlgorithmContext& ctx,
-    const ActsExamples::GeometryIdMultimap<
-        Acts::FittableMeasurement<ActsExamples::DigitizedHit>>& measurements) {
-  const auto& simHitContainer =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
-
-  for (auto& [key, value] : measurements) {
-    std::visit(
-        [&](auto&& m) {
-          const auto& surface = m.referenceObject();
-          Acts::GeometryIdentifier sIdentifier = surface.geometryId();
-          auto dTreeItr = m_outputTrees.find(sIdentifier);
-          if (dTreeItr != m_outputTrees.end()) {
-            auto& dTree = *dTreeItr;
-            // Fill the identification
-            dTree->fillIdentification(ctx.eventNumber, sIdentifier);
-            auto hitIndices = m.sourceLink().hitIndices();
-            std::vector<SimHit> simHits;
-            simHits.reserve(hitIndices.size());
-            for (auto& hi : hitIndices) {
-              auto nthhit = simHitContainer.nth(hi);
-              simHits.push_back(*nthhit);
-            }
-
-            auto tParams = truthParameters(ctx.geoContext, surface, simHits);
-            dTree->fillTruthParameters(std::get<0>(tParams),
-                                       std::get<1>(tParams),
-                                       std::get<2>(tParams));
-            dTree->fillBoundMeasurement(m);
-            dTree->tree->Fill();
-          }
-        },
-        value);
-  }
+    const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
+      m_cfg.inputMeasurementSimHitsMap);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
+  for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
+    const auto& meas = measurements[hitIdx];
+
+    std::visit(
+        [&](const auto& m) {
+          const auto& surface = m.referenceObject();
+          Acts::GeometryIdentifier geoId = surface.geometryId();
+
+          // find the corresponding output tree
+          auto dTreeItr = m_outputTrees.find(geoId);
+          if (dTreeItr == m_outputTrees.end()) {
+            return;
+          }
+          auto& dTree = *dTreeItr;
+
+          // Fill the identification
+          dTree->fillIdentification(ctx.eventNumber, geoId);
+
+          // Find the contributing simulated hits
+          auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+          // Use average truth in the case of multiple contributing sim hits
+          auto [local, pos4, dir] =
+              detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+          dTree->fillTruthParameters(local, pos4, dir);
+          dTree->fillBoundMeasurement(m);
+          dTree->tree->Fill();
+        },
+        meas);
+  }
+
   return ActsExamples::ProcessCode::SUCCESS;
-}
-
-std::tuple<Acts::Vector2D, Acts::Vector4D, Acts::Vector3D>
-ActsExamples::RootDigitizationWriter::truthParameters(
-    const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const std::vector<ActsExamples::SimHit>& simulatedHits) {
-  Acts::Vector3D position(0., 0., 0.);
-  Acts::Vector3D direction(0., 0., 0.);
-  double ctime = 0.;
-
-  if (simulatedHits.size() == 1 and
-      surface.isOnSurface(gCtx, simulatedHits[0].position(),
-                          simulatedHits[0].unitDirection())) {
-    position = simulatedHits[0].position();
-    direction = simulatedHits[0].unitDirection();
-    ctime = simulatedHits[0].time();
-
-  } else if (simulatedHits.size() > 1) {
-    Acts::Vector4D avePos(0., 0., 0., 0.);
-    for (const auto& hit : simulatedHits) {
-      avePos += hit.position4();
-      direction += hit.unitDirection();
-    }
-    double denom = 1. / simulatedHits.size();
-    avePos *= denom;
-    direction *= denom;
-    direction = direction.normalized();
-    auto sIntersection =
-        surface.intersect(gCtx, avePos.segment<3>(0), direction, false);
-
-    position = sIntersection.intersection.position;
-    ctime = avePos[Acts::eTime];
-  }
-  auto lpResult = surface.globalToLocal(gCtx, position, direction);
-  Acts::Vector2D lposition(0., 0.);
-  if (not lpResult.ok()) {
-    ACTS_WARNING(
-        "GlobalToLocal did not succeed, will fill (0.,0.) for local position.");
-  } else {
-    lposition = lpResult.value();
-  }
-
-  return {lposition, Acts::VectorHelpers::makeVector4(position, ctime),
-          direction};
 }

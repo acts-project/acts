@@ -40,7 +40,7 @@ class CsvPlanarClusterWriter final
     /// Which cluster collection to write.
     std::string inputClusters;
     /// Which simulated (truth) hits collection to use.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.

@@ -74,9 +74,9 @@ int main(int argc, char* argv[]) {
   CsvPlanarClusterReader::Config readClustersCfg;
   readClustersCfg.inputDir = inputDir;
   readClustersCfg.outputClusters = "clusters";
-  readClustersCfg.outputHitParticlesMap = "hit_particle_map";
+  readClustersCfg.outputMeasurementParticlesMap = "hit_particle_map";
   readClustersCfg.outputHitIds = "hit_ids";
-  readClustersCfg.outputSimulatedHits = "simulated_hits";
+  readClustersCfg.outputSimHits = "simulated_hits";
   readClustersCfg.trackingGeometry = trackingGeometry;
   sequencer.addReader(std::make_shared<ActsExamples::CsvPlanarClusterReader>(
       readClustersCfg, logLevel));
@@ -92,7 +92,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<ParticlesPrinter>(printFinalCfg, logLevel));
   HitsPrinter::Config printHitsCfg;
   printHitsCfg.inputClusters = readClustersCfg.outputClusters;
-  printHitsCfg.inputHitParticlesMap = readClustersCfg.outputHitParticlesMap;
+  printHitsCfg.inputMeasurementParticlesMap =
+      readClustersCfg.outputMeasurementParticlesMap;
   printHitsCfg.inputHitIds = readClustersCfg.outputHitIds;
   // print all hits in the container
   printHitsCfg.selectIndexLength = SIZE_MAX;
