@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <utility>
-
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <utility>
 
 namespace ActsFatras {
 

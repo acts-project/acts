@@ -15,7 +15,6 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 

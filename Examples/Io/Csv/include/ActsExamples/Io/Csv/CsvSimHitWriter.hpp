@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <limits>
@@ -21,7 +21,7 @@ namespace ActsExamples {
 /// separated-value format.
 ///
 /// This writes one file per event containing information about the
-/// global space points, momenta (before and after interaction )and hit index
+/// global space points, momenta (before and after interaction) and hit index
 /// into the configured output directory. By default it writes to the
 /// current working directory. Files are named using the following schema
 ///

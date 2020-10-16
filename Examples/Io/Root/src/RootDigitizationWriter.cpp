@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
+
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"

@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
+
 #include <climits>
 #include <cmath>
 #include <exception>
