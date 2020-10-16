@@ -564,7 +564,8 @@ class AtlasStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface, bool transportCovariance = true) const {
+  BoundState boundState(State& state, const Surface& surface,
+                        bool transportCovariance = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -604,7 +605,8 @@ class AtlasStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool transportCovariance = true) const {
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCovariance = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information

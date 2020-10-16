@@ -14,7 +14,8 @@
 namespace Acts {
 
 std::tuple<BoundTrackParameters, BoundMatrix, double>
-StraightLineStepper::boundState(State& state, const Surface& surface, bool transportCovariance) const {
+StraightLineStepper::boundState(State& state, const Surface& surface,
+                                bool transportCovariance) const {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -26,12 +27,14 @@ StraightLineStepper::boundState(State& state, const Surface& surface, bool trans
   parameters[eFreeQOverP] = state.q / state.p;
   return detail::boundState(state.geoContext, state.cov, state.jacobian,
                             state.jacTransport, state.derivative,
-                            state.jacToGlobal, parameters, state.covTransport && transportCovariance,
+                            state.jacToGlobal, parameters,
+                            state.covTransport && transportCovariance,
                             state.pathAccumulated, surface);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
-StraightLineStepper::curvilinearState(State& state, bool transportCovariance) const {
+StraightLineStepper::curvilinearState(State& state,
+                                      bool transportCovariance) const {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -43,7 +46,8 @@ StraightLineStepper::curvilinearState(State& state, bool transportCovariance) co
   parameters[eFreeQOverP] = state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport && transportCovariance, state.pathAccumulated);
+      state.jacToGlobal, parameters, state.covTransport && transportCovariance,
+      state.pathAccumulated);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& parameters,

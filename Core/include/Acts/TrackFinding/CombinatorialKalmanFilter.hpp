@@ -503,16 +503,16 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-		// Transport the covariance to the surface
+        // Transport the covariance to the surface
         stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
 
-		// Transport & bind the state to the current surface
+        // Transport & bind the state to the current surface
         auto boundState = stepper.boundState(state.stepping, *surface, false);
         auto boundParams = std::get<BoundTrackParameters>(boundState);
-        
+
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
 

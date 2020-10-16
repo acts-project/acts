@@ -303,7 +303,8 @@ class EigenStepper {
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface, bool transportCovariance = true) const;
+  BoundState boundState(State& state, const Surface& surface,
+                        bool transportCovariance = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -317,7 +318,8 @@ class EigenStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool transportCovariance = true) const;
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCovariance = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///
