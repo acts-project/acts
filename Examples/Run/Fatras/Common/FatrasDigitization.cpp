@@ -41,6 +41,9 @@ void setupDigitization(
     SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
     smearCfg.inputSimHits = kFatrasCollectionHits;
     smearCfg.outputMeasurements = "measurements";
+    smearCfg.outputSourceLinks = "sourcelinks";
+    smearCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+    smearCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
     smearCfg.trackingGeometry = trackingGeometry;
     smearCfg.randomNumbers = randomNumbers;
     sequencer.addAlgorithm(
@@ -64,6 +67,10 @@ void setupDigitization(
     PlanarSteppingAlgorithm::Config digi;
     digi.inputSimHits = "hits";
     digi.outputClusters = "clusters";
+    digi.outputMeasurements = "measurements";
+    digi.outputSourceLinks = "sourcelinks";
+    digi.outputMeasurementParticlesMap = "measurement_particles_map";
+    digi.outputMeasurementSimHitsMap = "measurement_simhits_map";
     digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
         Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
     digi.randomNumbers = randomNumbers;
