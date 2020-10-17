@@ -11,7 +11,7 @@ is used to identify the path to the build directory.
 Generate simulation datasets
 -----------------------------
 
-Generate two different example simulation datasets based on the generic example detector in a 2T magnetic field (More details could be found in the *run_fatras* guide):
+Generate two different example simulation datasets based on the generic example detector in a 2T magnetic field (More details could be found in the :ref:`Run the FAst TRAck Simulation` guide):
 
 -  10000 (``--pg-nparticles 10000``) single muons with absolute momentum at [0.1, 100 ) GeV (``--gen-p-gev 0.1:100``) and |eta| <= 2.5 (``--gen-eta -2.5:2.5``)
 
