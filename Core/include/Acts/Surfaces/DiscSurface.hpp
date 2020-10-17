@@ -215,14 +215,12 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param jacobian The jacobian to be initialized
-  /// @param position The global position of the parameters
-  /// @param direction The direction at of the parameters
-  ///
-  /// @param pars The paranmeters vector
+  /// @param freeParams is the free parameters vector
+  /// @param boundParams is the bound parameters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
                             BoundToFreeMatrix& jacobian,
-                            const Vector3D& position, const Vector3D& direction,
-                            const BoundVector& pars) const final;
+                            const FreeVector& freeParams,
+                            const BoundVector& boundParams) const final;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
@@ -230,13 +228,11 @@ class DiscSurface : public Surface {
   /// relevant entries are filled
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian The jacobian to be initialized
-  /// @param position The global position of the parameters
-  /// @param direction The direction at of the parameters
+  /// @param jacobian is the jacobian to be initialized
+  /// @param parameters is the free parameters
   void initJacobianToLocal(const GeometryContext& gctx,
                            FreeToBoundMatrix& jacobian,
-                           const Vector3D& position,
-                           const Vector3D& direction) const final;
+                           const FreeVector& parameters) const final;
 
   /// Path correction due to incident of the track
   ///

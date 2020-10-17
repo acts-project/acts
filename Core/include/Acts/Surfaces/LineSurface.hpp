@@ -123,14 +123,12 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
-  ///
-  /// @param pars is the paranmeters vector
+  /// @param freeParams is the free parameters vector
+  /// @param boundParams is the bound parameters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
                             BoundToFreeMatrix& jacobian,
-                            const Vector3D& position, const Vector3D& direction,
-                            const BoundVector& pars) const final;
+                            const FreeVector& freeParams,
+                            const BoundVector& boundParams) const final;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters

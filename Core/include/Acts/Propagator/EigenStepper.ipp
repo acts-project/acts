@@ -20,18 +20,18 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
                                              const Surface& surface,
                                              const NavigationDirection navDir,
                                              const double stepSize) const {
+  // Transform from bound to free parameters
+  const FreeVector freeParams = detail::transformBoundToFreeParameters(
+      surface, state.geoContext, boundParams);
   // Update the stepping state
-  update(state,
-         detail::transformBoundToFreeParameters(surface, state.geoContext,
-                                                boundParams),
-         cov);
+  update(state, freeParams, cov);
   state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal,
-                               position(state), direction(state), boundParams);
+  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, freeParams,
+                               boundParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();

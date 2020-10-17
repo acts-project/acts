@@ -103,10 +103,8 @@ void localToLocalJacobian(
       surface.freeToPathDerivative(geoContext, parameters);
   // Initalize the jacobian from global to local at the final surface
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  // Calculate the global to local
-  surface.initJacobianToLocal(geoContext, jacToLocal,
-                              parameters.segment<3>(eFreePos0),
-                              parameters.segment<3>(eFreeDir0));
+  // Calculate the jacobian from global to local at the final surface
+  surface.initJacobianToLocal(geoContext, jacToLocal, parameters);
   // Calculate the full jocobian from the local parameters at the start surface
   // to local parameters at the final surface
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
@@ -165,12 +163,12 @@ void localToLocalJacobian(const Vector3D& direction,
 /// parameters
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
-/// @param [in] parameters Free, nominal parametrisation
+/// @param [in] freeParams Free, nominal parametrisation
 /// @param [in] surface The surface the represents the local parametrisation
 void reinitializeJacobians(
     std::reference_wrapper<const GeometryContext> geoContext,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& freeParams,
     const Surface& surface) {
   using VectorHelpers::phi;
   using VectorHelpers::theta;
@@ -181,8 +179,8 @@ void reinitializeJacobians(
   jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
   // Reset the jacobian from local to global
-  const Vector3D position = parameters.segment<3>(eFreePos0);
-  const Vector3D direction = parameters.segment<3>(eFreeDir0);
+  const Vector3D position = freeParams.segment<3>(eFreePos0);
+  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
   if (not lpResult.ok()) {
     ACTS_LOCAL_LOGGER(
@@ -191,11 +189,11 @@ void reinitializeJacobians(
         "Inconsistency in global to local transformation during propagation.")
   }
   auto loc = lpResult.value();
-  BoundVector pars;
-  pars << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction), theta(direction),
-      parameters[eFreeQOverP], parameters[eFreeTime];
-  surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, position,
-                               direction, pars);
+  BoundVector boundParams;
+  boundParams << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction),
+      theta(direction), freeParams[eFreeQOverP], freeParams[eFreeTime];
+  surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, freeParams,
+                               boundParams);
 }
 
 /// @brief This function reinitialises the state members required for the

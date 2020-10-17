@@ -50,10 +50,6 @@ bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
 Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
     const GeometryContext& gctx, const FreeVector& parameters,
     const FreeVector& pathDerivative) const {
-  // The global posiiton
-  const auto position = parameters.head<3>();
-  // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
   // 1) Calculate the derivative of bound parameter local position w.r.t.
   // alignment parameters without path length correction
   const auto alignToBoundWithoutCorrection =
@@ -62,7 +58,7 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
   // 3) Calculate the jacobian from free parameters to bound parameters
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  initJacobianToLocal(gctx, jacToLocal, position, direction);
+  initJacobianToLocal(gctx, jacToLocal, parameters);
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath

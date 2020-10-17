@@ -130,11 +130,13 @@ inline SurfaceIntersection LineSurface::intersect(
           this};
 }
 
-inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
-                                              BoundToFreeMatrix& jacobian,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
-                                              const BoundVector& pars) const {
+inline void LineSurface::initJacobianToGlobal(
+    const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
+    const FreeVector& freeParams, const BoundVector& boundParams) const {
+  // The global position
+  const auto position = freeParams.head<3>();
+  // The direction
+  const auto direction = freeParams.segment<3>(eFreeDir0);
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -178,8 +180,9 @@ inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacobian.block<3, 1>(0, eBoundPhi) = dDPhiY * pars[eBoundLoc0] * ipdn;
-  jacobian.block<3, 1>(0, eBoundTheta) = dDThetaY * pars[eBoundLoc0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundPhi) = dDPhiY * boundParams[eBoundLoc0] * ipdn;
+  jacobian.block<3, 1>(0, eBoundTheta) =
+      dDThetaY * boundParams[eBoundLoc0] * ipdn;
 }
 
 inline FreeRowVector LineSurface::freeToPathDerivative(

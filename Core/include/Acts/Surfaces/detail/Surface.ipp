@@ -36,11 +36,13 @@ inline RotationMatrix3D Surface::referenceFrame(
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
-inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
-                                          BoundToFreeMatrix& jacobian,
-                                          const Vector3D& position,
-                                          const Vector3D& direction,
-                                          const BoundVector& /*pars*/) const {
+inline void Surface::initJacobianToGlobal(
+    const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
+    const FreeVector& freeParams, const BoundVector& /*boundParams*/) const {
+  // The global position
+  const auto position = freeParams.head<3>();
+  // The direction
+  const auto direction = freeParams.segment<3>(eFreeDir0);
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -74,8 +76,11 @@ inline void Surface::initJacobianToGlobal(const GeometryContext& gctx,
 
 inline void Surface::initJacobianToLocal(const GeometryContext& gctx,
                                          FreeToBoundMatrix& jacobian,
-                                         const Vector3D& position,
-                                         const Vector3D& direction) const {
+                                         const FreeVector& parameters) const {
+  // The global position
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)

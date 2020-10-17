@@ -96,7 +96,13 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
+        // Construct a free parameters vector
+        FreeVector freeParams = FreeVector::Zero();
+        freeParams.head<3>() = pos;
+        freeParams(eFreeTime) = t;
+        freeParams.segment<3>(eFreeDir0) = dir;
+        freeParams(eFreeQOverP) = q / p;
+        surface.initJacobianToGlobal(gctx, jacToGlobal, freeParams,
                                      par.parameters());
       }
     }

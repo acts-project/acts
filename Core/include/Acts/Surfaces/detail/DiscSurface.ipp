@@ -19,11 +19,13 @@ inline Vector2D DiscSurface::localCartesianToPolar(
                   atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
-inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
-                                              BoundToFreeMatrix& jacobian,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
-                                              const BoundVector& pars) const {
+inline void DiscSurface::initJacobianToGlobal(
+    const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
+    const FreeVector& freeParams, const BoundVector& boundParams) const {
+  // The global position
+  const auto position = freeParams.head<3>();
+  // The direction
+  const auto direction = freeParams.segment<3>(eFreeDir0);
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.
@@ -44,8 +46,8 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   const auto rframe = referenceFrame(gctx, position, direction);
 
   // special polar coordinates for the Disc
-  double lrad = pars[eBoundLoc0];
-  double lphi = pars[eBoundLoc1];
+  double lrad = boundParams[eBoundLoc0];
+  double lphi = boundParams[eBoundLoc1];
   double lcos_phi = cos(lphi);
   double lsin_phi = sin(lphi);
   // the local error components - rotated from reference frame
@@ -65,12 +67,15 @@ inline void DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline void DiscSurface::initJacobianToLocal(const GeometryContext& gctx,
-                                             FreeToBoundMatrix& jacobian,
-                                             const Vector3D& position,
-                                             const Vector3D& direction) const {
+inline void DiscSurface::initJacobianToLocal(
+    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
+    const FreeVector& parameters) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
+  // The global position
+  const auto position = parameters.head<3>();
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
