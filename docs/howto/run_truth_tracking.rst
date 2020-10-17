@@ -11,40 +11,40 @@ is used to identify the path to the build directory.
 Generate simulation datasets
 -----------------------------
 
-Generate two different example simulation datasets based on the generic example detector in a 2T magnetic field:
+Generate two different example simulation datasets based on the generic example detector in a 2T magnetic field (More details could be found in the *run_fatras* guide):
 
--  10000 (``--pg-nparticles 10000``) single muons with pT at [0.1, 100 ) GeV (``--pg-pt-range 0.1 100``) and |eta| <= 2.5 (``--pg-eta-range -2.5 2.5``)
+-  10000 (``--pg-nparticles 10000``) single muons with absolute momentum at [0.1, 100 ) GeV (``--gen-p-gev 0.1:100``) and |eta| <= 2.5 (``--gen-eta -2.5:2.5``)
 
 .. code-block:: console
 
    $ <build>/bin/ActsSimFatrasGeneric \
-       --evg-input-type=gun \
-       --pg-nparticles 10000 \
-       --pg-pt-range 0.1 100 \
-       --pg-eta-range -2.5 2.5 \
+       --gen-nparticles 10000 \
+       --gen-p-gev 0.1:100 \
+       --gen-eta -2.5:2.5 \
        --bf-value=0 0 2 \
-       --output-dir=sim_singlemuon \
+       --output-dir=data/sim_generic/single_muon \
        --output-csv=1 \
        --events=10
 
 -  ttbar process with an average of 200 additional pile-up interactions (``--evg-pileup=200``)
+This requires pre-generated events datasets based using Pythia8-based generator. 
+Unless the ``--input-dir`` is explicitly configured to be the path including the generated events, say ``data/gen/ttbar_mu200``, the simulation will use those events as the input events sample. Otherwise, the single muon samples will be generated on-the-fly. 
 The particles are selected at different phase, e.g. only generated particles with pT > 100 MeV 
 (``--select-pt-gev '0.1:'``) and |eta| <= 2.5 (``--select-eta '-2.5:2.5'``) are passed to simulation.
-Further particle selection, e.g. removing neutral particles (``--remove-neutral 1``), is done during the simulation.
+Further particle selection, e.g. requiring a minimum momentum at 100 MeV (``--fatras-pmin-gev 0.1``) and removing neutral particles (``--remove-neutral 1``), is done during the simulation.
 
 .. code-block:: console
 
   $ <build>/bin/ActsSimFatrasGeneric \
-       --evg-input-type=pythia8 \
-       --evg-hard-process Top:qqbar2ttbar=on \
-       --evg-pileup=200 \
+       --input-dir=data/gen/ttbar_mu200 \
        --select-pt-gev '0.1:' \
        --select-eta '-2.5:2.5' \
+       --fatras-pmin-gev 0.1 \
        --remove-neutral 1 \
        --bf-value=0 0 2 \
-       --output-dir=sim_ttbar_pu200 \
+       --output-dir=data/sim_generic/ttbar_mu200 \
        --output-csv=1 \
-       --events=10
+       --digi-geometric-3d 
 
 Setting the output to CSV is necessary since the truth tracking only reads
 CSV files at the moment. 
@@ -61,18 +61,18 @@ information to group simulated hits into tracks) and fits them. Examples of trut
 .. code-block:: console
 
    $ <build>/bin/ActsRecTruthTracks \
-       --input-dir=sim_singlemuon \
+       --input-dir=data/sim_generic/single_muon \
        --bf-value=0 0 2 \
-       --output-dir=rec_singlemuon
+       --output-dir=data/reco_generic/single_muon
 
 -  ttbar sample
 
 .. code-block:: console
 
    $ <build>/bin/ActsRecTruthTracks \
-       --input-dir=sim_ttbar_pu200 \
+       --input-dir=data/sim_generic/ttbar_mu200 \
        --bf-value=0 0 2 \
-       --output-dir=rec_ttbar_pu200
+       --output-dir=data/reco_generic/ttbar_mu200
 
 The magnetic field setup should be consistent between simulation and truth tracking. 
 
