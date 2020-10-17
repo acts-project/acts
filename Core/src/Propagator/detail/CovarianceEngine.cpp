@@ -97,9 +97,11 @@ FreeToBoundMatrix surfaceDerivative(
   surface.initJacobianToLocal(geoContext, jacToLocal,
                               parameters.segment<3>(eFreePos0),
                               parameters.segment<3>(eFreeDir0));
-  // Calculate the form factors for the derivatives
+  // Calculate the derivative of path length at the the bound parameters
+  // reference surface or the point-of-closest approach w.r.t. free parameters
   const FreeRowVector freeToPath =
       surface.freeToPathDerivative(geoContext, parameters);
+  // Correction to the local to global jacobian
   jacobianLocalToGlobal += derivatives * freeToPath * jacobianLocalToGlobal;
   // Return the jacobian to local
   return jacToLocal;
@@ -125,11 +127,12 @@ FreeToBoundMatrix surfaceDerivative(
 const FreeToBoundMatrix surfaceDerivative(
     const Vector3D& direction, BoundToFreeMatrix& jacobianLocalToGlobal,
     const FreeVector& derivatives) {
-  // Transport the covariance
-  const ActsRowVectorD<3> normVec(direction);
-  const BoundRowVector sfactors =
-      normVec * jacobianLocalToGlobal.template topLeftCorner<3, eBoundSize>();
-  jacobianLocalToGlobal -= derivatives * sfactors;
+  // Calculate the derivative of path length at the the curvilinear parameters
+  // reference surface w.r.t. free parameters
+  FreeRowVector freeToPath = FreeRowVector::Zero();
+  freeToPath.head<3>() = -1.0 * direction;
+  // Correction to the local to global jacobian
+  jacobianLocalToGlobal += derivatives * freeToPath * jacobianLocalToGlobal;
   // Since the jacobian to local needs to calculated for the bound parameters
   // here, it is convenient to do the same here
   return freeToCurvilinearJacobian(direction);
