@@ -31,14 +31,9 @@
 #include <memory>
 
 namespace Acts {
-class ISurfaceMaterial;
-}
-namespace Acts {
+
 class IVolumeMaterial;
-}
-
-namespace Acts {
-
+class ISurfaceMaterial;
 class TrackingGeometry;
 
 /// @brief selector for finding surface
