@@ -46,12 +46,12 @@ class EventAction final : public G4UserEventAction {
   void clear();
 
   /// Getter of the created HepMC3 event
-  std::shared_ptr<HepMC3::GenEvent> event() const;
+  HepMC3::GenEvent event() const;
 
  private:
   /// Instance of the EventAction
   static EventAction* s_instance;
   /// The current HepMC3 event
-  std::shared_ptr<HepMC3::GenEvent> m_event = nullptr;
+  HepMC3::GenEvent m_event;
 };
 }  // namespace ActsExamples
