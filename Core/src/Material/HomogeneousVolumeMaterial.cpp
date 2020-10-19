@@ -10,6 +10,8 @@
 
 #include "Acts/Material/Material.hpp"
 
+#include <ostream>
+
 Acts::HomogeneousVolumeMaterial::HomogeneousVolumeMaterial(
     const Material& material)
     : m_material(material) {}

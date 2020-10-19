@@ -10,6 +10,8 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <ostream>
+
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const MaterialSlab& full, double splitFactor)
     : ISurfaceMaterial(splitFactor), m_fullMaterial(full) {}

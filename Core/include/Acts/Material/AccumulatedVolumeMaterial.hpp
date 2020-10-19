@@ -12,6 +12,8 @@
 
 namespace Acts {
 
+class Material;
+
 /// Accumulate and average volume-based material properties.
 ///
 /// This class is intended to be used during the mapping process.

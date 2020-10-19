@@ -10,7 +10,6 @@
 
 #include "Acts/Material/detail/AverageMaterials.hpp"
 
-#include <climits>
 #include <limits>
 #include <ostream>
 
