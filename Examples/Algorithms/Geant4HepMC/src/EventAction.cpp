@@ -12,6 +12,28 @@
 #include <G4RunManager.hh>
 #include "SteppingAction.hpp"
 
+namespace {
+
+bool findAttribute(HepMC3::ConstGenVertexPtr vertex, const std::vector<std::string>& processFilter) {
+	// Consider only 1->1 vertices to maintain a correct history
+	if(vertex->particles_in().size() == 1 && vertex->particles_out().size() == 1)
+	{
+		// Test for all attributes if one matches the filter pattern
+		const std::vector<std::string> vertexAttributes = vertex->attribute_names();
+		for(const auto& att : vertexAttributes)
+		{
+			const std::string process = vertex->attribute_as_string(att);
+			if(std::find(processFilter.begin(), processFilter.end(), process) != processFilter.end())
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+	
+}
+
 ActsExamples::EventAction* ActsExamples::EventAction::s_instance = nullptr;
 
 ActsExamples::EventAction* ActsExamples::EventAction::instance() {
@@ -40,27 +62,48 @@ void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
 	// Walk over all vertices
 	for(const auto& vertex : m_event->vertices())
 	{
-		// Consider only 1->1 vertices to maintain a correct history
-		if(vertex->particles_in() == 1 && vertex->particles_out() == 1)
+		if(findAttribute(vertex, m_processFilter))
 		{
-			// Test for all attributes if one matches the filter pattern
-			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
-			for(const auto& att : vertexAttributes)
+			auto particleIn = vertex->particles_in()[0];
+			auto particleOut = vertex->particles_out()[0];
+			m_event->remove_vertex(vertex);
+			
+			auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
+			m_event->add_vertex(reducedVertex);
+			
+			while(findAttribute(particleIn->production_vertex(), m_processFilter))
 			{
-				const std::string process = vertex->attribute_as_string(att);
-				if(std::find(m_processFilter.begin(), m_processFilter.end(), process) != m_processFilter.end())
-				{
-					auto& particleIn = vertex->particles_in()[0];
-					auto prodVertex = particleIn->production_vertex();
-					const int trackId = particleIn->attribute<HepMC3::IntAttribute>("TrackID");
-					
-					
-					auto& particleOut = vertex->particles_out()[0];
-					
-					break;
-				}
+				auto nextParticle = particleIn->production_vertex()->particles_in()[0];
+				m_event->remove_particle(particleIn);
+				particleIn = nextParticle;
+				m_event->remove_vertex(particleIn->end_vertex());
 			}
+			while(findAttribute(particleOut->end_vertex(), m_processFilter))
+			{	
+				auto nextParticle = particleOut->end_vertex()->particles_out()[0];
+				m_event->remove_particle(particleOut);
+				particleOut = nextParticle;
+				m_event->remove_vertex(particleOut->end_vertex());		
+			}		
+			reducedVertex->add_particle_in(particleIn);
+			reducedVertex->add_particle_out(particleOut);
 		}
+		//~ // Consider only 1->1 vertices to maintain a correct history
+		//~ if(vertex->particles_in().size() == 1 && vertex->particles_out().size() == 1)
+		//~ {
+			//~ // Test for all attributes if one matches the filter pattern
+			//~ const std::vector<std::string> vertexAttributes = vertex->attribute_names();
+			//~ for(const auto& att : vertexAttributes)
+			//~ {
+				//~ const std::string process = vertex->attribute_as_string(att);
+				//~ if(std::find(m_processFilter.begin(), m_processFilter.end(), process) != m_processFilter.end())
+				//~ {
+					//~ auto prodVertex = particleIn->production_vertex();
+					//~ const int trackId = particleIn->attribute<HepMC3::IntAttribute>("TrackID");
+					//~ break;
+				//~ }
+			//~ }
+		//~ }
 	}
 }
 
