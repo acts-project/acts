@@ -33,17 +33,15 @@ ActsExamples::EventAction::~EventAction() {
 
 void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
   SteppingAction::instance()->clear();
-  m_event =
-      std::make_shared<HepMC3::GenEvent>(HepMC3::Units::GEV, HepMC3::Units::MM);
+  m_event = HepMC3::GenEvent(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
 void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {}
 
 void ActsExamples::EventAction::clear() {
-  m_event = nullptr;
   SteppingAction::instance()->clear();
 }
 
-std::shared_ptr<HepMC3::GenEvent> ActsExamples::EventAction::event() const {
+HepMC3::GenEvent ActsExamples::EventAction::event() const {
   return m_event;
 }

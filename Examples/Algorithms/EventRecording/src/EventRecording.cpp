@@ -57,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
           m_cfg.eventInput);
 
   // Storage of events that will be produced
-  std::vector<std::shared_ptr<HepMC3::GenEvent>> events;
+  std::vector<HepMC3::GenEvent> events;
   events.reserve(initialParticles.size());
 
   for (const auto& part : initialParticles) {

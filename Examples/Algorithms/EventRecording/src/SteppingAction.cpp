@@ -77,14 +77,14 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
                               preTime};
 
     // Handle the first step: No vertices exist
-    if (event->vertices().empty()) {
+    if (event.vertices().empty()) {
       auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
       vertex->add_particle_out(postParticle);
-      event->add_vertex(vertex);
+      event.add_vertex(vertex);
       vertex->add_attribute("NextProcessOf" + trackId, process);
     } else
       // Search for an existing vertex
-      for (const auto& vertex : event->vertices()) {
+      for (const auto& vertex : event.vertices()) {
         if (vertex->position() == prePos) {
           // Add particle to existing vertex
           vertex->add_particle_out(postParticle);
@@ -117,7 +117,7 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
   m_previousVertex->add_particle_in(postParticle);
 
   // Store the vertex
-  event->add_vertex(m_previousVertex);
+  event.add_vertex(m_previousVertex);
 
   // Store additional data in the particle
   postParticle->add_attribute(
