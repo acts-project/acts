@@ -32,10 +32,10 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
 
 {
   // trajectories collection name is already checked by base ctor
-  if (cfg.inputParticles.empty()) {
+  if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-  if (cfg.inputMeasurementParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.outputFilename.empty()) {
