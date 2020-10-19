@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/EventData/MinimalSourceLink.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 
 #include <ostream>
 
-std::ostream& Acts::operator<<(std::ostream& os,
-                               const Acts::MinimalSourceLink& sourceLink) {
-  os << "SourceLink(" << sourceLink.measurement << ")";
+std::ostream& Acts::Test::operator<<(
+    std::ostream& os, const Acts::Test::TestSourceLink& sourceLink) {
+  os << "TestsSourceLink(geometryId=" << sourceLink.geometryId()
+     << ",measurement=" << sourceLink.measurement << ")";
   return os;
 }
