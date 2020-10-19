@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MinimalSourceLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <random>
@@ -19,10 +19,8 @@
 namespace Acts {
 namespace Test {
 
-using SourceLink = MinimalSourceLink;
-
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 
 /// @brief Unit test for creation of Measurement object
 ///
@@ -81,7 +79,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mpp(
       plane, {}, std::move(covpp), 0.1, 0.2);
 
-  std::vector<FittableMeasurement<SourceLink>> measurements{
+  std::vector<FittableMeasurement<TestSourceLink>> measurements{
       std::move(mc), std::move(mp), std::move(mpp)};
 }
 }  // namespace Test

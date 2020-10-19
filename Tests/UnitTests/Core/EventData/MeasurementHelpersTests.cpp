@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/EventData/MinimalSourceLink.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 
 namespace Acts {
 namespace Test {
@@ -19,11 +19,9 @@ namespace Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-using SourceLink = MinimalSourceLink;
-
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
-using FittableMeasurement = FittableMeasurement<SourceLink>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
+using FittableMeasurement = FittableMeasurement<TestSourceLink>;
 
 BOOST_AUTO_TEST_CASE(getSurface_test) {
   auto cylinderBounds = std::make_shared<CylinderBounds>(3, 10);
