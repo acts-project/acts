@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 
@@ -27,9 +26,9 @@ namespace ActsExamples {
 /// easily changed without having to also change the source link.
 class IndexSourceLink final {
  public:
-  /// Construct from surface and index.
-  constexpr IndexSourceLink(const Acts::Surface& surface, Index idx)
-      : m_surface(&surface), m_index(idx) {}
+  /// Construct from geometry identifier and index.
+  constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
+      : m_geometryId(gid), m_index(idx) {}
 
   // Construct an invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
@@ -39,27 +38,19 @@ class IndexSourceLink final {
   IndexSourceLink& operator=(const IndexSourceLink&) = default;
   IndexSourceLink& operator=(IndexSourceLink&&) = default;
 
-  /// Access the reference surface.
-  constexpr const Acts::Surface& referenceSurface() const {
-    assert(m_surface and "Invalid Surface pointer in IndexSourceLink");
-    return *m_surface;
-  }
   /// Access the geometry identifier.
-  Acts::GeometryIdentifier geometryId() const {
-    assert(m_surface and "Invalid Surface pointer in IndexSourceLink");
-    return m_surface->geometryId();
-  }
+  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
  private:
-  // use pointer to make the object copyable
-  const Acts::Surface* m_surface = nullptr;
+  Acts::GeometryIdentifier m_geometryId;
   Index m_index;
 
   friend constexpr bool operator==(const IndexSourceLink& lhs,
                                    const IndexSourceLink& rhs) {
-    return (lhs.m_surface == rhs.m_surface) and (lhs.m_index == rhs.m_index);
+    return (lhs.m_geometryId == rhs.m_geometryId) and
+           (lhs.m_index == rhs.m_index);
   }
   friend constexpr bool operator!=(const IndexSourceLink& lhs,
                                    const IndexSourceLink& rhs) {

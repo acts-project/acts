@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/MinimalSourceLink.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -566,7 +567,8 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.smoothed());
   BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
+  BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
+                    pc.sourceLink.geometryId());
 
   BOOST_CHECK(ts.hasJacobian());
   BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);

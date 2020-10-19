@@ -185,13 +185,13 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // create the planar cluster
       Acts::PlanarModuleCluster cluster(
           dg.surface->getSharedPtr(),
-          Acts::DigitizationSourceLink(*dg.surface, {simHitIdx}),
+          Acts::DigitizationSourceLink(moduleGeoId, {simHitIdx}),
           std::move(cov), localX, localY, simHit.time(), std::move(usedCells));
 
       // the measurement container is unordered and the index under which
       // the measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
-      IndexSourceLink sourceLink(*dg.surface, hitIdx);
+      IndexSourceLink sourceLink(moduleGeoId, hitIdx);
       ConcreteMeasurement meas(dg.surface->getSharedPtr(), sourceLink, cov,
                                localX, localY, simHit.time());
 
