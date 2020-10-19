@@ -19,7 +19,7 @@ ActsExamples::EventAction* ActsExamples::EventAction::instance() {
   return s_instance;
 }
 
-ActsExamples::EventAction::EventAction() : G4UserEventAction() {
+ActsExamples::EventAction::EventAction(std::reference_wrapper<std::vector<std::string>> processFilter) : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
@@ -36,7 +36,33 @@ void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
   m_event = HepMC3::GenEvent(HepMC3::Units::GEV, HepMC3::Units::MM);
 }
 
-void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {}
+void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
+	// Walk over all vertices
+	for(const auto& vertex : m_event->vertices())
+	{
+		// Consider only 1->1 vertices to maintain a correct history
+		if(vertex->particles_in() == 1 && vertex->particles_out() == 1)
+		{
+			// Test for all attributes if one matches the filter pattern
+			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
+			for(const auto& att : vertexAttributes)
+			{
+				const std::string process = vertex->attribute_as_string(att);
+				if(std::find(m_processFilter.begin(), m_processFilter.end(), process) != m_processFilter.end())
+				{
+					auto& particleIn = vertex->particles_in()[0];
+					auto prodVertex = particleIn->production_vertex();
+					const int trackId = particleIn->attribute<HepMC3::IntAttribute>("TrackID");
+					
+					
+					auto& particleOut = vertex->particles_out()[0];
+					
+					break;
+				}
+			}
+		}
+	}
+}
 
 void ActsExamples::EventAction::clear() {
   SteppingAction::instance()->clear();

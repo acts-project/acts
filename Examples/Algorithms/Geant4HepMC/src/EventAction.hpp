@@ -28,7 +28,7 @@ class EventAction final : public G4UserEventAction {
   static EventAction* instance();
 
   /// Construct the action and ensure singleton usage.
-  EventAction();
+  EventAction(std::reference_wrapper<std::vector<std::string>> processFilter);
   ~EventAction() final override;
 
   /// Interface method for begin of the event
@@ -51,5 +51,7 @@ class EventAction final : public G4UserEventAction {
   static EventAction* s_instance;
   /// The current HepMC3 event
   HepMC3::GenEvent m_event;
+  
+  std::vector<std::string> m_processFilter;
 };
 }  // namespace ActsExamples

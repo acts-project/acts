@@ -40,12 +40,13 @@ ActsExamples::EventRecording::EventRecording(
   if (!m_cfg.detectorConstruction) {
     throw std::invalid_argument("Missing detector construction object");
   }
+  std::vector<std::string> filter = {"Transportation"};
 
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::RunAction());
-  m_runManager->SetUserAction(new ActsExamples::EventAction());
+  m_runManager->SetUserAction(new ActsExamples::EventAction(filter));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(new ActsExamples::SteppingAction());
