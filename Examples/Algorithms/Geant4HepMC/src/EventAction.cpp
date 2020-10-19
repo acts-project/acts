@@ -16,12 +16,12 @@ namespace {
 
 bool findAttribute(HepMC3::ConstGenVertexPtr vertex, const std::vector<std::string>& processFilter) {
 	
-	// Consider only 1->1 vertices to maintain a correct history
-	if(vertex->particles_in().size() == 1 && vertex->particles_out().size() == 1)
+	// Consider only 1->1 vertices to keep a correct history
+	if((vertex->particles_in().size() == 1) && (vertex->particles_out().size() == 1))
 	{
 for(const auto& s : vertex->attribute_names())
 	std::cout << s << " ";
-std::cout << std::endl;	
+std::cout << std::endl;
 		// Test for all attributes if one matches the filter pattern
 		const std::vector<std::string> vertexAttributes = vertex->attribute_names();
 		for(const auto& att : vertexAttributes)
@@ -37,13 +37,9 @@ std::cout << std::endl;
 }
 
 void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex, const std::vector<std::string>& processFilter) {
-	auto particleIn = vertex->particles_in()[0];
-	auto particleOut = vertex->particles_out()[0];
-	event.remove_vertex(vertex);
+	HepMC3::GenParticlePtr particleIn = vertex->particles_in()[0];
+	HepMC3::GenParticlePtr particleOut = vertex->particles_out()[0];
 
-	auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
-	event.add_vertex(reducedVertex);
-	
 	while(findAttribute(particleIn->production_vertex(), processFilter))
 	{
 		auto nextParticle = particleIn->production_vertex()->particles_in()[0];
@@ -53,13 +49,19 @@ void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex, const st
 	}
 	while(findAttribute(particleOut->end_vertex(), processFilter))
 	{	
-		auto nextParticle = particleOut->end_vertex()->particles_out()[0];
+		HepMC3::GenParticlePtr nextParticle = particleOut->end_vertex()->particles_out()[0];
 		event.remove_particle(particleOut);
 		particleOut = nextParticle;
-		event.remove_vertex(particleOut->end_vertex());		
+		event.remove_vertex(particleOut->production_vertex());		
 	}		
+
+	auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
+	event.add_vertex(reducedVertex);
+	
 	reducedVertex->add_particle_in(particleIn);
 	reducedVertex->add_particle_out(particleOut);
+	
+	event.remove_vertex(vertex);
 	vertex = reducedVertex;
 }
 
