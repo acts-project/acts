@@ -41,7 +41,7 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // trajectories collection name is already checked by base ctor
-  if (cfg.inputParticles.empty()) {
+  if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
   if (m_cfg.inputSimHits.empty()) {
@@ -50,14 +50,14 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
-  if (cfg.inputMeasurementParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (cfg.inputMeasurementSimHitsMap.empty()) {
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-simulated-hits map input collection");
   }
-  if (cfg.outputFilename.empty()) {
+  if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
   if (m_cfg.outputTreename.empty()) {
