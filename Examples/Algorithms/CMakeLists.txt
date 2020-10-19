@@ -1,5 +1,6 @@
 add_subdirectory(Digitization)
 add_subdirectory(Fatras)
+add_subdirectory_if(EventRecording ACTS_BUILD_EXAMPLES_GEANT4 AND ACTS_BUILD_EXAMPLES_HEPMC3)
 add_subdirectory_if(Geant4 ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory_if(Geant4DD4hep ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 add_subdirectory(Generators)

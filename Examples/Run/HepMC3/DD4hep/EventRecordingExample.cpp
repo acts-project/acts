@@ -16,9 +16,9 @@
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Plugins/HepMC3/EventRecording.hpp"
-#include "ActsExamples/Plugins/HepMC3/HepMC3Options.hpp"
-#include "ActsExamples/Plugins/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/EventRecording/EventRecording.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <fstream>
 #include <string>
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) {
 
   // Create the writer
   auto hepMC3WriterConfig = ActsExamples::Options::readHepMC3WriterOptions(vm);
-  hepMC3WriterConfig.inputCollection = erConfig.eventOutput;
-  sequencer.addWriter(std::make_shared<ActsExamples::HepMC3WriterAscii>(
+  hepMC3WriterConfig.inputEvents = erConfig.eventOutput;
+  sequencer.addWriter(std::make_shared<ActsExamples::HepMC3AsciiWriter>(
       std::move(hepMC3WriterConfig), logLevel));
 
   // Run
