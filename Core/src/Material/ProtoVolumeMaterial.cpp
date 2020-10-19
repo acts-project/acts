@@ -8,6 +8,8 @@
 
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 
+#include <ostream>
+
 Acts::ProtoVolumeMaterial::ProtoVolumeMaterial(const BinUtility& binUtility)
     : m_binUtility(binUtility), m_material() {}
 

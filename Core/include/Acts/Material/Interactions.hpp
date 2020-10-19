@@ -11,8 +11,6 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include <utility>
-
 namespace Acts {
 
 /// Compute the mean energy loss due to ionisation and excitation.

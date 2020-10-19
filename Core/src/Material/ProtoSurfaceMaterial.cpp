@@ -8,6 +8,8 @@
 
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 
+#include <ostream>
+
 Acts::ProtoSurfaceMaterial::ProtoSurfaceMaterial(const BinUtility& binUtility)
     : ISurfaceMaterial(), m_binUtility(binUtility) {}
 
