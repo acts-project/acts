@@ -25,11 +25,10 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
   parameters[eFreeQOverP] = state.q / state.p;
-  return detail::boundState(state.geoContext, state.cov, state.jacobian,
-                            state.jacTransport, state.derivative,
-                            state.jacToGlobal, parameters,
-                            state.covTransport && transportCov,
-                            state.pathAccumulated, surface);
+  return detail::boundState(
+      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, parameters,
+      state.covTransport && transportCov, state.pathAccumulated, surface);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>

@@ -278,7 +278,8 @@ class StraightLineStepper {
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state, bool transportCov = true) const;
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCov = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///

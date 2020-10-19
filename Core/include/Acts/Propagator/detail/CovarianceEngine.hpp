@@ -56,8 +56,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath,
-    const Surface& surface);
+    bool covTransport, double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
 ///

@@ -228,8 +228,7 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                       FreeMatrix& transportJacobian, FreeVector& derivatives,
                       BoundToFreeMatrix& jacobianLocalToGlobal,
                       const FreeVector& parameters, bool covTransport,
-                      double accumulatedPath,
-                      const Surface& surface) {
+                      double accumulatedPath, const Surface& surface) {
   // Covariance transport
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
@@ -250,11 +249,13 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
       jacobian, accumulatedPath);
 }
 
-CurvilinearState curvilinearState(
-    Covariance& covarianceMatrix, Jacobian& jacobian,
-    FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
-    bool covTransport, double accumulatedPath) {
+CurvilinearState curvilinearState(Covariance& covarianceMatrix,
+                                  Jacobian& jacobian,
+                                  FreeMatrix& transportJacobian,
+                                  FreeVector& derivatives,
+                                  BoundToFreeMatrix& jacobianLocalToGlobal,
+                                  const FreeVector& parameters,
+                                  bool covTransport, double accumulatedPath) {
   const Vector3D& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport

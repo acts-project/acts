@@ -135,8 +135,7 @@ auto Acts::Propagator<S, N>::propagate(
   if (result.ok()) {
     auto& propRes = *result;
     /// Convert into return type and fill the result object
-    auto curvState = m_stepper.curvilinearState(
-        state.stepping);
+    auto curvState = m_stepper.curvilinearState(state.stepping);
     auto& curvParameters = std::get<CurvilinearTrackParameters>(curvState);
     // Fill the end parameters
     propRes.endParameters = std::make_unique<const CurvilinearTrackParameters>(
