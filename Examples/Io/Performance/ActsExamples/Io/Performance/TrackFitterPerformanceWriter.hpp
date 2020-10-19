@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
@@ -29,13 +29,16 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class TrackFitterPerformanceWriter final : public WriterT<TrajectoryContainer> {
+class TrackFitterPerformanceWriter final
+    : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {
-    /// Input truth particles collection.
-    std::string inputParticles;
     /// Input (fitted) trajectories collection.
     std::string inputTrajectories;
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
     /// Output directory.
     std::string outputDir;
     /// Output filename.
@@ -48,14 +51,14 @@ class TrackFitterPerformanceWriter final : public WriterT<TrajectoryContainer> {
 
   /// Construct from configuration and log level.
   TrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~TrackFitterPerformanceWriter() override;
+  ~TrackFitterPerformanceWriter() final override;
 
   /// Finalize plots.
   ProcessCode endRun() final override;
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoryContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) final override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

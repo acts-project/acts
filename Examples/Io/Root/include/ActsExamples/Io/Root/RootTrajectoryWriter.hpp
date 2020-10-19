@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
@@ -35,17 +35,31 @@ namespace ActsExamples {
 /// file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
+class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
  public:
-  /// @brief The nested configuration struct
   struct Config {
-    std::string inputParticles;     ///< input truth particles collection.
-    std::string inputTrajectories;  ///< input (fitted) trajectories collection
-    std::string outputDir;          ///< output directory
-    std::string outputFilename = "tracks.root";  ///< output filename
-    std::string outputTreename = "tracks";       ///< name of the output tree
-    std::string fileMode = "RECREATE";           ///< file access mode
-    TFile* rootFile = nullptr;                   ///< common root file
+    /// Input (fitted) trajectories collection
+    std::string inputTrajectories;
+    /// Input particles collection.
+    std::string inputParticles;
+    /// Input collection of simulated hits.
+    std::string inputSimHits;
+    /// Input measurements collection.
+    std::string inputMeasurements;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
+    /// Input collection to map measured hits to simulated hits.
+    std::string inputMeasurementSimHitsMap;
+    /// output directory.
+    std::string outputDir;
+    /// output filename.
+    std::string outputFilename = "tracks.root";
+    /// name of the output tree.
+    std::string outputTreename = "tracks";
+    /// file access mode.
+    std::string fileMode = "RECREATE";
+    /// common root file.
+    TFile* rootFile = nullptr;
   };
 
   /// Constructor
@@ -53,8 +67,6 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   /// @param cfg Configuration struct
   /// @param level Message level declaration
   RootTrajectoryWriter(const Config& cfg, Acts::Logging::Level lvl);
-
-  /// Virtual destructor
   ~RootTrajectoryWriter() final override;
 
   /// End-of-run hook
@@ -65,7 +77,7 @@ class RootTrajectoryWriter final : public WriterT<TrajectoryContainer> {
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoryContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) final override;
 
  private:
   Config m_cfg;             ///< The config class

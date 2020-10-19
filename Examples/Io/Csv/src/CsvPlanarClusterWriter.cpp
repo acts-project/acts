@@ -11,7 +11,6 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -27,7 +26,7 @@ ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputClusters, "CsvPlanarClusterWriter", lvl), m_cfg(cfg) {
   // inputClusters is already checked by base constructor
-  if (m_cfg.inputSimulatedHits.empty()) {
+  if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
 }
@@ -37,8 +36,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
 
   // open per-event file for all components
   std::string pathHits =

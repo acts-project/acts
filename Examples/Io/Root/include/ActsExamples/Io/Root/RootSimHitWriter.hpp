@@ -32,7 +32,7 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {
     /// Input particle collection to write.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Path to the output file.
     std::string filePath;
     /// Output file access mode.

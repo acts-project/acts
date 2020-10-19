@@ -31,9 +31,17 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input collection of simulated hits.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Output collection of clusters.
     std::string outputClusters;
+    /// Output source links collection.
+    std::string outputSourceLinks;
+    /// Output measurements collection.
+    std::string outputMeasurements;
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap;
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Module stepper for geometric clustering.

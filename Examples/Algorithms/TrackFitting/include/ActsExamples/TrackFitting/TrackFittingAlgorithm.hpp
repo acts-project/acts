@@ -9,7 +9,8 @@
 #pragma once
 
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "ActsExamples/EventData/SimSourceLink.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
@@ -28,12 +29,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterOptions = Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
-                                                       Acts::VoidOutlierFinder>;
+  using TrackFitterOptions =
+      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
   using TrackFitterResult =
-      Acts::Result<Acts::KalmanFitterResult<SimSourceLink>>;
+      Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
   using TrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const std::vector<IndexSourceLink>&, const TrackParameters&,
       const TrackFitterOptions&)>;
 
   /// Create the track fitter function implementation.
@@ -45,6 +46,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       Options::BFieldVariant magneticField);
 
   struct Config {
+    /// Input measurements collection.
+    std::string inputMeasurements;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.

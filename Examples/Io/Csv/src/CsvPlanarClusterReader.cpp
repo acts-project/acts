@@ -14,7 +14,6 @@
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -38,10 +37,10 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (m_cfg.outputHitIds.empty()) {
     throw std::invalid_argument("Missing hit id output collection");
   }
-  if (m_cfg.outputHitParticlesMap.empty()) {
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map output collection");
   }
-  if (m_cfg.outputSimulatedHits.empty()) {
+  if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
   if (not m_cfg.trackingGeometry) {
@@ -287,8 +286,9 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   // write the data to the EventStore
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputHitIds, std::move(hitIds));
-  ctx.eventStore.add(m_cfg.outputHitParticlesMap, std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputSimulatedHits, std::move(simHits));
+  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
+                     std::move(hitParticlesMap));
+  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -31,7 +31,7 @@ struct TrackFitterFunctionImpl {
   TrackFitterFunctionImpl(track_fitter_t&& f) : trackFitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options)
       const {
