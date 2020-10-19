@@ -120,17 +120,6 @@ inline FreeRowVector Surface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline ActsVectorD<7> Surface::derivativeFactors(
-    const GeometryContext& /*unused*/, const Vector3D& /*unused*/,
-    const Vector3D& direction, const RotationMatrix3D& rft,
-    const ActsMatrixD<8, 7>& jacobian) const {
-  // Create the normal and scale it with the projection onto the direction
-  ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
-  norm_vec /= (norm_vec * direction);
-  // calculate the s factors
-  return (norm_vec * jacobian.topLeftCorner<3, 7>());
-}
-
 inline const DetectorElementBase* Surface::associatedDetectorElement() const {
   return m_associatedDetElement;
 }

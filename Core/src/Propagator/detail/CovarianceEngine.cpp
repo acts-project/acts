@@ -98,8 +98,6 @@ FreeToBoundMatrix surfaceDerivative(
   surface.initJacobianToLocal(geoContext, jacToLocal,
                               parameters.segment<3>(eFreePos0),
                               parameters.segment<3>(eFreeDir0));
-if(jacobianLocalToGlobal.has_value())
-{
   // Calculate the form factors for the derivatives
   const FreeRowVector freeToPath =
       surface.freeToPathDerivative(geoContext, parameters);
@@ -137,17 +135,16 @@ FreeToBoundMatrix surfaceDerivative(
   // Initialize the transport final frame jacobian
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Initalize the jacobian to local, returns the transposed ref frame
-  auto rframeT = surface.initJacobianToLocal(geoContext, jacToLocal,
+  surface.initJacobianToLocal(geoContext, jacToLocal,
                                              parameters.segment<3>(eFreePos0),
                                              parameters.segment<3>(eFreeDir0));
 
   // Calculate the form factors for the derivatives
   const ActsMatrixD<8, 7> transport = transportJacobian * jacobianAngleToDir;
-  const ActsRowVectorD<7> sVec = surface.derivativeFactors(
-      geoContext, parameters.segment<3>(eFreePos0),
-      parameters.segment<3>(eFreeDir0), rframeT, transport);
+  const FreeRowVector sVec = surface.freeToPathDerivative(
+      geoContext, parameters);
   // Return the jacobian to local
-  return jacToLocal * (transport - derivatives * sVec) * jacobianDirToAngle;
+  return jacToLocal * (transport + derivatives * sVec * transport) * jacobianDirToAngle;
 }
 
 /// @brief This function treats the modifications of the jacobian related to the
