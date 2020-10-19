@@ -15,9 +15,13 @@
 namespace {
 
 bool findAttribute(HepMC3::ConstGenVertexPtr vertex, const std::vector<std::string>& processFilter) {
+	
 	// Consider only 1->1 vertices to maintain a correct history
 	if(vertex->particles_in().size() == 1 && vertex->particles_out().size() == 1)
 	{
+for(const auto& s : vertex->attribute_names())
+	std::cout << s << " ";
+std::cout << std::endl;	
 		// Test for all attributes if one matches the filter pattern
 		const std::vector<std::string> vertexAttributes = vertex->attribute_names();
 		for(const auto& att : vertexAttributes)
@@ -31,7 +35,45 @@ bool findAttribute(HepMC3::ConstGenVertexPtr vertex, const std::vector<std::stri
 	}
 	return false;
 }
+
+void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex, const std::vector<std::string>& processFilter) {
+	auto particleIn = vertex->particles_in()[0];
+	auto particleOut = vertex->particles_out()[0];
+	event.remove_vertex(vertex);
+
+	auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
+	event.add_vertex(reducedVertex);
 	
+	while(findAttribute(particleIn->production_vertex(), processFilter))
+	{
+		auto nextParticle = particleIn->production_vertex()->particles_in()[0];
+		event.remove_particle(particleIn);
+		particleIn = nextParticle;
+		event.remove_vertex(particleIn->end_vertex());
+	}
+	while(findAttribute(particleOut->end_vertex(), processFilter))
+	{	
+		auto nextParticle = particleOut->end_vertex()->particles_out()[0];
+		event.remove_particle(particleOut);
+		particleOut = nextParticle;
+		event.remove_vertex(particleOut->end_vertex());		
+	}		
+	reducedVertex->add_particle_in(particleIn);
+	reducedVertex->add_particle_out(particleOut);
+	vertex = reducedVertex;
+}
+
+void followOutgoingParticles(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex, const std::vector<std::string>& processFilter)
+{
+	if(findAttribute(vertex, processFilter))
+	{
+		reduceVertex(event, vertex, processFilter);
+	}
+	for(const auto& particle : vertex->particles_out())
+	{
+		followOutgoingParticles(event, particle->end_vertex(), processFilter);
+	}
+}
 }
 
 ActsExamples::EventAction* ActsExamples::EventAction::s_instance = nullptr;
@@ -59,52 +101,12 @@ void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
 }
 
 void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
-	// Walk over all vertices
-	for(const auto& vertex : m_event->vertices())
-	{
-		if(findAttribute(vertex, m_processFilter))
-		{
-			auto particleIn = vertex->particles_in()[0];
-			auto particleOut = vertex->particles_out()[0];
-			m_event->remove_vertex(vertex);
-			
-			auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
-			m_event->add_vertex(reducedVertex);
-			
-			while(findAttribute(particleIn->production_vertex(), m_processFilter))
-			{
-				auto nextParticle = particleIn->production_vertex()->particles_in()[0];
-				m_event->remove_particle(particleIn);
-				particleIn = nextParticle;
-				m_event->remove_vertex(particleIn->end_vertex());
-			}
-			while(findAttribute(particleOut->end_vertex(), m_processFilter))
-			{	
-				auto nextParticle = particleOut->end_vertex()->particles_out()[0];
-				m_event->remove_particle(particleOut);
-				particleOut = nextParticle;
-				m_event->remove_vertex(particleOut->end_vertex());		
-			}		
-			reducedVertex->add_particle_in(particleIn);
-			reducedVertex->add_particle_out(particleOut);
-		}
-		//~ // Consider only 1->1 vertices to maintain a correct history
-		//~ if(vertex->particles_in().size() == 1 && vertex->particles_out().size() == 1)
-		//~ {
-			//~ // Test for all attributes if one matches the filter pattern
-			//~ const std::vector<std::string> vertexAttributes = vertex->attribute_names();
-			//~ for(const auto& att : vertexAttributes)
-			//~ {
-				//~ const std::string process = vertex->attribute_as_string(att);
-				//~ if(std::find(m_processFilter.begin(), m_processFilter.end(), process) != m_processFilter.end())
-				//~ {
-					//~ auto prodVertex = particleIn->production_vertex();
-					//~ const int trackId = particleIn->attribute<HepMC3::IntAttribute>("TrackID");
-					//~ break;
-				//~ }
-			//~ }
-		//~ }
-	}
+	
+	if(m_event.vertices().empty())
+		return;
+		
+	auto currentVertex = m_event.vertices()[0];
+	followOutgoingParticles(m_event, currentVertex, m_processFilter);
 }
 
 void ActsExamples::EventAction::clear() {
