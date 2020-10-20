@@ -42,6 +42,6 @@ void ActsExamples::EventAction::clear() {
   SteppingAction::instance()->clear();
 }
 
-HepMC3::GenEvent ActsExamples::EventAction::event() const {
+HepMC3::GenEvent& ActsExamples::EventAction::event() {
   return m_event;
 }
