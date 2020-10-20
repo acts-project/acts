@@ -40,13 +40,5 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   EventAction::instance()->clear();
 }
 
-void RunAction::EndOfRunAction(const G4Run* aRun) {
-  G4int nofEvents = aRun->GetNumberOfEvent();
-  if (nofEvents == 0)
-    return;
-
-  // Print
-  G4cout << "\n--------------------End of Run------------------------------\n"
-         << "\n------------------------------------------------------------\n"
-         << G4endl;
+void RunAction::EndOfRunAction(const G4Run* ) {
 }

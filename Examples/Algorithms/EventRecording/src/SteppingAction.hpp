@@ -9,17 +9,15 @@
 #pragma once
 
 #include <vector>
-#include "G4UserSteppingAction.hh"
-#include "globals.hh"
+#include <G4UserSteppingAction.hh>
+#include <globals.hh>
 
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
 
 namespace ActsExamples {
 
-/// @class SteppingAction
-///
-/// @brief Collects the particles history
+/// Collects the particles history.
 class SteppingAction : public G4UserSteppingAction {
  public:
   SteppingAction();

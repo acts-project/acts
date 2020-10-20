@@ -13,22 +13,25 @@
 #include <iostream>
 #include <stdexcept>
 #include "EventAction.hpp"
-#include "FTFP_BERT.hh"
+#include <FTFP_BERT.hh>
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
+#include "G4RunManager.hh"
 
 #include <HepMC3/GenEvent.h>
+
+ActsExamples::EventRecording::~EventRecording() { m_runManager = nullptr; }
 
 ActsExamples::EventRecording::EventRecording(
     ActsExamples::EventRecording::Config&& cnf, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("EventRecording", level),
       m_cfg(std::move(cnf)),
       m_runManager(std::make_unique<G4RunManager>()) {
-  if (m_cfg.eventInput.empty()) {
-    throw std::invalid_argument("Missing input event collection");
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing input particle collection");
   }
-  if (m_cfg.eventOutput.empty()) {
+  if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
   if (!m_cfg.detectorConstruction) {
@@ -54,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   // Retrieve the initial particles
   const auto initialParticles =
       context.eventStore.get<ActsExamples::SimParticleContainer>(
-          m_cfg.eventInput);
+          m_cfg.inputParticles);
 
   // Storage of events that will be produced
   std::vector<HepMC3::GenEvent> events;
@@ -62,11 +65,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
-    const auto pos = part.position();
-    const auto dir = part.unitDirection();
-    ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(
-        part.pdg(), part.absMomentum(), {pos[0], pos[1], pos[2]},
-        {dir[0], dir[1], dir[2]});
+    ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part);
 
     // Begin with the simulation
     m_runManager->BeamOn(1);
@@ -75,10 +74,10 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     events.push_back(ActsExamples::EventAction::instance()->event());
   }
 
-  ACTS_INFO(events.size() << " events generated");
+  ACTS_INFO(events.size() << " tracks generated");
 
   // Write the recorded material to the event store
-  context.eventStore.add(m_cfg.eventOutput, std::move(events));
+  context.eventStore.add(m_cfg.outputHepMcTracks, std::move(events));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

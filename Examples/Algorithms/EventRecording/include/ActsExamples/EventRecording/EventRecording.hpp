@@ -12,26 +12,22 @@
 
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Propagator/MaterialInteractor.hpp>
-#include <Acts/Utilities/Definitions.hpp>
-#include <Acts/Utilities/Logger.hpp>
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include <mutex>
-#include "G4RunManager.hh"
-#include "G4VUserDetectorConstruction.hh"
+#include <G4VUserDetectorConstruction.hh>
+
+class G4RunManager;
 
 namespace ActsExamples {
-
-class WhiteBoard;
-namespace DD4hepG4 {
-class DD4hepToG4Svc;
-}
 
 class EventRecording final : public ActsExamples::BareAlgorithm {
  public:
   /// @class Config
   struct Config {
-    std::string eventInput = "";
-    std::string eventOutput = "geant-outcome-tracks";
+    std::string inputParticles = "";
+    std::string outputHepMcTracks = "geant-outcome-tracks";
 
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
 
@@ -43,8 +39,8 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
 
   /// Constructor
   EventRecording(Config&& cnf,
-                 Acts::Logging::Level level = Acts::Logging::INFO);
-  ~EventRecording() { m_runManager = nullptr; };
+                 Acts::Logging::Level level);
+  ~EventRecording();
 
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;

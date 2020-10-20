@@ -17,8 +17,6 @@ class G4Run;
 
 namespace ActsExamples {
 
-/// @class RunAction
-///
 /// The RunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
 /// an resets the EventAction

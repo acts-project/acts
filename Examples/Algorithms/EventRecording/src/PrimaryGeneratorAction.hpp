@@ -9,19 +9,18 @@
 #pragma once
 
 #include <memory>
-#include "G4ParticleTable.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4ThreeVector.hh"
-#include "G4VUserPrimaryGeneratorAction.hh"
-#include "globals.hh"
+#include <G4ParticleTable.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4ThreeVector.hh>
+#include <G4VUserPrimaryGeneratorAction.hh>
+#include <globals.hh>
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 class G4ParticleGun;
 class G4Event;
 
 namespace ActsExamples {
 
-/// @class PrimaryGeneratorAction
-///
 /// The PrimaryGeneratorAction is the implementation of the Geant4
 /// class G4VUserPrimaryGeneratorAction. It generates a random direction
 /// and shoots a particle.
@@ -39,8 +38,7 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
   void GeneratePrimaries(G4Event*) final override;
 
   /// Prepare the particle gun with initial parameters
-  void prepareParticleGun(G4int pdg, G4double momentum, G4ThreeVector pos,
-                          G4ThreeVector dir);
+  void prepareParticleGun(const ActsExamples::SimParticle& part);
 
  private:
   /// Instance of the PrimaryGeneratorAction
