@@ -1,3 +1,5 @@
+.. _simulate-TrackML:
+
 Run the FAst TRAck Simulation
 =============================
 
