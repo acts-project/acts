@@ -10,6 +10,8 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <ostream>
+
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility& binUtility, MaterialSlabVector fullProperties,
     double splitFactor)

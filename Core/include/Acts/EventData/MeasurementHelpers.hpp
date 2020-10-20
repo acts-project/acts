@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/SourceLinkConcept.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-
 #include <cassert>
 #include <cstddef>
 #include <ostream>
@@ -38,41 +33,8 @@ size_t getSize(const T& fittable_measurement) {
   return std::visit([](const auto& meas) { return meas.size(); },
                     fittable_measurement);
 }
+
 }  // namespace MeasurementHelpers
-
-struct MinimalSourceLink {
-  const FittableMeasurement<MinimalSourceLink>* meas{nullptr};
-
-  bool operator==(const MinimalSourceLink& rhs) const;
-
-  const Surface& referenceSurface() const;
-
-  const FittableMeasurement<MinimalSourceLink>& operator*() const;
-};
-
-inline std::ostream& operator<<(std::ostream& os, const MinimalSourceLink& sl) {
-  os << "SourceLink(" << sl.meas << ")";
-  return os;
-}
-
-static_assert(SourceLinkConcept<MinimalSourceLink>,
-              "MinimalSourceLink does not fulfill SourceLinkConcept");
-
-/// A calibrator to extract the measurement from a SimSourceLink.
-struct MinimalSourceLinkCalibrator final {
-  /// Extract the measurement.
-  ///
-  /// @tparam track_parameters_t Type of the track parameters
-  /// @param sourceLink Input source link
-  /// @param parameters Input track parameters (unused)
-  template <typename track_parameters_t>
-  const FittableMeasurement<MinimalSourceLink>& operator()(
-      MinimalSourceLink sourceLink,
-      const track_parameters_t& /* parameters */) const {
-    assert(sourceLink.meas and "Invalid MinimalSourceLink");
-    return *sourceLink.meas;
-  }
-};
 
 namespace detail {
 
@@ -96,6 +58,7 @@ struct visit_measurement_callable {
     return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
   }
 };
+
 }  // namespace detail
 
 /// Dispatch a lambda call on an overallocated parameter vector and covariance

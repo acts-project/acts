@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <iostream>
@@ -28,7 +29,6 @@ namespace Test {
 
 GeometryContext gctx;
 
-using SourceLink = MinimalSourceLink;
 using Parameters = BoundVector;
 using Covariance = BoundSymMatrix;
 
@@ -43,11 +43,12 @@ using ParVec_t = BoundTrackParameters::ParametersVector;
 using CovMat_t = BoundTrackParameters::CovarianceMatrix;
 
 struct TestTrackState {
-  SourceLink sourceLink;
-  std::optional<Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1,
-                            eBoundQOverP>>
+  TestSourceLink sourceLink;
+  std::optional<Measurement<TestSourceLink, BoundIndices, eBoundLoc0,
+                            eBoundLoc1, eBoundQOverP>>
       meas3d;
-  std::optional<Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1>>
+  std::optional<
+      Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1>>
       meas2d;
   std::optional<BoundTrackParameters> predicted;
   std::optional<BoundTrackParameters> filtered;
@@ -73,7 +74,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
   auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                  Vector3D{0., 0., 1.});
 
-  std::unique_ptr<FittableMeasurement<SourceLink>> fm;
+  std::unique_ptr<FittableMeasurement<TestSourceLink>> fm;
   TestTrackState pc;
 
   if (dim == 3) {
@@ -82,12 +83,13 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector3D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1, eBoundQOverP>
+    Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1,
+                eBoundQOverP>
         meas{plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
-    fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
+    fm = std::make_unique<FittableMeasurement<TestSourceLink>>(meas);
 
-    SourceLink sourceLink{fm.get()};
+    TestSourceLink sourceLink(*fm);
     pc.sourceLink = sourceLink;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
       ts.uncalibrated() = sourceLink;
@@ -109,12 +111,12 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 
     Vector2D mPar;
     mPar.setRandom();
-    Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> meas{
+    Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> meas{
         plane, {}, mCov, mPar[0], mPar[1]};
 
-    fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
+    fm = std::make_unique<FittableMeasurement<TestSourceLink>>(meas);
 
-    SourceLink sourceLink{fm.get()};
+    TestSourceLink sourceLink(*fm);
     pc.sourceLink = sourceLink;
     if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
       ts.uncalibrated() = sourceLink;
@@ -197,7 +199,7 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
 }
 
 BOOST_AUTO_TEST_CASE(multitrajectory_build) {
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
   TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
@@ -235,7 +237,7 @@ BOOST_AUTO_TEST_CASE(multitrajectory_build) {
 }
 
 BOOST_AUTO_TEST_CASE(visit_apply_abort) {
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
   TrackStatePropMask mask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
@@ -342,7 +344,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_operators) {
 
 BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
   using PM = TrackStatePropMask;
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));
   BOOST_CHECK(ts.hasPredicted());
@@ -420,7 +422,7 @@ BOOST_AUTO_TEST_CASE(trackstate_add_bitmask_method) {
 BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   // assert expected "cross-talk" between trackstate proxies
 
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
   size_t index = t.addTrackState();
   auto tso = t.getTrackState(index);
   auto [pc, fm] = fillTrackState(tso, TrackStatePropMask::All);
@@ -460,11 +462,11 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
   BOOST_CHECK_EQUAL(cts.smoothedCovariance(), cov);
 
   // make copy of fm
-  auto fm2 = std::make_unique<FittableMeasurement<SourceLink>>(*fm);
-  SourceLink sourceLink2{fm2.get()};
+  auto fm2 = std::make_unique<FittableMeasurement<TestSourceLink>>(*fm);
+  TestSourceLink sourceLink2(*fm2);
   ts.uncalibrated() = sourceLink2;
   BOOST_CHECK_EQUAL(cts.uncalibrated(), sourceLink2);
-  BOOST_CHECK_NE(cts.uncalibrated(), SourceLink{fm.get()});
+  BOOST_CHECK_NE(cts.uncalibrated(), TestSourceLink(*fm));
 
   CovMat_t newMeasCov;
   newMeasCov.setRandom();
@@ -498,9 +500,10 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 }
 
 BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
-  constexpr size_t maxmeasdim = MultiTrajectory<SourceLink>::MeasurementSizeMax;
+  constexpr size_t maxmeasdim =
+      MultiTrajectory<TestSourceLink>::MeasurementSizeMax;
 
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
   size_t index = t.addTrackState();
   auto tso = t.getTrackState(index);
   auto [pc, fm] = fillTrackState(tso, TrackStatePropMask::All);
@@ -519,7 +522,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCov.setRandom();
   Vector2D mPar;
   mPar.setRandom();
-  Measurement<SourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> m2{
+  Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> m2{
       pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
 
   ts.setCalibrated(m2);
@@ -547,7 +550,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
 }
 
 BOOST_AUTO_TEST_CASE(storage_consistency) {
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   auto [pc, fm] = fillTrackState(ts, TrackStatePropMask::All);
@@ -566,7 +569,8 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.smoothed->parameters(), ts.smoothed());
   BOOST_CHECK_EQUAL(*pc.smoothed->covariance(), ts.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts.referenceSurface(), &pc.sourceLink.referenceSurface());
+  BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
+                    pc.sourceLink.geometryId());
 
   BOOST_CHECK(ts.hasJacobian());
   BOOST_CHECK_EQUAL(ts.jacobian(), pc.jacobian);
@@ -592,12 +596,12 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   // calibrated links to original measurement
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.calibratedSourceLink());
 
-  // uncalibrated **is** a SourceLink
+  // uncalibrated **is** a TestSourceLink
   BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.uncalibrated());
 
   // full projector, should be exactly equal
-  ActsMatrixD<MultiTrajectory<SourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       fullProj;
   fullProj.setZero();
   fullProj.topLeftCorner(pc.meas3d->size(), eBoundSize) =
@@ -610,7 +614,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
 }
 
 BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
-  MultiTrajectory<SourceLink> t;
+  MultiTrajectory<TestSourceLink> t;
 
   // this should allocate for all the components in the trackstate, plus
   // filtered
@@ -635,7 +639,7 @@ BOOST_AUTO_TEST_CASE(add_trackstate_allocations) {
 
 BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
   using PM = TrackStatePropMask;
-  MultiTrajectory<SourceLink> mj;
+  MultiTrajectory<TestSourceLink> mj;
 
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
                            PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
@@ -661,7 +665,7 @@ BOOST_AUTO_TEST_CASE(trackstateproxy_getmask) {
 
 BOOST_AUTO_TEST_CASE(trackstateproxy_copy) {
   using PM = TrackStatePropMask;
-  MultiTrajectory<SourceLink> mj;
+  MultiTrajectory<TestSourceLink> mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
   std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,

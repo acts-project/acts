@@ -10,6 +10,8 @@
 
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <utility>
+
 namespace Acts {
 
 /// Accumulate material properties from multiple hits/track and multiple tracks.

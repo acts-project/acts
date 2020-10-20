@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -24,9 +25,8 @@ namespace Test {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using SourceLink = MinimalSourceLink;
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -42,21 +42,21 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<SourceLink> meas1(
+  FittableMeasurement<TestSourceLink> meas1(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane1, {}, std::move(cov), -0.1, 0.45));
 
   cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<SourceLink> meas2(
+  FittableMeasurement<TestSourceLink> meas2(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane2, {}, std::move(cov), -0.2, 0.35));
 
   cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<SourceLink> meas3(
+  FittableMeasurement<TestSourceLink> meas3(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           plane3, {}, std::move(cov), -0.05, 0.25));
 
-  MultiTrajectory<SourceLink> traj;
+  MultiTrajectory<TestSourceLink> traj;
 
   size_t ts_idx;
 

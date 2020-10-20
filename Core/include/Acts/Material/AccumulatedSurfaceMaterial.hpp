@@ -9,15 +9,17 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
+#include <memory>
 #include <vector>
 
 namespace Acts {
+
+class ISurfaceMaterial;
 
 /// @class AccumulatedSurfaceMaterial
 ///

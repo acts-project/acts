@@ -10,6 +10,9 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+
+#include <utility>
 
 // Default Constructor - for homogeneous material
 Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
