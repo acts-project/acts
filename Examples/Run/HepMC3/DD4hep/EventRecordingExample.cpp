@@ -61,15 +61,15 @@ int main(int argc, char* argv[]) {
 
   // Prepare the recording
   ActsExamples::EventRecording::Config erConfig;
-  erConfig.eventInput = particleReader.outputParticles;
-  erConfig.eventOutput = "geant-event";
+  erConfig.inputParticles = particleReader.outputParticles;
+  erConfig.outputHepMcTracks = "geant-event";
   erConfig.detectorConstruction = std::move(g4detector);
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
 
   // Create the writer
   auto hepMC3WriterConfig = ActsExamples::Options::readHepMC3WriterOptions(vm);
-  hepMC3WriterConfig.inputEvents = erConfig.eventOutput;
+  hepMC3WriterConfig.inputEvents = erConfig.outputHepMcTracks;
 
   // Add to the sequencer
   sequencer.addAlgorithm(std::make_shared<ActsExamples::EventRecording>(

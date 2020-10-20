@@ -8,12 +8,12 @@
 
 #include "PrimaryGeneratorAction.hpp"
 #include <stdexcept>
-#include "G4Event.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4ParticleGun.hh"
-#include "G4RandomDirection.hh"
-#include "G4UnitsTable.hh"
-#include "Randomize.hh"
+#include <G4Event.hh>
+#include <G4ParticleDefinition.hh>
+#include <G4ParticleGun.hh>
+#include <G4RandomDirection.hh>
+#include <G4UnitsTable.hh>
+#include <Randomize.hh>
 
 ActsExamples::PrimaryGeneratorAction*
     ActsExamples::PrimaryGeneratorAction::s_instance = nullptr;
@@ -49,15 +49,16 @@ ActsExamples::PrimaryGeneratorAction::instance() {
   return s_instance;
 }
 
-void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
-    G4int pdg, G4double momentum, G4ThreeVector pos, G4ThreeVector dir) {
+void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(const ActsExamples::SimParticle& part) {       
   // Particle type
-  G4ParticleDefinition* particle = m_particleTable->FindParticle(pdg);
+  G4ParticleDefinition* particle = m_particleTable->FindParticle(part.pdg());
   m_particleGun->SetParticleDefinition(particle);
   // Particle properties
-  m_particleGun->SetParticlePosition(pos);
-  m_particleGun->SetParticleMomentum(momentum);
-  m_particleGun->SetParticleMomentumDirection(dir);
+      const auto pos = part.position();
+    const auto dir = part.unitDirection();
+  m_particleGun->SetParticlePosition({pos[0], pos[1], pos[2]});
+  m_particleGun->SetParticleMomentum(part.absMomentum());
+  m_particleGun->SetParticleMomentumDirection({dir[0], dir[1], dir[2]});
 }
 
 void ActsExamples::PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {

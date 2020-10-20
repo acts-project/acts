@@ -9,8 +9,8 @@
 #include "SteppingAction.hpp"
 #include <stdexcept>
 #include "EventAction.hpp"
-#include "G4Step.hh"
-#include "G4VProcess.hh"
+#include <G4Step.hh>
+#include <G4VProcess.hh>
 
 #include <HepMC3/Attribute.h>
 #include <HepMC3/Units.h>

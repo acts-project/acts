@@ -11,15 +11,13 @@
 #include <map>
 #include <memory>
 #include <string>
-#include "G4UserEventAction.hh"
-#include "globals.hh"
+#include <G4UserEventAction.hh>
+#include <globals.hh>
 
 #include <HepMC3/GenEvent.h>
 
 namespace ActsExamples {
 
-/// @class EventAction
-///
 /// The EventAction class is the realization of the Geant4 class
 /// G4UserEventAction and is writing out the collected RecordedMaterialTrack
 /// entities needed for material mapping once per event.
