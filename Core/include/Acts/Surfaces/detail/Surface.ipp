@@ -36,9 +36,9 @@ inline RotationMatrix3D Surface::referenceFrame(
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
-inline void Surface::initJacobianToGlobal(
-    const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
-    const FreeVector& freeParams, const BoundVector& /*boundParams*/) const {
+inline BoundToFreeMatrix Surface::jacobianLocalToGlobal(
+    const GeometryContext& gctx, const FreeVector& freeParams,
+    const BoundVector& /*boundParams*/) const {
   // The global position
   const auto position = freeParams.head<3>();
   // The direction
@@ -61,17 +61,20 @@ inline void Surface::initJacobianToGlobal(
   const double sin_phi = y * inv_sin_theta;
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
+  // Initialize the jacobian from local to global
+  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by reference frame
-  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  jacToGlobal.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
-  jacobian(3, eBoundTime) = 1;
+  jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
-  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
-  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
-  jacobian(6, eBoundTheta) = (-sin_theta);
-  jacobian(7, eBoundQOverP) = 1;
+  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+  return jacToGlobal;
 }
 
 inline FreeToBoundMatrix Surface::jacobianGlobalToLocal(

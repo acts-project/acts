@@ -163,7 +163,7 @@ void localToLocalJacobian(const Vector3D& direction,
 /// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] freeParams Free, nominal parametrisation
-/// @param [in] surface The surface the represents the local parametrisation
+/// @param [in] surface The reference surface of the local parametrisation
 void reinitializeJacobians(
     std::reference_wrapper<const GeometryContext> geoContext,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
@@ -175,9 +175,8 @@ void reinitializeJacobians(
   // Reset the jacobians
   transportJacobian = FreeMatrix::Identity();
   derivatives = FreeVector::Zero();
-  jacobianLocalToGlobal = BoundToFreeMatrix::Zero();
 
-  // Reset the jacobian from local to global
+  // Get the local position
   const Vector3D position = freeParams.segment<3>(eFreePos0);
   const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
@@ -188,11 +187,13 @@ void reinitializeJacobians(
         "Inconsistency in global to local transformation during propagation.")
   }
   auto loc = lpResult.value();
+  // Construct a bound parameters
   BoundVector boundParams;
   boundParams << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction),
       theta(direction), freeParams[eFreeQOverP], freeParams[eFreeTime];
-  surface.initJacobianToGlobal(geoContext, jacobianLocalToGlobal, freeParams,
-                               boundParams);
+  // Reset the jacobian from local to global
+  jacobianLocalToGlobal =
+      surface.jacobianLocalToGlobal(geoContext, freeParams, boundParams);
 }
 
 /// @brief This function reinitialises the state members required for the
@@ -225,18 +226,18 @@ void reinitializeJacobians(FreeMatrix& transportJacobian,
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
 
-  jacobianLocalToGlobal(0, eBoundLoc0) = -sinPhi;
-  jacobianLocalToGlobal(0, eBoundLoc1) = -cosPhi * cosTheta;
-  jacobianLocalToGlobal(1, eBoundLoc0) = cosPhi;
-  jacobianLocalToGlobal(1, eBoundLoc1) = -sinPhi * cosTheta;
-  jacobianLocalToGlobal(2, eBoundLoc1) = sinTheta;
-  jacobianLocalToGlobal(3, eBoundTime) = 1;
-  jacobianLocalToGlobal(4, eBoundPhi) = -sinTheta * sinPhi;
-  jacobianLocalToGlobal(4, eBoundTheta) = cosTheta * cosPhi;
-  jacobianLocalToGlobal(5, eBoundPhi) = sinTheta * cosPhi;
-  jacobianLocalToGlobal(5, eBoundTheta) = cosTheta * sinPhi;
-  jacobianLocalToGlobal(6, eBoundTheta) = -sinTheta;
-  jacobianLocalToGlobal(7, eBoundQOverP) = 1;
+  jacobianLocalToGlobal(eFreePos0, eBoundLoc0) = -sinPhi;
+  jacobianLocalToGlobal(eFreePos0, eBoundLoc1) = -cosPhi * cosTheta;
+  jacobianLocalToGlobal(eFreePos1, eBoundLoc0) = cosPhi;
+  jacobianLocalToGlobal(eFreePos1, eBoundLoc1) = -sinPhi * cosTheta;
+  jacobianLocalToGlobal(eFreePos2, eBoundLoc1) = sinTheta;
+  jacobianLocalToGlobal(eFreeTime, eBoundTime) = 1;
+  jacobianLocalToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  jacobianLocalToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  jacobianLocalToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  jacobianLocalToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  jacobianLocalToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
+  jacobianLocalToGlobal(eFreeQOverP, eBoundQOverP) = 1;
 }
 }  // namespace
 

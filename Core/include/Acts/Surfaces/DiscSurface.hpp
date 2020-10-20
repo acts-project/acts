@@ -208,19 +208,17 @@ class DiscSurface : public Surface {
                                   const Vector3D& position,
                                   double tol = 0.) const;
 
-  /// Initialize the jacobian from local to global
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from local to global which the surface knows best,
+  /// hence the calculation is done here
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian The jacobian to be initialized
   /// @param freeParams is the free parameters vector
   /// @param boundParams is the bound parameters vector
-  void initJacobianToGlobal(const GeometryContext& gctx,
-                            BoundToFreeMatrix& jacobian,
-                            const FreeVector& freeParams,
-                            const BoundVector& boundParams) const final;
+  ///
+  /// @return Jacobian from local to global
+  BoundToFreeMatrix jacobianLocalToGlobal(
+      const GeometryContext& gctx, const FreeVector& freeParams,
+      const BoundVector& boundParams) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here

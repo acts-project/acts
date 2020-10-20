@@ -19,9 +19,9 @@ inline Vector2D DiscSurface::localCartesianToPolar(
                   atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
-inline void DiscSurface::initJacobianToGlobal(
-    const GeometryContext& gctx, BoundToFreeMatrix& jacobian,
-    const FreeVector& freeParams, const BoundVector& boundParams) const {
+inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
+    const GeometryContext& gctx, const FreeVector& freeParams,
+    const BoundVector& boundParams) const {
   // The global position
   const auto position = freeParams.head<3>();
   // The direction
@@ -42,29 +42,31 @@ inline void DiscSurface::initJacobianToGlobal(
   const double inv_sin_theta = 1. / sin_theta;
   const double cos_phi = x * inv_sin_theta;
   const double sin_phi = y * inv_sin_theta;
-  // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
-
   // special polar coordinates for the Disc
   double lrad = boundParams[eBoundLoc0];
   double lphi = boundParams[eBoundLoc1];
   double lcos_phi = cos(lphi);
   double lsin_phi = sin(lphi);
+  // retrieve the reference frame
+  const auto rframe = referenceFrame(gctx, position, direction);
+  // Initialize the jacobian from local to global
+  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - rotated from reference frame
-  jacobian.block<3, 1>(0, eBoundLoc0) =
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc0) =
       lcos_phi * rframe.block<3, 1>(0, 0) + lsin_phi * rframe.block<3, 1>(0, 1);
-  jacobian.block<3, 1>(0, eBoundLoc1) =
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundLoc1) =
       lrad * (lcos_phi * rframe.block<3, 1>(0, 1) -
               lsin_phi * rframe.block<3, 1>(0, 0));
   // the time component
-  jacobian(3, eBoundTime) = 1;
+  jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
-  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
-  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
-  jacobian(6, eBoundTheta) = (-sin_theta);
-  jacobian(7, eBoundQOverP) = 1;
+  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
+  return jacToGlobal;
 }
 
 inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(

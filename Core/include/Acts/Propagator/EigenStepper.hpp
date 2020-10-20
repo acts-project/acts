@@ -102,8 +102,8 @@ class EigenStepper {
         freeParams(eFreeTime) = t;
         freeParams.segment<3>(eFreeDir0) = dir;
         freeParams(eFreeQOverP) = q / p;
-        surface.initJacobianToGlobal(gctx, jacToGlobal, freeParams,
-                                     par.parameters());
+        jacToGlobal =
+            surface.jacobianLocalToGlobal(gctx, freeParams, par.parameters());
       }
     }
 
@@ -186,8 +186,8 @@ class EigenStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(

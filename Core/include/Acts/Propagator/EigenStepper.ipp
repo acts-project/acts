@@ -30,8 +30,8 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
-  surface.initJacobianToGlobal(state.geoContext, state.jacToGlobal, freeParams,
-                               boundParams);
+  state.jacToGlobal =
+      surface.jacobianLocalToGlobal(state.geoContext, freeParams, boundParams);
   state.jacobian = BoundMatrix::Identity();
   state.jacTransport = FreeMatrix::Identity();
   state.derivative = FreeVector::Zero();

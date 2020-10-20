@@ -84,8 +84,8 @@ class StraightLineStepper {
         freeParams(eFreeTime) = t;
         freeParams.segment<3>(eFreeDir0) = dir;
         freeParams(eFreeQOverP) = q / p;
-        surface.initJacobianToGlobal(gctx, jacToGlobal, freeParams,
-                                     par.parameters());
+        jacToGlobal =
+            surface.jacobianLocalToGlobal(gctx, freeParams, par.parameters());
       }
     }
 
