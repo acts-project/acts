@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <limits>

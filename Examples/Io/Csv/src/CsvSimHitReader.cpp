@@ -18,8 +18,7 @@
 #include "TrackMlData.hpp"
 
 ActsExamples::CsvSimHitReader::CsvSimHitReader(
-    const ActsExamples::CsvSimHitReader::Config& cfg,
-    Acts::Logging::Level lvl)
+    const ActsExamples::CsvSimHitReader::Config& cfg, Acts::Logging::Level lvl)
     : m_cfg(cfg)
       // TODO check that all files (hits,cells,truth) exists
       ,
@@ -34,16 +33,14 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
   }
 }
 
-std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name()
-    const {
+std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
   return "CsvSimHitReader";
 }
 
-std::pair<size_t, size_t>
-ActsExamples::CsvSimHitReader::availableEvents() const {
+std::pair<size_t, size_t> ActsExamples::CsvSimHitReader::availableEvents()
+    const {
   return m_eventsRange;
 }
-
 
 ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
@@ -61,27 +58,27 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   SimHitData data;
 
   while (reader.read(data)) {
-    const auto geometryId  = Acts::GeometryIdentifier(data.geometry_id);
+    const auto geometryId = Acts::GeometryIdentifier(data.geometry_id);
     // TODO validate geo id consistency
-    const auto particleId  = ActsFatras::Barcode(data.particle_id);
+    const auto particleId = ActsFatras::Barcode(data.particle_id);
 
     ActsFatras::Hit::Vector4 pos4{
-      data.tx * Acts::UnitConstants::mm,
-      data.ty * Acts::UnitConstants::mm,
-      data.tz * Acts::UnitConstants::mm,
-      data.tt * Acts::UnitConstants::ns,
+        data.tx * Acts::UnitConstants::mm,
+        data.ty * Acts::UnitConstants::mm,
+        data.tz * Acts::UnitConstants::mm,
+        data.tt * Acts::UnitConstants::ns,
     };
     ActsFatras::Hit::Vector4 mom4{
-      data.tpx * Acts::UnitConstants::GeV,
-      data.tpy * Acts::UnitConstants::GeV,
-      data.tpz * Acts::UnitConstants::GeV,
-      data.te  * Acts::UnitConstants::GeV,
+        data.tpx * Acts::UnitConstants::GeV,
+        data.tpy * Acts::UnitConstants::GeV,
+        data.tpz * Acts::UnitConstants::GeV,
+        data.te * Acts::UnitConstants::GeV,
     };
     ActsFatras::Hit::Vector4 delta4{
-      data.deltapx * Acts::UnitConstants::GeV,
-      data.deltapy * Acts::UnitConstants::GeV,
-      data.deltapz * Acts::UnitConstants::GeV,
-      data.deltae  * Acts::UnitConstants::GeV,
+        data.deltapx * Acts::UnitConstants::GeV,
+        data.deltapy * Acts::UnitConstants::GeV,
+        data.deltapz * Acts::UnitConstants::GeV,
+        data.deltae * Acts::UnitConstants::GeV,
     };
 
     ActsFatras::Hit hit(geometryId, particleId, pos4, mom4, mom4 + delta4,

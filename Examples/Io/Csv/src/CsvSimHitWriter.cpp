@@ -30,14 +30,13 @@ ActsExamples::CsvSimHitWriter::CsvSimHitWriter(
 }
 
 ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
-    const AlgorithmContext& ctx,
-    const ActsExamples::SimHitContainer& simHits) {
-    // open per-event file for all simhit components
-    std::string pathSimHit = perEventFilepath(
-                   m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
+    const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& simHits) {
+  // open per-event file for all simhit components
+  std::string pathSimHit = perEventFilepath(
+      m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
 
-    dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
-                                                     m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<SimHitData> writerSimHit(pathSimHit,
+                                                    m_cfg.outputPrecision);
 
   // TrackMlData struct
   SimHitData simhit;
@@ -70,5 +69,5 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitWriter::writeT(
     writerSimHit.append(simhit);
   }  // end simHit loop
 
-    return ActsExamples::ProcessCode::SUCCESS;
+  return ActsExamples::ProcessCode::SUCCESS;
 }
