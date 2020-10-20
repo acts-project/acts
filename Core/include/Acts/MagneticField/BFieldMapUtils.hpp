@@ -8,10 +8,14 @@
 
 #pragma once
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <array>
+#include <functional>
+#include <utility>
 #include <vector>
 
 /// Convenience functions to ease creation of and Acts::InterpolatedBFieldMap
