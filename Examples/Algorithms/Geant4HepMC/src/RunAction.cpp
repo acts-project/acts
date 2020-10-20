@@ -34,9 +34,11 @@ RunAction::~RunAction() {
   s_instance = nullptr;
 }
 
-void RunAction::BeginOfRunAction(const G4Run* /*unused*/) {
+void RunAction::BeginOfRunAction(const G4Run* aRun) {
+  G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   // initialize event cumulative quantities
   EventAction::instance()->clear();
 }
 
-void RunAction::EndOfRunAction(const G4Run* /*unused*/) {}
+void RunAction::EndOfRunAction(const G4Run* ) {
+}

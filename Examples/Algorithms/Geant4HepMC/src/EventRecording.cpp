@@ -13,18 +13,16 @@
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include <iostream>
 #include <stdexcept>
-#include <FTFP_BERT.hh>
 #include "EventAction.hpp"
-#include "G4RunManager.hh"
+#include <FTFP_BERT.hh>
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
+#include "G4RunManager.hh"
 
 #include <HepMC3/GenEvent.h>
 
-ActsExamples::EventRecording::~EventRecording() {
-  m_runManager = nullptr;
-}
+ActsExamples::EventRecording::~EventRecording() { m_runManager = nullptr; }
 
 ActsExamples::EventRecording::EventRecording(
     ActsExamples::EventRecording::Config&& cnf, Acts::Logging::Level level)
@@ -73,12 +71,8 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
-    HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
-    HepMC3::FourVector shift(0., 0., 0., part.time());
-    event.shift_position_by(shift);
-
     // Store the result
-    events.push_back(std::move(event));
+    events.push_back(ActsExamples::EventAction::instance()->event());
   }
 
   ACTS_INFO(events.size() << " tracks generated");

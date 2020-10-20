@@ -11,5 +11,3 @@ target_link_libraries(
 install(
   TARGETS ActsExampleHepMC3
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)

@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include <memory>
 #include <G4ParticleTable.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4ThreeVector.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <globals.hh>
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 class G4ParticleGun;
 class G4Event;
