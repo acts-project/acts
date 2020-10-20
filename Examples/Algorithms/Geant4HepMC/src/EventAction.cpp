@@ -15,13 +15,10 @@
 namespace {
 
 bool findAttribute(HepMC3::ConstGenVertexPtr vertex, const std::vector<std::string>& processFilter) {
-	
+
 	// Consider only 1->1 vertices to keep a correct history
 	if((vertex->particles_in().size() == 1) && (vertex->particles_out().size() == 1))
 	{
-for(const auto& s : vertex->attribute_names())
-	std::cout << s << " ";
-std::cout << std::endl;
 		// Test for all attributes if one matches the filter pattern
 		const std::vector<std::string> vertexAttributes = vertex->attribute_names();
 		for(const auto& att : vertexAttributes)
@@ -71,9 +68,14 @@ void followOutgoingParticles(HepMC3::GenEvent& event, HepMC3::GenVertexPtr verte
 	{
 		reduceVertex(event, vertex, processFilter);
 	}
-	for(const auto& particle : vertex->particles_out())
+	if((vertex->particles_in().size() == 1) && (vertex->particles_out().size() == 1))
+		//~ event.remove_vertex(vertex);
+	else
 	{
-		followOutgoingParticles(event, particle->end_vertex(), processFilter);
+		for(const auto& particle : vertex->particles_out())
+		{
+			followOutgoingParticles(event, particle->end_vertex(), processFilter);
+		}
 	}
 }
 }
@@ -103,12 +105,13 @@ void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
 }
 
 void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
-	
+std::cout << "vertices before: " << m_event.vertices().size() << std::endl;
 	if(m_event.vertices().empty())
 		return;
 		
 	auto currentVertex = m_event.vertices()[0];
 	followOutgoingParticles(m_event, currentVertex, m_processFilter);
+std::cout << "vertices after: " << m_event.vertices().size() << std::endl;
 }
 
 void ActsExamples::EventAction::clear() {
