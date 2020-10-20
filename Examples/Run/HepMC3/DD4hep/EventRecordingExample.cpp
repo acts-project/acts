@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
   // Create the writer
   auto hepMC3WriterConfig = ActsExamples::Options::readHepMC3WriterOptions(vm);
   hepMC3WriterConfig.inputEvents = erConfig.eventOutput;
-  
+
   sequencer.addAlgorithm(std::make_shared<ActsExamples::EventRecording>(
       std::move(erConfig), logLevel));
   sequencer.addWriter(std::make_shared<ActsExamples::HepMC3AsciiWriter>(
