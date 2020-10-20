@@ -22,7 +22,8 @@ namespace ActsFatras {
 /// The Channelizer splits a full surface segment (i.e. after drift/projects)
 /// into segements
 ///
-struct Channelizer {
+class Channelizer {
+ public:
   /// Nexted struct for stepping from one channel to the next.
   struct ChannelStep {
     std::array<int, 2> delta = {0, 0};

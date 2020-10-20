@@ -13,7 +13,9 @@
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
+#include <Acts/Surfaces/DiscSurface.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
+#include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/RectangleBounds.hpp>
 #include <Acts/Tests/CommonHelpers/FloatComparisons.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
@@ -64,6 +66,41 @@ BOOST_AUTO_TEST_CASE(ChannelizerCartesian) {
   Acts::Vector2D ixyPositionE(-0.02, -0.73);
   auto ixySegments = cl.segments(nInput, ixyPositionS, ixyPositionE);
   BOOST_CHECK(ixySegments.size() == 18);
+}
+
+BOOST_AUTO_TEST_CASE(ChannelizerPolarRadial) {
+  Acts::GeometryContext geoCtx;
+
+  auto radialBounds = std::make_shared<const Acts::RadialBounds>(5.,10.,0.25,0.);
+  auto radialDisc = Acts::Surface::makeShared<Acts::DiscSurface>( Acts::Transform3D::Identity(), radialBounds);
+
+  // The segementation
+  Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::binR);
+  strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open, Acts::binPhi);
+
+  Channelizer cl;
+
+  // Test: Normal hit into the surface
+  Hit nHit(0, 1, {6.76, 0.5, 0., 0.}, {0., 0., 1.0, 0.}, {0., 0., 1.0, 0.});
+  DigitizationInput nInput(nHit, geoCtx, radialDisc.get(), strips);
+  auto nPosition = nHit.position4().segment<2>(Acts::ePos0);
+  auto nSegments = cl.segments(nInput, nPosition, nPosition);
+  BOOST_CHECK(nSegments.size() == 1);
+  BOOST_CHECK(nSegments[0].bin[0] == 0);
+  BOOST_CHECK(nSegments[0].bin[1] == 161);
+
+  // Test: now opver more phi strips
+  Acts::Vector2D sPositionS(6.76, 0.5);
+  Acts::Vector2D sPositionE(7.03, -0.3);
+  auto sSegment = cl.segments(nInput, sPositionS, sPositionE);
+  BOOST_CHECK(sSegment.size() == 59);
+
+  // Test: jump over R boundary, but stay in phi bin
+  sPositionS = Acts::Vector2D(6.76, 0.);
+  sPositionE = Acts::Vector2D(7.83, 0.);
+  sSegment = cl.segments(nInput, sPositionS, sPositionE);
+  BOOST_CHECK(sSegment.size() == 2);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
