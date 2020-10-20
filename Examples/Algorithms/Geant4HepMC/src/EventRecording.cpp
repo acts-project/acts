@@ -13,16 +13,18 @@
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include <iostream>
 #include <stdexcept>
-#include "EventAction.hpp"
 #include <FTFP_BERT.hh>
+#include "EventAction.hpp"
+#include "G4RunManager.hh"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
-#include "G4RunManager.hh"
 
 #include <HepMC3/GenEvent.h>
 
-ActsExamples::EventRecording::~EventRecording() { m_runManager = nullptr; }
+ActsExamples::EventRecording::~EventRecording() {
+  m_runManager = nullptr;
+}
 
 ActsExamples::EventRecording::EventRecording(
     ActsExamples::EventRecording::Config&& cnf, Acts::Logging::Level level)

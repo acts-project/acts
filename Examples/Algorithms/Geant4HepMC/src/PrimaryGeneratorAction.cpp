@@ -49,13 +49,14 @@ ActsExamples::PrimaryGeneratorAction::instance() {
   return s_instance;
 }
 
-void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(const ActsExamples::SimParticle& part) {       
+void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
+    const ActsExamples::SimParticle& part) {
   // Particle type
   G4ParticleDefinition* particle = m_particleTable->FindParticle(part.pdg());
   m_particleGun->SetParticleDefinition(particle);
   // Particle properties
-      const auto pos = part.position();
-    const auto dir = part.unitDirection();
+  const auto pos = part.position();
+  const auto dir = part.unitDirection();
   m_particleGun->SetParticlePosition({pos[0], pos[1], pos[2]});
   m_particleGun->SetParticleMomentum(part.absMomentum());
   m_particleGun->SetParticleMomentumDirection({dir[0], dir[1], dir[2]});
