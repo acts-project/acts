@@ -248,7 +248,7 @@ class CombinatorialKalmanFilter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::unordered_map<const Surface*, std::vector<source_link_t>>
+    std::unordered_map<GeometryIdentifier, std::vector<source_link_t>>
         inputMeasurements;
 
     /// Whether to consider multiple scattering.
@@ -497,7 +497,7 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface);
+      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
@@ -1099,11 +1099,10 @@ class CombinatorialKalmanFilter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::unordered_map<const Surface*, std::vector<SourceLink>>
+    std::unordered_map<GeometryIdentifier, std::vector<SourceLink>>
         inputMeasurements;
     for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements[srf].emplace_back(sl);
+      inputMeasurements[sl.geometryId()].emplace_back(sl);
     }
 
     // Create the ActionList and AbortList

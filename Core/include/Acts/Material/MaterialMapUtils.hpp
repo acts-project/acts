@@ -9,12 +9,13 @@
 #pragma once
 
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <array>
+#include <functional>
 #include <vector>
 
 /// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
@@ -22,6 +23,8 @@
 /// formats: rz and xyz.
 
 namespace Acts {
+
+class Material;
 
 /// Method to setup the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of

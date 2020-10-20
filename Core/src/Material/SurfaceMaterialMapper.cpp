@@ -9,16 +9,34 @@
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
+#include "Acts/Propagator/VolumeCollector.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <cstddef>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,

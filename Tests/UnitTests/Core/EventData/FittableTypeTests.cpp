@@ -12,6 +12,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <cmath>
@@ -71,7 +72,7 @@ BOOST_AUTO_TEST_CASE(index_combination_generation_test) {
 }  // namespace Acts
 
 using par_t = BoundIndices;
-using Source = MinimalSourceLink;
+using Source = TestSourceLink;
 
 template <par_t... pars>
 struct meas_factory {
