@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
+#include <boost/exception/exception.hpp>
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
