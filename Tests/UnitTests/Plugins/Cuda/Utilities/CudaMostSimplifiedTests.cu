@@ -7,9 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
-
 #include "Acts/Plugins/Cuda/Cuda.hpp"
-
 #include <Eigen/Dense>
 #include <cuda_profiler_api.h>
 

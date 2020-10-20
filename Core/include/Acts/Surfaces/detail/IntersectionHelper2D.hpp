@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include <utility>
+
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-
-#include <utility>
 
 namespace Acts {
 namespace detail {

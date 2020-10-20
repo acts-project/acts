@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/ReaderAscii.h>
 

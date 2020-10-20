@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
@@ -20,13 +21,13 @@ namespace ActsExamples {
 /// Read in a simhit collection in comma-separated-value format.
 ///
 /// This reads one files per event in the configured input directory. By default
-/// it reads files in the current working directory. Files are assumed to be
+/// it reads file in the current working directory. Files are assumed to be
 /// named using the following schema
 ///
 ///     event000000001-<stem>.csv
 ///     event000000002-<stem>.csv
 ///
-/// and each line in the file corresponds to one simhit.
+/// and each line in the file corresponds to one hit/cluster.
 class CsvSimHitReader final : public IReader {
  public:
   struct Config {
@@ -54,6 +55,7 @@ class CsvSimHitReader final : public IReader {
 
  private:
   Config m_cfg;
+  //std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*> m_surfaces;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

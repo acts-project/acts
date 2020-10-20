@@ -20,11 +20,11 @@
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <TTree.h>
+
 #include <memory>
 #include <mutex>
 #include <vector>
-
-#include <TTree.h>
 
 #include <TTree.h>
 

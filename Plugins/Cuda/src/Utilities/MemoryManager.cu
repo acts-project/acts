@@ -8,7 +8,6 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
-
 #include "ErrorCheck.cuh"
 
 // CUDA include(s).

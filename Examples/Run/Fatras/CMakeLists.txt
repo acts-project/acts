@@ -8,7 +8,7 @@ add_executable(
 target_link_libraries(
   ActsExampleFatrasGeneric
   PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorGeneric)
-  
+
 # Generic detector with IOV based alignment
 add_executable(
   ActsExampleFatrasAligned

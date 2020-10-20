@@ -63,8 +63,8 @@ struct SimHitData {
   // Hit index along the trajectory. Not available in the TrackML datasets.
   int32_t index = -1;
 
-  DFE_NAMEDTUPLE(SimHitData, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy,
-                 tpz, te, deltapx, deltapy, deltapz, deltae, index);
+  DFE_NAMEDTUPLE(SimHitData, particle_id, geometry_id, tx, ty, tz, tt,
+                 tpx, tpy, tpz, te, deltapx, deltapy, deltapz, deltae, index);
 };
 
 struct TruthHitData {
