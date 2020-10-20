@@ -558,12 +558,14 @@ class AtlasStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
+  /// @param [in] transportCov Flag steering covariance transport
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface) const {
+  BoundState boundState(State& state, const Surface& surface,
+                        bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -580,8 +582,10 @@ class AtlasStepper {
 
     // The transport of the covariance
     std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport) {
+    if (state.covTransport && transportCov) {
       covarianceTransport(state, surface);
+    }
+    if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
     }
 
@@ -597,12 +601,14 @@ class AtlasStepper {
   ///
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] transportCov Flag steering covariance transport
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state) const {
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCov = true) const {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     // extract state information
@@ -618,8 +624,10 @@ class AtlasStepper {
     const auto qOverP = state.pVector[7];
 
     std::optional<Covariance> covOpt = std::nullopt;
-    if (state.covTransport) {
+    if (state.covTransport && transportCov) {
       covarianceTransport(state);
+    }
+    if (state.cov != Covariance::Zero()) {
       covOpt = state.cov;
     }
 

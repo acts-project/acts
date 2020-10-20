@@ -235,8 +235,11 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
     covarianceTransport(geoContext, covarianceMatrix, jacobian,
                         transportJacobian, derivatives, jacobianLocalToGlobal,
                         parameters, surface);
+  }
+  if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
   }
+
   // Create the bound parameters
   BoundVector bv =
       detail::transformFreeToBoundParameters(parameters, surface, geoContext);
@@ -260,8 +263,11 @@ CurvilinearState curvilinearState(Covariance& covarianceMatrix,
   if (covTransport) {
     covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
                         derivatives, jacobianLocalToGlobal, direction);
+  }
+  if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
   }
+
   // Create the curvilinear parameters
   Vector4D pos4 = Vector4D::Zero();
   pos4[ePos0] = parameters[eFreePos0];
