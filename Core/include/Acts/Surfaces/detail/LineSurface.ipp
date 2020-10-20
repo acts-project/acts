@@ -131,12 +131,13 @@ inline SurfaceIntersection LineSurface::intersect(
 }
 
 inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
-    const GeometryContext& gctx, const FreeVector& freeParams,
-    const BoundVector& boundParams) const {
-  // The global position
-  const auto position = freeParams.head<3>();
-  // The direction
-  const auto direction = freeParams.segment<3>(eFreeDir0);
+    const GeometryContext& gctx, const BoundVector& boundParams) const {
+  // convert angles to global unit direction vector
+  const Vector3D direction = makeDirectionUnitFromPhiTheta(
+      boundParams[eBoundPhi], boundParams[eBoundTheta]);
+  // convert local position to global position vector
+  const Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
+  const Vector3D position = localToGlobal(gctx, local, direction);
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
   // surprisingly expensive from a performance point of view.

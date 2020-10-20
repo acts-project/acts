@@ -212,13 +212,11 @@ class DiscSurface : public Surface {
   /// hence the calculation is done here
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param freeParams is the free parameters vector
   /// @param boundParams is the bound parameters vector
   ///
   /// @return Jacobian from local to global
   BoundToFreeMatrix jacobianLocalToGlobal(
-      const GeometryContext& gctx, const FreeVector& freeParams,
-      const BoundVector& boundParams) const final;
+      const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here

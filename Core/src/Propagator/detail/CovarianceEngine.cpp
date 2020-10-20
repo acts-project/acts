@@ -193,7 +193,7 @@ void reinitializeJacobians(
       theta(direction), freeParams[eFreeQOverP], freeParams[eFreeTime];
   // Reset the jacobian from local to global
   jacobianLocalToGlobal =
-      surface.jacobianLocalToGlobal(geoContext, freeParams, boundParams);
+      surface.jacobianLocalToGlobal(geoContext, boundParams);
 }
 
 /// @brief This function reinitialises the state members required for the

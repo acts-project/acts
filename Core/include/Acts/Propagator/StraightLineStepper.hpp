@@ -78,14 +78,7 @@ class StraightLineStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        // Construct a free parameters vector
-        FreeVector freeParams = FreeVector::Zero();
-        freeParams.head<3>() = pos;
-        freeParams(eFreeTime) = t;
-        freeParams.segment<3>(eFreeDir0) = dir;
-        freeParams(eFreeQOverP) = q / p;
-        jacToGlobal =
-            surface.jacobianLocalToGlobal(gctx, freeParams, par.parameters());
+        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
       }
     }
 

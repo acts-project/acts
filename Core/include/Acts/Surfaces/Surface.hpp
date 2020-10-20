@@ -23,7 +23,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-
+#include "Acts/Utilities/UnitVectors.hpp"
 #include <memory>
 
 namespace Acts {
@@ -325,13 +325,11 @@ class Surface : public virtual GeometryObject,
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param freeParams is the free parameters vector
   /// @param boundParams is the bound parameters vector
   ///
   /// @return Jacobian from local to global
   virtual BoundToFreeMatrix jacobianLocalToGlobal(
-      const GeometryContext& gctx, const FreeVector& freeParams,
-      const BoundVector& boundParams) const;
+      const GeometryContext& gctx, const BoundVector& boundParams) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
   /// hence the calculation is done here
