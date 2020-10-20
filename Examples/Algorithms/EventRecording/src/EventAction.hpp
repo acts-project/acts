@@ -46,7 +46,7 @@ class EventAction final : public G4UserEventAction {
   void clear();
 
   /// Getter of the created HepMC3 event
-  HepMC3::GenEvent event() const;
+  HepMC3::GenEvent& event();
 
  private:
   /// Instance of the EventAction
