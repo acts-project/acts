@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,7 +34,7 @@ class CsvSimHitWriter final : public WriterT<SimHitContainer> {
  public:
   struct Config {
     /// Which simulated (truth) hits collection to use.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Where to place output files
     std::string outputDir;
     /// Output filename stem.

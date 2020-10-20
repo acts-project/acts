@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,7 +27,7 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
   if (m_cfg.inputStem.empty()) {
     throw std::invalid_argument("Missing input filename stem");
   }
-  if (m_cfg.outputSimulatedHits.empty()) {
+  if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
 }
@@ -46,11 +46,11 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   // define all optional columns
-  std::vector<std::string> optionalColumns = {
+  /*std::vector<std::string> optionalColumns = {
       "geometry_id", "tt",      "te",     "deltapx",
       "deltapy",     "deltapz", "deltae", "index",
-  };
-  dfe::NamedTupleCsvReader<SimHitData> reader(path, optionalColumns);
+  };*/
+  dfe::NamedTupleCsvReader<SimHitData> reader(path);
 
   SimHitContainer::sequence_type unordered;
   SimHitData data;
@@ -87,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
   simHits.adopt_sequence(std::move(unordered));
-  ctx.eventStore.add(m_cfg.outputSimulatedHits, std::move(simHits));
+  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -161,7 +161,7 @@ void setupSimulationAlgorithms(
 
     // write simulated hits collection
     ActsExamples::CsvSimHitWriter::Config writeSimHits;
-    writeSimHits.inputSimulatedHits = fatras.outputSimHits;
+    writeSimHits.inputSimHits = fatras.outputSimHits;
     writeSimHits.outputDir = outputDir;
     writeSimHits.outputStem = "sim" + fatras.outputSimHits;
     sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
