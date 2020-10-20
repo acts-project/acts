@@ -101,14 +101,13 @@ void localToLocalJacobian(
   // point-of-closest approach w.r.t. free parameters
   const FreeRowVector freeToPath =
       surface.freeToPathDerivative(geoContext, parameters);
-  // Initalize the jacobian from global to local at the final surface
-  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Calculate the jacobian from global to local at the final surface
-  surface.initJacobianToLocal(geoContext, jacToLocal, parameters);
+  FreeToBoundMatrix jacToLocal =
+      surface.jacobianGlobalToLocal(geoContext, parameters);
   // Calculate the full jocobian from the local parameters at the start surface
   // to local parameters at the final surface
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*transportJac(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
   jacFull = jacToLocal * (FreeMatrix::Identity() + derivatives * freeToPath) *
             transportJacobian * jacobianLocalToGlobal;
 }
@@ -148,7 +147,7 @@ void localToLocalJacobian(const Vector3D& direction,
   // Calculate the full jocobian from the local parameters at the start surface
   // to curvilinear parameters
   // @note jac(locA->locB) = jac(gloB->locB)*(1+
-  // pathCorrectionFactor(gloB))*transportJac(gloA->gloB) *jac(locA->gloA)
+  // pathCorrectionFactor(gloB))*jacTransport(gloA->gloB) *jac(locA->gloA)
   jacFull = jacToLocal * (FreeMatrix::Identity() + derivatives * freeToPath) *
             transportJacobian * jacobianLocalToGlobal;
 }

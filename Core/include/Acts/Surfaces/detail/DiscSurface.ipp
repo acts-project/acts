@@ -67,9 +67,8 @@ inline void DiscSurface::initJacobianToGlobal(
   jacobian(7, eBoundQOverP) = 1;
 }
 
-inline void DiscSurface::initJacobianToLocal(
-    const GeometryContext& gctx, FreeToBoundMatrix& jacobian,
-    const FreeVector& parameters) const {
+inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
+    const GeometryContext& gctx, const FreeVector& parameters) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The global position
@@ -98,17 +97,22 @@ inline void DiscSurface::initJacobianToLocal(
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
-  jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
-  jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
+  // Initalize the jacobian from global to local
+  FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
+  // Local position component
+  jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) = lcphi * lx + lsphi * ly;
+  jacToLocal.block<1, 3>(eBoundLoc1, eFreePos0) =
+      (lcphi * ly - lsphi * lx) / lr;
   // Time element
-  jacobian(eBoundTime, 3) = 1;
+  jacToLocal(eBoundTime, eFreeTime) = 1;
   // Directional and momentum elements for reference frame surface
-  jacobian(eBoundPhi, 4) = -sinPhi * invSinTheta;
-  jacobian(eBoundPhi, 5) = cosPhi * invSinTheta;
-  jacobian(eBoundTheta, 4) = cosPhi * cosTheta;
-  jacobian(eBoundTheta, 5) = sinPhi * cosTheta;
-  jacobian(eBoundTheta, 6) = -sinTheta;
-  jacobian(eBoundQOverP, 7) = 1;
+  jacToLocal(eBoundPhi, eFreeDir0) = -sinPhi * invSinTheta;
+  jacToLocal(eBoundPhi, eFreeDir1) = cosPhi * invSinTheta;
+  jacToLocal(eBoundTheta, eFreeDir0) = cosPhi * cosTheta;
+  jacToLocal(eBoundTheta, eFreeDir1) = sinPhi * cosTheta;
+  jacToLocal(eBoundTheta, eFreeDir2) = -sinTheta;
+  jacToLocal(eBoundQOverP, eFreeQOverP) = 1;
+  return jacToLocal;
 }
 
 inline SurfaceIntersection DiscSurface::intersect(
