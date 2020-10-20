@@ -98,10 +98,10 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
         }
       }
     if (track->GetCreatorProcess())
-		postParticle->add_attribute(
-        "CreatorProcessOf-" + trackId,
-        std::make_shared<HepMC3::StringAttribute>(
-            track->GetCreatorProcess()->GetProcessName()));
+      postParticle->add_attribute(
+          "CreatorProcessOf-" + trackId,
+          std::make_shared<HepMC3::StringAttribute>(
+              track->GetCreatorProcess()->GetProcessName()));
   } else {
     // Add particle from same track to vertex
     m_previousVertex->add_particle_out(postParticle);
