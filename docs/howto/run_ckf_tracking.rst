@@ -9,7 +9,7 @@ Acts must be build with activated examples and Pythia8 support
 is used to identify the path to the build directory.
 
 We assume that you have generated a simulation dataset based on the TrackML detector as described in
-:ref:`simulate-TrackML`. A good example dataset would be e.g. a ttbar sample with pileup 200 in a 2T magnetic field. Suppose the generated ttbar sample is available at `data/sim_trackML/ttbar_mu200`.
+:ref:`simulate-TrackML`. A good example dataset would be e.g. a ttbar sample with pileup 200 in a 2T magnetic field. Suppose the generated ttbar sample is available at ``data/sim_trackML/ttbar_mu200``.
 
 Run the CKF tracking
 ----------------------
