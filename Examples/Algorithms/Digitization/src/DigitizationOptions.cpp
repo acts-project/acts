@@ -8,10 +8,11 @@
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include <Acts/Utilities/Logger.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
 
 #include <string>
 
@@ -61,7 +62,7 @@ ActsExamples::Options::readSmearingConfig(
 
   SmearingAlgorithm::Config smearCfg;
 
-  smearCfg.inputSimulatedHits = variables["digi-input-hits"].as<std::string>();
+  smearCfg.inputSimHits = variables["digi-input-hits"].as<std::string>();
   smearCfg.outputMeasurements =
       variables["digi-smear-output"].as<std::string>();
 

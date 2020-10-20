@@ -8,15 +8,18 @@
 
 #include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
 
-#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
 #include <stdexcept>
@@ -24,14 +27,12 @@
 #include <TFile.h>
 #include <TTree.h>
 
-using namespace Acts::UnitLiterals;
+#include "detail/AverageSimHits.hpp"
+
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
-using Measurement =
-    Acts::Measurement<ActsExamples::SimSourceLink, Acts::BoundIndices,
-                      Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
 ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
     const ActsExamples::RootTrajectoryWriter::Config& cfg,
@@ -39,14 +40,27 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
     : WriterT(cfg.inputTrajectories, "RootTrajectoryWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
-  // An input collection name and tree name must be specified
-  if (m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument("Missing input trajectory collection");
-  } else if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input particle collection");
-  } else if (cfg.outputFilename.empty()) {
+  // trajectories collection name is already checked by base ctor
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing particles input collection");
+  }
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
+  }
+  if (m_cfg.inputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements input collection");
+  }
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
+  }
+  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-simulated-hits map input collection");
+  }
+  if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
-  } else if (m_cfg.outputTreename.empty()) {
+  }
+  if (m_cfg.outputTreename.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
@@ -253,15 +267,30 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
+    const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
+  using ConcreteMeasurement =
+      Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices,
+                        Acts::eBoundLoc0, Acts::eBoundLoc1>;
+
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;
 
   auto& gctx = ctx.geoContext;
-
-  // read truth particles from input collection
+  // Read additional input collections
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& measurements =
+      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& hitSimHitsMap =
+      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+
+  // For each particle within a track, how many hits did it contribute
+  std::vector<ParticleHitCount> particleHitCounts;
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -270,25 +299,28 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
   m_eventNr = ctx.eventNumber;
 
   // Loop over the trajectories
-  int iTraj = 0;
-  for (const auto& traj : trajectories) {
-    m_trajNr = iTraj;
+  for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
+    const auto& traj = trajectories[itraj];
 
-    // The trajectory entry indices and the multiTrajectory
-    const auto& [trackTips, mj] = traj.trajectory();
-    if (trackTips.empty()) {
-      ACTS_WARNING("Empty multiTrajectory.");
+    if (traj.empty()) {
+      ACTS_WARNING("Empty trajectories object " << itraj);
       continue;
     }
+
+    m_trajNr = itraj;
+
+    // The trajectory entry indices and the multiTrajectory
+    const auto& mj = traj.multiTrajectory();
+    const auto& trackTips = traj.tips();
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory
     if (trackTips.size() > 1) {
       ACTS_ERROR("Track fitting should not result in multiple trajectories.");
       return ProcessCode::ABORT;
     }
-    // Get the entry index for the single trajectory
-    auto& trackTip = trackTips.front();
 
+    // Get the entry index for the single trajectory
+    auto trackTip = trackTips.front();
     // Collect the trajectory summary info
     auto trajState =
         Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -296,10 +328,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
     m_nStates = trajState.nStates;
 
     // Get the majority truth particle to this track
-    const auto particleHitCount = traj.identifyMajorityParticle(trackTip);
-    if (not particleHitCount.empty()) {
+    identifyContributingParticles(hitParticlesMap, traj, trackTip,
+                                  particleHitCounts);
+    if (not particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
-      m_t_barcode = particleHitCount.front().particleId.value();
+      m_t_barcode = particleHitCounts.front().particleId.value();
       // Find the truth particle via the barcode
       auto ip = particles.find(m_t_barcode);
       if (ip != particles.end()) {
@@ -357,8 +390,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
         return true;
       }
 
-      auto meas = std::get<Measurement>(state.uncalibrated().makeMeasurement());
-      auto& surface = meas.referenceObject();
+      const auto hitIdx = state.uncalibrated().index();
+      const auto& fullMeas = measurements[hitIdx];
+      const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
+      const auto& surface = meas.referenceObject();
 
       // get the geometry ID
       auto geoID = surface.geometryId();
@@ -385,36 +420,39 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       m_y_hit.push_back(global.y());
       m_z_hit.push_back(global.z());
 
-      // get the truth hit corresponding to this trackState
-      const auto& truthHit = state.uncalibrated().truthHit();
-      // get local truth position
-      Acts::Vector2D truthlocal{0., 0.};
-      auto lpResult = surface.globalToLocal(gctx, truthHit.position(),
-                                            truthHit.unitDirection(), 0.5_um);
-      if (not lpResult.ok()) {
-        ACTS_FATAL("Global to local transformation did not succeed.");
+      // get the truth hits corresponding to this trackState
+      // Use average truth in the case of multiple contributing sim hits
+      auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+      auto [truthLocal, truthPos4, truthUnitDir] =
+          detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+      // momemtum averaging makes even less sense than averaging position and
+      // direction. use the first momentum or set q/p to zero
+      float truthQOP = 0.0f;
+      if (not indices.empty()) {
+        // we assume that the indices are within valid ranges so we do not need
+        // to check their validity again.
+        const auto simHitIdx0 = indices.begin()->second;
+        const auto& simHit0 = *simHits.nth(simHitIdx0);
+        const auto p =
+            simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
+        truthQOP = m_t_charge / p;
       }
-      truthlocal = lpResult.value();
 
       // push the truth hit info
-      m_t_x.push_back(truthHit.position().x());
-      m_t_y.push_back(truthHit.position().y());
-      m_t_z.push_back(truthHit.position().z());
-      m_t_r.push_back(perp(truthHit.position()));
-      m_t_dx.push_back(truthHit.unitDirection().x());
-      m_t_dy.push_back(truthHit.unitDirection().y());
-      m_t_dz.push_back(truthHit.unitDirection().z());
+      m_t_x.push_back(truthPos4[Acts::ePos0]);
+      m_t_y.push_back(truthPos4[Acts::ePos1]);
+      m_t_z.push_back(truthPos4[Acts::ePos2]);
+      m_t_r.push_back(perp(truthPos4.template segment<3>(Acts::ePos0)));
+      m_t_dx.push_back(truthUnitDir[Acts::eMom0]);
+      m_t_dy.push_back(truthUnitDir[Acts::eMom1]);
+      m_t_dz.push_back(truthUnitDir[Acts::eMom1]);
 
       // get the truth track parameter at this track State
-      float truthLOC0 = 0, truthLOC1 = 0, truthPHI = 0, truthTHETA = 0,
-            truthQOP = 0, truthTIME = 0;
-      truthLOC0 = truthlocal.x();
-      truthLOC1 = truthlocal.y();
-      truthPHI = phi(truthHit.unitDirection());
-      truthTHETA = theta(truthHit.unitDirection());
-      truthQOP =
-          m_t_charge / truthHit.momentum4Before().template head<3>().norm();
-      truthTIME = truthHit.time();
+      float truthLOC0 = truthLocal[Acts::ePos0];
+      float truthLOC1 = truthLocal[Acts::ePos1];
+      float truthTIME = truthPos4[Acts::eTime];
+      float truthPHI = phi(truthUnitDir);
+      float truthTHETA = theta(truthUnitDir);
 
       // push the truth track parameter at this track State
       m_t_eLOC0.push_back(truthLOC0);
@@ -915,8 +953,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
     m_pz_smt.clear();
     m_eta_smt.clear();
     m_pT_smt.clear();
-
-    iTraj++;
   }  // all trajectories
 
   return ProcessCode::SUCCESS;

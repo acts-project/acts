@@ -29,7 +29,7 @@ struct TrackFinderFunctionImpl {
   TrackFinderFunctionImpl(track_finder_t&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::SimSourceLinkContainer& sourceLinks,
+      const ActsExamples::IndexSourceLinkContainer& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
       const {

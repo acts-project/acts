@@ -46,9 +46,9 @@ class CsvPlanarClusterReader final : public IReader {
     /// For each cluster/ hit index the original hit id stored on file.
     std::string outputHitIds;
     /// Output hit-particles mapping collection.
-    std::string outputHitParticlesMap;
+    std::string outputMeasurementParticlesMap;
     /// Output simulated (truth) hits collection.
-    std::string outputSimulatedHits;
+    std::string outputSimHits;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };

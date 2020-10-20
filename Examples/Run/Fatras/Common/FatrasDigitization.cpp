@@ -39,8 +39,11 @@ void setupDigitization(
 
   if (vars["digi-smearing"].as<bool>()) {
     SmearingAlgorithm::Config smearCfg = Options::readSmearingConfig(vars);
-    smearCfg.inputSimulatedHits = kFatrasCollectionHits;
+    smearCfg.inputSimHits = kFatrasCollectionHits;
     smearCfg.outputMeasurements = "measurements";
+    smearCfg.outputSourceLinks = "sourcelinks";
+    smearCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+    smearCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
     smearCfg.trackingGeometry = trackingGeometry;
     smearCfg.randomNumbers = randomNumbers;
     sequencer.addAlgorithm(
@@ -51,7 +54,7 @@ void setupDigitization(
       // clusters as root
       RootDigitizationWriter::Config smearWriterRoot;
       smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
-      smearWriterRoot.inputSimulatedHits = smearCfg.inputSimulatedHits;
+      smearWriterRoot.inputSimHits = smearCfg.inputSimHits;
       smearWriterRoot.filePath =
           joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
       smearWriterRoot.smearers = smearCfg.smearers;
@@ -62,8 +65,12 @@ void setupDigitization(
   } else if (vars["digi-geometric-3d"].as<bool>()) {
     // Configure the digitizer
     PlanarSteppingAlgorithm::Config digi;
-    digi.inputSimulatedHits = "hits";
+    digi.inputSimHits = "hits";
     digi.outputClusters = "clusters";
+    digi.outputMeasurements = "measurements";
+    digi.outputSourceLinks = "sourcelinks";
+    digi.outputMeasurementParticlesMap = "measurement_particles_map";
+    digi.outputMeasurementSimHitsMap = "measurement_simhits_map";
     digi.planarModuleStepper = std::make_shared<Acts::PlanarModuleStepper>(
         Acts::getDefaultLogger("PlanarModuleStepper", logLevel));
     digi.randomNumbers = randomNumbers;
@@ -76,7 +83,7 @@ void setupDigitization(
       // clusters as root
       CsvPlanarClusterWriter::Config clusterWriterCsv;
       clusterWriterCsv.inputClusters = digi.outputClusters;
-      clusterWriterCsv.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterCsv.inputSimHits = digi.inputSimHits;
       clusterWriterCsv.outputDir = outputDir;
       sequencer.addWriter(
           std::make_shared<CsvPlanarClusterWriter>(clusterWriterCsv, logLevel));
@@ -87,7 +94,7 @@ void setupDigitization(
       // clusters as root
       RootPlanarClusterWriter::Config clusterWriterRoot;
       clusterWriterRoot.inputClusters = digi.outputClusters;
-      clusterWriterRoot.inputSimulatedHits = digi.inputSimulatedHits;
+      clusterWriterRoot.inputSimHits = digi.inputSimHits;
       clusterWriterRoot.filePath =
           joinPaths(outputDir, digi.outputClusters + ".root");
       sequencer.addWriter(std::make_shared<RootPlanarClusterWriter>(

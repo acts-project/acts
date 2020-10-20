@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <numeric>
 #include <stdexcept>
@@ -27,12 +28,12 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
       m_fakeRatePlotTool(m_cfg.fakeRatePlotToolConfig, lvl),
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
-  // Input track and truth collection name
-  if (m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument("Missing input trajectories collection");
-  }
+  // trajectories collection name is already checked by base ctor
   if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input particles collection");
+    throw std::invalid_argument("Missing particles input collection");
+  }
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -77,33 +78,41 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
-    const AlgorithmContext& ctx, const TrajectoryContainer& trajectories) {
+    const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
 
-  // Read truth particles from input collection
+  // Read truth input collections
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-
-  // Exclusive access to the tree while writing
-  std::lock_guard<std::mutex> lock(m_writeMutex);
+  const auto& hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
   // Counter of truth-unmatched reco tracks
   std::map<ActsFatras::Barcode, size_t> unmatched;
+  // For each particle within a track, how many hits did it contribute
+  std::vector<ParticleHitCount> particleHitCounts;
+
+  // Exclusive access to the tree while writing
+  std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // Loop over all trajectories
-  for (const auto& traj : trajectories) {
-    // The trajectory entry indices and the multiTrajectory
-    const auto& [trackTips, mj] = traj.trajectory();
-    if (trackTips.empty()) {
-      ACTS_WARNING("Empty multiTrajectory.");
+  for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
+    const auto& traj = trajectories[itraj];
+
+    if (traj.empty()) {
+      ACTS_WARNING("Empty trajectories object " << itraj);
       continue;
     }
 
+    const auto& mj = traj.multiTrajectory();
+    const auto& trackTips = traj.tips();
+
     // Loop over all trajectories in a multiTrajectory
-    for (const size_t& trackTip : trackTips) {
+    for (auto trackTip : trackTips) {
       // Collect the trajectory summary info
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -127,9 +136,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
                                   trajState.nOutliers, trajState.nHoles);
 
       // Get the majority truth particle to this track
-      std::vector<ParticleHitCount> particleHitCount =
-          traj.identifyMajorityParticle(trackTip);
-      if (particleHitCount.empty()) {
+      identifyContributingParticles(hitParticlesMap, traj, trackTip,
+                                    particleHitCounts);
+      if (particleHitCounts.empty()) {
         ACTS_WARNING(
             "No truth particle associated with this trajectory with entry "
             "index = "
@@ -140,8 +149,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Note that the majority particle might be not in the truth seeds
       // collection
       ActsFatras::Barcode majorityParticleId =
-          particleHitCount.front().particleId;
-      size_t nMajorityHits = particleHitCount.front().hitCount;
+          particleHitCounts.front().particleId;
+      size_t nMajorityHits = particleHitCounts.front().hitCount;
 
       // Check if the trajectory is matched with truth.
       // If not, it will be classified as 'fake'
