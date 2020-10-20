@@ -19,9 +19,8 @@
 
 ActsExamples::CsvSimHitReader::CsvSimHitReader(
     const ActsExamples::CsvSimHitReader::Config& cfg, Acts::Logging::Level lvl)
-    : m_cfg(cfg)
+    : m_cfg(cfg),
       // TODO check that all files (hits,cells,truth) exists
-      ,
       m_eventsRange(
           determineEventFilesRange(cfg.inputDir, cfg.inputStem + ".csv")),
       m_logger(Acts::getDefaultLogger("CsvSimHitReader", lvl)) {
@@ -44,11 +43,6 @@ std::pair<size_t, size_t> ActsExamples::CsvSimHitReader::availableEvents()
 
 ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
-  // geometry_id in the files is not required to be neither continuous nor
-  // monotonic. internally, we want continous indices within [0,#geoObj)
-  // to simplify data handling. to be able to perform this mapping we first
-  // read all data into memory before converting to the internal event data
-  // types.
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
 
@@ -86,7 +80,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     unordered.push_back(std::move(hit));
   }
 
-  // write the ordered data to the EventStore
+  // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
   simHits.adopt_sequence(std::move(unordered));
   ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
