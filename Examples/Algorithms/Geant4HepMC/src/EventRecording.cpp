@@ -47,7 +47,7 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::RunAction());
-  m_runManager->SetUserAction(new ActsExamples::EventAction(filter));
+  m_runManager->SetUserAction(new ActsExamples::EventAction(m_cfg.processFilter));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(new ActsExamples::SteppingAction());
@@ -68,6 +68,8 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   std::vector<HepMC3::GenEvent> events;
   events.reserve(initialParticles.size());
 
+  std::vector<std::string> processSelection = {"Inelastic"};
+
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
     ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part);
@@ -79,8 +81,26 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     HepMC3::FourVector shift(0., 0., 0., part.time());
     event.shift_position_by(shift);
 
-    // Store the result
-    events.push_back(std::move(event));
+	if(processSelection.empty())
+	{
+		// Store the result
+		events.push_back(std::move(event));
+	}
+	else
+	{
+		for(const auto& vertex : event.vertices())
+		{
+			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
+			for(const auto& s : vertexAttributes)
+				for(const auto& ps : processSelection)
+					if(vertex->attribute_as_string(s).find(ps) != std::string::npos)
+					{
+						// Store the result
+						events.push_back(std::move(event));
+						std::cout << "Event stored" << std::endl;
+					}
+		}
+	}
   }
 
   ACTS_INFO(events.size() << " tracks generated");

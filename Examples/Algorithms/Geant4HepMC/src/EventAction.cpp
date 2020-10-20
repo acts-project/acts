@@ -39,18 +39,34 @@ void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex, const st
 
 	while(findAttribute(particleIn->production_vertex(), processFilter))
 	{
-		auto nextParticle = particleIn->production_vertex()->particles_in()[0];
+		// Take the particles before the vertex and remove particles & vertices in between
+		HepMC3::GenVertexPtr currentVertex = particleOut->production_vertex();
+		HepMC3::GenParticlePtr nextParticle = currentVertex->particles_in()[0];
+		// Cut connections from particle and remove it
+		if(particleIn->end_vertex())
+			particleIn->end_vertex()->remove_particle_in(particleIn);
+		currentVertex->remove_particle_out(particleIn);
 		event.remove_particle(particleIn);
+		// Cut connections from vertext and remove it
 		particleIn = nextParticle;
-		event.remove_vertex(particleIn->end_vertex());
+		currentVertex->remove_particle_in(particleIn);
+		event.remove_vertex(currentVertex);
 	}
 	while(findAttribute(particleOut->end_vertex(), processFilter))
 	{	
-		HepMC3::GenParticlePtr nextParticle = particleOut->end_vertex()->particles_out()[0];
+		// Take the particles after the vertex and remove particles & vertices in between
+		HepMC3::GenVertexPtr currentVertex = particleOut->end_vertex();
+		HepMC3::GenParticlePtr nextParticle = currentVertex->particles_out()[0];
+		// Cut connections from particle and remove it
+		if(particleOut->production_vertex())
+			particleOut->production_vertex()->remove_particle_out(particleOut);
+		currentVertex->remove_particle_in(particleOut);
 		event.remove_particle(particleOut);
+		// Cut connections from vertext and remove it
 		particleOut = nextParticle;
-		event.remove_vertex(particleOut->production_vertex());		
-	}		
+		currentVertex->remove_particle_out(particleOut);
+		event.remove_vertex(currentVertex);
+	}
 
 	auto reducedVertex = std::make_shared<HepMC3::GenVertex>();
 	event.add_vertex(reducedVertex);
@@ -68,14 +84,10 @@ void followOutgoingParticles(HepMC3::GenEvent& event, HepMC3::GenVertexPtr verte
 	{
 		reduceVertex(event, vertex, processFilter);
 	}
-	if((vertex->particles_in().size() == 1) && (vertex->particles_out().size() == 1))
-		//~ event.remove_vertex(vertex);
-	else
+	// Move forward to the next vertices
+	for(const auto& particle : vertex->particles_out())
 	{
-		for(const auto& particle : vertex->particles_out())
-		{
-			followOutgoingParticles(event, particle->end_vertex(), processFilter);
-		}
+		followOutgoingParticles(event, particle->end_vertex(), processFilter);
 	}
 }
 }
@@ -107,8 +119,10 @@ void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
 void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
 std::cout << "vertices before: " << m_event.vertices().size() << std::endl;
 	if(m_event.vertices().empty())
+	{
 		return;
-		
+	}
+	// Filter irrelevant processes	
 	auto currentVertex = m_event.vertices()[0];
 	followOutgoingParticles(m_event, currentVertex, m_processFilter);
 std::cout << "vertices after: " << m_event.vertices().size() << std::endl;

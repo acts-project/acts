@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
   erConfig.detectorConstruction = std::move(g4detector);
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
+  erConfig.processFilter = {"Transportation"};
 
   // Create the writer
   auto hepMC3WriterConfig = ActsExamples::Options::readHepMC3WriterOptions(vm);
