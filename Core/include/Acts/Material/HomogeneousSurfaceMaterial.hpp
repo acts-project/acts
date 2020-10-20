@@ -12,6 +12,8 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <iosfwd>
+
 namespace Acts {
 
 /// @class HomogeneousSurfaceMaterial

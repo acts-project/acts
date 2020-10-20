@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
       // the measurement container is unordered and the index under which the
       // measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
-      IndexSourceLink sourceLink(*surface, hitIdx);
+      IndexSourceLink sourceLink(moduleGeoId, hitIdx);
       ConcreteMeasurement meas(surface->getSharedPtr(), sourceLink, cov, loc);
 
       // add to output containers. since the input is already geometry-order,

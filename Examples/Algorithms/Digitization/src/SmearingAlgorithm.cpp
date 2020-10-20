@@ -90,7 +90,14 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
   // setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
-  for (auto&& [moduleGeoId, moduleSimHits] : groupByModule(simHits)) {
+  for (auto simHitsGroup : groupByModule(simHits)) {
+    // manual pair unpacking instead of using
+    //   auto [moduleGeoId, moduleSimHits] : ...
+    // otherwise clang on macos complains that it is unable to capture the local
+    // binding in the lambda used for visiting the smearer below.
+    Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
+    const auto& moduleSimHits = simHitsGroup.second;
+
     auto smearerItr = m_cfg.smearers.find(moduleGeoId);
     if (smearerItr == m_cfg.smearers.end()) {
       ACTS_DEBUG("No smearing function present for module " << moduleGeoId);
@@ -123,7 +130,7 @@ ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
             // the measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index hitIdx = measurements.size();
-            IndexSourceLink sourceLink(*surface, hitIdx);
+            IndexSourceLink sourceLink(moduleGeoId, hitIdx);
             auto meas = makeMeasurement(sourceLink, *surface,
                                         std::move(smearResult.value()));
 

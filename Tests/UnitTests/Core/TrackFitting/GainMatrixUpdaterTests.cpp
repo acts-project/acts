@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -25,9 +26,8 @@ namespace Test {
 
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-using SourceLink = MinimalSourceLink;
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
 
   SymMatrix2D cov;
   cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<SourceLink> meas(
+  FittableMeasurement<TestSourceLink> meas(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
           cylinder, {}, std::move(cov), -0.1, 0.45));
 
@@ -50,11 +50,11 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   BoundVector parValues;
   parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01, 0.;
 
-  MultiTrajectory<SourceLink> traj;
+  MultiTrajectory<TestSourceLink> traj;
   traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(0);
 
-  ts.uncalibrated() = SourceLink{&meas};
+  ts.uncalibrated() = TestSourceLink(meas);
   // "calibrate"
   std::visit([&](const auto& m) { ts.setCalibrated(m); }, meas);
 
