@@ -1,3 +1,5 @@
+.. _simulate-TrackML:
+
 Run the FAst TRAck Simulation
 =============================
 
@@ -80,7 +82,6 @@ A full list of options and their default values is available via
 
    $ <build>/bin/ActsExamplePythia8 -h
 
-.. _simulate-TrackML:
 Simulate a TrackML-like detector
 --------------------------------
 
