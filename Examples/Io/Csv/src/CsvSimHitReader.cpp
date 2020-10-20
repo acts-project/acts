@@ -45,11 +45,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
-  // define all optional columns
-  /*std::vector<std::string> optionalColumns = {
-      "geometry_id", "tt",      "te",     "deltapx",
-      "deltapy",     "deltapz", "deltae", "index",
-  };*/
+                               
   dfe::NamedTupleCsvReader<SimHitData> reader(path);
 
   SimHitContainer::sequence_type unordered;
