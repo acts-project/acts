@@ -33,3 +33,12 @@ Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
   }
   return TrackLabels::good;
 }
+
+// function that checks if the predicted track label is duplicate
+bool Acts::MLTrackClassifier::isDuplicate(
+    std::vector<float>& inputFeatures, const double& decisionThreshProb) const {
+  Acts::MLTrackClassifier::TrackLabels predictedLabel =
+      Acts::MLTrackClassifier::predictTrackLabel(inputFeatures,
+                                                 decisionThreshProb);
+  return predictedLabel == Acts::MLTrackClassifier::TrackLabels::duplicate;
+}
