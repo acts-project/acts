@@ -104,7 +104,9 @@ class EigenStepper {
         surface.initJacobianToGlobal(gctx, *jacToGlobal, pos, dir,
                                      par.parameters());
         jacobian.emplace<0>(BoundMatrix::Identity());
-      }
+      } else {
+		  cov = BoundSymMatrix(BoundSymMatrix::Zero());
+	  }
     }
 
     /// Constructor from the initial track parameters
@@ -145,7 +147,9 @@ class EigenStepper {
         // Set up transformations between angles and directions in jacobian
         jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
         jacAngleToDir = detail::jacobianAnglesToDirections(dir);
-      }
+      } else {
+		  cov = FreeSymMatrix(FreeSymMatrix::Zero());
+	  }
     }
 
     /// Global particle position
