@@ -78,5 +78,5 @@ int main(int argc, char* argv[]) {
       std::move(hepMC3WriterConfig), logLevel));
 
   // Run
-  sequencer.run();
+  return sequencer.run();
 }
