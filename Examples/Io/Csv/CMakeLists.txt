@@ -6,6 +6,8 @@ add_library(
   src/CsvParticleWriter.cpp
   src/CsvPlanarClusterReader.cpp
   src/CsvPlanarClusterWriter.cpp
+  src/CsvSimHitReader.cpp
+  src/CsvSimHitWriter.cpp
   src/CsvTrackingGeometryWriter.cpp)
 target_include_directories(
   ActsExamplesIoCsv

@@ -23,6 +23,8 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
@@ -152,6 +154,18 @@ void setupSimulationAlgorithms(
     writeInitial.outputStem = fatras.outputParticlesInitial;
     sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
         writeInitial, logLevel));
+
+    //--------------------------------------------------------------------------
+    // SimHit write test
+    //--------------------------------------------------------------------------
+
+    // write simulated hits collection
+    ActsExamples::CsvSimHitWriter::Config writeSimHits;
+    writeSimHits.inputSimHits = fatras.outputSimHits;
+    writeSimHits.outputDir = outputDir;
+    writeSimHits.outputStem = "sim" + fatras.outputSimHits;
+    sequencer.addWriter(std::make_shared<ActsExamples::CsvSimHitWriter>(
+        writeSimHits, logLevel));
 
     // write final simulated particles
     ActsExamples::CsvParticleWriter::Config writeFinal;
