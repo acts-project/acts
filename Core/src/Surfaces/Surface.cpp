@@ -57,13 +57,12 @@ Acts::AlignmentToBoundMatrix Acts::Surface::alignmentToBoundDerivative(
   // 2) Calculate the derivative of path length w.r.t. alignment parameters
   const auto alignToPath = alignmentToPathDerivative(gctx, parameters);
   // 3) Calculate the jacobian from free parameters to bound parameters
-  FreeToBoundMatrix jacGlobalToLocal = jacobianGlobalToLocal(gctx, parameters);
+  FreeToBoundMatrix jacToLocal = jacobianGlobalToLocal(gctx, parameters);
   // 4) The derivative of bound parameters w.r.t. alignment
   // parameters is alignToBoundWithoutCorrection +
   // jacToLocal*pathDerivative*alignToPath
   AlignmentToBoundMatrix alignToBound =
-      alignToBoundWithoutCorrection +
-      jacGlobalToLocal * pathDerivative * alignToPath;
+      alignToBoundWithoutCorrection + jacToLocal * pathDerivative * alignToPath;
 
   return alignToBound;
 }
