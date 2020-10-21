@@ -88,8 +88,8 @@ class StraightLineStepper {
                                      par.parameters());
         jacobian.emplace<0>(BoundMatrix::Identity());
       } else {
-		  cov = BoundSymMatrix(BoundSymMatrix::Zero());
-	  }
+        cov = BoundSymMatrix(BoundSymMatrix::Zero());
+      }
     }
 
     /// Constructor from the initial track parameters
@@ -130,8 +130,8 @@ class StraightLineStepper {
         jacDirToAngle = detail::jacobianDirectionsToAngles(dir);
         jacAngleToDir = detail::jacobianAnglesToDirections(dir);
       } else {
-		  cov = FreeSymMatrix(FreeSymMatrix::Zero());
-	  }
+        cov = FreeSymMatrix(FreeSymMatrix::Zero());
+      }
     }
 
     /// Transform from directions to angles in jacobian
