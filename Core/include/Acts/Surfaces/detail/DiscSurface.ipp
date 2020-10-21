@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Acts::Vector2D DiscSurface::localPolarToCartesian(
+inline Vector2D DiscSurface::localPolarToCartesian(
     const Vector2D& lpolar) const {
   return Vector2D(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
                   lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));

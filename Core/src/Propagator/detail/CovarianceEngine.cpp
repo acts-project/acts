@@ -186,7 +186,7 @@ void reinitializeJacobians(
     ACTS_FATAL(
         "Inconsistency in global to local transformation during propagation.")
   }
-  // Construct a bound parameters
+  // Transform from free to bound parameters 
   BoundVector boundParams =
       detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
   // Reset the jacobian from local to global
