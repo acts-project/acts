@@ -14,6 +14,7 @@
 #include <G4RandomDirection.hh>
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
+#include "Acts/Utilities/Units.hpp"
 
 ActsExamples::PrimaryGeneratorAction*
     ActsExamples::PrimaryGeneratorAction::s_instance = nullptr;
@@ -51,14 +52,18 @@ ActsExamples::PrimaryGeneratorAction::instance() {
 
 void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
     const ActsExamples::SimParticle& part) {
+
+  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
+  
   // Particle type
   G4ParticleDefinition* particle = m_particleTable->FindParticle(part.pdg());
   m_particleGun->SetParticleDefinition(particle);
   // Particle properties
-  const auto pos = part.position();
+  const auto pos = part.position() * convertLength;
   const auto dir = part.unitDirection();
   m_particleGun->SetParticlePosition({pos[0], pos[1], pos[2]});
-  m_particleGun->SetParticleMomentum(part.absMomentum());
+  m_particleGun->SetParticleMomentum(part.absMomentum() * convertEnergy);
   m_particleGun->SetParticleMomentumDirection({dir[0], dir[1], dir[2]});
 }
 

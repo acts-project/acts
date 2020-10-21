@@ -78,7 +78,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     m_runManager->BeamOn(1);
 
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
-    HepMC3::FourVector shift(0., 0., 0., part.time());
+    HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::s);
     event.shift_position_by(shift);
 
 	if(processSelection.empty())
@@ -91,9 +91,9 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 		for(const auto& vertex : event.vertices())
 		{
 			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
-			for(const auto& s : vertexAttributes)
-				for(const auto& ps : processSelection)
-					if(vertex->attribute_as_string(s).find(ps) != std::string::npos)
+			for(const auto& att : vertexAttributes)
+				for(const auto& proc : processSelection)
+					if(vertex->attribute_as_string(att).find(proc) != std::string::npos)
 					{
 						// Store the result
 						events.push_back(std::move(event));
