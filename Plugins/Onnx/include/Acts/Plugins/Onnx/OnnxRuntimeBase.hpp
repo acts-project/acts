@@ -13,7 +13,8 @@
 
 namespace Acts {
 
-// General class that sets up the ONNX runtime framework for loading a ML model and using it for inference.
+// General class that sets up the ONNX runtime framework for loading a ML model
+// and using it for inference.
 class OnnxRuntimeBase {
  public:
   /// @brief Default constructor

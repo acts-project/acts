@@ -12,8 +12,7 @@
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 
 // parametrized constructor
-Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env,
-                                           const char* modelPath) {
+Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
   // set the ONNX runtime session options
   Ort::SessionOptions sessionOptions;
   // set graph optimization level
