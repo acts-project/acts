@@ -256,8 +256,8 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
     // Then reinitialize the transportJacobian, derivatives and the
     // jacToGlobal
     covarianceTransport(geoContext, covarianceMatrix, jacobian,
-                        transportJacobian, derivatives, jacToGlobal,
-                        parameters, surface);
+                        transportJacobian, derivatives, jacToGlobal, parameters,
+                        surface);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
