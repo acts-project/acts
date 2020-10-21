@@ -9,6 +9,7 @@
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -187,9 +188,8 @@ void reinitializeJacobians(
   }
   auto loc = lpResult.value();
   // Construct a bound parameters
-  BoundVector boundParams;
-  boundParams << loc[eBoundLoc0], loc[eBoundLoc1], phi(direction),
-      theta(direction), freeParams[eFreeQOverP], freeParams[eFreeTime];
+  BoundVector boundParams =
+      detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
   // Reset the jacobian from local to global
   jacToGlobal = surface.jacobianLocalToGlobal(geoContext, boundParams);
 }
