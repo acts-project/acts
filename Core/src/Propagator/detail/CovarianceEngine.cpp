@@ -74,7 +74,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3D& direction) {
 /// @brief This function calculates the full jacobian from local parameters at
 /// the start surface to bound parameters at the final surface
 ///
-// @note Modifications of the jacobian related to the
+/// @note Modifications of the jacobian related to the
 /// projection onto a surface is considered. Since a variation of the start
 /// parameters within a given uncertainty would lead to a variation of the end
 /// parameters, these need to be propagated onto the target surface. This an
@@ -186,7 +186,7 @@ void reinitializeJacobians(
     ACTS_FATAL(
         "Inconsistency in global to local transformation during propagation.")
   }
-  // Transform from free to bound parameters 
+  // Transform from free to bound parameters
   BoundVector boundParams =
       detail::transformFreeToBoundParameters(freeParams, surface, geoContext);
   // Reset the jacobian from local to global
