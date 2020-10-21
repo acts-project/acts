@@ -108,6 +108,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 	}
   }
 
+  ACTS_INFO(initialParticles.size() << " initial particles provided");
   ACTS_INFO(events.size() << " tracks generated");
 
   // Write the recorded material to the event store

@@ -51,7 +51,7 @@ class EventAction final : public G4UserEventAction {
   static EventAction* s_instance;
   /// The current HepMC3 event
   HepMC3::GenEvent m_event;
-  
+  /// List of processes that can be combined to a single vertex
   std::vector<std::string> m_processFilter;
 };
 }  // namespace ActsExamples
