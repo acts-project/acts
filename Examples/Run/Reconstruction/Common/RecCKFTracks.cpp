@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -30,6 +31,7 @@
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
+using namespace std::placeholders;
 
 int runRecCKFTracks(int argc, char* argv[],
                     std::shared_ptr<ActsExamples::IBaseDetector> detector) {
@@ -190,6 +192,13 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;
+  // Initialize OnnxRuntime plugin
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
+  Acts::MLTrackClassifier neuralNetworkClassifier(
+      env, perfWriterCfg.onnxModelFilename.c_str());
+  perfWriterCfg.duplicatedPredictor =
+      std::bind(&Acts::MLTrackClassifier::isDuplicate, &neuralNetworkClassifier,
+                std::placeholders::_1, std::placeholders::_2);
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
