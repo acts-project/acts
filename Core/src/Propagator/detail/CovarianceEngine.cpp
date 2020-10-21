@@ -390,7 +390,8 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
                         jacobianDirToAngle, jacobianAngleToDir, parameters,
                         surface);
   }
-  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) && std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
+  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) &&
+      std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
     cov = std::get<BoundSymMatrix>(covarianceMatrix);
   }
 
@@ -419,7 +420,8 @@ CurvilinearState curvilinearState(
                         derivatives, jacobianLocalToGlobal, jacobianDirToAngle,
                         jacobianAngleToDir, direction, true);
   }
-  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) && std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
+  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) &&
+      std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
     cov = std::get<BoundSymMatrix>(covarianceMatrix);
   }
 
@@ -450,7 +452,8 @@ FreeState freeState(Covariance& covarianceMatrix, Jacobian& jacobian,
                         derivatives, jacobianLocalToGlobal, jacobianDirToAngle,
                         jacobianAngleToDir, parameters.segment<3>(4), false);
   }
-  if (std::get_if<FreeSymMatrix>(&covarianceMatrix) && std::get<FreeSymMatrix>(covarianceMatrix) != FreeSymMatrix::Zero()) {
+  if (std::get_if<FreeSymMatrix>(&covarianceMatrix) &&
+      std::get<FreeSymMatrix>(covarianceMatrix) != FreeSymMatrix::Zero()) {
     cov = std::get<FreeSymMatrix>(covarianceMatrix);
   }
   // Create the free parameters

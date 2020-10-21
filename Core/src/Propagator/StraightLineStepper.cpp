@@ -13,7 +13,8 @@
 
 namespace Acts {
 
-auto StraightLineStepper::curvilinearState(State& state, bool transportCov) const
+auto StraightLineStepper::curvilinearState(State& state,
+                                           bool transportCov) const
     -> CurvilinearState {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
@@ -30,7 +31,8 @@ auto StraightLineStepper::curvilinearState(State& state, bool transportCov) cons
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
-auto StraightLineStepper::freeState(State& state, bool transportCov) const -> FreeState {
+auto StraightLineStepper::freeState(State& state, bool transportCov) const
+    -> FreeState {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -40,15 +42,14 @@ auto StraightLineStepper::freeState(State& state, bool transportCov) const -> Fr
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
   parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
-  return detail::freeState(state.cov, state.jacobian, state.jacTransport,
-                           state.derivative, state.jacToGlobal,
-                           state.jacDirToAngle, state.jacAngleToDir, parameters,
-                           state.covTransport && transportCov, state.pathAccumulated);
+  return detail::freeState(
+      state.cov, state.jacobian, state.jacTransport, state.derivative,
+      state.jacToGlobal, state.jacDirToAngle, state.jacAngleToDir, parameters,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
-auto
-StraightLineStepper::boundState(State& state, const Surface& surface,
-                                bool transportCov) const -> BoundState {
+auto StraightLineStepper::boundState(State& state, const Surface& surface,
+                                     bool transportCov) const -> BoundState {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -58,11 +59,11 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   parameters[eFreeDir1] = state.dir[eMom1];
   parameters[eFreeDir2] = state.dir[eMom2];
   parameters[eFreeQOverP] = (state.q != 0. ? state.q : 1.) / state.p;
-  return detail::boundState(state.geoContext, state.cov, state.jacobian,
-                            state.jacTransport, state.derivative,
-                            state.jacToGlobal, state.jacDirToAngle,
-                            state.jacAngleToDir, parameters, state.covTransport && transportCov,
-                            state.pathAccumulated, surface);
+  return detail::boundState(
+      state.geoContext, state.cov, state.jacobian, state.jacTransport,
+      state.derivative, state.jacToGlobal, state.jacDirToAngle,
+      state.jacAngleToDir, parameters, state.covTransport && transportCov,
+      state.pathAccumulated, surface);
 }
 
 void StraightLineStepper::update(State& state, const FreeVector& parameters,
