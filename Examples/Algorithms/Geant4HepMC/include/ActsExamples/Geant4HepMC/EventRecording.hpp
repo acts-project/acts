@@ -35,7 +35,7 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     int seed1 = 12345;
     /// random number seed 2
     int seed2 = 45678;
-    
+
     /// List of processes that can be combined to a single vertex
     std::vector<std::string> processFilter;
     /// List of processes that should be recorded

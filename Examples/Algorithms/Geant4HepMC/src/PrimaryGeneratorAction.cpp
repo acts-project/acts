@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "PrimaryGeneratorAction.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include <stdexcept>
 #include <G4Event.hh>
 #include <G4ParticleDefinition.hh>
@@ -14,7 +15,6 @@
 #include <G4RandomDirection.hh>
 #include <G4UnitsTable.hh>
 #include <Randomize.hh>
-#include "Acts/Utilities/Units.hpp"
 
 ActsExamples::PrimaryGeneratorAction*
     ActsExamples::PrimaryGeneratorAction::s_instance = nullptr;
@@ -52,10 +52,9 @@ ActsExamples::PrimaryGeneratorAction::instance() {
 
 void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
     const ActsExamples::SimParticle& part) {
-
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
-  
+
   // Particle type
   G4ParticleDefinition* particle = m_particleTable->FindParticle(part.pdg());
   m_particleGun->SetParticleDefinition(particle);

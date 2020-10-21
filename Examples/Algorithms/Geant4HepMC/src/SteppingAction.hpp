@@ -32,7 +32,7 @@ class SteppingAction : public G4UserSteppingAction {
 
   /// Interface reset method
   void clear();
-  
+
   /// Return the abort status
   bool eventAborted() { return m_eventAborted; }
 

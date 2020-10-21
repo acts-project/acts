@@ -47,10 +47,12 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::RunAction());
-  m_runManager->SetUserAction(new ActsExamples::EventAction(m_cfg.processFilter));
+  m_runManager->SetUserAction(
+      new ActsExamples::EventAction(m_cfg.processFilter));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new ActsExamples::SteppingAction(m_cfg.eventRejectionProcess));
+  m_runManager->SetUserAction(
+      new ActsExamples::SteppingAction(m_cfg.eventRejectionProcess));
   m_runManager->Initialize();
 }
 
@@ -75,37 +77,33 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
-	// Test if the event was aborted
-	if(SteppingAction::instance()->eventAborted())
-	{
-		continue;
-	}
-	
+    // Test if the event was aborted
+    if (SteppingAction::instance()->eventAborted()) {
+      continue;
+    }
+
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::s);
     event.shift_position_by(shift);
 
-	if(m_cfg.eventSelectionProcess.empty())
-	{
-		// Store the result
-		events.push_back(std::move(event));
-	}
-	else
-	{
-		// Test if the event has a process of interest in it
-		for(const auto& vertex : event.vertices())
-		{
-			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
-			for(const auto& att : vertexAttributes)
-				for(const auto& proc : m_cfg.eventSelectionProcess)
-					if(vertex->attribute_as_string(att).find(proc) != std::string::npos)
-					{
-						// Store the result
-						events.push_back(std::move(event));
-						std::cout << "Event stored" << std::endl;
-					}
-		}
-	}
+    if (m_cfg.eventSelectionProcess.empty()) {
+      // Store the result
+      events.push_back(std::move(event));
+    } else {
+      // Test if the event has a process of interest in it
+      for (const auto& vertex : event.vertices()) {
+        const std::vector<std::string> vertexAttributes =
+            vertex->attribute_names();
+        for (const auto& att : vertexAttributes)
+          for (const auto& proc : m_cfg.eventSelectionProcess)
+            if (vertex->attribute_as_string(att).find(proc) !=
+                std::string::npos) {
+              // Store the result
+              events.push_back(std::move(event));
+              std::cout << "Event stored" << std::endl;
+            }
+      }
+    }
   }
 
   ACTS_INFO(initialParticles.size() << " initial particles provided");
