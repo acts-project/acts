@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -100,11 +99,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // initialize OnnxRuntime plugin
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
-  Acts::MLTrackClassifier neuralNetworkClassifier(
-      env, m_cfg.onnxModelFilename.c_str());
-
   // Loop over all trajectories
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
@@ -181,11 +175,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         inputFeatures[0] = trajState.nMeasurements;
         inputFeatures[1] = trajState.nOutliers;
         inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
-        Acts::MLTrackClassifier::TrackLabels predictedLabel =
-            neuralNetworkClassifier.predictTrackLabel(inputFeatures,
-                                                      m_cfg.decisionThreshProb);
         bool isDuplicated =
-            predictedLabel == Acts::MLTrackClassifier::TrackLabels::duplicate;
+            m_cfg.duplicatedPredictor(inputFeatures, m_cfg.decisionThreshProb);
         // Fill the duplication rate
         m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);

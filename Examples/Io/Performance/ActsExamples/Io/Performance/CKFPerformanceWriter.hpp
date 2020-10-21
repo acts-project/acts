@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -64,6 +63,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     bool useMLTrackClassifier = false;
     /// threshold probability for neural network to classify track as duplicate
     double decisionThreshProb = 0.5;
+    /// function to check if neural network predicted track label is duplicate
+    std::function<bool(std::vector<float>&, const double&)>
+        duplicatedPredictor = nullptr;
   };
 
   /// Construct from configuration and log level.
