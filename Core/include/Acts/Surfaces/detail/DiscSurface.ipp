@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector2D DiscSurface::localPolarToCartesian(
+inline Acts::Vector2D DiscSurface::localPolarToCartesian(
     const Vector2D& lpolar) const {
   return Vector2D(lpolar[eBoundLoc0] * cos(lpolar[eBoundLoc1]),
                   lpolar[eBoundLoc0] * sin(lpolar[eBoundLoc1]));
@@ -21,12 +21,13 @@ inline Vector2D DiscSurface::localCartesianToPolar(
 
 inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Convert angles to global unit direction vector
-  const Vector3D direction = makeDirectionUnitFromPhiTheta(
-      boundParams[eBoundPhi], boundParams[eBoundTheta]);
-  // Convert local position to global position vector
-  const Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
-  const Vector3D position = localToGlobal(gctx, local, direction);
+  // Transform from bound to free parameters
+  FreeVector freeParams =
+      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
+  // The global position
+  const Vector3D position = freeParams.head<3>();
+  // The direction
+  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);

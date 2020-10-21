@@ -209,7 +209,7 @@ class DiscSurface : public Surface {
                                   double tol = 0.) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
-  /// hence the calculation is done here
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param boundParams is the bound parameters vector
@@ -219,7 +219,7 @@ class DiscSurface : public Surface {
       const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
   /// Calculate the jacobian from global to local which the surface knows best,
-  /// hence the calculation is done here
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters is the free parameters
@@ -308,5 +308,4 @@ class DiscSurface : public Surface {
 };
 
 #include "Acts/Surfaces/detail/DiscSurface.ipp"
-
 }  // end of namespace Acts

@@ -23,7 +23,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <memory>
 
@@ -319,7 +318,13 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3D& momentum) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
-  /// hence the calculation is done here
+  /// hence the calculation is done here.
+  ///
+  /// @note In priciple, the input could also be a free parameters
+  /// vector as it could be transformed to a bound parameters. But the transform
+  /// might fail in case the parameters is not on surface. To avoid the check
+  /// inside this function, it takes directly the bound parameters as input
+  /// (then the check might be done where this function is called).
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
@@ -333,7 +338,10 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const BoundVector& boundParams) const;
 
   /// Calculate the jacobian from global to local which the surface knows best,
-  /// hence the calculation is done here
+  /// hence the calculation is done here.
+  ///
+  /// @note It assumes the input free parameters is on surface, hence no
+  /// onSurface check is done inside this function.
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
@@ -493,6 +501,5 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
-#include "Acts/Surfaces/detail/Surface.ipp"
-
 }  // namespace Acts
+#include "Acts/Surfaces/detail/Surface.ipp"

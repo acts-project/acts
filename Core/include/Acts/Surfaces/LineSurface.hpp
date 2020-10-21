@@ -117,7 +117,7 @@ class LineSurface : public Surface {
                                   const Vector3D& momentum) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
-  /// hence the calculation is done here
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param boundParams is the bound parameters vector

@@ -132,12 +132,13 @@ inline SurfaceIntersection LineSurface::intersect(
 
 inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Convert angles to global unit direction vector
-  const Vector3D direction = makeDirectionUnitFromPhiTheta(
-      boundParams[eBoundPhi], boundParams[eBoundTheta]);
-  // Convert local position to global position vector
-  const Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
-  const Vector3D position = localToGlobal(gctx, local, direction);
+  // Transform from bound to free parameters
+  FreeVector freeParams =
+      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
+  // The global position
+  const Vector3D position = freeParams.head<3>();
+  // The direction
+  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);

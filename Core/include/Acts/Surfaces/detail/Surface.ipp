@@ -6,18 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3D Surface::center(const GeometryContext& gctx) const {
+#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+
+inline Acts::Vector3D Acts::Surface::center(const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
-inline Vector3D Surface::normal(const GeometryContext& gctx,
-                                const Vector3D& /*unused*/) const {
+inline Acts::Vector3D Acts::Surface::normal(const GeometryContext& gctx,
+                                            const Vector3D& /*unused*/) const {
   return normal(gctx, s_origin2D);
 }
 
-inline const Transform3D& Surface::transform(
+inline const Acts::Transform3D& Acts::Surface::transform(
     const GeometryContext& gctx) const {
   if (m_associatedDetElement != nullptr) {
     return m_associatedDetElement->transform(gctx);
@@ -25,25 +27,26 @@ inline const Transform3D& Surface::transform(
   return m_transform;
 }
 
-inline bool Surface::insideBounds(const Vector2D& lposition,
-                                  const BoundaryCheck& bcheck) const {
+inline bool Acts::Surface::insideBounds(const Vector2D& lposition,
+                                        const BoundaryCheck& bcheck) const {
   return bounds().inside(lposition, bcheck);
 }
 
-inline RotationMatrix3D Surface::referenceFrame(
+inline Acts::RotationMatrix3D Acts::Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3D& /*unused*/,
     const Vector3D& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
-inline BoundToFreeMatrix Surface::jacobianLocalToGlobal(
+inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // Convert angles to global unit direction vector
-  const Vector3D direction = makeDirectionUnitFromPhiTheta(
-      boundParams[eBoundPhi], boundParams[eBoundTheta]);
-  // Convert local position to global position vector
-  const Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
-  const Vector3D position = localToGlobal(gctx, local, direction);
+  // Transform from bound to free parameters
+  FreeVector freeParams =
+      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
+  // The global position
+  const Vector3D position = freeParams.head<3>();
+  // The direction
+  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
   const double cos_theta = std::cos(boundParams[eBoundTheta]);
   const double sin_theta = std::sin(boundParams[eBoundTheta]);
@@ -67,7 +70,7 @@ inline BoundToFreeMatrix Surface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline FreeToBoundMatrix Surface::jacobianGlobalToLocal(
+inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.head<3>();
@@ -102,7 +105,7 @@ inline FreeToBoundMatrix Surface::jacobianGlobalToLocal(
   return jacToLocal;
 }
 
-inline FreeRowVector Surface::freeToPathDerivative(
+inline Acts::FreeRowVector Acts::Surface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
   const auto position = parameters.head<3>();
@@ -120,28 +123,29 @@ inline FreeRowVector Surface::freeToPathDerivative(
   return freeToPath;
 }
 
-inline const DetectorElementBase* Surface::associatedDetectorElement() const {
+inline const Acts::DetectorElementBase*
+Acts::Surface::associatedDetectorElement() const {
   return m_associatedDetElement;
 }
 
-inline const Layer* Surface::associatedLayer() const {
+inline const Acts::Layer* Acts::Surface::associatedLayer() const {
   return (m_associatedLayer);
 }
 
-inline const ISurfaceMaterial* Surface::surfaceMaterial() const {
+inline const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
   return m_surfaceMaterial.get();
 }
 
-inline const std::shared_ptr<const ISurfaceMaterial>&
-Surface::surfaceMaterialSharedPtr() const {
+inline const std::shared_ptr<const Acts::ISurfaceMaterial>&
+Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
 }
 
-inline void Surface::assignSurfaceMaterial(
-    std::shared_ptr<const ISurfaceMaterial> material) {
+inline void Acts::Surface::assignSurfaceMaterial(
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
   m_surfaceMaterial = std::move(material);
 }
 
-inline void Surface::associateLayer(const Layer& lay) {
+inline void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
