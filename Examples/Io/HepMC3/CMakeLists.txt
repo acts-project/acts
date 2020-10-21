@@ -5,7 +5,8 @@ add_library(
   src/HepMC3Particle.cpp
   src/HepMC3Reader.cpp
   src/HepMC3Vertex.cpp
-  src/HepMC3Writer.cpp)
+  src/HepMC3Writer.cpp
+  src/HepMC3Options.cpp)
 target_include_directories(
   ActsExamplesIoHepMC3
   SYSTEM PUBLIC ${HEPMC3_INCLUDE_DIR})
@@ -14,7 +15,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoHepMC3
-  PUBLIC ActsCore ActsExamplesFramework ${HEPMC3_LIBRARIES} HepPID)
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 ${HEPMC3_LIBRARIES} HepPID)
 
 install(
   TARGETS ActsExamplesIoHepMC3
