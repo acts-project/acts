@@ -7,18 +7,25 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/ParameterTraits.hpp"
+#include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
+#include <array>
+#include <iosfwd>
 #include <memory>
 #include <ostream>
 #include <type_traits>
 #include <utility>
+#include <variant>
 
 namespace Acts {
 
@@ -391,4 +398,230 @@ using FittableMeasurement =
 template <typename source_link_t>
 using FittableVolumeMeasurement =
     typename fittable_volume_measurement_helper<source_link_t>::type;
+
+/// A measurement of a fixed-size subset of parameters.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+/// @tparam indices_t Parameter index type, determines the full parameter space
+/// @tparam kSize Size of the parameter subset.
+///
+/// TODO explain design decisions and comparison w/ previous implementation
+template <typename source_link_t, typename indices_t, size_t kSize>
+class FixedSizeMeasurement {
+  static_assert(SourceLinkConcept<source_link_t>,
+                "Source link does not fulfill SourceLinkConcept");
+
+  static constexpr size_t kFullSize = detail::kParametersSize<indices_t>;
+
+  using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
+
+ public:
+  using Scalar = typename detail::ParametersScalar<indices_t>;
+  /// Vector type containing for measured parameter values.
+  using ParametersVector = ActsVector<Scalar, kSize>;
+  /// Matrix type for the measurement covariance.
+  using CovarianceMatrix = ActsSymMatrix<Scalar, kSize>;
+  /// Vector type containing all parameters in the same space.
+  using FullParametersVector = ActsVector<Scalar, kFullSize>;
+  using ProjectionMatrix = ActsMatrix<Scalar, kSize, kFullSize>;
+  using ExpansionMatrix = ActsMatrix<Scalar, kFullSize, kSize>;
+
+  /// Construct from source link, subset indices, and measured data.
+  ///
+  /// @tparam parameters_t Input parameters vector type
+  /// @tparam covariance_t Input covariance matrix type
+  /// @param source The link that connects to the underlying detector readout
+  /// @param indices Which parameters are measured
+  /// @param params Measured parameters values
+  /// @param cov Measured parameters covariance
+  template <typename parameters_t, typename covariance_t>
+  FixedSizeMeasurement(source_link_t source,
+                       const std::array<indices_t, kSize>& indices,
+                       const Eigen::MatrixBase<parameters_t>& params,
+                       const Eigen::MatrixBase<covariance_t>& cov)
+      : m_source(std::move(source)),
+        m_subspace(indices),
+        m_params(params),
+        m_cov(cov) {}
+  /// A measurement can only be constructed with valid parameters.
+  FixedSizeMeasurement() = delete;
+  FixedSizeMeasurement(const FixedSizeMeasurement&) = default;
+  FixedSizeMeasurement(FixedSizeMeasurement&&) = default;
+  ~FixedSizeMeasurement() = default;
+  FixedSizeMeasurement& operator=(const FixedSizeMeasurement&) = default;
+  FixedSizeMeasurement& operator=(FixedSizeMeasurement&&) = default;
+
+  /// Source link that connects to the underlying detector readout.
+  constexpr const source_link_t& sourceLink() const { return m_source; }
+
+  /// Number of measured parameters.
+  static constexpr size_t size() { return kSize; }
+
+  /// Check if a specific parameter is part of this measurement.
+  constexpr bool contains(indices_t i) const { return m_subspace.contains(i); }
+
+  /// Measured parameters values.
+  const ParametersVector& parameters() const { return m_params; }
+
+  /// Measured parameters covariance.
+  const CovarianceMatrix& covariance() const { return m_cov; }
+
+  /// Projection matrix from the full space into the measured space.
+  ProjectionMatrix projector() const {
+    return m_subspace.template projector<Scalar>();
+  }
+
+  /// Expansion matrix from the measured into the full space.
+  ///
+  /// This is equivalent to the tranpose of the projection matrix only in the
+  /// case of a trivial projection matrix. While this is the case here, it is
+  /// still recommended to use the expansion matrix directly in cases where it
+  /// is explicitely used.
+  ExpansionMatrix expander() const {
+    return m_subspace.template expander<Scalar>();
+  }
+
+  /// Compute the residuals in the measured space.
+  ///
+  /// @param reference Reference parameters in the full space.
+  ///
+  /// Only the values in the measurement subspace are used for the computation.
+  ParametersVector residual(const FullParametersVector& reference) const {
+    // TODO enforce parameter range from traits
+    return m_params - m_subspace.projectVector(reference);
+  }
+
+  std::ostream& operator<<(std::ostream& os) const {
+    detail::printMeasurement(os, static_cast<indices_t>(kSize),
+                             m_subspace.indices().data(), m_params, m_cov);
+    return os;
+  }
+
+ private:
+  source_link_t m_source;
+  Subspace m_subspace;
+  ParametersVector m_params;
+  CovarianceMatrix m_cov;
+};
+
+/// Construct a fixed-size measurement for the given indices.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+/// @tparam parameters_t Input parameters vector type
+/// @tparam covariance_t Input covariance matrix type
+/// @tparam indices_t Parameter index type, determines the full parameter space
+/// @tparam tail_indices_t Helper types required to
+/// @param source The link that connects to the underlying detector readout
+/// @param params Measured parameters values
+/// @param cov Measured parameters covariance
+/// @param index0 Required parameter index, measurement must be at least 1d
+/// @param tailIndices Additional parameter indices for larger measurements
+/// @return Fixed-size measurement w/ the correct type and given inputs
+///
+/// This helper function can be used to create a fixed-size measurement using an
+/// explicit set of indices, e.g.
+///
+///     auto m = makeFixedSizeMeasurement(s, p, c, eBoundLoc0, eBoundTime);
+///
+/// for a 2d measurement w/ one position and time.
+template <typename source_link_t, typename parameters_t, typename covariance_t,
+          typename indices_t, typename... tail_indices_t>
+auto makeFixedSizeMeasurement(source_link_t source,
+                              const Eigen::MatrixBase<parameters_t>& params,
+                              const Eigen::MatrixBase<covariance_t>& cov,
+                              indices_t index0, tail_indices_t... tailIndices)
+    -> FixedSizeMeasurement<source_link_t, indices_t,
+                            1u + sizeof...(tail_indices_t)> {
+  return {std::move(source), {index0, tailIndices...}, params, cov};
+}
+
+namespace detail {
+
+// Recursive construction of the measurement variant. `kN` is counted down until
+// zero while the sizes are accumulated in the parameter pack.
+//
+// Example:
+//
+//        VariantMeasurementGenerator<..., 4>
+//     -> VariantMeasurementGenerator<..., 3, 4>
+//     -> VariantMeasurementGenerator<..., 2, 3, 4>
+//     -> VariantMeasurementGenerator<..., 1, 2, 3, 4>
+//     -> VariantMeasurementGenerator<..., 0, 1, 2, 3, 4>
+//
+template <typename source_link_t, typename indices_t, size_t kN,
+          size_t... kSizes>
+struct VariantMeasurementGenerator
+    : VariantMeasurementGenerator<source_link_t, indices_t, kN - 1u, kN,
+                                  kSizes...> {};
+template <typename source_link_t, typename indices_t, size_t... kSizes>
+struct VariantMeasurementGenerator<source_link_t, indices_t, 0u, kSizes...> {
+  using Type =
+      std::variant<FixedSizeMeasurement<source_link_t, indices_t, kSizes>...>;
+};
+
+}  // namespace detail
+
+/// Variant that can contain all possible measurements in a parameter space.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+/// @tparam indices_t Parameter index type, determines the full parameter space
+template <typename source_link_t, typename indices_t>
+using VariantMeasurement = typename detail::VariantMeasurementGenerator<
+    source_link_t, indices_t, detail::kParametersSize<indices_t>>::Type;
+
+template <typename source_link_t, typename indices_t>
+std::ostream& operator<<(
+    std::ostream& os, const VariantMeasurement<source_link_t, indices_t>& vm) {
+  return std::visit([&](const auto& m) { return (os << m); }, vm);
+}
+
+/// Variant that can hold all possible bound measurements.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+template <typename source_link_t>
+using VariantBoundMeasurement = VariantMeasurement<source_link_t, BoundIndices>;
+
+/// Variant that can hold all possible free measurements.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+template <typename source_link_t>
+using VariantFreeMeasurement = VariantMeasurement<source_link_t, FreeIndices>;
+
+/// Construct a variant measurement for the given indices.
+///
+/// @tparam source_link_t Source link type to connect to the detector readout
+/// @tparam parameters_t Input parameters vector type
+/// @tparam covariance_t Input covariance matrix type
+/// @tparam indices_t Parameter index type, determines the full parameter space
+/// @tparam tail_indices_t Helper types required to
+/// @param source The link that connects to the underlying detector readout
+/// @param params Measured parameters values
+/// @param cov Measured parameters covariance
+/// @param index0 Required parameter index, measurement must be at least 1d
+/// @param tailIndices Additional parameter indices for larger measurements
+/// @return Variant measurement w/ the correct type and given inputs
+///
+/// This helper function can be used to create a variant measurement using an
+/// explicit set of indices, e.g.
+///
+///     auto m = makeFixedSizeMeasurement(s, p2, c2, eBoundLoc0, eBoundTime);
+///
+/// for a 2d measurement w/ one position and time. The returned type is
+/// independent of the number of input indices since the variant can hold
+/// multiple options. It can be set to a different size e.g.
+///
+///     // assign to same variable as before
+///     m = makeFixedSizeMeasurement(s, p1, c1, eBoundLoc1);
+///
+template <typename source_link_t, typename parameters_t, typename covariance_t,
+          typename indices_t, typename... tail_indices_t>
+auto makeVariantMeasurement(source_link_t source,
+                            const Eigen::MatrixBase<parameters_t>& params,
+                            const Eigen::MatrixBase<covariance_t>& cov,
+                            indices_t index0, tail_indices_t... tailIndices)
+    -> VariantMeasurement<source_link_t, indices_t> {
+  return makeFixedSizeMeasurement(std::move(source), params, cov, index0,
+                                  tailIndices...);
+}
+
 }  // namespace Acts
