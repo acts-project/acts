@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <G4Step.hh>
 #include <G4VProcess.hh>
+#include <G4RunManager.hh>
 #include "EventAction.hpp"
 
 #include <HepMC3/Attribute.h>
@@ -23,7 +24,7 @@ ActsExamples::SteppingAction* ActsExamples::SteppingAction::instance() {
   return s_instance;
 }
 
-ActsExamples::SteppingAction::SteppingAction() : G4UserSteppingAction() {
+ActsExamples::SteppingAction::SteppingAction(std::vector<std::string> eventRejectionProcess) : G4UserSteppingAction(), m_eventRejectionProcess(eventRejectionProcess) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
@@ -36,6 +37,15 @@ ActsExamples::SteppingAction::~SteppingAction() {
 }
 
 void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
+
+// Test if the event should be aborted
+if(std::find(m_eventRejectionProcess.begin(), m_eventRejectionProcess.end(), step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName()) != m_eventRejectionProcess.end())
+{
+	m_eventAborted = true;
+	G4RunManager::GetRunManager()->AbortEvent();
+	return;
+}
+	
   /// Store the step such that a vertex knows the position and upcoming process
   /// for a particle. The particle properties are stored as ingoing before and
   /// as outgoing after the step with the process was performed. Therefore the
@@ -148,4 +158,5 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
 
 void ActsExamples::SteppingAction::clear() {
   m_previousVertex = nullptr;
+  m_eventAborted = false;
 }

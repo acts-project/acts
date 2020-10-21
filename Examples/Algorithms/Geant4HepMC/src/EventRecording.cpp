@@ -50,7 +50,7 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserAction(new ActsExamples::EventAction(m_cfg.processFilter));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new ActsExamples::SteppingAction());
+  m_runManager->SetUserAction(new ActsExamples::SteppingAction(m_cfg.eventRejectionProcess));
   m_runManager->Initialize();
 }
 
@@ -68,8 +68,6 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
   std::vector<HepMC3::GenEvent> events;
   events.reserve(initialParticles.size());
 
-  std::vector<std::string> processSelection = {"Inelastic"};
-
   for (const auto& part : initialParticles) {
     // Prepare the particle gun
     ActsExamples::PrimaryGeneratorAction::instance()->prepareParticleGun(part);
@@ -77,22 +75,29 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
+	// Test if the event was aborted
+	if(SteppingAction::instance()->eventAborted())
+	{
+		continue;
+	}
+	
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::s);
     event.shift_position_by(shift);
 
-	if(processSelection.empty())
+	if(m_cfg.eventSelectionProcess.empty())
 	{
 		// Store the result
 		events.push_back(std::move(event));
 	}
 	else
 	{
+		// Test if the event has a process of interest in it
 		for(const auto& vertex : event.vertices())
 		{
 			const std::vector<std::string> vertexAttributes = vertex->attribute_names();
 			for(const auto& att : vertexAttributes)
-				for(const auto& proc : processSelection)
+				for(const auto& proc : m_cfg.eventSelectionProcess)
 					if(vertex->attribute_as_string(att).find(proc) != std::string::npos)
 					{
 						// Store the result
