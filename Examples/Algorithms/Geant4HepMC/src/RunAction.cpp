@@ -34,9 +34,9 @@ RunAction::~RunAction() {
   s_instance = nullptr;
 }
 
-void RunAction::BeginOfRunAction(const G4Run* aRun) {
+void RunAction::BeginOfRunAction(const G4Run* /*unused*/) {
   // initialize event cumulative quantities
   EventAction::instance()->clear();
 }
 
-void RunAction::EndOfRunAction(const G4Run*) {}
+void RunAction::EndOfRunAction(const G4Run* /*unused*/) {}

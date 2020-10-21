@@ -31,10 +31,10 @@ class RunAction final : public G4UserRunAction {
 
   /// Interface method at the begin of the run
   /// @note resets the event action
-  void BeginOfRunAction(const G4Run*) final override;
+  void BeginOfRunAction(const G4Run* /*unused*/) final override;
 
   /// Interface method at the end of the run
-  void EndOfRunAction(const G4Run*) final override;
+  void EndOfRunAction(const G4Run* /*unused*/) final override;
 
  private:
   /// Instance of the EventAction
