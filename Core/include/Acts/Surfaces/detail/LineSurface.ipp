@@ -132,28 +132,17 @@ inline SurfaceIntersection LineSurface::intersect(
 
 inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
     const GeometryContext& gctx, const BoundVector& boundParams) const {
-  // convert angles to global unit direction vector
+  // Convert angles to global unit direction vector
   const Vector3D direction = makeDirectionUnitFromPhiTheta(
       boundParams[eBoundPhi], boundParams[eBoundTheta]);
-  // convert local position to global position vector
+  // Convert local position to global position vector
   const Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
   const Vector3D position = localToGlobal(gctx, local, direction);
-  // The trigonometry required to convert the direction to spherical
-  // coordinates and then compute the sines and cosines again can be
-  // surprisingly expensive from a performance point of view.
-  //
-  // Here, we can avoid it because the direction is by definition a unit
-  // vector, with the following coordinate conversions...
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-
-  // ...which we can invert to directly get the sines and cosines:
-  const double cos_theta = z;
-  const double sin_theta = sqrt(x * x + y * y);
-  const double inv_sin_theta = 1. / sin_theta;
-  const double cos_phi = x * inv_sin_theta;
-  const double sin_phi = y * inv_sin_theta;
+  // Get the sines and cosines directly
+  const double cos_theta = std::cos(boundParams[eBoundTheta]);
+  const double sin_theta = std::sin(boundParams[eBoundTheta]);
+  const double cos_phi = std::cos(boundParams[eBoundPhi]);
+  const double sin_phi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
   // Initialize the jacobian from local to global
