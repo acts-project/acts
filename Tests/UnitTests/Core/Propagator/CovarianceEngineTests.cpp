@@ -78,10 +78,12 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BOOST_CHECK_EQUAL(parameters, startParameters);
 
   // Produce a curvilinear state without covariance matrix
+  auto covarianceBefore = covariance;
   auto curvResult = detail::curvilinearState(
       covariance, jacobian, transportJacobian, derivatives,
       jacobianLocalToGlobal, parameters, false, 1337.);
-  BOOST_CHECK(!std::get<0>(curvResult).covariance().has_value());
+  BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
+  BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
   BOOST_CHECK_EQUAL(std::get<2>(curvResult), 1337.);
 
   // Reset
@@ -102,10 +104,12 @@ BOOST_AUTO_TEST_CASE(covariance_engine_test) {
   BOOST_CHECK_EQUAL(std::get<2>(curvResult), 1337.);
 
   // Produce a bound state without covariance matrix
+  covarianceBefore = covariance;
   auto boundResult = detail::boundState(
       tgContext, covariance, jacobian, transportJacobian, derivatives,
       jacobianLocalToGlobal, parameters, false, 1337., *surface);
-  BOOST_CHECK(!std::get<0>(boundResult).covariance().has_value());
+  BOOST_CHECK(std::get<0>(curvResult).covariance().has_value());
+  BOOST_CHECK_EQUAL(*(std::get<0>(curvResult).covariance()), covarianceBefore);
   BOOST_CHECK_EQUAL(std::get<2>(boundResult), 1337.);
 
   // Reset
