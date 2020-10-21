@@ -172,7 +172,7 @@ struct PropagatorState {
                              state.pathAccumulated);
     }
 
-    FreeState freeState(State& state) const {
+    FreeState freeState(State& state, bool /*unused*/) const {
       // Create the free parameters
       FreeVector pars;
       pars.template segment<4>(eFreePos0) = state.pos4;

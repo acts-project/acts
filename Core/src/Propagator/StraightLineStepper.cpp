@@ -30,7 +30,7 @@ auto StraightLineStepper::curvilinearState(State& state, bool transportCov) cons
       state.covTransport && transportCov, state.pathAccumulated);
 }
 
-auto StraightLineStepper::freeState(State& state) const -> FreeState {
+auto StraightLineStepper::freeState(State& state, bool transportCov) const -> FreeState {
   FreeVector parameters;
   parameters[eFreePos0] = state.pos[ePos0];
   parameters[eFreePos1] = state.pos[ePos1];
@@ -43,7 +43,7 @@ auto StraightLineStepper::freeState(State& state) const -> FreeState {
   return detail::freeState(state.cov, state.jacobian, state.jacTransport,
                            state.derivative, state.jacToGlobal,
                            state.jacDirToAngle, state.jacAngleToDir, parameters,
-                           state.covTransport, state.pathAccumulated);
+                           state.covTransport && transportCov, state.pathAccumulated);
 }
 
 auto

@@ -370,10 +370,11 @@ class EigenStepper {
   /// @brief Final state builder without a target surface
   ///
   /// @param [in, out] state State of the propagation
+  /// @param [in] transportCov Flag steering covariance transport
   ///
   /// @return std::tuple conatining the final state parameters, the jacobian &
   /// the accumulated path
-  FreeState freeState(State& state) const;
+  FreeState freeState(State& state, bool transportCov = true) const;
 
   /// @brief Final state builder without a target surface
   ///

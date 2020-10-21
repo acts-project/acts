@@ -69,14 +69,14 @@ auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
 }
 
 template <typename B, typename E, typename A>
-auto Acts::EigenStepper<B, E, A>::freeState(State& state) const -> FreeState {
+auto Acts::EigenStepper<B, E, A>::freeState(State& state, bool transportCov) const -> FreeState {
   FreeVector parameters;
   parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
       state.dir[1], state.dir[2], (state.q != 0. ? state.q : 1.) / state.p;
   return detail::freeState(state.cov, state.jacobian, state.jacTransport,
                            state.derivative, state.jacToGlobal,
                            state.jacDirToAngle, state.jacAngleToDir, parameters,
-                           state.covTransport, state.pathAccumulated);
+                           state.covTransport && transportCov, state.pathAccumulated);
 }
 
 template <typename B, typename E, typename A>
@@ -94,6 +94,7 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                             state.pathAccumulated, surface);
 }
 
+template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::update(State& state,
                                          const FreeVector& parameters,
                                          const Covariance& covariance) const {

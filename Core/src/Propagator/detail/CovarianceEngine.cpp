@@ -386,16 +386,11 @@ BoundState boundState(std::reference_wrapper<const GeometryContext> geoContext,
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     covarianceTransport(geoContext, covarianceMatrix, jacobian,
-<<<<<<< HEAD
-                        transportJacobian, derivatives, jacobianLocalToGlobal, jacobianDirToAngle, jacobianAngleToDir,
-                        parameters, surface);
-  }
-  if (std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
-=======
                         transportJacobian, derivatives, jacobianLocalToGlobal,
                         jacobianDirToAngle, jacobianAngleToDir, parameters,
                         surface);
->>>>>>> Format fixed
+  }
+  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) && std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
     cov = std::get<BoundSymMatrix>(covarianceMatrix);
   }
 
@@ -421,14 +416,10 @@ CurvilinearState curvilinearState(
   std::optional<BoundSymMatrix> cov = std::nullopt;
   if (covTransport) {
     covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
-<<<<<<< HEAD
-                        derivatives, jacobianLocalToGlobal, jacobianDirToAngle, jacobianAngleToDir,  direction, true);
-  }
-  if (std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
-=======
                         derivatives, jacobianLocalToGlobal, jacobianDirToAngle,
                         jacobianAngleToDir, direction, true);
->>>>>>> Format fixed
+  }
+  if (std::get_if<BoundSymMatrix>(&covarianceMatrix) && std::get<BoundSymMatrix>(covarianceMatrix) != BoundSymMatrix::Zero()) {
     cov = std::get<BoundSymMatrix>(covarianceMatrix);
   }
 
@@ -458,6 +449,8 @@ FreeState freeState(Covariance& covarianceMatrix, Jacobian& jacobian,
     covarianceTransport(covarianceMatrix, jacobian, transportJacobian,
                         derivatives, jacobianLocalToGlobal, jacobianDirToAngle,
                         jacobianAngleToDir, parameters.segment<3>(4), false);
+  }
+  if (std::get_if<FreeSymMatrix>(&covarianceMatrix) && std::get<FreeSymMatrix>(covarianceMatrix) != FreeSymMatrix::Zero()) {
     cov = std::get<FreeSymMatrix>(covarianceMatrix);
   }
   // Create the free parameters

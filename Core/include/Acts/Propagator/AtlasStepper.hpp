@@ -619,11 +619,11 @@ class AtlasStepper {
     const auto qOverP = state.pVector[7];
 
     // The transport of the covariance
-    std::optional<Covariance> covOpt = std::nullopt;
+    std::optional<BoundSymMatrix> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
       covarianceTransport(state, surface);
     }
-    if (std::get<BoundSymMatrix>(state.cov) != Covariance::Zero()) {
+    if (std::get<BoundSymMatrix>(state.cov) != BoundSymMatrix::Zero()) {
       covOpt = std::get<BoundSymMatrix>(state.cov);
     }
 
@@ -661,11 +661,11 @@ class AtlasStepper {
     dir[eMom2] = state.pVector[6];
     const auto qOverP = state.pVector[7];
 
-    std::optional<Covariance> covOpt = std::nullopt;
+    std::optional<BoundSymMatrix> covOpt = std::nullopt;
     if (state.covTransport && transportCov) {
       covarianceTransport(state);
     }
-    if (std::get<BoundSymMatrix>(state.cov) != Covariance::Zero()) {
+    if (std::get<BoundSymMatrix>(state.cov) != BoundSymMatrix::Zero()) {
       covOpt = std::get<BoundSymMatrix>(state.cov);
     }
 
@@ -679,7 +679,7 @@ class AtlasStepper {
   ///
   /// @warning The functionality is not implemented
   /// @throw
-  [[noreturn]] FreeState freeState(State& /*unused*/) const {
+  [[noreturn]] FreeState freeState(State& /*unused*/, bool /*unused*/) const {
     throw std::runtime_error("AtlasStepper::freeState is not implemented");
   }
 

@@ -129,7 +129,7 @@ using geo_context_t = decltype(std::declval<T>().geoContext);
         static_assert(output_step_size_exists, "outputStepSize method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
-        constexpr static bool free_state_method_exists = has_method<const S, typename S::FreeState, free_state_method_t, state&>;
+        constexpr static bool free_state_method_exists = has_method<const S, typename S::FreeState, free_state_method_t, state&, bool>;
         static_assert(free_state_method_exists, "freeState method not found");        
         constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
         static_assert(bound_state_method_exists, "boundState method not found");
