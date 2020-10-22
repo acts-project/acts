@@ -100,7 +100,6 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
                 std::string::npos) {
               // Store the result
               events.push_back(std::move(event));
-              std::cout << "Event stored" << std::endl;
             }
       }
     }
