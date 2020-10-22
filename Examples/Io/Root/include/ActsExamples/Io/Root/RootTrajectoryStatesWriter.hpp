@@ -124,40 +124,74 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
-  std::array<int, 3> m_nParams;
-  std::array<std::vector<bool>, 3> m_hasParams;
-  std::array<std::vector<float>, 3> m_eLOC0;
-  std::array<std::vector<float>, 3> m_eLOC1;
-  std::array<std::vector<float>, 3> m_ePHI;
-  std::array<std::vector<float>, 3> m_eTHETA;
-  std::array<std::vector<float>, 3> m_eQOP;
-  std::array<std::vector<float>, 3> m_eT;
-  std::array<std::vector<float>, 3> m_res_eLOC0;
-  std::array<std::vector<float>, 3> m_res_eLOC1;
-  std::array<std::vector<float>, 3> m_res_ePHI;
-  std::array<std::vector<float>, 3> m_res_eTHETA;
-  std::array<std::vector<float>, 3> m_res_eQOP;
-  std::array<std::vector<float>, 3> m_res_eT;
-  std::array<std::vector<float>, 3> m_err_eLOC0;
-  std::array<std::vector<float>, 3> m_err_eLOC1;
-  std::array<std::vector<float>, 3> m_err_ePHI;
-  std::array<std::vector<float>, 3> m_err_eTHETA;
-  std::array<std::vector<float>, 3> m_err_eQOP;
-  std::array<std::vector<float>, 3> m_err_eT;
-  std::array<std::vector<float>, 3> m_pull_eLOC0;
-  std::array<std::vector<float>, 3> m_pull_eLOC1;
-  std::array<std::vector<float>, 3> m_pull_ePHI;
-  std::array<std::vector<float>, 3> m_pull_eTHETA;
-  std::array<std::vector<float>, 3> m_pull_eQOP;
-  std::array<std::vector<float>, 3> m_pull_eT;
-  std::array<std::vector<float>, 3> m_x;
-  std::array<std::vector<float>, 3> m_y;
-  std::array<std::vector<float>, 3> m_z;
-  std::array<std::vector<float>, 3> m_px;
-  std::array<std::vector<float>, 3> m_py;
-  std::array<std::vector<float>, 3> m_pz;
-  std::array<std::vector<float>, 3> m_eta;
-  std::array<std::vector<float>, 3> m_pT;
+  std::array<int, 3> m_nParams;  ///< number of states which have
+                                 ///< filtered/predicted/smoothed parameters
+  std::array<std::vector<bool>, 3>
+      m_hasParams;  ///< status of the filtered/predicted/smoothed parameters
+  std::array<std::vector<float>, 3>
+      m_eLOC0;  ///< predicted/filtered/smoothed parameter eLOC0
+  std::array<std::vector<float>, 3>
+      m_eLOC1;  ///< predicted/filtered/smoothed parameter eLOC1
+  std::array<std::vector<float>, 3>
+      m_ePHI;  ///< predicted/filtered/smoothed parameter ePHI
+  std::array<std::vector<float>, 3>
+      m_eTHETA;  ///< predicted/filtered/smoothed parameter eTHETA
+  std::array<std::vector<float>, 3>
+      m_eQOP;  ///< predicted/filtered/smoothed parameter eQOP
+  std::array<std::vector<float>, 3>
+      m_eT;  ///< predicted/filtered/smoothed parameter eT
+  std::array<std::vector<float>, 3>
+      m_res_eLOC0;  ///< predicted/filtered/smoothed parameter eLOC0 residual
+  std::array<std::vector<float>, 3>
+      m_res_eLOC1;  ///< predicted/filtered/smoothed parameter eLOC1 residual
+  std::array<std::vector<float>, 3>
+      m_res_ePHI;  ///< predicted/filtered/smoothed parameter ePHI residual
+  std::array<std::vector<float>, 3>
+      m_res_eTHETA;  ///< predicted/filtered/smoothed parameter eTHETA residual
+  std::array<std::vector<float>, 3>
+      m_res_eQOP;  ///< predicted/filtered/smoothed parameter eQOP residual
+  std::array<std::vector<float>, 3>
+      m_res_eT;  ///< predicted/filtered/smoothed parameter eT residual
+  std::array<std::vector<float>, 3>
+      m_err_eLOC0;  ///< predicted/filtered/smoothed parameter eLOC0 error
+  std::array<std::vector<float>, 3>
+      m_err_eLOC1;  ///< predicted/filtered/smoothed parameter eLOC1 error
+  std::array<std::vector<float>, 3>
+      m_err_ePHI;  ///< predicted/filtered/smoothed parameter ePHI error
+  std::array<std::vector<float>, 3>
+      m_err_eTHETA;  ///< predicted/filtered/smoothed parameter eTHETA error
+  std::array<std::vector<float>, 3>
+      m_err_eQOP;  ///< predicted/filtered/smoothed parameter eQOP error
+  std::array<std::vector<float>, 3>
+      m_err_eT;  ///< predicted/filtered/smoothed parameter eT error
+  std::array<std::vector<float>, 3>
+      m_pull_eLOC0;  ///< predicted/filtered/smoothed parameter eLOC0 pull
+  std::array<std::vector<float>, 3>
+      m_pull_eLOC1;  ///< predicted/filtered/smoothed parameter eLOC1 pull
+  std::array<std::vector<float>, 3>
+      m_pull_ePHI;  ///< predicted/filtered/smoothed parameter ePHI pull
+  std::array<std::vector<float>, 3>
+      m_pull_eTHETA;  ///< predicted/filtered/smoothed parameter eTHETA pull
+  std::array<std::vector<float>, 3>
+      m_pull_eQOP;  ///< predicted/filtered/smoothed parameter eQOP pull
+  std::array<std::vector<float>, 3>
+      m_pull_eT;  ///< predicted/filtered/smoothed parameter eT pull
+  std::array<std::vector<float>, 3>
+      m_x;  ///< predicted/filtered/smoothed parameter global x
+  std::array<std::vector<float>, 3>
+      m_y;  ///< predicted/filtered/smoothed parameter global y
+  std::array<std::vector<float>, 3>
+      m_z;  ///< predicted/filtered/smoothed parameter global z
+  std::array<std::vector<float>, 3>
+      m_px;  ///< predicted/filtered/smoothed parameter px
+  std::array<std::vector<float>, 3>
+      m_py;  ///< predicted/filtered/smoothed parameter py
+  std::array<std::vector<float>, 3>
+      m_pz;  ///< predicted/filtered/smoothed parameter pz
+  std::array<std::vector<float>, 3>
+      m_eta;  ///< predicted/filtered/smoothed parameter eta
+  std::array<std::vector<float>, 3>
+      m_pT;  ///< predicted/filtered/smoothed parameter pT
 
   std::vector<float> m_chi2;  ///< chisq from filtering
 };
