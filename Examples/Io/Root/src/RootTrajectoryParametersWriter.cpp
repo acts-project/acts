@@ -70,7 +70,8 @@ ActsExamples::RootTrajectoryParametersWriter::RootTrajectoryParametersWriter(
   else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("traj_nr", &m_trajNr);
+    m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
+    m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
     m_outputTree->Branch("t_barcode", &m_t_barcode, "t_barcode/l");
     m_outputTree->Branch("t_charge", &m_t_charge);
     m_outputTree->Branch("t_time", &m_t_time);
@@ -152,79 +153,82 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
       continue;
     }
 
-    m_trajNr = itraj;
+    // The trajectory index
+    m_multiTrajNr = itraj;
 
     // The trajectory entry indices and the multiTrajectory
     const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
-    // Check the size of the trajectory entry indices. For track fitting, there
-    // should be at most one trajectory
-    if (trackTips.size() > 1) {
-      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
-      return ProcessCode::ABORT;
-    }
 
-    // Get the entry index for the single trajectory
-    auto trackTip = trackTips.front();
-    // Collect the trajectory summary info
-    auto trajState =
-        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    // Loop over the entry indices for the subtrajectories
+    for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
+      // The subtrajectory index
+      m_subTrajNr = isubtraj;
+      // The entry index for this subtrajectory
+      const auto& trackTip = trackTips[isubtraj];
 
-    // Get the majority truth particle to this track
-    identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                  particleHitCounts);
-    if (not particleHitCounts.empty()) {
-      // Get the barcode of the majority truth particle
-      m_t_barcode = particleHitCounts.front().particleId.value();
-      // Find the truth particle via the barcode
-      auto ip = particles.find(m_t_barcode);
-      if (ip != particles.end()) {
-        const auto& particle = *ip;
-        ACTS_DEBUG("Find the truth particle with barcode = " << m_t_barcode);
-        // Get the truth particle info at vertex
-        const auto p = particle.absMomentum();
-        m_t_charge = particle.charge();
-        m_t_time = particle.time();
-        m_t_vx = particle.position().x();
-        m_t_vy = particle.position().y();
-        m_t_vz = particle.position().z();
-        m_t_px = p * particle.unitDirection().x();
-        m_t_py = p * particle.unitDirection().y();
-        m_t_pz = p * particle.unitDirection().z();
-        m_t_theta = theta(particle.unitDirection());
-        m_t_phi = phi(particle.unitDirection());
-        m_t_eta = eta(particle.unitDirection());
-        m_t_pT = p * perp(particle.unitDirection());
-      } else {
-        ACTS_WARNING("Truth particle with barcode = " << m_t_barcode
-                                                      << " not found!");
+      // Collect the trajectory summary info
+      auto trajState =
+          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+
+      // Get the majority truth particle to this track
+      identifyContributingParticles(hitParticlesMap, traj, trackTip,
+                                    particleHitCounts);
+      if (not particleHitCounts.empty()) {
+        // Get the barcode of the majority truth particle
+        m_t_barcode = particleHitCounts.front().particleId.value();
+        // Find the truth particle via the barcode
+        auto ip = particles.find(m_t_barcode);
+        if (ip != particles.end()) {
+          const auto& particle = *ip;
+          ACTS_DEBUG("Find the truth particle with barcode = " << m_t_barcode);
+          // Get the truth particle info at vertex
+          const auto p = particle.absMomentum();
+          m_t_charge = particle.charge();
+          m_t_time = particle.time();
+          m_t_vx = particle.position().x();
+          m_t_vy = particle.position().y();
+          m_t_vz = particle.position().z();
+          m_t_px = p * particle.unitDirection().x();
+          m_t_py = p * particle.unitDirection().y();
+          m_t_pz = p * particle.unitDirection().z();
+          m_t_theta = theta(particle.unitDirection());
+          m_t_phi = phi(particle.unitDirection());
+          m_t_eta = eta(particle.unitDirection());
+          m_t_pT = p * perp(particle.unitDirection());
+        } else {
+          ACTS_WARNING("Truth particle with barcode = " << m_t_barcode
+                                                        << " not found!");
+        }
       }
-    }
 
-    // Get the fitted track parameter
-    m_hasFittedParams = false;
-    if (traj.hasTrackParameters(trackTip)) {
-      m_hasFittedParams = true;
-      const auto& boundParam = traj.trackParameters(trackTip);
-      const auto& parameter = boundParam.parameters();
-      const auto& covariance = *boundParam.covariance();
-      m_eLOC0_fit = parameter[Acts::eBoundLoc0];
-      m_eLOC1_fit = parameter[Acts::eBoundLoc1];
-      m_ePHI_fit = parameter[Acts::eBoundPhi];
-      m_eTHETA_fit = parameter[Acts::eBoundTheta];
-      m_eQOP_fit = parameter[Acts::eBoundQOverP];
-      m_eT_fit = parameter[Acts::eBoundTime];
-      m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
-      m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-      m_err_eTHETA_fit = sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
-      m_err_eQOP_fit = sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
-      m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
-    }
+      // Get the fitted track parameter
+      m_hasFittedParams = false;
+      if (traj.hasTrackParameters(trackTip)) {
+        m_hasFittedParams = true;
+        const auto& boundParam = traj.trackParameters(trackTip);
+        const auto& parameter = boundParam.parameters();
+        const auto& covariance = *boundParam.covariance();
+        m_eLOC0_fit = parameter[Acts::eBoundLoc0];
+        m_eLOC1_fit = parameter[Acts::eBoundLoc1];
+        m_ePHI_fit = parameter[Acts::eBoundPhi];
+        m_eTHETA_fit = parameter[Acts::eBoundTheta];
+        m_eQOP_fit = parameter[Acts::eBoundQOverP];
+        m_eT_fit = parameter[Acts::eBoundTime];
+        m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
+        m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
+        m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
+        m_err_eTHETA_fit =
+            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
+        m_err_eQOP_fit =
+            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
+        m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+      }
 
-    // fill the variables for one track to tree
-    m_outputTree->Fill();
-  }  // all trajectories
+      // fill the variables for one track to tree
+      m_outputTree->Fill();
+    }  // all subtrajectories
+  }    // all trajectories
 
   return ProcessCode::SUCCESS;
 }

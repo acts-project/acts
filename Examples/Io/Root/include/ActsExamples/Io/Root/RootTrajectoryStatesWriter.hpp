@@ -82,10 +82,11 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};  ///< The output file
-  TTree* m_outputTree{nullptr};  ///< The output tree
-  int m_eventNr{0};              ///< the event number
-  int m_trajNr{0};               ///< the trajectory number
+  TFile* m_outputFile{nullptr};   ///< The output file
+  TTree* m_outputTree{nullptr};   ///< The output tree
+  unsigned int m_eventNr{0};      ///< the event number
+  unsigned int m_multiTrajNr{0};  ///< the multi-trajectory number
+  unsigned int m_subTrajNr{0};  ///< the multi-trajectory sub-trajectory number
 
   std::vector<float> m_t_x;  ///< Global truth hit position x
   std::vector<float> m_t_y;  ///< Global truth hit position y
@@ -105,8 +106,8 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_t_eQOP;    ///< truth parameter eQOP
   std::vector<float> m_t_eT;      ///< truth parameter eT
 
-  int m_nStates{0};                 ///< number of all states
-  int m_nMeasurements{0};           ///< number of states with measurements
+  unsigned int m_nStates{0};        ///< number of all states
+  unsigned int m_nMeasurements{0};  ///< number of states with measurements
   std::vector<int> m_volumeID;      ///< volume identifier
   std::vector<int> m_layerID;       ///< layer identifier
   std::vector<int> m_moduleID;      ///< surface identifier

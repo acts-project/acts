@@ -77,10 +77,11 @@ class RootTrajectoryParametersWriter final
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  TFile* m_outputFile{nullptr};  ///< The output file
-  TTree* m_outputTree{nullptr};  ///< The output tree
-  int m_eventNr{0};              ///< the event number
-  int m_trajNr{0};               ///< the trajectory number
+  TFile* m_outputFile{nullptr};   ///< The output file
+  TTree* m_outputTree{nullptr};   ///< The output tree
+  unsigned int m_eventNr{0};      ///< the event number
+  unsigned int m_multiTrajNr{0};  ///< the multi-trajectory number
+  unsigned int m_subTrajNr{0};  ///< the multi-trajectory sub-trajectory number
 
   unsigned long m_t_barcode{0};  ///< Truth particle barcode
   int m_t_charge{0};             ///< Truth particle charge

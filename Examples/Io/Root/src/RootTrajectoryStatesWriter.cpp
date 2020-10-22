@@ -80,7 +80,8 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
-    m_outputTree->Branch("traj_nr", &m_trajNr);
+    m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
+    m_outputTree->Branch("subTraj_nr", &m_subTrajNr);
 
     m_outputTree->Branch("t_x", &m_t_x);
     m_outputTree->Branch("t_y", &m_t_y);
@@ -282,372 +283,374 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     }
 
     // The trajectory index
-    m_trajNr = itraj;
+    m_multiTrajNr = itraj;
 
     // The trajectory entry indices and the multiTrajectory
     const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
-    // Check the size of the trajectory entry indices. For track fitting, there
-    // should be at most one trajectory
-    if (trackTips.size() > 1) {
-      ACTS_ERROR("Track fitting should not result in multiple trajectories.");
-      return ProcessCode::ABORT;
-    }
 
-    // Get the entry index for the single trajectory
-    auto trackTip = trackTips.front();
-    // Collect the trajectory summary info
-    auto trajState =
-        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
-    m_nMeasurements = trajState.nMeasurements;
-    m_nStates = trajState.nStates;
+    // Loop over the entry indices for the subtrajectories
+    for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
+      // The subtrajectory index
+      m_subTrajNr = isubtraj;
+      // The entry index for this subtrajectory
+      const auto& trackTip = trackTips[isubtraj];
+      // Collect the trajectory summary info
+      auto trajState =
+          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+      m_nMeasurements = trajState.nMeasurements;
+      m_nStates = trajState.nStates;
 
-    // Get the majority truth particle to this track
-    float truthQ = 1.;
-    identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                  particleHitCounts);
-    if (not particleHitCounts.empty()) {
-      // Get the barcode of the majority truth particle
-      auto barcode = particleHitCounts.front().particleId.value();
-      // Find the truth particle via the barcode
-      auto ip = particles.find(barcode);
-      if (ip != particles.end()) {
-        const auto& particle = *ip;
-        ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
-        // Get the truth particle charge
-        truthQ = particle.charge();
-      } else {
-        ACTS_WARNING("Truth particle with barcode = " << barcode
-                                                      << " not found!");
-      }
-    }
-
-    // Get the trackStates on the trajectory
-    m_nParams = {0, 0, 0};
-    mj.visitBackwards(trackTip, [&](const auto& state) {
-      // we only fill the track states with non-outlier measurement
-      auto typeFlags = state.typeFlags();
-      if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
-        return true;
-      }
-
-      const auto hitIdx = state.uncalibrated().index();
-      const auto& fullMeas = measurements[hitIdx];
-      const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
-      const auto& surface = meas.referenceObject();
-
-      // get the truth hits corresponding to this trackState
-      // Use average truth in the case of multiple contributing sim hits
-      auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-      auto [truthLocal, truthPos4, truthUnitDir] =
-          detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
-      // momemtum averaging makes even less sense than averaging position and
-      // direction. use the first momentum or set q/p to zero
-      float truthQOP = 0.0f;
-      if (not indices.empty()) {
-        // we assume that the indices are within valid ranges so we do not need
-        // to check their validity again.
-        const auto simHitIdx0 = indices.begin()->second;
-        const auto& simHit0 = *simHits.nth(simHitIdx0);
-        const auto p =
-            simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
-        truthQOP = truthQ / p;
-      }
-
-      // fill the truth hit info
-      m_t_x.push_back(truthPos4[Acts::ePos0]);
-      m_t_y.push_back(truthPos4[Acts::ePos1]);
-      m_t_z.push_back(truthPos4[Acts::ePos2]);
-      m_t_r.push_back(perp(truthPos4.template segment<3>(Acts::ePos0)));
-      m_t_dx.push_back(truthUnitDir[Acts::eMom0]);
-      m_t_dy.push_back(truthUnitDir[Acts::eMom1]);
-      m_t_dz.push_back(truthUnitDir[Acts::eMom1]);
-
-      // get the truth track parameter at this track State
-      float truthLOC0 = truthLocal[Acts::ePos0];
-      float truthLOC1 = truthLocal[Acts::ePos1];
-      float truthTIME = truthPos4[Acts::eTime];
-      float truthPHI = phi(truthUnitDir);
-      float truthTHETA = theta(truthUnitDir);
-
-      // fill the truth track parameter at this track State
-      m_t_eLOC0.push_back(truthLOC0);
-      m_t_eLOC1.push_back(truthLOC1);
-      m_t_ePHI.push_back(truthPHI);
-      m_t_eTHETA.push_back(truthTHETA);
-      m_t_eQOP.push_back(truthQOP);
-      m_t_eT.push_back(truthTIME);
-
-      // get the geometry ID
-      auto geoID = surface.geometryId();
-      m_volumeID.push_back(geoID.volume());
-      m_layerID.push_back(geoID.layer());
-      m_moduleID.push_back(geoID.sensitive());
-
-      // get local position
-      Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
-                           meas.parameters()[Acts::eBoundLoc1]);
-      // get global position
-      Acts::Vector3D mom(1, 1, 1);
-      Acts::Vector3D global = surface.localToGlobal(ctx.geoContext, local, mom);
-
-      // get measurement covariance
-      auto cov = meas.covariance();
-      // float resX = sqrt(cov(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      // float resY = sqrt(cov(Acts::eBoundLoc1, Acts::eBoundLoc1));
-
-      // fill the measurement info
-      m_lx_hit.push_back(local.x());
-      m_ly_hit.push_back(local.y());
-      m_x_hit.push_back(global.x());
-      m_y_hit.push_back(global.y());
-      m_z_hit.push_back(global.z());
-
-      // status of the fitted track parameters
-      std::array<bool, 3> hasParams = {false, false, false};
-      // optional fitted track parameters
-      std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>>
-          trackParamsOpt = std::nullopt;
-      // lambda to get the fitted track parameters
-      auto getTrackParams = [&](unsigned int ipar) {
-        if (ipar == 0 && state.hasPredicted()) {
-          hasParams[0] = true;
-          m_nParams[0]++;
-          trackParamsOpt =
-              std::make_pair(state.predicted(), state.predictedCovariance());
-        } else if (ipar == 1 && state.hasFiltered()) {
-          hasParams[1] = true;
-          m_nParams[1]++;
-          trackParamsOpt =
-              std::make_pair(state.filtered(), state.filteredCovariance());
-        } else if (ipar == 2 && state.hasSmoothed()) {
-          hasParams[2] = true;
-          m_nParams[2]++;
-          trackParamsOpt =
-              std::make_pair(state.smoothed(), state.smoothedCovariance());
-        }
-      };
-
-      // fill the fitted track parameters
-      for (unsigned int ipar = 0; ipar < 3; ++ipar) {
-        // get the fitted track parameters
-        getTrackParams(ipar);
-        if (trackParamsOpt) {
-          const auto& [parameters, covariance] = *trackParamsOpt;
-          if (ipar == 0) {
-            // local hit residual info
-            auto H = meas.projector();
-            auto resCov = cov + H * covariance * H.transpose();
-            auto residual = meas.residual(parameters);
-            m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
-            m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
-            m_err_x_hit.push_back(
-                sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-            m_err_y_hit.push_back(
-                sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-            m_pull_x_hit.push_back(
-                residual(Acts::eBoundLoc0) /
-                sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-            m_pull_y_hit.push_back(
-                residual(Acts::eBoundLoc1) /
-                sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-            m_dim_hit.push_back(state.calibratedSize());
-          }
-
-          // track parameters
-          m_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0]);
-          m_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1]);
-          m_ePHI[ipar].push_back(parameters[Acts::eBoundPhi]);
-          m_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta]);
-          m_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP]);
-          m_eT[ipar].push_back(parameters[Acts::eBoundTime]);
-
-          // track parameters residual
-          m_res_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
-          m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
-          m_res_ePHI[ipar].push_back(parameters[Acts::eBoundPhi] - truthPHI);
-          m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
-                                       truthTHETA);
-          m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] - truthQOP);
-          m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
-
-          // track parameters error
-          m_err_eLOC0[ipar].push_back(
-              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-          m_err_eLOC1[ipar].push_back(
-              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-          m_err_ePHI[ipar].push_back(
-              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-          m_err_eTHETA[ipar].push_back(
-              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-          m_err_eQOP[ipar].push_back(
-              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-          m_err_eT[ipar].push_back(
-              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-          // track parameters pull
-          m_pull_eLOC0[ipar].push_back(
-              (parameters[Acts::eBoundLoc0] - truthLOC0) /
-              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-          m_pull_eLOC1[ipar].push_back(
-              (parameters[Acts::eBoundLoc1] - truthLOC1) /
-              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-          m_pull_ePHI[ipar].push_back(
-              (parameters[Acts::eBoundPhi] - truthPHI) /
-              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-          m_pull_eTHETA[ipar].push_back(
-              (parameters[Acts::eBoundTheta] - truthTHETA) /
-              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-          m_pull_eQOP[ipar].push_back(
-              (parameters[Acts::eBoundQOverP] - truthQOP) /
-              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-          m_pull_eT[ipar].push_back(
-              (parameters[Acts::eBoundTime] - truthTIME) /
-              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-          // further track parameter info
-          Acts::FreeVector freeParams =
-              Acts::detail::transformBoundToFreeParameters(surface, gctx,
-                                                           parameters);
-          m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
-          m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
-          m_z[ipar].push_back(freeParams[Acts::eFreePos2]);
-          auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-          m_px[ipar].push_back(p * freeParams[Acts::eFreeDir0]);
-          m_py[ipar].push_back(p * freeParams[Acts::eFreeDir1]);
-          m_pz[ipar].push_back(p * freeParams[Acts::eFreeDir2]);
-          m_pT[ipar].push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                              freeParams[Acts::eFreeDir1]));
-          m_eta[ipar].push_back(
-              Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
+      // Get the majority truth particle to this track
+      int truthQ = 1.;
+      identifyContributingParticles(hitParticlesMap, traj, trackTip,
+                                    particleHitCounts);
+      if (not particleHitCounts.empty()) {
+        // Get the barcode of the majority truth particle
+        auto barcode = particleHitCounts.front().particleId.value();
+        // Find the truth particle via the barcode
+        auto ip = particles.find(barcode);
+        if (ip != particles.end()) {
+          const auto& particle = *ip;
+          ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
+          // Get the truth particle charge
+          truthQ = particle.charge();
         } else {
-          if (ipar == 0) {
-            // push default values if no track parameters
-            m_res_x_hit.push_back(-99.);
-            m_res_y_hit.push_back(-99.);
-            m_err_x_hit.push_back(-99.);
-            m_err_y_hit.push_back(-99.);
-            m_pull_x_hit.push_back(-99.);
-            m_pull_y_hit.push_back(-99.);
-            m_dim_hit.push_back(-99.);
-          }
-          // push default values if no track parameters
-          m_eLOC0[ipar].push_back(-99.);
-          m_eLOC1[ipar].push_back(-99.);
-          m_ePHI[ipar].push_back(-99.);
-          m_eTHETA[ipar].push_back(-99.);
-          m_eQOP[ipar].push_back(-99.);
-          m_eT[ipar].push_back(-99.);
-          m_res_eLOC0[ipar].push_back(-99.);
-          m_res_eLOC1[ipar].push_back(-99.);
-          m_res_ePHI[ipar].push_back(-99.);
-          m_res_eTHETA[ipar].push_back(-99.);
-          m_res_eQOP[ipar].push_back(-99.);
-          m_res_eT[ipar].push_back(-99.);
-          m_err_eLOC0[ipar].push_back(-99);
-          m_err_eLOC1[ipar].push_back(-99);
-          m_err_ePHI[ipar].push_back(-99);
-          m_err_eTHETA[ipar].push_back(-99);
-          m_err_eQOP[ipar].push_back(-99);
-          m_err_eT[ipar].push_back(-99);
-          m_pull_eLOC0[ipar].push_back(-99.);
-          m_pull_eLOC1[ipar].push_back(-99.);
-          m_pull_ePHI[ipar].push_back(-99.);
-          m_pull_eTHETA[ipar].push_back(-99.);
-          m_pull_eQOP[ipar].push_back(-99.);
-          m_pull_eT[ipar].push_back(-99.);
-          m_x[ipar].push_back(-99.);
-          m_y[ipar].push_back(-99.);
-          m_z[ipar].push_back(-99.);
-          m_px[ipar].push_back(-99.);
-          m_py[ipar].push_back(-99.);
-          m_pz[ipar].push_back(-99.);
-          m_pT[ipar].push_back(-99.);
-          m_eta[ipar].push_back(-99.);
+          ACTS_WARNING("Truth particle with barcode = " << barcode
+                                                        << " not found!");
         }
-        // fill the track parameters status
-        m_hasParams[ipar].push_back(hasParams[ipar]);
       }
 
-      // fill the chi2
-      m_chi2.push_back(state.chi2());
+      // Get the trackStates on the trajectory
+      m_nParams = {0, 0, 0};
+      mj.visitBackwards(trackTip, [&](const auto& state) {
+        // we only fill the track states with non-outlier measurement
+        auto typeFlags = state.typeFlags();
+        if (not typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
+          return true;
+        }
 
-      return true;
-    });  // all states
+        const auto hitIdx = state.uncalibrated().index();
+        const auto& fullMeas = measurements[hitIdx];
+        const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
+        const auto& surface = meas.referenceObject();
 
-    // fill the variables for one track to tree
-    m_outputTree->Fill();
+        // get the truth hits corresponding to this trackState
+        // Use average truth in the case of multiple contributing sim hits
+        auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
+        auto [truthLocal, truthPos4, truthUnitDir] =
+            detail::averageSimHits(ctx.geoContext, surface, simHits, indices);
+        // momemtum averaging makes even less sense than averaging position and
+        // direction. use the first momentum or set q/p to zero
+        float truthQOP = 0.0f;
+        if (not indices.empty()) {
+          // we assume that the indices are within valid ranges so we do not
+          // need to check their validity again.
+          const auto simHitIdx0 = indices.begin()->second;
+          const auto& simHit0 = *simHits.nth(simHitIdx0);
+          const auto p =
+              simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
+          truthQOP = truthQ / p;
+        }
 
-    // now reset
-    m_t_x.clear();
-    m_t_y.clear();
-    m_t_z.clear();
-    m_t_r.clear();
-    m_t_dx.clear();
-    m_t_dy.clear();
-    m_t_dz.clear();
-    m_t_eLOC0.clear();
-    m_t_eLOC1.clear();
-    m_t_ePHI.clear();
-    m_t_eTHETA.clear();
-    m_t_eQOP.clear();
-    m_t_eT.clear();
+        // fill the truth hit info
+        m_t_x.push_back(truthPos4[Acts::ePos0]);
+        m_t_y.push_back(truthPos4[Acts::ePos1]);
+        m_t_z.push_back(truthPos4[Acts::ePos2]);
+        m_t_r.push_back(perp(truthPos4.template segment<3>(Acts::ePos0)));
+        m_t_dx.push_back(truthUnitDir[Acts::eMom0]);
+        m_t_dy.push_back(truthUnitDir[Acts::eMom1]);
+        m_t_dz.push_back(truthUnitDir[Acts::eMom1]);
 
-    m_volumeID.clear();
-    m_layerID.clear();
-    m_moduleID.clear();
-    m_lx_hit.clear();
-    m_ly_hit.clear();
-    m_x_hit.clear();
-    m_y_hit.clear();
-    m_z_hit.clear();
-    m_res_x_hit.clear();
-    m_res_y_hit.clear();
-    m_err_x_hit.clear();
-    m_err_y_hit.clear();
-    m_pull_x_hit.clear();
-    m_pull_y_hit.clear();
-    m_dim_hit.clear();
+        // get the truth track parameter at this track State
+        float truthLOC0 = truthLocal[Acts::ePos0];
+        float truthLOC1 = truthLocal[Acts::ePos1];
+        float truthTIME = truthPos4[Acts::eTime];
+        float truthPHI = phi(truthUnitDir);
+        float truthTHETA = theta(truthUnitDir);
 
-    for (unsigned int ipar = 0; ipar < 3; ++ipar) {
-      m_hasParams[ipar].clear();
-      m_eLOC0[ipar].clear();
-      m_eLOC1[ipar].clear();
-      m_ePHI[ipar].clear();
-      m_eTHETA[ipar].clear();
-      m_eQOP[ipar].clear();
-      m_eT[ipar].clear();
-      m_res_eLOC0[ipar].clear();
-      m_res_eLOC1[ipar].clear();
-      m_res_ePHI[ipar].clear();
-      m_res_eTHETA[ipar].clear();
-      m_res_eQOP[ipar].clear();
-      m_res_eT[ipar].clear();
-      m_err_eLOC0[ipar].clear();
-      m_err_eLOC1[ipar].clear();
-      m_err_ePHI[ipar].clear();
-      m_err_eTHETA[ipar].clear();
-      m_err_eQOP[ipar].clear();
-      m_err_eT[ipar].clear();
-      m_pull_eLOC0[ipar].clear();
-      m_pull_eLOC1[ipar].clear();
-      m_pull_ePHI[ipar].clear();
-      m_pull_eTHETA[ipar].clear();
-      m_pull_eQOP[ipar].clear();
-      m_pull_eT[ipar].clear();
-      m_x[ipar].clear();
-      m_y[ipar].clear();
-      m_z[ipar].clear();
-      m_px[ipar].clear();
-      m_py[ipar].clear();
-      m_pz[ipar].clear();
-      m_eta[ipar].clear();
-      m_pT[ipar].clear();
-    }
+        // fill the truth track parameter at this track State
+        m_t_eLOC0.push_back(truthLOC0);
+        m_t_eLOC1.push_back(truthLOC1);
+        m_t_ePHI.push_back(truthPHI);
+        m_t_eTHETA.push_back(truthTHETA);
+        m_t_eQOP.push_back(truthQOP);
+        m_t_eT.push_back(truthTIME);
 
-    m_chi2.clear();
+        // get the geometry ID
+        auto geoID = surface.geometryId();
+        m_volumeID.push_back(geoID.volume());
+        m_layerID.push_back(geoID.layer());
+        m_moduleID.push_back(geoID.sensitive());
 
-  }  // all trajectories
+        // get local position
+        Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
+                             meas.parameters()[Acts::eBoundLoc1]);
+        // get global position
+        Acts::Vector3D mom(1, 1, 1);
+        Acts::Vector3D global =
+            surface.localToGlobal(ctx.geoContext, local, mom);
+
+        // get measurement covariance
+        auto cov = meas.covariance();
+        // float resX = sqrt(cov(Acts::eBoundLoc0, Acts::eBoundLoc0));
+        // float resY = sqrt(cov(Acts::eBoundLoc1, Acts::eBoundLoc1));
+
+        // fill the measurement info
+        m_lx_hit.push_back(local.x());
+        m_ly_hit.push_back(local.y());
+        m_x_hit.push_back(global.x());
+        m_y_hit.push_back(global.y());
+        m_z_hit.push_back(global.z());
+
+        // status of the fitted track parameters
+        std::array<bool, 3> hasParams = {false, false, false};
+        // optional fitted track parameters
+        std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>>
+            trackParamsOpt = std::nullopt;
+        // lambda to get the fitted track parameters
+        auto getTrackParams = [&](unsigned int ipar) {
+          if (ipar == 0 && state.hasPredicted()) {
+            hasParams[0] = true;
+            m_nParams[0]++;
+            trackParamsOpt =
+                std::make_pair(state.predicted(), state.predictedCovariance());
+          } else if (ipar == 1 && state.hasFiltered()) {
+            hasParams[1] = true;
+            m_nParams[1]++;
+            trackParamsOpt =
+                std::make_pair(state.filtered(), state.filteredCovariance());
+          } else if (ipar == 2 && state.hasSmoothed()) {
+            hasParams[2] = true;
+            m_nParams[2]++;
+            trackParamsOpt =
+                std::make_pair(state.smoothed(), state.smoothedCovariance());
+          }
+        };
+
+        // fill the fitted track parameters
+        for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+          // get the fitted track parameters
+          getTrackParams(ipar);
+          if (trackParamsOpt) {
+            const auto& [parameters, covariance] = *trackParamsOpt;
+            if (ipar == 0) {
+              // local hit residual info
+              auto H = meas.projector();
+              auto resCov = cov + H * covariance * H.transpose();
+              auto residual = meas.residual(parameters);
+              m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
+              m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
+              m_err_x_hit.push_back(
+                  sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+              m_err_y_hit.push_back(
+                  sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+              m_pull_x_hit.push_back(
+                  residual(Acts::eBoundLoc0) /
+                  sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+              m_pull_y_hit.push_back(
+                  residual(Acts::eBoundLoc1) /
+                  sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+              m_dim_hit.push_back(state.calibratedSize());
+            }
+
+            // track parameters
+            m_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0]);
+            m_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1]);
+            m_ePHI[ipar].push_back(parameters[Acts::eBoundPhi]);
+            m_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta]);
+            m_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP]);
+            m_eT[ipar].push_back(parameters[Acts::eBoundTime]);
+
+            // track parameters residual
+            m_res_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0] -
+                                        truthLOC0);
+            m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] -
+                                        truthLOC1);
+            m_res_ePHI[ipar].push_back(parameters[Acts::eBoundPhi] - truthPHI);
+            m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
+                                         truthTHETA);
+            m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] -
+                                       truthQOP);
+            m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
+
+            // track parameters error
+            m_err_eLOC0[ipar].push_back(
+                sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+            m_err_eLOC1[ipar].push_back(
+                sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+            m_err_ePHI[ipar].push_back(
+                sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+            m_err_eTHETA[ipar].push_back(
+                sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+            m_err_eQOP[ipar].push_back(
+                sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+            m_err_eT[ipar].push_back(
+                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+
+            // track parameters pull
+            m_pull_eLOC0[ipar].push_back(
+                (parameters[Acts::eBoundLoc0] - truthLOC0) /
+                sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+            m_pull_eLOC1[ipar].push_back(
+                (parameters[Acts::eBoundLoc1] - truthLOC1) /
+                sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+            m_pull_ePHI[ipar].push_back(
+                (parameters[Acts::eBoundPhi] - truthPHI) /
+                sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+            m_pull_eTHETA[ipar].push_back(
+                (parameters[Acts::eBoundTheta] - truthTHETA) /
+                sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+            m_pull_eQOP[ipar].push_back(
+                (parameters[Acts::eBoundQOverP] - truthQOP) /
+                sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+            m_pull_eT[ipar].push_back(
+                (parameters[Acts::eBoundTime] - truthTIME) /
+                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+
+            // further track parameter info
+            Acts::FreeVector freeParams =
+                Acts::detail::transformBoundToFreeParameters(surface, gctx,
+                                                             parameters);
+            m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
+            m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
+            m_z[ipar].push_back(freeParams[Acts::eFreePos2]);
+            auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
+            m_px[ipar].push_back(p * freeParams[Acts::eFreeDir0]);
+            m_py[ipar].push_back(p * freeParams[Acts::eFreeDir1]);
+            m_pz[ipar].push_back(p * freeParams[Acts::eFreeDir2]);
+            m_pT[ipar].push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
+                                                freeParams[Acts::eFreeDir1]));
+            m_eta[ipar].push_back(Acts::VectorHelpers::eta(
+                freeParams.segment<3>(Acts::eFreeDir0)));
+          } else {
+            if (ipar == 0) {
+              // push default values if no track parameters
+              m_res_x_hit.push_back(-99.);
+              m_res_y_hit.push_back(-99.);
+              m_err_x_hit.push_back(-99.);
+              m_err_y_hit.push_back(-99.);
+              m_pull_x_hit.push_back(-99.);
+              m_pull_y_hit.push_back(-99.);
+              m_dim_hit.push_back(-99.);
+            }
+            // push default values if no track parameters
+            m_eLOC0[ipar].push_back(-99.);
+            m_eLOC1[ipar].push_back(-99.);
+            m_ePHI[ipar].push_back(-99.);
+            m_eTHETA[ipar].push_back(-99.);
+            m_eQOP[ipar].push_back(-99.);
+            m_eT[ipar].push_back(-99.);
+            m_res_eLOC0[ipar].push_back(-99.);
+            m_res_eLOC1[ipar].push_back(-99.);
+            m_res_ePHI[ipar].push_back(-99.);
+            m_res_eTHETA[ipar].push_back(-99.);
+            m_res_eQOP[ipar].push_back(-99.);
+            m_res_eT[ipar].push_back(-99.);
+            m_err_eLOC0[ipar].push_back(-99);
+            m_err_eLOC1[ipar].push_back(-99);
+            m_err_ePHI[ipar].push_back(-99);
+            m_err_eTHETA[ipar].push_back(-99);
+            m_err_eQOP[ipar].push_back(-99);
+            m_err_eT[ipar].push_back(-99);
+            m_pull_eLOC0[ipar].push_back(-99.);
+            m_pull_eLOC1[ipar].push_back(-99.);
+            m_pull_ePHI[ipar].push_back(-99.);
+            m_pull_eTHETA[ipar].push_back(-99.);
+            m_pull_eQOP[ipar].push_back(-99.);
+            m_pull_eT[ipar].push_back(-99.);
+            m_x[ipar].push_back(-99.);
+            m_y[ipar].push_back(-99.);
+            m_z[ipar].push_back(-99.);
+            m_px[ipar].push_back(-99.);
+            m_py[ipar].push_back(-99.);
+            m_pz[ipar].push_back(-99.);
+            m_pT[ipar].push_back(-99.);
+            m_eta[ipar].push_back(-99.);
+          }
+          // fill the track parameters status
+          m_hasParams[ipar].push_back(hasParams[ipar]);
+        }
+
+        // fill the chi2
+        m_chi2.push_back(state.chi2());
+
+        return true;
+      });  // all states
+
+      // fill the variables for one track to tree
+      m_outputTree->Fill();
+
+      // now reset
+      m_t_x.clear();
+      m_t_y.clear();
+      m_t_z.clear();
+      m_t_r.clear();
+      m_t_dx.clear();
+      m_t_dy.clear();
+      m_t_dz.clear();
+      m_t_eLOC0.clear();
+      m_t_eLOC1.clear();
+      m_t_ePHI.clear();
+      m_t_eTHETA.clear();
+      m_t_eQOP.clear();
+      m_t_eT.clear();
+
+      m_volumeID.clear();
+      m_layerID.clear();
+      m_moduleID.clear();
+      m_lx_hit.clear();
+      m_ly_hit.clear();
+      m_x_hit.clear();
+      m_y_hit.clear();
+      m_z_hit.clear();
+      m_res_x_hit.clear();
+      m_res_y_hit.clear();
+      m_err_x_hit.clear();
+      m_err_y_hit.clear();
+      m_pull_x_hit.clear();
+      m_pull_y_hit.clear();
+      m_dim_hit.clear();
+
+      for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+        m_hasParams[ipar].clear();
+        m_eLOC0[ipar].clear();
+        m_eLOC1[ipar].clear();
+        m_ePHI[ipar].clear();
+        m_eTHETA[ipar].clear();
+        m_eQOP[ipar].clear();
+        m_eT[ipar].clear();
+        m_res_eLOC0[ipar].clear();
+        m_res_eLOC1[ipar].clear();
+        m_res_ePHI[ipar].clear();
+        m_res_eTHETA[ipar].clear();
+        m_res_eQOP[ipar].clear();
+        m_res_eT[ipar].clear();
+        m_err_eLOC0[ipar].clear();
+        m_err_eLOC1[ipar].clear();
+        m_err_ePHI[ipar].clear();
+        m_err_eTHETA[ipar].clear();
+        m_err_eQOP[ipar].clear();
+        m_err_eT[ipar].clear();
+        m_pull_eLOC0[ipar].clear();
+        m_pull_eLOC1[ipar].clear();
+        m_pull_ePHI[ipar].clear();
+        m_pull_eTHETA[ipar].clear();
+        m_pull_eQOP[ipar].clear();
+        m_pull_eT[ipar].clear();
+        m_x[ipar].clear();
+        m_y[ipar].clear();
+        m_z[ipar].clear();
+        m_px[ipar].clear();
+        m_py[ipar].clear();
+        m_pz[ipar].clear();
+        m_eta[ipar].clear();
+        m_pT[ipar].clear();
+      }
+
+      m_chi2.clear();
+    }  // all subtrajectories
+  }    // all trajectories
 
   return ProcessCode::SUCCESS;
 }
