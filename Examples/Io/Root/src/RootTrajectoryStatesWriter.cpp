@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -34,10 +34,10 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
-    const ActsExamples::RootTrajectoryWriter::Config& cfg,
+ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
+    const ActsExamples::RootTrajectoryStatesWriter::Config& cfg,
     Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "RootTrajectoryWriter", lvl),
+    : WriterT(cfg.inputTrajectories, "RootTrajectoryStatesWriter", lvl),
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // trajectories collection name is already checked by base ctor
@@ -81,19 +81,6 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("traj_nr", &m_trajNr);
-    m_outputTree->Branch("t_barcode", &m_t_barcode, "t_barcode/l");
-    m_outputTree->Branch("t_charge", &m_t_charge);
-    m_outputTree->Branch("t_time", &m_t_time);
-    m_outputTree->Branch("t_vx", &m_t_vx);
-    m_outputTree->Branch("t_vy", &m_t_vy);
-    m_outputTree->Branch("t_vz", &m_t_vz);
-    m_outputTree->Branch("t_px", &m_t_px);
-    m_outputTree->Branch("t_py", &m_t_py);
-    m_outputTree->Branch("t_pz", &m_t_pz);
-    m_outputTree->Branch("t_theta", &m_t_theta);
-    m_outputTree->Branch("t_phi", &m_t_phi);
-    m_outputTree->Branch("t_eta", &m_t_eta);
-    m_outputTree->Branch("t_pT", &m_t_pT);
 
     m_outputTree->Branch("t_x", &m_t_x);
     m_outputTree->Branch("t_y", &m_t_y);
@@ -126,20 +113,6 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
     m_outputTree->Branch("pull_x_hit", &m_pull_x_hit);
     m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
     m_outputTree->Branch("dim_hit", &m_dim_hit);
-
-    m_outputTree->Branch("hasFittedParams", &m_hasFittedParams);
-    m_outputTree->Branch("eLOC0_fit", &m_eLOC0_fit);
-    m_outputTree->Branch("eLOC1_fit", &m_eLOC1_fit);
-    m_outputTree->Branch("ePHI_fit", &m_ePHI_fit);
-    m_outputTree->Branch("eTHETA_fit", &m_eTHETA_fit);
-    m_outputTree->Branch("eQOP_fit", &m_eQOP_fit);
-    m_outputTree->Branch("eT_fit", &m_eT_fit);
-    m_outputTree->Branch("err_eLOC0_fit", &m_err_eLOC0_fit);
-    m_outputTree->Branch("err_eLOC1_fit", &m_err_eLOC1_fit);
-    m_outputTree->Branch("err_ePHI_fit", &m_err_ePHI_fit);
-    m_outputTree->Branch("err_eTHETA_fit", &m_err_eTHETA_fit);
-    m_outputTree->Branch("err_eQOP_fit", &m_err_eQOP_fit);
-    m_outputTree->Branch("err_eT_fit", &m_err_eT_fit);
 
     m_outputTree->Branch("nPredicted", &m_nPredicted);
     m_outputTree->Branch("predicted", &m_prt);
@@ -249,13 +222,13 @@ ActsExamples::RootTrajectoryWriter::RootTrajectoryWriter(
   }
 }
 
-ActsExamples::RootTrajectoryWriter::~RootTrajectoryWriter() {
+ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
   if (m_outputFile) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
@@ -266,7 +239,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
@@ -307,6 +280,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
       continue;
     }
 
+    // The trajectory index
     m_trajNr = itraj;
 
     // The trajectory entry indices and the multiTrajectory
@@ -328,55 +302,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
     m_nStates = trajState.nStates;
 
     // Get the majority truth particle to this track
+    float truthQ = 1.;
     identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                   particleHitCounts);
     if (not particleHitCounts.empty()) {
       // Get the barcode of the majority truth particle
-      m_t_barcode = particleHitCounts.front().particleId.value();
+      auto barcode = particleHitCounts.front().particleId.value();
       // Find the truth particle via the barcode
-      auto ip = particles.find(m_t_barcode);
+      auto ip = particles.find(barcode);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        ACTS_DEBUG("Find the truth particle with barcode = " << m_t_barcode);
-        // Get the truth particle info at vertex
-        const auto p = particle.absMomentum();
-        m_t_charge = particle.charge();
-        m_t_time = particle.time();
-        m_t_vx = particle.position().x();
-        m_t_vy = particle.position().y();
-        m_t_vz = particle.position().z();
-        m_t_px = p * particle.unitDirection().x();
-        m_t_py = p * particle.unitDirection().y();
-        m_t_pz = p * particle.unitDirection().z();
-        m_t_theta = theta(particle.unitDirection());
-        m_t_phi = phi(particle.unitDirection());
-        m_t_eta = eta(particle.unitDirection());
-        m_t_pT = p * perp(particle.unitDirection());
+        ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
+        // Get the truth particle charge
+        truthQ = particle.charge();
       } else {
-        ACTS_WARNING("Truth particle with barcode = " << m_t_barcode
+        ACTS_WARNING("Truth particle with barcode = " << barcode
                                                       << " not found!");
       }
-    }
-
-    // Get the fitted track parameter
-    m_hasFittedParams = false;
-    if (traj.hasTrackParameters(trackTip)) {
-      m_hasFittedParams = true;
-      const auto& boundParam = traj.trackParameters(trackTip);
-      const auto& parameter = boundParam.parameters();
-      const auto& covariance = *boundParam.covariance();
-      m_eLOC0_fit = parameter[Acts::eBoundLoc0];
-      m_eLOC1_fit = parameter[Acts::eBoundLoc1];
-      m_ePHI_fit = parameter[Acts::eBoundPhi];
-      m_eTHETA_fit = parameter[Acts::eBoundTheta];
-      m_eQOP_fit = parameter[Acts::eBoundQOverP];
-      m_eT_fit = parameter[Acts::eBoundTime];
-      m_err_eLOC0_fit = sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      m_err_eLOC1_fit = sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1));
-      m_err_ePHI_fit = sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi));
-      m_err_eTHETA_fit = sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta));
-      m_err_eQOP_fit = sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP));
-      m_err_eT_fit = sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
     }
 
     // Get the trackStates on the trajectory
@@ -435,7 +377,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryWriter::writeT(
         const auto& simHit0 = *simHits.nth(simHitIdx0);
         const auto p =
             simHit0.momentum4Before().template segment<3>(Acts::eMom0).norm();
-        truthQOP = m_t_charge / p;
+        truthQOP = truthQ / p;
       }
 
       // push the truth hit info

@@ -20,7 +20,7 @@ class TTree;
 
 namespace ActsExamples {
 
-/// @class RootTrajectoryWriter
+/// @class RootTrajectoryStatesWriter
 ///
 /// Write out a trajectory (i.e. a vector of
 /// trackState at the moment) into a TTree
@@ -35,7 +35,7 @@ namespace ActsExamples {
 /// file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
+class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {
     /// Input (fitted) trajectories collection
@@ -53,9 +53,9 @@ class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
     /// output directory.
     std::string outputDir;
     /// output filename.
-    std::string outputFilename = "tracks.root";
+    std::string outputFilename = "trackStates.root";
     /// name of the output tree.
-    std::string outputTreename = "tracks";
+    std::string outputTreename = "trackStates";
     /// file access mode.
     std::string fileMode = "RECREATE";
     /// common root file.
@@ -66,8 +66,8 @@ class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
   ///
   /// @param cfg Configuration struct
   /// @param level Message level declaration
-  RootTrajectoryWriter(const Config& cfg, Acts::Logging::Level lvl);
-  ~RootTrajectoryWriter() final override;
+  RootTrajectoryStatesWriter(const Config& cfg, Acts::Logging::Level lvl);
+  ~RootTrajectoryStatesWriter() final override;
 
   /// End-of-run hook
   ProcessCode endRun() final override;
@@ -86,20 +86,6 @@ class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
   TTree* m_outputTree{nullptr};  ///< The output tree
   int m_eventNr{0};              ///< the event number
   int m_trajNr{0};               ///< the trajectory number
-
-  unsigned long m_t_barcode{0};  ///< Truth particle barcode
-  int m_t_charge{0};             ///< Truth particle charge
-  float m_t_time{0};             ///< Truth particle time
-  float m_t_vx{-99.};            ///< Truth particle vertex x
-  float m_t_vy{-99.};            ///< Truth particle vertex y
-  float m_t_vz{-99.};            ///< Truth particle vertex z
-  float m_t_px{-99.};            ///< Truth particle initial momentum px
-  float m_t_py{-99.};            ///< Truth particle initial momentum py
-  float m_t_pz{-99.};            ///< Truth particle initial momentum pz
-  float m_t_theta{-99.};         ///< Truth particle initial momentum theta
-  float m_t_phi{-99.};           ///< Truth particle initial momentum phi
-  float m_t_pT{-99.};            ///< Truth particle initial momentum pT
-  float m_t_eta{-99.};           ///< Truth particle initial momentum eta
 
   std::vector<float> m_t_x;  ///< Global truth hit position x
   std::vector<float> m_t_y;  ///< Global truth hit position y
@@ -136,20 +122,6 @@ class RootTrajectoryWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_x_hit;  ///< hit pull x
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
-
-  bool m_hasFittedParams;        ///< if the track has fitted parameter
-  float m_eLOC0_fit{-99.};       ///< fitted parameter eBoundLoc0
-  float m_eLOC1_fit{-99.};       ///< fitted parameter eBoundLoc1
-  float m_ePHI_fit{-99.};        ///< fitted parameter ePHI
-  float m_eTHETA_fit{-99.};      ///< fitted parameter eTHETA
-  float m_eQOP_fit{-99.};        ///< fitted parameter eQOP
-  float m_eT_fit{-99.};          ///< fitted parameter eT
-  float m_err_eLOC0_fit{-99.};   ///< fitted parameter eLOC err
-  float m_err_eLOC1_fit{-99.};   ///< fitted parameter eBoundLoc1 err
-  float m_err_ePHI_fit{-99.};    ///< fitted parameter ePHI err
-  float m_err_eTHETA_fit{-99.};  ///< fitted parameter eTHETA err
-  float m_err_eQOP_fit{-99.};    ///< fitted parameter eQOP err
-  float m_err_eT_fit{-99.};      ///< fitted parameter eT err
 
   int m_nPredicted{0};      ///< number of states with predicted parameter
   std::vector<bool> m_prt;  ///< predicted status

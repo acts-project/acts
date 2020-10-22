@@ -10,7 +10,8 @@ add_library(
   src/RootPropagationStepsWriter.cpp
   src/RootSimHitWriter.cpp
   src/RootTrackParameterWriter.cpp
-  src/RootTrajectoryWriter.cpp
+  src/RootTrajectoryStatesWriter.cpp
+  src/RootTrajectoryParametersWriter.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot

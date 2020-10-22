@@ -16,7 +16,7 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
   // write tracks from fitting
-  RootTrajectoryWriter::Config trackWriter;
+  RootTrajectoryStatesWriter::Config trackWriter;
   trackWriter.inputTrajectories = fitter.outputTrajectories;
   trackWriter.inputParticles = inputParticles;
   trackWriter.inputSimHits = clusterReaderCfg.outputSimHits;
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
   trackWriter.outputFilename = "tracks.root";
   trackWriter.outputTreename = "tracks";
   sequencer.addWriter(
-      std::make_shared<RootTrajectoryWriter>(trackWriter, logLevel));
+      std::make_shared<RootTrajectoryStatesWriter>(trackWriter, logLevel));
 
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
