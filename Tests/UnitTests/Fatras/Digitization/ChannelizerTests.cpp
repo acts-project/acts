@@ -211,9 +211,9 @@ BOOST_DATA_TEST_CASE(RandomChannelizerTest,
       };
 
       // Helper method to write an arc
-      auto writeArc = [&](std::ostream& outf, double r, double phimin,
-                          double phimax) -> void {
-        outf << "a," << r << "," << r << "," << phimin << "," << phimax << "\n";
+      auto writeArc = [&](std::ostream& outf, double r, double phiMin,
+                          double phiMax) -> void {
+        outf << "a," << r << "," << r << "," << phiMin << "," << phiMax << "\n";
       };
 
       // Helper method to write a polygon
