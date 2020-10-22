@@ -16,7 +16,6 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
-#include "ActsExamples/Io/Performance/CKFPerformanceWriterOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -46,7 +45,6 @@ int runRecCKFTracks(int argc, char* argv[],
   detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
-  Options::addCKFPerformanceWriterOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -185,13 +183,22 @@ int runRecCKFTracks(int argc, char* argv[],
       trackParamsWriter, logLevel));
 
   // Write CKF performance data
-  auto perfWriterCfg = Options::readCKFPerformanceWriterConfig(vm);
+  CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;
+  // Onnx plugin related options
+  // Path to default demo ML model for track classification
+  std::string currentFilePath = __FILE__;
+  std::string commonPath =
+      currentFilePath.substr(0, currentFilePath.find("RecCKFTracks"));
+  std::string demoModelPath = commonPath + "MLAmbiguityResolutionDemo.onnx";
+  perfWriterCfg.onnxModelFilename = demoModelPath;
+  // Change the line below if you want to use ML track classification
+  perfWriterCfg.useMLTrackClassifier = true;
   // Initialize OnnxRuntime plugin
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
   Acts::MLTrackClassifier neuralNetworkClassifier(
