@@ -114,111 +114,112 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     m_outputTree->Branch("pull_y_hit", &m_pull_y_hit);
     m_outputTree->Branch("dim_hit", &m_dim_hit);
 
-    m_outputTree->Branch("nPredicted", &m_nPredicted);
-    m_outputTree->Branch("predicted", &m_prt);
-    m_outputTree->Branch("eLOC0_prt", &m_eLOC0_prt);
-    m_outputTree->Branch("eLOC1_prt", &m_eLOC1_prt);
-    m_outputTree->Branch("ePHI_prt", &m_ePHI_prt);
-    m_outputTree->Branch("eTHETA_prt", &m_eTHETA_prt);
-    m_outputTree->Branch("eQOP_prt", &m_eQOP_prt);
-    m_outputTree->Branch("eT_prt", &m_eT_prt);
-    m_outputTree->Branch("res_eLOC0_prt", &m_res_eLOC0_prt);
-    m_outputTree->Branch("res_eLOC1_prt", &m_res_eLOC1_prt);
-    m_outputTree->Branch("res_ePHI_prt", &m_res_ePHI_prt);
-    m_outputTree->Branch("res_eTHETA_prt", &m_res_eTHETA_prt);
-    m_outputTree->Branch("res_eQOP_prt", &m_res_eQOP_prt);
-    m_outputTree->Branch("res_eT_prt", &m_res_eT_prt);
-    m_outputTree->Branch("err_eLOC0_prt", &m_err_eLOC0_prt);
-    m_outputTree->Branch("err_eLOC1_prt", &m_err_eLOC1_prt);
-    m_outputTree->Branch("err_ePHI_prt", &m_err_ePHI_prt);
-    m_outputTree->Branch("err_eTHETA_prt", &m_err_eTHETA_prt);
-    m_outputTree->Branch("err_eQOP_prt", &m_err_eQOP_prt);
-    m_outputTree->Branch("err_eT_prt", &m_err_eT_prt);
-    m_outputTree->Branch("pull_eLOC0_prt", &m_pull_eLOC0_prt);
-    m_outputTree->Branch("pull_eLOC1_prt", &m_pull_eLOC1_prt);
-    m_outputTree->Branch("pull_ePHI_prt", &m_pull_ePHI_prt);
-    m_outputTree->Branch("pull_eTHETA_prt", &m_pull_eTHETA_prt);
-    m_outputTree->Branch("pull_eQOP_prt", &m_pull_eQOP_prt);
-    m_outputTree->Branch("pull_eT_prt", &m_pull_eT_prt);
-    m_outputTree->Branch("g_x_prt", &m_x_prt);
-    m_outputTree->Branch("g_y_prt", &m_y_prt);
-    m_outputTree->Branch("g_z_prt", &m_z_prt);
-    m_outputTree->Branch("px_prt", &m_px_prt);
-    m_outputTree->Branch("py_prt", &m_py_prt);
-    m_outputTree->Branch("pz_prt", &m_pz_prt);
-    m_outputTree->Branch("eta_prt", &m_eta_prt);
-    m_outputTree->Branch("pT_prt", &m_pT_prt);
+    m_outputTree->Branch("nPredicted", &m_nParams[0]);
+    m_outputTree->Branch("predicted", &m_hasParams[0]);
+    m_outputTree->Branch("eLOC0_prt", &m_eLOC0[0]);
+    m_outputTree->Branch("eLOC1_prt", &m_eLOC1[0]);
+    m_outputTree->Branch("ePHI_prt", &m_ePHI[0]);
+    m_outputTree->Branch("eTHETA_prt", &m_eTHETA[0]);
+    m_outputTree->Branch("eQOP_prt", &m_eQOP[0]);
+    m_outputTree->Branch("eT_prt", &m_eT[0]);
+    m_outputTree->Branch("res_eLOC0_prt", &m_res_eLOC0[0]);
+    m_outputTree->Branch("res_eLOC1_prt", &m_res_eLOC1[0]);
+    m_outputTree->Branch("res_ePHI_prt", &m_res_ePHI[0]);
+    m_outputTree->Branch("res_eTHETA_prt", &m_res_eTHETA[0]);
+    m_outputTree->Branch("res_eQOP_prt", &m_res_eQOP[0]);
+    m_outputTree->Branch("res_eT_prt", &m_res_eT[0]);
+    m_outputTree->Branch("err_eLOC0_prt", &m_err_eLOC0[0]);
+    m_outputTree->Branch("err_eLOC1_prt", &m_err_eLOC1[0]);
+    m_outputTree->Branch("err_ePHI_prt", &m_err_ePHI[0]);
+    m_outputTree->Branch("err_eTHETA_prt", &m_err_eTHETA[0]);
+    m_outputTree->Branch("err_eQOP_prt", &m_err_eQOP[0]);
+    m_outputTree->Branch("err_eT_prt", &m_err_eT[0]);
+    m_outputTree->Branch("pull_eLOC0_prt", &m_pull_eLOC0[0]);
+    m_outputTree->Branch("pull_eLOC1_prt", &m_pull_eLOC1[0]);
+    m_outputTree->Branch("pull_ePHI_prt", &m_pull_ePHI[0]);
+    m_outputTree->Branch("pull_eTHETA_prt", &m_pull_eTHETA[0]);
+    m_outputTree->Branch("pull_eQOP_prt", &m_pull_eQOP[0]);
+    m_outputTree->Branch("pull_eT_prt", &m_pull_eT[0]);
+    m_outputTree->Branch("g_x_prt", &m_x[0]);
+    m_outputTree->Branch("g_y_prt", &m_y[0]);
+    m_outputTree->Branch("g_z_prt", &m_z[0]);
+    m_outputTree->Branch("px_prt", &m_px[0]);
+    m_outputTree->Branch("py_prt", &m_py[0]);
+    m_outputTree->Branch("pz_prt", &m_pz[0]);
+    m_outputTree->Branch("eta_prt", &m_eta[0]);
+    m_outputTree->Branch("pT_prt", &m_pT[0]);
 
-    m_outputTree->Branch("nFiltered", &m_nFiltered);
-    m_outputTree->Branch("filtered", &m_flt);
-    m_outputTree->Branch("eLOC0_flt", &m_eLOC0_flt);
-    m_outputTree->Branch("eLOC1_flt", &m_eLOC1_flt);
-    m_outputTree->Branch("ePHI_flt", &m_ePHI_flt);
-    m_outputTree->Branch("eTHETA_flt", &m_eTHETA_flt);
-    m_outputTree->Branch("eQOP_flt", &m_eQOP_flt);
-    m_outputTree->Branch("eT_flt", &m_eT_flt);
-    m_outputTree->Branch("res_eLOC0_flt", &m_res_eLOC0_flt);
-    m_outputTree->Branch("res_eLOC1_flt", &m_res_eLOC1_flt);
-    m_outputTree->Branch("res_ePHI_flt", &m_res_ePHI_flt);
-    m_outputTree->Branch("res_eTHETA_flt", &m_res_eTHETA_flt);
-    m_outputTree->Branch("res_eQOP_flt", &m_res_eQOP_flt);
-    m_outputTree->Branch("res_eT_flt", &m_res_eT_flt);
-    m_outputTree->Branch("err_eLOC0_flt", &m_err_eLOC0_flt);
-    m_outputTree->Branch("err_eLOC1_flt", &m_err_eLOC1_flt);
-    m_outputTree->Branch("err_ePHI_flt", &m_err_ePHI_flt);
-    m_outputTree->Branch("err_eTHETA_flt", &m_err_eTHETA_flt);
-    m_outputTree->Branch("err_eQOP_flt", &m_err_eQOP_flt);
-    m_outputTree->Branch("err_eT_flt", &m_err_eT_flt);
-    m_outputTree->Branch("pull_eLOC0_flt", &m_pull_eLOC0_flt);
-    m_outputTree->Branch("pull_eLOC1_flt", &m_pull_eLOC1_flt);
-    m_outputTree->Branch("pull_ePHI_flt", &m_pull_ePHI_flt);
-    m_outputTree->Branch("pull_eTHETA_flt", &m_pull_eTHETA_flt);
-    m_outputTree->Branch("pull_eQOP_flt", &m_pull_eQOP_flt);
-    m_outputTree->Branch("pull_eT_flt", &m_pull_eT_flt);
-    m_outputTree->Branch("g_x_flt", &m_x_flt);
-    m_outputTree->Branch("g_y_flt", &m_y_flt);
-    m_outputTree->Branch("g_z_flt", &m_z_flt);
-    m_outputTree->Branch("px_flt", &m_px_flt);
-    m_outputTree->Branch("py_flt", &m_py_flt);
-    m_outputTree->Branch("pz_flt", &m_pz_flt);
-    m_outputTree->Branch("eta_flt", &m_eta_flt);
-    m_outputTree->Branch("pT_flt", &m_pT_flt);
+    m_outputTree->Branch("nFiltered", &m_nParams[1]);
+    m_outputTree->Branch("filtered", &m_hasParams[1]);
+    m_outputTree->Branch("eLOC0_flt", &m_eLOC0[1]);
+    m_outputTree->Branch("eLOC1_flt", &m_eLOC1[1]);
+    m_outputTree->Branch("ePHI_flt", &m_ePHI[1]);
+    m_outputTree->Branch("eTHETA_flt", &m_eTHETA[1]);
+    m_outputTree->Branch("eQOP_flt", &m_eQOP[1]);
+    m_outputTree->Branch("eT_flt", &m_eT[1]);
+    m_outputTree->Branch("res_eLOC0_flt", &m_res_eLOC0[1]);
+    m_outputTree->Branch("res_eLOC1_flt", &m_res_eLOC1[1]);
+    m_outputTree->Branch("res_ePHI_flt", &m_res_ePHI[1]);
+    m_outputTree->Branch("res_eTHETA_flt", &m_res_eTHETA[1]);
+    m_outputTree->Branch("res_eQOP_flt", &m_res_eQOP[1]);
+    m_outputTree->Branch("res_eT_flt", &m_res_eT[1]);
+    m_outputTree->Branch("err_eLOC0_flt", &m_err_eLOC0[1]);
+    m_outputTree->Branch("err_eLOC1_flt", &m_err_eLOC1[1]);
+    m_outputTree->Branch("err_ePHI_flt", &m_err_ePHI[1]);
+    m_outputTree->Branch("err_eTHETA_flt", &m_err_eTHETA[1]);
+    m_outputTree->Branch("err_eQOP_flt", &m_err_eQOP[1]);
+    m_outputTree->Branch("err_eT_flt", &m_err_eT[1]);
+    m_outputTree->Branch("pull_eLOC0_flt", &m_pull_eLOC0[1]);
+    m_outputTree->Branch("pull_eLOC1_flt", &m_pull_eLOC1[1]);
+    m_outputTree->Branch("pull_ePHI_flt", &m_pull_ePHI[1]);
+    m_outputTree->Branch("pull_eTHETA_flt", &m_pull_eTHETA[1]);
+    m_outputTree->Branch("pull_eQOP_flt", &m_pull_eQOP[1]);
+    m_outputTree->Branch("pull_eT_flt", &m_pull_eT[1]);
+    m_outputTree->Branch("g_x_flt", &m_x[1]);
+    m_outputTree->Branch("g_y_flt", &m_y[1]);
+    m_outputTree->Branch("g_z_flt", &m_z[1]);
+    m_outputTree->Branch("px_flt", &m_px[1]);
+    m_outputTree->Branch("py_flt", &m_py[1]);
+    m_outputTree->Branch("pz_flt", &m_pz[1]);
+    m_outputTree->Branch("eta_flt", &m_eta[1]);
+    m_outputTree->Branch("pT_flt", &m_pT[1]);
+
+    m_outputTree->Branch("nSmoothed", &m_nParams[2]);
+    m_outputTree->Branch("smoothed", &m_hasParams[2]);
+    m_outputTree->Branch("eLOC0_smt", &m_eLOC0[2]);
+    m_outputTree->Branch("eLOC1_smt", &m_eLOC1[2]);
+    m_outputTree->Branch("ePHI_smt", &m_ePHI[2]);
+    m_outputTree->Branch("eTHETA_smt", &m_eTHETA[2]);
+    m_outputTree->Branch("eQOP_smt", &m_eQOP[2]);
+    m_outputTree->Branch("eT_smt", &m_eT[2]);
+    m_outputTree->Branch("res_eLOC0_smt", &m_res_eLOC0[2]);
+    m_outputTree->Branch("res_eLOC1_smt", &m_res_eLOC1[2]);
+    m_outputTree->Branch("res_ePHI_smt", &m_res_ePHI[2]);
+    m_outputTree->Branch("res_eTHETA_smt", &m_res_eTHETA[2]);
+    m_outputTree->Branch("res_eQOP_smt", &m_res_eQOP[2]);
+    m_outputTree->Branch("res_eT_smt", &m_res_eT[2]);
+    m_outputTree->Branch("err_eLOC0_smt", &m_err_eLOC0[2]);
+    m_outputTree->Branch("err_eLOC1_smt", &m_err_eLOC1[2]);
+    m_outputTree->Branch("err_ePHI_smt", &m_err_ePHI[2]);
+    m_outputTree->Branch("err_eTHETA_smt", &m_err_eTHETA[2]);
+    m_outputTree->Branch("err_eQOP_smt", &m_err_eQOP[2]);
+    m_outputTree->Branch("err_eT_smt", &m_err_eT[2]);
+    m_outputTree->Branch("pull_eLOC0_smt", &m_pull_eLOC0[2]);
+    m_outputTree->Branch("pull_eLOC1_smt", &m_pull_eLOC1[2]);
+    m_outputTree->Branch("pull_ePHI_smt", &m_pull_ePHI[2]);
+    m_outputTree->Branch("pull_eTHETA_smt", &m_pull_eTHETA[2]);
+    m_outputTree->Branch("pull_eQOP_smt", &m_pull_eQOP[2]);
+    m_outputTree->Branch("pull_eT_smt", &m_pull_eT[2]);
+    m_outputTree->Branch("g_x_smt", &m_x[2]);
+    m_outputTree->Branch("g_y_smt", &m_y[2]);
+    m_outputTree->Branch("g_z_smt", &m_z[2]);
+    m_outputTree->Branch("px_smt", &m_px[2]);
+    m_outputTree->Branch("py_smt", &m_py[2]);
+    m_outputTree->Branch("pz_smt", &m_pz[2]);
+    m_outputTree->Branch("eta_smt", &m_eta[2]);
+    m_outputTree->Branch("pT_smt", &m_pT[2]);
+
     m_outputTree->Branch("chi2", &m_chi2);
-
-    m_outputTree->Branch("nSmoothed", &m_nSmoothed);
-    m_outputTree->Branch("smoothed", &m_smt);
-    m_outputTree->Branch("eLOC0_smt", &m_eLOC0_smt);
-    m_outputTree->Branch("eLOC1_smt", &m_eLOC1_smt);
-    m_outputTree->Branch("ePHI_smt", &m_ePHI_smt);
-    m_outputTree->Branch("eTHETA_smt", &m_eTHETA_smt);
-    m_outputTree->Branch("eQOP_smt", &m_eQOP_smt);
-    m_outputTree->Branch("eT_smt", &m_eT_smt);
-    m_outputTree->Branch("res_eLOC0_smt", &m_res_eLOC0_smt);
-    m_outputTree->Branch("res_eLOC1_smt", &m_res_eLOC1_smt);
-    m_outputTree->Branch("res_ePHI_smt", &m_res_ePHI_smt);
-    m_outputTree->Branch("res_eTHETA_smt", &m_res_eTHETA_smt);
-    m_outputTree->Branch("res_eQOP_smt", &m_res_eQOP_smt);
-    m_outputTree->Branch("res_eT_smt", &m_res_eT_smt);
-    m_outputTree->Branch("err_eLOC0_smt", &m_err_eLOC0_smt);
-    m_outputTree->Branch("err_eLOC1_smt", &m_err_eLOC1_smt);
-    m_outputTree->Branch("err_ePHI_smt", &m_err_ePHI_smt);
-    m_outputTree->Branch("err_eTHETA_smt", &m_err_eTHETA_smt);
-    m_outputTree->Branch("err_eQOP_smt", &m_err_eQOP_smt);
-    m_outputTree->Branch("err_eT_smt", &m_err_eT_smt);
-    m_outputTree->Branch("pull_eLOC0_smt", &m_pull_eLOC0_smt);
-    m_outputTree->Branch("pull_eLOC1_smt", &m_pull_eLOC1_smt);
-    m_outputTree->Branch("pull_ePHI_smt", &m_pull_ePHI_smt);
-    m_outputTree->Branch("pull_eTHETA_smt", &m_pull_eTHETA_smt);
-    m_outputTree->Branch("pull_eQOP_smt", &m_pull_eQOP_smt);
-    m_outputTree->Branch("pull_eT_smt", &m_pull_eT_smt);
-    m_outputTree->Branch("g_x_smt", &m_x_smt);
-    m_outputTree->Branch("g_y_smt", &m_y_smt);
-    m_outputTree->Branch("g_z_smt", &m_z_smt);
-    m_outputTree->Branch("px_smt", &m_px_smt);
-    m_outputTree->Branch("py_smt", &m_py_smt);
-    m_outputTree->Branch("pz_smt", &m_pz_smt);
-    m_outputTree->Branch("eta_smt", &m_eta_smt);
-    m_outputTree->Branch("pT_smt", &m_pT_smt);
   }
 }
 
@@ -232,7 +233,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
-    ACTS_INFO("Write trajectories to tree '"
+    ACTS_INFO("Write states of trajectories to tree '"
               << m_cfg.outputTreename << "' in '"
               << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
   }
@@ -322,9 +323,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     }
 
     // Get the trackStates on the trajectory
-    m_nPredicted = 0;
-    m_nFiltered = 0;
-    m_nSmoothed = 0;
+    m_nParams = {0, 0, 0};
     mj.visitBackwards(trackTip, [&](const auto& state) {
       // we only fill the track states with non-outlier measurement
       auto typeFlags = state.typeFlags();
@@ -336,31 +335,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       const auto& fullMeas = measurements[hitIdx];
       const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
       const auto& surface = meas.referenceObject();
-
-      // get the geometry ID
-      auto geoID = surface.geometryId();
-      m_volumeID.push_back(geoID.volume());
-      m_layerID.push_back(geoID.layer());
-      m_moduleID.push_back(geoID.sensitive());
-
-      // get local position
-      Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
-                           meas.parameters()[Acts::eBoundLoc1]);
-      // get global position
-      Acts::Vector3D mom(1, 1, 1);
-      Acts::Vector3D global = surface.localToGlobal(ctx.geoContext, local, mom);
-
-      // get measurement covariance
-      auto cov = meas.covariance();
-      // float resX = sqrt(cov(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      // float resY = sqrt(cov(Acts::eBoundLoc1, Acts::eBoundLoc1));
-
-      // push the measurement info
-      m_lx_hit.push_back(local.x());
-      m_ly_hit.push_back(local.y());
-      m_x_hit.push_back(global.x());
-      m_y_hit.push_back(global.y());
-      m_z_hit.push_back(global.z());
 
       // get the truth hits corresponding to this trackState
       // Use average truth in the case of multiple contributing sim hits
@@ -380,7 +354,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         truthQOP = truthQ / p;
       }
 
-      // push the truth hit info
+      // fill the truth hit info
       m_t_x.push_back(truthPos4[Acts::ePos0]);
       m_t_y.push_back(truthPos4[Acts::ePos1]);
       m_t_z.push_back(truthPos4[Acts::ePos2]);
@@ -396,7 +370,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       float truthPHI = phi(truthUnitDir);
       float truthTHETA = theta(truthUnitDir);
 
-      // push the truth track parameter at this track State
+      // fill the truth track parameter at this track State
       m_t_eLOC0.push_back(truthLOC0);
       m_t_eLOC1.push_back(truthLOC1);
       m_t_ePHI.push_back(truthPHI);
@@ -404,358 +378,200 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       m_t_eQOP.push_back(truthQOP);
       m_t_eT.push_back(truthTIME);
 
-      // get the predicted parameter
-      bool predicted = false;
-      if (state.hasPredicted()) {
-        predicted = true;
-        m_nPredicted++;
-        auto parameters = state.predicted();
-        auto covariance = state.predictedCovariance();
-        // local hit residual info
-        auto H = meas.projector();
-        auto resCov = cov + H * covariance * H.transpose();
-        auto residual = meas.residual(parameters);
-        m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
-        m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
-        m_err_x_hit.push_back(sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_y_hit.push_back(sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_pull_x_hit.push_back(
-            residual(Acts::eBoundLoc0) /
-            sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_pull_y_hit.push_back(
-            residual(Acts::eBoundLoc1) /
-            sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_dim_hit.push_back(state.calibratedSize());
+      // get the geometry ID
+      auto geoID = surface.geometryId();
+      m_volumeID.push_back(geoID.volume());
+      m_layerID.push_back(geoID.layer());
+      m_moduleID.push_back(geoID.sensitive());
 
-        // predicted parameter
-        m_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0]);
-        m_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1]);
-        m_ePHI_prt.push_back(parameters[Acts::eBoundPhi]);
-        m_eTHETA_prt.push_back(parameters[Acts::eBoundTheta]);
-        m_eQOP_prt.push_back(parameters[Acts::eBoundQOverP]);
-        m_eT_prt.push_back(parameters[Acts::eBoundTime]);
+      // get local position
+      Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
+                           meas.parameters()[Acts::eBoundLoc1]);
+      // get global position
+      Acts::Vector3D mom(1, 1, 1);
+      Acts::Vector3D global = surface.localToGlobal(ctx.geoContext, local, mom);
 
-        // predicted residual
-        m_res_eLOC0_prt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
-        m_res_eLOC1_prt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
-        m_res_ePHI_prt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
-        m_res_eTHETA_prt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_prt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
-        m_res_eT_prt.push_back(parameters[Acts::eBoundTime] - truthTIME);
+      // get measurement covariance
+      auto cov = meas.covariance();
+      // float resX = sqrt(cov(Acts::eBoundLoc0, Acts::eBoundLoc0));
+      // float resY = sqrt(cov(Acts::eBoundLoc1, Acts::eBoundLoc1));
 
-        // predicted parameter error
-        m_err_eLOC0_prt.push_back(
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_eLOC1_prt.push_back(
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_err_ePHI_prt.push_back(
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_err_eTHETA_prt.push_back(
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_err_eQOP_prt.push_back(
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_err_eT_prt.push_back(
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+      // fill the measurement info
+      m_lx_hit.push_back(local.x());
+      m_ly_hit.push_back(local.y());
+      m_x_hit.push_back(global.x());
+      m_y_hit.push_back(global.y());
+      m_z_hit.push_back(global.z());
 
-        // predicted parameter pull
-        m_pull_eLOC0_prt.push_back(
-            (parameters[Acts::eBoundLoc0] - truthLOC0) /
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_pull_eLOC1_prt.push_back(
-            (parameters[Acts::eBoundLoc1] - truthLOC1) /
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_pull_ePHI_prt.push_back(
-            (parameters[Acts::eBoundPhi] - truthPHI) /
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_pull_eTHETA_prt.push_back(
-            (parameters[Acts::eBoundTheta] - truthTHETA) /
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_pull_eQOP_prt.push_back(
-            (parameters[Acts::eBoundQOverP] - truthQOP) /
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_pull_eT_prt.push_back(
-            (parameters[Acts::eBoundTime] - truthTIME) /
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+      // status of the fitted track parameters
+      std::array<bool, 3> hasParams = {false, false, false};
+      // optional fitted track parameters
+      std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>>
+          trackParamsOpt = std::nullopt;
+      // lambda to get the fitted track parameters
+      auto getTrackParams = [&](unsigned int ipar) {
+        if (ipar == 0 && state.hasPredicted()) {
+          hasParams[0] = true;
+          m_nParams[0]++;
+          trackParamsOpt =
+              std::make_pair(state.predicted(), state.predictedCovariance());
+        } else if (ipar == 1 && state.hasFiltered()) {
+          hasParams[1] = true;
+          m_nParams[1]++;
+          trackParamsOpt =
+              std::make_pair(state.filtered(), state.filteredCovariance());
+        } else if (ipar == 2 && state.hasSmoothed()) {
+          hasParams[2] = true;
+          m_nParams[2]++;
+          trackParamsOpt =
+              std::make_pair(state.smoothed(), state.smoothedCovariance());
+        }
+      };
 
-        // further predicted parameter info
-        Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
-                                                         parameters);
-        m_x_prt.push_back(freeParams[Acts::eFreePos0]);
-        m_y_prt.push_back(freeParams[Acts::eFreePos1]);
-        m_z_prt.push_back(freeParams[Acts::eFreePos2]);
-        auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-        m_px_prt.push_back(p * freeParams[Acts::eFreeDir0]);
-        m_py_prt.push_back(p * freeParams[Acts::eFreeDir1]);
-        m_pz_prt.push_back(p * freeParams[Acts::eFreeDir2]);
-        m_pT_prt.push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                          freeParams[Acts::eFreeDir1]));
-        m_eta_prt.push_back(
-            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
-      } else {
-        // push default values if no predicted parameter
-        m_res_x_hit.push_back(-99.);
-        m_res_y_hit.push_back(-99.);
-        m_err_x_hit.push_back(-99.);
-        m_err_y_hit.push_back(-99.);
-        m_pull_x_hit.push_back(-99.);
-        m_pull_y_hit.push_back(-99.);
-        m_dim_hit.push_back(-99.);
-        m_eLOC0_prt.push_back(-99.);
-        m_eLOC1_prt.push_back(-99.);
-        m_ePHI_prt.push_back(-99.);
-        m_eTHETA_prt.push_back(-99.);
-        m_eQOP_prt.push_back(-99.);
-        m_eT_prt.push_back(-99.);
-        m_res_eLOC0_prt.push_back(-99.);
-        m_res_eLOC1_prt.push_back(-99.);
-        m_res_ePHI_prt.push_back(-99.);
-        m_res_eTHETA_prt.push_back(-99.);
-        m_res_eQOP_prt.push_back(-99.);
-        m_res_eT_prt.push_back(-99.);
-        m_err_eLOC0_prt.push_back(-99);
-        m_err_eLOC1_prt.push_back(-99);
-        m_err_ePHI_prt.push_back(-99);
-        m_err_eTHETA_prt.push_back(-99);
-        m_err_eQOP_prt.push_back(-99);
-        m_err_eT_prt.push_back(-99);
-        m_pull_eLOC0_prt.push_back(-99.);
-        m_pull_eLOC1_prt.push_back(-99.);
-        m_pull_ePHI_prt.push_back(-99.);
-        m_pull_eTHETA_prt.push_back(-99.);
-        m_pull_eQOP_prt.push_back(-99.);
-        m_pull_eT_prt.push_back(-99.);
-        m_x_prt.push_back(-99.);
-        m_y_prt.push_back(-99.);
-        m_z_prt.push_back(-99.);
-        m_px_prt.push_back(-99.);
-        m_py_prt.push_back(-99.);
-        m_pz_prt.push_back(-99.);
-        m_pT_prt.push_back(-99.);
-        m_eta_prt.push_back(-99.);
+      // fill the fitted track parameters
+      for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+        // get the fitted track parameters
+        getTrackParams(ipar);
+        if (trackParamsOpt) {
+          const auto& [parameters, covariance] = *trackParamsOpt;
+          if (ipar == 0) {
+            // local hit residual info
+            auto H = meas.projector();
+            auto resCov = cov + H * covariance * H.transpose();
+            auto residual = meas.residual(parameters);
+            m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
+            m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
+            m_err_x_hit.push_back(
+                sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+            m_err_y_hit.push_back(
+                sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+            m_pull_x_hit.push_back(
+                residual(Acts::eBoundLoc0) /
+                sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+            m_pull_y_hit.push_back(
+                residual(Acts::eBoundLoc1) /
+                sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+            m_dim_hit.push_back(state.calibratedSize());
+          }
+
+          // track parameters
+          m_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0]);
+          m_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1]);
+          m_ePHI[ipar].push_back(parameters[Acts::eBoundPhi]);
+          m_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta]);
+          m_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP]);
+          m_eT[ipar].push_back(parameters[Acts::eBoundTime]);
+
+          // track parameters residual
+          m_res_eLOC0[ipar].push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
+          m_res_eLOC1[ipar].push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
+          m_res_ePHI[ipar].push_back(parameters[Acts::eBoundPhi] - truthPHI);
+          m_res_eTHETA[ipar].push_back(parameters[Acts::eBoundTheta] -
+                                       truthTHETA);
+          m_res_eQOP[ipar].push_back(parameters[Acts::eBoundQOverP] - truthQOP);
+          m_res_eT[ipar].push_back(parameters[Acts::eBoundTime] - truthTIME);
+
+          // track parameters error
+          m_err_eLOC0[ipar].push_back(
+              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+          m_err_eLOC1[ipar].push_back(
+              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+          m_err_ePHI[ipar].push_back(
+              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+          m_err_eTHETA[ipar].push_back(
+              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+          m_err_eQOP[ipar].push_back(
+              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+          m_err_eT[ipar].push_back(
+              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+
+          // track parameters pull
+          m_pull_eLOC0[ipar].push_back(
+              (parameters[Acts::eBoundLoc0] - truthLOC0) /
+              sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+          m_pull_eLOC1[ipar].push_back(
+              (parameters[Acts::eBoundLoc1] - truthLOC1) /
+              sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+          m_pull_ePHI[ipar].push_back(
+              (parameters[Acts::eBoundPhi] - truthPHI) /
+              sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+          m_pull_eTHETA[ipar].push_back(
+              (parameters[Acts::eBoundTheta] - truthTHETA) /
+              sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+          m_pull_eQOP[ipar].push_back(
+              (parameters[Acts::eBoundQOverP] - truthQOP) /
+              sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+          m_pull_eT[ipar].push_back(
+              (parameters[Acts::eBoundTime] - truthTIME) /
+              sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+
+          // further track parameter info
+          Acts::FreeVector freeParams =
+              Acts::detail::transformBoundToFreeParameters(surface, gctx,
+                                                           parameters);
+          m_x[ipar].push_back(freeParams[Acts::eFreePos0]);
+          m_y[ipar].push_back(freeParams[Acts::eFreePos1]);
+          m_z[ipar].push_back(freeParams[Acts::eFreePos2]);
+          auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
+          m_px[ipar].push_back(p * freeParams[Acts::eFreeDir0]);
+          m_py[ipar].push_back(p * freeParams[Acts::eFreeDir1]);
+          m_pz[ipar].push_back(p * freeParams[Acts::eFreeDir2]);
+          m_pT[ipar].push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
+                                              freeParams[Acts::eFreeDir1]));
+          m_eta[ipar].push_back(
+              Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
+        } else {
+          if (ipar == 0) {
+            // push default values if no track parameters
+            m_res_x_hit.push_back(-99.);
+            m_res_y_hit.push_back(-99.);
+            m_err_x_hit.push_back(-99.);
+            m_err_y_hit.push_back(-99.);
+            m_pull_x_hit.push_back(-99.);
+            m_pull_y_hit.push_back(-99.);
+            m_dim_hit.push_back(-99.);
+          }
+          // push default values if no track parameters
+          m_eLOC0[ipar].push_back(-99.);
+          m_eLOC1[ipar].push_back(-99.);
+          m_ePHI[ipar].push_back(-99.);
+          m_eTHETA[ipar].push_back(-99.);
+          m_eQOP[ipar].push_back(-99.);
+          m_eT[ipar].push_back(-99.);
+          m_res_eLOC0[ipar].push_back(-99.);
+          m_res_eLOC1[ipar].push_back(-99.);
+          m_res_ePHI[ipar].push_back(-99.);
+          m_res_eTHETA[ipar].push_back(-99.);
+          m_res_eQOP[ipar].push_back(-99.);
+          m_res_eT[ipar].push_back(-99.);
+          m_err_eLOC0[ipar].push_back(-99);
+          m_err_eLOC1[ipar].push_back(-99);
+          m_err_ePHI[ipar].push_back(-99);
+          m_err_eTHETA[ipar].push_back(-99);
+          m_err_eQOP[ipar].push_back(-99);
+          m_err_eT[ipar].push_back(-99);
+          m_pull_eLOC0[ipar].push_back(-99.);
+          m_pull_eLOC1[ipar].push_back(-99.);
+          m_pull_ePHI[ipar].push_back(-99.);
+          m_pull_eTHETA[ipar].push_back(-99.);
+          m_pull_eQOP[ipar].push_back(-99.);
+          m_pull_eT[ipar].push_back(-99.);
+          m_x[ipar].push_back(-99.);
+          m_y[ipar].push_back(-99.);
+          m_z[ipar].push_back(-99.);
+          m_px[ipar].push_back(-99.);
+          m_py[ipar].push_back(-99.);
+          m_pz[ipar].push_back(-99.);
+          m_pT[ipar].push_back(-99.);
+          m_eta[ipar].push_back(-99.);
+        }
+        // fill the track parameters status
+        m_hasParams[ipar].push_back(hasParams[ipar]);
       }
 
-      // get the filtered parameter
-      bool filtered = false;
-      if (state.hasFiltered()) {
-        filtered = true;
-        m_nFiltered++;
-        auto parameters = state.filtered();
-        auto covariance = state.filteredCovariance();
-        // filtered parameter
-        m_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0]);
-        m_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1]);
-        m_ePHI_flt.push_back(parameters[Acts::eBoundPhi]);
-        m_eTHETA_flt.push_back(parameters[Acts::eBoundTheta]);
-        m_eQOP_flt.push_back(parameters[Acts::eBoundQOverP]);
-        m_eT_flt.push_back(parameters[Acts::eBoundTime]);
+      // fill the chi2
+      m_chi2.push_back(state.chi2());
 
-        // filtered residual
-        m_res_eLOC0_flt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
-        m_res_eLOC1_flt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
-        m_res_ePHI_flt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
-        m_res_eTHETA_flt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_flt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
-        m_res_eT_flt.push_back(parameters[Acts::eBoundTime] - truthTIME);
-
-        // filtered parameter error
-        m_err_eLOC0_flt.push_back(
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_eLOC1_flt.push_back(
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_err_ePHI_flt.push_back(
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_err_eTHETA_flt.push_back(
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_err_eQOP_flt.push_back(
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_err_eT_flt.push_back(
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-        // filtered parameter pull
-        m_pull_eLOC0_flt.push_back(
-            (parameters[Acts::eBoundLoc0] - truthLOC0) /
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_pull_eLOC1_flt.push_back(
-            (parameters[Acts::eBoundLoc1] - truthLOC1) /
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_pull_ePHI_flt.push_back(
-            (parameters[Acts::eBoundPhi] - truthPHI) /
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_pull_eTHETA_flt.push_back(
-            (parameters[Acts::eBoundTheta] - truthTHETA) /
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_pull_eQOP_flt.push_back(
-            (parameters[Acts::eBoundQOverP] - truthQOP) /
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_pull_eT_flt.push_back(
-            (parameters[Acts::eBoundTime] - truthTIME) /
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-        // more filtered parameter info
-        const Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
-                                                         parameters);
-        m_x_flt.push_back(freeParams[Acts::eFreePos0]);
-        m_y_flt.push_back(freeParams[Acts::eFreePos1]);
-        m_z_flt.push_back(freeParams[Acts::eFreePos2]);
-        const auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-        m_px_flt.push_back(p * freeParams[Acts::eFreeDir0]);
-        m_py_flt.push_back(p * freeParams[Acts::eFreeDir1]);
-        m_pz_flt.push_back(p * freeParams[Acts::eFreeDir2]);
-        m_pT_flt.push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                          freeParams[Acts::eFreeDir1]));
-        m_eta_flt.push_back(
-            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
-        m_chi2.push_back(state.chi2());
-      } else {
-        // push default values if no filtered parameter
-        m_eLOC0_flt.push_back(-99.);
-        m_eLOC1_flt.push_back(-99.);
-        m_ePHI_flt.push_back(-99.);
-        m_eTHETA_flt.push_back(-99.);
-        m_eQOP_flt.push_back(-99.);
-        m_eT_flt.push_back(-99.);
-        m_res_eLOC0_flt.push_back(-99.);
-        m_res_eLOC1_flt.push_back(-99.);
-        m_res_ePHI_flt.push_back(-99.);
-        m_res_eTHETA_flt.push_back(-99.);
-        m_res_eQOP_flt.push_back(-99.);
-        m_res_eT_flt.push_back(-99.);
-        m_err_eLOC0_flt.push_back(-99);
-        m_err_eLOC1_flt.push_back(-99);
-        m_err_ePHI_flt.push_back(-99);
-        m_err_eTHETA_flt.push_back(-99);
-        m_err_eQOP_flt.push_back(-99);
-        m_err_eT_flt.push_back(-99);
-        m_pull_eLOC0_flt.push_back(-99.);
-        m_pull_eLOC1_flt.push_back(-99.);
-        m_pull_ePHI_flt.push_back(-99.);
-        m_pull_eTHETA_flt.push_back(-99.);
-        m_pull_eQOP_flt.push_back(-99.);
-        m_pull_eT_flt.push_back(-99.);
-        m_x_flt.push_back(-99.);
-        m_y_flt.push_back(-99.);
-        m_z_flt.push_back(-99.);
-        m_py_flt.push_back(-99.);
-        m_pz_flt.push_back(-99.);
-        m_pT_flt.push_back(-99.);
-        m_eta_flt.push_back(-99.);
-        m_chi2.push_back(-99.0);
-      }
-
-      // get the smoothed parameter
-      bool smoothed = false;
-      if (state.hasSmoothed()) {
-        smoothed = true;
-        m_nSmoothed++;
-        auto parameters = state.smoothed();
-        auto covariance = state.smoothedCovariance();
-
-        // smoothed parameter
-        m_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0]);
-        m_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1]);
-        m_ePHI_smt.push_back(parameters[Acts::eBoundPhi]);
-        m_eTHETA_smt.push_back(parameters[Acts::eBoundTheta]);
-        m_eQOP_smt.push_back(parameters[Acts::eBoundQOverP]);
-        m_eT_smt.push_back(parameters[Acts::eBoundTime]);
-
-        // smoothed residual
-        m_res_eLOC0_smt.push_back(parameters[Acts::eBoundLoc0] - truthLOC0);
-        m_res_eLOC1_smt.push_back(parameters[Acts::eBoundLoc1] - truthLOC1);
-        m_res_ePHI_smt.push_back(parameters[Acts::eBoundPhi] - truthPHI);
-        m_res_eTHETA_smt.push_back(parameters[Acts::eBoundTheta] - truthTHETA);
-        m_res_eQOP_smt.push_back(parameters[Acts::eBoundQOverP] - truthQOP);
-        m_res_eT_smt.push_back(parameters[Acts::eBoundTime] - truthTIME);
-
-        // smoothed parameter error
-        m_err_eLOC0_smt.push_back(
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_err_eLOC1_smt.push_back(
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_err_ePHI_smt.push_back(
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_err_eTHETA_smt.push_back(
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_err_eQOP_smt.push_back(
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_err_eT_smt.push_back(
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-        // smoothed parameter pull
-        m_pull_eLOC0_smt.push_back(
-            (parameters[Acts::eBoundLoc0] - truthLOC0) /
-            sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
-        m_pull_eLOC1_smt.push_back(
-            (parameters[Acts::eBoundLoc1] - truthLOC1) /
-            sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
-        m_pull_ePHI_smt.push_back(
-            (parameters[Acts::eBoundPhi] - truthPHI) /
-            sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
-        m_pull_eTHETA_smt.push_back(
-            (parameters[Acts::eBoundTheta] - truthTHETA) /
-            sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
-        m_pull_eQOP_smt.push_back(
-            (parameters[Acts::eBoundQOverP] - truthQOP) /
-            sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
-        m_pull_eT_smt.push_back(
-            (parameters[Acts::eBoundTime] - truthTIME) /
-            sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
-
-        // further smoothed parameter info
-        const Acts::FreeVector freeParams =
-            Acts::detail::transformBoundToFreeParameters(surface, gctx,
-                                                         parameters);
-        m_x_smt.push_back(freeParams[Acts::eFreePos0]);
-        m_y_smt.push_back(freeParams[Acts::eFreePos1]);
-        m_z_smt.push_back(freeParams[Acts::eFreePos2]);
-        const auto p = std::abs(1 / freeParams[Acts::eFreeQOverP]);
-        m_px_smt.push_back(p * freeParams[Acts::eFreeDir0]);
-        m_py_smt.push_back(p * freeParams[Acts::eFreeDir1]);
-        m_pz_smt.push_back(p * freeParams[Acts::eFreeDir2]);
-        m_pT_smt.push_back(p * std::hypot(freeParams[Acts::eFreeDir0],
-                                          freeParams[Acts::eFreeDir1]));
-        m_eta_smt.push_back(
-            Acts::VectorHelpers::eta(freeParams.segment<3>(Acts::eFreeDir0)));
-      } else {
-        // push default values if no smoothed parameter
-        m_eLOC0_smt.push_back(-99.);
-        m_eLOC1_smt.push_back(-99.);
-        m_ePHI_smt.push_back(-99.);
-        m_eTHETA_smt.push_back(-99.);
-        m_eQOP_smt.push_back(-99.);
-        m_eT_smt.push_back(-99.);
-        m_res_eLOC0_smt.push_back(-99.);
-        m_res_eLOC1_smt.push_back(-99.);
-        m_res_ePHI_smt.push_back(-99.);
-        m_res_eTHETA_smt.push_back(-99.);
-        m_res_eQOP_smt.push_back(-99.);
-        m_res_eT_smt.push_back(-99.);
-        m_err_eLOC0_smt.push_back(-99);
-        m_err_eLOC1_smt.push_back(-99);
-        m_err_ePHI_smt.push_back(-99);
-        m_err_eTHETA_smt.push_back(-99);
-        m_err_eQOP_smt.push_back(-99);
-        m_err_eT_smt.push_back(-99);
-        m_pull_eLOC0_smt.push_back(-99.);
-        m_pull_eLOC1_smt.push_back(-99.);
-        m_pull_ePHI_smt.push_back(-99.);
-        m_pull_eTHETA_smt.push_back(-99.);
-        m_pull_eQOP_smt.push_back(-99.);
-        m_pull_eT_smt.push_back(-99.);
-        m_x_smt.push_back(-99.);
-        m_y_smt.push_back(-99.);
-        m_z_smt.push_back(-99.);
-        m_px_smt.push_back(-99.);
-        m_py_smt.push_back(-99.);
-        m_pz_smt.push_back(-99.);
-        m_pT_smt.push_back(-99.);
-        m_eta_smt.push_back(-99.);
-      }
-
-      m_prt.push_back(predicted);
-      m_flt.push_back(filtered);
-      m_smt.push_back(smoothed);
       return true;
     });  // all states
 
@@ -793,108 +609,44 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     m_pull_y_hit.clear();
     m_dim_hit.clear();
 
-    m_prt.clear();
-    m_eLOC0_prt.clear();
-    m_eLOC1_prt.clear();
-    m_ePHI_prt.clear();
-    m_eTHETA_prt.clear();
-    m_eQOP_prt.clear();
-    m_eT_prt.clear();
-    m_res_eLOC0_prt.clear();
-    m_res_eLOC1_prt.clear();
-    m_res_ePHI_prt.clear();
-    m_res_eTHETA_prt.clear();
-    m_res_eQOP_prt.clear();
-    m_res_eT_prt.clear();
-    m_err_eLOC0_prt.clear();
-    m_err_eLOC1_prt.clear();
-    m_err_ePHI_prt.clear();
-    m_err_eTHETA_prt.clear();
-    m_err_eQOP_prt.clear();
-    m_err_eT_prt.clear();
-    m_pull_eLOC0_prt.clear();
-    m_pull_eLOC1_prt.clear();
-    m_pull_ePHI_prt.clear();
-    m_pull_eTHETA_prt.clear();
-    m_pull_eQOP_prt.clear();
-    m_pull_eT_prt.clear();
-    m_x_prt.clear();
-    m_y_prt.clear();
-    m_z_prt.clear();
-    m_px_prt.clear();
-    m_py_prt.clear();
-    m_pz_prt.clear();
-    m_eta_prt.clear();
-    m_pT_prt.clear();
+    for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+      m_hasParams[ipar].clear();
+      m_eLOC0[ipar].clear();
+      m_eLOC1[ipar].clear();
+      m_ePHI[ipar].clear();
+      m_eTHETA[ipar].clear();
+      m_eQOP[ipar].clear();
+      m_eT[ipar].clear();
+      m_res_eLOC0[ipar].clear();
+      m_res_eLOC1[ipar].clear();
+      m_res_ePHI[ipar].clear();
+      m_res_eTHETA[ipar].clear();
+      m_res_eQOP[ipar].clear();
+      m_res_eT[ipar].clear();
+      m_err_eLOC0[ipar].clear();
+      m_err_eLOC1[ipar].clear();
+      m_err_ePHI[ipar].clear();
+      m_err_eTHETA[ipar].clear();
+      m_err_eQOP[ipar].clear();
+      m_err_eT[ipar].clear();
+      m_pull_eLOC0[ipar].clear();
+      m_pull_eLOC1[ipar].clear();
+      m_pull_ePHI[ipar].clear();
+      m_pull_eTHETA[ipar].clear();
+      m_pull_eQOP[ipar].clear();
+      m_pull_eT[ipar].clear();
+      m_x[ipar].clear();
+      m_y[ipar].clear();
+      m_z[ipar].clear();
+      m_px[ipar].clear();
+      m_py[ipar].clear();
+      m_pz[ipar].clear();
+      m_eta[ipar].clear();
+      m_pT[ipar].clear();
+    }
 
-    m_flt.clear();
-    m_eLOC0_flt.clear();
-    m_eLOC1_flt.clear();
-    m_ePHI_flt.clear();
-    m_eTHETA_flt.clear();
-    m_eQOP_flt.clear();
-    m_eT_flt.clear();
-    m_res_eLOC0_flt.clear();
-    m_res_eLOC1_flt.clear();
-    m_res_ePHI_flt.clear();
-    m_res_eTHETA_flt.clear();
-    m_res_eQOP_flt.clear();
-    m_res_eT_flt.clear();
-    m_err_eLOC0_flt.clear();
-    m_err_eLOC1_flt.clear();
-    m_err_ePHI_flt.clear();
-    m_err_eTHETA_flt.clear();
-    m_err_eQOP_flt.clear();
-    m_err_eT_flt.clear();
-    m_pull_eLOC0_flt.clear();
-    m_pull_eLOC1_flt.clear();
-    m_pull_ePHI_flt.clear();
-    m_pull_eTHETA_flt.clear();
-    m_pull_eQOP_flt.clear();
-    m_pull_eT_flt.clear();
-    m_x_flt.clear();
-    m_y_flt.clear();
-    m_z_flt.clear();
-    m_px_flt.clear();
-    m_py_flt.clear();
-    m_pz_flt.clear();
-    m_eta_flt.clear();
-    m_pT_flt.clear();
     m_chi2.clear();
 
-    m_smt.clear();
-    m_eLOC0_smt.clear();
-    m_eLOC1_smt.clear();
-    m_ePHI_smt.clear();
-    m_eTHETA_smt.clear();
-    m_eQOP_smt.clear();
-    m_eT_smt.clear();
-    m_res_eLOC0_smt.clear();
-    m_res_eLOC1_smt.clear();
-    m_res_ePHI_smt.clear();
-    m_res_eTHETA_smt.clear();
-    m_res_eQOP_smt.clear();
-    m_res_eT_smt.clear();
-    m_err_eLOC0_smt.clear();
-    m_err_eLOC1_smt.clear();
-    m_err_ePHI_smt.clear();
-    m_err_eTHETA_smt.clear();
-    m_err_eQOP_smt.clear();
-    m_err_eT_smt.clear();
-    m_pull_eLOC0_smt.clear();
-    m_pull_eLOC1_smt.clear();
-    m_pull_ePHI_smt.clear();
-    m_pull_eTHETA_smt.clear();
-    m_pull_eQOP_smt.clear();
-    m_pull_eT_smt.clear();
-    m_x_smt.clear();
-    m_y_smt.clear();
-    m_z_smt.clear();
-    m_px_smt.clear();
-    m_py_smt.clear();
-    m_pz_smt.clear();
-    m_eta_smt.clear();
-    m_pT_smt.clear();
   }  // all trajectories
 
   return ProcessCode::SUCCESS;

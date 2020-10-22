@@ -113,7 +113,7 @@ ActsExamples::RootTrajectoryParametersWriter::endRun() {
   if (m_outputFile) {
     m_outputFile->cd();
     m_outputTree->Write();
-    ACTS_INFO("Write trajectory parameters to tree '"
+    ACTS_INFO("Write parameters of trajectories to tree '"
               << m_cfg.outputTreename << "' in '"
               << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
   }

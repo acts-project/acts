@@ -123,111 +123,42 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
-  int m_nPredicted{0};      ///< number of states with predicted parameter
-  std::vector<bool> m_prt;  ///< predicted status
-  std::vector<float> m_eLOC0_prt;       ///< predicted parameter eLOC0
-  std::vector<float> m_eLOC1_prt;       ///< predicted parameter eLOC1
-  std::vector<float> m_ePHI_prt;        ///< predicted parameter ePHI
-  std::vector<float> m_eTHETA_prt;      ///< predicted parameter eTHETA
-  std::vector<float> m_eQOP_prt;        ///< predicted parameter eQOP
-  std::vector<float> m_eT_prt;          ///< predicted parameter eT
-  std::vector<float> m_res_eLOC0_prt;   ///< predicted parameter eLOC0 residual
-  std::vector<float> m_res_eLOC1_prt;   ///< predicted parameter eLOC1 residual
-  std::vector<float> m_res_ePHI_prt;    ///< predicted parameter ePHI residual
-  std::vector<float> m_res_eTHETA_prt;  ///< predicted parameter eTHETA residual
-  std::vector<float> m_res_eQOP_prt;    ///< predicted parameter eQOP residual
-  std::vector<float> m_res_eT_prt;      ///< predicted parameter eT residual
-  std::vector<float> m_err_eLOC0_prt;   ///< predicted parameter eLOC0 error
-  std::vector<float> m_err_eLOC1_prt;   ///< predicted parameter eLOC1 error
-  std::vector<float> m_err_ePHI_prt;    ///< predicted parameter ePHI error
-  std::vector<float> m_err_eTHETA_prt;  ///< predicted parameter eTHETA error
-  std::vector<float> m_err_eQOP_prt;    ///< predicted parameter eQOP error
-  std::vector<float> m_err_eT_prt;      ///< predicted parameter eT error
-  std::vector<float> m_pull_eLOC0_prt;  ///< predicted parameter eLOC0 pull
-  std::vector<float> m_pull_eLOC1_prt;  ///< predicted parameter eLOC1 pull
-  std::vector<float> m_pull_ePHI_prt;   ///< predicted parameter ePHI pull
-  std::vector<float> m_pull_eTHETA_prt;  ///< predicted parameter eTHETA pull
-  std::vector<float> m_pull_eQOP_prt;    ///< predicted parameter eQOP pull
-  std::vector<float> m_pull_eT_prt;      ///< predicted parameter eT pull
-  std::vector<float> m_x_prt;            ///< predicted global x
-  std::vector<float> m_y_prt;            ///< predicted global y
-  std::vector<float> m_z_prt;            ///< predicted global z
-  std::vector<float> m_px_prt;           ///< predicted momentum px
-  std::vector<float> m_py_prt;           ///< predicted momentum py
-  std::vector<float> m_pz_prt;           ///< predicted momentum pz
-  std::vector<float> m_eta_prt;          ///< predicted momentum eta
-  std::vector<float> m_pT_prt;           ///< predicted momentum pT
+  std::array<int, 3> m_nParams;
+  std::array<std::vector<bool>, 3> m_hasParams;
+  std::array<std::vector<float>, 3> m_eLOC0;
+  std::array<std::vector<float>, 3> m_eLOC1;
+  std::array<std::vector<float>, 3> m_ePHI;
+  std::array<std::vector<float>, 3> m_eTHETA;
+  std::array<std::vector<float>, 3> m_eQOP;
+  std::array<std::vector<float>, 3> m_eT;
+  std::array<std::vector<float>, 3> m_res_eLOC0;
+  std::array<std::vector<float>, 3> m_res_eLOC1;
+  std::array<std::vector<float>, 3> m_res_ePHI;
+  std::array<std::vector<float>, 3> m_res_eTHETA;
+  std::array<std::vector<float>, 3> m_res_eQOP;
+  std::array<std::vector<float>, 3> m_res_eT;
+  std::array<std::vector<float>, 3> m_err_eLOC0;
+  std::array<std::vector<float>, 3> m_err_eLOC1;
+  std::array<std::vector<float>, 3> m_err_ePHI;
+  std::array<std::vector<float>, 3> m_err_eTHETA;
+  std::array<std::vector<float>, 3> m_err_eQOP;
+  std::array<std::vector<float>, 3> m_err_eT;
+  std::array<std::vector<float>, 3> m_pull_eLOC0;
+  std::array<std::vector<float>, 3> m_pull_eLOC1;
+  std::array<std::vector<float>, 3> m_pull_ePHI;
+  std::array<std::vector<float>, 3> m_pull_eTHETA;
+  std::array<std::vector<float>, 3> m_pull_eQOP;
+  std::array<std::vector<float>, 3> m_pull_eT;
+  std::array<std::vector<float>, 3> m_x;
+  std::array<std::vector<float>, 3> m_y;
+  std::array<std::vector<float>, 3> m_z;
+  std::array<std::vector<float>, 3> m_px;
+  std::array<std::vector<float>, 3> m_py;
+  std::array<std::vector<float>, 3> m_pz;
+  std::array<std::vector<float>, 3> m_eta;
+  std::array<std::vector<float>, 3> m_pT;
 
-  int m_nFiltered{0};              ///< number of states with filtered parameter
-  std::vector<bool> m_flt;         ///< filtered status
-  std::vector<float> m_eLOC0_flt;  ///< filtered parameter eLOC0
-  std::vector<float> m_eLOC1_flt;  ///< filtered parameter eLOC1
-  std::vector<float> m_ePHI_flt;   ///< filtered parameter ePHI
-  std::vector<float> m_eTHETA_flt;       ///< filtered parameter eTHETA
-  std::vector<float> m_eQOP_flt;         ///< filtered parameter eQOP
-  std::vector<float> m_eT_flt;           ///< filtered parameter eT
-  std::vector<float> m_res_eLOC0_flt;    ///< filtered parameter eLOC0 residual
-  std::vector<float> m_res_eLOC1_flt;    ///< filtered parameter eLOC1 residual
-  std::vector<float> m_res_ePHI_flt;     ///< filtered parameter ePHI residual
-  std::vector<float> m_res_eTHETA_flt;   ///< filtered parameter eTHETA residual
-  std::vector<float> m_res_eQOP_flt;     ///< filtered parameter eQOP residual
-  std::vector<float> m_res_eT_flt;       ///< filtered parameter eT residual
-  std::vector<float> m_err_eLOC0_flt;    ///< filtered parameter eLOC0 error
-  std::vector<float> m_err_eLOC1_flt;    ///< filtered parameter eLOC1 error
-  std::vector<float> m_err_ePHI_flt;     ///< filtered parameter ePHI error
-  std::vector<float> m_err_eTHETA_flt;   ///< filtered parameter eTHETA error
-  std::vector<float> m_err_eQOP_flt;     ///< filtered parameter eQOP error
-  std::vector<float> m_err_eT_flt;       ///< filtered parameter eT error
-  std::vector<float> m_pull_eLOC0_flt;   ///< filtered parameter eLOC0 pull
-  std::vector<float> m_pull_eLOC1_flt;   ///< filtered parameter eLOC1 pull
-  std::vector<float> m_pull_ePHI_flt;    ///< filtered parameter ePHI pull
-  std::vector<float> m_pull_eTHETA_flt;  ///< filtered parameter eTHETA pull
-  std::vector<float> m_pull_eQOP_flt;    ///< filtered parameter eQOP pull
-  std::vector<float> m_pull_eT_flt;      ///< filtered parameter eT pull
-  std::vector<float> m_x_flt;            ///< filtered global x
-  std::vector<float> m_y_flt;            ///< filtered global y
-  std::vector<float> m_z_flt;            ///< filtered global z
-  std::vector<float> m_px_flt;           ///< filtered momentum px
-  std::vector<float> m_py_flt;           ///< filtered momentum py
-  std::vector<float> m_pz_flt;           ///< filtered momentum pz
-  std::vector<float> m_eta_flt;          ///< filtered momentum eta
-  std::vector<float> m_pT_flt;           ///< filtered momentum pT
-  std::vector<float> m_chi2;             ///< chisq from filtering
-
-  int m_nSmoothed{0};              ///< number of states with smoothed parameter
-  std::vector<bool> m_smt;         ///< smoothed status
-  std::vector<float> m_eLOC0_smt;  ///< smoothed parameter eLOC0
-  std::vector<float> m_eLOC1_smt;  ///< smoothed parameter eLOC1
-  std::vector<float> m_ePHI_smt;   ///< smoothed parameter ePHI
-  std::vector<float> m_eTHETA_smt;       ///< smoothed parameter eTHETA
-  std::vector<float> m_eQOP_smt;         ///< smoothed parameter eQOP
-  std::vector<float> m_eT_smt;           ///< smoothed parameter eT
-  std::vector<float> m_res_eLOC0_smt;    ///< smoothed parameter eLOC0 residual
-  std::vector<float> m_res_eLOC1_smt;    ///< smoothed parameter eLOC1 residual
-  std::vector<float> m_res_ePHI_smt;     ///< smoothed parameter ePHI residual
-  std::vector<float> m_res_eTHETA_smt;   ///< smoothed parameter eTHETA residual
-  std::vector<float> m_res_eQOP_smt;     ///< smoothed parameter eQOP residual
-  std::vector<float> m_res_eT_smt;       ///< smoothed parameter eT residual
-  std::vector<float> m_err_eLOC0_smt;    ///< smoothed parameter eLOC0 error
-  std::vector<float> m_err_eLOC1_smt;    ///< smoothed parameter eLOC1 error
-  std::vector<float> m_err_ePHI_smt;     ///< smoothed parameter ePHI error
-  std::vector<float> m_err_eTHETA_smt;   ///< smoothed parameter eTHETA error
-  std::vector<float> m_err_eQOP_smt;     ///< smoothed parameter eQOP error
-  std::vector<float> m_err_eT_smt;       ///< smoothed parameter eT error
-  std::vector<float> m_pull_eLOC0_smt;   ///< smoothed parameter eLOC0 pull
-  std::vector<float> m_pull_eLOC1_smt;   ///< smoothed parameter eLOC1 pull
-  std::vector<float> m_pull_ePHI_smt;    ///< smoothed parameter ePHI pull
-  std::vector<float> m_pull_eTHETA_smt;  ///< smoothed parameter eTHETA pull
-  std::vector<float> m_pull_eQOP_smt;    ///< smoothed parameter eQOP pull
-  std::vector<float> m_pull_eT_smt;      ///< smoothed parameter eT pull
-  std::vector<float> m_x_smt;            ///< smoothed global x
-  std::vector<float> m_y_smt;            ///< smoothed global y
-  std::vector<float> m_z_smt;            ///< smoothed global z
-  std::vector<float> m_px_smt;           ///< smoothed momentum px
-  std::vector<float> m_py_smt;           ///< smoothed momentum py
-  std::vector<float> m_pz_smt;           ///< smoothed momentum pz
-  std::vector<float> m_eta_smt;          ///< smoothed momentum eta
-  std::vector<float> m_pT_smt;           ///< smoothed momentum pT
+  std::vector<float> m_chi2;  ///< chisq from filtering
 };
 
 }  // namespace ActsExamples
