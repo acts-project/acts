@@ -48,9 +48,9 @@ class RootTrajectoryParametersWriter final
     /// output directory.
     std::string outputDir;
     /// output filename.
-    std::string outputFilename = "trackParameters.root";
+    std::string outputFilename = "trackparameters.root";
     /// name of the output tree.
-    std::string outputTreename = "trackParameters";
+    std::string outputTreename = "trackparameters";
     /// file access mode.
     std::string fileMode = "RECREATE";
     /// common root file.

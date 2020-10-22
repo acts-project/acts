@@ -53,9 +53,9 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
     /// output directory.
     std::string outputDir;
     /// output filename.
-    std::string outputFilename = "trackStates.root";
+    std::string outputFilename = "trackstates.root";
     /// name of the output tree.
-    std::string outputTreename = "trackStates";
+    std::string outputTreename = "trackstates";
     /// file access mode.
     std::string fileMode = "RECREATE";
     /// common root file.
