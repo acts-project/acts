@@ -38,7 +38,7 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
             static_cast<unsigned int>(segmentation.bin(end, 1))};
     // Fast single channel exit
     if (bstart == bend) {
-      return {ChannelSegment(bstart, segment2d.norm())};
+      return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
     }
     // The lines channel segment lines along x
     if (bstart[0] != bend[0]) {
@@ -82,7 +82,7 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
 
     // Fast single channel exit
     if (bstart == bend) {
-      return {ChannelSegment(bstart, segment2d.norm())};
+      return {ChannelSegment(bstart, {start, end}, segment2d.norm())};
     }
 
     double phistart = pstart[1];
@@ -135,16 +135,19 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
   std::vector<ChannelSegment> cSegments;
   cSegments.reserve(cSteps.size());
 
-  std::array<unsigned int, 2> cbin = {bstart[0], bstart[1]};
-  std::array<int, 2> cdelta = {0, 0};
-  double cpath = 0.;
+  std::array<unsigned int, 2> currentBin = {bstart[0], bstart[1]};
+  std::array<int, 2> lastDelta = {0, 0};
+  Acts::Vector2D lastIntersect = start;
+  double lastPath = 0.;
   for (auto& cStep : cSteps) {
-    cbin[0] += cdelta[0];
-    cbin[1] += cdelta[1];
-    double path = cStep.path - cpath;
-    cSegments.push_back(ChannelSegment(cbin, path));
-    cpath = cStep.path;
-    cdelta = cStep.delta;
+    currentBin[0] += lastDelta[0];
+    currentBin[1] += lastDelta[1];
+    double path = cStep.path - lastPath;
+    cSegments.push_back(
+        ChannelSegment(currentBin, {lastIntersect, cStep.intersect}, path));
+    lastPath = cStep.path;
+    lastDelta = cStep.delta;
+    lastIntersect = cStep.intersect;
   }
 
   return cSegments;

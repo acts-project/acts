@@ -1,4 +1,5 @@
 // This file is part of the Acts project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2020 CERN for the benefit of the Acts project
 //
@@ -53,14 +54,17 @@ struct Channelizer {
   /// Nested struct for representing channel steps.
   struct ChannelSegment {
     std::array<unsigned int, 2> bin = {0, 0};
+    std::array<Acts::Vector2D, 2> path2D;
     double value = 0.;
 
     /// Constructor with arguments
     ///
     /// @param bin_ The bin corresponding to this step
+    /// @param path2D_ The start/end 2D position of the segement
     /// @param value_ The segment length for this bin
-    ChannelSegment(std::array<unsigned int, 2> bin_, double value_)
-        : bin(std::move(bin_)), value(value_) {}
+    ChannelSegment(std::array<unsigned int, 2> bin_,
+                   std::array<Acts::Vector2D, 2> path2D_, double value_)
+        : bin(std::move(bin_)), path2D(std::move(path2D_)), value(value_) {}
   };
 
   /// Divide the surface segment into channel segments.
