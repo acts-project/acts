@@ -128,7 +128,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
   if (m_outputFile == nullptr)
     return ProcessCode::SUCCESS;
 
-  auto& gctx = ctx.geoContext;
   // Read additional input collections
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
@@ -157,7 +156,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
     m_multiTrajNr = itraj;
 
     // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
 
     // Loop over the entry indices for the subtrajectories
@@ -166,10 +164,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryParametersWriter::writeT(
       m_subTrajNr = isubtraj;
       // The entry index for this subtrajectory
       const auto& trackTip = trackTips[isubtraj];
-
-      // Collect the trajectory summary info
-      auto trajState =
-          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
       // Get the majority truth particle to this track
       identifyContributingParticles(hitParticlesMap, traj, trackTip,

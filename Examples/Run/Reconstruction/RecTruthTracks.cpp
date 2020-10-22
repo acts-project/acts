@@ -171,8 +171,8 @@ int main(int argc, char* argv[]) {
   trackStatesWriter.inputMeasurementSimHitsMap =
       hitSmearingCfg.outputMeasurementSimHitsMap;
   trackStatesWriter.outputDir = outputDir;
-  trackStatesWriter.outputFilename = "trackstates.root";
-  trackStatesWriter.outputTreename = "trackstates";
+  trackStatesWriter.outputFilename = "trackstates_fitter.root";
+  trackStatesWriter.outputTreename = "trackstates_fitter";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
 
@@ -183,8 +183,8 @@ int main(int argc, char* argv[]) {
   trackParamsWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   trackParamsWriter.outputDir = outputDir;
-  trackParamsWriter.outputFilename = "trackparams.root";
-  trackParamsWriter.outputTreename = "trackparams";
+  trackParamsWriter.outputFilename = "trackparams_fitter.root";
+  trackParamsWriter.outputTreename = "trackparams_fitter";
   sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
       trackParamsWriter, logLevel));
 
