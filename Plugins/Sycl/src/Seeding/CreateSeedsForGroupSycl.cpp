@@ -21,14 +21,13 @@
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp"
+#include "DupletSearch.hpp"
 
 // SYCL include
 #include <CL/sycl.hpp>
 
 namespace Acts::Sycl {
 // Kernel classes in order of execution.
-class duplet_search_bottom_kernel;
-class duplet_search_top_kernel;
 class ind_copy_bottom_kernel;
 class ind_copy_top_kernel;
 class transform_coord_bottom_kernel;
@@ -124,75 +123,34 @@ void createSeedsForGroupSycl(
     // ********** DUPLET SEARCH - BEGIN ********** //
     //*********************************************//
 
+    // Atomic accessor type used throughout the code.
+    using AtomicAccessor =
+        sycl::ONEAPI::atomic_accessor<uint32_t, 1,
+                                      sycl::ONEAPI::memory_order::relaxed,
+                                      sycl::ONEAPI::memory_scope::device>;
     {
+      // Allocate temporary buffers on top of the count arrays booked in USM.
       sycl::buffer<uint32_t> countBotBuf(countBotDuplets.data(), M);
       sycl::buffer<uint32_t> countTopBuf(countTopDuplets.data(), M);
+
+      // Perform the middle-bottom duplet search.
       q->submit([&](cl::sycl::handler& h) {
-        auto countBotDupletsAcc =
-            sycl::ONEAPI::atomic_accessor<uint32_t, 1,
-                                          sycl::ONEAPI::memory_order::relaxed,
-                                          sycl::ONEAPI::memory_scope::device>(
-                countBotBuf, h);
-        h.parallel_for<duplet_search_bottom_kernel>(
-            bottomDupletNDRange, [=](cl::sycl::nd_item<2> item) {
-              const auto mid = item.get_global_id(0);
-              const auto bot = item.get_global_id(1);
-              // We check whether this thread actually makes sense (within
-              // bounds).
-              // The number of threads is usually a factor of 2, or 3*2^k (k
-              // \in N), etc. Without this check we may index out of arrays.
-              if (mid < M && bot < B) {
-                const auto midSP = deviceMiddleSPs[mid];
-                const auto botSP = deviceBottomSPs[bot];
-
-                const auto deltaR = midSP.r - botSP.r;
-                const auto cotTheta = (midSP.z - botSP.z) / deltaR;
-                const auto zOrigin = midSP.z - midSP.r * cotTheta;
-
-                if (!(deltaR < seedfinderConfig.deltaRMin) &&
-                    !(deltaR > seedfinderConfig.deltaRMax) &&
-                    !(cl::sycl::abs(cotTheta) > seedfinderConfig.cotThetaMax) &&
-                    !(zOrigin < seedfinderConfig.collisionRegionMin) &&
-                    !(zOrigin > seedfinderConfig.collisionRegionMax)) {
-                  // We keep counting duplets with atomic access.
-                  const auto ind = countBotDupletsAcc[mid].fetch_add(1);
-                  deviceTmpIndBot[mid * B + ind] = bot;
-                }
-              }
-            });
+        AtomicAccessor countBotDupletsAcc(countBotBuf, h);
+        detail::DupletSearch<detail::SpacePointType::Bottom, AtomicAccessor>
+            kernel(M, deviceMiddleSPs, B, deviceBottomSPs, deviceTmpIndBot,
+                   countBotDupletsAcc, seedfinderConfig);
+        h.parallel_for<class DupletSearchBottomKernel>(
+            bottomDupletNDRange, kernel);
       });
 
+      // Perform the middle-top duplet search.
       q->submit([&](cl::sycl::handler& h) {
-        auto countTopDupletsAcc =
-            sycl::ONEAPI::atomic_accessor<uint32_t, 1,
-                                          sycl::ONEAPI::memory_order::relaxed,
-                                          sycl::ONEAPI::memory_scope::device>(
-                countTopBuf, h);
-        h.parallel_for<duplet_search_top_kernel>(
-            topDupletNDRange, [=](cl::sycl::nd_item<2> item) {
-              const auto mid = item.get_global_id(0);
-              const auto top = item.get_global_id(1);
-              // We check whether this thread actually makes sense (within
-              // bounds).
-              if (mid < M && top < T) {
-                const auto midSP = deviceMiddleSPs[mid];
-                const auto topSP = deviceTopSPs[top];
-
-                const auto deltaR = topSP.r - midSP.r;
-                const auto cotTheta = (topSP.z - midSP.z) / deltaR;
-                const auto zOrigin = midSP.z - midSP.r * cotTheta;
-
-                if (!(deltaR < seedfinderConfig.deltaRMin) &&
-                    !(deltaR > seedfinderConfig.deltaRMax) &&
-                    !(cl::sycl::abs(cotTheta) > seedfinderConfig.cotThetaMax) &&
-                    !(zOrigin < seedfinderConfig.collisionRegionMin) &&
-                    !(zOrigin > seedfinderConfig.collisionRegionMax)) {
-                  // We keep counting duplets with atomic access.
-                  const auto ind = countTopDupletsAcc[mid].fetch_add(1);
-                  deviceTmpIndTop[mid * T + ind] = top;
-                }
-              }
-            });
+        AtomicAccessor countTopDupletsAcc(countTopBuf, h);
+        detail::DupletSearch<detail::SpacePointType::Top, AtomicAccessor>
+            kernel(M, deviceMiddleSPs, T, deviceTopSPs, deviceTmpIndTop,
+                   countTopDupletsAcc, seedfinderConfig);
+        h.parallel_for<class DupletSearchTopKernel>(
+            topDupletNDRange, kernel);
       });
     }  // sync (buffers get destroyed and duplet counts are copied back to
        // countBotDuplets and countTopDuplets)

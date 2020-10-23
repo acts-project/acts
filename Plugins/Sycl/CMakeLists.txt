@@ -12,6 +12,8 @@ add_library(
   include/Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp
   # implementation files
   src/Seeding/CreateSeedsForGroupSycl.cpp
+  src/Seeding/DupletSearch.hpp
+  src/Seeding/SpacePointType.hpp
   src/Utilities/CalculateNdRange.cpp
   src/Utilities/DeviceSelector.cpp
   src/Utilities/ListPlatforms.cpp
@@ -23,7 +25,7 @@ target_include_directories(
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-  
+
 target_link_libraries(
   ActsPluginSycl
   PUBLIC ActsCore)
@@ -34,8 +36,7 @@ install(
   TARGETS ActsPluginSycl
   EXPORT ActsPluginSyclTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  
+
 install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-  
