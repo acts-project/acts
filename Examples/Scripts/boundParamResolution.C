@@ -20,7 +20,7 @@ void
 setHistStyle(TH1F* hist, short color);
 
 // This ROOT script will plot the residual and pull of track parameters (loc1,
-// loc2, phi, theta, q/p, t) from root file produced by the RootTrajectoryWriter
+// loc2, phi, theta, q/p, t) at all track states from root file produced by the RootTrajectoryStatesWriter
 //
 void
 boundParamResolution(const std::string& inFile,
@@ -239,7 +239,7 @@ boundParamResolution(const std::string& inFile,
   std::vector<bool>* filtered  = new std::vector<bool>;  ///< filtering status
   std::vector<bool>* smoothed  = new std::vector<bool>;  ///< smoothing status
 
-  int nStates, nMeasurements;
+  unsigned int nStates, nMeasurements;
 
   tree->SetBranchAddress("eLOC0_prt", &LOC0_prt);
   tree->SetBranchAddress("eLOC1_prt", &LOC1_prt);

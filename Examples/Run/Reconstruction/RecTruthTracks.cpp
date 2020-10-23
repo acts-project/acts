@@ -16,7 +16,8 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
@@ -159,21 +160,33 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
-  // write tracks from fitting
-  RootTrajectoryWriter::Config trackWriter;
-  trackWriter.inputTrajectories = fitter.outputTrajectories;
-  trackWriter.inputParticles = inputParticles;
-  trackWriter.inputSimHits = clusterReaderCfg.outputSimHits;
-  trackWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  trackWriter.inputMeasurementParticlesMap =
+  // write track states from fitting
+  RootTrajectoryStatesWriter::Config trackStatesWriter;
+  trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
+  trackStatesWriter.inputParticles = inputParticles;
+  trackStatesWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
-  trackWriter.inputMeasurementSimHitsMap =
+  trackStatesWriter.inputMeasurementSimHitsMap =
       hitSmearingCfg.outputMeasurementSimHitsMap;
-  trackWriter.outputDir = outputDir;
-  trackWriter.outputFilename = "tracks.root";
-  trackWriter.outputTreename = "tracks";
-  sequencer.addWriter(
-      std::make_shared<RootTrajectoryWriter>(trackWriter, logLevel));
+  trackStatesWriter.outputDir = outputDir;
+  trackStatesWriter.outputFilename = "trackstates_fitter.root";
+  trackStatesWriter.outputTreename = "trackstates_fitter";
+  sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
+      trackStatesWriter, logLevel));
+
+  // write track parameters from fitting
+  RootTrajectoryParametersWriter::Config trackParamsWriter;
+  trackParamsWriter.inputTrajectories = fitter.outputTrajectories;
+  trackParamsWriter.inputParticles = inputParticles;
+  trackParamsWriter.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
+  trackParamsWriter.outputDir = outputDir;
+  trackParamsWriter.outputFilename = "trackparams_fitter.root";
+  trackParamsWriter.outputTreename = "trackparams_fitter";
+  sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
+      trackParamsWriter, logLevel));
 
   // write reconstruction performance data
   TrackFinderPerformanceWriter::Config perfFinder;
