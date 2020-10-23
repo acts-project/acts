@@ -10,11 +10,15 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
-#include "Acts/Geometry/Layer.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace Acts {
+
+class ISurfaceMaterial;
 
 /// @class PassiveLayerBuilder
 ///
