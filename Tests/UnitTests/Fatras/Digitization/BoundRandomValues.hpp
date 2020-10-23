@@ -77,8 +77,8 @@ struct DiscRandom {
   ///
   /// @param rmin_ the minimum r of the disc
   /// @param rmax_ the maximum r of the disc
-  /// @param phimin_ the minimumphi
-  /// @param phimax_ the maximum y value
+  /// @param phimin_ the minimum phi value of the disc
+  /// @param phimax_ the maximum phi value of the disc
   DiscRandom(double rmin_, double rmax_, double phimin_, double phimax_)
       : rmin(rmin_), rmax(rmax_), phimin(phimin_), phimax(phimax_) {}
 
