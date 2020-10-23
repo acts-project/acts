@@ -8,19 +8,17 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
-#include <exception>
+#include <iosfwd>
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
-
-class IVisualization3D;
 
 class CylinderBounds;
 class DiscBounds;
