@@ -24,10 +24,13 @@ namespace ActsFatras {
 /// onto the readout surface into channel segments.
 ///
 struct Channelizer {
-  /// Nexted struct for stepping from one channel to the next.
+  /// Nested struct for stepping from one channel to the next.
   struct ChannelStep {
+    /// This is the delta to the last step in bins
     std::array<int, 2> delta = {0, 0};
+    /// The intersection with the channel boundary
     Acts::Vector2D intersect;
+    /// The patlength from the start
     double path = 0.;
 
     /// Constructor with arguments for a ChannelStep.
@@ -52,18 +55,23 @@ struct Channelizer {
 
   /// Nested struct for representing channel steps.
   struct ChannelSegment {
+    /// The bin of this segment
     std::array<unsigned int, 2> bin = {0, 0};
+    /// The segment start, end points
     std::array<Acts::Vector2D, 2> path2D;
-    double value = 0.;
+    // The clipped path length
+    double pathLength = 0.;
 
     /// Constructor with arguments
     ///
     /// @param bin_ The bin corresponding to this step
     /// @param path2D_ The start/end 2D position of the segement
-    /// @param value_ The segment length for this bin
+    /// @param pathLength_ The segment length for this bin
     ChannelSegment(std::array<unsigned int, 2> bin_,
-                   std::array<Acts::Vector2D, 2> path2D_, double value_)
-        : bin(std::move(bin_)), path2D(std::move(path2D_)), value(value_) {}
+                   std::array<Acts::Vector2D, 2> path2D_, double pathLength_)
+        : bin(std::move(bin_)),
+          path2D(std::move(path2D_)),
+          pathLength(pathLength_) {}
   };
 
   /// Divide the surface segment into channel segments.

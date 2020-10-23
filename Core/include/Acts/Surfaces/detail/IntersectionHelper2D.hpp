@@ -22,7 +22,7 @@ struct IntersectionHelper2D {
   /// @param s0 The Start of the segement
   /// @param s1 The end of the segement
   /// @param origin The Start of intersection line
-  /// @param direction The Direction of intersection line
+  /// @param dir The Direction of intersection line
   ///
   /// @return the intersection point with status
   static Intersection2D intersectSegment(const Vector2D& s0, const Vector2D& s1,
@@ -35,7 +35,7 @@ struct IntersectionHelper2D {
   /// @param Rx The radius in x
   /// @param Ry The radius in y
   /// @param origin The Start of intersection line
-  /// @param direction The Direction of intersection line
+  /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
   static std::array<Intersection2D, 2> intersectEllipse(double Rx, double Ry,
@@ -46,7 +46,7 @@ struct IntersectionHelper2D {
   ///
   /// @param R The radius
   /// @param origin The Start of intersection line
-  /// @param direction The Direction of intersection line
+  /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
   static inline std::array<Intersection2D, 2> intersectCircle(
@@ -62,7 +62,7 @@ struct IntersectionHelper2D {
   /// @param phiMin The minimum phi value
   /// @param phiMax The maximum phi value
   /// @param origin The Start of intersection line
-  /// @param direction The Direction of intersection line
+  /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
   static Intersection2D intersectCircleSegment(double R, double phiMin,
