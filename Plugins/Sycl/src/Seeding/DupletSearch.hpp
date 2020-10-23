@@ -9,8 +9,9 @@
 #pragma once
 
 // Local include(s).
-#include "SpacePointType.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
+#include "SpacePointType.hpp"
+#include "../Utilities/Arrays.hpp"
 
 // SYCL include(s).
 #include <CL/sycl.hpp>
@@ -33,13 +34,16 @@ class DupletSearch {
 
  public:
   /// Constructor with all the necessary arguments
-  DupletSearch(uint32_t nMiddleSPs, const DeviceSpacePoint* middleSPs,
-               uint32_t nOtherSPs, const DeviceSpacePoint* otherSPs,
-               uint32_t* middleOtherSPIndices,
+  DupletSearch(uint32_t nMiddleSPs,
+               const device_array<DeviceSpacePoint>& middleSPs,
+               uint32_t nOtherSPs,
+               const device_array<DeviceSpacePoint>& otherSPs,
+               device_array<uint32_t>& middleOtherSPIndices,
                const AtomicAccessorType& middleOtherSPCounts,
                const DeviceSeedfinderConfig& config)
-  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs), m_nOtherSPs(nOtherSPs),
-    m_otherSPs(otherSPs), m_middleOtherSPIndices(middleOtherSPIndices),
+  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs.get()),
+    m_nOtherSPs(nOtherSPs), m_otherSPs(otherSPs.get()),
+    m_middleOtherSPIndices(middleOtherSPIndices.get()),
     m_middleOtherSPCounts(middleOtherSPCounts), m_config(config) {}
 
   /// Operator performing the duplet search

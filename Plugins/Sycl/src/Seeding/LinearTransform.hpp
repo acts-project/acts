@@ -11,6 +11,7 @@
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "SpacePointType.hpp"
+#include "../Utilities/Arrays.hpp"
 
 // SYCL include(s).
 #include <CL/sycl.hpp>
@@ -34,15 +35,18 @@ class LinearTransform {
 
  public:
   /// Constructor with all the necessary arguments
-  LinearTransform(uint32_t nMiddleSPs, const DeviceSpacePoint* middleSPs,
-                  uint32_t nOtherSPs, const DeviceSpacePoint* otherSPs,
-                  const uint32_t* middleIndexLUT,
-                  const uint32_t* otherIndexLUT, uint32_t nEdges,
-                  DeviceLinEqCircle* resultArray)
-  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs), m_nOtherSPs(nOtherSPs),
-    m_otherSPs(otherSPs), m_middleIndexLUT(middleIndexLUT),
-    m_otherIndexLUT(otherIndexLUT), m_nEdges(nEdges),
-    m_resultArray(resultArray) {}
+  LinearTransform(uint32_t nMiddleSPs,
+                  const device_array<DeviceSpacePoint>& middleSPs,
+                  uint32_t nOtherSPs,
+                  const device_array<DeviceSpacePoint>& otherSPs,
+                  const device_array<uint32_t>& middleIndexLUT,
+                  const device_array<uint32_t>& otherIndexLUT, uint32_t nEdges,
+                  device_array<DeviceLinEqCircle>& resultArray)
+  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs.get()),
+    m_nOtherSPs(nOtherSPs), m_otherSPs(otherSPs.get()),
+    m_middleIndexLUT(middleIndexLUT.get()),
+    m_otherIndexLUT(otherIndexLUT.get()), m_nEdges(nEdges),
+    m_resultArray(resultArray.get()) {}
 
   /// Operator performing the coordinate linear transformation
   void operator()(cl::sycl::nd_item<1> item) const {
