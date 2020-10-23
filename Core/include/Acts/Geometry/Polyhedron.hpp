@@ -9,12 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
-#include <array>
-#include <limits>
 #include <vector>
 
 namespace Acts {

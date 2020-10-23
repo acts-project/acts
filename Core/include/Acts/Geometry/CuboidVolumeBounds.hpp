@@ -15,14 +15,15 @@
 
 #include <array>
 #include <cmath>
-#include <exception>
+#include <iomanip>
+#include <iosfwd>
+#include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
 
 class RectangleBounds;
-class Volume;
-class Surface;
 
 /// @class CuboidVolumeBounds
 ///

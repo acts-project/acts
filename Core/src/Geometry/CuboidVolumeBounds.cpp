@@ -13,7 +13,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-#include <cmath>
 #include <iostream>
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,

@@ -12,7 +12,6 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <iostream>
 #include <utility>
 
 Acts::AbstractVolume::AbstractVolume(

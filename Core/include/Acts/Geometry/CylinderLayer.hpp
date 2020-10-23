@@ -8,19 +8,17 @@
 
 #pragma once
 
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <algorithm>
+#include <memory>
 
 namespace Acts {
-
-class CylinderBounds;
-class ApproachDescriptor;
 
 /// @class CylinderLayer
 ///

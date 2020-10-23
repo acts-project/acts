@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Geometry module
 #include "Acts/Geometry/PlaneLayer.hpp"
 
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
-#include <utility>
+#include <vector>
 
 Acts::PlaneLayer::PlaneLayer(const Transform3D& transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
