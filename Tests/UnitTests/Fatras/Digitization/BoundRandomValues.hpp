@@ -83,7 +83,7 @@ struct DiscRandom {
       : rmin(rmin_), rmax(rmax_), phimin(phimin_), phimax(phimax_) {}
 
   /// Given two random numbers @param r0 and @param r1
-  /// generate a x/y position inside the Trapezoid @return
+  /// generate a x/y position inside the Disc @return
   ///
   /// @note r0, r1 need to be within [0,1]
   std::array<double, 2> operator()(double r0, double r1) const {
