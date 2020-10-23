@@ -22,6 +22,7 @@
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp"
 #include "DupletSearch.hpp"
+#include "LinearTransform.hpp"
 
 // SYCL include
 #include <CL/sycl.hpp>
@@ -30,8 +31,6 @@ namespace Acts::Sycl {
 // Kernel classes in order of execution.
 class ind_copy_bottom_kernel;
 class ind_copy_top_kernel;
-class transform_coord_bottom_kernel;
-class transform_coord_top_kernel;
 class triplet_search_kernel;
 class filter_2sp_fixed_kernel;
 
@@ -347,88 +346,20 @@ void createSeedsForGroupSycl(
 
       // coordinate transformation middle-bottom pairs
       auto linB = q->submit([&](cl::sycl::handler& h) {
-        h.parallel_for<transform_coord_bottom_kernel>(
-            edgesBotNdRange, [=](cl::sycl::nd_item<1> item) {
-              auto idx = item.get_global_linear_id();
-              if (idx < edgesBottom) {
-                const auto midSP = deviceMiddleSPs[deviceMidIndPerBot[idx]];
-                const auto botSP = deviceBottomSPs[deviceIndBot[idx]];
-
-                const auto xM = midSP.x;
-                const auto yM = midSP.y;
-                const auto zM = midSP.z;
-                const auto rM = midSP.r;
-                const auto varianceZM = midSP.varZ;
-                const auto varianceRM = midSP.varR;
-                const auto cosPhiM = xM / rM;
-                const auto sinPhiM = yM / rM;
-
-                const auto deltaX = botSP.x - xM;
-                const auto deltaY = botSP.y - yM;
-                const auto deltaZ = botSP.z - zM;
-
-                const auto x = deltaX * cosPhiM + deltaY * sinPhiM;
-                const auto y = deltaY * cosPhiM - deltaX * sinPhiM;
-                const auto iDeltaR2 = 1.f / (deltaX * deltaX + deltaY * deltaY);
-                const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
-                const auto cot_theta = -(deltaZ * iDeltaR);
-
-                detail::DeviceLinEqCircle L;
-                L.cotTheta = cot_theta;
-                L.zo = zM - rM * cot_theta;
-                L.iDeltaR = iDeltaR;
-                L.u = x * iDeltaR2;
-                L.v = y * iDeltaR2;
-                L.er = ((varianceZM + botSP.varZ) +
-                        (cot_theta * cot_theta) * (varianceRM + botSP.varR)) *
-                       iDeltaR2;
-
-                deviceLinBot[idx] = L;
-              }
-            });
+        detail::LinearTransform<detail::SpacePointType::Bottom>
+            kernel(M, deviceMiddleSPs, B, deviceBottomSPs, deviceMidIndPerBot,
+                   deviceIndBot, edgesBottom, deviceLinBot);
+        h.parallel_for<class TransformCoordBottomKernel>(
+            edgesBotNdRange, kernel);
       });
 
       // coordinate transformation middle-top pairs
       auto linT = q->submit([&](cl::sycl::handler& h) {
-        h.parallel_for<transform_coord_top_kernel>(
-            edgesTopNdRange, [=](cl::sycl::nd_item<1> item) {
-              auto idx = item.get_global_linear_id();
-              if (idx < edgesTop) {
-                const auto midSP = deviceMiddleSPs[deviceMidIndPerTop[idx]];
-                const auto topSP = deviceTopSPs[deviceIndTop[idx]];
-
-                const auto xM = midSP.x;
-                const auto yM = midSP.y;
-                const auto zM = midSP.z;
-                const auto rM = midSP.r;
-                const auto varianceZM = midSP.varZ;
-                const auto varianceRM = midSP.varR;
-                const auto cosPhiM = xM / rM;
-                const auto sinPhiM = yM / rM;
-
-                const auto deltaX = topSP.x - xM;
-                const auto deltaY = topSP.y - yM;
-                const auto deltaZ = topSP.z - zM;
-
-                const auto x = deltaX * cosPhiM + deltaY * sinPhiM;
-                const auto y = deltaY * cosPhiM - deltaX * sinPhiM;
-                const auto iDeltaR2 = 1.f / (deltaX * deltaX + deltaY * deltaY);
-                const auto iDeltaR = cl::sycl::sqrt(iDeltaR2);
-                const auto cot_theta = deltaZ * iDeltaR;
-
-                detail::DeviceLinEqCircle L;
-                L.cotTheta = cot_theta;
-                L.zo = zM - rM * cot_theta;
-                L.iDeltaR = iDeltaR;
-                L.u = x * iDeltaR2;
-                L.v = y * iDeltaR2;
-                L.er = ((varianceZM + topSP.varZ) +
-                        (cot_theta * cot_theta) * (varianceRM + topSP.varR)) *
-                       iDeltaR2;
-
-                deviceLinTop[idx] = L;
-              }
-            });
+        detail::LinearTransform<detail::SpacePointType::Top>
+            kernel(M, deviceMiddleSPs, T, deviceTopSPs, deviceMidIndPerTop,
+                   deviceIndTop, edgesTop, deviceLinTop);
+        h.parallel_for<class TransformCoordTopKernel>(
+            edgesTopNdRange, kernel);
       });
 
       //************************************************//

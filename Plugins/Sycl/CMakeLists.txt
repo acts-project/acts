@@ -13,6 +13,7 @@ add_library(
   # implementation files
   src/Seeding/CreateSeedsForGroupSycl.cpp
   src/Seeding/DupletSearch.hpp
+  src/Seeding/LinearTransform.hpp
   src/Seeding/SpacePointType.hpp
   src/Utilities/CalculateNdRange.cpp
   src/Utilities/DeviceSelector.cpp
