@@ -114,7 +114,7 @@ struct AnnulusRandom {
         originys(originys_) {}
 
   /// Given two random numbers @param r0 and @param r1
-  /// generate a x/y position inside the Trapezoid @return
+  /// generate a x/y position inside Annulus shape and  @return
   std::array<double, 2> operator()(double r0, double r1) const {
     double r = rmin + (rmax - rmin) * r0;
     double phi = phimins + (phimaxs - phimins) * r1;
