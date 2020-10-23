@@ -1,12 +1,13 @@
 add_library(
   ActsFatras SHARED
-  src/DigitizationError.cpp
-  src/LandauDistribution.cpp
-  src/Particle.cpp
-  src/ParticleData.cpp
-  src/ProcessType.cpp
-  src/SimulatorError.cpp
-  src/StandardPhysicsLists.cpp)
+  src/Digitization/DigitizationError.cpp
+  src/Digitization/Channelizer.cpp
+  src/EventData/Particle.cpp
+  src/EventData/ProcessType.cpp
+  src/Kernel/SimulatorError.cpp
+  src/Physics/StandardPhysicsLists.cpp
+  src/Utilities/LandauDistribution.cpp
+  src/Utilities/ParticleData.cpp)
 target_compile_features(
   ActsFatras
   PUBLIC cxx_std_17)

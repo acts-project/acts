@@ -1,3 +1,4 @@
 set(unittest_extra_libraries ActsFatras)
 
+add_unittest(FatrasChannelizer ChannelizerTests.cpp)
 add_unittest(FatrasUncorrelatedHitSmearer UncorrelatedHitSmearerTests.cpp)
