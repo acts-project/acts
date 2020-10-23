@@ -87,7 +87,7 @@ struct Channelizer {
   /// @param surface The surface for the channelizing
   /// @param segmentation The segmentation for the channelizing
   /// @param start The surface segment start (cartesian coordinates)
-  /// @param send The surface segement end (cartesian coordinates)
+  /// @param end The surface segement end (cartesian coordinates)
   ///
   /// @return a vector of ChannelSegment objects
   std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
