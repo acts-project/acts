@@ -10,8 +10,8 @@
 
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
-#include "SpacePointType.hpp"
 #include "../Utilities/Arrays.hpp"
+#include "SpacePointType.hpp"
 
 // SYCL include(s).
 #include <CL/sycl.hpp>
@@ -23,12 +23,11 @@
 namespace Acts::Sycl::detail {
 
 /// Functor performing a linear coordinate transformation on spacepoint pairs
-template< SpacePointType OtherSPType >
+template <SpacePointType OtherSPType>
 class LinearTransform {
-
   // Sanity check(s).
   static_assert((OtherSPType == SpacePointType::Bottom) ||
-                (OtherSPType == SpacePointType::Top),
+                    (OtherSPType == SpacePointType::Top),
                 "Class must be instantiated with either "
                 "Acts::Sycl::detail::SpacePointType::Bottom or "
                 "Acts::Sycl::detail::SpacePointType::Top");
@@ -42,15 +41,17 @@ class LinearTransform {
                   const device_array<uint32_t>& middleIndexLUT,
                   const device_array<uint32_t>& otherIndexLUT, uint32_t nEdges,
                   device_array<DeviceLinEqCircle>& resultArray)
-  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs.get()),
-    m_nOtherSPs(nOtherSPs), m_otherSPs(otherSPs.get()),
-    m_middleIndexLUT(middleIndexLUT.get()),
-    m_otherIndexLUT(otherIndexLUT.get()), m_nEdges(nEdges),
-    m_resultArray(resultArray.get()) {}
+      : m_nMiddleSPs(nMiddleSPs),
+        m_middleSPs(middleSPs.get()),
+        m_nOtherSPs(nOtherSPs),
+        m_otherSPs(otherSPs.get()),
+        m_middleIndexLUT(middleIndexLUT.get()),
+        m_otherIndexLUT(otherIndexLUT.get()),
+        m_nEdges(nEdges),
+        m_resultArray(resultArray.get()) {}
 
   /// Operator performing the coordinate linear transformation
   void operator()(cl::sycl::nd_item<1> item) const {
-
     // Get the index to operate on.
     const auto idx = item.get_global_linear_id();
     if (idx >= m_nEdges) {
@@ -62,9 +63,11 @@ class LinearTransform {
     // quite correctly at the moment. :-( So these checks may need to be
     // disabled if you need to build for an NVidia backend in Debug mode.
     const uint32_t middleIndex = m_middleIndexLUT[idx];
-    assert(middleIndex < m_nMiddleSPs); (void) m_nMiddleSPs;
+    assert(middleIndex < m_nMiddleSPs);
+    (void)m_nMiddleSPs;
     const uint32_t otherIndex = m_otherIndexLUT[idx];
-    assert(otherIndex < m_nOtherSPs); (void) m_nOtherSPs;
+    assert(otherIndex < m_nOtherSPs);
+    (void)m_nOtherSPs;
 
     // Create a copy of the spacepoint objects for the current thread. On
     // dedicated GPUs this provides a better performance than accessing
@@ -89,15 +92,16 @@ class LinearTransform {
     DeviceLinEqCircle result;
     result.iDeltaR = cl::sycl::sqrt(iDeltaR2);
     result.cotTheta = deltaZ * result.iDeltaR;
-    if constexpr(OtherSPType == SpacePointType::Bottom) {
-       result.cotTheta = -(result.cotTheta);
+    if constexpr (OtherSPType == SpacePointType::Bottom) {
+      result.cotTheta = -(result.cotTheta);
     }
     result.zo = middleSP.z - middleSP.r * result.cotTheta;
     result.u = x * iDeltaR2;
     result.v = y * iDeltaR2;
-    result.er = ((middleSP.varZ + otherSP.varZ) +
-                 (result.cotTheta * result.cotTheta) * (middleSP.varR + otherSP.varR)) *
-                iDeltaR2;
+    result.er =
+        ((middleSP.varZ + otherSP.varZ) +
+         (result.cotTheta * result.cotTheta) * (middleSP.varR + otherSP.varR)) *
+        iDeltaR2;
 
     // Store the result object in device global memory.
     m_resultArray[idx] = result;

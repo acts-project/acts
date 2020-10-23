@@ -30,6 +30,7 @@ class DeviceArrayDeleter {
       cl::sycl::free(ptr, *m_queue);
     }
   }
+
  private:
   /// The queue that manages the memory area in question
   cl::sycl::queue* m_queue;

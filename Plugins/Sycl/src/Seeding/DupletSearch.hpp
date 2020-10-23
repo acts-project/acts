@@ -10,8 +10,8 @@
 
 // Local include(s).
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
-#include "SpacePointType.hpp"
 #include "../Utilities/Arrays.hpp"
+#include "SpacePointType.hpp"
 
 // SYCL include(s).
 #include <CL/sycl.hpp>
@@ -22,12 +22,11 @@
 namespace Acts::Sycl::detail {
 
 /// Functor taking care of finding viable spacepoint duplets
-template< SpacePointType OtherSPType, class AtomicAccessorType >
+template <SpacePointType OtherSPType, class AtomicAccessorType>
 class DupletSearch {
-
   // Sanity check(s).
   static_assert((OtherSPType == SpacePointType::Bottom) ||
-                (OtherSPType == SpacePointType::Top),
+                    (OtherSPType == SpacePointType::Top),
                 "Class must be instantiated with either "
                 "Acts::Sycl::detail::SpacePointType::Bottom or "
                 "Acts::Sycl::detail::SpacePointType::Top");
@@ -41,17 +40,19 @@ class DupletSearch {
                device_array<uint32_t>& middleOtherSPIndices,
                const AtomicAccessorType& middleOtherSPCounts,
                const DeviceSeedfinderConfig& config)
-  : m_nMiddleSPs(nMiddleSPs), m_middleSPs(middleSPs.get()),
-    m_nOtherSPs(nOtherSPs), m_otherSPs(otherSPs.get()),
-    m_middleOtherSPIndices(middleOtherSPIndices.get()),
-    m_middleOtherSPCounts(middleOtherSPCounts), m_config(config) {}
+      : m_nMiddleSPs(nMiddleSPs),
+        m_middleSPs(middleSPs.get()),
+        m_nOtherSPs(nOtherSPs),
+        m_otherSPs(otherSPs.get()),
+        m_middleOtherSPIndices(middleOtherSPIndices.get()),
+        m_middleOtherSPCounts(middleOtherSPCounts),
+        m_config(config) {}
 
   /// Operator performing the duplet search
   void operator()(cl::sycl::nd_item<2> item) const {
-
     // Get the indices of the spacepoints to evaluate.
     const auto middleIndex = item.get_global_id(0);
-    const auto otherIndex  = item.get_global_id(1);
+    const auto otherIndex = item.get_global_id(1);
 
     // We check whether this thread actually makes sense (within bounds).
     // The number of threads is usually a factor of 2, or 3*2^k (k \in N), etc.
@@ -70,7 +71,7 @@ class DupletSearch {
     // Note that the asserts of the functor make sure that 'OtherSPType' must be
     // either SpacePointType::Bottom or SpacePointType::Top.
     float deltaR = 0.0f, cotTheta = 0.0f;
-    if constexpr(OtherSPType == SpacePointType::Bottom) {
+    if constexpr (OtherSPType == SpacePointType::Bottom) {
       deltaR = middleSP.r - otherSP.r;
       cotTheta = (middleSP.z - otherSP.z) / deltaR;
     } else {
@@ -80,8 +81,7 @@ class DupletSearch {
     const float zOrigin = middleSP.z - middleSP.r * cotTheta;
 
     // Check if the duplet passes our quality requirements.
-    if ((deltaR >= m_config.deltaRMin) &&
-        (deltaR <= m_config.deltaRMax) &&
+    if ((deltaR >= m_config.deltaRMin) && (deltaR <= m_config.deltaRMax) &&
         (cl::sycl::abs(cotTheta) <= m_config.cotThetaMax) &&
         (zOrigin >= m_config.collisionRegionMin) &&
         (zOrigin <= m_config.collisionRegionMax)) {

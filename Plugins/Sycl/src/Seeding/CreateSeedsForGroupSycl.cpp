@@ -21,9 +21,9 @@
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp"
+#include "../Utilities/Arrays.hpp"
 #include "DupletSearch.hpp"
 #include "LinearTransform.hpp"
-#include "../Utilities/Arrays.hpp"
 
 // SYCL include
 #include <CL/sycl.hpp>
@@ -136,8 +136,8 @@ void createSeedsForGroupSycl(
         detail::DupletSearch<detail::SpacePointType::Bottom, AtomicAccessor>
             kernel(M, deviceMiddleSPs, B, deviceBottomSPs, deviceTmpIndBot,
                    countBotDupletsAcc, seedfinderConfig);
-        h.parallel_for<class DupletSearchBottomKernel>(
-            bottomDupletNDRange, kernel);
+        h.parallel_for<class DupletSearchBottomKernel>(bottomDupletNDRange,
+                                                       kernel);
       });
 
       // Perform the middle-top duplet search.
@@ -146,8 +146,7 @@ void createSeedsForGroupSycl(
         detail::DupletSearch<detail::SpacePointType::Top, AtomicAccessor>
             kernel(M, deviceMiddleSPs, T, deviceTopSPs, deviceTmpIndTop,
                    countTopDupletsAcc, seedfinderConfig);
-        h.parallel_for<class DupletSearchTopKernel>(
-            topDupletNDRange, kernel);
+        h.parallel_for<class DupletSearchTopKernel>(topDupletNDRange, kernel);
       });
     }  // sync (buffers get destroyed and duplet counts are copied back to
        // countBotDuplets and countTopDuplets)
@@ -315,8 +314,8 @@ void createSeedsForGroupSycl(
                 auto idx = item.get_global_linear_id();
                 if (idx < edgesBottom) {
                   auto mid = deviceMidIndPerBotPtr[idx];
-                  auto ind = deviceTmpIndBotPtr[mid * B + idx -
-                                                deviceSumBotPtr[mid]];
+                  auto ind =
+                      deviceTmpIndBotPtr[mid * B + idx - deviceSumBotPtr[mid]];
                   deviceIndBotPtr[idx] = ind;
                 }
               });
@@ -332,8 +331,8 @@ void createSeedsForGroupSycl(
                 auto idx = item.get_global_linear_id();
                 if (idx < edgesTop) {
                   auto mid = deviceMidIndPerTopPtr[idx];
-                  auto ind = deviceTmpIndTopPtr[mid * T + idx -
-                                                deviceSumTopPtr[mid]];
+                  auto ind =
+                      deviceTmpIndTopPtr[mid * T + idx - deviceSumTopPtr[mid]];
                   deviceIndTopPtr[idx] = ind;
                 }
               });
@@ -351,20 +350,19 @@ void createSeedsForGroupSycl(
 
       // coordinate transformation middle-bottom pairs
       auto linB = q->submit([&](cl::sycl::handler& h) {
-        detail::LinearTransform<detail::SpacePointType::Bottom>
-            kernel(M, deviceMiddleSPs, B, deviceBottomSPs, deviceMidIndPerBot,
-                   deviceIndBot, edgesBottom, deviceLinBot);
-        h.parallel_for<class TransformCoordBottomKernel>(
-            edgesBotNdRange, kernel);
+        detail::LinearTransform<detail::SpacePointType::Bottom> kernel(
+            M, deviceMiddleSPs, B, deviceBottomSPs, deviceMidIndPerBot,
+            deviceIndBot, edgesBottom, deviceLinBot);
+        h.parallel_for<class TransformCoordBottomKernel>(edgesBotNdRange,
+                                                         kernel);
       });
 
       // coordinate transformation middle-top pairs
       auto linT = q->submit([&](cl::sycl::handler& h) {
-        detail::LinearTransform<detail::SpacePointType::Top>
-            kernel(M, deviceMiddleSPs, T, deviceTopSPs, deviceMidIndPerTop,
-                   deviceIndTop, edgesTop, deviceLinTop);
-        h.parallel_for<class TransformCoordTopKernel>(
-            edgesTopNdRange, kernel);
+        detail::LinearTransform<detail::SpacePointType::Top> kernel(
+            M, deviceMiddleSPs, T, deviceTopSPs, deviceMidIndPerTop,
+            deviceIndTop, edgesTop, deviceLinTop);
+        h.parallel_for<class TransformCoordTopKernel>(edgesTopNdRange, kernel);
       });
 
       //************************************************//
@@ -715,8 +713,8 @@ void createSeedsForGroupSycl(
             h.parallel_for<filter_2sp_fixed_kernel>(
                 tripletFilterNDRange, [=](cl::sycl::nd_item<1> item) {
                   if (item.get_global_linear_id() < numTripletFilterThreads) {
-                    const auto idx =
-                        deviceSumBotPtr[firstMiddle] + item.get_global_linear_id();
+                    const auto idx = deviceSumBotPtr[firstMiddle] +
+                                     item.get_global_linear_id();
                     const auto mid = deviceMidIndPerBotPtr[idx];
                     const auto bot = deviceIndBotPtr[idx];
 
