@@ -62,7 +62,7 @@ struct Channel {
   /// The signal value, as complex as possible,
   /// but need += operator and double() cast for the weight
   signal_t value = 0.;
-  /// The potential (truth) linke
+  /// The potential (truth) links
   std::unordered_set<unsigned int> links = {};
 
   /// Channel constructor

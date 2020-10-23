@@ -23,6 +23,8 @@ struct RectangleRandom {
 
   /// Given two random numbers @param r0 and @param r1
   /// generate a x/y position inside the Rectangle @return
+  ///
+  /// @note r0, r1 need to be within [0,1]
   std::array<double, 2> operator()(double r0, double r1) const {
     return {(2 * r0 - 1) * xmax, (2 * r1 - 1) * ymax};
   }
@@ -54,6 +56,8 @@ struct TrapezoidRandom {
 
   /// Given two random numbers @param r0 and @param r1
   /// generate a x/y position inside the Trapezoid @return
+  ///
+  /// @note r0, r1 need to be within [0,1]
   std::array<double, 2> operator()(double r0, double r1) const {
     double y = ymin + (ymax - ymin) * r1;
     double xmax = xminy + (xmaxy - xminy) / (ymax - ymin) * (y - ymin);
@@ -80,6 +84,8 @@ struct DiscRandom {
 
   /// Given two random numbers @param r0 and @param r1
   /// generate a x/y position inside the Trapezoid @return
+  ///
+  /// @note r0, r1 need to be within [0,1]
   std::array<double, 2> operator()(double r0, double r1) const {
     double r = rmin + (rmax - rmin) * r0;
     double phi = phimin + (phimax - phimin) * r1;
@@ -115,6 +121,8 @@ struct AnnulusRandom {
 
   /// Given two random numbers @param r0 and @param r1
   /// generate a x/y position inside Annulus shape and  @return
+  ///
+  /// @note r0, r1 need to be within [0,1]
   std::array<double, 2> operator()(double r0, double r1) const {
     double r = rmin + (rmax - rmin) * r0;
     double phi = phimins + (phimaxs - phimins) * r1;
