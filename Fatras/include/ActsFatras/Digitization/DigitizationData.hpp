@@ -51,7 +51,7 @@ struct DigitizationInput {
 /// A single cell definition: index, cell central value
 using Cell = std::pair<unsigned int, double>;
 
-/// A channel definition: Cell idenficiation, readout word, links
+/// A channel definition: Cell identification, readout word, links
 ///
 /// @tparam signal_t Type of the signal, requires += operator
 /// @tparam kParameters ... The parameters pack
