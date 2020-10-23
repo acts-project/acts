@@ -20,8 +20,10 @@ std::string ActsFatras::detail::DigitizationErrorCategory::message(
       return "Digitization: smeared out of surface bounds.";
     case DigitizationError::SmearingError:
       return "Digitization: smearing error occured.";
-    case DigitizationError::NoSurfaceDefined:
+    case DigitizationError::UndefinedSurface:
       return "Digitization: no surface for bound measurement defined.";
+    case DigitizationError::MaskingError:
+      return "Digitization: surface maks could not be applied.";
     default:
       return "unknown";
   }
