@@ -16,6 +16,8 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
+#include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
