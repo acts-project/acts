@@ -200,7 +200,7 @@ int runRecCKFTracks(int argc, char* argv[],
   std::string demoModelPath = commonPath + "MLAmbiguityResolutionDemo.onnx";
   perfWriterCfg.onnxModelFilename = demoModelPath;
   // Change the line below if you want to use ML track classification
-  perfWriterCfg.useMLTrackClassifier = true;
+  perfWriterCfg.useMLTrackClassifier = false;
   // Initialize OnnxRuntime plugin
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
   Acts::MLTrackClassifier neuralNetworkClassifier(
