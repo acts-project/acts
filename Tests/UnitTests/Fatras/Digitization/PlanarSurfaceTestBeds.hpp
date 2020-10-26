@@ -99,7 +99,7 @@ struct PlanarSurfaceTestBeds {
                        (M_PI_2 - M_PI_4) * irScale, (M_PI_2 + M_PI_4) * rScale);
 
     // Annulus disc test
-    Acts::Vector2D aorigin(0.05, -0.1);
+    Acts::Vector2D aorigin(0.05, -0.2);
     double phimin = -0.25;
     double phimax = 0.38;
     auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, -0.25,
