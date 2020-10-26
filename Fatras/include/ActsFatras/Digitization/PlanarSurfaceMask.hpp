@@ -29,7 +29,6 @@ struct PlanarSurfaceMask {
   ///
   /// @note Only PlaneSurface/DiscSurface are supported
   ///
-  /// @param geoCtx The geometry context
   /// @param surface The surface in question
   /// @param segment The track segment (on surface)
   ///
@@ -39,22 +38,29 @@ struct PlanarSurfaceMask {
 
   /// Apply the mask of a polygon
   ///
-  /// @param outise The outside point of the segment
+  /// @param outside The outside point of the segment
   /// @param inside The inside point of the segment
   /// @param vertices The vertices of the polygon
   ///
-  /// @return a result wrapping the new new outside position
+  /// @return a result wrapping the new outside position
   Acts::Result<Acts::Vector2D> polygonMask(
       const Acts::Vector2D& outside, const Acts::Vector2D& inside,
       const std::vector<Acts::Vector2D>& vertices) const;
 };
 
+/// A helper class for segments in polar coordinates.
 struct PolarSegment {
+  /// The clipped position
   Acts::Vector2D clipped;
+  /// The start position of the segment (cartesian)
   Acts::Vector2D start;
+  /// The end position of the segment (cartesian)
   Acts::Vector2D end;
+  /// Indicator if inisde or not
   bool inside = false;
 
+  /// Constructor from arguments.
+  /// Parameter definition see above.
   PolarSegment(Acts::Vector2D clipped_, const Acts::Vector2D& start_,
                const Acts::Vector2D& end_, bool inside_)
       : clipped(clipped_), start(start_), end(end_), inside(inside_) {}

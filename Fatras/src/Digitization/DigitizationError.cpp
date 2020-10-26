@@ -1,4 +1,5 @@
 // This file is part of the Acts project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2020 CERN for the benefit of the Acts project
 //
@@ -23,7 +24,7 @@ std::string ActsFatras::detail::DigitizationErrorCategory::message(
     case DigitizationError::UndefinedSurface:
       return "Digitization: no surface for bound measurement defined.";
     case DigitizationError::MaskingError:
-      return "Digitization: surface maks could not be applied.";
+      return "Digitization: surface mask could not be applied.";
     default:
       return "unknown";
   }
