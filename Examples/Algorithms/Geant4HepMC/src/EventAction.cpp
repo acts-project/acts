@@ -106,11 +106,11 @@ void followOutgoingParticles(HepMC3::GenEvent& event,
                              const std::vector<std::string>& processFilter) {
   // Replace and reduce vertex if it should be filtered
   if (findAttribute(vertex, processFilter)) {
-    reduceVertex(event, vertex, processFilter);
+	reduceVertex(event, vertex, processFilter);
   }
   // Move forward to the next vertices
   for (const auto& particle : vertex->particles_out()) {
-    followOutgoingParticles(event, particle->end_vertex(), processFilter);
+	followOutgoingParticles(event, particle->end_vertex(), processFilter);
   }
 }
 }  // namespace
@@ -139,6 +139,7 @@ ActsExamples::EventAction::~EventAction() {
 void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
   SteppingAction::instance()->clear();
   m_event = HepMC3::GenEvent(HepMC3::Units::GEV, HepMC3::Units::MM);
+  m_event.add_beam_particle(std::make_shared<HepMC3::GenParticle>());
 }
 
 void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {

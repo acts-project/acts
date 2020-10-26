@@ -21,6 +21,7 @@
 #include "SteppingAction.hpp"
 
 #include <HepMC3/GenEvent.h>
+#include <HepMC3/GenParticle.h>
 
 ActsExamples::EventRecording::~EventRecording() {
   m_runManager = nullptr;
@@ -40,6 +41,8 @@ ActsExamples::EventRecording::EventRecording(
   if (!m_cfg.detectorConstruction) {
     throw std::invalid_argument("Missing detector construction object");
   }
+  std::vector<std::string> filter = {"Transportation"};
+  //~ std::vector<std::string> filter = {};
 
   /// Now set up the Geant4 simulation
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
@@ -80,26 +83,57 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
       continue;
     }
 
+	// Set event start time
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
     HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::s);
     event.shift_position_by(shift);
+    
+    // Set beam particle properties
+    HepMC3::FourVector beamMom4(part.momentum4()[0], part.momentum4()[1], part.momentum4()[2], part.momentum4()[3]);
+    auto beamParticle = event.particles()[0];
+    beamParticle->set_momentum(beamMom4);
+    beamParticle->set_pid(part.pdg());
 
     if (m_cfg.eventSelectionProcess.empty()) {
       // Store the result
       events.push_back(std::move(event));
     } else {
+		bool storeEvent = false;
       // Test if the event has a process of interest in it
       for (const auto& vertex : event.vertices()) {
+		  if(vertex->id() == -1)
+		  {
+			vertex->add_particle_in(beamParticle);
+		}
         const std::vector<std::string> vertexAttributes =
             vertex->attribute_names();
         for (const auto& att : vertexAttributes)
+        {
           for (const auto& proc : m_cfg.eventSelectionProcess)
+          {
             if (vertex->attribute_as_string(att).find(proc) !=
                 std::string::npos) {
-              // Store the result
-              events.push_back(std::move(event));
+			  storeEvent = true;
+			  break;
             }
+		}
+		if(storeEvent) break;
+	}
+	if(storeEvent) break;
       }
+      // Store the result
+      if(storeEvent)
+      {
+		  			  // Remove vertices without outgoing particles
+			  for(auto it = event.vertices().crbegin(); it != event.vertices().crend(); it++)
+			  {
+				if((*it)->particles_out().empty())
+				{
+					event.remove_vertex(*it);
+				}
+				}
+		events.push_back(std::move(event));
+	}
     }
   }
 

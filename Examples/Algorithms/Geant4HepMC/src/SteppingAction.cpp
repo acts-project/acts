@@ -92,6 +92,7 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
       auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
       vertex->add_particle_out(postParticle);
       event.add_vertex(vertex);
+      vertex->set_status(1);
       vertex->add_attribute("NextProcessOf" + trackId, process);
     } else
       // Search for an existing vertex
@@ -150,10 +151,11 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
                               std::make_shared<HepMC3::DoubleAttribute>(L0));
   postParticle->add_attribute(
       "StepLength", std::make_shared<HepMC3::DoubleAttribute>(stepLength));
+  postParticle->set_status(1);
 
   // Stop tracking the vertex if the particle dies
   if (track->GetTrackStatus() != fAlive) {
-    process = std::make_shared<HepMC3::StringAttribute>("DeathOf-" + trackId);
+    process = std::make_shared<HepMC3::StringAttribute>("Death");
     m_previousVertex->add_attribute("NextProcessOf-" + trackId, process);
     m_previousVertex = nullptr;
   }
