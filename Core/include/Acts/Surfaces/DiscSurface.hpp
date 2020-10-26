@@ -208,35 +208,25 @@ class DiscSurface : public Surface {
                                   const Vector3D& position,
                                   double tol = 0.) const;
 
-  /// Initialize the jacobian from local to global
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from local to global which the surface knows best,
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian The jacobian to be initialized
-  /// @param position The global position of the parameters
-  /// @param direction The direction at of the parameters
+  /// @param boundParams is the bound parameters vector
   ///
-  /// @param pars The paranmeters vector
-  void initJacobianToGlobal(const GeometryContext& gctx,
-                            BoundToFreeMatrix& jacobian,
-                            const Vector3D& position, const Vector3D& direction,
-                            const BoundVector& pars) const final;
+  /// @return Jacobian from local to global
+  BoundToFreeMatrix jacobianLocalToGlobal(
+      const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
-  /// Initialize the jacobian from global to local
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from global to local which the surface knows best,
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian The jacobian to be initialized
-  /// @param position The global position of the parameters
-  /// @param direction The direction at of the parameters
-  void initJacobianToLocal(const GeometryContext& gctx,
-                           FreeToBoundMatrix& jacobian,
-                           const Vector3D& position,
-                           const Vector3D& direction) const final;
+  /// @param parameters is the free parameters
+  ///
+  /// @return Jacobian from global to local
+  FreeToBoundMatrix jacobianGlobalToLocal(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Path correction due to incident of the track
   ///
@@ -318,5 +308,4 @@ class DiscSurface : public Surface {
 };
 
 #include "Acts/Surfaces/detail/DiscSurface.ipp"
-
 }  // end of namespace Acts

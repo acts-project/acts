@@ -96,8 +96,7 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
-                                     par.parameters());
+        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
       }
     }
 
@@ -180,8 +179,8 @@ class EigenStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
