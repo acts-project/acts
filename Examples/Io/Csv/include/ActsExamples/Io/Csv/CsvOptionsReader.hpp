@@ -9,8 +9,8 @@
 #pragma once
 
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {

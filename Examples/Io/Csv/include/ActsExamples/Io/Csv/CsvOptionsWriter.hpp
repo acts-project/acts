@@ -9,8 +9,8 @@
 #pragma once
 
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 

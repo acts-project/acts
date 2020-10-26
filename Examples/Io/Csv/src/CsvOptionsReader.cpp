@@ -36,4 +36,3 @@ ActsExamples::Options::readCsvPlanarClusterReaderConfig(const Variables& vm) {
   }
   return cfg;
 }
-
