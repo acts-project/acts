@@ -13,7 +13,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
@@ -77,20 +77,16 @@ int main(int argc, char* argv[]) {
   particleReader.outputParticles = "particles_initial";
   sequencer.addReader(
       std::make_shared<CsvParticleReader>(particleReader, logLevel));
-  // Read clusters from CSV files
-  auto clusterReaderCfg = Options::readCsvPlanarClusterReaderConfig(vm);
-  clusterReaderCfg.trackingGeometry = trackingGeometry;
-  clusterReaderCfg.outputClusters = "clusters";
-  clusterReaderCfg.outputHitIds = "hit_ids";
-  // only simhits are used and the map will be re-created by the digitizer
-  clusterReaderCfg.outputMeasurementParticlesMap = "unused-hit_particles_map";
-  clusterReaderCfg.outputSimHits = "simhits";
+  // Read truth hits from CSV files
+  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
+  simHitReaderCfg.inputStem = "simhits";
+  simHitReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
-      std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
+      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
   hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
@@ -159,7 +155,7 @@ int main(int argc, char* argv[]) {
   // filtered particle collection. Thsi could be avoided when a seperate track
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
-  trackStatesWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;

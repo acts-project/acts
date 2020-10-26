@@ -13,7 +13,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
@@ -78,19 +78,16 @@ int main(int argc, char* argv[]) {
   sequencer.addReader(
       std::make_shared<CsvParticleReader>(particleReader, logLevel));
   // Read clusters from CSV files
-  auto clusterReaderCfg = Options::readCsvPlanarClusterReaderConfig(vm);
-  clusterReaderCfg.trackingGeometry = trackingGeometry;
-  clusterReaderCfg.outputClusters = "clusters";
-  clusterReaderCfg.outputHitIds = "hit_ids";
-  // only simhits are used and the map will be re-created by the digitizer
-  clusterReaderCfg.outputMeasurementParticlesMap = "unused-hit_particles_map";
-  clusterReaderCfg.outputSimHits = "hits";
+  // Read truth hits from CSV files
+  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
+  simHitReaderCfg.inputStem = "simhits";
+  simHitReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
-      std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
+      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
   hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
@@ -164,7 +161,7 @@ int main(int argc, char* argv[]) {
   RootTrajectoryStatesWriter::Config trackStatesWriter;
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
-  trackStatesWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
