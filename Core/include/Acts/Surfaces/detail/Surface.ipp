@@ -44,7 +44,7 @@ inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3D position = freeParams.head<3>();
+  const Vector3D position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
@@ -73,7 +73,7 @@ inline Acts::BoundToFreeMatrix Acts::Surface::jacobianLocalToGlobal(
 inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
-  const auto position = parameters.head<3>();
+  const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // Optimized trigonometry on the propagation direction
@@ -108,7 +108,7 @@ inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
 inline Acts::FreeRowVector Acts::Surface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
-  const auto position = parameters.head<3>();
+  const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The measurement frame of the surface
@@ -119,7 +119,7 @@ inline Acts::FreeRowVector Acts::Surface::freeToPathDerivative(
   const double dz = refZAxis.dot(direction);
   // Initialize the derivative
   FreeRowVector freeToPath = FreeRowVector::Zero();
-  freeToPath.head<3>() = -1.0 * refZAxis.transpose() / dz;
+  freeToPath.segment<3>(eFreePos0) = -1.0 * refZAxis.transpose() / dz;
   return freeToPath;
 }
 

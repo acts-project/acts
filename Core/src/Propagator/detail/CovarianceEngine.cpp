@@ -141,7 +141,7 @@ void jacobianLocalToLocal(const Vector3D& direction,
   // Calculate the derivative of path length at the the curvilinear surface
   // w.r.t. free parameters
   FreeRowVector freeToPath = FreeRowVector::Zero();
-  freeToPath.head<3>() = -1.0 * direction;
+  freeToPath.segment<3>(eFreePos0) = -1.0 * direction;
   // Calculate the jacobian from global to local at the curvilinear surface
   FreeToBoundMatrix jacToLocal = freeToCurvilinearJacobian(direction);
   // Calculate the full jocobian from the local parameters at the start surface

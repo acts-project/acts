@@ -25,7 +25,7 @@ inline BoundToFreeMatrix DiscSurface::jacobianLocalToGlobal(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3D position = freeParams.head<3>();
+  const Vector3D position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3D direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
@@ -65,7 +65,7 @@ inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The global position
-  const auto position = parameters.head<3>();
+  const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // Optimized trigonometry on the propagation direction

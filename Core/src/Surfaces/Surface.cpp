@@ -112,7 +112,7 @@ Acts::Surface::alignmentToBoundDerivativeWithoutCorrection(
 Acts::AlignmentRowVector Acts::Surface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
-  const auto position = parameters.head<3>();
+  const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
