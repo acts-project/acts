@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
   CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[0]), M_PI_4,
                   Acts::s_epsilon);
 
-  /// Case four: outside phi max
+  /// Case five: outside phi max
   segment = {Acts::Vector2D(0., 3.5), Acts::Vector2D(-8., 5.)};
   clipped = psm.apply(*discSurface, segment).value();
   CHECK_CLOSE_ABS(Acts::VectorHelpers::phi(clipped[1]), M_PI_2 + M_PI_4,
