@@ -115,7 +115,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
 inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global position
-  const auto position = parameters.head<3>();
+  const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
