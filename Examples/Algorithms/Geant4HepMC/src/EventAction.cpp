@@ -106,11 +106,11 @@ void followOutgoingParticles(HepMC3::GenEvent& event,
                              const std::vector<std::string>& processFilter) {
   // Replace and reduce vertex if it should be filtered
   if (findAttribute(vertex, processFilter)) {
-	reduceVertex(event, vertex, processFilter);
+    reduceVertex(event, vertex, processFilter);
   }
   // Move forward to the next vertices
   for (const auto& particle : vertex->particles_out()) {
-	followOutgoingParticles(event, particle->end_vertex(), processFilter);
+    followOutgoingParticles(event, particle->end_vertex(), processFilter);
   }
 }
 }  // namespace
