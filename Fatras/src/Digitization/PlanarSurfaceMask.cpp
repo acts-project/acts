@@ -150,14 +150,14 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
           [](const Acts::Vector2D& a, const Acts::Vector2D& b) {
             return (Acts::VectorHelpers::phi(a) < Acts::VectorHelpers::phi(b));
           });
-      Segment2D minEdge = {cartesianEdges[0], cartesianEdges[3]};
-      Segment2D maxEdge = {cartesianEdges[1], cartesianEdges[2]};
+      Segment2D minEdge = {cartesianEdges[0], cartesianEdges[2]};
+      Segment2D maxEdge = {cartesianEdges[1], cartesianEdges[3]};
       sectorEdges = {minEdge, maxEdge};
       std::pair<double, double> phisMinR = {
           Acts::VectorHelpers::phi(cartesianEdges[0]),
           Acts::VectorHelpers::phi(cartesianEdges[2])};
       std::pair<double, double> phisMaxR = {
-          Acts::VectorHelpers::phi(cartesianEdges[1]),
+          Acts::VectorHelpers::phi(cartesianEdges[2]),
           Acts::VectorHelpers::phi(cartesianEdges[3])};
       polarE = {phisMinR, phisMaxR};
     }
