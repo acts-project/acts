@@ -552,7 +552,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 
   for (auto& entry : fitterState.tracksAtVerticesMap) {
     // Delete all linearized tracks for current (bad) vertex
-    if (entry.first.second == vtx) {
+    if (entry.first.second == &vtx) {
       entry.second.isLinearized = false;
     }
   }
