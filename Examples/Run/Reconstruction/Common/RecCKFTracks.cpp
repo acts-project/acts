@@ -32,8 +32,8 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int recCKFTracks(int argc, char* argv[],
-                 std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecCKFTracks(int argc, char* argv[],
+                    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

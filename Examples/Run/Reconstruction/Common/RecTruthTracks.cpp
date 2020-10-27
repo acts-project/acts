@@ -33,8 +33,8 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int recTruthTracks(int argc, char* argv[],
-                   std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecTruthTracks(int argc, char* argv[],
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);

@@ -11,5 +11,5 @@
 #include "RecCKFTracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return recCKFTracks(argc, argv, std::make_shared<GenericDetector>());
+  return runRecCKFTracks(argc, argv, std::make_shared<GenericDetector>());
 }

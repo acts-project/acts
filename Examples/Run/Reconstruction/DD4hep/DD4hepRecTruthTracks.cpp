@@ -11,5 +11,5 @@
 #include "RecTruthTracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return recTruthTracks(argc, argv, std::make_shared<DD4hepDetector>());
+  return runRecTruthTracks(argc, argv, std::make_shared<DD4hepDetector>());
 }

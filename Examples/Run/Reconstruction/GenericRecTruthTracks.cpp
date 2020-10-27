@@ -11,5 +11,5 @@
 #include "RecTruthTracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return recTruthTracks(argc, argv, std::make_shared<GenericDetector>());
+  return runRecTruthTracks(argc, argv, std::make_shared<GenericDetector>());
 }
