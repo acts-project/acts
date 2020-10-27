@@ -8,13 +8,13 @@
 
 #pragma once
 
-#include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <cassert>
 #include <cmath>
+#include <optional>
 #include <type_traits>
 
 namespace Acts {
@@ -45,7 +45,9 @@ class SingleFreeTrackParameters {
   /// debug builds to check for consistency with the q/p parameter.
   SingleFreeTrackParameters(const ParametersVector& params, Scalar q,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), params), m_chargeInterpreter(std::abs(q)) {
+      : m_params(params),
+        m_cov(std::move(cov)),
+        m_chargeInterpreter(std::abs(q)) {
     assert((0 <= (params[eFreeQOverP] * q)) and "Inconsistent q/p and q signs");
   }
 
@@ -61,7 +63,7 @@ class SingleFreeTrackParameters {
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   SingleFreeTrackParameters(const ParametersVector& params,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), params), m_chargeInterpreter(T()) {}
+      : m_params(params), m_cov(std::move(cov)), m_chargeInterpreter(T()) {}
 
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
@@ -74,19 +76,20 @@ class SingleFreeTrackParameters {
   SingleFreeTrackParameters(const Vector4D& pos4, Scalar phi, Scalar theta,
                             Scalar p, Scalar q,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), ParametersVector::Zero()),
+      : m_params(FreeVector::Zero()),
+        m_cov(std::move(cov)),
         m_chargeInterpreter(std::abs(q)) {
     assert((0 <= p) and "Absolute momentum must be positive");
 
-    m_paramSet.setParameter<eFreePos0>(pos4[ePos0]);
-    m_paramSet.setParameter<eFreePos1>(pos4[ePos1]);
-    m_paramSet.setParameter<eFreePos2>(pos4[ePos2]);
-    m_paramSet.setParameter<eFreeTime>(pos4[eTime]);
     auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
-    m_paramSet.setParameter<eFreeDir0>(dir[eMom0]);
-    m_paramSet.setParameter<eFreeDir1>(dir[eMom1]);
-    m_paramSet.setParameter<eFreeDir2>(dir[eMom2]);
-    m_paramSet.setParameter<eFreeQOverP>((q != Scalar(0)) ? (q / p) : (1 / p));
+    m_params[eFreePos0] = pos4[ePos0];
+    m_params[eFreePos1] = pos4[ePos1];
+    m_params[eFreePos2] = pos4[ePos2];
+    m_params[eFreeTime] = pos4[eTime];
+    m_params[eFreeDir0] = dir[eMom0];
+    m_params[eFreeDir1] = dir[eMom1];
+    m_params[eFreeDir2] = dir[eMom2];
+    m_params[eFreeQOverP] = (q != Scalar(0)) ? (q / p) : (1 / p);
   }
 
   /// Construct from four-position, angles, and charge-over-momentum.
@@ -104,69 +107,57 @@ class SingleFreeTrackParameters {
   SingleFreeTrackParameters(const Vector4D& pos4, Scalar phi, Scalar theta,
                             Scalar qOverP,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_paramSet(std::move(cov), ParametersVector::Zero()),
+      : m_params(FreeVector::Zero()),
+        m_cov(std::move(cov)),
         m_chargeInterpreter(T()) {
-    m_paramSet.setParameter<eFreePos0>(pos4[ePos0]);
-    m_paramSet.setParameter<eFreePos1>(pos4[ePos1]);
-    m_paramSet.setParameter<eFreePos2>(pos4[ePos2]);
-    m_paramSet.setParameter<eFreeTime>(pos4[eTime]);
     auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
-    m_paramSet.setParameter<eFreeDir0>(dir[eMom0]);
-    m_paramSet.setParameter<eFreeDir1>(dir[eMom1]);
-    m_paramSet.setParameter<eFreeDir2>(dir[eMom2]);
-    m_paramSet.setParameter<eFreeQOverP>(qOverP);
+    m_params[eFreePos0] = pos4[ePos0];
+    m_params[eFreePos1] = pos4[ePos1];
+    m_params[eFreePos2] = pos4[ePos2];
+    m_params[eFreeTime] = pos4[eTime];
+    m_params[eFreeDir0] = dir[eMom0];
+    m_params[eFreeDir1] = dir[eMom1];
+    m_params[eFreeDir2] = dir[eMom2];
+    m_params[eFreeQOverP] = qOverP;
   }
 
   // this class does not have a custom default constructor and thus should not
   // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
 
   /// Parameters vector.
-  ParametersVector parameters() const { return m_paramSet.getParameters(); }
+  const ParametersVector& parameters() const { return m_params; }
   /// Optional covariance matrix.
-  const std::optional<CovarianceMatrix>& covariance() const {
-    return m_paramSet.getCovariance();
-  }
+  const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
   /// Access a single parameter value indentified by its index.
   ///
   /// @tparam kIndex Track parameter index
   template <FreeIndices kIndex>
   Scalar get() const {
-    return m_paramSet.template getParameter<kIndex>();
-  }
-  /// Access a single parameter uncertainty identified by its index.
-  ///
-  /// @tparam kIndex Track parameter index
-  /// @retval zero if the track parameters have no associated covariance
-  /// @retval parameter standard deviation if the covariance is available
-  template <FreeIndices kIndex>
-  Scalar uncertainty() const {
-    return m_paramSet.template getUncertainty<kIndex>();
+    return m_params[kIndex];
   }
 
   /// Space-time position four-vector.
   Vector4D fourPosition() const {
     Vector4D pos4;
-    pos4[ePos0] = get<eFreePos0>();
-    pos4[ePos1] = get<eFreePos1>();
-    pos4[ePos2] = get<eFreePos2>();
-    pos4[eTime] = get<eFreeTime>();
+    pos4[ePos0] = m_params[eFreePos0];
+    pos4[ePos1] = m_params[eFreePos1];
+    pos4[ePos2] = m_params[eFreePos2];
+    pos4[eTime] = m_params[eFreeTime];
     return pos4;
   }
   /// Spatial position three-vector.
-  Vector3D position() const {
-    return parameters().template segment<3>(eFreePos0);
-  }
+  Vector3D position() const { return m_params.segment<3>(eFreePos0); }
   /// Time coordinate.
-  Scalar time() const { return get<eFreeTime>(); }
+  Scalar time() const { return m_params[eFreeTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3D unitDirection() const {
-    return parameters().template segment<3>(eFreeDir0).normalized();
+    return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
-    return m_chargeInterpreter.extractMomentum(get<eFreeQOverP>());
+    return m_chargeInterpreter.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
   Scalar transverseMomentum() const {
@@ -174,9 +165,10 @@ class SingleFreeTrackParameters {
     //   [f*sin(theta)*cos(phi), f*sin(theta)*sin(phi), f*cos(theta)]
     // w/ f,sin(theta) positive, the transverse magnitude is then
     //   sqrt(f^2*sin^2(theta)) = f*sin(theta)
-    Scalar transverseMagnitude = std::hypot(get<eFreeDir0>(), get<eFreeDir1>());
+    Scalar transverseMagnitude =
+        std::hypot(m_params[eFreeDir0], m_params[eFreeDir1]);
     // absolute magnitude is f by construction
-    Scalar magnitude = std::hypot(transverseMagnitude, get<eFreeDir2>());
+    Scalar magnitude = std::hypot(transverseMagnitude, m_params[eFreeDir2]);
     // such that we can extract sin(theta) = f*sin(theta) / f
     return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
@@ -189,7 +181,8 @@ class SingleFreeTrackParameters {
   }
 
  private:
-  FullFreeParameterSet m_paramSet;
+  FreeVector m_params;
+  std::optional<FreeSymMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 
