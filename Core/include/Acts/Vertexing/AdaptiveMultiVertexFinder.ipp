@@ -550,6 +550,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
   // Update fitter state with removed vertex candidate
   fitterState.removeVertexFromMultiMap(vtx);
 
+  for(auto entry : fitterState.tracksAtVerticesMap){
+    // Delete all linearized tracks for current (bad) vertex
+    if(entry.first.second == vtx){
+      entry.second.isLinearized = false;
+    }
+  }
+
   // Do the fit with removed vertex
   auto fitResult = m_cfg.vertexFitter.addVtxToFit(
       fitterState, vtx, m_cfg.linearizer, vertexingOptions);

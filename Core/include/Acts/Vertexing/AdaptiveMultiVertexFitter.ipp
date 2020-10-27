@@ -274,8 +274,7 @@ Acts::Result<void> Acts::
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
-        if (trkAtVtx.linearizedState.covarianceAtPCA ==
-                BoundSymMatrix::Zero() ||
+        if (not trkAtVtx.isLinearized ||
             state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
@@ -285,6 +284,7 @@ Acts::Result<void> Acts::
             return result.error();
           }
           trkAtVtx.linearizedState = *result;
+          trkAtVtx.isLinearized = true;
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
         }
         // Update the vertex with the new track
