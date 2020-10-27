@@ -226,18 +226,6 @@ class SingleBoundTrackParameters {
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 
-  /// Compare two bound parameters for equality.
-  friend bool operator==(const SingleBoundTrackParameters& lhs,
-                         const SingleBoundTrackParameters& rhs) {
-    return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
-           (lhs.m_surface == rhs.m_surface) and
-           (lhs.m_chargeInterpreter == rhs.m_chargeInterpreter);
-  }
-  /// Compare two bound parameters for inequality.
-  friend bool operator!=(const SingleBoundTrackParameters& lhs,
-                         const SingleBoundTrackParameters& rhs) {
-    return !(lhs == rhs);
-  }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleBoundTrackParameters& tp) {
