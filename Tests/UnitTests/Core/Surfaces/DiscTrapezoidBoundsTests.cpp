@@ -25,9 +25,6 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsConstruction) {
   double minHalfX(1.0), maxHalfX(5.0), rMin(2.0), rMax(6.0), averagePhi(0.0),
       stereo(0.1);
-  // test default construction
-  // DiscTrapezoidBounds defaultConstructedDiscTrapezoidBounds;  should be
-  // deleted
   //
   /// Test construction with dimensions and default stereo
   BOOST_CHECK_EQUAL(

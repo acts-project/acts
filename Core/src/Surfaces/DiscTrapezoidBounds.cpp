@@ -19,7 +19,7 @@ Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
   m_ymax = std::sqrt(get(eMaxR) * get(eMaxR) -
-                          get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
+                     get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
 Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
@@ -48,7 +48,6 @@ Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
 
 bool Acts::DiscTrapezoidBounds::inside(
     const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
-      
   Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
                          {get(eHalfLengthXmaxR), m_ymax},
                          {-get(eHalfLengthXmaxR), m_ymax},

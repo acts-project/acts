@@ -99,15 +99,18 @@ struct PlanarSurfaceTestBeds {
                        (M_PI_2 - M_PI_4) * irScale, (M_PI_2 + M_PI_4) * rScale);
 
     // Annulus disc test
-    Acts::Vector2D aorigin(0.05, -0.2);
+    Acts::Vector2D aorigin(0.1, -0.3);
     double phimin = -0.25;
     double phimax = 0.38;
-    auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, -0.25,
-                                                         0.38, aorigin, M_PI_4);
+    auto annulus = std::make_shared<Acts::AnnulusBounds>(
+        rmin, rmax, phimin, phimax, aorigin, M_PI_4);
     auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-        Acts::Transform3D::Identity(), annulus);
-    Acts::BinUtility stripsPhiA(1, 0., 10., Acts::open, Acts::binR);
-    stripsPhiA += Acts::BinUtility(12, -0.25, 0.36, Acts::open, Acts::binPhi);
+        Acts::Transform3D::Identity() *
+            Acts::Translation3D(-aorigin.x(), -aorigin.y(), 0.),
+        annulus);
+    Acts::BinUtility stripsPhiA(2, rmin, rmax, Acts::open, Acts::binR);
+    stripsPhiA +=
+        Acts::BinUtility(12, phimin, phimax, Acts::open, Acts::binPhi);
     AnnulusRandom aRandom(rmin * irScale, rmax * rScale, phimin * rScale,
                           phimax * rScale, aorigin.x(), aorigin.y());
 

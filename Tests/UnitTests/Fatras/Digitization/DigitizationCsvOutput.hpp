@@ -43,12 +43,14 @@ struct DigitizationCsvOutput {
   /// @param outf The output stream
   /// @param vertices The vertices of the polygon
   void writePolygon(std::ostream& outf,
-                    const std::vector<Acts::Vector2D>& vertices) const {
+                    const std::vector<Acts::Vector2D>& vertices,
+                    const Acts::Vector2D& shift = Acts::Vector2D(0.,
+                                                                 0.)) const {
     auto nvertices = vertices.size();
     for (unsigned long iv = 1; iv < nvertices; ++iv) {
-      writeLine(outf, vertices[iv - 1], vertices[iv]);
+      writeLine(outf, vertices[iv - 1] + shift, vertices[iv] + shift);
     }
-    writeLine(outf, vertices[nvertices - 1], vertices[0]);
+    writeLine(outf, vertices[nvertices - 1] + shift, vertices[0] + shift);
   };
 };
 
