@@ -8,7 +8,11 @@
 
 #pragma once
 
+// Acts include(s).
+#include "Acts/Utilities/Logger.hpp"
+
 // System include(s)
+#include <memory>
 #include <string>
 
 /// Forward declaration of incomplete type cl::sycl::queue
@@ -24,7 +28,9 @@ class QueueWrapper {
  public:
   /// Create queue with default selector or given name
   /// Default constructed queue wrappers are owners.
-  QueueWrapper(const std::string& = "");
+  QueueWrapper(const std::string& = "",
+               std::unique_ptr<const Logger> logger =
+                   getDefaultLogger("Sycl::QueueWrapper", Logging::INFO));
   /// Move constructor
   /// It takes ownership (if it is given).
   QueueWrapper(QueueWrapper&& parent) noexcept;
@@ -48,8 +54,8 @@ class QueueWrapper {
   cl::sycl::queue* m_queue;
   /// Owns queue
   bool m_ownsQueue;
-  /// @brief This function creates the SYCL queue object.
-  void initialize(const std::string& = "");
+  /// The logger object
+  std::unique_ptr<const Logger> m_logger;
 
 };  // class QueueWrapper
 }  // namespace Acts::Sycl
