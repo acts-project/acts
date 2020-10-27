@@ -6,22 +6,24 @@ add_executable(
   GenericRecTruthTracks.cpp)
 
 target_link_libraries(
-	ActsExampleTruthTracksGeneric
+  ActsExampleTruthTracksGeneric
   PRIVATE
-  ActsExamplesRecTracksCommon ActsExamplesDetectorGeneric)
+    ActsExamplesRecTracksCommon 
+    ActsExamplesDetectorGeneric)
 
 add_executable(
-    ActsExampleCKFTracksGeneric
-    GenericRecCKFTracks.cpp)
+  ActsExampleCKFTracksGeneric
+  GenericRecCKFTracks.cpp)
 target_link_libraries(
-    ActsExampleCKFTracksGeneric
-    PRIVATE
-  ActsExamplesRecTracksCommon ActsExamplesDetectorGeneric)
+  ActsExampleCKFTracksGeneric
+  PRIVATE
+    ActsExamplesRecTracksCommon 
+    ActsExamplesDetectorGeneric)
 
 install(
   TARGETS
-  ActsExampleTruthTracksGeneric
-  ActsExampleCKFTracksGeneric
+    ActsExampleTruthTracksGeneric
+    ActsExampleCKFTracksGeneric
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)

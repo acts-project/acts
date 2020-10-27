@@ -1,12 +1,12 @@
 add_library(
-	ActsExamplesRecTracksCommon SHARED
-	RecTruthTracks.cpp
-	RecCKFTracks.cpp)
+  ActsExamplesRecTracksCommon SHARED
+  RecTruthTracks.cpp
+  RecCKFTracks.cpp)
 target_include_directories(
-	ActsExamplesRecTracksCommon
+  ActsExamplesRecTracksCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
-	ActsExamplesRecTracksCommon
+  ActsExamplesRecTracksCommon
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
@@ -19,5 +19,5 @@ target_link_libraries(
     ActsExamplesIoPerformance)    
 
 install(
-	TARGETS ActsExamplesRecTracksCommon
+  TARGETS ActsExamplesRecTracksCommon
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
