@@ -142,16 +142,17 @@ BOOST_DATA_TEST_CASE(RandomChannelizerTest,
       std::ofstream shape;
       std::ofstream grid;
 
+      const auto centerXY = surface->center(geoCtx).segment<2>(0);
       // 0 - write the shape
       shape.open("Channelizer" + name + "Borders.csv");
       if (surface->type() == Acts::Surface::Plane) {
         const auto* pBounds =
             static_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-        csvHelper.writePolygon(shape, pBounds->vertices(1));
+        csvHelper.writePolygon(shape, pBounds->vertices(1), -centerXY);
       } else if (surface->type() == Acts::Surface::Disc) {
         const auto* dBounds =
             static_cast<const Acts::DiscBounds*>(&(surface->bounds()));
-        csvHelper.writePolygon(shape, dBounds->vertices(72));
+        csvHelper.writePolygon(shape, dBounds->vertices(72), -centerXY);
       }
       // 1 - write the grid
       grid.open("Channelizer" + name + "Grid.csv");

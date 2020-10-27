@@ -103,10 +103,11 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
   // List of vertices counter-clockwise starting with left inner
   std::vector<Acts::Vector2D> rvertices;
 
-  double phiMinInner = VectorHelpers::phi(m_inLeftStripXY);
-  double phiMaxInner = VectorHelpers::phi(m_inRightStripXY);
-  double phiMinOuter = VectorHelpers::phi(m_outRightStripXY);
-  double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY);
+  // Shift them to get the module phi
+  double phiMinInner = VectorHelpers::phi(m_inLeftStripXY - m_moduleOrigin);
+  double phiMaxInner = VectorHelpers::phi(m_inRightStripXY - m_moduleOrigin);
+  double phiMinOuter = VectorHelpers::phi(m_outRightStripXY - m_moduleOrigin);
+  double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY - m_moduleOrigin);
 
   std::vector<double> phisInner =
       detail::VerticesHelper::phiSegments(phiMinInner, phiMaxInner);
@@ -127,6 +128,9 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
         rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
         phisOuter[iseg + 1], lseg, addon);
   }
+
+  std::for_each(rvertices.begin(), rvertices.end(),
+                [&](Acts::Vector2D& rv) { rv += m_moduleOrigin; });
 
   return rvertices;
 }
