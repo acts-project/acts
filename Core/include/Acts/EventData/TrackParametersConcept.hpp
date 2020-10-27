@@ -12,6 +12,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <type_traits>
+
 namespace Acts {
 
 class Surface;
@@ -64,10 +66,10 @@ struct BoundTrackParametersConceptImpl {
 
   // check for required methods
   constexpr static bool hasMethodParameters =
-      identical_to<BoundVector, ReturnTypeParameters, const T>;
+      std::is_convertible_v<ReturnTypeParameters<T>, BoundVector>;
   constexpr static bool hasMethodCovariance =
-      identical_to<const std::optional<BoundSymMatrix>&, ReturnTypeCovariance,
-                   const T>;
+      std::is_convertible_v<ReturnTypeCovariance<T>,
+                            std::optional<BoundSymMatrix>>;
   constexpr static bool hasMethodFourPositionFromContext =
       identical_to<Vector4D, ReturnTypeFourPositionFromContext, const T>;
   constexpr static bool hasMethodPositionFromContext =
@@ -121,10 +123,10 @@ struct FreeTrackParametersConceptImpl {
 
   // check for required methods
   constexpr static bool hasMethodParameters =
-      identical_to<FreeVector, ReturnTypeParameters, const T>;
+      std::is_convertible_v<ReturnTypeParameters<T>, FreeVector>;
   constexpr static bool hasMethodCovariance =
-      identical_to<const std::optional<FreeSymMatrix>&, ReturnTypeCovariance,
-                   const T>;
+      std::is_convertible_v<ReturnTypeCovariance<T>,
+                            std::optional<FreeSymMatrix>>;
   constexpr static bool hasMethodFourPosition =
       identical_to<Vector4D, ReturnTypeFourPosition, const T>;
   constexpr static bool hasMethodPosition =
