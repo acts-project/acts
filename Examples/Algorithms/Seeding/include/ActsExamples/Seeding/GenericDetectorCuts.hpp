@@ -30,7 +30,7 @@ class GenericDetectorCuts : public IExperimentCuts<SpacePoint> {
   /// discarded
   bool singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
                      const InternalSpacePoint<SpacePoint>& middle,
-                     const InternalSpacePoint<SpacePoint>&) const;
+                     const InternalSpacePoint<SpacePoint>& top) const;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
