@@ -1,19 +1,19 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
@@ -32,9 +32,8 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int main(int argc, char* argv[]) {
-  GenericDetector detector;
-
+int runRecCKFTracks(int argc, char* argv[],
+                    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -43,7 +42,7 @@ int main(int argc, char* argv[]) {
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
   Options::addOutputOptions(desc);
-  detector.addOptions(desc);
+  detector->addOptions(desc);
   Options::addBFieldOptions(desc);
   Options::addTrackFindingOptions(desc);
 
@@ -62,7 +61,7 @@ int main(int argc, char* argv[]) {
       Options::readRandomNumbersConfig(vm));
 
   // Setup detector geometry
-  auto geometry = Geometry::build(vm, detector);
+  auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
   for (auto cdr : geometry.second) {
@@ -77,20 +76,16 @@ int main(int argc, char* argv[]) {
   particleReader.outputParticles = "particles_initial";
   sequencer.addReader(
       std::make_shared<CsvParticleReader>(particleReader, logLevel));
-  // Read clusters from CSV files
-  auto clusterReaderCfg = Options::readCsvPlanarClusterReaderConfig(vm);
-  clusterReaderCfg.trackingGeometry = trackingGeometry;
-  clusterReaderCfg.outputClusters = "clusters";
-  clusterReaderCfg.outputHitIds = "hit_ids";
-  // only simhits are used and the map will be re-created by the digitizer
-  clusterReaderCfg.outputMeasurementParticlesMap = "unused-hit_particles_map";
-  clusterReaderCfg.outputSimHits = "simhits";
+  // Read truth hits from CSV files
+  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
+  simHitReaderCfg.inputStem = "simhits";
+  simHitReaderCfg.outputSimHits = "simhits";
   sequencer.addReader(
-      std::make_shared<CsvPlanarClusterReader>(clusterReaderCfg, logLevel));
+      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
 
   // Create smeared measurements
   HitSmearing::Config hitSmearingCfg;
-  hitSmearingCfg.inputSimHits = clusterReaderCfg.outputSimHits;
+  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   hitSmearingCfg.outputMeasurements = "measurements";
   hitSmearingCfg.outputSourceLinks = "sourcelinks";
   hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
@@ -159,7 +154,7 @@ int main(int argc, char* argv[]) {
   // filtered particle collection. Thsi could be avoided when a seperate track
   // selection algorithm is used.
   trackStatesWriter.inputParticles = particleReader.outputParticles;
-  trackStatesWriter.inputSimHits = clusterReaderCfg.outputSimHits;
+  trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
