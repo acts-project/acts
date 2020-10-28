@@ -46,9 +46,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   BoundVector newTrkParams(BoundVector::Zero());
 
   // Get phi and theta and correct for possible periodicity changes
-  auto correctedPhiTheta =
-      Acts::detail::ensureThetaBounds(newTrkMomentum(0), newTrkMomentum(1));
-
+  const auto correctedPhiTheta =
+      Acts::detail::normalizePhiTheta(newTrkMomentum(0), newTrkMomentum(1));
   newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
   newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
