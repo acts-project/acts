@@ -12,6 +12,7 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -60,6 +61,7 @@ class SingleBoundTrackParameters {
     assert((0 <= (params[eBoundQOverP] * q)) and
            "Inconsistent q/p and q signs");
     assert(m_surface);
+    normalizePhiTheta();
   }
 
   /// Construct from a parameters vector on the surface.
@@ -80,6 +82,7 @@ class SingleBoundTrackParameters {
         m_surface(std::move(surface)),
         m_chargeInterpreter(T()) {
     assert(m_surface);
+    normalizePhiTheta();
   }
 
   /// Construct from four-position, direction, absolute momentum, and charge.
@@ -104,6 +107,7 @@ class SingleBoundTrackParameters {
         m_chargeInterpreter(std::abs(q)) {
     assert((0 <= p) and "Absolute momentum must be positive");
     assert(m_surface);
+    // free-to-bound transform always return phi/theta within bounds
   }
 
   /// Construct from four-position, direction, and charge-over-momentum.
@@ -132,6 +136,7 @@ class SingleBoundTrackParameters {
         m_surface(std::move(surface)),
         m_chargeInterpreter(T()) {
     assert(m_surface);
+    // free-to-bound transform always return phi/theta within bounds
   }
 
   // this class does not have a custom default constructor and thus should not
@@ -225,6 +230,14 @@ class SingleBoundTrackParameters {
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
+
+  /// Ensure phi and theta angles are within bounds.
+  void normalizePhiTheta() {
+    auto [phi, theta] =
+        detail::ensureThetaBounds(m_params[eBoundPhi], m_params[eBoundTheta]);
+    m_params[eBoundPhi] = phi;
+    m_params[eBoundTheta] = theta;
+  }
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
