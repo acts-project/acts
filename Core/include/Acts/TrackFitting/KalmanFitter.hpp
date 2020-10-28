@@ -275,16 +275,15 @@ class KalmanFitter {
         // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
         // -> Fill strack state information & update stepper information
-        if (state.stepping.navDir == forward and not result.smoothed and
-            not result.forwardFiltered) {
+        if (not result.smoothed and not result.forwardFiltered) {
           ACTS_VERBOSE("Perform forward filter step");
           auto res = filter(surface, state, stepper, result);
           if (!res.ok()) {
             ACTS_ERROR("Error in forward filter: " << res.error());
             result.result = res.error();
           }
-        } else if (state.stepping.navDir == backward and
-                   result.forwardFiltered) {
+        }
+        if (result.forwardFiltered) {
           ACTS_VERBOSE("Perform backward filter step");
           auto res = backwardFilter(surface, state, stepper, result);
           if (!res.ok()) {
@@ -298,11 +297,11 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run backward filtering or
       // proceed to run smoothing
-      if (state.stepping.navDir == forward) {
+      if (not result.smoothed and not result.forwardFiltered) {
         if (result.measurementStates == inputMeasurements.size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
-          if (backwardFiltering and not result.forwardFiltered) {
+          if (backwardFiltering) {
             ACTS_VERBOSE("Forward filtering done");
             result.forwardFiltered = true;
             // Start to run backward filtering:
@@ -310,7 +309,7 @@ class KalmanFitter {
             // state to last measurement
             ACTS_VERBOSE("Reverse navigation direction.");
             reverse(state, stepper, result);
-          } else if (not result.smoothed) {
+          } else {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
             // --> Set a stop condition when all track states have been
@@ -328,8 +327,7 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or
-          (backwardFiltering and state.stepping.navDir == backward)) {
+      if (result.smoothed or result.forwardFiltered) {
         if (targetSurface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using backward filtering mode
@@ -631,7 +629,7 @@ class KalmanFitter {
 
         // No backward filtering for last measurement state, but still update
         // with material effects
-        if (state.stepping.navDir == backward and
+        if (result.forwardFiltered and
             surface == state.navigation.startSurface) {
           materialInteractor(surface, state, stepper);
           return Result<void>::success();
