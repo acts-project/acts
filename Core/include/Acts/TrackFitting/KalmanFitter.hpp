@@ -80,7 +80,7 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering),
+        bidirectionalFiltering(bwdFiltering),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
@@ -111,7 +111,7 @@ struct KalmanFitterOptions {
   bool energyLoss = true;
 
   /// Whether to run backward filtering
-  bool backwardFiltering = false;
+  bool bidirectionalFiltering = false;
 
   /// Logger
   LoggerWrapper logger;
@@ -142,14 +142,14 @@ struct KalmanFitterResult {
   // Indicator if the propagation state has been reset
   bool reset = false;
 
+  // Indicator if navigation direction has been reversed
+  bool reversed = false;
+
   // Indicator if track fitting has been done
   bool finished = false;
 
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
-
-  // Indicator if forward filtering has been done
-  bool forwardFiltered = false;
 
   // Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
@@ -226,7 +226,7 @@ class KalmanFitter {
     bool energyLoss = true;
 
     /// Whether run smoothing as backward filtering
-    bool backwardFiltering = false;
+    bool bidirectionalFiltering = false;
 
     /// @brief Kalman actor operation
     ///
@@ -275,7 +275,7 @@ class KalmanFitter {
         // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
         // -> Fill strack state information & update stepper information
-        if (not result.smoothed and not result.forwardFiltered) {
+        if (not result.smoothed and not result.reversed) {
           ACTS_VERBOSE("Perform forward filter step");
           auto res = filter(surface, state, stepper, result);
           if (!res.ok()) {
@@ -283,9 +283,9 @@ class KalmanFitter {
             result.result = res.error();
           }
         }
-        if (result.forwardFiltered) {
+        if (result.reversed) {
           ACTS_VERBOSE("Perform backward filter step");
-          auto res = backwardFilter(surface, state, stepper, result);
+          auto res = reversedFilter(surface, state, stepper, result);
           if (!res.ok()) {
             ACTS_ERROR("Error in backward filter: " << res.error());
             result.result = res.error();
@@ -297,13 +297,11 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run backward filtering or
       // proceed to run smoothing
-      if (not result.smoothed and not result.forwardFiltered) {
+      if (not result.smoothed and not result.reversed) {
         if (result.measurementStates == inputMeasurements.size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
-          if (backwardFiltering) {
-            ACTS_VERBOSE("Forward filtering done");
-            result.forwardFiltered = true;
+          if (bidirectionalFiltering) {
             // Start to run backward filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
@@ -327,12 +325,12 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or result.forwardFiltered) {
+      if (result.smoothed or result.reversed) {
         if (targetSurface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using backward filtering mode
           // -> Fitting is finished here
-          if (backwardFiltering) {
+          if (bidirectionalFiltering) {
             ACTS_ERROR(
                 "The target surface needed for aborting backward propagation "
                 "is not provided");
@@ -353,7 +351,7 @@ class KalmanFitter {
           result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
           // Reset smoothed status of states missed in backward filtering
-          if (backwardFiltering) {
+          if (bidirectionalFiltering) {
             result.fittedStates.applyBackwards(
                 result.trackTip, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
@@ -386,7 +384,8 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void reverse(propagator_state_t& state, stepper_t& stepper,
                  result_type& result) const {
-      // Remember the navigation direciton has been reserved
+      // Remember the navigation direciton has been reversed
+      result.reversed = true;
       result.reset = true;
 
       // Reset propagator options
@@ -614,7 +613,7 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> backwardFilter(const Surface* surface,
+    Result<void> reversedFilter(const Surface* surface,
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
                                 result_type& result) const {
@@ -629,8 +628,7 @@ class KalmanFitter {
 
         // No backward filtering for last measurement state, but still update
         // with material effects
-        if (result.forwardFiltered and
-            surface == state.navigation.startSurface) {
+        if (result.reversed and surface == state.navigation.startSurface) {
           materialInteractor(surface, state, stepper);
           return Result<void>::success();
         }
@@ -850,8 +848,6 @@ class KalmanFitter {
         return Result<void>::success();
       }
 
-      std::cout << "measurementIndices size " << measurementIndices.size()
-                << std::endl;
       // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedMeasurement =
           result.fittedStates.getTrackState(measurementIndices.back());
@@ -1007,7 +1003,7 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+    kalmanActor.bidirectionalFiltering = kfOptions.bidirectionalFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
@@ -1102,7 +1098,7 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
+    kalmanActor.bidirectionalFiltering = kfOptions.bidirectionalFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
