@@ -162,7 +162,6 @@ struct KalmanFitterResult {
 /// @tparam propagator_t Type of the propagation class
 /// @tparam updater_t Type of the kalman updater class
 /// @tparam smoother_t Type of the kalman smoother class
-/// @tparam outlier_finder_t Type of the outlier finder class
 ///
 /// The Kalman filter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -174,11 +173,6 @@ struct KalmanFitterResult {
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
 /// - The Smoother is called at the end of the forward fit by the Actor.
-/// - The outlier finder is called during the filtering by the Actor.
-///   It determines if the measurement is an outlier
-/// - The Calibrator is a dedicated calibration algorithm that allows
-///   to calibrate measurements using track information, this could be
-///    e.g. sagging for wires, module deformations, etc.
 ///
 /// Measurements are not required to be ordered for the KalmanFilter,
 /// measurement ordering needs to be figured out by the navigation of
@@ -207,6 +201,8 @@ class KalmanFitter {
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam calibrator_t The type of calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder class
   ///
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
@@ -276,10 +272,9 @@ class KalmanFitter {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
+        // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
-        // -> Check outlier behavior
-        // -> Fill strack state information & update stepper information if
-        // non-outlier
+        // -> Fill strack state information & update stepper information
         if (state.stepping.navDir == forward and not result.smoothed and
             not result.forwardFiltered) {
           ACTS_VERBOSE("Perform forward filter step");
@@ -333,7 +328,8 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or (backwardFiltering and state.stepping.navDir == backward)) {
+      if (result.smoothed or
+          (backwardFiltering and state.stepping.navDir == backward)) {
         if (targetSurface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using backward filtering mode
@@ -889,7 +885,8 @@ class KalmanFitter {
       ACTS_VERBOSE(
           "Smoothing successful, updating stepping state, "
           "set target surface.");
-      // Decide whether need to reverse navigation direction for further stepping 
+      // Decide whether need to reverse navigation direction for further
+      // stepping
       bool reverseDirection = false;
       if (std::abs(firstIntersection.intersection.pathLength) <=
           std::abs(lastIntersection.intersection.pathLength)) {
@@ -901,7 +898,7 @@ class KalmanFitter {
                        lastCreatedMeasurement.smoothedCovariance());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
-      
+
       // Reverse the navigation direction if necessary
       if (reverseDirection) {
         state.stepping.navDir = NavigationDirection(-1 * state.stepping.navDir);
