@@ -172,7 +172,7 @@ struct KalmanFitterResult {
 /// given to the Actor for further use:
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
-/// - The Smoother is called at the end of the forward fit by the Actor.
+/// - The Smoother is called at the end of the filtering by the Actor.
 ///
 /// Measurements are not required to be ordered for the KalmanFilter,
 /// measurement ordering needs to be figured out by the navigation of
@@ -268,6 +268,8 @@ class KalmanFitter {
       // Update:
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
+      std::string direction =
+          (state.stepping.navDir == forward) ? "forward" : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -275,19 +277,20 @@ class KalmanFitter {
         // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
         // -> Fill strack state information & update stepper information
+
         if (not result.smoothed and not result.reversed) {
-          ACTS_VERBOSE("Perform forward filter step");
+          ACTS_VERBOSE("Perform " << direction << " filter step");
           auto res = filter(surface, state, stepper, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in forward filter: " << res.error());
+            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
           }
         }
         if (result.reversed) {
-          ACTS_VERBOSE("Perform backward filter step");
+          ACTS_VERBOSE("Perform " << direction << " filter step");
           auto res = reversedFilter(surface, state, stepper, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in backward filter: " << res.error());
+            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
           }
         }
@@ -499,8 +502,8 @@ class KalmanFitter {
         // an outlier
         if (not m_outlierFinder(trackStateProxy)) {
           // Run Kalman update
-          auto updateRes =
-              m_updater(state.geoContext, trackStateProxy, forward);
+          auto updateRes = m_updater(state.geoContext, trackStateProxy,
+                                     state.stepping.navDir);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -844,6 +847,7 @@ class KalmanFitter {
         return smoothRes.error();
       }
 
+      // Return in case no target surface
       if (targetSurface == nullptr) {
         return Result<void>::success();
       }
@@ -876,14 +880,13 @@ class KalmanFitter {
       // either the first measurement state or the last measurement state. It
       // assums the target surface is not within the
       // first and the last smoothed measurement state
-      ACTS_VERBOSE(
-          "Smoothing successful, updating stepping state, "
-          "set target surface.");
       // Decide whether need to reverse navigation direction for further
       // stepping
       bool reverseDirection = false;
-      if (std::abs(firstIntersection.intersection.pathLength) <=
-          std::abs(lastIntersection.intersection.pathLength)) {
+      bool closerToFirstCreatedMeasurement =
+          (std::abs(firstIntersection.intersection.pathLength) <=
+           std::abs(lastIntersection.intersection.pathLength));
+      if (closerToFirstCreatedMeasurement) {
         stepper.update(state.stepping, firstParams,
                        firstCreatedMeasurement.smoothedCovariance());
         reverseDirection = (firstIntersection.intersection.pathLength < 0);
@@ -892,9 +895,19 @@ class KalmanFitter {
                        lastCreatedMeasurement.smoothedCovariance());
         reverseDirection = (lastIntersection.intersection.pathLength < 0);
       }
+      const auto& surface = closerToFirstCreatedMeasurement
+                                ? firstCreatedMeasurement.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
+      ACTS_VERBOSE(
+          "Smoothing successful, updating stepping state to smoothed "
+          "parameters at surface "
+          << surface.geometryId() << ". Prepared to reach the target surface.");
 
       // Reverse the navigation direction if necessary
       if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
         state.stepping.navDir = NavigationDirection(-1 * state.stepping.navDir);
       }
       // Reset the step size
@@ -943,7 +956,7 @@ class KalmanFitter {
 
  public:
   /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
+  /// the filter and smoother/reversed filter
   ///
   /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
@@ -1036,7 +1049,7 @@ class KalmanFitter {
   }
 
   /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
+  /// the filter and smoother/reversed filter
   ///
   /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
