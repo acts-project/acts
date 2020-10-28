@@ -204,7 +204,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
         derivatives,
     const Acts::BoundSymMatrix& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
+    const std::vector<double>& deviations) const -> Covariance {
   Jacobian jacobian;
   jacobian.setIdentity();
   jacobian.col(eBoundLoc0) = fitLinear(derivatives[eBoundLoc0], deviations);
