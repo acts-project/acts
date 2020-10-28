@@ -187,7 +187,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 
     // Correct for a possible variation of phi around
-    if (param == 2) {
+    if (param == eBoundPhi) {
       double phi0 = nominal(Acts::eBoundPhi);
       double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
       if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
