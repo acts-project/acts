@@ -141,7 +141,6 @@ BOOST_DATA_TEST_CASE(RandomChannelizerTest,
     if (index == 0) {
       std::ofstream shape;
       std::ofstream grid;
-
       const auto centerXY = surface->center(geoCtx).segment<2>(0);
       // 0 - write the shape
       shape.open("Channelizer" + name + "Borders.csv");
