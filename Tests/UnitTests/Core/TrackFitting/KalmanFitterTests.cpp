@@ -271,7 +271,7 @@ struct MinimalOutlierFinder {
         });
 
     // In case the chi2 is too small
-    if (std::abs(chi2) < chi2Tolerance) {
+    if (chi2 < chi2Tolerance) {
       return false;
     }
     // The chisq distribution
@@ -489,13 +489,13 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                                          1e-6));
 
   // Run KF fit in backward filtering mode
-  kfOptions.backwardFiltering = true;
+  kfOptions.bidirectionalFiltering = true;
   // Fit the track
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto fittedWithBwdFiltering = *fitRes;
   // Check the filtering and smoothing status flag
-  BOOST_CHECK(fittedWithBwdFiltering.forwardFiltered);
+  BOOST_CHECK(fittedWithBwdFiltering.reversed);
   BOOST_CHECK(not fittedWithBwdFiltering.smoothed);
 
   // Count the number of 'smoothed' states
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
 
   // Reset to use smoothing formalism
-  kfOptions.backwardFiltering = false;
+  kfOptions.bidirectionalFiltering = false;
 
   // Extract outliers from result of propagation.
   // This vector owns the outliers
@@ -538,6 +538,25 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
     }
   });
   BOOST_CHECK_EQUAL(nOutliers, 1u);
+
+  // Construct a boundless plane surface near the track exit
+  Vector3D center(3._m, 0., 0.);
+  Vector3D normal(1., 0., 0.);
+  auto pSurface = Surface::makeShared<PlaneSurface>(center, normal);
+  // Reset the target surface
+  kfOptions.referenceSurface = pSurface.get();
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+
+  // Construct a curvilinear parameters near the track exit
+  Vector4D rPos4Outer(3._m, 10_um * gauss(generator), 100_um * gauss(generator),
+                      42_ns);
+  CurvilinearTrackParameters rStartOuter(rPos4Outer, rDir, 1_e / 1_GeV, cov);
+  // Reset the target surface and navigation direction
+  kfOptions.referenceSurface = &rStartOuter.referenceSurface();
+  kfOptions.propagatorPlainOptions.direction = backward;
+  fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
+  BOOST_CHECK(fitRes.ok());
 }
 
 }  // namespace Test
