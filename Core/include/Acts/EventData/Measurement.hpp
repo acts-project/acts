@@ -11,6 +11,7 @@
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CalculateResiduals.hpp"
 #include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
@@ -515,14 +516,18 @@ class FixedSizeMeasurement {
     return m_subspace.template expander<Scalar>();
   }
 
-  /// Compute the residuals in the measured space.
+  /// Compute residuals in the measured subspace.
   ///
   /// @param reference Reference parameters in the full space.
   ///
-  /// Only the values in the measurement subspace are used for the computation.
-  ParametersVector residual(const FullParametersVector& reference) const {
-    // TODO enforce parameter range from traits
-    return m_params - m_subspace.projectVector(reference);
+  /// This computes the difference `measured - reference` taking into account
+  /// the allowed parameter ranges. Only the reference values in the measured
+  /// subspace are used for the computation.
+  ParametersVector residuals(const FullParametersVector& reference) const {
+    ParametersVector res = ParametersVector::Zero();
+    detail::calculateResiduals(static_cast<indices_t>(kSize),
+                               m_subspace.indices(), reference, m_params, res);
+    return res;
   }
 
   std::ostream& operator<<(std::ostream& os) const {
