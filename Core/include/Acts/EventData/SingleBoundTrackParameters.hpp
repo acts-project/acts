@@ -77,10 +77,7 @@ class SingleBoundTrackParameters {
   SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
                              const ParametersVector& params,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(params),
-        m_cov(std::move(cov)),
-        m_surface(std::move(surface)),
-        m_chargeInterpreter(T()) {
+      : m_params(params), m_cov(std::move(cov)), m_surface(std::move(surface)) {
     assert(m_surface);
     normalizePhiTheta();
   }
@@ -133,14 +130,19 @@ class SingleBoundTrackParameters {
             pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface,
             geoCtx)),
         m_cov(std::move(cov)),
-        m_surface(std::move(surface)),
-        m_chargeInterpreter(T()) {
+        m_surface(std::move(surface)) {
     assert(m_surface);
     // free-to-bound transform always return phi/theta within bounds
   }
 
-  // this class does not have a custom default constructor and thus should not
-  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
+  /// Parameters are not default constructible due to the charge type.
+  SingleBoundTrackParameters() = delete;
+  SingleBoundTrackParameters(const SingleBoundTrackParameters&) = default;
+  SingleBoundTrackParameters(SingleBoundTrackParameters&&) = default;
+  ~SingleBoundTrackParameters() = default;
+  SingleBoundTrackParameters& operator=(const SingleBoundTrackParameters&) =
+      default;
+  SingleBoundTrackParameters& operator=(SingleBoundTrackParameters&&) = default;
 
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
@@ -239,6 +241,26 @@ class SingleBoundTrackParameters {
     m_params[eBoundTheta] = theta;
   }
 
+  /// Compare two bound track parameters for bitwise equality.
+  ///
+  /// @note Comparing track parameters for bitwise equality is not a good idea.
+  ///   Depending on the context you might want to compare only the parameter
+  ///   values, or compare them for compability instead of equality; you might
+  ///   also have different (floating point) thresholds of equality in different
+  ///   contexts. None of that can be handled by this operator. Users should
+  ///   think really hard if this is what they want and we might decided that we
+  ///   will remove this in the future.
+  friend bool operator==(const SingleBoundTrackParameters<charge_t>& lhs,
+                         const SingleBoundTrackParameters<charge_t>& rhs) {
+    return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
+           (lhs.m_surface == rhs.m_surface) and
+           (lhs.m_chargeInterpreter == rhs.m_chargeInterpreter);
+  }
+  /// Compare two bound track parameters for bitwise in-equality.
+  friend bool operator!=(const SingleBoundTrackParameters<charge_t>& lhs,
+                         const SingleBoundTrackParameters<charge_t>& rhs) {
+    return not(lhs == rhs);
+  }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
                                   const SingleBoundTrackParameters& tp) {
