@@ -438,18 +438,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               // local hit residual info
               auto H = meas.projector();
               auto resCov = cov + H * covariance * H.transpose();
-              auto residual = meas.residual(parameters);
-              m_res_x_hit.push_back(residual(Acts::eBoundLoc0));
-              m_res_y_hit.push_back(residual(Acts::eBoundLoc1));
+              auto res = meas.residuals(parameters);
+              m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
+              m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
               m_err_x_hit.push_back(
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_err_y_hit.push_back(
                   sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               m_pull_x_hit.push_back(
-                  residual(Acts::eBoundLoc0) /
+                  res[Acts::eBoundLoc0] /
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_y_hit.push_back(
-                  residual(Acts::eBoundLoc1) /
+                  res[Acts::eBoundLoc1] /
                   sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               m_dim_hit.push_back(state.calibratedSize());
             }
