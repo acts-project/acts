@@ -118,6 +118,21 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
                   Acts::s_epsilon);
 }
 
+BOOST_AUTO_TEST_CASE(DiscAnnulusBounds) {
+  // Annulus disc test
+  Acts::Vector2D aorigin(0.1, -0.3);
+  double rmin = 2.5;
+  double rmax = 4.5;
+  double phimin = -0.25;
+  double phimax = 0.38;
+  auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, phimin,
+                                                       phimax, aorigin);
+  auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
+      Acts::Transform3D::Identity() *
+          Acts::Translation3D(-aorigin.x(), -aorigin.y(), 0.),
+      annulus);
+}
+
 std::vector<std::array<std::ofstream, 3>> segmentOutput;
 
 int ntests = 100;
@@ -147,17 +162,18 @@ BOOST_DATA_TEST_CASE(RandomPlanarSurfaceMask,
 
     if (index == 0) {
       std::ofstream shape;
+      const auto centerXY = surface->center(geoCtx).segment<2>(0);
 
       // 0 - write the shape
       shape.open("PlanarSurfaceMask" + name + "Borders.csv");
       if (surface->type() == Acts::Surface::Plane) {
         const auto* pBounds =
             static_cast<const Acts::PlanarBounds*>(&(surface->bounds()));
-        csvHelper.writePolygon(shape, pBounds->vertices(1));
+        csvHelper.writePolygon(shape, pBounds->vertices(1), -centerXY);
       } else if (surface->type() == Acts::Surface::Disc) {
         const auto* dBounds =
             static_cast<const Acts::DiscBounds*>(&(surface->bounds()));
-        csvHelper.writePolygon(shape, dBounds->vertices(72));
+        csvHelper.writePolygon(shape, dBounds->vertices(72), -centerXY);
       }
 
       segmentOutput.push_back(std::array<std::ofstream, 3>());

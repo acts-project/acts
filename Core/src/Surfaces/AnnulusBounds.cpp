@@ -20,7 +20,6 @@ Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
-
   m_rotationStripPC =
       Eigen::Translation<double, 2>(Vector2D(0, -get(eAveragePhi)));
   m_translation = Eigen::Translation<double, 2>(m_moduleOrigin);
@@ -100,45 +99,47 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::corners() const {
 
 std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
     unsigned int lseg) const {
-  // List of vertices counter-clockwise starting with left inner
-  std::vector<Acts::Vector2D> rvertices;
+  if (lseg > 0) {
+    // List of vertices counter-clockwise starting with left inner
+    std::vector<Acts::Vector2D> rvertices;
 
-  // Shift them to get the module phi
-  double phiMinInner = VectorHelpers::phi(m_inLeftStripXY - m_moduleOrigin);
-  double phiMaxInner = VectorHelpers::phi(m_inRightStripXY - m_moduleOrigin);
-  double phiMinOuter = VectorHelpers::phi(m_outRightStripXY - m_moduleOrigin);
-  double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY - m_moduleOrigin);
+    // Shift them to get the module phi
+    double phiMinInner = VectorHelpers::phi(m_inLeftStripXY - m_moduleOrigin);
+    double phiMaxInner = VectorHelpers::phi(m_inRightStripXY - m_moduleOrigin);
+    double phiMinOuter = VectorHelpers::phi(m_outRightStripXY - m_moduleOrigin);
+    double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY - m_moduleOrigin);
 
-  std::vector<double> phisInner =
-      detail::VerticesHelper::phiSegments(phiMinInner, phiMaxInner);
-  std::vector<double> phisOuter =
-      detail::VerticesHelper::phiSegments(phiMinOuter, phiMaxOuter);
+    std::vector<double> phisInner =
+        detail::VerticesHelper::phiSegments(phiMinInner, phiMaxInner);
+    std::vector<double> phisOuter =
+        detail::VerticesHelper::phiSegments(phiMinOuter, phiMaxOuter);
 
-  // Inner bow from phi_min -> phi_max
-  for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
-    int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
-    detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
-        rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
-        phisInner[iseg + 1], lseg, addon);
+    // Inner bow from phi_min -> phi_max
+    for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
+      int addon = (iseg == phisInner.size() - 2) ? 1 : 0;
+      detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
+          rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
+          phisInner[iseg + 1], lseg, addon);
+    }
+    // Upper bow from phi_min -> phi_max
+    for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
+      int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
+      detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
+          rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
+          phisOuter[iseg + 1], lseg, addon);
+    }
+    std::for_each(rvertices.begin(), rvertices.end(),
+                  [&](Acts::Vector2D& rv) { rv += m_moduleOrigin; });
+    return rvertices;
   }
-  // Upper bow from phi_min -> phi_max
-  for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
-    int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
-    detail::VerticesHelper::createSegment<Vector2D, Transform2D>(
-        rvertices, {get(eMaxR), get(eMaxR)}, phisOuter[iseg],
-        phisOuter[iseg + 1], lseg, addon);
-  }
-
-  std::for_each(rvertices.begin(), rvertices.end(),
-                [&](Acts::Vector2D& rv) { rv += m_moduleOrigin; });
-
-  return rvertices;
+  return {m_inLeftStripXY, m_inRightStripXY, m_outRightStripXY,
+          m_outLeftStripXY};
 }
 
 bool Acts::AnnulusBounds::inside(const Vector2D& lposition, double tolR,
                                  double tolPhi) const {
   // locpo is PC in STRIP SYSTEM
-  // need to perform internal rotation induced by m_phiAvg
+  // need to perform internal rotation induced by average phi
   Vector2D locpo_rotated = m_rotationStripPC * lposition;
   double phiLoc = locpo_rotated[eBoundLoc1];
   double rLoc = locpo_rotated[eBoundLoc0];
@@ -192,7 +193,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
     // via jacobian.
     // The following transforms into STRIP XY, does the shift into MODULE XY,
     // and then transforms into MODULE PC
-    double dphi = m_phiAvg;
+    double dphi = get(eAveragePhi);
     double phi_strip = locpo_rotated[eBoundLoc1];
     double r_strip = locpo_rotated[eBoundLoc0];
     double O_x = m_shiftXY[eBoundLoc0];
@@ -356,7 +357,7 @@ double Acts::AnnulusBounds::squaredNorm(
 }
 
 Acts::Vector2D Acts::AnnulusBounds::moduleOrigin() const {
-  return Eigen::Rotation2D<double>(m_phiAvg) * m_moduleOrigin;
+  return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 // Ostream operator overload
@@ -367,9 +368,7 @@ std::ostream& Acts::AnnulusBounds::toStream(std::ostream& sl) const {
   sl << "(" << get(eMinR) << ", " << get(eMaxR) << ", " << phiMin() << ", "
      << phiMax() << ")" << '\n';
   sl << " - shift xy = " << m_shiftXY.x() << ", " << m_shiftXY.y() << '\n';
-  ;
   sl << " - shift pc = " << m_shiftPC.x() << ", " << m_shiftPC.y() << '\n';
-  ;
   sl << std::setprecision(-1);
   return sl;
 }

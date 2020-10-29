@@ -17,13 +17,13 @@ std::string ActsFatras::detail::DigitizationErrorCategory::message(
     int c) const {
   switch (static_cast<DigitizationError>(c)) {
     case DigitizationError::SmearingOutOfRange:
-      return "Digitization: smeared out of surface bounds.";
+      return "Smeared out of surface bounds.";
     case DigitizationError::SmearingError:
-      return "Digitization: smearing error occured.";
+      return "Smearing error occured.";
     case DigitizationError::UndefinedSurface:
-      return "Digitization: no surface for bound measurement defined.";
+      return "Surface undefined for this operation.";
     case DigitizationError::MaskingError:
-      return "Digitization: surface mask could not be applied.";
+      return "Surface mask could not be applied.";
     default:
       return "unknown";
   }

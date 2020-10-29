@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -14,7 +15,9 @@
 
 namespace Acts {
 class Surface;
-}
+class AnnulusBounds;
+class RadialBounds;
+}  // namespace Acts
 
 namespace ActsFatras {
 
@@ -38,32 +41,40 @@ struct PlanarSurfaceMask {
 
   /// Apply the mask of a polygon
   ///
-  /// @param outside The outside point of the segment
-  /// @param inside The inside point of the segment
   /// @param vertices The vertices of the polygon
+  /// @param segment The track segment (on surface)
+  /// @param firstInside The indicator if the first is inside
   ///
-  /// @return a result wrapping the new outside position
-  Acts::Result<Acts::Vector2D> polygonMask(
-      const Acts::Vector2D& outside, const Acts::Vector2D& inside,
-      const std::vector<Acts::Vector2D>& vertices) const;
-};
+  /// @return a result wrapping a segment
+  Acts::Result<Segment2D> polygonMask(
+      const std::vector<Acts::Vector2D>& vertices, const Segment2D& segment,
+      bool firstInside) const;
 
-/// A helper class for segments in polar coordinates.
-struct PolarSegment {
-  /// The clipped position
-  Acts::Vector2D clipped;
-  /// The start position of the segment (cartesian)
-  Acts::Vector2D start;
-  /// The end position of the segment (cartesian)
-  Acts::Vector2D end;
-  /// Indicator if inisde or not
-  bool inside = false;
+  /// Apply the mask of a Radial disk
+  ///
+  /// @param rBounds The radial disc for the masking
+  /// @param segment The track segment (on surface)
+  /// @param polarSegment The track segmetn (on surface, in polar)
+  /// @param firstInside The indicator if the first is inside
+  ///
+  /// @return a result wrapping a segment
+  Acts::Result<Segment2D> radialMask(const Acts::RadialBounds& rBounds,
+                                     const Segment2D& segment,
+                                     const Segment2D& polarSegment,
+                                     bool firstInside) const;
 
-  /// Constructor from arguments.
-  /// Parameter definition see above.
-  PolarSegment(Acts::Vector2D clipped_, const Acts::Vector2D& start_,
-               const Acts::Vector2D& end_, bool inside_)
-      : clipped(clipped_), start(start_), end(end_), inside(inside_) {}
+  /// Apply the mask of an annulus disk
+  ///
+  /// @param aBounds The annulus disc for the masking
+  /// @param segment The track segment (on surface)
+  /// @param firstInside The indicator if the first is inside
+  ///
+  /// @return a result wrapping a segment
+  Acts::Result<Segment2D> annulusMask(const Acts::AnnulusBounds& aBounds,
+                                      const Segment2D& segment,
+                                      bool firstInside) const;
+
+  Acts::detail::IntersectionHelper2D intersector;
 };
 
 }  // namespace ActsFatras
