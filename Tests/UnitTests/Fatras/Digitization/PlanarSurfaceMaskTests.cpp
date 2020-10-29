@@ -118,23 +118,7 @@ BOOST_AUTO_TEST_CASE(DiscMaskRadialBounds) {
                   Acts::s_epsilon);
 }
 
-BOOST_AUTO_TEST_CASE(DiscAnnulusBounds) {
-  // Annulus disc test
-  Acts::Vector2D aorigin(0.1, -0.3);
-  double rmin = 2.5;
-  double rmax = 4.5;
-  double phimin = -0.25;
-  double phimax = 0.38;
-  auto annulus = std::make_shared<Acts::AnnulusBounds>(rmin, rmax, phimin,
-                                                       phimax, aorigin);
-  auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
-      Acts::Transform3D::Identity() *
-          Acts::Translation3D(-aorigin.x(), -aorigin.y(), 0.),
-      annulus);
-}
-
 std::vector<std::array<std::ofstream, 3>> segmentOutput;
-
 int ntests = 100;
 
 /// Unit test for testing the Surface mask
