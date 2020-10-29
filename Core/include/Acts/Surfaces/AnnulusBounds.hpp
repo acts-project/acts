@@ -15,6 +15,7 @@
 
 #include <array>
 #include <exception>
+#include <iostream>
 #include <vector>
 
 namespace Acts {
@@ -135,8 +136,8 @@ class AnnulusBounds : public DiscBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note that the extremas are given, which may slightly alter the
-  /// number of segments returned
+  /// @note that that if @param lseg > 0, the extrema points are given,
+  ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2D> vertices(unsigned int lseg) const;
@@ -154,7 +155,6 @@ class AnnulusBounds : public DiscBounds {
   Vector2D m_moduleOrigin;
   Vector2D m_shiftXY;  // == -m_moduleOrigin
   Vector2D m_shiftPC;
-  double m_phiAvg;
   Transform2D m_rotationStripPC;
   Transform2D m_translation;
 

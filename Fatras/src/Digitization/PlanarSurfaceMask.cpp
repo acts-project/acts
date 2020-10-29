@@ -14,10 +14,58 @@
 #include <Acts/Surfaces/PlanarBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Surfaces/detail/IntersectionHelper2D.hpp>
 #include <Acts/Utilities/Helpers.hpp>
 
-Acts::Result<std::array<Acts::Vector2D, 2>>
+namespace {
+
+/// Helper method to check if an interseciton is good.
+///
+/// Good in this context is defined as: along direction,
+/// closer than the segment length & reachable
+///
+/// @param intersections The confimed intersections for the segment
+/// @param candidate The candidate intersection
+/// @param sLength The segment length, maximal allowed length
+void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
+                       const Acts::Intersection2D& candidate, double sLength) {
+  if (candidate and candidate.pathLength > 0 and
+      candidate.pathLength < sLength) {
+    intersections.push_back(candidate);
+  }
+}
+
+/// Helper method to apply the mask and return.
+///
+/// If two (ore more) intersections would be good, appply the first two
+/// If only one is available, the boolean tells you which one it is.
+/// If no intersection is valide, return an error code for masking.
+///
+/// @param intersections All confirmed intersections
+/// @param segment The original segment before masking
+/// @param firstInside Indicator if the first is inisde or not
+///
+/// @return a new Segment (clipped) wrapped in a result or error_code
+Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(
+    std::vector<Acts::Intersection2D>& intersections,
+    const ActsFatras::PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
+  std::sort(intersections.begin(), intersections.end());
+  if (intersections.size() >= 2) {
+    return ActsFatras::PlanarSurfaceMask::Segment2D{intersections[0].position,
+                                                    intersections[1].position};
+  } else if (intersections.size() == 1) {
+    return (not firstInside
+                ? ActsFatras::PlanarSurfaceMask::Segment2D{intersections[0]
+                                                               .position,
+                                                           segment[1]}
+                : ActsFatras::PlanarSurfaceMask::Segment2D{
+                      segment[0], intersections[0].position});
+  }
+  return ActsFatras::DigitizationError::MaskingError;
+}
+
+}  // anonymous namespace
+
+Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
 ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
                                      const Segment2D& segment) const {
   auto surfaceType = surface.type();
@@ -41,6 +89,7 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
     bool startInside = surface.bounds().inside(localStart, true);
     bool endInside = surface.bounds().inside(localEnd, true);
 
+    // Fast exit, both inside
     if (startInside and endInside) {
       return segment;
     }
@@ -60,25 +109,9 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
     }
     auto vertices = planarBounds != nullptr ? planarBounds->vertices(1)
                                             : dtbBounds->vertices(1);
-    if (not startInside) {
-      auto maskedR = polygonMask(segment[0], segment[1], vertices);
-      if (maskedR.ok()) {
-        clipped[0] = maskedR.value();
-      } else {
-        return DigitizationError::MaskingError;
-      }
-    }
-    if (not endInside) {
-      auto maskedR = polygonMask(segment[1], segment[0], vertices);
-      if (maskedR.ok()) {
-        clipped[1] = maskedR.value();
-      } else {
-        return DigitizationError::MaskingError;
-      }
-    }
-    return clipped;
 
-    // Disc surface section --------------------
+    return polygonMask(vertices, segment, startInside);
+
   } else if (surfaceType == Acts::Surface::Disc) {
     // Polar coordinates
     Acts::Vector2D sPolar(Acts::VectorHelpers::perp(segment[0]),
@@ -89,144 +122,155 @@ ActsFatras::PlanarSurfaceMask::apply(const Acts::Surface& surface,
     bool startInside = surface.bounds().inside(sPolar, true);
     bool endInside = surface.bounds().inside(ePolar, true);
 
+    // Fast exit for both inside
     if (startInside and endInside) {
       return segment;
     }
 
-    // DiscTrapezoidalBounds are already excluded
-    std::array<double, 2> radialE;
-    std::array<std::pair<double, double>, 2> polarE;
-    std::array<Segment2D, 2> sectorEdges;
-    if (surface.bounds().type() == Acts::SurfaceBounds::eDisc) {
+    auto boundsType = surface.bounds().type();
+    if (boundsType == Acts::SurfaceBounds::eDisc) {
       auto rBounds =
           static_cast<const Acts::RadialBounds*>(&(surface.bounds()));
-      double rMin = rBounds->get(Acts::RadialBounds::eMinR);
-      double rMax = rBounds->get(Acts::RadialBounds::eMaxR);
-      radialE = {rMin, rMax};
-      double hPhi = rBounds->get(Acts::RadialBounds::eHalfPhiSector);
-      double aPhi = rBounds->get(Acts::RadialBounds::eAveragePhi);
-      std::pair<double, double> phiMinMax = {aPhi - hPhi, aPhi + hPhi};
-      polarE = {phiMinMax, phiMinMax};
-      double cphiMin = std::cos(aPhi - hPhi);
-      double sphiMin = std::sin(aPhi - hPhi);
-      double cphiMax = std::cos(aPhi + hPhi);
-      double sphiMax = std::sin(aPhi + hPhi);
-      Segment2D minEdge = {Acts::Vector2D(rMin * cphiMin, rMin * sphiMin),
-                           Acts::Vector2D(rMax * cphiMin, rMax * sphiMin)};
-      Segment2D maxEdge = {Acts::Vector2D(rMin * cphiMax, rMin * sphiMax),
-                           Acts::Vector2D(rMax * cphiMax, rMax * sphiMax)};
-      sectorEdges = {minEdge, maxEdge};
+      return radialMask(*rBounds, segment, {sPolar, ePolar}, startInside);
 
-    } else if (surface.bounds().type() == Acts::SurfaceBounds::eAnnulus) {
+    } else if (boundsType == Acts::SurfaceBounds::eAnnulus) {
       auto aBounds =
           static_cast<const Acts::AnnulusBounds*>(&(surface.bounds()));
-      double rMin = aBounds->rMin();
-      double rMax = aBounds->rMax();
-      radialE = {rMin, rMax};
-
-      auto polarEdges = aBounds->corners();
-      auto polarCenter = aBounds->moduleOrigin();
-
-      std::vector<Acts::Vector2D> cartesianEdges;
-      for (const auto& pe : polarEdges) {
-        double R = pe[Acts::eBoundLoc0];
-        double phi = pe[Acts::eBoundLoc1];
-        Acts::Vector2D ce(R * std::cos(phi) - polarCenter.x(),
-                          R * std::sin(phi) - polarCenter.y());
-        cartesianEdges.push_back(ce);
-      }
-      std::sort(cartesianEdges.begin(), cartesianEdges.end(),
-                [](const Acts::Vector2D& a, const Acts::Vector2D& b) {
-                  return (Acts::VectorHelpers::perp(a) <
-                          Acts::VectorHelpers::perp(b));
-                });
-      std::sort(
-          cartesianEdges.begin(), cartesianEdges.begin() + 1,
-          [](const Acts::Vector2D& a, const Acts::Vector2D& b) {
-            return (Acts::VectorHelpers::phi(a) < Acts::VectorHelpers::phi(b));
-          });
-      std::sort(
-          cartesianEdges.begin() + 2, cartesianEdges.begin() + 3,
-          [](const Acts::Vector2D& a, const Acts::Vector2D& b) {
-            return (Acts::VectorHelpers::phi(a) < Acts::VectorHelpers::phi(b));
-          });
-      Segment2D minEdge = {cartesianEdges[0], cartesianEdges[2]};
-      Segment2D maxEdge = {cartesianEdges[1], cartesianEdges[3]};
-      sectorEdges = {minEdge, maxEdge};
-      std::pair<double, double> phisMinR = {
-          Acts::VectorHelpers::phi(cartesianEdges[0]),
-          Acts::VectorHelpers::phi(cartesianEdges[2])};
-      std::pair<double, double> phisMaxR = {
-          Acts::VectorHelpers::phi(cartesianEdges[2]),
-          Acts::VectorHelpers::phi(cartesianEdges[3])};
-      polarE = {phisMinR, phisMaxR};
+      return annulusMask(*aBounds, segment, startInside);
     }
-
-    Acts::detail::IntersectionHelper2D intersector;
-
-    std::array<PolarSegment, 2> segEdges = {
-        PolarSegment(segment[0], segment[0], segment[1], startInside),
-        PolarSegment(segment[1], segment[1], segment[0], endInside)};
-
-    // Clip to radial bound
-    for (auto& se : segEdges) {
-      Acts::Intersection2D solution;
-      if (not se.inside) {
-        Acts::Vector2D sedir = (se.end - se.start).normalized();
-        for (const auto& sector : sectorEdges) {
-          auto tSolution = intersector.intersectSegment(sector[0], sector[1],
-                                                        se.start, sedir, true);
-          if (tSolution and tSolution.pathLength > 0. and
-              tSolution.pathLength < solution.pathLength) {
-            se.clipped = tSolution.position;
-            solution = tSolution;
-          }
-        }
-        size_t ir = 0;
-        // Check radial first
-        for (auto r : radialE) {
-          auto tSolution = intersector.intersectCircleSegment(
-              r, polarE[ir].first, polarE[ir].second, se.start, sedir);
-          if (tSolution and tSolution.pathLength > 0. and
-              tSolution.pathLength < solution.pathLength) {
-            se.clipped = tSolution.position;
-            solution = tSolution;
-          }
-          ++ir;
-        }
-        // No clipping happened
-        if (not solution) {
-          return DigitizationError::MaskingError;
-        }
-      }
-    }
-    clipped = {segEdges[0].clipped, segEdges[1].clipped};
-    return clipped;
   }
   return DigitizationError::UndefinedSurface;
 }
 
-Acts::Result<Acts::Vector2D> ActsFatras::PlanarSurfaceMask::polygonMask(
-    const Acts::Vector2D& outside, const Acts::Vector2D& inside,
-    const std::vector<Acts::Vector2D>& vertices) const {
-  Acts::Intersection2D solution;
-  Acts::detail::IntersectionHelper2D intersector;
+Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
+ActsFatras::PlanarSurfaceMask::polygonMask(
+    const std::vector<Acts::Vector2D>& vertices, const Segment2D& segment,
+    bool firstInside) const {
+  std::vector<Acts::Intersection2D> intersections;
+  Acts::Vector2D sVector(segment[1] - segment[0]);
+  Acts::Vector2D sDir = sVector.normalized();
+  double sLength = sVector.norm();
 
   for (size_t iv = 0; iv < vertices.size(); ++iv) {
     const Acts::Vector2D& s0 = vertices[iv];
     const Acts::Vector2D& s1 =
         (iv + 1) < vertices.size() ? vertices[iv + 1] : vertices[0];
+    checkIntersection(
+        intersections,
+        intersector.intersectSegment(s0, s1, segment[0], sDir, true), sLength);
+  }
+  return maskAndReturn(intersections, segment, firstInside);
+}
 
-    Acts::Vector2D lineSegment2D = (inside - outside).normalized();
-    auto intersection =
-        intersector.intersectSegment(s0, s1, outside, lineSegment2D, true);
-    if (intersection and intersection.pathLength < solution.pathLength) {
-      solution = intersection;
+Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
+ActsFatras::PlanarSurfaceMask::radialMask(const Acts::RadialBounds& rBounds,
+                                          const Segment2D& segment,
+                                          const Segment2D& polarSegment,
+                                          bool firstInside) const {
+  double rMin = rBounds.get(Acts::RadialBounds::eMinR);
+  double rMax = rBounds.get(Acts::RadialBounds::eMaxR);
+  double hPhi = rBounds.get(Acts::RadialBounds::eHalfPhiSector);
+  double aPhi = rBounds.get(Acts::RadialBounds::eAveragePhi);
+
+  std::array<double, 2> radii = {rMin, rMax};
+  std::array<double, 2> phii = {aPhi - hPhi, aPhi + hPhi};
+
+  std::vector<Acts::Intersection2D> intersections;
+  Acts::Vector2D sVector(segment[1] - segment[0]);
+  Acts::Vector2D sDir = sVector.normalized();
+  double sLength = sVector.norm();
+
+  double sR = polarSegment[0][Acts::eBoundLoc0];
+  double eR = polarSegment[1][Acts::eBoundLoc0];
+  double sPhi = polarSegment[0][Acts::eBoundLoc1];
+  double ePhi = polarSegment[1][Acts::eBoundLoc1];
+
+  // Helper method to intersect phi boundaries
+  auto intersectPhiLine = [&](double phi) -> void {
+    Acts::Vector2D s0(rMin * std::cos(phi), rMin * std::sin(phi));
+    Acts::Vector2D s1(rMax * std::cos(phi), rMax * std::sin(phi));
+    checkIntersection(
+        intersections,
+        intersector.intersectSegment(s0, s1, segment[0], sDir, true), sLength);
+  };
+
+  // Helper method to intersect radial full boundaries
+  auto intersectCircle = [&](double r) -> void {
+    auto cIntersections = intersector.intersectCircle(r, segment[0], sDir);
+    for (const auto& intersection : cIntersections) {
+      checkIntersection(intersections, intersection, sLength);
+    }
+  };
+
+  // Intersect phi lines
+  if ((M_PI - hPhi) > Acts::s_epsilon) {
+    if (sPhi < phii[0] or ePhi < phii[0]) {
+      intersectPhiLine(phii[0]);
+    }
+    if (sPhi > phii[1] or ePhi > phii[1]) {
+      intersectPhiLine(phii[1]);
+    }
+    // Intersect radial segments
+    if (sR < radii[0] or eR < radii[0]) {
+      checkIntersection(intersections,
+                        intersector.intersectCircleSegment(
+                            radii[0], phii[0], phii[1], segment[0], sDir),
+                        sLength);
+    }
+    if (sR > radii[1] or eR > radii[1]) {
+      checkIntersection(intersections,
+                        intersector.intersectCircleSegment(
+                            radii[1], phii[0], phii[1], segment[0], sDir),
+                        sLength);
+    }
+  } else {
+    // Full radial set
+    // Intersect radial segments
+    if (sR < radii[0] or eR < radii[0]) {
+      intersectCircle(radii[0]);
+    }
+    if (sR > radii[1] or eR > radii[1]) {
+      intersectCircle(radii[1]);
     }
   }
+  return maskAndReturn(intersections, segment, firstInside);
+}
 
-  if (solution.status == Acts::Intersection2D::Status::reachable) {
-    return Acts::Result<Acts::Vector2D>::success(solution.position);
+Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D>
+ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
+                                           const Segment2D& segment,
+                                           bool firstInside) const {
+  auto vertices = aBounds.vertices(0);
+  Acts::Vector2D moduleOrigin = aBounds.moduleOrigin();
+
+  std::array<std::array<unsigned int, 2>, 2> edgeCombos = {
+      std::array<unsigned int, 2>{0, 3}, std::array<unsigned int, 2>{1, 2}};
+
+  std::vector<Acts::Intersection2D> intersections;
+  Acts::Vector2D sVector(segment[1] - segment[0]);
+  Acts::Vector2D sDir = sVector.normalized();
+  double sLength = sVector.norm();
+  // First the phi edges in strip system
+  for (const auto& ec : edgeCombos) {
+    checkIntersection(
+        intersections,
+        intersector.intersectSegment(vertices[ec[0]], vertices[ec[1]],
+                                     segment[0], sDir, true),
+        sLength);
   }
-  return Acts::Result<Acts::Vector2D>::failure(DigitizationError::MaskingError);
+
+  // Shift them to get the module phi and intersect
+  std::array<unsigned int, 4> phii = {1, 0, 2, 3};
+  for (unsigned int iarc = 0; iarc < 2; ++iarc) {
+    Acts::Intersection2D intersection = intersector.intersectCircleSegment(
+        aBounds.get(static_cast<Acts::AnnulusBounds::BoundValues>(iarc)),
+        Acts::VectorHelpers::phi(vertices[phii[iarc * 2]] - moduleOrigin),
+        Acts::VectorHelpers::phi(vertices[phii[iarc * 2 + 1]] - moduleOrigin),
+        segment[0] - moduleOrigin, sDir);
+    if (intersection) {
+      intersection.position += moduleOrigin;
+      checkIntersection(intersections, intersection, sLength);
+    }
+  }
+  return maskAndReturn(intersections, segment, firstInside);
 }
