@@ -63,7 +63,7 @@ class SingleFreeTrackParameters {
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   SingleFreeTrackParameters(const ParametersVector& params,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(params), m_cov(std::move(cov)), m_chargeInterpreter(T()) {}
+      : m_params(params), m_cov(std::move(cov)) {}
 
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
@@ -107,9 +107,7 @@ class SingleFreeTrackParameters {
   SingleFreeTrackParameters(const Vector4D& pos4, Scalar phi, Scalar theta,
                             Scalar qOverP,
                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(FreeVector::Zero()),
-        m_cov(std::move(cov)),
-        m_chargeInterpreter(T()) {
+      : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
     auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
@@ -121,8 +119,14 @@ class SingleFreeTrackParameters {
     m_params[eFreeQOverP] = qOverP;
   }
 
-  // this class does not have a custom default constructor and thus should not
-  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
+  /// Parameters are not default constructible due to the charge type.
+  SingleFreeTrackParameters() = delete;
+  SingleFreeTrackParameters(const SingleFreeTrackParameters&) = default;
+  SingleFreeTrackParameters(SingleFreeTrackParameters&&) = default;
+  ~SingleFreeTrackParameters() = default;
+  SingleFreeTrackParameters& operator=(const SingleFreeTrackParameters&) =
+      default;
+  SingleFreeTrackParameters& operator=(SingleFreeTrackParameters&&) = default;
 
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
