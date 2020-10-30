@@ -392,12 +392,15 @@ class KalmanFitter {
       result.reversed = true;
       result.reset = true;
 
+      // Reverse navigation direction
+      state.stepping.navDir = (state.stepping.navDir == forward)? backward: forward;
+
       // Reset propagator options
       state.options.maxStepSize =
-          -1.0 * state.options.maxStepSize * state.stepping.navDir;
+          -1.0 * state.options.maxStepSize;
       // Not sure if reset of pathLimit during propagation makes any sense
       state.options.pathLimit =
-          -1.0 * state.options.pathLimit * state.stepping.navDir;
+          -1.0 * state.options.pathLimit;
 
       // Reset stepping&navigation state using last measurement track state on
       // sensitive surface
@@ -420,7 +423,7 @@ class KalmanFitter {
           stepper.resetState(
               state.stepping, st.filtered(), st.filteredCovariance(),
               st.referenceSurface(),
-              static_cast<NavigationDirection>(-1 * state.stepping.navDir),
+              state.stepping.navDir,
               state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
@@ -508,7 +511,7 @@ class KalmanFitter {
         if (not m_outlierFinder(trackStateProxy)) {
           // Run Kalman update
           auto updateRes = m_updater(state.geoContext, trackStateProxy,
-                                     state.stepping.navDir);
+                                     state.stepping.navDir, logger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -679,7 +682,7 @@ class KalmanFitter {
 
         // If the update is successful, set covariance and
         auto updateRes = m_updater(state.geoContext, trackStateProxy,
-                                   state.navigation.navDir, logger);
+                                   state.stepping.navDir, logger);
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
