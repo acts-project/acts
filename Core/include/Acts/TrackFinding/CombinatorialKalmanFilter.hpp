@@ -1017,7 +1017,7 @@ class CombinatorialKalmanFilter {
         return Result<void>::success();
       }
 
-       // Obtain the smoothed parameters at first/last measurement state
+      // Obtain the smoothed parameters at first/last measurement state
       auto firstCreatedMeasurement =
           result.fittedStates.getTrackState(measurementIndices.back());
       auto lastCreatedMeasurement =
@@ -1045,8 +1045,9 @@ class CombinatorialKalmanFilter {
       // stepping if necessary.
       // @note The stepping parameters is updated to the smoothed parameters at
       // either the first measurement state or the last measurement state. It
-      // assumes the target surface is not within the first and the last smoothed measurement state. Also, whether the
-      // intersection is on surface is not checked here.
+      // assumes the target surface is not within the first and the last
+      // smoothed measurement state. Also, whether the intersection is on
+      // surface is not checked here.
       bool reverseDirection = false;
       bool closerToFirstCreatedMeasurement =
           (std::abs(firstIntersection.intersection.pathLength) <=
@@ -1063,7 +1064,7 @@ class CombinatorialKalmanFilter {
       const auto& surface = closerToFirstCreatedMeasurement
                                 ? firstCreatedMeasurement.referenceSurface()
                                 : lastCreatedMeasurement.referenceSurface();
-       ACTS_VERBOSE(
+      ACTS_VERBOSE(
           "Smoothing successful, updating stepping state to smoothed "
           "parameters at surface "
           << surface.geometryId() << ". Prepared to reach the target surface.");

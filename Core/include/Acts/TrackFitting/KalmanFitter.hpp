@@ -390,7 +390,7 @@ class KalmanFitter {
                  result_type& result) const {
       // Remember the navigation direciton has been reversed
       result.reversed = true;
-      // The reset is used for resetting the navigation 
+      // The reset is used for resetting the navigation
       result.reset = true;
 
       // Reverse navigation direction
@@ -888,8 +888,9 @@ class KalmanFitter {
       // stepping if necessary.
       // @note The stepping parameters is updated to the smoothed parameters at
       // either the first measurement state or the last measurement state. It
-      // assumes the target surface is not within the first and the last smoothed measurement state. Also, whether the
-      // intersection is on surface is not checked here.
+      // assumes the target surface is not within the first and the last
+      // smoothed measurement state. Also, whether the intersection is on
+      // surface is not checked here.
       bool reverseDirection = false;
       bool closerToFirstCreatedMeasurement =
           (std::abs(firstIntersection.intersection.pathLength) <=
