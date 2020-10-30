@@ -24,6 +24,29 @@ inline T wrap_periodic(T value, T start, T range) {
              : (value - range * floor(diff / range));
 }
 
+/// Compute the minimal `lhs - rhs` using the periodicity.
+///
+/// Imagine you have two values within the nominal range: `l` is close to the
+/// lower edge and `u` is close to the upper edge. The naive difference between
+/// the two is almost as large as the range itself. If we move `l` to its
+/// equivalent value outside the nominal range, i.e. just above the upper edge,
+/// the effective absolute difference becomes smaller.
+///
+/// @note The sign of the returned value can be different from `lhs - rhs`
+template <typename T>
+inline T difference_periodic(T lhs, T rhs, T range) {
+  using std::fmod;
+  T delta = fmod(lhs - rhs, range);
+  // check if |delta| is larger than half the range. if that is the case, we
+  // can move either rhs/lhs by one range/period to get a smaller |delta|.
+  if ((2 * delta) < -range) {
+    delta += range;
+  } else if (range <= (2 * delta)) {
+    delta -= range;
+  }
+  return delta;
+}
+
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
 inline T radian_pos(T x) {
