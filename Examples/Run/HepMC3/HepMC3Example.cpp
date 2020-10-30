@@ -59,26 +59,21 @@ int main(int argc, char** argv) {
   using ActsExamples::HepMC3Event;
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
-  if (momentumUnit(genevt) ==
-      Acts::UnitConstants::GeV)
+  if (momentumUnit(genevt) == Acts::UnitConstants::GeV)
     std::cout << "[GEV], ";
-  else if (momentumUnit(genevt) ==
-           Acts::UnitConstants::MeV)
+  else if (momentumUnit(genevt) == Acts::UnitConstants::MeV)
     std::cout << "[MeV], ";
   if (lengthUnit(genevt) == Acts::UnitConstants::mm)
     std::cout << "[mm]" << std::endl;
-  else if (lengthUnit(genevt) ==
-           Acts::UnitConstants::cm)
+  else if (lengthUnit(genevt) == Acts::UnitConstants::cm)
     std::cout << "[cm]" << std::endl;
   Acts::Vector3D evtPos = eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
             << evtPos(2) << std::endl;
-  std::cout << "Event time: " << eventTime(genevt)
-            << std::endl;
+  std::cout << "Event time: " << eventTime(genevt) << std::endl;
 
   std::cout << "Beam particles: ";
-  std::vector<ActsExamples::SimParticle> beam =
-      beams(genevt);
+  std::vector<ActsExamples::SimParticle> beam = beams(genevt);
   if (beam.empty())
     std::cout << "none" << std::endl;
   else {
@@ -108,8 +103,7 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Total particle record:" << std::endl;
-  std::vector<ActsExamples::SimParticle> particles =
-      particles(genevt);
+  std::vector<ActsExamples::SimParticle> particles = particles(genevt);
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
               << "\tID:" << particle.particleId() << ", momentum: ("
@@ -118,8 +112,7 @@ int main(int argc, char** argv) {
               << "), mass:  " << particle.mass() << std::endl;
 
   std::cout << std::endl << "Initial to final state: ";
-  std::vector<ActsExamples::SimParticle> fState =
-      finalState(genevt);
+  std::vector<ActsExamples::SimParticle> fState = finalState(genevt);
   for (auto& pbeam : beam)
     std::cout << HepPID::particleName(pbeam.pdg()) << " ";
   std::cout << "-> ";
