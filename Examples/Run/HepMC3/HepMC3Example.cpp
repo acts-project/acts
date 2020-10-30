@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Total particle record:" << std::endl;
-  std::vector<ActsExamples::SimParticle> particles = 
+  std::vector<ActsExamples::SimParticle> particles =
       ActsExamples::HepMC3Event::particles(genevt);
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
