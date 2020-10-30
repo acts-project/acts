@@ -36,9 +36,9 @@ void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
 
 /// Helper method to apply the mask and return.
 ///
-/// If two (ore more) intersections would be good, appply the first two
+/// If two (or more) intersections would be good, appply the first two
 /// If only one is available, the boolean tells you which one it is.
-/// If no intersection is valide, return an error code for masking.
+/// If no intersection is valid, return an error code for masking.
 ///
 /// @param intersections All confirmed intersections
 /// @param segment The original segment before masking

@@ -103,16 +103,13 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
     // List of vertices counter-clockwise starting with left inner
     std::vector<Acts::Vector2D> rvertices;
 
-    // Shift them to get the module phi
-    double phiMinInner = VectorHelpers::phi(m_inLeftStripXY - m_moduleOrigin);
-    double phiMaxInner = VectorHelpers::phi(m_inRightStripXY - m_moduleOrigin);
-    double phiMinOuter = VectorHelpers::phi(m_outRightStripXY - m_moduleOrigin);
-    double phiMaxOuter = VectorHelpers::phi(m_outLeftStripXY - m_moduleOrigin);
-
-    std::vector<double> phisInner =
-        detail::VerticesHelper::phiSegments(phiMinInner, phiMaxInner);
-    std::vector<double> phisOuter =
-        detail::VerticesHelper::phiSegments(phiMinOuter, phiMaxOuter);
+    using VectorHelpers::phi;
+    std::vector<double> phisInner = detail::VerticesHelper::phiSegments(
+        phi(m_inRightStripXY - m_moduleOrigin),
+        phi(m_inLeftStripXY - m_moduleOrigin));
+    std::vector<double> phisOuter = detail::VerticesHelper::phiSegments(
+        phi(m_outLeftStripXY - m_moduleOrigin),
+        phi(m_outRightStripXY - m_moduleOrigin));
 
     // Inner bow from phi_min -> phi_max
     for (unsigned int iseg = 0; iseg < phisInner.size() - 1; ++iseg) {
@@ -121,7 +118,7 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
           rvertices, {get(eMinR), get(eMinR)}, phisInner[iseg],
           phisInner[iseg + 1], lseg, addon);
     }
-    // Upper bow from phi_min -> phi_max
+    // Upper bow from phi_max -> phi_min
     for (unsigned int iseg = 0; iseg < phisOuter.size() - 1; ++iseg) {
       int addon = (iseg == phisOuter.size() - 2) ? 1 : 0;
       detail::VerticesHelper::createSegment<Vector2D, Transform2D>(

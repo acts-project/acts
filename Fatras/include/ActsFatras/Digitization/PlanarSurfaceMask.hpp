@@ -32,6 +32,13 @@ struct PlanarSurfaceMask {
   ///
   /// @note Only PlaneSurface/DiscSurface are supported
   ///
+  /// @note If both end points of the segment are inside, the segment
+  /// is not clipped/masked, even if it would cross a surface boundary.
+  /// Examples for those would be non-covex polygons or segments on a
+  /// radial bound, where the radial boundary is crossed. Such segments
+  /// do not occur in Digitization, as the hit has to be inside the
+  /// surface bounds to start with.
+  ///
   /// @param surface The surface in question
   /// @param segment The track segment (on surface)
   ///
