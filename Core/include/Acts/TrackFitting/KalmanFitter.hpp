@@ -393,15 +393,14 @@ class KalmanFitter {
       result.reset = true;
 
       // Reverse navigation direction
-      state.stepping.navDir = (state.stepping.navDir == forward)? backward: forward;
+      state.stepping.navDir =
+          (state.stepping.navDir == forward) ? backward : forward;
 
-      // @note The following reset might be removed since it's always the absolute value of them are used
-      // Reset propagator options
-      state.options.maxStepSize =
-          -1.0 * state.options.maxStepSize;
+      // @note The following reset might be removed since it's always the
+      // absolute value of them are used Reset propagator options
+      state.options.maxStepSize = -1.0 * state.options.maxStepSize;
       // Not sure if reset of pathLimit during propagation makes any sense
-      state.options.pathLimit =
-          -1.0 * state.options.pathLimit;
+      state.options.pathLimit = -1.0 * state.options.pathLimit;
 
       // Reset stepping&navigation state using last measurement track state on
       // sensitive surface
@@ -421,11 +420,9 @@ class KalmanFitter {
           state.navigation.currentVolume = state.navigation.startVolume;
 
           // Update the stepping state
-          stepper.resetState(
-              state.stepping, st.filtered(), st.filteredCovariance(),
-              st.referenceSurface(),
-              state.stepping.navDir,
-              state.options.maxStepSize);
+          stepper.resetState(state.stepping, st.filtered(),
+                             st.filteredCovariance(), st.referenceSurface(),
+                             state.stepping.navDir, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
           st.smoothed() = st.filtered();
@@ -879,18 +876,19 @@ class KalmanFitter {
           state.options.geoContext, firstCreatedMeasurement);
       auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
           state.options.geoContext, lastCreatedMeasurement);
-      // Get the intersection of the smoothed free parameters with the target
+      // Get the intersections of the smoothed free parameters with the target
       // surface
       const auto firstIntersection = target(firstParams);
       const auto lastIntersection = target(lastParams);
 
-      // Update the stepping parameters - in order to progress to destination
+      // Update the stepping parameters - in order to progress to destination.
+      // At the same time, reverse navigation direction for further
+      // stepping if necessary.
       // @note The stepping parameters is updated to the smoothed parameters at
       // either the first measurement state or the last measurement state. It
-      // assums the target surface is not within the
-      // first and the last smoothed measurement state
-      // Decide whether need to reverse navigation direction for further
-      // stepping
+      // assumes the target surface is not within the
+      // first and the last smoothed measurement state. Also, whether the
+      // intersection is on surface is not checked here.
       bool reverseDirection = false;
       bool closerToFirstCreatedMeasurement =
           (std::abs(firstIntersection.intersection.pathLength) <=
@@ -917,11 +915,12 @@ class KalmanFitter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = (state.stepping.navDir == forward)? backward: forward;
+        state.stepping.navDir =
+            (state.stepping.navDir == forward) ? backward : forward;
       }
       // Reset the step size
-      state.stepping.stepSize =
-          ConstrainedStep(state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(
+          state.stepping.navDir * std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 

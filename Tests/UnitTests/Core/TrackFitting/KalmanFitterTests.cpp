@@ -272,10 +272,10 @@ struct MinimalOutlierFinder {
 
     // In case the chi2 is too small
     if (chi2 < chi2Tolerance) {
-	    if(chi2<0){
-	     std::cout<<"WARNING: negative Chi2: "<< chi2<< "found"<<std::endl; 
-	    } 
-	    return false;
+      if (chi2 < 0) {
+        std::cout << "WARNING: negative Chi2: " << chi2 << "found" << std::endl;
+      }
+      return false;
     }
     // The chisq distribution
     boost::math::chi_squared chiDist(state.calibratedSize());
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitter kFitter(rPropagator);
 
-  // Test 1: The nominal fit  
+  // Test 1: The nominal fit
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedTrack = *fitRes;
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   });
   BOOST_CHECK_EQUAL(nOutliers, 1u);
 
-  // Test 7: Run reversed filtering as smoothing 
+  // Test 7: Run reversed filtering as smoothing
   kfOptions.reversedFiltering = true;
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
@@ -550,8 +550,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
 
-  // Test 9: Run filtering in outward->inward with starting parameters near the tracker exit
-  // Construct a curvilinear parameters near the tracker exit
+  // Test 9: Run filtering in outward->inward with starting parameters near the
+  // tracker exit Construct a curvilinear parameters near the tracker exit
   Vector4D rPos4Outer(3._m, 10_um * gauss(generator), 100_um * gauss(generator),
                       42_ns);
   CurvilinearTrackParameters rStartOuter(rPos4Outer, rDir, 1_e / 1_GeV, cov);
