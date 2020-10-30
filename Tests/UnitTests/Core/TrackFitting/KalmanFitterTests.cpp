@@ -557,6 +557,11 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   kfOptions.propagatorPlainOptions.direction = backward;
   fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
   BOOST_CHECK(fitRes.ok());
+
+  // Fit with reversed filtering
+  kfOptions.bidirectionalFiltering = true;
+  fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
+  BOOST_CHECK(fitRes.ok());
 }
 
 }  // namespace Test
