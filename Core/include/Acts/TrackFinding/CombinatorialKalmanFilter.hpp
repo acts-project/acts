@@ -1011,24 +1011,74 @@ class CombinatorialKalmanFilter {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-      // Obtain the smoothed parameters at first measurement state
-      auto firstMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
 
-      // Update the stepping parameters - in order to progress to destination
-      ACTS_VERBOSE(
-          "Smoothing successful, updating stepping state, "
-          "set target surface.");
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeSmoothed(
-                         state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
-      // Reverse the propagation direction
-      state.stepping.stepSize =
-          ConstrainedStep(-1. * state.options.maxStepSize);
-      state.stepping.navDir = backward;
-      // Set accumulatd path to zero before targeting surface
-      state.stepping.pathAccumulated = 0.;
+      // Return in case no target surface
+      if (targetSurface == nullptr) {
+        return Result<void>::success();
+      }
+
+       // Obtain the smoothed parameters at first/last measurement state
+      auto firstCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.back());
+      auto lastCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.front());
+
+      // Lambda to get the intersection of the free params on the target surface
+      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+        return targetSurface->intersect(
+            state.geoContext, freeVector.segment<3>(eFreePos0),
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+      };
+
+      // The smoothed free params at the first/last measurement state
+      auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, firstCreatedMeasurement);
+      auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, lastCreatedMeasurement);
+      // Get the intersections of the smoothed free parameters with the target
+      // surface
+      const auto firstIntersection = target(firstParams);
+      const auto lastIntersection = target(lastParams);
+
+      // Update the stepping parameters - in order to progress to destination.
+      // At the same time, reverse navigation direction for further
+      // stepping if necessary.
+      // @note The stepping parameters is updated to the smoothed parameters at
+      // either the first measurement state or the last measurement state. It
+      // assumes the target surface is not within the first and the last smoothed measurement state. Also, whether the
+      // intersection is on surface is not checked here.
+      bool reverseDirection = false;
+      bool closerToFirstCreatedMeasurement =
+          (std::abs(firstIntersection.intersection.pathLength) <=
+           std::abs(lastIntersection.intersection.pathLength));
+      if (closerToFirstCreatedMeasurement) {
+        stepper.update(state.stepping, firstParams,
+                       firstCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (firstIntersection.intersection.pathLength < 0);
+      } else {
+        stepper.update(state.stepping, lastParams,
+                       lastCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (lastIntersection.intersection.pathLength < 0);
+      }
+      const auto& surface = closerToFirstCreatedMeasurement
+                                ? firstCreatedMeasurement.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
+       ACTS_VERBOSE(
+          "Smoothing successful, updating stepping state to smoothed "
+          "parameters at surface "
+          << surface.geometryId() << ". Prepared to reach the target surface.");
+
+      // Reverse the navigation direction if necessary
+      if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
+        state.stepping.navDir =
+            (state.stepping.navDir == forward) ? backward : forward;
+      }
+      // Reset the step size
+      state.stepping.stepSize = ConstrainedStep(
+          state.stepping.navDir * std::abs(state.options.maxStepSize));
 
       return Result<void>::success();
     }
