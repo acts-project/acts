@@ -57,7 +57,7 @@ struct Neutral {
   /// This constructor is only provided to allow consistent construction.
   template <typename T>
   constexpr Neutral(T absQ) noexcept {
-    assert((absQ == 0.0f) and "Input charge must be zero");
+    assert((absQ == static_cast<T>(0)) and "Input charge must be zero");
     // suppress `unused variable` warning in non-debug builds
     (void)(absQ);
   }
