@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   }
   std::cout << std::endl;
 
-  using ActsExamples::HepMC3Event;
+  using namespace ActsExamples::HepMC3Event;
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
   if (momentumUnit(genevt) == Acts::UnitConstants::GeV)
