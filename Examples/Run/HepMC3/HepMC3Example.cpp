@@ -56,28 +56,29 @@ int main(int argc, char** argv) {
   }
   std::cout << std::endl;
 
+  using ActsExamples::HepMC3Event;
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
-  if (ActsExamples::HepMC3Event::momentumUnit(genevt) ==
+  if (momentumUnit(genevt) ==
       Acts::UnitConstants::GeV)
     std::cout << "[GEV], ";
-  else if (ActsExamples::HepMC3Event::momentumUnit(genevt) ==
+  else if (momentumUnit(genevt) ==
            Acts::UnitConstants::MeV)
     std::cout << "[MeV], ";
-  if (ActsExamples::HepMC3Event::lengthUnit(genevt) == Acts::UnitConstants::mm)
+  if (lengthUnit(genevt) == Acts::UnitConstants::mm)
     std::cout << "[mm]" << std::endl;
-  else if (ActsExamples::HepMC3Event::lengthUnit(genevt) ==
+  else if (lengthUnit(genevt) ==
            Acts::UnitConstants::cm)
     std::cout << "[cm]" << std::endl;
-  Acts::Vector3D evtPos = ActsExamples::HepMC3Event::eventPos(genevt);
+  Acts::Vector3D evtPos = eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
             << evtPos(2) << std::endl;
-  std::cout << "Event time: " << ActsExamples::HepMC3Event::eventTime(genevt)
+  std::cout << "Event time: " << eventTime(genevt)
             << std::endl;
 
   std::cout << "Beam particles: ";
   std::vector<ActsExamples::SimParticle> beam =
-      ActsExamples::HepMC3Event::beams(genevt);
+      beams(genevt);
   if (beam.empty())
     std::cout << "none" << std::endl;
   else {
@@ -88,7 +89,7 @@ int main(int argc, char** argv) {
 
   std::cout << std::endl << "Vertices: ";
   std::vector<std::unique_ptr<ActsExamples::SimVertex>> vertices =
-      ActsExamples::HepMC3Event::vertices(genevt);
+      vertices(genevt);
   if (vertices.empty())
     std::cout << "none" << std::endl;
   else {
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
 
   std::cout << "Total particle record:" << std::endl;
   std::vector<ActsExamples::SimParticle> particles =
-      ActsExamples::HepMC3Event::particles(genevt);
+      particles(genevt);
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
               << "\tID:" << particle.particleId() << ", momentum: ("
@@ -118,7 +119,7 @@ int main(int argc, char** argv) {
 
   std::cout << std::endl << "Initial to final state: ";
   std::vector<ActsExamples::SimParticle> fState =
-      ActsExamples::HepMC3Event::finalState(genevt);
+      finalState(genevt);
   for (auto& pbeam : beam)
     std::cout << HepPID::particleName(pbeam.pdg()) << " ";
   std::cout << "-> ";

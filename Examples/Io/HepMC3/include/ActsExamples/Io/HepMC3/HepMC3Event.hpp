@@ -20,7 +20,7 @@
 
 namespace ActsExamples {
 
-/// Helper struct to convert HepMC3 event to the internal format.
+/// Helper functions to convert HepMC3 event to the internal format.
 namespace HepMC3Event {
 ///
 /// Setter
