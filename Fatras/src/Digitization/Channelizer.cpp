@@ -16,19 +16,22 @@ std::vector<ActsFatras::Channelizer::ChannelSegment>
 ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
                                   const Acts::Surface& surface,
                                   const Acts::BinUtility& segmentation,
-                                  const Acts::Vector2D& start,
-                                  const Acts::Vector2D& end) const {
+                                  const Segment2D& segment) const {
   // Return if the segmentation is not two-dimensional
   // (strips need to have one bin along the strip)
   if (segmentation.dimensions() != 2) {
     return {};
   }
 
+  // Start and end point
+  const auto& start = segment[0];
+  const auto& end = segment[1];
+
   // Full path length - the full channel
   auto segment2d = (end - start);
   std::vector<ChannelStep> cSteps;
-  std::array<unsigned int, 2> bstart = {0, 0};
-  std::array<unsigned int, 2> bend = {0, 0};
+  Bin2D bstart = {0, 0};
+  Bin2D bend = {0, 0};
 
   if (surface.type() == Acts::Surface::SurfaceType::Plane) {
     // Get the segmentation and convert it to lines & arcs
@@ -135,8 +138,8 @@ ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,
   std::vector<ChannelSegment> cSegments;
   cSegments.reserve(cSteps.size());
 
-  std::array<unsigned int, 2> currentBin = {bstart[0], bstart[1]};
-  std::array<int, 2> lastDelta = {0, 0};
+  Bin2D currentBin = {bstart[0], bstart[1]};
+  BinDelta2D lastDelta = {0, 0};
   Acts::Vector2D lastIntersect = start;
   double lastPath = 0.;
   for (auto& cStep : cSteps) {
