@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
   std::cout << std::endl << "Vertices: ";
   std::vector<std::unique_ptr<ActsExamples::SimVertex>> vertices =
-      vertices(genevt);
+      ActsExamples::HepMC3Event::vertices(genevt);
   if (vertices.empty())
     std::cout << "none" << std::endl;
   else {
@@ -103,7 +103,8 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Total particle record:" << std::endl;
-  std::vector<ActsExamples::SimParticle> particles = particles(genevt);
+  std::vector<ActsExamples::SimParticle> particles = 
+      ActsExamples::HepMC3Event::particles(genevt);
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
               << "\tID:" << particle.particleId() << ", momentum: ("
