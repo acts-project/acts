@@ -271,8 +271,11 @@ struct MinimalOutlierFinder {
         });
 
     // In case the chi2 is too small
-    if (std::abs(chi2) < chi2Tolerance) {
-      return false;
+    if (chi2 < chi2Tolerance) {
+	    if(chi2<0){
+	     std::cout<<"WARNING: negative Chi2: "<< chi2<< "found"<<std::endl; 
+	    } 
+	    return false;
     }
     // The chisq distribution
     boost::math::chi_squared chiDist(state.calibratedSize());
@@ -517,17 +520,17 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(nOutliers, 1u);
 
   // Test 7: Run reversed filtering as smoothing 
-  kfOptions.bidirectionalFiltering = true;
+  kfOptions.reversedFiltering = true;
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
-  auto fittedWithBwdFiltering = *fitRes;
+  auto fittedWithReversedFiltering = *fitRes;
   // Check the filtering and smoothing status flag
-  BOOST_CHECK(fittedWithBwdFiltering.reversed);
-  BOOST_CHECK(not fittedWithBwdFiltering.smoothed);
+  BOOST_CHECK(fittedWithReversedFiltering.reversed);
+  BOOST_CHECK(not fittedWithReversedFiltering.smoothed);
 
   // Count the number of 'smoothed' states
-  trackTip = fittedWithBwdFiltering.trackTip;
-  mj = fittedWithBwdFiltering.fittedStates;
+  trackTip = fittedWithReversedFiltering.trackTip;
+  mj = fittedWithReversedFiltering.fittedStates;
   size_t nSmoothed = 0;
   mj.visitBackwards(trackTip, [&](const auto& state) {
     if (state.hasSmoothed())
@@ -536,7 +539,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(nSmoothed, 6u);
 
   // Reset to use smoothing formalism
-  kfOptions.bidirectionalFiltering = false;
+  kfOptions.reversedFiltering = false;
 
   // Test 8: Target surface near the tracker exit
   // Construct a boundless plane surface near the tracker exit
@@ -559,7 +562,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK(fitRes.ok());
 
   // Test 10: Similar to test 9, but run reversed filtering as smoothing
-  kfOptions.bidirectionalFiltering = true;
+  kfOptions.reversedFiltering = true;
   fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
   BOOST_CHECK(fitRes.ok());
 

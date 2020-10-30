@@ -61,7 +61,7 @@ struct KalmanFitterOptions {
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
-  /// @param biDirFiltering Whether to run filtering in reversed direction as
+  /// @param rFiltering Whether to run filtering in reversed direction as
   /// smoothing
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
@@ -71,7 +71,7 @@ struct KalmanFitterOptions {
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool biDirFiltering = false)
+                      bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -81,7 +81,7 @@ struct KalmanFitterOptions {
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        bidirectionalFiltering(biDirFiltering),
+        reversedFiltering(rFiltering),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
@@ -112,7 +112,7 @@ struct KalmanFitterOptions {
   bool energyLoss = true;
 
   /// Whether to run filtering in reversed direction
-  bool bidirectionalFiltering = false;
+  bool reversedFiltering = false;
 
   /// Logger
   LoggerWrapper logger;
@@ -227,7 +227,7 @@ class KalmanFitter {
     bool energyLoss = true;
 
     /// Whether run reversed filtering
-    bool bidirectionalFiltering = false;
+    bool reversedFiltering = false;
 
     /// @brief Kalman actor operation
     ///
@@ -305,7 +305,7 @@ class KalmanFitter {
         if (result.measurementStates == inputMeasurements.size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
-          if (bidirectionalFiltering) {
+          if (reversedFiltering) {
             // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
@@ -334,7 +334,7 @@ class KalmanFitter {
           // If no target surface provided:
           // -> Return an error when using reversed filtering mode
           // -> Fitting is finished here
-          if (bidirectionalFiltering) {
+          if (reversedFiltering) {
             ACTS_ERROR(
                 "The target surface needed for aborting reversed propagation "
                 "is not provided");
@@ -355,7 +355,7 @@ class KalmanFitter {
           result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
           // Reset smoothed status of states missed in reversed filtering
-          if (bidirectionalFiltering) {
+          if (reversedFiltering) {
             result.fittedStates.applyBackwards(
                 result.trackTip, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
@@ -395,6 +395,7 @@ class KalmanFitter {
       // Reverse navigation direction
       state.stepping.navDir = (state.stepping.navDir == forward)? backward: forward;
 
+      // @note The following reset might be removed since it's always the absolute value of them are used
       // Reset propagator options
       state.options.maxStepSize =
           -1.0 * state.options.maxStepSize;
@@ -916,11 +917,11 @@ class KalmanFitter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = NavigationDirection(-1 * state.stepping.navDir);
+        state.stepping.navDir = (state.stepping.navDir == forward)? backward: forward;
       }
       // Reset the step size
       state.stepping.stepSize =
-          ConstrainedStep(state.stepping.navDir * state.options.maxStepSize);
+          ConstrainedStep(state.stepping.navDir * std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
@@ -1024,7 +1025,7 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.bidirectionalFiltering = kfOptions.bidirectionalFiltering;
+    kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
@@ -1119,7 +1120,7 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.bidirectionalFiltering = kfOptions.bidirectionalFiltering;
+    kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 

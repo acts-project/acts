@@ -26,7 +26,7 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
                                                 boundParams),
          cov);
   state.navDir = navDir;
-  state.stepSize = ConstrainedStep(stepSize);
+  state.stepSize = ConstrainedStep(navDir*std::abs(stepSize));
   state.pathAccumulated = 0.;
 
   // Reinitialize the stepping jacobian
