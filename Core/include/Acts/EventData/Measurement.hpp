@@ -406,8 +406,8 @@ using FittableVolumeMeasurement =
 /// @tparam indices_t Parameter index type, determines the full parameter space
 /// @tparam kSize Size of the parameter subset.
 ///
-/// The measurement is templated only on the measurement subspace size; its
-/// content (indices) is defined only at runtime. In previous implementations,
+/// The measurement is templated on the measurement subspace size and its
+/// content (indices) is defined at runtime. In previous implementations,
 /// the measurement was templated directly on the subspace indices. This lead to
 /// a combinatorial explosion and severe penalty during compilation since all
 /// possible combinations need to be considered for the measurement variant.
