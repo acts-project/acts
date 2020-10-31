@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/detail/ParameterTraits.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <cmath>
 #include <random>
@@ -21,17 +21,11 @@ namespace Test {
 /// Generate a random parameters vector and covariance matrix.
 ///
 /// @return std:::pair<ParametersVector, CovarianceMatrix>
-template <typename generator_t, typename indices0_t, typename... indicesn_t>
-inline auto generateParametersCovariance(generator_t& rng,
-                                         indices0_t /* unused */,
-                                         indicesn_t... /* unused */)
-    -> std::pair<Acts::ActsVector<Acts::detail::ParametersScalar<indices0_t>,
-                                  1u + sizeof...(indicesn_t)>,
-                 Acts::ActsSymMatrix<Acts::detail::ParametersScalar<indices0_t>,
-                                     1u + sizeof...(indicesn_t)> > {
-  constexpr size_t kSize = 1u + sizeof...(indicesn_t);
-
-  using Scalar = Acts::detail::ParametersScalar<indices0_t>;
+template <typename scalar_t, size_t kSize, typename generator_t>
+inline auto generateParametersCovariance(generator_t& rng)
+    -> std::pair<Acts::ActsVector<scalar_t, kSize>,
+                 Acts::ActsSymMatrix<scalar_t, kSize>> {
+  using Scalar = scalar_t;
   using ParametersVector = Acts::ActsVector<Scalar, kSize>;
   using CovarianceMatrix = Acts::ActsSymMatrix<Scalar, kSize>;
 
@@ -70,16 +64,13 @@ inline auto generateParametersCovariance(generator_t& rng,
 /// Generate a random bound parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateBoundParametersCovariance(generator_t& rng) {
-  return generateParametersCovariance(rng, eBoundLoc0, eBoundLoc1, eBoundPhi,
-                                      eBoundTheta, eBoundQOverP, eBoundTime);
+  return generateParametersCovariance<BoundScalar, eBoundSize>(rng);
 }
 
 /// Generate a random free parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateFreeParametersCovariance(generator_t& rng) {
-  return generateParametersCovariance(rng, eFreePos0, eFreePos1, eFreePos2,
-                                      eFreeTime, eFreeDir0, eFreeDir1,
-                                      eFreeDir2, eFreeQOverP);
+  return generateParametersCovariance<FreeScalar, eFreeSize>(rng);
 }
 
 }  // namespace Test
