@@ -44,7 +44,7 @@ std::default_random_engine rng(123);
 BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
 
 BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
-  auto [params, cov] = generateParametersCovariance(rng, index);
+  auto [params, cov] = generateParametersCovariance<BoundScalar, 1u>(rng);
   auto meas = makeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
@@ -118,7 +118,7 @@ BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
 }
 
 BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
-  auto [params, cov] = generateParametersCovariance(rng, index);
+  auto [params, cov] = generateParametersCovariance<FreeScalar, 1u>(rng);
   auto meas = makeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
 
 BOOST_AUTO_TEST_CASE(VariantBound) {
   // generate w/ a single parameter
-  auto [par1, cov1] = generateParametersCovariance(rng, eBoundTheta);
+  auto [par1, cov1] = generateParametersCovariance<BoundScalar, 1u>(rng);
   BoundVariantMeasurement<SourceLink> meas =
       makeMeasurement(source, par1, cov1, eBoundTheta);
   std::visit(
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
 
 BOOST_AUTO_TEST_CASE(VariantFree) {
   // generate w/ two parameters
-  auto [par2, cov2] = generateParametersCovariance(rng, eFreePos2, eFreeTime);
+  auto [par2, cov2] = generateParametersCovariance<FreeScalar, 2u>(rng);
   FreeVariantMeasurement<SourceLink> meas =
       makeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
   std::visit(
