@@ -40,6 +40,8 @@ class CsvTrackingGeometryWriter : public IWriter {
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
     std::size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    /// Write dedicated csv files for 2D objects
+    bool output2Dcsv = false;
     /// Whether to write the per-event file.
     bool writePerEvent = false;
   };

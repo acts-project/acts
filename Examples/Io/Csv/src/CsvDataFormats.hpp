@@ -156,4 +156,26 @@ struct SurfaceData {
                  module_hv, pitch_u, pitch_v);
 };
 
+struct SegmentData {
+  /// Surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id;
+  /// Partially decoded surface identifier components.
+  uint32_t volume_id, layer_id, module_id;
+  /// The type row describes: l(line), a(arc), c(circle), e(ellipse), m(marker)
+  char type;
+  /// The object this belongs to: h (helper), g(grid), l(layer), s(surface)
+  char object;
+  /// The parameters described by that segment
+  float p0 = 0.;
+  float p1 = 0.;
+  float p2 = 0.;
+  float p3 = 0.;
+  float p4 = 0.;
+  float p5 = 0.;
+  float p6 = 0.;
+
+  DFE_NAMEDTUPLE(SegmentData, geometry_id, volume_id, layer_id, module_id, type,
+                 object, p0, p1, p2, p3, p4, p5, p6);
+};
+
 }  // namespace ActsExamples

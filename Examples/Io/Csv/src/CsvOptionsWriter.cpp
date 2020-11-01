@@ -20,7 +20,8 @@ void ActsExamples::Options::addCsvWriterOptions(
   desc.add_options()(
       "csv-output-precision",
       value<size_t>()->default_value(std::numeric_limits<float>::max_digits10),
-      "Floating number output precision.")(
+      "Floating number output precision.")("csv-tg-output2d", bool_switch(),
+                                           "Write dedicated 2D output files.")(
       "csv-tg-perevent", bool_switch(), "Write tracking geometry per event.");
 }
 
@@ -63,6 +64,7 @@ ActsExamples::Options::readCsvTrackingGeometryWriterConfig(
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
   cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
+  cfg.output2Dcsv = vm.count("csv-tg-output2d");
   cfg.writePerEvent = vm.count("csv-tg-perevent");
   return cfg;
 }

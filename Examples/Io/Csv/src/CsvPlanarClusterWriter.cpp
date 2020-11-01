@@ -19,7 +19,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvDataFormats.hpp"
 
 ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
     const ActsExamples::CsvPlanarClusterWriter::Config& cfg,

@@ -13,6 +13,8 @@
 #include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
 #include <Acts/Plugins/Digitization/DigitizationModule.hpp>
 #include <Acts/Plugins/Identification/IdentifiedDetectorElement.hpp>
+#include <Acts/Surfaces/DiscBounds.hpp>
+#include <Acts/Surfaces/PlanarBounds.hpp>
 #include <Acts/Surfaces/Surface.hpp>
 #include <Acts/Utilities/Units.hpp>
 
@@ -22,7 +24,7 @@
 
 #include <dfe/dfe_io_dsv.hpp>
 
-#include "TrackMlData.hpp"
+#include "CsvDataFormats.hpp"
 
 using namespace ActsExamples;
 
@@ -47,10 +49,14 @@ std::string CsvTrackingGeometryWriter::name() const {
 }
 
 namespace {
+
+using SegmentWriter = dfe::NamedTupleCsvWriter<SegmentData>;
+
 using SurfaceWriter = dfe::NamedTupleCsvWriter<SurfaceData>;
 
 /// Write a single surface.
-void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
+void writeSurface(SegmentWriter& swriter, SurfaceWriter& writer,
+                  const Acts::Surface& surface,
                   const Acts::GeometryContext& geoCtx) {
   SurfaceData data;
 
@@ -87,9 +93,13 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
   }
 
   // bounds and pitch (if available)
-  const auto& bounds = surface.bounds();
+  std::vector<Acts::Vector2D> vertices;
+  const Acts::SurfaceBounds& bounds = surface.bounds();
   const auto* planarBounds = dynamic_cast<const Acts::PlanarBounds*>(&bounds);
   if (planarBounds) {
+    // Get the vertices
+    vertices = planarBounds->vertices(1);
+
     // extract limits from value store
     auto boundValues = surface.bounds().values();
     if (boundValues.size() == 2) {
@@ -117,13 +127,42 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
         data.pitch_u = pitch.second / Acts::UnitConstants::mm;
       }
     }
+  } else {
+    const auto* discBounds = dynamic_cast<const Acts::DiscBounds*>(&bounds);
+    // Get the vertices
+    vertices = discBounds->vertices(72);
   }
 
   writer.append(data);
+
+  if (not vertices.empty()) {
+    // Close the loop
+    vertices.push_back(vertices[0]);
+    for (size_t iv = 1; iv < vertices.size(); ++iv) {
+      Acts::Vector2D lstart = vertices[iv - 1];
+      Acts::Vector2D lend = vertices[iv];
+      Acts::Vector3D start =
+          transform * Acts::Vector3D(lstart.x(), lstart.y(), 0.);
+      Acts::Vector3D end = transform * Acts::Vector3D(lend.x(), lend.y(), 0.);
+      SegmentData sdata;
+      sdata.geometry_id = data.geometry_id;
+      sdata.volume_id = data.volume_id;
+      sdata.layer_id = data.layer_id;
+      sdata.module_id = data.module_id;
+      sdata.type = 'l';
+      sdata.object = 's';
+      sdata.p0 = start.x();
+      sdata.p1 = start.y();
+      sdata.p2 = end.x();
+      sdata.p3 = end.y();
+      swriter.append(sdata);
+    }
+  }
 }
 
 /// Write all child surfaces and descend into confined volumes.
-void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
+void writeVolume(SegmentWriter& swriter, SurfaceWriter& writer,
+                 const Acts::TrackingVolume& volume,
                  const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
   if (volume.confinedLayers()) {
@@ -136,7 +175,7 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
       if (layer->surfaceArray()) {
         for (auto surface : layer->surfaceArray()->surfaces()) {
           if (surface) {
-            writeSurface(writer, *surface, geoCtx);
+            writeSurface(swriter, writer, *surface, geoCtx);
           }
         }
       }
@@ -145,7 +184,7 @@ void writeVolume(SurfaceWriter& writer, const Acts::TrackingVolume& volume,
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
     for (auto confined : volume.confinedVolumes()->arrayObjects()) {
-      writeVolume(writer, *confined.get(), geoCtx);
+      writeVolume(swriter, writer, *confined.get(), geoCtx);
     }
   }
 }
@@ -155,16 +194,21 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   if (not m_cfg.writePerEvent) {
     return ProcessCode::SUCCESS;
   }
-  SurfaceWriter writer(
-      perEventFilepath(m_cfg.outputDir, "detectors.csv", ctx.eventNumber),
-      m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, ctx.geoContext);
+  SegmentWriter swriter(joinPaths(m_cfg.outputDir, "segments.csv"),
+                        m_cfg.outputPrecision);
+
+  SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
+                       m_cfg.outputPrecision);
+  writeVolume(swriter, writer, *m_world, Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
 
 ProcessCode CsvTrackingGeometryWriter::endRun() {
+  SegmentWriter swriter(joinPaths(m_cfg.outputDir, "segments.csv"),
+                        m_cfg.outputPrecision);
+
   SurfaceWriter writer(joinPaths(m_cfg.outputDir, "detectors.csv"),
                        m_cfg.outputPrecision);
-  writeVolume(writer, *m_world, Acts::GeometryContext());
+  writeVolume(swriter, writer, *m_world, Acts::GeometryContext());
   return ProcessCode::SUCCESS;
 }
