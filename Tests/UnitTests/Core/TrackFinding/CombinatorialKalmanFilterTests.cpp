@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
@@ -46,24 +47,6 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-struct ExtendedMinimalSourceLink {
-  size_t sourceID = 0;
-
-  const FittableMeasurement<ExtendedMinimalSourceLink>* meas{nullptr};
-
-  bool operator==(const ExtendedMinimalSourceLink& rhs) const {
-    return meas == rhs.meas;
-  }
-
-  const Surface& referenceSurface() const {
-    return *MeasurementHelpers::getSurface(*meas);
-  }
-
-  const FittableMeasurement<ExtendedMinimalSourceLink>& operator*() const {
-    return *meas;
-  }
-};
-
 // helper function to create geometry ids
 GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
   return GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
@@ -71,7 +54,6 @@ GeometryIdentifier makeId(int volume = 0, int layer = 0, int sensitive = 0) {
 }
 
 // A few initialisations and definitionas
-using SourceLink = ExtendedMinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
 using Resolution = std::pair<BoundIndices, double>;
@@ -92,7 +74,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -104,7 +86,7 @@ struct MeasurementCreator {
   /// The detector resolution
   DetectorResolution detectorResolution;
 
-  using result_type = std::vector<FittableMeasurement<SourceLink>>;
+  using result_type = std::vector<FittableMeasurement<TestSourceLink>>;
 
   /// @brief Operater that is callable by an ActionList. The function collects
   /// the surfaces
@@ -225,10 +207,9 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   mCreator.detectorResolution = detRes;
 
   // This vector owns the measurements
-  std::multimap<size_t, FittableMeasurement<SourceLink>> measurements;
-
+  std::multimap<size_t, FittableMeasurement<TestSourceLink>> measurements;
   // Make a vector of source links and further processed for KF inputs
-  std::vector<SourceLink> sourcelinks;
+  std::vector<TestSourceLink> sourcelinks;
 
   // Set the starting positions for propagation
   double eps = 15_mm;
@@ -240,7 +221,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
   // Run the propagation for a few times such that multiple measurements exist
   // on one surface
   // Set the starting momentum for propagation
-  for (const auto& [trackID, mPos] : startingPos) {
+  for (const auto& [trackId, mPos] : startingPos) {
     Vector4D pos4 = makeVector4(mPos, 42_ns);
     NeutralCurvilinearTrackParameters mStart(pos4, 0_degree, 90_degree,
                                              1 / 1_GeV);
@@ -252,14 +233,15 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     auto value = std::move(result.value());
     auto measurementsCreated = value.get<MeasurementCreator::result_type>();
     for (auto& meas : measurementsCreated) {
-      measurements.emplace(trackID, std::move(meas));
+      measurements.emplace(trackId, std::move(meas));
     }
   }
 
   // Transform the measurments to sourcelinks
   std::transform(measurements.begin(), measurements.end(),
                  std::back_inserter(sourcelinks), [](const auto& m) {
-                   return SourceLink{m.first, &m.second};
+                   // pair is {track id, measurement}
+                   return TestSourceLink(m.second, m.first);
                  });
 
   // There should be 18 source links in total
@@ -281,30 +263,28 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
   using Updater = GainMatrixUpdater;
   using Smoother = GainMatrixSmoother;
-  using SourceLinkSelector = CKFSourceLinkSelector;
   using CombinatorialKalmanFilter =
-      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother,
-                                SourceLinkSelector>;
+      CombinatorialKalmanFilter<RecoPropagator, Updater, Smoother>;
 
-  // Implement different chi2/nSourceLinks cutoff at different detector level
-  // NB: pixel volumeID = 2, strip volumeID= 3
-  SourceLinkSelector::Config sourcelinkSelectorConfig = {
+  // Implement different chi2/nTestSourceLinks cutoff at different detector
+  // level NB: pixel volumeID = 2, strip volumeID= 3
+  CKFSourceLinkSelector::Config sourcelinkSelectorConfig = {
       // global default valies
       {makeId(), {8.0, 10}},
-      // pixel layer 2 chi2/nSourceLinks cutoff: 8.0/5
+      // pixel layer 2 chi2/nTestSourceLinks cutoff: 8.0/5
       {makeId(2, 2), {8.0, 5}},
-      // pixel layer 4 chi2/nSourceLinks cutoff: 7.0/5
+      // pixel layer 4 chi2/nTestSourceLinks cutoff: 7.0/5
       {makeId(2, 4), {7.0, 5}},
-      // pixel volume chi2/nSourceLinks cutoff: 7.0/5
+      // pixel volume chi2/nTestSourceLinks cutoff: 7.0/5
       {makeId(2), {7.0, 5}},
-      // strip volume chi2/nSourceLinks cutoff: 8.0/5
+      // strip volume chi2/nTestSourceLinks cutoff: 8.0/5
       {makeId(3), {8.0, 5}},
   };
   CombinatorialKalmanFilter cKF(rPropagator);
 
   // Run the CombinaltorialKamanFitter for track finding from different starting
   // parameter
-  for (const auto& [trackID, pos] : startingPos) {
+  for (const auto& [trackId, pos] : startingPos) {
     // Set initial parameters for the particle track
     Covariance cov;
     cov << pow(10_um, 2), 0., 0., 0., 0., 0., 0., pow(10_um, 2), 0., 0., 0., 0.,
@@ -321,9 +301,11 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
 
     auto logger =
         getDefaultLogger("CombinatorialKalmanFilter", Logging::VERBOSE);
-    CombinatorialKalmanFilterOptions<SourceLinkSelector> ckfOptions(
-        tgContext, mfContext, calContext, sourcelinkSelectorConfig,
-        LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
+    CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
+                                     CKFSourceLinkSelector>
+        ckfOptions(tgContext, mfContext, calContext, TestSourceLinkCalibrator(),
+                   CKFSourceLinkSelector(sourcelinkSelectorConfig),
+                   LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
     // Found the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
@@ -334,16 +316,16 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
     auto& trackTips = foundTrack.trackTips;
 
     for (const auto& tip : trackTips) {
-      std::vector<size_t> sourceIds;
+      std::vector<size_t> trackIds;
       fittedStates.visitBackwards(tip, [&](const auto& trackState) {
-        sourceIds.push_back(trackState.uncalibrated().sourceID);
+        trackIds.push_back(trackState.uncalibrated().sourceId);
       });
 
-      BOOST_CHECK_EQUAL(sourceIds.size(), 6);
+      BOOST_CHECK_EQUAL(trackIds.size(), 6);
 
       size_t numFakeHit = 0;
-      for (const auto& id : sourceIds) {
-        numFakeHit = numFakeHit + (id != trackID ? 1 : 0);
+      for (const auto& id : trackIds) {
+        numFakeHit = numFakeHit + (id != trackId ? 1 : 0);
       }
 
       // Check if there are fake hits from other tracks

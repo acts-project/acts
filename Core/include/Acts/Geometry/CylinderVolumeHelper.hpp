@@ -10,11 +10,12 @@
 
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ILayerArrayCreator.hpp"
-#include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
@@ -26,6 +27,8 @@ class TrackingVolume;
 class VolumeBounds;
 class CylinderVolumeBounds;
 class IVolumeMaterial;
+class ILayerArrayCreator;
+class ITrackingVolumeArrayCreator;
 
 /// @class CylinderVolumeHelper
 ///
@@ -57,7 +60,6 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
                        std::unique_ptr<const Logger> logger = getDefaultLogger(
                            "CylinderVolumeHelper", Logging::INFO));
 
-  /// Destructor
   ~CylinderVolumeHelper() override = default;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters

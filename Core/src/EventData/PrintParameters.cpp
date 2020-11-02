@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <array>
+#include <cstddef>
 #include <iomanip>
 #include <ostream>
 

@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -47,10 +48,8 @@ namespace Acts {
 namespace Test {
 
 // A few initialisations and definitionas
-using SourceLink = MinimalSourceLink;
 using Jacobian = BoundMatrix;
 using Covariance = BoundSymMatrix;
-
 using Resolution = std::pair<BoundIndices, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<GeometryIdentifier::Value, ElementResolution>;
@@ -69,7 +68,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 CalibrationContext calContext = CalibrationContext();
 
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 
 /// @brief This struct creates FittableMeasurements on the
 /// detector surfaces, according to the given smearing xxparameters
@@ -83,10 +82,10 @@ struct MeasurementCreator {
 
   struct this_result {
     // The measurements
-    std::vector<FittableMeasurement<SourceLink>> measurements;
+    std::vector<FittableMeasurement<TestSourceLink>> measurements;
 
     // The outliers
-    std::vector<FittableMeasurement<SourceLink>> outliers;
+    std::vector<FittableMeasurement<TestSourceLink>> outliers;
   };
 
   using result_type = this_result;
@@ -348,15 +347,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Extract measurements from result of propagation.
   // This vector owns the measurements
-  std::vector<FittableMeasurement<SourceLink>> measurements = std::move(
+  std::vector<FittableMeasurement<TestSourceLink>> measurements = std::move(
       mResult.template get<MeasurementCreator::result_type>().measurements);
   BOOST_CHECK_EQUAL(measurements.size(), 6u);
 
   // Make a vector of source links as input to the KF
-  std::vector<SourceLink> sourcelinks;
+  std::vector<TestSourceLink> sourcelinks;
   std::transform(measurements.begin(), measurements.end(),
                  std::back_inserter(sourcelinks),
-                 [](const auto& m) { return SourceLink{&m}; });
+                 [](const auto& m) { return TestSourceLink(m); });
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   // Build navigator for the measurement creatoin
@@ -387,15 +386,15 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   using Updater = GainMatrixUpdater;
   using Smoother = GainMatrixSmoother;
-  using KalmanFitter =
-      KalmanFitter<RecoPropagator, Updater, Smoother, MinimalOutlierFinder>;
+  using KalmanFitter = KalmanFitter<RecoPropagator, Updater, Smoother>;
 
   MinimalOutlierFinder outlierFinder;
   outlierFinder.measurementSignificanceCutoff = 0.05;
   auto kfLogger = getDefaultLogger("KalmanFilter", Logging::VERBOSE);
 
-  KalmanFitterOptions<MinimalOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, outlierFinder, LoggerWrapper{*kfLogger},
+  KalmanFitterOptions<TestSourceLinkCalibrator, MinimalOutlierFinder> kfOptions(
+      tgContext, mfContext, calContext, TestSourceLinkCalibrator(),
+      std::move(outlierFinder), LoggerWrapper{*kfLogger},
       PropagatorPlainOptions(), rSurface);
 
   KalmanFitter kFitter(rPropagator);
@@ -439,7 +438,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   kfOptions.referenceSurface = rSurface;
 
   // Change the order of the sourcelinks
-  std::vector<SourceLink> shuffledMeasurements = {
+  std::vector<TestSourceLink> shuffledMeasurements = {
       sourcelinks[3], sourcelinks[2], sourcelinks[1],
       sourcelinks[4], sourcelinks[5], sourcelinks[0]};
 
@@ -457,7 +456,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                   1e-5);
 
   // Remove one measurement and find a hole
-  std::vector<SourceLink> measurementsWithHole = {
+  std::vector<TestSourceLink> measurementsWithHole = {
       sourcelinks[0], sourcelinks[1], sourcelinks[2], sourcelinks[4],
       sourcelinks[5]};
 
@@ -514,13 +513,14 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   // Extract outliers from result of propagation.
   // This vector owns the outliers
-  std::vector<FittableMeasurement<SourceLink>> outliers = std::move(
+  std::vector<FittableMeasurement<TestSourceLink>> outliers = std::move(
       mResult.template get<MeasurementCreator::result_type>().outliers);
 
   // Replace one measurement with outlier
-  std::vector<SourceLink> measurementsWithOneOutlier = {
-      sourcelinks[0],           sourcelinks[1], sourcelinks[2],
-      SourceLink{&outliers[3]}, sourcelinks[4], sourcelinks[5]};
+  std::vector<TestSourceLink> measurementsWithOneOutlier = {
+      sourcelinks[0], sourcelinks[1],
+      sourcelinks[2], TestSourceLink(outliers[3]),
+      sourcelinks[4], sourcelinks[5]};
 
   // Make sure it works with one outlier
   fitRes = kFitter.fit(measurementsWithOneOutlier, rStart, kfOptions);

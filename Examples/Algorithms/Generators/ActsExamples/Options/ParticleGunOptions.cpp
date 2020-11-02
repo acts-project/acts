@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,68 +14,73 @@
 #include "ActsExamples/Generators/VertexGenerators.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
-void ActsExamples::Options::addParticleGunOptions(
-    boost::program_options::options_description& opt) {
-  using namespace boost::program_options;
+#include <boost/program_options.hpp>
 
-  opt.add_options()("pg-nparticles", value<size_t>()->default_value(1.),
-                    "number of particles.")(
-      "pg-d0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
-      "range in which the d0 parameter is simulated in [mm]. Please hand"
-      "over by simply seperating the values by space")(
-      "pg-z0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
-      "range in which the z0 parameter is simulated in [mm]. Please hand"
-      "over by simply seperating the values by space")(
-      "pg-t0-range", value<read_range>()->multitoken()->default_value({0., 0.}),
-      "range in which the t0 parameter is simulated in [ns]. Please hand"
-      "over by simply seperating the values by space")(
-      "pg-phi-range",
-      value<read_range>()->multitoken()->default_value({-M_PI, M_PI}),
-      "range in which the phi0 parameter is simulated. Please hand over by "
-      "simply seperating the values by space")(
-      "pg-eta-range",
-      value<read_range>()->multitoken()->default_value({-4., 4.}),
-      "range in which the eta parameter is simulated. Please hand over by "
-      "simply seperating the values by space")(
-      "pg-pt-range", value<read_range>()->multitoken()->default_value({1, 100}),
-      "range in which the pt in [GeV] parameter is simulated. Please hand "
-      "over by simply seperating the values by space")(
-      "pg-pdg", value<int32_t>()->default_value(Acts::PdgParticle::eMuon),
-      "PDG number of the particle, will be adjusted for charge flip.")(
-      "pg-randomize-charge", bool_switch(),
-      "flip the charge (and change PDG accordingly).");
+void ActsExamples::Options::addParticleGunOptions(Description& desc) {
+  using boost::program_options::bool_switch;
+  using boost::program_options::value;
+
+  auto opt = desc.add_options();
+  opt("gen-vertex-xy-std-mm", value<double>()->default_value(0.0),
+      "Transverse vertex standard deviation in mm");
+  opt("gen-vertex-z-std-mm", value<double>()->default_value(0.0),
+      "Longitudinal vertex standard deviation in mm");
+  opt("gen-vertex-t-std-ns", value<double>()->default_value(0.0),
+      "Temporal vertex standard deviation in ns");
+  opt("gen-phi-degree",
+      value<Interval>()->value_name("MIN:MAX")->default_value({0.0, 360.0}),
+      "Transverse direction angle generation range in degree");
+  opt("gen-eta",
+      value<Interval>()->value_name("MIN:MAX")->default_value({-4.0, 4.0}),
+      "Pseudo-rapidity generation range");
+  opt("gen-p-gev",
+      value<Interval>()->value_name("MIN:MAX")->default_value({1.0, 10.0}),
+      "Absolute momentum generation range in GeV");
+  opt("gen-pdg", value<int32_t>()->default_value(Acts::PdgParticle::eMuon),
+      "PDG number of the particle, will be adjusted for charge flip.");
+  opt("gen-randomize-charge", bool_switch(),
+      "Flip the charge and change the PDG number accordingly.");
+  opt("gen-nparticles", value<size_t>()->default_value(1u),
+      "Number of generated particles");
 }
 
 ActsExamples::EventGenerator::Config
-ActsExamples::Options::readParticleGunOptions(
-    const boost::program_options::variables_map& vm) {
+ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   using namespace Acts::UnitLiterals;
 
-  // read the range as vector (missing istream for std::array)
-  auto d0 = vm["pg-d0-range"].template as<read_range>();
-  auto z0 = vm["pg-z0-range"].template as<read_range>();
-  auto t0 = vm["pg-t0-range"].template as<read_range>();
-  auto phi = vm["pg-phi-range"].template as<read_range>();
-  auto eta = vm["pg-eta-range"].template as<read_range>();
-  auto pt = vm["pg-pt-range"].template as<read_range>();
+  // access user config w/ unit conversion
+  auto getValue = [&](const char* name, auto unit) {
+    return vars[name].as<double>() * unit;
+  };
+  auto getRange = [&](const char* name, auto unit, auto& lower, auto& upper) {
+    auto interval = vars[name].as<Options::Interval>();
+    lower = interval.lower.value() * unit;
+    upper = interval.upper.value() * unit;
+  };
+
+  GaussianVertexGenerator vertexGen;
+  vertexGen.stddev[Acts::ePos0] = getValue("gen-vertex-xy-std-mm", 1_mm);
+  vertexGen.stddev[Acts::ePos1] = getValue("gen-vertex-xy-std-mm", 1_mm);
+  vertexGen.stddev[Acts::ePos2] = getValue("gen-vertex-z-std-mm", 1_mm);
+  vertexGen.stddev[Acts::eTime] = getValue("gen-vertex-t-std-ns", 1_ns);
 
   ParametricParticleGenerator::Config pgCfg;
-  pgCfg.numParticles = vm["pg-nparticles"].template as<size_t>();
-  pgCfg.d0Range = {{d0[0] * 1_mm, d0[1] * 1_mm}};
-  pgCfg.z0Range = {{z0[0] * 1_mm, z0[1] * 1_mm}};
-  pgCfg.t0Range = {{t0[0] * 1_ns, t0[1] * 1_ns}};
-  pgCfg.phiRange = {{phi[0], phi[1]}};
-  pgCfg.etaRange = {{eta[0], eta[1]}};
-  pgCfg.ptRange = {{pt[0] * 1_GeV, pt[1] * 1_GeV}};
+  getRange("gen-phi-degree", 1_degree, pgCfg.phiMin, pgCfg.phiMax);
+  // user config sets eta but the generator takes theta
+  double etaMin, etaMax;
+  getRange("gen-eta", 1.0, etaMin, etaMax);
+  pgCfg.thetaMin = 2 * std::atan(std::exp(-etaMin));
+  pgCfg.thetaMax = 2 * std::atan(std::exp(-etaMax));
+  getRange("gen-p-gev", 1_GeV, pgCfg.pMin, pgCfg.pMax);
   pgCfg.pdg =
-      static_cast<Acts::PdgParticle>(vm["pg-pdg"].template as<int32_t>());
-  pgCfg.randomizeCharge = vm["pg-randomize-charge"].template as<bool>();
+      static_cast<Acts::PdgParticle>(vars["gen-pdg"].template as<int32_t>());
+  pgCfg.randomizeCharge = vars["gen-randomize-charge"].template as<bool>();
+  pgCfg.numParticles = vars["gen-nparticles"].as<size_t>();
 
   EventGenerator::Config cfg;
   cfg.generators = {
-      {FixedMultiplicityGenerator{1},
-       FixedVertexGenerator{{0.0, 0.0, 0.0, 0.0}},
-       ParametricParticleGenerator{pgCfg}},
+      {FixedMultiplicityGenerator{1}, std::move(vertexGen),
+       ParametricParticleGenerator(pgCfg)},
   };
 
   return cfg;

@@ -317,66 +317,58 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3D& position,
                                                 const Vector3D& momentum) const;
 
-  /// Initialize the jacobian from local to global
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from local to global which the surface knows best,
+  /// hence the calculation is done here.
+  ///
+  /// @note In priciple, the input could also be a free parameters
+  /// vector as it could be transformed to a bound parameters. But the transform
+  /// might fail in case the parameters is not on surface. To avoid the check
+  /// inside this function, it takes directly the bound parameters as input
+  /// (then the check might be done where this function is called).
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
-  /// @param pars is the parameter vector
-  virtual void initJacobianToGlobal(const GeometryContext& gctx,
-                                    BoundToFreeMatrix& jacobian,
-                                    const Vector3D& position,
-                                    const Vector3D& direction,
-                                    const BoundVector& pars) const;
+  /// @param boundParams is the bound parameters vector
+  ///
+  /// @return Jacobian from local to global
+  virtual BoundToFreeMatrix jacobianLocalToGlobal(
+      const GeometryContext& gctx, const BoundVector& boundParams) const;
 
-  /// Initialize the jacobian from global to local
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from global to local which the surface knows best,
+  /// hence the calculation is done here.
+  ///
+  /// @note It assumes the input free parameters is on surface, hence no
+  /// onSurface check is done inside this function.
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
-  /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @param parameters is the free parameters
   ///
-  /// @return the transposed reference frame (avoids recalculation)
-  virtual RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
-                                               FreeToBoundMatrix& jacobian,
-                                               const Vector3D& position,
-                                               const Vector3D& direction) const;
+  /// @return Jacobian from global to local
+  virtual FreeToBoundMatrix jacobianGlobalToLocal(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
-  /// Calculate the form factors for the derivatives
-  /// the calculation is identical for all surfaces where the
-  /// reference frame does not depend on the direction
-  ///
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. free parameters. The calculation is
+  /// identical for all surfaces where the reference frame does not depend on
+  /// the direction
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the position of the paramters in global
-  /// @param direction is the direction of the track
-  /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jacobian is the transport jacobian
+  /// @param parameters is the free parameters
   ///
-  /// @return a five-dim vector
-  virtual BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const RotationMatrix3D& rft,
-      const BoundToFreeMatrix& jacobian) const;
+  /// @return Derivative of path length w.r.t. free parameters
+  virtual FreeRowVector freeToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calucation of the path correction for incident
   ///
@@ -434,35 +426,32 @@ class Surface : public virtual GeometryObject,
   /// extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param derivatives Path length derivatives of the free, nominal
-  /// parameters to help evaluate change of free track parameters caused by
   /// change of alignment parameters
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
+  /// @param pathDerivative is the derivative of free parameters w.r.t. path
+  /// length
   ///
   /// @return Derivative of bound track parameters w.r.t. local frame
   /// alignment parameters
   AlignmentToBoundMatrix alignmentToBoundDerivative(
-      const GeometryContext& gctx, const FreeVector& derivatives,
-      const Vector3D& position, const Vector3D& direction) const;
+      const GeometryContext& gctx, const FreeVector& parameters,
+      const FreeVector& pathDerivative) const;
 
-  /// Calculate the derivative of path length w.r.t. alignment parameters of the
-  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
-  /// its rotation represented with extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
   ///
-  /// Re-implementation is needed for surface whose intersection with track is
-  /// not its local xy plane, e.g. LineSurface, CylinderSurface and ConeSurface
+  /// @note Re-implementation is needed for surface whose intersection with
+  /// track is not its local xy plane, e.g. LineSurface, CylinderSurface and
+  /// ConeSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
-  /// its rotation
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   virtual AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-      const Vector3D& position, const Vector3D& direction) const;
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates
@@ -493,8 +482,24 @@ class Surface : public virtual GeometryObject,
 
   /// Possibility to attach a material descrption
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
+
+ private:
+  /// Calculate the derivative of bound track parameters w.r.t.
+  /// alignment parameters of its reference surface (i.e. origin in global 3D
+  /// Cartesian coordinates and its rotation represented with extrinsic Euler
+  /// angles) without any path correction
+  ///
+  /// @note This function should be used together with alignment to path
+  /// derivative to get the full alignment to bound derivatives
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param parameters is the free parameters
+  ///
+  /// @return Derivative of bound track parameters w.r.t. local frame alignment
+  /// parameters without path correction
+  AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
-#include "Acts/Surfaces/detail/Surface.ipp"
-
 }  // namespace Acts
+#include "Acts/Surfaces/detail/Surface.ipp"

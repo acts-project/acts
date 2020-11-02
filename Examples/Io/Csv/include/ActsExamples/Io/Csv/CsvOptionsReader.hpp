@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
@@ -20,6 +21,10 @@ namespace Options {
 
 /// Read the CSV particle reader config.
 ActsExamples::CsvParticleReader::Config readCsvParticleReaderConfig(
+    const Variables& vm);
+
+/// Read the CSV sim hit reader config.
+ActsExamples::CsvSimHitReader::Config readCsvSimHitReaderConfig(
     const Variables& vm);
 
 /// Read the CSV particle reader config.

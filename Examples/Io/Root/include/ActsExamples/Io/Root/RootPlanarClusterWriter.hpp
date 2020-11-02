@@ -37,7 +37,7 @@ class RootPlanarClusterWriter
     /// Which cluster collection to write.
     std::string inputClusters;
     /// Which simulated (truth) hits collection to use.
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     std::string treeName = "clusters";  ///< name of the output tree

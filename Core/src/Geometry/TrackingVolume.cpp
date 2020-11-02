@@ -8,14 +8,24 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Ray.hpp"
 
+#include <algorithm>
+#include <array>
 #include <functional>
+#include <string>
 #include <utility>
 
 Acts::TrackingVolume::TrackingVolume(
@@ -346,15 +356,16 @@ void Acts::TrackingVolume::interlinkLayers() {
 
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
-    std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) {
-  // insert the volume into the map
-  volumeMap[volumeName()] = this;
-
+    std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
+    size_t& vol) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
+
+  // insert the volume into the map
+  volumeMap[volumeID] = thisVolume;
 
   // assign the material if you have a decorator
   if (materialDecorator != nullptr) {

@@ -13,16 +13,18 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include <cmath>
+#include <array>
+#include <iomanip>
+#include <memory>
+#include <ostream>
+#include <vector>
 
 namespace Acts {
 
-class Surface;
 class CylinderBounds;
 class ConeBounds;
 class RadialBounds;
 class PlanarBounds;
-class Volume;
 
 /// @class ConeVolumeBounds
 ///

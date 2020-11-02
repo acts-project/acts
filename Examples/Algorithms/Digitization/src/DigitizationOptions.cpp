@@ -7,32 +7,31 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
+
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include <Acts/Utilities/Logger.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
-
-#include <boost/program_options.hpp>
 
 #include <string>
 
+#include <boost/program_options.hpp>
+
 void ActsExamples::Options::addDigitizationOptions(
     ActsExamples::Options::Description& desc) {
+  using boost::program_options::bool_switch;
   using boost::program_options::value;
   using namespace std;
 
   auto opt = desc.add_options();
-  opt("digi-input-hits", value<string>()->default_value("hits"),
-      "Name of the input hit collection.");
-  opt("digi-config-file", value<string>()->default_value(""),
+  opt("digi-config-file", value<string>(),
       "Configuration (.json) file for digitization description, overwrites "
       "options input on command line.");
-  opt("digi-geometric-3d", value<bool>()->default_value(true),
+  opt("digi-geometric-3d", bool_switch(),
       "Geometric: Switching geometric digitisation in 3D on");
-  opt("digi-smearing", value<bool>()->default_value(false),
+  opt("digi-smearing", bool_switch(),
       "Smearing: Switching geometric digitisation in 3D on");
-  opt("digi-smear-output", value<string>()->default_value(""),
-      "Smearing Output: Name of the output measurement collection.");
   opt("digi-smear-volume-id",
       value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: sensitive volume identifiers.");
@@ -63,7 +62,7 @@ ActsExamples::Options::readSmearingConfig(
 
   SmearingAlgorithm::Config smearCfg;
 
-  smearCfg.inputSimulatedHits = variables["digi-input-hits"].as<std::string>();
+  smearCfg.inputSimHits = variables["digi-input-hits"].as<std::string>();
   smearCfg.outputMeasurements =
       variables["digi-smear-output"].as<std::string>();
 

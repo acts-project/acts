@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
+#include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -21,22 +22,37 @@
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <iostream>
 #include <stdexcept>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     ActsExamples::PlanarSteppingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("PlanarSteppingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputSimulatedHits.empty()) {
+  if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
   }
   if (m_cfg.outputClusters.empty()) {
     throw std::invalid_argument("Missing output clusters collection");
+  }
+  if (m_cfg.outputSourceLinks.empty()) {
+    throw std::invalid_argument("Missing source links output collection");
+  }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
+  }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
+  }
+  if (m_cfg.outputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-simulated-hits map output collection");
   }
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
@@ -73,12 +89,28 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  // Prepare the input and output collections
-  const auto& hits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
-  ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster> clusters;
+  using ClusterContainer =
+      ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
+  using ConcreteMeasurement =
+      Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
+                        Acts::eBoundLoc1, Acts::eBoundTime>;
 
-  for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
+  // retrieve input
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+
+  // prepare output containers
+  ClusterContainer clusters;
+  IndexSourceLinkContainer sourceLinks;
+  MeasurementContainer measurements;
+  IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
+  IndexMultimap<Index> hitSimHitsMap;
+  clusters.reserve(simHits.size());
+  sourceLinks.reserve(simHits.size());
+  measurements.reserve(simHits.size());
+  hitParticlesMap.reserve(simHits.size());
+  hitSimHitsMap.reserve(simHits.size());
+
+  for (auto&& [moduleGeoId, moduleSimHits] : groupByModule(simHits)) {
     // can only digitize hits on digitizable surfaces
     const auto it = m_digitizables.find(moduleGeoId);
     if (it == m_digitizables.end()) {
@@ -90,13 +122,14 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const auto invTransfrom = dg.surface->transform(ctx.geoContext).inverse();
 
     // use iterators manually so we can retrieve the hit index in the container
-    for (auto ih = moduleHits.begin(); ih != moduleHits.end(); ++ih) {
-      const auto& hit = *ih;
-      const auto idx = hits.index_of(ih);
+    for (auto ih = moduleSimHits.begin(); ih != moduleSimHits.end(); ++ih) {
+      const auto& simHit = *ih;
+      const auto simHitIdx = simHits.index_of(ih);
 
-      Acts::Vector2D localIntersect = (invTransfrom * hit.position()).head<2>();
+      Acts::Vector2D localIntersect =
+          (invTransfrom * simHit.position()).head<2>();
       Acts::Vector3D localDirection =
-          invTransfrom.linear() * hit.unitDirection();
+          invTransfrom.linear() * simHit.unitDirection();
 
       // compute digitization steps
       const auto thickness = dg.detectorElement->thickness();
@@ -144,27 +177,45 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // size_t bin1 = binUtility.bin(localPosition, 1);
       // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
-      // the covariance is currently set to 0.
-      Acts::ActsSymMatrixD<3> cov;
+      // the covariance is currently set to some arbitrary value.
+      Acts::SymMatrix3D cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
 
       // create the planar cluster
-      Acts::PlanarModuleCluster pCluster(
-          dg.surface->getSharedPtr(), Identifier(identifier_type(idx), {idx}),
-          std::move(cov), localX, localY, hit.time(), std::move(usedCells));
+      Acts::PlanarModuleCluster cluster(
+          dg.surface->getSharedPtr(),
+          Acts::DigitizationSourceLink(moduleGeoId, {simHitIdx}),
+          std::move(cov), localX, localY, simHit.time(), std::move(usedCells));
 
-      // insert into the cluster container. since the input data is already
-      // sorted by geoId, we should always be able to add at the end.
-      clusters.emplace_hint(clusters.end(), hit.geometryId(),
-                            std::move(pCluster));
+      // the measurement container is unordered and the index under which
+      // the measurement will be stored is known before adding it.
+      Index hitIdx = measurements.size();
+      IndexSourceLink sourceLink(moduleGeoId, hitIdx);
+      ConcreteMeasurement meas(dg.surface->getSharedPtr(), sourceLink, cov,
+                               localX, localY, simHit.time());
+
+      // add to output containers. since the input is already geometry-order,
+      // new elements in geometry containers can just be appended at the end.
+      clusters.emplace_hint(clusters.end(), moduleGeoId, std::move(cluster));
+      sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+      measurements.emplace_back(std::move(meas));
+      // no hit merging -> only one mapping per digitized hit.
+      hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
+                                   simHit.particleId());
+      hitSimHitsMap.emplace_hint(hitSimHitsMap.end(), hitIdx, simHitIdx);
     }
   }
 
-  ACTS_DEBUG("digitized " << hits.size() << " hits into " << clusters.size()
+  ACTS_DEBUG("digitized " << simHits.size() << " hits into " << clusters.size()
                           << " clusters");
 
-  // write the clusters to the EventStore
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
+  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
+  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
+                     std::move(hitParticlesMap));
+  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
+                     std::move(hitSimHitsMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

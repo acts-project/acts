@@ -18,7 +18,7 @@
 
 ActsExamples::RootSimHitWriter::RootSimHitWriter(
     const ActsExamples::RootSimHitWriter::Config& cfg, Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSimulatedHits, "RootSimHitWriter", lvl), m_cfg(cfg) {
+    : WriterT(cfg.inputSimHits, "RootSimHitWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");

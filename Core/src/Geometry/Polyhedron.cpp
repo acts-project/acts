@@ -12,6 +12,9 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <utility>
 
 void Acts::Polyhedron::merge(const Acts::Polyhedron& other) {
   size_t cvert = vertices.size();

@@ -36,8 +36,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   std::cout << "Create first hit" << std::endl;
 
   // Build Bounds
-  std::shared_ptr<const RectangleBounds> recBounds(
-      new RectangleBounds(35_um, 25_mm));
+  auto recBounds = std::make_shared<RectangleBounds>(35_um, 25_mm);
 
   // Build binning and segmentation
   std::vector<float> boundariesX, boundariesY;
@@ -52,8 +51,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   std::shared_ptr<BinUtility> buY(new BinUtility(binDataY));
   (*buX) += (*buY);
 
-  std::shared_ptr<const Segmentation> segmentation(
-      new CartesianSegmentation(buX, recBounds));
+  auto segmentation = std::make_shared<CartesianSegmentation>(buX, recBounds);
 
   // Build translation
 
@@ -77,9 +75,9 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   Vector2D local = {0.1, -0.1};
 
   // Build PlanarModuleCluster
-  PlanarModuleCluster* pmc =
-      new PlanarModuleCluster(pSur, {}, cov, local[0], local[1], 0.,
-                              {DigitizationCell(0, 0, 1.)}, &digMod);
+  PlanarModuleCluster pmc(pSur, DigitizationSourceLink(pSur->geometryId(), {}),
+                          cov, local[0], local[1], 0.,
+                          {DigitizationCell(0, 0, 1.)}, &digMod);
 
   std::cout << "Create second hit" << std::endl;
 
@@ -100,9 +98,9 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   auto pSur2 = Surface::makeShared<PlaneSurface>(recBounds, detElem2);
 
-  PlanarModuleCluster* pmc2 =
-      new PlanarModuleCluster(pSur2, {}, cov, local[0], local[1], 0.,
-                              {DigitizationCell(0, 0, 1.)}, &digMod);
+  PlanarModuleCluster pmc2(
+      pSur2, DigitizationSourceLink(pSur->geometryId(), {}), cov, local[0],
+      local[1], 0., {DigitizationCell(0, 0, 1.)}, &digMod);
 
   std::cout << "Store both hits" << std::endl;
 
@@ -113,11 +111,11 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
 
   // Combine two PlanarModuleClusters
   SpacePointBuilder<SpacePoint<PlanarModuleCluster>> dhsp(dhsp_cfg);
-  dhsp.makeClusterPairs(tgContext, {pmc}, {pmc2}, clusterPairs);
+  dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc2}, clusterPairs);
 
   BOOST_CHECK_EQUAL(clusterPairs.size(), 1u);
-  BOOST_CHECK_EQUAL(*(clusterPairs[0].first), *pmc);
-  BOOST_CHECK_EQUAL(*(clusterPairs[0].second), *pmc2);
+  BOOST_CHECK_EQUAL(clusterPairs[0].first, &pmc);
+  BOOST_CHECK_EQUAL(clusterPairs[0].second, &pmc2);
 
   std::cout << "Calculate space point" << std::endl;
 
@@ -134,14 +132,14 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   DetectorElementStub detElem3(t3d3);
   auto pSur3 = Surface::makeShared<PlaneSurface>(recBounds, detElem3);
 
-  PlanarModuleCluster* pmc3 =
-      new PlanarModuleCluster(pSur3, {}, cov, local[0], local[1], 0.,
-                              {DigitizationCell(0, 0, 1.)}, &digMod);
+  PlanarModuleCluster pmc3(
+      pSur3, DigitizationSourceLink(pSur->geometryId(), {}), cov, local[0],
+      local[1], 0., {DigitizationCell(0, 0, 1.)}, &digMod);
 
   std::cout << "Try to store hits" << std::endl;
 
   // Combine points
-  dhsp.makeClusterPairs(tgContext, {pmc}, {pmc3}, clusterPairs);
+  dhsp.makeClusterPairs(tgContext, {&pmc}, {&pmc3}, clusterPairs);
 
   // Test for rejecting unconnected hits
   BOOST_CHECK_EQUAL(resultSP.size(), 1u);

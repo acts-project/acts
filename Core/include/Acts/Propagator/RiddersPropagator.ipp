@@ -45,13 +45,14 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     derivatives[i] =
         wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
   }
-  // Exchange the result by Ridders Covariance
-  const FullBoundParameterSet& parSet =
-      nominalResult.endParameters->getParameterSet();
-  FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
   if (start.covariance()) {
-    mParSet->setCovariance(
-        calculateCovariance(derivatives, *start.covariance(), deviations));
+    auto cov =
+        calculateCovariance(derivatives, *start.covariance(), deviations);
+    // replace the covariance of the nominal result w/ the ridders covariance
+    auto& nom = *nominalResult.endParameters;
+    nom = CurvilinearTrackParameters(
+        nom.fourPosition(options.geoContext), nom.unitDirection(),
+        nom.absoluteMomentum(), nom.charge(), std::move(cov));
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -106,10 +107,6 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     derivatives[i] =
         wiggleDimension(opts, start, i, target, nominalParameters, deviations);
   }
-  // Exchange the result by Ridders Covariance
-  const FullBoundParameterSet& parSet =
-      nominalResult.endParameters->getParameterSet();
-  FullBoundParameterSet* mParSet = const_cast<FullBoundParameterSet*>(&parSet);
   if (start.covariance()) {
     // Test if target is disc - this may lead to inconsistent results
     if (target.type() == Surface::Disc) {
@@ -118,13 +115,16 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
           // Set covariance to zero and return
           // TODO: This should be changed to indicate that something went
           // wrong
-          mParSet->setCovariance(Covariance::Zero());
           return ThisResult::success(std::move(nominalResult));
         }
       }
     }
-    mParSet->setCovariance(
-        calculateCovariance(derivatives, *start.covariance(), deviations));
+    // use nominal parameters and Ridders covariance
+    auto cov =
+        calculateCovariance(derivatives, *start.covariance(), deviations);
+    auto& nom = *nominalResult.endParameters;
+    nom = BoundTrackParameters(nom.referenceSurface().getSharedPtr(),
+                               nom.parameters(), nom.charge(), std::move(cov));
   }
   return ThisResult::success(std::move(nominalResult));
 }
@@ -187,7 +187,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
 
     // Correct for a possible variation of phi around
-    if (param == 2) {
+    if (param == eBoundPhi) {
       double phi0 = nominal(Acts::eBoundPhi);
       double phi1 = r.endParameters->parameters()(Acts::eBoundPhi);
       if (std::abs(phi1 + 2. * M_PI - phi0) < std::abs(phi1 - phi0))
@@ -204,7 +204,7 @@ auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
     const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
         derivatives,
     const Acts::BoundSymMatrix& startCov,
-    const std::vector<double>& deviations) const -> const Covariance {
+    const std::vector<double>& deviations) const -> Covariance {
   Jacobian jacobian;
   jacobian.setIdentity();
   jacobian.col(eBoundLoc0) = fitLinear(derivatives[eBoundLoc0], deviations);

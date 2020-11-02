@@ -11,7 +11,7 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -24,7 +24,7 @@ ActsExamples::HitsPrinter::HitsPrinter(
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument("Input clusters collection is not configured");
   }
-  if (m_cfg.inputHitParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument(
         "Input hit-particles map collection is not configured");
   }
@@ -41,7 +41,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   const auto& clusters = ctx.eventStore.get<Clusters>(m_cfg.inputClusters);
   const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   const auto& hitIds = ctx.eventStore.get<HitIds>(m_cfg.inputHitIds);
 
   if (clusters.size() != hitIds.size()) {

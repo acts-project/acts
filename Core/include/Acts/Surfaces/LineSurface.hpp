@@ -116,37 +116,25 @@ class LineSurface : public Surface {
                                   const Vector3D& position,
                                   const Vector3D& momentum) const final;
 
-  /// Initialize the jacobian from local to global
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from local to global which the surface knows best,
+  /// hence the calculation is done here.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
+  /// @param boundParams is the bound parameters vector
   ///
-  /// @param pars is the paranmeters vector
-  void initJacobianToGlobal(const GeometryContext& gctx,
-                            BoundToFreeMatrix& jacobian,
-                            const Vector3D& position, const Vector3D& direction,
-                            const BoundVector& pars) const final;
+  /// @return Jacobian from local to global
+  BoundToFreeMatrix jacobianLocalToGlobal(
+      const GeometryContext& gctx, const BoundVector& boundParams) const final;
 
-  /// Calculate the form factors for the derivatives
-  /// the calculation is identical for all surfaces where the
-  /// reference frame does not depend on the direction
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. free parameters
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the position of the paramters in global
-  /// @param direction is the direction of the track
-  /// @param rft is the transposed reference frame (avoids recalculation)
-  /// @param jacobian is the transport jacobian
+  /// @param parameters is the free parameters
   ///
-  /// @return a five-dim vector
-  BoundRowVector derivativeFactors(
-      const GeometryContext& gctx, const Vector3D& position,
-      const Vector3D& direction, const RotationMatrix3D& rft,
-      const BoundToFreeMatrix& jacobian) const final;
+  /// @return Derivative of path length w.r.t. free parameters
+  FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
+                                     const FreeVector& parameters) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -256,20 +244,17 @@ class LineSurface : public Surface {
   /// Return properly formatted class name for screen output */
   std::string name() const override;
 
-  /// Calculate the derivative of path length w.r.t. alignment parameters of the
-  /// surface (i.e. local frame origin in global 3D Cartesian coordinates and
-  /// its rotation represented with extrinsic Euler angles)
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param rotToLocalZAxis The derivative of local frame z axis vector w.r.t.
-  /// its rotation
-  /// @param position The position of the paramters in global
-  /// @param direction The direction of the track
+  /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
   AlignmentRowVector alignmentToPathDerivative(
-      const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-      const Vector3D& position, const Vector3D& direction) const final;
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

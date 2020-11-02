@@ -111,8 +111,17 @@ class SingleCurvilinearTrackParameters
                                                           theta, qOverP),
              std::move(cov)) {}
 
-  // this class does not have a custom default constructor and thus should not
-  // provide any custom default cstors, dstor, or assignment. see ISOCPP C.20.
+  /// Parameters are not default constructible due to the charge type.
+  SingleCurvilinearTrackParameters() = delete;
+  SingleCurvilinearTrackParameters(const SingleCurvilinearTrackParameters&) =
+      default;
+  SingleCurvilinearTrackParameters(SingleCurvilinearTrackParameters&&) =
+      default;
+  ~SingleCurvilinearTrackParameters() = default;
+  SingleCurvilinearTrackParameters& operator=(
+      const SingleCurvilinearTrackParameters&) = default;
+  SingleCurvilinearTrackParameters& operator=(
+      SingleCurvilinearTrackParameters&&) = default;
 };
 
 }  // namespace Acts

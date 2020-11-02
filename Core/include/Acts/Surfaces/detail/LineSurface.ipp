@@ -26,7 +26,6 @@ inline Result<Vector2D> LineSurface::globalToLocal(const GeometryContext& gctx,
                                                    const Vector3D& momentum,
                                                    double /*tolerance*/) const {
   using VectorHelpers::perp;
-
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3D lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -131,109 +130,114 @@ inline SurfaceIntersection LineSurface::intersect(
           this};
 }
 
-inline void LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
-                                              BoundToFreeMatrix& jacobian,
-                                              const Vector3D& position,
-                                              const Vector3D& direction,
-                                              const BoundVector& pars) const {
-  // The trigonometry required to convert the direction to spherical
-  // coordinates and then compute the sines and cosines again can be
-  // surprisingly expensive from a performance point of view.
-  //
-  // Here, we can avoid it because the direction is by definition a unit
-  // vector, with the following coordinate conversions...
-  const double x = direction(0);  // == cos(phi) * sin(theta)
-  const double y = direction(1);  // == sin(phi) * sin(theta)
-  const double z = direction(2);  // == cos(theta)
-
-  // ...which we can invert to directly get the sines and cosines:
-  const double cos_theta = z;
-  const double sin_theta = sqrt(x * x + y * y);
-  const double inv_sin_theta = 1. / sin_theta;
-  const double cos_phi = x * inv_sin_theta;
-  const double sin_phi = y * inv_sin_theta;
+inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
+    const GeometryContext& gctx, const BoundVector& boundParams) const {
+  // Transform from bound to free parameters
+  FreeVector freeParams =
+      detail::transformBoundToFreeParameters(*this, gctx, boundParams);
+  // The global position
+  const Vector3D position = freeParams.segment<3>(eFreePos0);
+  // The direction
+  const Vector3D direction = freeParams.segment<3>(eFreeDir0);
+  // Get the sines and cosines directly
+  const double cos_theta = std::cos(boundParams[eBoundTheta]);
+  const double sin_theta = std::sin(boundParams[eBoundTheta]);
+  const double cos_phi = std::cos(boundParams[eBoundPhi]);
+  const double sin_phi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
   const auto rframe = referenceFrame(gctx, position, direction);
+  // Initialize the jacobian from local to global
+  BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by the reference frame
-  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
+  jacToGlobal.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
-  jacobian(3, eBoundTime) = 1;
+  jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacobian(4, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacobian(4, eBoundTheta) = cos_theta * cos_phi;
-  jacobian(5, eBoundPhi) = sin_theta * cos_phi;
-  jacobian(5, eBoundTheta) = cos_theta * sin_phi;
-  jacobian(6, eBoundTheta) = (-sin_theta);
-  jacobian(7, eBoundQOverP) = 1;
+  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
   // build the cross product of d(D)/d(eBoundPhi) components with y axis
-  auto dDPhiY =
-      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundPhi));
+  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(
+      jacToGlobal.block<3, 1>(eFreeDir0, eBoundPhi));
   // and the same for the d(D)/d(eTheta) components
-  auto dDThetaY =
-      rframe.block<3, 1>(0, 1).cross(jacobian.block<3, 1>(4, eBoundTheta));
+  auto dDThetaY = rframe.block<3, 1>(0, 1).cross(
+      jacToGlobal.block<3, 1>(eFreeDir0, eBoundTheta));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
   dDThetaY -=
       rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDThetaY));
   // set the jacobian components for global d/ phi/Theta
-  jacobian.block<3, 1>(0, eBoundPhi) = dDPhiY * pars[eBoundLoc0] * ipdn;
-  jacobian.block<3, 1>(0, eBoundTheta) = dDThetaY * pars[eBoundLoc0] * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundPhi) =
+      dDPhiY * boundParams[eBoundLoc0] * ipdn;
+  jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) =
+      dDThetaY * boundParams[eBoundLoc0] * ipdn;
+  return jacToGlobal;
 }
 
-inline BoundRowVector LineSurface::derivativeFactors(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const RotationMatrix3D& rft,
-    const BoundToFreeMatrix& jacobian) const {
-  // the vector between position and center
-  ActsRowVectorD<3> pc = (position - center(gctx)).transpose();
-  // the longitudinal component vector (alogn local z)
-  ActsRowVectorD<3> locz = rft.block<1, 3>(1, 0);
-  // build the norm vector comonent by subtracting the longitudinal one
-  double long_c = locz * direction;
-  ActsRowVectorD<3> norm_vec = direction.transpose() - long_c * locz;
-  // calculate the s factors for the dependency on X
-  const BoundRowVector s_vec =
-      norm_vec * jacobian.topLeftCorner<3, eBoundSize>();
-  // calculate the d factors for the dependency on Tx
-  const BoundRowVector d_vec = locz * jacobian.block<3, eBoundSize>(4, 0);
-  // normalisation of normal & longitudinal components
-  double norm = 1. / (1. - long_c * long_c);
-  // create a matrix representation
-  ActsMatrixD<3, eBoundSize> long_mat = ActsMatrixD<3, eBoundSize>::Zero();
-  long_mat.colwise() += locz.transpose();
-  // build the combined normal & longitudinal components
-  return (norm * (s_vec - pc * (long_mat * d_vec.asDiagonal() -
-                                jacobian.block<3, eBoundSize>(4, 0))));
-}
-
-inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
-    const GeometryContext& gctx, const RotationMatrix3D& rotToLocalZAxis,
-    const Vector3D& position, const Vector3D& direction) const {
+inline FreeRowVector LineSurface::freeToPathDerivative(
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global posiiton
+  const auto position = parameters.segment<3>(eFreePos0);
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<double, 3> pcRowVec =
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
-  // The local frame transform
-  const auto& sTransform = transform(gctx);
-  const auto& rotation = sTransform.rotation();
+  // The rotation
+  const auto& rotation = transform(gctx).rotation();
   // The local frame z axis
   const Vector3D localZAxis = rotation.col(2);
   // The local z coordinate
-  const double localZ = pcRowVec * localZAxis;
-
+  const double pz = pcRowVec * localZAxis;
   // Cosine of angle between momentum direction and local frame z axis
-  const double dirZ = localZAxis.dot(direction);
-  const double norm = 1. / (1. - dirZ * dirZ);
+  const double dz = localZAxis.dot(direction);
+  const double norm = 1. / (1. - dz * dz);
+  // Initialize the derivative of propagation path w.r.t. free parameter
+  FreeRowVector freeToPath = FreeRowVector::Zero();
+  // The derivative of path w.r.t. position
+  freeToPath.segment<3>(eFreePos0) =
+      norm * (dz * localZAxis.transpose() - direction.transpose());
+  // The derivative of path w.r.t. direction
+  freeToPath.segment<3>(eFreeDir0) =
+      norm * (pz * localZAxis.transpose() - pcRowVec);
+
+  return freeToPath;
+}
+
+inline AlignmentRowVector LineSurface::alignmentToPathDerivative(
+    const GeometryContext& gctx, const FreeVector& parameters) const {
+  // The global posiiton
+  const auto position = parameters.segment<3>(eFreePos0);
+  // The direction
+  const auto direction = parameters.segment<3>(eFreeDir0);
+  // The vector between position and center
+  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
+      (position - center(gctx)).transpose();
+  // The rotation
+  const auto& rotation = transform(gctx).rotation();
+  // The local frame z axis
+  const Vector3D localZAxis = rotation.col(2);
+  // The local z coordinate
+  const double pz = pcRowVec * localZAxis;
+  // Cosine of angle between momentum direction and local frame z axis
+  const double dz = localZAxis.dot(direction);
+  const double norm = 1. / (1. - dz * dz);
+  // Calculate the derivative of local frame axes w.r.t its rotation
+  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(rotation);
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentRowVector alignToPath = AlignmentRowVector::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) =
-      norm * (direction.transpose() - dirZ * localZAxis.transpose());
+      norm * (direction.transpose() - dz * localZAxis.transpose());
   alignToPath.segment<3>(eAlignmentRotation0) =
-      norm * (dirZ * pcRowVec + localZ * direction.transpose()) *
-      rotToLocalZAxis;
+      norm * (dz * pcRowVec + pz * direction.transpose()) * rotToLocalZAxis;
 
   return alignToPath;
 }

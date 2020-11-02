@@ -26,6 +26,12 @@ struct CommandLineArguments {
   /// Look for spacepoint duplicates in the received input file, and remove them
   bool filterDuplicates = false;
 
+  /// The CUDA device to use
+  int cudaDevice = 0;
+  /// Memory to use on the CUDA device in megabytes (by default it's 80% of the
+  /// available)
+  std::size_t cudaDeviceMemory = 0;
+
   /// Interpret the command line arguments of the test executable
   void interpret(int argc, char* argv[]);
 

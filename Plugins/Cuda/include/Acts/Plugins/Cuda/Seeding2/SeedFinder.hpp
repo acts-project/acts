@@ -15,6 +15,10 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+// System include(s).
+#include <memory>
 
 namespace Acts {
 namespace Cuda {
@@ -26,9 +30,20 @@ class SeedFinder {
   ///////////////////////////////////////////////////////////////////
 
  public:
+  /// Create a CUDA backed seed finder object
+  ///
+  /// @param commonConfig Configuration shared with @c Acts::Seedfinder
+  /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
+  /// @param tripletFilterConfig Configuration for the GPU based triplet
+  ///        filtering
+  /// @param device The identifier of the CUDA device to run on
+  /// @param loggerLevel Output level of messages coming from the object
+  ///
   SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
              const SeedFilterConfig& seedFilterConfig,
-             const TripletFilterConfig& tripletFilterConfig);
+             const TripletFilterConfig& tripletFilterConfig, int device = 0,
+             std::unique_ptr<const Logger> logger =
+                 getDefaultLogger("Cuda::SeedFinder", Logging::INFO));
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
@@ -42,13 +57,27 @@ class SeedFinder {
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
+  /// set logging instance
+  ///
+  /// @param [in] newLogger is the logging istance to be set
+  void setLogger(std::unique_ptr<const Logger> newLogger);
+
  private:
+  /// Private access to the logger
+  ///
+  /// @return a const reference to the logger
+  const Logger& logger() const { return *m_logger; }
+
   /// Configuration for the seed finder
   SeedfinderConfig<external_spacepoint_t> m_commonConfig;
   /// Configuration for the (host) seed filter
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter
   TripletFilterConfig m_tripletFilterConfig;
+  /// CUDA device identifier
+  int m_device;
+  /// The logger object
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Cuda

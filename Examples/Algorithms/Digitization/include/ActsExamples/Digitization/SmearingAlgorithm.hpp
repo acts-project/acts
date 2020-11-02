@@ -8,20 +8,15 @@
 
 #pragma once
 
-#include "Acts/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/DigitizedHit.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
-#include <Acts/Geometry/GeometryHierarchyMap.hpp>
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
 
 #include <array>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace Acts {
 class Surface;
@@ -34,7 +29,6 @@ namespace ActsExamples {
 ///
 /// Different smearing functions can be configured for a list of supported
 /// smearers (see below).
-///
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
   template <Acts::BoundIndices... kParameters>
@@ -59,10 +53,16 @@ class SmearingAlgorithm final : public BareAlgorithm {
               Acts::eBoundTheta, Acts::eBoundTime>>;
 
   struct Config {
-    /// Input collection of simulated hits
-    std::string inputSimulatedHits;
-    /// Output collection of measuremetns
+    /// Input collection of simulated hits.
+    std::string inputSimHits;
+    /// Output source links collection.
+    std::string outputSourceLinks;
+    /// Output measurements collection.
     std::string outputMeasurements;
+    /// Output collection to map measured hits to contributing particles.
+    std::string outputMeasurementParticlesMap;
+    /// Output collection to map measured hits to simulated hits.
+    std::string outputMeasurementSimHitsMap;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
     /// Random numbers tool.
@@ -73,43 +73,21 @@ class SmearingAlgorithm final : public BareAlgorithm {
     bool configured = false;
   };
 
-  /// Construct the digitization algorithm.
+  /// Construct the smearing algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   SmearingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
-  /// Build measurement from simulation hits at input
+  /// Build measurement from simulation hits at input.
   ///
   /// @param ctx is the algorithm context with event information
-  ///
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
   /// The configuration struct containing the smearers
   Config m_cfg;
-
-  /// All digitizable surfaces in the geometry
-  std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
-      m_dSurfaces;
-
-  /// Create a fittable measurmement from a parameter set
-  ///
-  /// @param pset The ParameterSet created from the smearer.
-  /// @param surface The surface of the measurement.
-  /// @param hitIndices The index list of simulated hits.
-  ///
-  /// @return A Fittable measurement with a DigitizedHit source link
-  template <Acts::BoundIndices... kParameters>
-  Acts::FittableMeasurement<DigitizedHit> createMeasurement(
-      Acts::ParameterSet<Acts::BoundIndices, kParameters...>&& pset,
-      const Acts::Surface& surface,
-      std::vector<unsigned int> hitIndices) const {
-    DigitizedHit dhit(surface, hitIndices);
-    return Acts::Measurement<DigitizedHit, Acts::BoundIndices, kParameters...>(
-        std::move(surface.getSharedPtr()), dhit, std::move(pset));
-  }
 };
 
 }  // namespace ActsExamples

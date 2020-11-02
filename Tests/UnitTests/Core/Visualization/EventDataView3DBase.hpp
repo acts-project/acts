@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -46,11 +47,11 @@ using Acts::VectorHelpers::makeVector4;
 
 namespace Acts {
 namespace EventDataView3DTest {
-using SourceLink = MinimalSourceLink;
-using Covariance = BoundSymMatrix;
 
+using Covariance = BoundSymMatrix;
 template <BoundIndices... params>
-using MeasurementType = Measurement<SourceLink, BoundIndices, params...>;
+using MeasurementType =
+    Measurement<Test::TestSourceLink, BoundIndices, params...>;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -204,7 +205,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<FittableMeasurement<SourceLink>> measurements;
+  std::vector<FittableMeasurement<Test::TestSourceLink>> measurements;
   measurements.reserve(6);
   Vector2D lPosCenter{10_mm, 10_mm};
   std::array<double, 2> resolution = {30_um, 50_um};
@@ -222,10 +223,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   }
 
   // Make a vector of source links as input to the KF
-  std::vector<SourceLink> sourcelinks;
+  std::vector<Test::TestSourceLink> sourcelinks;
   std::transform(measurements.begin(), measurements.end(),
                  std::back_inserter(sourcelinks),
-                 [](const auto& m) { return SourceLink{&m}; });
+                 [](const auto& m) { return Test::TestSourceLink{m}; });
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   std::cout << "Construct KalmanFitter and perform fit" << std::endl;
@@ -260,9 +261,10 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   KalmanFitter kFitter(rPropagator);
 
   auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-  KalmanFitterOptions<VoidOutlierFinder> kfOptions(
-      tgContext, mfContext, calContext, VoidOutlierFinder(),
-      LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
+  KalmanFitterOptions<Test::TestSourceLinkCalibrator, VoidOutlierFinder>
+      kfOptions(tgContext, mfContext, calContext,
+                Test::TestSourceLinkCalibrator(), VoidOutlierFinder(),
+                LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
   // Fit the track
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);

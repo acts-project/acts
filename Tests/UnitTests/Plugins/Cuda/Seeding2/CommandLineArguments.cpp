@@ -34,7 +34,11 @@ void CommandLineArguments::interpret(int argc, char* argv[]) {
       "The number of groups to process as a maximum")(
       "filterDuplicates,d", po::bool_switch(),
       "Look for spacepoint duplicates in the input file, and remove them "
-      "(slow!)");
+      "(slow!)")("cudaDevice", po::value<int>()->default_value(0),
+                 "The CUDA device to use in the test")(
+      "cudaDeviceMemory", po::value<unsigned int>()->default_value(0),
+      "The amount of CUDA device memory to use, in megabytes. By default it is"
+      " 80% of the available amount.");
 
   // Parse the command line arguments.
   po::variables_map vm;
@@ -53,5 +57,7 @@ void CommandLineArguments::interpret(int argc, char* argv[]) {
   onlyGPU = vm["onlyGPU"].as<bool>();
   groupsToIterate = vm["groupsToIterate"].as<unsigned int>();
   filterDuplicates = vm["filterDuplicates"].as<bool>();
+  cudaDevice = vm["cudaDevice"].as<int>();
+  cudaDeviceMemory = vm["cudaDeviceMemory"].as<unsigned int>();
   return;
 }

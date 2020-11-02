@@ -11,6 +11,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <vector>

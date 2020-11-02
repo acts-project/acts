@@ -9,7 +9,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -26,7 +26,7 @@ TruthSeedSelector::TruthSeedSelector(const Config& cfg,
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
-  if (m_cfg.inputHitParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing input hit-particles map collection");
   }
   if (m_cfg.outputParticles.empty()) {
@@ -41,7 +41,7 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
   const auto& inputParticles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);

@@ -7,11 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
+
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include <Acts/Geometry/GeometryIdentifier.hpp>
-#include <Acts/Geometry/TrackingGeometry.hpp>
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <stdexcept>
 
@@ -19,78 +23,138 @@ ActsExamples::SmearingAlgorithm::SmearingAlgorithm(
     ActsExamples::SmearingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SmearingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputSimulatedHits.empty()) {
-    throw std::invalid_argument("Missing input hits collection");
+  if (m_cfg.inputSimHits.empty()) {
+    throw std::invalid_argument("Missing simulated hits input collection");
   }
   if (m_cfg.outputMeasurements.empty()) {
-    throw std::invalid_argument("Missing output measurement collection");
+    throw std::invalid_argument("Missing measurements output collection");
   }
-  if (!m_cfg.randomNumbers) {
+  if (m_cfg.outputSourceLinks.empty()) {
+    throw std::invalid_argument("Missing source links output collection");
+  }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
+  }
+  if (m_cfg.outputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-simulated-hits map output collection");
+  }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
+  if (not m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
-
-  // fill the digitizables map to allow lookup by geometry id only
-  m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
-    this->m_dSurfaces.insert_or_assign(surface->geometryId(), surface);
-  });
+  if (not m_cfg.configured) {
+    throw std::invalid_argument("Smearing Algorithm is misconfigured");
+  }
 }
+
+namespace {
+
+/// Create a fittable measurmement from a parameter set
+///
+/// @param sourceLink The corresponding source link.
+/// @param surface The surface of the measurement.
+/// @param paramSet The ParameterSet created from the smearer.
+/// @return A fittable framework measurement
+template <Acts::BoundIndices... kParameters>
+ActsExamples::Measurement makeMeasurement(
+    ActsExamples::IndexSourceLink sourceLink, const Acts::Surface& surface,
+    Acts::ParameterSet<Acts::BoundIndices, kParameters...>&& paramSet) {
+  using ConcreteMeasurement =
+      Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices,
+                        kParameters...>;
+  return ConcreteMeasurement(surface.getSharedPtr(), sourceLink,
+                             std::move(paramSet));
+}
+
+}  // namespace
 
 ActsExamples::ProcessCode ActsExamples::SmearingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  if (not m_cfg.configured) {
-    ACTS_FATAL("Smearing Algorithm is misconfigured. Aborting.");
-    return ProcessCode::ABORT;
-  }
+  // retrieve input
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
 
-  const auto& hits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
+  // prepare output containers
+  IndexSourceLinkContainer sourceLinks;
+  MeasurementContainer measurements;
+  IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
+  IndexMultimap<Index> hitSimHitsMap;
+  sourceLinks.reserve(simHits.size());
+  measurements.reserve(simHits.size());
+  hitParticlesMap.reserve(simHits.size());
+  hitSimHitsMap.reserve(simHits.size());
 
-  ActsExamples::GeometryIdMultimap<Acts::FittableMeasurement<DigitizedHit>>
-      measurements;
-  measurements.reserve(hits.size());
-
+  // setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
-  for (auto&& [moduleGeoId, moduleHits] : groupByModule(hits)) {
-    for (auto ih = moduleHits.begin(); ih != moduleHits.end(); ++ih) {
-      // Gather the hit index for further storage
-      unsigned int hitidx = ih - hits.begin();
-      const auto& hit = *ih;
+  for (auto simHitsGroup : groupByModule(simHits)) {
+    // manual pair unpacking instead of using
+    //   auto [moduleGeoId, moduleSimHits] : ...
+    // otherwise clang on macos complains that it is unable to capture the local
+    // binding in the lambda used for visiting the smearer below.
+    Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
+    const auto& moduleSimHits = simHitsGroup.second;
 
-      auto smearItr = m_cfg.smearers.find(moduleGeoId);
-      if (smearItr != m_cfg.smearers.end()) {
-        auto surfaceItr = m_dSurfaces.find(moduleGeoId);
-        if (surfaceItr != m_dSurfaces.end()) {
-          // First one wins (there shouldn't be more than one smearer per)
-          // surface
-          auto& surface = surfaceItr->second;
-          auto& smearer = *smearItr;
-          ActsFatras::SmearInput sInput(hit, ctx.geoContext, surface);
-          // Run the visitor
-          std::visit(
-              [&](auto&& sm) {
-                auto sParSet = sm.first(sInput, rng, sm.second);
-                if (sParSet.ok()) {
-                  auto measurement = createMeasurement(
-                      std::move(sParSet.value()), *surface, {hitidx});
-                  measurements.emplace_hint(measurements.end(),
-                                            surface->geometryId(),
-                                            std::move(measurement));
-                }
-              },
-              smearer);
-        } else {
-          ACTS_WARNING("Could not find surface with geometry identifier "
-                       << moduleGeoId.value());
-        }
-      } else {
-        ACTS_DEBUG("No smearingm function present for this module in volume "
-                   << moduleGeoId.volume());
-      }
+    auto smearerItr = m_cfg.smearers.find(moduleGeoId);
+    if (smearerItr == m_cfg.smearers.end()) {
+      ACTS_DEBUG("No smearing function present for module " << moduleGeoId);
+      continue;
+    }
+    const Acts::Surface* surface =
+        m_cfg.trackingGeometry->findSurface(moduleGeoId);
+    if (not surface) {
+      // this is either an invalid geometry id or a misconfigured smearer
+      // setup; both cases can not be handled and should be fatal.
+      ACTS_ERROR("Could not find surface " << moduleGeoId
+                                           << " for configured smearer");
+      return ProcessCode::ABORT;
+    }
+
+    for (auto ih = moduleSimHits.begin(); ih != moduleSimHits.end(); ++ih) {
+      const auto& simHit = *ih;
+      const auto simHitIdx = simHits.index_of(ih);
+
+      // run the smearer
+      std::visit(
+          [&](auto&& smearer) {
+            ActsFatras::SmearInput smearInput(simHit, ctx.geoContext, surface);
+            auto smearResult = smearer.first(smearInput, rng, smearer.second);
+            if (not smearResult.ok()) {
+              // do not store un-smearable measurements
+              return;
+            }
+
+            // the measurement container is unordered and the index under which
+            // the measurement will be stored is known before adding it.
+            Index hitIdx = measurements.size();
+            IndexSourceLink sourceLink(moduleGeoId, hitIdx);
+            auto meas = makeMeasurement(sourceLink, *surface,
+                                        std::move(smearResult.value()));
+
+            // add to output containers
+            // index map and source link container are geometry-ordered.
+            // since the input is also geometry-ordered, new items can
+            // be added at the end.
+            sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+            measurements.emplace_back(std::move(meas));
+            // this digitization does not do hit merging so there is only one
+            // mapping entry for each digitized hit.
+            hitParticlesMap.emplace_hint(hitParticlesMap.end(), hitIdx,
+                                         simHit.particleId());
+            hitSimHitsMap.emplace_hint(hitSimHitsMap.end(), hitIdx, simHitIdx);
+          },
+          *smearerItr);
     }
   }
 
-  // write the clusters to the EventStore
+  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  return ActsExamples::ProcessCode::SUCCESS;
+  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
+                     std::move(hitParticlesMap));
+  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
+                     std::move(hitSimHitsMap));
+  return ProcessCode::SUCCESS;
 }

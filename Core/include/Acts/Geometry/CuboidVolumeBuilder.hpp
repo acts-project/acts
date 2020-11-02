@@ -14,7 +14,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <functional>
+#include <iosfwd>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -26,6 +29,7 @@ class ISurfaceMaterial;
 class IVolumeMaterial;
 class DetectorElementBase;
 class PlaneSurface;
+class Layer;
 
 /// @brief This class builds a box detector with a configurable amount of
 /// surfaces in it. The idea is to allow a quick configuration of a detector for
