@@ -104,7 +104,7 @@ class FixedSizeSubspace {
       assert((*idx < kFullSize) and
              "Axis indices must be within the full space");
       if (0u < istore) {
-        assert((indices[istore - 1u] < *idx) and
+        assert((m_axes[istore - 1u] < *idx) and
                "Axis indices must be strongly ordered and unique");
       }
       // assign stored axis
