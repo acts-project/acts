@@ -453,6 +453,7 @@ class FixedSizeMeasurement {
 
   /// Construct from source link, subset indices, and measured data.
   ///
+  /// @tparam index_container_t Forward-iterable Container for indices
   /// @tparam parameters_t Input parameters vector type
   /// @tparam covariance_t Input covariance matrix type
   /// @param source The link that connects to the underlying detector readout
@@ -462,9 +463,9 @@ class FixedSizeMeasurement {
   ///
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
-  template <typename parameters_t, typename covariance_t>
-  FixedSizeMeasurement(source_link_t source,
-                       const std::array<indices_t, kSize>& indices,
+  template <typename index_container_t, typename parameters_t,
+            typename covariance_t>
+  FixedSizeMeasurement(source_link_t source, const index_container_t& indices,
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)),
@@ -496,10 +497,10 @@ class FixedSizeMeasurement {
   constexpr bool contains(indices_t i) const { return m_subspace.contains(i); }
 
   /// Measured parameters values.
-  const ParametersVector& parameters() const { return m_params; }
+  constexpr const ParametersVector& parameters() const { return m_params; }
 
   /// Measured parameters covariance.
-  const CovarianceMatrix& covariance() const { return m_cov; }
+  constexpr const CovarianceMatrix& covariance() const { return m_cov; }
 
   /// Projection matrix from the full space into the measured subspace.
   ProjectionMatrix projector() const {
@@ -549,7 +550,8 @@ class FixedSizeMeasurement {
 /// @tparam parameters_t Input parameters vector type
 /// @tparam covariance_t Input covariance matrix type
 /// @tparam indices_t Parameter index type, determines the full parameter space
-/// @tparam tail_indices_t Helper types required to
+/// @tparam tail_indices_t Helper types required to support variadic arguments;
+///   all types must be convertibale to `indices_t`.
 /// @param source The link that connects to the underlying detector readout
 /// @param params Measured parameters values
 /// @param cov Measured parameters covariance
@@ -574,7 +576,9 @@ auto makeMeasurement(source_link_t source,
                      indices_t index0, tail_indices_t... tailIndices)
     -> FixedSizeMeasurement<source_link_t, indices_t,
                             1u + sizeof...(tail_indices_t)> {
-  return {std::move(source), {index0, tailIndices...}, params, cov};
+  using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
+  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
+          cov};
 }
 
 namespace detail {
