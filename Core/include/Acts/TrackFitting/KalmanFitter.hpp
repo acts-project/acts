@@ -397,12 +397,12 @@ class KalmanFitter {
       state.stepping.navDir =
           (state.stepping.navDir == forward) ? backward : forward;
 
-      // @note The following reset might be removed since it's always the
-      // absolute value of them are used.
       // Reset propagator options
-      state.options.maxStepSize = -1.0 * state.options.maxStepSize;
+      state.options.maxStepSize =
+          state.stepping.navDir * std::abs(state.options.maxStepSize);
       // Not sure if reset of pathLimit during propagation makes any sense
-      state.options.pathLimit = -1.0 * state.options.pathLimit;
+      state.options.pathLimit =
+          state.stepping.navDir * std::abs(state.options.pathLimit);
 
       // Reset stepping&navigation state using last measurement track state on
       // sensitive surface
