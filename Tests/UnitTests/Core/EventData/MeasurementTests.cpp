@@ -83,10 +83,8 @@ const std::vector<std::tuple<double, double, double>> kPhiDataset = {
     // measurement and reference in bounds and close
     {0.5, 0.75, -0.25},
     // measurement and reference in bounds but at different edges
-    // TODO fix the phi difference calculation to take the periodicity into
-    //   account to always compute the distance w/ the smallest absolute value.
-    // {0.25, 2 * M_PI - 0.25, 0.5},
-    // {2 * M_PI - 0.125, 0.125, -0.25},
+    {0.25, 2 * M_PI - 0.25, 0.5},
+    {2 * M_PI - 0.125, 0.125, -0.25},
     // measurement in bounds, reference ouf-of-bounds, both near lower edge
     {0.25, -0.25, 0.5},
     // measurement in bounds, reference ouf-of-bounds, both near upper edge
