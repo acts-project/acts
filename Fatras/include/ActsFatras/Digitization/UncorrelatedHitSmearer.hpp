@@ -83,7 +83,7 @@ struct BoundParametersSmearer {
         detail::ParametersSmearer<Acts::BoundIndices, kParameters...>;
 
     if (sInput.surface == nullptr) {
-      return Result(ActsFatras::DigitizationError::NoSurfaceDefined);
+      return Result(ActsFatras::DigitizationError::UndefinedSurface);
     }
 
     const auto& hit = sInput.hit.get();

@@ -24,10 +24,17 @@ namespace ActsFatras {
 /// onto the readout surface into channel segments.
 ///
 struct Channelizer {
+  /// Shorthand for a 2D segment
+  using Segment2D = std::array<Acts::Vector2D, 2>;
+  /// Shorthand for a 2D bin
+  using Bin2D = std::array<unsigned int, 2>;
+  /// shorthand for a 2D bin delta
+  using BinDelta2D = std::array<int, 2>;
+
   /// Nested struct for stepping from one channel to the next.
   struct ChannelStep {
     /// This is the delta to the last step in bins
-    std::array<int, 2> delta = {0, 0};
+    BinDelta2D delta = {0, 0};
     /// The intersection with the channel boundary
     Acts::Vector2D intersect;
     /// The patlength from the start
@@ -38,7 +45,7 @@ struct Channelizer {
     /// @param delta_ The bin delta for this step
     /// @param intersect_ The intersect with the channel boundary
     /// @param start The start of the surface segment, for path from origin
-    ChannelStep(std::array<int, 2> delta_, Acts::Vector2D intersect_,
+    ChannelStep(BinDelta2D delta_, Acts::Vector2D intersect_,
                 const Acts::Vector2D& start)
         : delta(delta_),
           intersect(intersect_),
@@ -56,10 +63,10 @@ struct Channelizer {
   /// Nested struct for representing channel steps.
   struct ChannelSegment {
     /// The bin of this segment
-    std::array<unsigned int, 2> bin = {0, 0};
+    Bin2D bin = {0, 0};
     /// The segment start, end points
-    std::array<Acts::Vector2D, 2> path2D;
-    // The clipped path length
+    Segment2D path2D;
+    /// The clipped path length
     double pathLength = 0.;
 
     /// Constructor with arguments
@@ -67,8 +74,7 @@ struct Channelizer {
     /// @param bin_ The bin corresponding to this step
     /// @param path2D_ The start/end 2D position of the segement
     /// @param pathLength_ The segment length for this bin
-    ChannelSegment(std::array<unsigned int, 2> bin_,
-                   std::array<Acts::Vector2D, 2> path2D_, double pathLength_)
+    ChannelSegment(Bin2D bin_, Segment2D path2D_, double pathLength_)
         : bin(std::move(bin_)),
           path2D(std::move(path2D_)),
           pathLength(pathLength_) {}
@@ -86,15 +92,13 @@ struct Channelizer {
   /// @param geoCtx The geometry context for the localToGlobal, etc.
   /// @param surface The surface for the channelizing
   /// @param segmentation The segmentation for the channelizing
-  /// @param start The surface segment start (cartesian coordinates)
-  /// @param end The surface segement end (cartesian coordinates)
+  /// @param segment The surface segment (cartesian coordinates)
   ///
   /// @return a vector of ChannelSegment objects
   std::vector<ChannelSegment> segments(const Acts::GeometryContext& geoCtx,
                                        const Acts::Surface& surface,
                                        const Acts::BinUtility& segmentation,
-                                       const Acts::Vector2D& start,
-                                       const Acts::Vector2D& end) const;
+                                       const Segment2D& segment) const;
 };
 
 }  // namespace ActsFatras
