@@ -236,7 +236,7 @@ class SingleBoundTrackParameters {
   /// Ensure phi and theta angles are within bounds.
   void normalizePhiTheta() {
     auto [phi, theta] =
-        detail::ensureThetaBounds(m_params[eBoundPhi], m_params[eBoundTheta]);
+        detail::normalizePhiTheta(m_params[eBoundPhi], m_params[eBoundTheta]);
     m_params[eBoundPhi] = phi;
     m_params[eBoundTheta] = theta;
   }

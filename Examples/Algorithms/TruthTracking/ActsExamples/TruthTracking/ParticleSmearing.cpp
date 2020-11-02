@@ -77,10 +77,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundLoc1] = sigmaZ0 * stdNormal(rng);
       params[Acts::eBoundTime] = time + sigmaT0 * stdNormal(rng);
       // smear direction angles phi,theta ensuring correct bounds
-      const double deltaPhi = sigmaPhi * stdNormal(rng);
-      const double deltaTheta = sigmaTheta * stdNormal(rng);
-      const auto [newPhi, newTheta] =
-          Acts::detail::ensureThetaBounds(phi + deltaPhi, theta + deltaTheta);
+      const auto [newPhi, newTheta] = Acts::detail::normalizePhiTheta(
+          phi + sigmaPhi * stdNormal(rng), theta + sigmaTheta * stdNormal(rng));
       params[Acts::eBoundPhi] = newPhi;
       params[Acts::eBoundTheta] = newTheta;
       // compute smeared absolute momentum vector
