@@ -56,12 +56,14 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
   ACTS_DEBUG("Attempting to write event to " << path);
   HepMC3::ReaderAscii reader(path);
 
-  while (reader.read_event(event)) {
+  reader.read_event(event);
+  while (!reader.failed()) {
     events.push_back(std::move(event));
     event.clear();
+    reader.read_event(event);
   }
 
-  if (reader.failed())
+  if (events.empty())
     return ActsExamples::ProcessCode::ABORT;
 
   ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
