@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/detail/ParameterTraits.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
 
@@ -36,6 +36,8 @@ inline void calculateResiduals(BoundIndices size,
                                const BoundVector& reference,
                                const Eigen::MatrixBase<measured_t>& measured,
                                Eigen::MatrixBase<residuals_t>& residuals) {
+  using OutputScalar = typename residuals_t::Scalar;
+
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(measured_t);
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(residuals_t);
   assert((size <= eBoundSize) and "Measured subspace is too large");
@@ -43,17 +45,19 @@ inline void calculateResiduals(BoundIndices size,
   assert((size <= residuals.size()) and "Inconsistent residuals size");
 
   for (size_t i = 0; i < size; ++i) {
+    size_t fullIndex = indices[i];
     // this is neither elegant nor smart but it is the simplest solution.
     //
     // only phi must be handled specially here. the theta limits can only be
     // correctly handled if phi is updated, too. since we can not ensure that
     // both are available, it is probably less error-prone to treat theta as a
     // regular, unrestricted parameter here.
-    if (i == eBoundPhi) {
-      residuals[i] = ParameterTraits<BoundIndices, eBoundPhi>::getDifference(
-          measured[i], reference[indices[i]]);
+    if (fullIndex == eBoundPhi) {
+      residuals[i] = difference_periodic<OutputScalar>(
+          measured[i], reference[fullIndex],
+          static_cast<OutputScalar>(2 * M_PI));
     } else {
-      residuals[i] = measured[i] - reference[indices[i]];
+      residuals[i] = measured[i] - reference[fullIndex];
     }
   }
 }
