@@ -34,7 +34,6 @@ class GenericDetectorCuts : public IExperimentCuts<SpacePoint> {
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space point
-  /// point
   /// @return vector of seeds that pass the cut
   std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
   cutPerMiddleSP(

@@ -56,9 +56,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 }
 
 std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
-							   std::size_t hit_id, const Acts::GeometryIdentifier geoId,
-							   const Acts::PlanarModuleCluster& cluster,
-							   const AlgorithmContext& ctx) const {
+    std::size_t hit_id, const Acts::GeometryIdentifier geoId,
+    const Acts::PlanarModuleCluster& cluster,
+    const AlgorithmContext& ctx) const {
   const auto parameters = cluster.parameters();
   Acts::Vector2D localPos(parameters[0], parameters[1]);
   Acts::Vector3D globalPos(0, 0, 0);
@@ -73,9 +73,10 @@ std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
   y = globalPos.y();
   z = globalPos.z();
   r = std::sqrt(x * x + y * y);
-  varianceR = cov(0,0);
-  varianceZ = cov(1,1);
-  std::unique_ptr<SimSpacePoint> sp(new SimSpacePoint{hit_id, x, y, z, r, geoId, varianceR, varianceZ});
+  varianceR = cov(0, 0);
+  varianceZ = cov(1, 1);
+  std::unique_ptr<SimSpacePoint> sp(
+      new SimSpacePoint{hit_id, x, y, z, r, geoId, varianceR, varianceZ});
   return sp;
 }
 

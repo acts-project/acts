@@ -11,8 +11,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/SimSpacePoint.hpp"
 
 #include <memory>
