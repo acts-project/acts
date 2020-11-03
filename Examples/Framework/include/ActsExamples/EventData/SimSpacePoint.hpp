@@ -11,12 +11,16 @@
 #include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 namespace ActsExamples {
 struct SimSpacePoint {
+  // Hit id
   size_t m_Id;
+  // Global position
   float m_x;
   float m_y;
   float m_z;
   float m_r;
+  // volume and layer ID
   Acts::GeometryIdentifier m_geoId;
+  // VarianceR/Z of the SP position.
   float varianceR;
   float varianceZ;
   size_t Id() const { return m_Id; }
