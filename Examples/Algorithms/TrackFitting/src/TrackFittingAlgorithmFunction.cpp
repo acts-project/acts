@@ -45,7 +45,7 @@ struct DirectedFitterFunctionImpl {
   DirectedFitterFunctionImpl(Fitter&& f) : fitter(std::move(f)) {}
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::TrackFitterOptions& options,
       const std::vector<const Acts::Surface*>& sSequence) const {

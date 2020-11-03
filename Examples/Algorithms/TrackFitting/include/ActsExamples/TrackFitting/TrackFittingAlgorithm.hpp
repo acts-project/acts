@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -40,7 +41,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   /// Fit function that takes the above parameters plus a sorted surface
   /// sequence for the DirectNavigator to follow
   using DirectedTrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<SimSourceLink>&, const TrackParameters&,
+      const std::vector<IndexSourceLink>&, const TrackParameters&,
       const TrackFitterOptions&, const std::vector<const Acts::Surface*>&)>;
 
   /// Create the track fitter function implementation.
@@ -71,6 +72,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     TrackFitterFunction fit;
     /// Type erased direct navigation fitter function
     DirectedTrackFitterFunction dFit;
+    /// Tracking geometry for surface lookup
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor of the fitting algorithm
@@ -88,7 +91,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
  private:
   /// Helper function to call correct FitterFunction
   TrackFitterResult fitTrack(
-      const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const TrackFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfSequence) const;
@@ -98,9 +101,9 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
 inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
 ActsExamples::TrackFittingAlgorithm::fitTrack(
-    const std::vector<ActsExamples::SimSourceLink>& sourceLinks,
+    const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
-    const Acts::KalmanFitterOptions<SimSourceLinkCalibrator,
+    const Acts::KalmanFitterOptions<MeasurementCalibrator,
                                     Acts::VoidOutlierFinder>& options,
     const std::vector<const Acts::Surface*>& surfSequence) const {
   if (m_cfg.directNavigation)

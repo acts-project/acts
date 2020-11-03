@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesTrackFitting SHARED
+  src/SurfaceSortingAlgorithm.cpp
   src/TrackFittingAlgorithm.cpp
   src/TrackFittingAlgorithmFunction.cpp)
 target_include_directories(

@@ -20,6 +20,7 @@
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
+#include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
@@ -146,19 +147,34 @@ int runRecTruthTracks(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 
+  SurfaceSortingAlgorithm::Config sorterCfg;
+
+  // Setup the surface sorter if running direct navigator
+  sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputMeasurementSimHitsMap =
+      hitSmearingCfg.outputMeasurementSimHitsMap;
+  sorterCfg.outputProtoTracks = "sortedprototracks";
+  if (dirNav) {
+    sequencer.addAlgorithm(
+        std::make_shared<SurfaceSortingAlgorithm>(sorterCfg, logLevel));
+  }
+
   // setup the fitter
   TrackFittingAlgorithm::Config fitter;
   fitter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   fitter.inputSourceLinks = hitSmearingCfg.outputSourceLinks;
   fitter.inputProtoTracks = trackFinderCfg.outputProtoTracks;
+  if (dirNav)
+    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
+  fitter.trackingGeometry = trackingGeometry;
   fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
   fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
                                                               magneticField);
-
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
