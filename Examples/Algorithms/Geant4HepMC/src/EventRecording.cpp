@@ -104,12 +104,17 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         const std::vector<std::string> vertexAttributes =
             vertex->attribute_names();
         for (const auto& att : vertexAttributes) {
-            if ((vertex->attribute_as_string(att).find(m_cfg.eventSelectionProcess) !=
-                std::string::npos) && !vertex->particles_in().empty() && vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>("TrackID")
-                && vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>("TrackID")->value() == 1) {
-              storeEvent = true;
-              break;
-            }
+          if ((vertex->attribute_as_string(att).find(
+                   m_cfg.eventSelectionProcess) != std::string::npos) &&
+              !vertex->particles_in().empty() &&
+              vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>(
+                  "TrackID") &&
+              vertex->particles_in()[0]
+                      ->attribute<HepMC3::IntAttribute>("TrackID")
+                      ->value() == 1) {
+            storeEvent = true;
+            break;
+          }
         }
         if (storeEvent)
           break;

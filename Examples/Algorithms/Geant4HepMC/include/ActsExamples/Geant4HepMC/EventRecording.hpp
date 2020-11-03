@@ -31,7 +31,7 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     std::string inputParticles = "";
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
-    
+
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
 
     /// random number seed 1
