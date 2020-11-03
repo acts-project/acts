@@ -33,7 +33,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
   std::vector<const InputTrack_t*> removedSeedTracks;
   while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
           ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
-         iteration < m_cfg.maxIterations) {    
+         iteration < m_cfg.maxIterations) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
     std::vector<const InputTrack_t*> searchTracks;
@@ -53,7 +53,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
     Vertex<InputTrack_t>& vtxCandidate = *allVertices.back();
     allVerticesPtr.push_back(&vtxCandidate);
-            
+
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
                << vtxCandidate.fullPosition());
     if (vtxCandidate.position().z() ==
@@ -165,18 +165,16 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                              Vertex<InputTrack_t>& seedVertex) const
-    -> void {
+                              Vertex<InputTrack_t>& seedVertex) const -> void {
   if (m_cfg.useBeamSpotConstraint) {
     if (currentConstraint.fullCovariance() == SymMatrix4D::Zero()) {
       ACTS_WARNING(
           "No constraint provided, but useBeamSpotConstraint set to true.");
     }
-    if (not m_cfg.useSeedConstraint) {      
+    if (not m_cfg.useSeedConstraint) {
       // Set seed vertex constraint to old constraint before seeding
       seedVertex.setFullCovariance(currentConstraint.fullCovariance());
-    }
-    else{      
+    } else {
       // Use the constraint provided by the seed finder
       currentConstraint.setFullPosition(seedVertex.fullPosition());
       currentConstraint.setFullCovariance(seedVertex.fullCovariance());
@@ -287,7 +285,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       vtx.setFullPosition(Vector4D(0., 0., newZ, 0.));
 
       // Update vertex info for current vertex
-      fitterState.vtxInfoMap[&vtx] = VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
+      fitterState.vtxInfoMap[&vtx] =
+          VertexInfo<InputTrack_t>(currentConstraint, vtx.fullPosition());
 
       // Try to add compatible track with adapted vertex position
       auto res = addCompatibleTracksToVertex(allTracks, vtx, fitterState,
@@ -297,7 +296,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
       }
 
       if (fitterState.vtxInfoMap[&vtx].trackLinks.empty()) {
-        ACTS_DEBUG( 
+        ACTS_DEBUG(
             "No tracks near seed were found, while at least one was "
             "expected. Break.");
         return Result<bool>::success(false);
