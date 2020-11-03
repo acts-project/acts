@@ -21,17 +21,26 @@
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+#include <memory>
+#include <utility>
+
+namespace {
+
+using namespace Acts;
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
 
-namespace Acts {
-namespace Test {
+using MagneticField = Acts::ConstantBField;
+using Stepper = Acts::EigenStepper<MagneticField>;
+using Propagator = Acts::Propagator<Stepper>;
 
-using Covariance = BoundSymMatrix;
-using Propagator = Propagator<EigenStepper<ConstantBField>>;
-// Create a test context
-GeometryContext geoContext = GeometryContext();
-MagneticFieldContext magFieldContext = MagneticFieldContext();
+using Estimator =
+    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+
+const Acts::GeometryContext geoContext;
+const Acts::MagneticFieldContext magFieldContext;
+// use a fixed seed for reproducible tests
+std::default_random_engine gen(31415);
 
 // Track d0 distribution
 std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
@@ -58,6 +67,19 @@ std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
 // Number of tracks distritbution
 std::uniform_int_distribution<> nTracksDist(3, 10);
 
+/// Construct an ip estimator for a constant bfield along z.
+Estimator makeEstimator(double bZ) {
+  MagneticField field(Vector3D(0, 0, bZ));
+  Stepper stepper(field);
+  Estimator::Config cfg(field,
+                        std::make_shared<Propagator>(std::move(stepper)));
+  return Estimator(cfg);
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_SUITE(Vertexing)
+
 /// @brief Unit test for ImpactPointEstimator params and distance
 ///
 BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
@@ -66,24 +88,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
   // Number of tests
   unsigned int nTests = 10;
 
-  // Set up RNG
-  int mySeed = 31415;
-  std::mt19937 gen(mySeed);
-
-  // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2._T));
-
-  // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
-
-  // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-
-  // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state(magFieldContext);
+  Estimator ipEstimator = makeEstimator(2_T);
+  Estimator::State state(magFieldContext);
 
   // Reference position
   Vector3D refPosition(0., 0., 0.);
@@ -98,8 +104,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
     double resTh = resAngDist(gen);
     double resQp = resQoPDist(gen);
 
-    // Covariance matrix
-    Covariance covMat;
+    // CovarianceMatrix matrix
+    BoundTrackParameters::CovarianceMatrix covMat;
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
@@ -188,25 +194,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
   // Number of tests
   unsigned int nTests = 10;
 
-  // Set up RNG
-  int mySeed = 31415;
-  std::mt19937 gen(mySeed);
-
-  // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 2.) * UnitConstants::T);
-
-  // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
-
-  // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-
-  // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state(magFieldContext);
-
+  Estimator ipEstimator = makeEstimator(2_T);
+  Estimator::State state(magFieldContext);
   // Reference position
   Vector3D refPosition(0., 0., 0.);
 
@@ -225,7 +214,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 
   // Start running tests
   for (unsigned int i = 0; i < nTests; i++) {
-    // Covariance matrix
+    // CovarianceMatrix matrix
     BoundTrackParameters::CovarianceMatrix covMat =
         BoundTrackParameters::CovarianceMatrix::Zero();
     covMat(eBoundLoc0, eBoundLoc0) = resD0 * resD0;
@@ -296,13 +285,13 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
       // Relative differences of compatibility values and distances
       // should have the same sign, i.e. the following product
       // should always be positive
-      // double res = relDiffComp * relDiffDist;
+      double res = relDiffComp * relDiffDist;
 
       // TODO 2020-09-09 msmk
       // this fails for one track after the the track parameters cleanup.
       // i do not understand what this tests and/or how to fix it. Bastian
       // has to look at this.
-      // BOOST_CHECK_GE(res, 0);
+      BOOST_CHECK_GE(res, 0);
     }
   }
 }
@@ -311,33 +300,21 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 /// configuration and test values as in Athena unit test algorithm
 /// Tracking/TrkVertexFitter/TrkVertexFitterUtils/test/ImpactPointEstimator_test
 BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
-  // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.9971546939_T));
-
-  // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
-
-  // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-
-  // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state(magFieldContext);
+  Estimator ipEstimator = makeEstimator(1.9971546939_T);
+  Estimator::State state(magFieldContext);
 
   // Use same values as in Athena unit test
-  Vector3D pos1(2_mm, 1_mm, -10_mm);
+  Vector4D pos1(2_mm, 1_mm, -10_mm, 0_ns);
   Vector3D mom1(400_MeV, 600_MeV, 200_MeV);
   Vector3D vtxPos(1.2_mm, 0.8_mm, -7_mm);
 
   // Start creating some track parameters
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(pos1);
+      Surface::makeShared<PerigeeSurface>(pos1.segment<3>(ePos0));
   // Some fixed track parameter values
-  BoundTrackParameters params1(perigeeSurface, geoContext,
-                               makeVector4(pos1, 0_ns), mom1, mom1.norm(), 1,
-                               Covariance::Identity());
+  BoundTrackParameters params1(
+      perigeeSurface, geoContext, pos1, mom1, mom1.norm(), 1_e,
+      BoundTrackParameters::CovarianceMatrix::Identity());
 
   auto res1 =
       ipEstimator.calculate3dDistance(geoContext, params1, vtxPos, state);
@@ -345,8 +322,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_athena_test) {
   double distance = (*res1);
 
   // Desired result from Athena unit test
-  const double result = 3.10391_mm;
-  CHECK_CLOSE_ABS(distance, result, 0.00001_mm);
+  CHECK_CLOSE_ABS(distance, 3.10391_mm, 0.00001_mm);
 
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
@@ -364,18 +340,8 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   // Number of tracks to test with
   unsigned int nTracks = 10;
 
-  // Set up RNG
-  int mySeed = 31415;
-  std::mt19937 gen(mySeed);
-
-  // Set up constant B-Field
-  ConstantBField bField(0.0, 0.0, 1_T);
-
-  // Set up Eigenstepper
-  EigenStepper<ConstantBField> stepper(bField);
-
-  // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
+  Estimator ipEstimator = makeEstimator(1_T);
+  Estimator::State state(magFieldContext);
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -403,12 +369,6 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   double d0_v = std::sqrt(x * x + y * y);
   double z0_v = z;
 
-  // Set up the ImpactPointEstimator
-  using IPEstimator = ImpactPointEstimator<BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstCfg(bField, propagator);
-  IPEstimator ipEstimator(ipEstCfg);
-  IPEstimator::State state(magFieldContext);
-
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
@@ -416,7 +376,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
     double q = qDist(gen) < 0 ? -1. : 1.;
 
     // Construct random track parameters
-    BoundVector paramVec;
+    BoundTrackParameters::ParametersVector paramVec;
     paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
         thetaDist(gen), q / pTDist(gen), 0.;
 
@@ -428,7 +388,7 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
     double resQp = resQoPDist(gen);
 
     // Fill vector of track objects with simple covariance matrix
-    Covariance covMat;
+    BoundTrackParameters::CovarianceMatrix covMat;
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
@@ -446,5 +406,4 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   }
 }
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_SUITE_END()
