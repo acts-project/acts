@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
-
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
@@ -20,7 +19,6 @@
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
 
-#include <HepMC3/GenEvent.h>
 #include <HepMC3/GenParticle.h>
 
 ActsExamples::EventRecording::~EventRecording() {
@@ -106,15 +104,12 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         const std::vector<std::string> vertexAttributes =
             vertex->attribute_names();
         for (const auto& att : vertexAttributes) {
-          for (const auto& proc : m_cfg.eventSelectionProcess) {
-            if (vertex->attribute_as_string(att).find(proc) !=
-                std::string::npos) {
+            if ((vertex->attribute_as_string(att).find(m_cfg.eventSelectionProcess) !=
+                std::string::npos) && !vertex->particles_in().empty() && vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>("TrackID")
+                && vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>("TrackID")->value() == 1) {
               storeEvent = true;
               break;
             }
-          }
-          if (storeEvent)
-            break;
         }
         if (storeEvent)
           break;

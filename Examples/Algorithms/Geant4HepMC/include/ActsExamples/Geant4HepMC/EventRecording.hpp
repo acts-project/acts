@@ -17,6 +17,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <mutex>
 #include <G4VUserDetectorConstruction.hh>
+#include <HepMC3/GenEvent.h>
 
 class G4RunManager;
 
@@ -26,9 +27,11 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
  public:
   /// @class Config
   struct Config {
+    /// The input collection of particles
     std::string inputParticles = "";
+    /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
-
+    
     std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
 
     /// random number seed 1
@@ -38,8 +41,8 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
 
     /// List of processes that can be combined to a single vertex
     std::vector<std::string> processFilter;
-    /// List of processes that should be recorded
-    std::vector<std::string> eventSelectionProcess;
+    /// Process that should be recorded
+    std::string eventSelectionProcess;
     /// List to veto events with certain processes
     std::vector<std::string> eventRejectionProcess;
   };
