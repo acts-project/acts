@@ -208,6 +208,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
         // from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
+        // For pt < maxPtScattering,
         // if deltaTheta larger than allowed scattering for calculated pT, skip
         if ((m_config.pTPerHelixRadius * std::sqrt(S2 / B2) <
              2 * m_config.maxPtScattering) &&
