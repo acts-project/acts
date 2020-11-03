@@ -28,8 +28,6 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Seeding/GenericDetectorCuts.hpp"
-#include "ActsExamples/Seeding/SeedContainer.hpp"
-#include "ActsExamples/Seeding/SimSpacePoint.hpp"
 #include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 
 #include <iostream>
@@ -37,7 +35,6 @@
 
 using ProtoTrack = ActsExamples::ProtoTrack;
 using SimSpacePoint = ActsExamples::SimSpacePoint;
-using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -46,9 +43,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument(
         "Missing clusters input collection with the hits");
-  }
-  if (m_cfg.inputHitParticlesMap.empty()) {
-    throw std::invalid_argument("Missing hit-particles map input collection");
   }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particles collection");
@@ -61,47 +55,28 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 }
 
-SimSpacePoint* ActsExamples::SeedingAlgorithm::transformSP(
-    std::size_t hit_id, const Acts::GeometryIdentifier geoId,
-    const Acts::PlanarModuleCluster& cluster,
-    const HitParticlesMap& hitParticlesMap, const AlgorithmContext& ctx) const {
+std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
+							   std::size_t hit_id, const Acts::GeometryIdentifier geoId,
+							   const Acts::PlanarModuleCluster& cluster,
+							   const AlgorithmContext& ctx) const {
   const auto parameters = cluster.parameters();
   Acts::Vector2D localPos(parameters[0], parameters[1]);
   Acts::Vector3D globalPos(0, 0, 0);
   Acts::Vector3D globalFakeMom(1, 1, 1);
+
   // transform local into global position information
   globalPos = cluster.referenceObject().localToGlobal(ctx.geoContext, localPos,
                                                       globalFakeMom);
+  auto cov = cluster.covariance();
   float x, y, z, r, varianceR, varianceZ;
   x = globalPos.x();
   y = globalPos.y();
   z = globalPos.z();
   r = std::sqrt(x * x + y * y);
-  varianceR = 0.;
-  varianceZ = 0.;
-
-  // get truth particles that are a part of this space point
-  std::vector<ActsExamples::ParticleHitCount> particleHitCount;
-  for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hit_id))) {
-    auto particleId = hitParticle.second;
-    // search for existing particle in the existing hit counts
-    auto isSameParticle = [=](const ParticleHitCount& phc) {
-      return (phc.particleId == particleId);
-    };
-    auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
-                           isSameParticle);
-    // either increase count if we saw the particle before or add it
-    if (it != particleHitCount.end()) {
-      it->hitCount += 1;
-    } else {
-      particleHitCount.push_back({particleId, 1u});
-    }
-  }
-
-  SimSpacePoint* SP = new SimSpacePoint{
-      hit_id, x, y, z, r, geoId, varianceR, varianceZ, particleHitCount};
-
-  return SP;
+  varianceR = cov(0,0);
+  varianceZ = cov(1,1);
+  std::unique_ptr<SimSpacePoint> sp(new SimSpacePoint{hit_id, x, y, z, r, geoId, varianceR, varianceZ});
+  return sp;
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -156,9 +131,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       ctx.eventStore
           .get<ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>>(
               m_cfg.inputClusters);
-  // read in the map of hitId to particleId truth information
-  const HitParticlesMap hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
 
   // create the space points
   std::size_t clustCounter = 0;
@@ -173,9 +145,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     std::size_t volumeId = geoId.volume();
 
     if (volumeId >= 7 and volumeId <= 9) {  // pixel detector
-      SimSpacePoint* SP =
-          transformSP(hit_id, geoId, cluster, hitParticlesMap, ctx);
-      spVec.push_back(SP);
+      // std::unique_ptr<SimSpacePoint>
+      auto sp = transformSP(hit_id, geoId, cluster, ctx).release();
+      spVec.push_back(sp);
       clustCounter++;
     }
     hit_id++;
@@ -196,7 +168,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
   }
 
-  // SeedContainer seeds;
   ProtoTrackContainer protoTracks;  // Three hits
   int numSeeds = 0;
   for (auto& outVec : seedVector) {

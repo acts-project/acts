@@ -19,7 +19,6 @@ struct SimSpacePoint {
   Acts::GeometryIdentifier m_geoId;
   float varianceR;
   float varianceZ;
-  std::vector<ActsExamples::ParticleHitCount> particles;
   size_t Id() const { return m_Id; }
   float x() const { return m_x; }
   float y() const { return m_y; }
