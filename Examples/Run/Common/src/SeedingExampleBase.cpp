@@ -77,7 +77,6 @@ int seedingExample(int argc, char* argv[],
   // Seeding algorithm
   ActsExamples::SeedingAlgorithm::Config seeding;
   seeding.outputSeeds = "seeds";
-  seeding.outputProtoTracks = "protoTracks";
   seeding.inputClusters = clusterReaderCfg.outputClusters;
   seeding.inputParticles = particleReader.outputParticles;
   sequencer.addAlgorithm(
@@ -85,7 +84,6 @@ int seedingExample(int argc, char* argv[],
 
   // Performance Writer
   ActsExamples::SeedingPerformanceWriter::Config seedPerfCfg;
-  // seedPerfCfg.inputSeeds = seeding.outputSeeds;
   seedPerfCfg.inputSeeds = "seeds";
   seedPerfCfg.inputParticles = particleReader.outputParticles;
   seedPerfCfg.inputClusters = clusterReaderCfg.outputClusters;

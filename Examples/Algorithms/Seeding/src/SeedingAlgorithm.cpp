@@ -28,12 +28,10 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Seeding/GenericDetectorCuts.hpp"
-#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
-using ProtoTrack = ActsExamples::ProtoTrack;
 using SimSpacePoint = ActsExamples::SimSpacePoint;
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -49,9 +47,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing output seeds collection");
-  }
-  if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing output proto-tracks collection");
   }
 }
 
@@ -146,7 +141,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     std::size_t volumeId = geoId.volume();
 
     if (volumeId >= 7 and volumeId <= 9) {  // pixel detector
-      // std::unique_ptr<SimSpacePoint>
+
       auto sp = transformSP(hit_id, geoId, cluster, ctx).release();
       spVec.push_back(sp);
       clustCounter++;
@@ -169,26 +164,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
   }
 
-  ProtoTrackContainer protoTracks;  // Three hits
   int numSeeds = 0;
   for (auto& outVec : seedVector) {
     numSeeds += outVec.size();
-    for (size_t i = 0; i < outVec.size(); i++) {
-      const Acts::Seed<SimSpacePoint>* seed = &outVec[i];
-      ProtoTrack ptrack;
-      ptrack.reserve(seed->sp().size());
-      for (std::size_t j = 0; j < seed->sp().size(); j++) {
-        ptrack.emplace_back(seed->sp()[j]->Id());
-      }
-      protoTracks.emplace_back(std::move(ptrack));
-    }
   }
 
   ACTS_DEBUG(spVec.size() << " hits, " << seedVector.size() << " regions, "
                           << numSeeds << " seeds");
 
   ctx.eventStore.add(m_cfg.outputSeeds, std::move(seedVector));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

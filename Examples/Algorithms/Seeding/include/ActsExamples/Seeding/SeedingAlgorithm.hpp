@@ -11,9 +11,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Framework/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 
 #include <memory>
 #include <set>
@@ -32,8 +31,6 @@ class SeedingAlgorithm final : public BareAlgorithm {
   struct Config {
     /// Output collection of clusters.
     std::string outputSeeds;
-    /// Output prototracks
-    std::string outputProtoTracks;
     // input Clusters from the event#-hits.csv file.
     std::string inputClusters;
     // input particles for creating proto seeds
