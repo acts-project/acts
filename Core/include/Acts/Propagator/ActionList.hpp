@@ -44,28 +44,11 @@ struct ActionList : public detail::Extendable<actors_t...> {
 
   using detail::Extendable<actors_t...>::get;
 
-  /// Default constructor
   ActionList() = default;
-
-  /// Default copy constructor
-  ///
-  /// @param actors The source action list
   ActionList(const ActionList<actors_t...>& actors) = default;
-
-  /// Default move constructor
-  ///
-  /// @param actors The source action list
   ActionList(ActionList<actors_t...>&& actors) = default;
-
-  /// Default move assignment operator
-  ///
-  /// @param actors The source action list
   ActionList<actors_t...>& operator=(const ActionList<actors_t...>& actors) =
       default;
-
-  /// Default move assignment operator
-  ///
-  /// @param actors The source action list
   ActionList<actors_t...>& operator=(ActionList<actors_t...>&& actors) =
       default;
 

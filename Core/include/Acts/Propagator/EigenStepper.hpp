@@ -131,7 +131,7 @@ class EigenStepper {
     FreeVector derivative = FreeVector::Zero();
 
     /// Covariance matrix (and indicator)
-    //// associated with the initial error on track parameters
+    /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 

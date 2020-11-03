@@ -45,28 +45,11 @@ struct AbortList : public detail::Extendable<aborters_t...> {
 
   using detail::Extendable<aborters_t...>::get;
 
-  /// Default constructor
   AbortList() = default;
-
-  /// Default copy constructor
-  ///
-  /// @param aborters The source action list
   AbortList(const AbortList<aborters_t...>& aborters) = default;
-
-  /// Default move constructor
-  ///
-  /// @param aborters The source action list
   AbortList(AbortList<aborters_t...>&& aborters) = default;
-
-  /// Default move assignment operator
-  ///
-  /// @param aborters The source action list
   AbortList<aborters_t...>& operator=(
       const AbortList<aborters_t...>& aborters) = default;
-
-  /// Default move assignment operator
-  ///
-  /// @param aborters The source action list
   AbortList<aborters_t...>& operator=(AbortList<aborters_t...>&& aborters) =
       default;
 
@@ -82,7 +65,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   AbortList(std::tuple<aborters_t...>&& aborters)
       : detail::Extendable<aborters_t...>(std::move(aborters)) {}
 
-  /// Append new entries and return a new condition
+  /// Append new entries and return a new, extended abort list
   template <typename... appendices_t>
   AbortList<aborters_t..., appendices_t...> append(appendices_t... aps) const {
     auto catTuple =
