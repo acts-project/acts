@@ -11,11 +11,10 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Seeding/SimSpacePoint.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
 #include <mutex>
@@ -36,8 +35,6 @@ class SeedingPerformanceWriter final
     std::string inputParticles;
     /// Input seeds to be analyzed.
     std::string inputSeeds;
-    /// Input seeds as proto tracks
-    std::string inputProtoTracks;
     /// input Clusters from the event#-hits.csv file for calculating efficiency.
     std::string inputClusters;
     /// Output filename.
@@ -53,7 +50,12 @@ class SeedingPerformanceWriter final
   /// the seed.
   /// @param seed The seed to be analyzed
   std::set<ActsFatras::Barcode> identifySharedParticles(
+      const ActsExamples::IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
       const Acts::Seed<SimSpacePoint>* seed) const;
+
+  std::vector<ActsFatras::Barcode> getTruthParticles(
+      const ActsExamples::IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
+      const std::size_t hit_id) const;
 
   /// Construct from configuration and log level.
   SeedingPerformanceWriter(Config cfg, Acts::Logging::Level lvl);

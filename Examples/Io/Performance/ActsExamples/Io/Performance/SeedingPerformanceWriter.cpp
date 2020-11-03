@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include <TFile.h>
 
+using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config cfg,
     Acts::Logging::Level lvl)
@@ -35,6 +37,9 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   }
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
+  }
+  if (m_cfg.inputHitParticlesMap.empty()) {
+    throw std::invalid_argument("Missing hit-particles map input collection");
   }
 
   // the output file can not be given externally since TFile accesses to the
@@ -79,29 +84,41 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 
 std::set<ActsFatras::Barcode>
 ActsExamples::SeedingPerformanceWriter::identifySharedParticles(
+    const HitParticlesMap& hitParticlesMap,
     const Acts::Seed<SimSpacePoint>* seed) const {
-  const SimSpacePoint* sp0 = seed->sp()[0];
-  const SimSpacePoint* sp1 = seed->sp()[1];
-  const SimSpacePoint* sp2 = seed->sp()[2];
-  std::set<ActsFatras::Barcode> particles0;
-  std::set<ActsFatras::Barcode> particles1;
-  std::set<ActsFatras::Barcode> particles2;
-  for (size_t i = 0; i < sp0->particles.size(); i++) {
-    particles0.insert(sp0->particles[i].particleId);  // insert particle barcode
-  }
-  for (size_t i = 0; i < sp1->particles.size(); i++) {
-    particles1.insert(sp1->particles[i].particleId);
-  }
-  for (size_t i = 0; i < sp2->particles.size(); i++) {
-    particles2.insert(sp2->particles[i].particleId);
-  }
+  auto particles0 = getTruthParticles(hitParticlesMap, seed->sp()[0]->Id());
+  auto particles1 = getTruthParticles(hitParticlesMap, seed->sp()[1]->Id());
+  auto particles2 = getTruthParticles(hitParticlesMap, seed->sp()[2]->Id());
+
   std::set<ActsFatras::Barcode> tmp;
   set_intersection(particles0.begin(), particles0.end(), particles1.begin(),
                    particles1.end(), std::inserter(tmp, tmp.end()));
+
   std::set<ActsFatras::Barcode> prtsInCommon;
   set_intersection(particles2.begin(), particles2.end(), tmp.begin(), tmp.end(),
                    std::inserter(prtsInCommon, prtsInCommon.end()));
   return prtsInCommon;
+}
+
+// get truth particles that are a part of this space point
+std::vector<ActsFatras::Barcode>
+ActsExamples::SeedingPerformanceWriter::getTruthParticles(
+    const HitParticlesMap& hitParticlesMap, const std::size_t hit_id) const {
+  std::vector<ActsExamples::ParticleHitCount> particleHitCount;
+  std::vector<ActsFatras::Barcode> particles;
+  for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hit_id))) {
+    auto particleId = hitParticle.second;
+    // search for existing particle in the existing hit counts
+    auto isSameParticle = [=](const ParticleHitCount& phc) {
+      return (phc.particleId == particleId);
+    };
+    auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
+                           isSameParticle);
+    if (it == particleHitCount.end()) {
+      particles.push_back(particleId);
+    }
+  }
+  return particles;
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
@@ -116,14 +133,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
+  const HitParticlesMap hitParticlesMap =
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
 
-      std::set<ActsFatras::Barcode> prtsInCommon =
-          identifySharedParticles(seed);
+      auto prtsInCommon = identifySharedParticles(hitParticlesMap, seed);
       if (prtsInCommon.size() > 0) {
         for (const auto& prt : prtsInCommon) {
           auto it = truthCount.try_emplace(prt, 0u).first;
