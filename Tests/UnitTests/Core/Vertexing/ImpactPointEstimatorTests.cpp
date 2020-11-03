@@ -39,35 +39,11 @@ using Estimator =
 
 const Acts::GeometryContext geoContext;
 const Acts::MagneticFieldContext magFieldContext;
+
 // use a fixed seed for reproducible tests
 std::default_random_engine gen(31415);
 
-// Track d0 distribution
-std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
-// Track z0 distribution
-std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
-// Track pT distribution
-std::uniform_real_distribution<> pTDist(0.4_GeV, 10._GeV);
-// Track phi distribution
-std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
-// Track theta distribution
-std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
-// Track IP resolution distribution
-std::uniform_real_distribution<> resIPDist(0., 100._um);
-// Track angular distribution
-std::uniform_real_distribution<> resAngDist(0., 0.1);
-// Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
-// Track charge helper distribution
-std::uniform_real_distribution<> qDist(-1, 1);
-// Vertex x/y position distribution
-std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
-// Vertex z position distribution
-std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
-// Number of tracks distritbution
-std::uniform_int_distribution<> nTracksDist(3, 10);
-
-/// Construct an ip estimator for a constant bfield along z.
+// Construct an impact point estimator for a constant bfield along z.
 Estimator makeEstimator(double bZ) {
   MagneticField field(Vector3D(0, 0, bZ));
   Stepper stepper(field);
@@ -76,13 +52,69 @@ Estimator makeEstimator(double bZ) {
   return Estimator(cfg);
 }
 
+// Generate track parameter vector and diagonal covariance matrix.
+template <typename rng_t>
+std::pair<Acts::BoundVector, Acts::BoundSymMatrix>
+makeTrackParametersCovariance(rng_t& rng) {
+  using namespace Acts;
+  using Uniform = std::uniform_real_distribution<BoundScalar>;
+
+  auto boolDist = std::uniform_int_distribution<int>(0, 1);
+
+  // generate parameters uniformly within reasonable ranges
+  BoundVector params;
+  params[eBoundLoc0] = Uniform(-10_um, 10_um)(rng);
+  params[eBoundLoc1] = Uniform(-200_um, 200_um)(rng);
+  params[eBoundTime] = Uniform(-5_ns, 5_ns)(rng);
+  params[eBoundPhi] = Uniform(-M_PI, M_PI)(rng);
+  params[eBoundTheta] = Uniform(1.0, M_PI - 1.0)(rng);
+  params[eBoundQOverP] =
+      (boolDist(rng) ? -1_e : 1_e) / Uniform(0.4_GeV, 10_GeV)(rng);
+  // generate random resolutions w/p correlations in reasonable ranges
+  // this ignores correlations between parameter values and their resolution
+  BoundVector stddev;
+  stddev[eBoundLoc0] = Uniform(5_um, 100_um)(rng);
+  stddev[eBoundLoc1] = Uniform(5_um, 100_um)(rng);
+  stddev[eBoundTime] = Uniform(1_ns, 5_ns)(rng);
+  stddev[eBoundPhi] = Uniform(0.1_degree, 1_degree)(rng);
+  stddev[eBoundTheta] = Uniform(0.1_degree, 1_degree)(rng);
+  // draw relative momentum resolution
+  stddev[eBoundQOverP] = Uniform(0.0125, 0.125)(rng) * params[eBoundQOverP];
+
+  return {params, stddev.cwiseProduct(stddev).asDiagonal()};
+}
+
+// Generate vertex position vector and diagonal covariance matrix.
+template <typename rng_t>
+std::pair<Acts::Vector4D, Acts::SymMatrix4D> makeVertexParametersCovariance(
+    rng_t& rng) {
+  using namespace Acts;
+  using Normal = std::normal_distribution<double>;
+  using Uniform = std::uniform_real_distribution<BoundScalar>;
+
+  auto stdNormalDist = std::normal_distribution<double>(0, 1);
+
+  Vector4D stddev;
+  stddev[ePos0] = Uniform(5_um, 50_um)(rng);
+  stddev[ePos1] = Uniform(5_um, 50_um)(rng);
+  stddev[ePos2] = Uniform(10_um, 100_um)(rng);
+  stddev[eTime] = Uniform(1_ns, 5_ns)(rng);
+  Vector4D pos;
+  pos[ePos0] = stdNormalDist(rng) * stddev[ePos0];
+  pos[ePos1] = stdNormalDist(rng) * stddev[ePos1];
+  pos[ePos2] = stdNormalDist(rng) * stddev[ePos2] + Uniform(-20_mm, 20_mm)(rng);
+  pos[eTime] = stdNormalDist(rng) * stddev[eTime];
+
+  return {pos, stddev.cwiseProduct(stddev).asDiagonal()};
+}
+
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(Vertexing)
 
 /// @brief Unit test for ImpactPointEstimator params and distance
 ///
-BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
+BOOST_AUTO_TEST_CASE(ImpactPointEstimator3d) {
   // Debug mode
   bool debugMode = false;
   // Number of tests
@@ -91,91 +123,44 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_params_distance_test) {
   Estimator ipEstimator = makeEstimator(2_T);
   Estimator::State state(magFieldContext);
 
-  // Reference position
+  // Reference position and corresponding perigee surface
   Vector3D refPosition(0., 0., 0.);
+  auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
 
   // Start running tests
   for (unsigned int i = 0; i < nTests; i++) {
-    // Create a track
-    // Resolutions
-    double resD0 = resIPDist(gen);
-    double resZ0 = resIPDist(gen);
-    double resPh = resAngDist(gen);
-    double resTh = resAngDist(gen);
-    double resQp = resQoPDist(gen);
-
-    // CovarianceMatrix matrix
-    BoundTrackParameters::CovarianceMatrix covMat;
-    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
-        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-
-    // The charge
-    double q = qDist(gen) < 0 ? -1. : 1.;
-    // Impact parameters (IP)
-    double d0 = d0Dist(gen);
-    double z0 = z0Dist(gen);
-
-    if (debugMode) {
-      std::cout << "IP: (" << d0 << "," << z0 << ")" << std::endl;
-    }
-
-    // The track parameters
-    BoundTrackParameters::ParametersVector paramVec;
-    paramVec[eBoundLoc0] = d0;
-    paramVec[eBoundLoc1] = z0;
-    paramVec[eBoundTime] = 0;
-    paramVec[eBoundPhi] = phiDist(gen);
-    paramVec[eBoundTheta] = thetaDist(gen);
-    paramVec[eBoundQOverP] = q / pTDist(gen);
-
-    // Corresponding surface
-    std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(refPosition);
-
     // Creating the track
-    BoundTrackParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
+    auto [par, cov] = makeTrackParametersCovariance(gen);
+    BoundTrackParameters myTrack(perigeeSurface, par, cov);
 
-    // Distance in transverse plane
-    double transverseDist = std::sqrt(std::pow(d0, 2) + std::pow(z0, 2));
-
-    // Estimate 3D distance
-    auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
-                                                       refPosition, state);
-    BOOST_CHECK(distanceRes.ok());
-
-    double distance = *distanceRes;
-
-    BOOST_CHECK(distance < transverseDist);
+    // Estimate 3D distance must be less than the 2d distance on the perigee
+    double distT = std::hypot(par[eBoundLoc0], par[eBoundLoc1]);
+    double dist3 =
+        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition, state)
+            .value();
+    BOOST_CHECK_LT(dist3, distT);
 
     if (debugMode) {
       std::cout << std::setprecision(10)
-                << "Distance in transverse plane: " << transverseDist
-                << std::endl;
-      std::cout << std::setprecision(10) << "Distance in 3D: " << distance
+                << "Distance in transverse plane: " << distT << std::endl;
+      std::cout << std::setprecision(10) << "Distance in 3D: " << dist3
                 << std::endl;
     }
 
     auto res = ipEstimator.estimate3DImpactParameters(
         geoContext, magFieldContext, myTrack, refPosition, state);
-
-    BOOST_CHECK(res.ok());
-
-    BoundTrackParameters trackAtIP3d = std::move(**res);
-
+    BoundTrackParameters trackAtIP3d = **res;
     const auto& myTrackParams = myTrack.parameters();
     const auto& trackIP3dParams = trackAtIP3d.parameters();
 
     // d0 and z0 should have changed
-    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc0],
-                   trackIP3dParams[BoundIndices::eBoundLoc0]);
-    BOOST_CHECK_NE(myTrackParams[BoundIndices::eBoundLoc1],
-                   trackIP3dParams[BoundIndices::eBoundLoc1]);
+    BOOST_CHECK_NE(myTrackParams[eBoundLoc0], trackIP3dParams[eBoundLoc0]);
+    BOOST_CHECK_NE(myTrackParams[eBoundLoc1], trackIP3dParams[eBoundLoc1]);
     // Theta along helix and q/p shoud remain the same
-    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundTheta],
-                    trackIP3dParams[BoundIndices::eBoundTheta], 1e-5);
-    CHECK_CLOSE_REL(myTrackParams[BoundIndices::eBoundQOverP],
-                    trackIP3dParams[BoundIndices::eBoundQOverP], 1e-5);
+    CHECK_CLOSE_REL(myTrackParams[eBoundTheta], trackIP3dParams[eBoundTheta],
+                    1e-5);
+    CHECK_CLOSE_REL(myTrackParams[eBoundQOverP], trackIP3dParams[eBoundQOverP],
+                    1e-5);
 
     if (debugMode) {
       std::cout << std::setprecision(10) << "Old track parameters: \n"
@@ -196,46 +181,20 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_compatibility_test) {
 
   Estimator ipEstimator = makeEstimator(2_T);
   Estimator::State state(magFieldContext);
-  // Reference position
+
+  // Reference position and corresponding perigee surface
   Vector3D refPosition(0., 0., 0.);
+  auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
 
   // Lists to store distances and comp values
   std::vector<double> distancesList;
   std::vector<double> compatibilityList;
 
-  // Generate covariance matrix values once
-  // for all cov matrices below
-  // Resolutions
-  double resD0 = resIPDist(gen);
-  double resZ0 = resIPDist(gen);
-  double resPh = resAngDist(gen);
-  double resTh = resAngDist(gen);
-  double resQp = resQoPDist(gen);
-
   // Start running tests
   for (unsigned int i = 0; i < nTests; i++) {
-    // CovarianceMatrix matrix
-    BoundTrackParameters::CovarianceMatrix covMat =
-        BoundTrackParameters::CovarianceMatrix::Zero();
-    covMat(eBoundLoc0, eBoundLoc0) = resD0 * resD0;
-    covMat(eBoundLoc1, eBoundLoc1) = resZ0 * resZ0;
-    covMat(eBoundTime, eBoundTime) = 1;
-    covMat(eBoundPhi, eBoundPhi) = resPh * resPh;
-    covMat(eBoundTheta, eBoundTheta) = resTh * resTh;
-    covMat(eBoundQOverP, eBoundQOverP) = resQp * resQp;
-    // The track parameters
-    BoundTrackParameters::ParametersVector paramVec;
-    paramVec[eBoundLoc0] = d0Dist(gen);
-    paramVec[eBoundLoc1] = z0Dist(gen);
-    paramVec[eBoundTime] = 0;
-    paramVec[eBoundPhi] = phiDist(gen);
-    paramVec[eBoundTheta] = thetaDist(gen);
-    paramVec[eBoundQOverP] = (qDist(gen) < 0 ? -1. : 1.) / pTDist(gen);
-
-    // Corresponding surface
-    auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
     // Creating the track
-    BoundTrackParameters myTrack(perigeeSurface, paramVec, std::move(covMat));
+    auto [par, cov] = makeTrackParametersCovariance(gen);
+    BoundTrackParameters myTrack(perigeeSurface, par, cov);
 
     // Estimate 3D distance
     auto distanceRes = ipEstimator.calculate3dDistance(geoContext, myTrack,
@@ -343,57 +302,21 @@ BOOST_AUTO_TEST_CASE(impactpoint_estimator_parameter_estimation_test) {
   Estimator ipEstimator = makeEstimator(1_T);
   Estimator::State state(magFieldContext);
 
-  // Create perigee surface
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+  // Reference position and corresponding perigee surface
+  Vector3D refPosition(0., 0., 0.);
+  auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
 
   // Create position of vertex and perigee surface
-  double x = vXYDist(gen);
-  double y = vXYDist(gen);
-  double z = vZDist(gen);
-
-  Vector4D vertexPosition(x, y, z, 0.);
-
-  // Constraint for vertex fit
+  auto [vtxPos, vtxCov] = makeVertexParametersCovariance(gen);
   Vertex<BoundTrackParameters> myConstraint;
-  // Some abitrary values
-  SymMatrix4D myCovMat = SymMatrix4D::Zero();
-  myCovMat(0, 0) = 30.;
-  myCovMat(1, 1) = 30.;
-  myCovMat(2, 2) = 30.;
-  myCovMat(3, 3) = 30.;
-  myConstraint.setFullCovariance(std::move(myCovMat));
-  myConstraint.setFullPosition(vertexPosition);
-
-  // Calculate d0 and z0 corresponding to vertex position
-  double d0_v = std::sqrt(x * x + y * y);
-  double z0_v = z;
+  myConstraint.setFullPosition(vtxPos);
+  myConstraint.setFullCovariance(4 * vtxCov);
 
   // Construct random track emerging from vicinity of vertex position
   // Vector to store track objects used for vertex fit
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
-    // Construct positive or negative charge randomly
-    double q = qDist(gen) < 0 ? -1. : 1.;
-
-    // Construct random track parameters
-    BoundTrackParameters::ParametersVector paramVec;
-    paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
-        thetaDist(gen), q / pTDist(gen), 0.;
-
-    // Resolutions
-    double resD0 = resIPDist(gen);
-    double resZ0 = resIPDist(gen);
-    double resPh = resAngDist(gen);
-    double resTh = resAngDist(gen);
-    double resQp = resQoPDist(gen);
-
-    // Fill vector of track objects with simple covariance matrix
-    BoundTrackParameters::CovarianceMatrix covMat;
-    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
-        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
-        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-
-    BoundTrackParameters track(perigeeSurface, paramVec, std::move(covMat));
+    auto [par, cov] = makeTrackParametersCovariance(gen);
+    BoundTrackParameters track(perigeeSurface, par, cov);
 
     // Check if IP are retrieved
     ImpactParametersAndSigma output =
