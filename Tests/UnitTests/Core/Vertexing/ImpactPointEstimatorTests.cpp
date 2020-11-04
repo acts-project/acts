@@ -22,7 +22,6 @@
 
 #include <limits>
 #include <memory>
-#include <utility>
 
 namespace {
 
@@ -229,89 +228,6 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   BOOST_CHECK_NE(output.IPz0, 0.);
   // TODO what about the other struct members? can the parameter space be
   // restricted further?
-}
-
-// Compare consistency checks between multiple tracks for the same vertex.
-BOOST_AUTO_TEST_CASE(MultiTrackCompatibility) {
-  using UniformDist = std::uniform_real_distribution<BoundScalar>;
-
-  // use a fixed seed for reproducible tests
-  std::default_random_engine rng(31415);
-  // Number of tests
-  size_t nTracks = 10;
-
-  Estimator ipEstimator = makeEstimator(2_T);
-  Estimator::State state(magFieldContext);
-  // Reference position and corresponding perigee surface
-  Vector3D refPosition(0., 0., 0.);
-  auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
-  // use same covariance for all tracks
-  auto cov = makeBoundParametersCovariance();
-
-  // compute distance and compatibility
-  std::vector<double> distances;
-  std::vector<double> scores;
-  for (size_t i = 0; i < nTracks; i++) {
-    // generate parameters uniformly within reasonable ranges
-    BoundVector params;
-    params[eBoundLoc0] = UniformDist(-10_um, 10_um)(rng);
-    params[eBoundLoc1] = UniformDist(-200_um, 200_um)(rng);
-    params[eBoundTime] = UniformDist(-5_ns, 5_ns)(rng);
-    params[eBoundPhi] = UniformDist(-M_PI, M_PI)(rng);
-    params[eBoundTheta] = UniformDist(1.0, M_PI - 1.0)(rng);
-    auto q = std::uniform_int_distribution<int>(0, 1)(rng) ? -1_e : 1_e;
-    params[eBoundQOverP] = q / UniformDist(0.4_GeV, 10_GeV)(rng);
-    BoundTrackParameters myTrack(perigeeSurface, params, q, cov);
-
-    // estimate 3d distance
-    double distance =
-        ipEstimator.calculate3dDistance(geoContext, myTrack, refPosition, state)
-            .value();
-    distances.push_back(distance);
-
-    // estimate track compatibility
-    auto atIp3d = ipEstimator
-                      .estimate3DImpactParameters(geoContext, magFieldContext,
-                                                  myTrack, refPosition, state)
-                      .value();
-    auto score =
-        ipEstimator
-            .get3dVertexCompatibility(geoContext, atIp3d.get(), refPosition)
-            .value();
-    scores.push_back(score);
-  }
-
-  // check that the distances and compatibility scores as consistent between the
-  // different tracks.
-  for (size_t i = 0; i < nTracks; i++) {
-    auto di = distances[i];
-    auto si = scores[i];
-    // should always have a non-zero distance
-    BOOST_CHECK_NE(di, 0);
-    // chi2-like score value should always be positive
-    BOOST_CHECK_GT(si, 0);
-
-    for (size_t j = 0; j < i; j++) {
-      auto dj = distances[j];
-      auto sj = scores[j];
-      BOOST_TEST_INFO("reference track " << i << " distance " << di << " score "
-                                         << si);
-      BOOST_TEST_INFO("test track " << j << " distance " << dj << " score "
-                                    << sj);
-
-      // TODO I am now quite certain that this test does not make sense.
-      // depending on the track covariance and the particular orientation of two
-      // different tracks it is perfectly possible that the track w/ a larger
-      // real distance still has a lower score.
-
-      // lower real distance should translate to smaller score
-      if (std::abs(di) < std::abs(dj)) {
-        BOOST_CHECK_LT(si, sj);
-      } else {
-        BOOST_CHECK_GT(si, sj);
-      }
-    }
-  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
