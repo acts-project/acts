@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
@@ -19,7 +20,7 @@ namespace detail {
 
 /// Residuals between bound reference parameters and a measured subspace.
 ///
-/// @tparam index_container_t SequenceContainer for measured inidices
+/// @tparam index_container_t SequenceContainer for measured indices
 /// @tparam measured_t Measured parameters vector type
 /// @tparam residuals_t Residuals vector type
 /// @param[in] size Size of the measured parameters subspace
@@ -51,7 +52,7 @@ inline void calculateResiduals(BoundIndices size,
     // only phi must be handled specially here. the theta limits can only be
     // correctly handled if phi is updated, too. since we can not ensure that
     // both are available, it is probably less error-prone to treat theta as a
-    // regular, unrestricted parameter here.
+    // regular, unrestricted parameter.
     if (fullIndex == eBoundPhi) {
       residuals[i] = difference_periodic<OutputScalar>(
           measured[i], reference[fullIndex],
