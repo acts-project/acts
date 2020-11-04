@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
 
 // Check `calculated3dDistance`, `estimate3DImpactParameters`, and
 // `get3dVertexCompatibility`.
-BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility, tracks, d0, l0,
-                     t0, phi, theta, p, q) {
+BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
+                     l0, t0, phi, theta, p, q) {
   BoundVector par;
   par[eBoundLoc0] = d0;
   par[eBoundLoc1] = l0;
