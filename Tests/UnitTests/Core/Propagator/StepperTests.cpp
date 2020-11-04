@@ -147,17 +147,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   EigenStepper<ConstantBField>::State esState(tgContext, mfContext, cp, ndir,
                                               stepSize, tolerance);
 
+  EigenStepper<ConstantBField> es(bField);
+
   // Test the result & compare with the input/test for reasonable members
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
-  CHECK_CLOSE_OR_SMALL(esState.pos, pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(esState.dir, dir.normalized(), eps, eps);
-  CHECK_CLOSE_REL(esState.p, absMom, eps);
-  BOOST_CHECK_EQUAL(esState.q, charge);
-  CHECK_CLOSE_OR_SMALL(esState.t, time, eps, eps);
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
@@ -169,7 +166,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
                                         1 / absMom);
   esState = EigenStepper<ConstantBField>::State(tgContext, mfContext, ncp, ndir,
                                                 stepSize, tolerance);
-  BOOST_CHECK_EQUAL(esState.q, 0.);
+  BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
@@ -207,11 +204,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
-  BOOST_CHECK_EQUAL(es.position(esState), esState.pos);
-  BOOST_CHECK_EQUAL(es.direction(esState), esState.dir);
-  BOOST_CHECK_EQUAL(es.momentum(esState), esState.p);
-  BOOST_CHECK_EQUAL(es.charge(esState), esState.q);
-  BOOST_CHECK_EQUAL(es.time(esState), esState.t);
+  BOOST_CHECK_EQUAL(es.position(esState), pos);
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  BOOST_CHECK_EQUAL(es.time(esState), time);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
   BOOST_CHECK_EQUAL(es.getField(esState, pos), bField.getField(pos));
 
@@ -244,11 +239,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   Vector3D newMom(3., 9., 27.);
   double newTime(321.);
   es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
-  BOOST_CHECK_EQUAL(esState.pos, newPos);
-  BOOST_CHECK_EQUAL(esState.dir, newMom.normalized());
-  BOOST_CHECK_EQUAL(esState.p, newMom.norm());
-  BOOST_CHECK_EQUAL(esState.q, charge);
-  BOOST_CHECK_EQUAL(esState.t, newTime);
+  BOOST_CHECK_EQUAL(es.position(esState), newPos);
+  BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
+  BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
+  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
   // The covariance transport
   esState.cov = cov;
@@ -266,10 +261,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double h = es.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
-  BOOST_CHECK_NE(ps.stepping.pos.norm(), newPos.norm());
-  BOOST_CHECK_NE(ps.stepping.dir, newMom.normalized());
-  BOOST_CHECK_EQUAL(ps.stepping.q, charge);
-  BOOST_CHECK_LT(ps.stepping.t, newTime);
+  BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
+  BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
+  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
+  BOOST_CHECK_LT(es.time(ps.stepping), newTime);
   BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
@@ -277,10 +272,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double h2 = es.step(ps).value();
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
-  BOOST_CHECK_NE(ps.stepping.pos.norm(), newPos.norm());
-  BOOST_CHECK_NE(ps.stepping.dir, newMom.normalized());
-  BOOST_CHECK_EQUAL(ps.stepping.q, charge);
-  BOOST_CHECK_LT(ps.stepping.t, newTime);
+  BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
+  BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
+  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
+  BOOST_CHECK_LT(es.time(ps.stepping), newTime);
   BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_NE(ps.stepping.jacTransport, FreeMatrix::Identity());
 
@@ -310,12 +305,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
   BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(esStateCopy.dir,
+  BOOST_CHECK_EQUAL(es.position(esStateCopy),
+                    freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
-  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+                    std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize, ndir * stepSize2);
@@ -333,12 +330,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
   BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(esStateCopy.dir,
+  BOOST_CHECK_EQUAL(es.position(esStateCopy),
+                    freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
-  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+                    std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize,
@@ -357,12 +356,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.derivative, FreeVector::Zero());
   BOOST_CHECK(esStateCopy.covTransport);
   BOOST_CHECK_EQUAL(esStateCopy.cov, cov2);
-  BOOST_CHECK_EQUAL(esStateCopy.pos, freeParams.template segment<3>(eFreePos0));
-  BOOST_CHECK_EQUAL(esStateCopy.dir,
+  BOOST_CHECK_EQUAL(es.position(esStateCopy),
+                    freeParams.template segment<3>(eFreePos0));
+  BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(esStateCopy.p, std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(esStateCopy.q, ps.stepping.q);
-  BOOST_CHECK_EQUAL(esStateCopy.t, freeParams[eFreeTime]);
+  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+                    std::abs(1. / freeParams[eFreeQOverP]));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
@@ -386,15 +387,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the step size modification in the context of a surface
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, esState.pos,
-                               esState.navDir * esState.dir, false),
+      targetSurface->intersect(esState.geoContext, es.position(esState),
+                               esState.navDir * es.direction(esState), false),
       false);
   CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, esState.pos,
-                               esState.navDir * esState.dir, false),
+      targetSurface->intersect(esState.geoContext, es.position(esState),
+                               esState.navDir * es.direction(esState), false),
       true);
   CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
 
@@ -424,15 +425,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams.segment<3>(eFreePos0) *= 2;
   freeParams[eFreeTime] *= 2;
   freeParams.segment<3>(eFreeDir0) *= 2;
+  (freeParams.segment<3>(eFreeDir0)).normalize();
   freeParams[eFreeQOverP] *= -0.5;
 
   es.update(esState, freeParams, 2 * (*bp.covariance()));
-  CHECK_CLOSE_OR_SMALL(esState.pos, 2. * pos, eps, eps);
-  CHECK_CLOSE_OR_SMALL(esState.dir, dir, eps, eps);
-  CHECK_CLOSE_REL(esState.p, 2 * absMom, eps);
+  CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
+  CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
+  CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
   // update does not change the particle hypothesis
-  BOOST_CHECK_EQUAL(esState.q, 1. * charge);
-  CHECK_CLOSE_OR_SMALL(esState.t, 2. * time, eps, eps);
+  BOOST_CHECK_EQUAL(es.charge(esState), 1. * charge);
+  CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
 
   // Test a case where no step size adjustment is required
