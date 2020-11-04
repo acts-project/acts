@@ -42,12 +42,9 @@ auto Acts::EigenStepper<B, E, A>::boundState(State& state,
                                              const Surface& surface,
                                              bool transportCov) const
     -> BoundState {
-  FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, parameters,
+      state.derivative, state.jacToGlobal, state.pars,
       state.covTransport && transportCov, state.pathAccumulated, surface);
 }
 
@@ -55,12 +52,9 @@ template <typename B, typename E, typename A>
 auto Acts::EigenStepper<B, E, A>::curvilinearState(State& state,
                                                    bool transportCov) const
     -> CurvilinearState {
-  FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, parameters, state.covTransport && transportCov,
+      state.jacToGlobal, state.pars, state.covTransport && transportCov,
       state.pathAccumulated);
 }
 
@@ -68,11 +62,7 @@ template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::update(State& state,
                                          const FreeVector& parameters,
                                          const Covariance& covariance) const {
-  state.pos = parameters.template segment<3>(eFreePos0);
-  state.dir = parameters.template segment<3>(eFreeDir0).normalized();
-  state.p = std::abs(1. / parameters[eFreeQOverP]);
-  state.t = parameters[eFreeTime];
-
+  state.pars = parameters;
   state.cov = covariance;
 }
 
@@ -81,27 +71,25 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
                                          const Vector3D& uposition,
                                          const Vector3D& udirection, double up,
                                          double time) const {
-  state.pos = uposition;
-  state.dir = udirection;
-  state.p = up;
-  state.t = time;
+  state.pars.template segment<3>(eFreePos0) = uposition;
+  state.pars.template segment<3>(eFreeDir0) = udirection;
+  state.pars[eFreeTime] = time;
+  state.pars[eFreeQOverP] = state.q / up;
 }
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
-                              state.derivative, state.jacToGlobal, state.dir);
+                              state.derivative, state.jacToGlobal,
+                              direction(state));
 }
 
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(
     State& state, const Surface& surface) const {
-  FreeVector parameters;
-  parameters << state.pos[0], state.pos[1], state.pos[2], state.t, state.dir[0],
-      state.dir[1], state.dir[2], state.q / state.p;
   detail::covarianceTransport(state.geoContext, state.cov, state.jacobian,
                               state.jacTransport, state.derivative,
-                              state.jacToGlobal, parameters, surface);
+                              state.jacToGlobal, state.pars, surface);
 }
 
 template <typename B, typename E, typename A>
@@ -115,8 +103,11 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   double error_estimate = 0.;
   double h2, half_h;
 
+  auto pos = position(state.stepping);
+  auto dir = direction(state.stepping);
+
   // First Runge-Kutta point (at current position)
-  sd.B_first = getField(state.stepping, state.stepping.pos);
+  sd.B_first = getField(state.stepping, pos);
   if (!state.stepping.extension.validExtensionForStep(state, *this) ||
       !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first, sd.kQoP)) {
     return 0.;
@@ -132,8 +123,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     half_h = h * 0.5;
 
     // Second Runge-Kutta point
-    const Vector3D pos1 =
-        state.stepping.pos + half_h * state.stepping.dir + h2 * 0.125 * sd.k1;
+    const Vector3D pos1 = pos + half_h * dir + h2 * 0.125 * sd.k1;
     sd.B_middle = getField(state.stepping, pos1);
     if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
                                      half_h, sd.k1)) {
@@ -147,8 +137,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     }
 
     // Last Runge-Kutta point
-    const Vector3D pos2 =
-        state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
+    const Vector3D pos2 = pos + h * dir + h2 * 0.5 * sd.k3;
     sd.B_last = getField(state.stepping, pos2);
     if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
                                      sd.k3)) {
@@ -213,12 +202,15 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   }
 
   // Update the track parameters according to the equations of motion
-  state.stepping.pos +=
-      h * state.stepping.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
-  state.stepping.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
-  state.stepping.dir /= state.stepping.dir.norm();
+  state.stepping.pars.template segment<3>(eFreePos0) +=
+      h * dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
+  state.stepping.pars.template segment<3>(eFreeDir0) +=
+      h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
+  (state.stepping.pars.template segment<3>(eFreeDir0)).normalize();
+
   if (state.stepping.covTransport) {
-    state.stepping.derivative.template head<3>() = state.stepping.dir;
+    state.stepping.derivative.template head<3>() =
+        state.stepping.pars.template segment<3>(eFreeDir0);
     state.stepping.derivative.template segment<3>(4) = sd.k4;
   }
   state.stepping.pathAccumulated += h;

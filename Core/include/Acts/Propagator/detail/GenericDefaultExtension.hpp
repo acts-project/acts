@@ -120,7 +120,7 @@ struct GenericDefaultExtension {
     using std::hypot;
     auto derivative =
         hypot(1, state.options.mass / stepper.momentum(state.stepping));
-    state.stepping.t += h * derivative;
+    state.stepping.pars[eFreeTime] += h * derivative;
     if (state.stepping.covTransport) {
       state.stepping.derivative(3) = derivative;
     }

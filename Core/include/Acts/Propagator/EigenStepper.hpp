@@ -40,7 +40,7 @@ using namespace Acts::UnitLiterals;
 /// dT/ds = q/p * (T x B)
 ///
 /// with s being the arc length of the track, q the charge of the particle,
-/// p its momentum and B the magnetic field
+/// p the momentum magnitude and B the magnetic field
 ///
 template <typename bfield_t,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
@@ -79,16 +79,17 @@ class EigenStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position(gctx)),
-          dir(par.unitDirection()),
-          p(par.absoluteMomentum()),
-          q(par.charge()),
-          t(par.time()),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
+      pars.template segment<3>(eFreePos0) = par.position(gctx);
+      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars[eFreeTime] = par.time();
+      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -100,20 +101,11 @@ class EigenStepper {
       }
     }
 
-    /// Global particle position
-    Vector3D pos = Vector3D(0., 0., 0.);
+    /// Internal free vector parameters
+    FreeVector pars = FreeVector::Zero();
 
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1., 0., 0.);
-
-    /// Momentum
-    double p = 0.;
-
-    /// The charge
+    /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
-
-    /// Propagated time
-    double t = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -131,7 +123,7 @@ class EigenStepper {
     FreeVector derivative = FreeVector::Zero();
 
     /// Covariance matrix (and indicator)
-    //// associated with the initial error on track parameters
+    /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
@@ -202,17 +194,23 @@ class EigenStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const { return state.pos; }
+  Vector3D position(const State& state) const {
+    return state.pars.template segment<3>(eFreePos0);
+  }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const { return state.dir; }
+  Vector3D direction(const State& state) const {
+    return state.pars.template segment<3>(eFreeDir0);
+  }
 
-  /// Actual momentum accessor
+  /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return state.p; }
+  double momentum(const State& state) const {
+    return std::abs(1. / state.pars[eFreeQOverP]);
+  }
 
   /// Charge access
   ///
@@ -222,7 +220,7 @@ class EigenStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t; }
+  double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
   ///
