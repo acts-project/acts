@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
-  BOOST_CHECK_EQUAL(es.position(esState), pos);
-  BOOST_CHECK_EQUAL(es.direction(esState), dir);
-  BOOST_CHECK_EQUAL(es.momentum(esState), absMom);
-  BOOST_CHECK_EQUAL(es.charge(esState), charge);
-  BOOST_CHECK_EQUAL(es.time(esState), time);
+  CHECK_CLOSE_ABS(es.position(esState), pos, 1e-6);
+  CHECK_CLOSE_ABS(es.direction(esState), dir, 1e-6);
+  CHECK_CLOSE_ABS(es.momentum(esState), absMom, 1e-6);
+  CHECK_CLOSE_ABS(es.charge(esState), charge, 1e-6);
+  CHECK_CLOSE_ABS(es.time(esState), time, 1e-6);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
   BOOST_CHECK_EQUAL(es.getField(esState, pos), bField.getField(pos));
 
