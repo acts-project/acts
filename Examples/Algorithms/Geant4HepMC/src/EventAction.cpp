@@ -123,8 +123,7 @@ ActsExamples::EventAction* ActsExamples::EventAction::instance() {
   return s_instance;
 }
 
-ActsExamples::EventAction::EventAction(
-    std::vector<std::string>& processFilter)
+ActsExamples::EventAction::EventAction(std::vector<std::string>& processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");

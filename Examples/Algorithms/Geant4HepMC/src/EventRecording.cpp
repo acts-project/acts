@@ -104,8 +104,8 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         const std::vector<std::string> vertexAttributes =
             vertex->attribute_names();
         for (const auto& att : vertexAttributes) {
-          if ((vertex->attribute_as_string(att).find(
-                   m_cfg.processSelect) != std::string::npos) &&
+          if ((vertex->attribute_as_string(att).find(m_cfg.processSelect) !=
+               std::string::npos) &&
               !vertex->particles_in().empty() &&
               vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>(
                   "TrackID") &&
@@ -118,7 +118,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         }
         if (storeEvent) {
           break;
-	    }
+        }
       }
       // Store the result
       if (storeEvent) {
