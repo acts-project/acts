@@ -62,7 +62,7 @@ class StraightLineStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(par.charge()),
+        : q(static_cast<int>(par.charge())),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -97,7 +97,7 @@ class StraightLineStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    double q = 1.;
+    int q = 1;
 
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
