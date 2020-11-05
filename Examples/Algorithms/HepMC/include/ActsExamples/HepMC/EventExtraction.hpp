@@ -21,20 +21,6 @@ class G4RunManager;
 
 namespace ActsExamples {
 
-struct EventFraction {
-  EventFraction() = default;
-
-  EventFraction(ActsExamples::SimParticle& initPart,
-                std::vector<ActsExamples::SimParticle>& finalPart)
-      : initialParticle(initPart), finalParticles(std::move(finalPart)) {}
-
-  ActsExamples::SimParticle initialParticle;
-  std::vector<ActsExamples::SimParticle> finalParticles;
-
-  bool soft = false;
-  unsigned int multiplicity = 0;
-};
-
 /// @brief This class extracts a certain process from a HepMC event record.
 class EventExtraction final : public ActsExamples::BareAlgorithm {
  public:
