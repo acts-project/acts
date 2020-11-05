@@ -205,6 +205,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Test the getters
   BOOST_CHECK_EQUAL(es.position(esState), pos);
+  BOOST_CHECK_EQUAL(es.direction(esState), dir);
+  BOOST_CHECK_EQUAL(es.momentum(esState), absMom);
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_EQUAL(es.time(esState), time);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
@@ -424,8 +426,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       bp.referenceSurface(), tgContext, bp.parameters());
   freeParams.segment<3>(eFreePos0) *= 2;
   freeParams[eFreeTime] *= 2;
-  freeParams.segment<3>(eFreeDir0) *= 2;
-  (freeParams.segment<3>(eFreeDir0)).normalize();
   freeParams[eFreeQOverP] *= -0.5;
 
   es.update(esState, freeParams, 2 * (*bp.covariance()));
