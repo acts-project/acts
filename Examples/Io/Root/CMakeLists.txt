@@ -12,6 +12,9 @@ add_library(
   src/RootTrackParameterWriter.cpp
   src/RootTrajectoryStatesWriter.cpp
   src/RootTrajectoryParametersWriter.cpp
+  src/RootNuclearInteractionParametersWriter.cpp
+  src/RootNuclearInteractionParametersReader.cpp
+  src/detail/NuclearInteractionParametrisation.cpp
 )
 target_include_directories(
   ActsExamplesIoRoot
@@ -19,8 +22,8 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
-    ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
+    ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization ActsFatras
+    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesEventExtraction
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 
