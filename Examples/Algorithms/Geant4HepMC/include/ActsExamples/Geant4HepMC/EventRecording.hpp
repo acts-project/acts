@@ -41,7 +41,8 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
 
     /// List of processes that can be combined to a single vertex
     std::vector<std::string> processesCombine;
-    /// Selective recording based on a process
+    /// Optional selective recording based on a process
+    /// @note All events are recorded if this is empty
     std::string processSelect;
     /// List to veto events with certain processes
     std::vector<std::string> processesReject;
