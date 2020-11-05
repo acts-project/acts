@@ -26,13 +26,13 @@ class EventExtraction final : public ActsExamples::BareAlgorithm {
  public:
   /// @class Config
   struct Config {
-	  /// The input collection
+    /// The input collection
     std::string inputEvents;
     /// The output collection
     std::string outputEventFraction = "event-fraction";
     /// The process that should be extracted
     std::string extractionProcess;
-    
+
     /// Minimum absolute value of considered PDG IDs
     int minAbsPdg = 40;
     /// Maximum absolute value of considered PDG IDs
