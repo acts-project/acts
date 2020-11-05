@@ -16,6 +16,9 @@
 #include <HepMC3/GenVertex.h>
 
 namespace {
+
+using Particles = std::pair<ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>;	
+
 /// @brief This method searches for an outgoing particle from a vertex
 ///
 /// @param [in] vertex The vertex
@@ -140,55 +143,26 @@ std::vector<ActsExamples::SimParticle> outgoingParticles(
 ///
 /// @param [in, out] interactions The recorded interactions
 /// @param [in] cfg Configuration of the filtering
-void filterAndSort(std::vector<ActsExamples::EventFraction>& interactions,
+void filterAndSort(std::vector<Particles>& interactions,
                    const ActsExamples::EventExtraction::Config& cfg) {
-  for (ActsExamples::EventFraction& event : interactions) {
-    for (auto cit = event.finalParticles.cbegin();
-         cit != event.finalParticles.cend();) {
+  for (Particles& interaction : interactions) {
+    for (auto cit = interaction.second.cbegin();
+         cit != interaction.second.cend();) {
 			 // Test whether a particle fulfills the conditions
       if (cit->pdg() < cfg.minAbsPdg || cit->pdg() > cfg.maxAbsPdg ||
           cit->absMomentum() < cfg.pMin)
-        event.finalParticles.erase(cit);
+        interaction.second.erase(cit);
       else
         cit++;
     }
   }
 
 	// Sort the particles based on their momentum
-  for (ActsExamples::EventFraction& interaction : interactions) {
-    std::sort(interaction.finalParticles.begin(), interaction.finalParticles.end(),
+  for (Particles& interaction : interactions) {
+    std::sort(interaction.second.begin(), interaction.second.end(),
               [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
                 return a.absMomentum() > b.absMomentum();
               });
-  }
-}
-
-void labelEvents(std::vector<ActsExamples::EventFraction>& events) {
-  for (ActsExamples::EventFraction& event : events) {
-    double maxMom = 0.;
-    double maxMomOthers = 0.;
-    for (const ActsExamples::SimParticle& p : event.finalParticles) {
-      if (p.pdg() == event.initialParticle.pdg())
-        maxMom = std::max(p.absMomentum(), maxMom);
-      else
-        maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
-    }
-    event.soft = (maxMom > maxMomOthers);
-
-    double pt = 0.;
-    Acts::Vector2D ptVec(0., 0.);
-    for (const ActsExamples::SimParticle& p : event.finalParticles) {
-      Acts::Vector2D particlePt =
-          p.momentum4().template segment<2>(Acts::eMom0);
-      ptVec[0] += particlePt[0];
-      ptVec[1] += particlePt[1];
-    }
-    pt = ptVec.norm();
-
-    if (event.soft && pt <= event.initialParticle.transverseMomentum())
-      event.soft = false;
-
-    event.multiplicity = event.finalParticles.size();
   }
 }
 }  // namespace
@@ -216,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
   const auto events =
       context.eventStore.get<std::vector<HepMC3::GenEvent>>(m_cfg.inputEvents);
 
-  std::vector<EventFraction> fractions;
+  std::vector<Particles> fractions;
   for (const HepMC3::GenEvent& event : events) {
 	// Fast exit
     if (event.particles().empty() || event.vertices().empty())
@@ -243,12 +217,11 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
         }
       }
     }
-    fractions.push_back(EventFraction(simParticle, finalStateParticles));
+    fractions.push_back(std::make_pair(simParticle, finalStateParticles));
   }
 
   // Filter and sort the record
   filterAndSort(fractions, m_cfg);
-  labelEvents(fractions);
 
   ACTS_INFO(events.size() << " processed");
 
