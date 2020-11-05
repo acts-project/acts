@@ -79,6 +79,9 @@ struct TrackAtVertex {
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;
+
+  /// Is already linearized
+  bool isLinearized = false;
 };
 
 }  // namespace Acts
