@@ -44,7 +44,6 @@ class StraightLineStepper {
   /// State for track parameter propagation
   ///
   struct State {
-    /// Delete the default constructor
     State() = delete;
 
     /// Constructor from the initial track parameters
@@ -63,15 +62,15 @@ class StraightLineStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position(gctx)),
-          dir(par.unitDirection()),
-          p(par.absoluteMomentum()),
-          q(par.charge()),
-          t(par.time()),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           geoContext(gctx) {
+      pars.template segment<3>(eFreePos0) = par.position(gctx);
+      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars[eFreeTime] = par.time();
+      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
@@ -94,24 +93,15 @@ class StraightLineStepper {
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
 
+    /// Internal free vector parameters
+    FreeVector pars = FreeVector::Zero();
+
+    /// The charge as the free vector can be 1/p or q/p
+    double q = 1.;
+
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
-
-    /// Global particle position
-    Vector3D pos = Vector3D(0., 0., 0.);
-
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1., 0., 0.);
-
-    /// Momentum
-    double p = 0.;
-
-    /// Save the charge: neutral as default for SL stepper
-    double q = 0.;
-
-    /// Propagated time
-    double t = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -136,7 +126,6 @@ class StraightLineStepper {
   /// track parameter type and of the target surface
   using state_type = State;
 
-  /// Constructor
   StraightLineStepper() = default;
 
   /// @brief Resets the state
@@ -165,17 +154,23 @@ class StraightLineStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const { return state.pos; }
+  Vector3D position(const State& state) const {
+    return state.pars.template segment<3>(eFreePos0);
+  }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const { return state.dir; }
+  Vector3D direction(const State& state) const {
+    return state.pars.template segment<3>(eFreeDir0);
+  }
 
-  /// Momentum accessor
+  /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return state.p; }
+  double momentum(const State& state) const {
+    return std::abs(1. / state.pars[eFreeQOverP]);
+  }
 
   /// Charge access
   ///
@@ -185,7 +180,7 @@ class StraightLineStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t; }
+  double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Overstep limit
   ///
@@ -331,11 +326,13 @@ class StraightLineStepper {
   Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize;
+    const double p = momentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., state.options.mass / state.stepping.p);
+    const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion
-    state.stepping.pos += h * state.stepping.dir;
-    state.stepping.t += h * dtds;
+    Vector3D dir = direction(state.stepping);
+    state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
+    state.stepping.pars[eFreeTime] += h * dtds;
     // Propagate the jacobian
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
@@ -344,13 +341,12 @@ class StraightLineStepper {
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * state.options.mass * state.options.mass *
-                (state.stepping.q == 0. ? 1. : state.stepping.q) /
-                (state.stepping.p * dtds);
+                (state.stepping.q == 0. ? 1. : state.stepping.q) / (p * dtds);
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;
       // Update jacobian and derivative
       state.stepping.jacTransport = D * state.stepping.jacTransport;
-      state.stepping.derivative.template head<3>() = state.stepping.dir;
+      state.stepping.derivative.template head<3>() = dir;
     }
     // state the path length
     state.stepping.pathAccumulated += h;

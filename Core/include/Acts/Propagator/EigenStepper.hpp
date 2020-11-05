@@ -107,6 +107,11 @@ class EigenStepper {
     /// The charge as the free vector can be 1/p or q/p
     double q = 1;
 
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    Covariance cov = Covariance::Zero();
+
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
@@ -121,11 +126,6 @@ class EigenStepper {
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
 
     /// Accummulated path length state
     double pathAccumulated = 0.;
