@@ -85,9 +85,10 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     event.shift_position_by(shift);
 
     // Set beam particle properties
-    const Acts::Vector4D momentum4 = part.momentum4() / Acts::UnitConstants::GeV;
-    HepMC3::FourVector beamMom4(momentum4[0], momentum4[1],
-                                momentum4[2], momentum4[3]);
+    const Acts::Vector4D momentum4 =
+        part.momentum4() / Acts::UnitConstants::GeV;
+    HepMC3::FourVector beamMom4(momentum4[0], momentum4[1], momentum4[2],
+                                momentum4[3]);
     auto beamParticle = event.particles()[0];
     beamParticle->set_momentum(beamMom4);
     beamParticle->set_pid(part.pdg());
