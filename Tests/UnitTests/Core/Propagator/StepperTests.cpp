@@ -204,11 +204,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<ConstantBField> es(bField);
 
   // Test the getters
-  CHECK_CLOSE_ABS(es.position(esState), pos, 1e-6);
-  CHECK_CLOSE_ABS(es.direction(esState), dir, 1e-6);
-  CHECK_CLOSE_ABS(es.momentum(esState), absMom, 1e-6);
-  CHECK_CLOSE_ABS(es.charge(esState), charge, 1e-6);
-  CHECK_CLOSE_ABS(es.time(esState), time, 1e-6);
+  CHECK_CLOSE_ABS(es.position(esState), pos, eps);
+  CHECK_CLOSE_ABS(es.direction(esState), dir, eps);
+  CHECK_CLOSE_ABS(es.momentum(esState), absMom, eps);
+  CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
+  CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
   BOOST_CHECK_EQUAL(es.getField(esState, pos), bField.getField(pos));
 
@@ -226,15 +226,15 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the curvilinear state construction
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
-  CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
+  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), eps);
+  CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), eps);
+  CHECK_CLOSE_ABS(curvPars.time(), cp.time(), eps);
   BOOST_CHECK(curvPars.covariance().has_value());
   BOOST_CHECK_NE(*curvPars.covariance(), cov);
   CHECK_CLOSE_COVARIANCE(std::get<1>(curvState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
-  CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
+                         BoundMatrix(BoundMatrix::Identity()), eps);
+  CHECK_CLOSE_ABS(std::get<2>(curvState), 0., eps);
 
   // Test the update method
   Vector3D newPos(2., 4., 8.);
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   ps.stepping.covTransport = false;
   double h = es.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   ps.stepping.covTransport = true;
   double h2 = es.step(ps).value();
   BOOST_CHECK_EQUAL(h2, h);
-  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
+  CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
   BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       Surface::makeShared<PlaneSurface>(pos + ndir * 2. * dir, dir);
   es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), ndir * 2.,
-                  1e-6);
+                  eps);
 
   // Test the step size modification in the context of a surface
   es.updateStepSize(
@@ -392,27 +392,27 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       false);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
+  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       true);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., 1e-6);
+  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
 
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane);
   auto boundPars = std::get<0>(boundState);
-  CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
+  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), eps);
+  CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), eps);
+  CHECK_CLOSE_ABS(boundPars.time(), bp.time(), eps);
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
   CHECK_CLOSE_COVARIANCE(std::get<1>(boundState),
-                         BoundMatrix(BoundMatrix::Identity()), 1e-6);
-  CHECK_CLOSE_ABS(std::get<2>(boundState), 0., 1e-6);
+                         BoundMatrix(BoundMatrix::Identity()), eps);
+  CHECK_CLOSE_ABS(std::get<2>(boundState), 0., eps);
 
   // Transport the covariance in the context of a surface
   es.covarianceTransport(esState, *plane);
@@ -435,13 +435,13 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // update does not change the particle hypothesis
   BOOST_CHECK_EQUAL(es.charge(esState), 1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
-  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), 1e-6);
+  CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize;
   es.step(ps);
-  CHECK_CLOSE_ABS(h0, esState.stepSize, 1e-6);
+  CHECK_CLOSE_ABS(h0, esState.stepSize, eps);
 
   // Produce some errors
   NullBField nBfield;
