@@ -40,11 +40,11 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     int seed2 = 45678;
 
     /// List of processes that can be combined to a single vertex
-    std::vector<std::string> processFilter;
-    /// Process that should be recorded
-    std::string eventSelectionProcess;
+    std::vector<std::string> processesCombine;
+    /// Selective recording based on a process
+    std::string processSelect;
     /// List to veto events with certain processes
-    std::vector<std::string> eventRejectionProcess;
+    std::vector<std::string> processesReject;
   };
 
   /// Constructor

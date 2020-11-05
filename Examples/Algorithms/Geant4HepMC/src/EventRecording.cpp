@@ -45,11 +45,11 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::RunAction());
   m_runManager->SetUserAction(
-      new ActsExamples::EventAction(m_cfg.processFilter));
+      new ActsExamples::EventAction(m_cfg.processesCombine));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
   m_runManager->SetUserAction(
-      new ActsExamples::SteppingAction(m_cfg.eventRejectionProcess));
+      new ActsExamples::SteppingAction(m_cfg.processesReject));
   m_runManager->Initialize();
 }
 
@@ -91,7 +91,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     beamParticle->set_momentum(beamMom4);
     beamParticle->set_pid(part.pdg());
 
-    if (m_cfg.eventSelectionProcess.empty()) {
+    if (m_cfg.processSelect.empty()) {
       // Store the result
       events.push_back(std::move(event));
     } else {
@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
             vertex->attribute_names();
         for (const auto& att : vertexAttributes) {
           if ((vertex->attribute_as_string(att).find(
-                   m_cfg.eventSelectionProcess) != std::string::npos) &&
+                   m_cfg.processSelect) != std::string::npos) &&
               !vertex->particles_in().empty() &&
               vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>(
                   "TrackID") &&
@@ -116,8 +116,9 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
             break;
           }
         }
-        if (storeEvent)
+        if (storeEvent) {
           break;
+	    }
       }
       // Store the result
       if (storeEvent) {

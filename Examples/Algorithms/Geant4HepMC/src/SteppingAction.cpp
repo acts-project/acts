@@ -26,7 +26,7 @@ ActsExamples::SteppingAction* ActsExamples::SteppingAction::instance() {
 
 ActsExamples::SteppingAction::SteppingAction(
     std::vector<std::string> eventRejectionProcess)
-    : G4UserSteppingAction(), m_eventRejectionProcess(eventRejectionProcess) {
+    : G4UserSteppingAction(), m_eventRejectionProcess(std::move(eventRejectionProcess)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {

@@ -57,8 +57,9 @@ void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex,
     HepMC3::GenVertexPtr currentVertex = particleOut->production_vertex();
     HepMC3::GenParticlePtr nextParticle = currentVertex->particles_in()[0];
     // Cut connections from particle and remove it
-    if (particleIn->end_vertex())
+    if (particleIn->end_vertex()) {
       particleIn->end_vertex()->remove_particle_in(particleIn);
+    }
     currentVertex->remove_particle_out(particleIn);
     event.remove_particle(particleIn);
     // Cut connections from vertext and remove it
@@ -123,7 +124,7 @@ ActsExamples::EventAction* ActsExamples::EventAction::instance() {
 }
 
 ActsExamples::EventAction::EventAction(
-    std::reference_wrapper<std::vector<std::string>> processFilter)
+    std::vector<std::string>& processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
