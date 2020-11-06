@@ -13,7 +13,6 @@ add_library(
   src/RootTrajectoryStatesWriter.cpp
   src/RootTrajectoryParametersWriter.cpp
   src/RootNuclearInteractionParametersWriter.cpp
-  src/RootNuclearInteractionParametersReader.cpp
   src/detail/NuclearInteractionParametrisation.cpp
 )
 target_include_directories(

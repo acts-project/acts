@@ -19,13 +19,13 @@ namespace NuclearInteractionParametrisation {
 
 struct EventFraction {
   EventFraction() = default;
-
-  EventFraction(ActsExamples::SimParticle initPart,
-                std::vector<ActsExamples::SimParticle> finalPart)
-      : initialParticle(std::move(initPart)),
-        finalParticles(std::move(finalPart)) {}
-
+  
+  EventFraction(std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
+                                std::vector<ActsExamples::SimParticle>> event) 
+								: initialParticle(std::get<0>(event)), interactingParticle(std::get<1>(event)), finalParticles(std::get<2>(event)) {}
+								
   ActsExamples::SimParticle initialParticle;
+  ActsExamples::SimParticle interactingParticle;
   std::vector<ActsExamples::SimParticle> finalParticles;
 
   bool soft = false;
@@ -168,7 +168,7 @@ Parametrisation<multiplicity_t> buildMomentumParameters(
 /// @param [in] soft Decision whether soft interactions should be considered
 ///
 /// @return Vector containing the final state invariant masses
-EventProperties prepateInvariantMasses(const EventCollection& events,
+EventProperties prepareInvariantMasses(const EventCollection& events,
                                        unsigned int multiplicity, bool soft);
 
 /// @brief This function calculates all components required for simulating final
@@ -184,7 +184,7 @@ template <unsigned int multiplicity_t>
 Parametrisation<multiplicity_t> buildInvariantMassParameters(
     const EventCollection& events, bool soft, unsigned int nBins) {
   // Strip off data
-  auto invariantMasses = prepateInvariantMasses(events, multiplicity_t, soft);
+  auto invariantMasses = prepareInvariantMasses(events, multiplicity_t, soft);
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(invariantMasses, nBins);

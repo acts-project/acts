@@ -132,20 +132,20 @@ EventProperties convertEventToGaussian(const ProbabilityDistributions& histos,
   return gaussianEvents;
 }
 
-EventProperties prepateInvariantMasses(const EventCollection& events,
+EventProperties prepareInvariantMasses(const EventCollection& events,
                                        unsigned int multiplicity, bool soft) {
   EventProperties result;
   // Loop over all events
   for (const EventFraction& event : events) {
     // Test the multiplicity and type of the event
     if (event.multiplicity == multiplicity && event.soft == soft) {
-      const auto initialFourVector = event.initialParticle.momentum4();
+      const auto fourVectorBefore = event.interactingParticle.momentum4();
       std::vector<float> invariantMasses;
       invariantMasses.reserve(multiplicity);
       // Fill the vector with the invariant masses
       for (const ActsExamples::SimParticle& p : event.finalParticles) {
         const auto fourVector = p.momentum4();
-        invariantMasses.push_back(invariantMass(initialFourVector, fourVector));
+        invariantMasses.push_back(invariantMass(fourVectorBefore, fourVector));
       }
       result.push_back(invariantMasses);
     }

@@ -16,9 +16,6 @@
 #include <mutex>
 #include <vector>
 
-class TFile;
-class TTree;
-
 namespace ActsExamples {
 
 /// @class RootTrajectoryWriter
@@ -37,7 +34,7 @@ namespace ActsExamples {
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootNuclearInteractionParametersWriter final
-    : public WriterT<std::vector<std::pair<
+    : public WriterT<std::vector<std::tuple<ActsExamples::SimParticle,
           ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>>> {
  public:
   struct Config {
@@ -72,7 +69,7 @@ class RootNuclearInteractionParametersWriter final
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(
       const AlgorithmContext& /*ctx*/,
-      const std::vector<std::pair<ActsExamples::SimParticle,
+      const std::vector<std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
                                   std::vector<ActsExamples::SimParticle>>>&
           event) final override;
 

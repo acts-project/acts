@@ -134,7 +134,7 @@ void recordKinematicParametrisation(
   recordKinematicParametrisation<multiplicity_t - 1>(eventFractionCollection,
                                                      interactionType, cfg);
 }
-/// Recursion breaking
+/// Recursion break
 template <>
 void recordKinematicParametrisation<0>(
     const std::vector<NuclearInteractionParametrisation::
@@ -236,13 +236,13 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
-    const std::vector<std::pair<ActsExamples::SimParticle,
+    const std::vector<std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
                                 std::vector<ActsExamples::SimParticle>>>&
         event) {
   std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());
   for (const auto& e : event) {
-    eventFractions.emplace_back(e.first, e.second);
+    eventFractions.emplace_back(e);
   }
   labelEvents(eventFractions);
   m_eventFractionCollection.insert(m_eventFractionCollection.end(),
