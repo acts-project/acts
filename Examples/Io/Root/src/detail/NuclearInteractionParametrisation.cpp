@@ -174,13 +174,13 @@ cumulativePDGprobability(const EventCollection& events) {
   for (const auto& element : counter) {
     for (auto it1 = counter[element.first].begin();
          it1 != counter[element.first].end(); it1++) {
-		  // Add content to next bins
-		  for (auto it2 = std::next(it1, 1); it2 != counter[element.first].end();
-			   it2++) {
-			it2->second += it1->second;
-		  }
-		  // Normalise the entry
-		  it1->second /= totalSum[element.first];
+      // Add content to next bins
+      for (auto it2 = std::next(it1, 1); it2 != counter[element.first].end();
+           it2++) {
+        it2->second += it1->second;
+      }
+      // Normalise the entry
+      it1->second /= totalSum[element.first];
     }
   }
   return counter;
@@ -228,23 +228,23 @@ TVectorF softProbability(const EventCollection& events) {
   return result;
 }
 
-CumulativeDistribution
-cumulativeNuclearInteractionProbability(const EventCollection& events, unsigned int interactionProbabilityBins) {
-	// Find the limits of the histogram
-	float min = std::numeric_limits<float>::max();
-	float max = 0.;
-	for(const EventFraction& event : events)
-	{
-		min = std::min((float) event.initialParticle.pathInL0(), min);
-		max = std::max((float) event.initialParticle.pathInL0(), max);
-	}
-	
-	// Fill the histogram
-	TH1F* histo = new TH1F("", "", interactionProbabilityBins, min, max);
-	for(const EventFraction& event : events)
-		histo->Fill(event.initialParticle.pathInL0());
+CumulativeDistribution cumulativeNuclearInteractionProbability(
+    const EventCollection& events, unsigned int interactionProbabilityBins) {
+  // Find the limits of the histogram
+  float min = std::numeric_limits<float>::max();
+  float max = 0.;
+  for (const EventFraction& event : events) {
+    min = std::min((float)event.initialParticle.pathInL0(), min);
+    max = std::max((float)event.initialParticle.pathInL0(), max);
+  }
 
-	// Build the distributions
-	return histo;  //TODO: in this case the normalisation is not taking into account
+  // Fill the histogram
+  TH1F* histo = new TH1F("", "", interactionProbabilityBins, min, max);
+  for (const EventFraction& event : events)
+    histo->Fill(event.initialParticle.pathInL0());
+
+  // Build the distributions
+  return histo;  // TODO: in this case the normalisation is not taking into
+                 // account
 }
 }  // namespace NuclearInteractionParametrisation

@@ -37,7 +37,8 @@ namespace ActsExamples {
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootNuclearInteractionParametersWriter final
-    : public WriterT<std::vector<std::pair<ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>>> {
+    : public WriterT<std::vector<std::pair<
+          ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>>> {
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
@@ -69,13 +70,17 @@ class RootNuclearInteractionParametersWriter final
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
-  ProcessCode writeT(const AlgorithmContext& /*ctx*/,
-                     const std::vector<std::pair<ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>>& event) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& /*ctx*/,
+      const std::vector<std::pair<ActsExamples::SimParticle,
+                                  std::vector<ActsExamples::SimParticle>>>&
+          event) final override;
 
- private:  
+ private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-  std::vector<NuclearInteractionParametrisation::EventFraction> m_eventFractionCollection;
+  std::vector<NuclearInteractionParametrisation::EventFraction>
+      m_eventFractionCollection;
 };
 
 }  // namespace ActsExamples

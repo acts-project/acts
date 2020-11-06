@@ -22,7 +22,8 @@ struct EventFraction {
 
   EventFraction(ActsExamples::SimParticle initPart,
                 std::vector<ActsExamples::SimParticle> finalPart)
-      : initialParticle(std::move(initPart)), finalParticles(std::move(finalPart)) {}
+      : initialParticle(std::move(initPart)),
+        finalParticles(std::move(finalPart)) {}
 
   ActsExamples::SimParticle initialParticle;
   std::vector<ActsExamples::SimParticle> finalParticles;
@@ -44,7 +45,8 @@ template <unsigned int length_t>
 using EigenspaceComponents =
     std::tuple<Vector<length_t>, Matrix<length_t>, Vector<length_t>>;
 template <unsigned int multiplicity_t>
-using Parametrisation = std::pair<EigenspaceComponents<multiplicity_t + 1>, std::vector<CumulativeDistribution>>;
+using Parametrisation = std::pair<EigenspaceComponents<multiplicity_t + 1>,
+                                  std::vector<CumulativeDistribution>>;
 
 /// @brief This method scales the final state momenta by the initial momentum
 ///
@@ -125,7 +127,7 @@ EigenspaceComponents<multiplicity_t> calculateEigenspace(
   Matrix<multiplicity_t> eigenvectors = es.eigenvectors().real();
   // Transform the mean vector into eigenspace
   Vector<multiplicity_t> meanEigenspace = eigenvectors * mean;
-		
+
   return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
 }
 
@@ -139,9 +141,8 @@ EigenspaceComponents<multiplicity_t> calculateEigenspace(
 ///
 /// @return Pair storing all components
 template <unsigned int multiplicity_t>
-Parametrisation<multiplicity_t>
-buildMomentumParameters(const EventCollection& events, bool soft,
-                        unsigned int nBins) {
+Parametrisation<multiplicity_t> buildMomentumParameters(
+    const EventCollection& events, bool soft, unsigned int nBins) {
   // Strip off data
   auto momenta = prepateMomenta(events, multiplicity_t, soft);
 
@@ -180,9 +181,8 @@ EventProperties prepateInvariantMasses(const EventCollection& events,
 ///
 /// @return Pair storing all components
 template <unsigned int multiplicity_t>
-Parametrisation<multiplicity_t>
-buildInvariantMassParameters(const EventCollection& events, bool soft,
-                             unsigned int nBins) {
+Parametrisation<multiplicity_t> buildInvariantMassParameters(
+    const EventCollection& events, bool soft, unsigned int nBins) {
   // Strip off data
   auto invariantMasses = prepateInvariantMasses(events, multiplicity_t, soft);
 
@@ -228,13 +228,17 @@ cumulativeMultiplicityProbability(const EventCollection& events);
 /// @return The probability for soft interactions
 TVectorF softProbability(const EventCollection& events);
 
-/// @brief This method calculates the cumulative probability for a nuclear interaction as a function of L0
+/// @brief This method calculates the cumulative probability for a nuclear
+/// interaction as a function of L0
 ///
 /// @param [in] events The event storage
 /// @param [in] interactionProbabilityBins Number of bins used for the histogram
-/// @note The number of events is used for the normalisation of the distribution. Hence the result is not necessarily normalised to 1. This allows to sample whether a nuclear interaction occurs up to a certain value of L0 or not at all.
+/// @note The number of events is used for the normalisation of the
+/// distribution. Hence the result is not necessarily normalised to 1. This
+/// allows to sample whether a nuclear interaction occurs up to a certain value
+/// of L0 or not at all.
 ///
 /// @return The cumulative distribution for the nuclear interaction
-CumulativeDistribution
-cumulativeNuclearInteractionProbability(const EventCollection& events, unsigned int interactionProbabilityBins);
+CumulativeDistribution cumulativeNuclearInteractionProbability(
+    const EventCollection& events, unsigned int interactionProbabilityBins);
 }  // namespace NuclearInteractionParametrisation
