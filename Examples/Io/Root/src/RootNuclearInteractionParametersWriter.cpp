@@ -14,7 +14,8 @@
 
 namespace {
 
-/// @brief This method labels events as either soft or hard and sets the multiplicity
+/// @brief This method labels events as either soft or hard and sets the
+/// multiplicity
 ///
 /// @param [in] events The events that will be labeled
 void labelEvents(
@@ -25,17 +26,19 @@ void labelEvents(
     double maxMomOthers = 0.;
     // Walk over all final state particles
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
-		// Search for the maximum in particles with the same PDG ID as the interacting one
+      // Search for the maximum in particles with the same PDG ID as the
+      // interacting one
       if (p.pdg() == event.initialParticle.pdg())
         maxMom = std::max(p.absMomentum(), maxMom);
-        // And the maximum among the others
+      // And the maximum among the others
       else
         maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
     }
-    // Label the indication that the interacting particle carries most of the momentum
+    // Label the indication that the interacting particle carries most of the
+    // momentum
     event.soft = (maxMom > maxMomOthers);
 
-	// Get the final state p_T
+    // Get the final state p_T
     double pt = 0.;
     Acts::Vector2D ptVec(0., 0.);
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
@@ -46,11 +49,11 @@ void labelEvents(
     }
     pt = ptVec.norm();
 
-	// Use the final state p_T as veto for the soft label
+    // Use the final state p_T as veto for the soft label
     if (event.soft && pt <= event.interactingParticle.transverseMomentum())
       event.soft = false;
 
-	// Store the multiplicity
+    // Store the multiplicity
     event.multiplicity = event.finalParticles.size();
   }
 }
@@ -247,9 +250,9 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
-    const std::vector<std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                                std::vector<ActsExamples::SimParticle>>>&
-        event) {
+    const std::vector<
+        std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
+                   std::vector<ActsExamples::SimParticle>>>& event) {
   // Convert the tuple to use additional categorisation variables
   std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());

@@ -162,7 +162,7 @@ cumulativePDGprobability(const EventCollection& events) {
   std::unordered_map<int, std::unordered_map<int, float>> counter;
   std::unordered_map<int, float> totalSum;
 
-	// Count how many and which particles were created by which particle
+  // Count how many and which particles were created by which particle
   for (const EventFraction& event : events) {
     if (!event.soft) {
       counter[event.initialParticle.pdg()][event.finalParticles[0].pdg()]++;

@@ -17,10 +17,16 @@
 
 namespace ActsExamples {
 
-/// @brief This class takes fractions of recorded events that represent the effect of a nuclear interaction and produces histograms and parameters which can be used for a parametrisation based simultion of nuclear interaction. Since the parameters are based on the set of all provided events, during the event loop newly provided events are stored until the end of the run. Then all parts are calculated and written to file.
+/// @brief This class takes fractions of recorded events that represent the
+/// effect of a nuclear interaction and produces histograms and parameters which
+/// can be used for a parametrisation based simultion of nuclear interaction.
+/// Since the parameters are based on the set of all provided events, during the
+/// event loop newly provided events are stored until the end of the run. Then
+/// all parts are calculated and written to file.
 class RootNuclearInteractionParametersWriter final
-    : public WriterT<std::vector<std::tuple<ActsExamples::SimParticle,
-          ActsExamples::SimParticle, std::vector<ActsExamples::SimParticle>>>> {
+    : public WriterT<std::vector<
+          std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
+                     std::vector<ActsExamples::SimParticle>>>> {
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
@@ -32,7 +38,7 @@ class RootNuclearInteractionParametersWriter final
     /// file access mode.
     std::string fileMode = "RECREATE";
 
-	/// Number of bins used for the interaction probability distributions
+    /// Number of bins used for the interaction probability distributions
     unsigned int interactionProbabilityBins = 1e6;
     /// Number of bins used for the momentum distributions
     unsigned int momentumBins = 1e6;
@@ -54,17 +60,19 @@ class RootNuclearInteractionParametersWriter final
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
-  /// @param [in] event Fraction of an event that will be stored in @p m_eventFractionCollection
+  /// @param [in] event Fraction of an event that will be stored in @p
+  /// m_eventFractionCollection
   ProcessCode writeT(
       const AlgorithmContext& /*ctx*/,
-      const std::vector<std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                                  std::vector<ActsExamples::SimParticle>>>&
-          event) final override;
+      const std::vector<
+          std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
+                     std::vector<ActsExamples::SimParticle>>>& event)
+      final override;
 
  private:
   Config m_cfg;             ///< The config class
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   std::vector<NuclearInteractionParametrisation::EventFraction>
-      m_eventFractionCollection; ///< The recorded fractions of events
+      m_eventFractionCollection;  ///< The recorded fractions of events
 };
 }  // namespace ActsExamples

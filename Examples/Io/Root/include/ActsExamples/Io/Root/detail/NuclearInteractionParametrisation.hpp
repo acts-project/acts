@@ -16,16 +16,21 @@
 
 namespace NuclearInteractionParametrisation {
 
-/// @brief This struct stores a fraction of an event around a nuclear interaction.
+/// @brief This struct stores a fraction of an event around a nuclear
+/// interaction.
 struct EventFraction {
   EventFraction() = default;
-  
+
   /// @brief Constructor
   ///
-  /// @param [in] event Tuple containing the inital particle, the particle before the interaction and all final state particles after the interaction
+  /// @param [in] event Tuple containing the inital particle, the particle
+  /// before the interaction and all final state particles after the interaction
   EventFraction(std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                                std::vector<ActsExamples::SimParticle>> event) 
-								: initialParticle(std::get<0>(event)), interactingParticle(std::get<1>(event)), finalParticles(std::get<2>(event)) {}
+                           std::vector<ActsExamples::SimParticle>>
+                    event)
+      : initialParticle(std::get<0>(event)),
+        interactingParticle(std::get<1>(event)),
+        finalParticles(std::get<2>(event)) {}
 
   /// The initial particle
   ActsExamples::SimParticle initialParticle;
