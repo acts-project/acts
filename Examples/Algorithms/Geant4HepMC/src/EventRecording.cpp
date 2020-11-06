@@ -81,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
 
     // Set event start time
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
-    HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::s);
+    HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::mm);
     event.shift_position_by(shift);
 
     // Set beam particle properties
