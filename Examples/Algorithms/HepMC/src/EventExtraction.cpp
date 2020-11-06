@@ -16,9 +16,11 @@
 #include <HepMC3/GenVertex.h>
 
 namespace {
-/// Stores the initial properties of a particle, the properties before the interaction and the particle properties after the interaction
-using Particles = std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                            std::vector<ActsExamples::SimParticle>>;
+/// Stores the initial properties of a particle, the properties before the
+/// interaction and the particle properties after the interaction
+using Particles =
+    std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
+               std::vector<ActsExamples::SimParticle>>;
 
 /// @brief This method searches for an outgoing particle from a vertex
 ///
@@ -214,7 +216,8 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
                 m_cfg.extractionProcess) != std::string::npos) {
           const int procID = stoi(attribute.substr(attribute.find("-") + 1));
           // Get the particle before the interaction
-          particleToInteraction = HepMC3Particle::particle(vertex->particles_in()[0]);
+          particleToInteraction =
+              HepMC3Particle::particle(vertex->particles_in()[0]);
           // Attach passed material to the particle
           passedMaterial(particleToInteraction, vertex, procID);
           // Record the final state particles
@@ -222,7 +225,8 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
         }
       }
     }
-    fractions.push_back(std::make_tuple(simParticle, particleToInteraction, finalStateParticles));
+    fractions.push_back(std::make_tuple(simParticle, particleToInteraction,
+                                        finalStateParticles));
   }
 
   // Filter and sort the record
