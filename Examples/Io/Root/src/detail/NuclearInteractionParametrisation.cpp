@@ -35,9 +35,13 @@ float gaussianValue(TH1F const* histo, const float mom) {
   delete (cumulative);
   return value;
 }
-}  // namespace
 
-namespace {
+/// @brief Evaluate the invariant mass of two four vectors
+///
+/// @param [in] fourVector1 The one four vector
+/// @param [in] fourVector2 The other four vector
+///
+/// @return The invarian mass
 float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
                     const ActsExamples::SimParticle::Vector4& fourVector2) {
   ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
@@ -158,6 +162,7 @@ cumulativePDGprobability(const EventCollection& events) {
   std::unordered_map<int, std::unordered_map<int, float>> counter;
   std::unordered_map<int, float> totalSum;
 
+	// Count how many and which particles were created by which particle
   for (const EventFraction& event : events) {
     if (!event.soft) {
       counter[event.initialParticle.pdg()][event.finalParticles[0].pdg()]++;

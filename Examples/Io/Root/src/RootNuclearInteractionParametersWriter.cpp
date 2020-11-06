@@ -14,19 +14,28 @@
 
 namespace {
 
+/// @brief This method labels events as either soft or hard and sets the multiplicity
+///
+/// @param [in] events The events that will be labeled
 void labelEvents(
     std::vector<NuclearInteractionParametrisation::EventFraction>& events) {
+  // Search for the highest momentum particles per event
   for (NuclearInteractionParametrisation::EventFraction& event : events) {
     double maxMom = 0.;
     double maxMomOthers = 0.;
+    // Walk over all final state particles
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
+		// Search for the maximum in particles with the same PDG ID as the interacting one
       if (p.pdg() == event.initialParticle.pdg())
         maxMom = std::max(p.absMomentum(), maxMom);
+        // And the maximum among the others
       else
         maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
     }
+    // Label the indication that the interacting particle carries most of the momentum
     event.soft = (maxMom > maxMomOthers);
 
+	// Get the final state p_T
     double pt = 0.;
     Acts::Vector2D ptVec(0., 0.);
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
@@ -37,9 +46,11 @@ void labelEvents(
     }
     pt = ptVec.norm();
 
-    if (event.soft && pt <= event.initialParticle.transverseMomentum())
+	// Use the final state p_T as veto for the soft label
+    if (event.soft && pt <= event.interactingParticle.transverseMomentum())
       event.soft = false;
 
+	// Store the multiplicity
     event.multiplicity = event.finalParticles.size();
   }
 }
@@ -239,12 +250,15 @@ ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const std::vector<std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
                                 std::vector<ActsExamples::SimParticle>>>&
         event) {
+  // Convert the tuple to use additional categorisation variables
   std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());
   for (const auto& e : event) {
     eventFractions.emplace_back(e);
   }
+  // Categorise the event
   labelEvents(eventFractions);
+  // Store the event
   m_eventFractionCollection.insert(m_eventFractionCollection.end(),
                                    eventFractions.begin(),
                                    eventFractions.end());
