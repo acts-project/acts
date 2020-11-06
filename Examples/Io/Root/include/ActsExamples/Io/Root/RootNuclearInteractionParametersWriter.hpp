@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/HepMC/EventExtraction.hpp"
 #include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
 
 #include <mutex>

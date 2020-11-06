@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/HepMC/EventExtraction.hpp"
 
 #include <unordered_map>
 #include <TH1F.h>

@@ -22,7 +22,7 @@ target_link_libraries(
   ActsExamplesIoRoot
   PUBLIC
     ActsCore ActsPluginDigitization ActsPluginIdentification ActsExamplesDigitization ActsFatras
-    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking ActsExamplesEventExtraction
+    ActsExamplesFramework ActsExamplesPropagation ActsExamplesTruthTracking
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 
