@@ -16,8 +16,8 @@
 #include <HepMC3/GenVertex.h>
 
 namespace {
-
-using Particles = std::pair<ActsExamples::SimParticle,
+/// Stores the initial properties of a particle, the properties before the interaction and the particle properties after the interaction
+using Particles = std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
                             std::vector<ActsExamples::SimParticle>>;
 
 /// @brief This method searches for an outgoing particle from a vertex
@@ -148,12 +148,12 @@ std::vector<ActsExamples::SimParticle> outgoingParticles(
 void filterAndSort(std::vector<Particles>& interactions,
                    const ActsExamples::EventExtraction::Config& cfg) {
   for (Particles& interaction : interactions) {
-    for (auto cit = interaction.second.cbegin();
-         cit != interaction.second.cend();) {
+    for (auto cit = std::get<2>(interaction).cbegin();
+         cit != std::get<2>(interaction).cend();) {
       // Test whether a particle fulfills the conditions
       if (cit->pdg() < cfg.minAbsPdg || cit->pdg() > cfg.maxAbsPdg ||
           cit->absMomentum() < cfg.pMin)
-        interaction.second.erase(cit);
+        std::get<2>(interaction).erase(cit);
       else
         cit++;
     }
@@ -161,7 +161,7 @@ void filterAndSort(std::vector<Particles>& interactions,
 
   // Sort the particles based on their momentum
   for (Particles& interaction : interactions) {
-    std::sort(interaction.second.begin(), interaction.second.end(),
+    std::sort(std::get<2>(interaction).begin(), std::get<2>(interaction).end(),
               [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
                 return a.absMomentum() > b.absMomentum();
               });
@@ -204,6 +204,7 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
         HepMC3Particle::particle(initialParticle);
 
     // Get the final state particles
+    ActsExamples::SimParticle particleToInteraction;
     std::vector<ActsExamples::SimParticle> finalStateParticles;
     // Search the process vertex
     for (const auto& vertex : event.vertices()) {
@@ -212,14 +213,16 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
         if (vertex->attribute_as_string(attribute).find(
                 m_cfg.extractionProcess) != std::string::npos) {
           const int procID = stoi(attribute.substr(attribute.find("-") + 1));
-          // Attach passed material to the initial particle
-          passedMaterial(simParticle, vertex, procID);
+          // Get the particle before the interaction
+          particleToInteraction = HepMC3Particle::particle(vertex->particles_in()[0]);
+          // Attach passed material to the particle
+          passedMaterial(particleToInteraction, vertex, procID);
           // Record the final state particles
           finalStateParticles = outgoingParticles(vertex, procID);
         }
       }
     }
-    fractions.push_back(std::make_pair(simParticle, finalStateParticles));
+    fractions.push_back(std::make_tuple(simParticle, particleToInteraction, finalStateParticles));
   }
 
   // Filter and sort the record
