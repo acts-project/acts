@@ -12,11 +12,8 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-
-#include <random>
 
 namespace {
 
@@ -29,24 +26,12 @@ using Jacobian = Acts::BoundMatrix;
 
 const Acts::GeometryContext tgContext;
 const Acts::Test::TestSourceLinkCalibrator calibrator;
-// fix seed for reproducible tests
-std::default_random_engine rng(456);
 
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
-  auto [par1, cov1] = generateParametersCovariance<BoundScalar, 2u>(rng);
-  auto [par2, cov2] = generateParametersCovariance<BoundScalar, 2u>(rng);
-  auto [par3, cov3] = generateParametersCovariance<BoundScalar, 2u>(rng);
-  auto meas1 =
-      calibrator(TestSourceLink(eBoundLoc0, eBoundLoc1, par1, cov1), nullptr);
-  auto meas2 =
-      calibrator(TestSourceLink(eBoundLoc0, eBoundLoc1, par2, cov2), nullptr);
-  auto meas3 =
-      calibrator(TestSourceLink(eBoundLoc0, eBoundLoc1, par3, cov3), nullptr);
-
   MultiTrajectory<TestSourceLink> traj;
   size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
