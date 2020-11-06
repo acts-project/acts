@@ -36,7 +36,8 @@ struct LoopProtection {
         // Transverse component at start is taken for the loop protection
         const double p = stepper.momentum(state.stepping);
         // Calculate the full helix path
-        const double helixPath = state.stepping.navDir * 2 * M_PI * p / B;
+        const double helixPath =
+            stepper.steppingDirection(state.stepping) * 2 * M_PI * p / B;
         // And set it as the loop limit if it overwrites the internal limit
         auto& pathAborter =
             state.options.abortList.template get<path_arborter_t>();

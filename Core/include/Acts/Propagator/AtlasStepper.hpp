@@ -16,6 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStepControl.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -45,7 +46,9 @@ class AtlasStepper {
 
   /// @brief Nested State struct for the local caching
   struct State {
-    /// Default constructor - deleted
+    friend AtlasStepper<BField>;
+    friend ConstrainedStepControl<AtlasStepper>;
+
     State() = delete;
 
     /// Constructor
@@ -241,6 +244,7 @@ class AtlasStepper {
       state_ready = true;
     }
 
+   private:
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
@@ -301,6 +305,9 @@ class AtlasStepper {
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
   };
+
+  using StepControl = ConstrainedStepControl<AtlasStepper>;
+  StepControl stepControl;
 
   AtlasStepper(bfield_t bField) : m_bField(std::move(bField)){};
 
@@ -498,12 +505,59 @@ class AtlasStepper {
   /// Time access
   double time(const State& state) const { return state.pVector[3]; }
 
+  /// Access to the current geometry context
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const GeometryContext& geometryContext(const State& state) const {
+    return state.geoContext;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  NavigationDirection steppingDirection(const State& state) const {
+    return state.navDir;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  /// @param sdir [in] stepping direction
+  void setSteppingDirection(State& state, NavigationDirection sdir) const {
+    state.navDir = sdir;
+  }
+
+  /// Access to the stepping tolerance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double steppingTolerance(const State& state) const { return state.tolerance; }
+
+  /// Access to the accumulated path
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double accumulatedPath(const State& state) const {
+    return state.pathAccumulated;
+  }
+
+  /// Reset to the accumulated path
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  void resetAccumulatedPath(State& state) const {
+    state.pathAccumulated = 0;
+    ;
+  }
+
+  /// Indicate if the covariance has to be transported
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  bool transportCovariance(const State& state) const {
+    return state.covTransport;
+  }
+
   /// Update surface status
   ///
-  /// This method intersect the provided surface and update the navigation
-  /// step estimation accordingly (hence it changes the state). It also
-  /// returns the status of the intersection to trigger onSurface in case
-  /// the surface is reached.
+  /// It checks the status to the reference surface & updates
+  /// the step size accordingly
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
@@ -512,45 +566,6 @@ class AtlasStepper {
       State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(*this, state,
                                                            surface, bcheck);
-  }
-
-  /// Update step size
-  ///
-  /// It checks the status to the reference surface & updates
-  /// the step size accordingly
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param release [in] boolean to trigger step size release
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
-    detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
-  }
-
-  /// Set Step size - explicitely with a double
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param stepSize [in] The step size value
-  /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-    state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
-  }
-
-  /// Release the Step size
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
-  }
-
-  /// Output the Step Size - single component
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  std::string outputStepSize(const State& state) const {
-    return state.stepSize.toString();
   }
 
   /// Create and return the bound state at the current position
@@ -685,6 +700,25 @@ class AtlasStepper {
     state.pVector[5] = udirection[1];
     state.pVector[6] = udirection[2];
     state.pVector[7] = charge(state) / up;
+  }
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] change The delta that may be applied to it
+  ///
+  void updateBoundVariance(State& state, BoundIndices bIndex,
+                           double delta) const {
+    state.cov(bIndex, bIndex) += delta;
+  }
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] cov the bound covariance matrix to be updated
+  ///
+  void updateBoundCovariance(State& state, Covariance cov) const {
+    state.cov = std::move(cov);
   }
 
   /// Method for on-demand transport of the covariance

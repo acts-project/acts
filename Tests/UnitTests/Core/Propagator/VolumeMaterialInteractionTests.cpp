@@ -56,7 +56,15 @@ struct Stepper {
 
   double momentum(const StepperState& state) const { return state.p; }
 
-  double charge(const StepperState& state) const { return state.q; };
+  double charge(const StepperState& state) const { return state.q; }
+
+  bool transportCovariance(const StepperState& state) const {
+    return state.covTransport;
+  }
+
+  NavigationDirection steppingDirection(const StepperState& state) const {
+    return state.navDir;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {

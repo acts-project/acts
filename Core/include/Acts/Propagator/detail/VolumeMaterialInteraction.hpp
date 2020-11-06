@@ -66,8 +66,8 @@ struct VolumeMaterialInteraction {
         qOverP(q / momentum),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
-        performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir) {}
+        performCovarianceTransport(stepper.transportCovariance(state.stepping)),
+        nav(stepper.steppingDirection(state.stepping)) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///

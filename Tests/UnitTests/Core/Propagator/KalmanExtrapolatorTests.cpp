@@ -76,9 +76,9 @@ struct StepWiseActor {
     if ((state.navigation.navigationBreak or state.navigation.targetReached) and
         not result.finalized) {
       // Set the last stepping parameter
-      result.paths.push_back(state.stepping.pathAccumulated);
+      result.paths.push_back(stepper.stepControl.size(state.stepping));
       // Set the full parameter
-      result.fullPath = state.stepping.pathAccumulated;
+      result.fullPath = stepper.accumulatedPath(state.stepping);
       // Remember that you finalized this
       result.finalized = true;
     }

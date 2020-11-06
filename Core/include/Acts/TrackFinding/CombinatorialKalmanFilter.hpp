@@ -421,10 +421,10 @@ class CombinatorialKalmanFilter {
                 result.smoothed = false;
                 result.iSmoothed++;
                 // To avoid meaningless navigation target call
-                state.stepping.stepSize =
-                    ConstrainedStep(state.options.maxStepSize);
+                stepper.stepControl.set(
+                    state.stepping, ConstrainedStep(state.options.maxStepSize));
                 // Need to go back to start targeting for the rest tracks
-                state.stepping.navDir = forward;
+                stepper.setSteppingDirection(state.stepping, forward);
               } else {
                 ACTS_VERBOSE(
                     "Finish forward Kalman filtering and backward smoothing");
@@ -467,10 +467,10 @@ class CombinatorialKalmanFilter {
       state.navigation.currentVolume = state.navigation.startVolume;
 
       // Update the stepping state
-      stepper.resetState(state.stepping, currentState.filtered(),
-                         currentState.filteredCovariance(),
-                         currentState.referenceSurface(), state.stepping.navDir,
-                         state.options.maxStepSize);
+      stepper.resetState(
+          state.stepping, currentState.filtered(),
+          currentState.filteredCovariance(), currentState.referenceSurface(),
+          stepper.steppingDirection(state.stepping), state.options.maxStepSize);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -1018,11 +1018,11 @@ class CombinatorialKalmanFilter {
                          state.options.geoContext, firstMeasurement),
                      firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
-      state.stepping.stepSize =
-          ConstrainedStep(-1. * state.options.maxStepSize);
-      state.stepping.navDir = backward;
+      stepper.stepControl.set(state.stepping,
+                              ConstrainedStep(-1. * state.options.maxStepSize));
+      stepper.setSteppingDirection(state.stepping, backward);
       // Set accumulatd path to zero before targeting surface
-      state.stepping.pathAccumulated = 0.;
+      stepper.resetAccumulatedPath(state.stepping);
 
       return Result<void>::success();
     }

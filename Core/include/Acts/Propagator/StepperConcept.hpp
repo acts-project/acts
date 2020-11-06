@@ -66,22 +66,11 @@ template <typename T>
 using step_size_t = decltype(std::declval<T>().stepSize);
 
 // clang-format off
-    template <typename S>
-    constexpr bool StepperStateConcept
-      = require<has_member<S, cov_transport_t, bool>,
-                has_member<S, cov_t, BoundSymMatrix>,
-                has_member<S, nav_dir_t, NavigationDirection>,
-                has_member<S, path_accumulated_t, double>,
-                has_member<S, step_size_t, ConstrainedStep>
-               >;
-// clang-format on
-
-// clang-format off
     template <typename S, typename state = typename S::State>
       struct StepperConcept {
         constexpr static bool state_exists = exists<state_t, S>;
         static_assert(state_exists, "State type not found");
-        constexpr static bool jacobian_exists = exists<jacobian_t, S>;
+       /* constexpr static bool jacobian_exists = exists<jacobian_t, S>;
         static_assert(jacobian_exists, "Jacobian type not found");
         constexpr static bool covariance_exists = exists<covariance_t, S>;
         static_assert(covariance_exists, "Covariance type not found");
@@ -121,12 +110,13 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
         constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
         static_assert(set_step_size_exists, "setStepSize method not found");
-        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
+        constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&, ConstrainedStep::Type>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");
         constexpr static bool output_step_size_exists = has_method<const S, std::string, output_step_size_t, const state&>;
         static_assert(output_step_size_exists, "outputStepSize method not found");
-
-        constexpr static bool value = require<state_exists,
+*/
+        constexpr static bool value = require<state_exists>;
+        /**,
                                               jacobian_exists,
                                               covariance_exists,
                                               bound_state_exists,
@@ -145,7 +135,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
                                               update_surface_exists,
                                               set_step_size_exists,
                                               release_step_size_exists,
-                                              output_step_size_exists>;
+                                              output_step_size_exists>; */
       };
 // clang-format on
 }  // namespace Stepper
@@ -154,7 +144,5 @@ using step_size_t = decltype(std::declval<T>().stepSize);
 template <typename stepper, typename state = typename stepper::State>
 constexpr bool StepperConcept =
     Acts::Concepts ::Stepper::StepperConcept<stepper, state>::value;
-template <typename stepper>
-constexpr bool StepperStateConcept =
-    Acts::Concepts ::Stepper::StepperStateConcept<stepper>;
+
 }  // namespace Acts

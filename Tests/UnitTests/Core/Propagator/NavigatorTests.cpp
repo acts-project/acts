@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStepControl.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -56,6 +57,9 @@ struct PropagatorState {
     /// This is a simple cache struct to mimic the
     /// Stepper cache in the propagation
     struct State {
+      friend Stepper;
+      friend ConstrainedStepControl<Stepper>;
+
       /// Position
       Vector4D pos4 = Vector4D(0., 0., 0., 0.);
 
@@ -86,6 +90,9 @@ struct PropagatorState {
       GeometryContext geoContext = GeometryContext();
     };
 
+    using StepControl = ConstrainedStepControl<Stepper>;
+    StepControl stepControl;
+
     /// State resetter
     void resetState(State& /*unused*/, const BoundVector& /*unused*/,
                     const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
@@ -114,33 +121,39 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
+    /// Access to the current geometry context
+    ///
+    /// @param state [in] The stepping state (thread-local cache)
+    const GeometryContext& geometryContext(const State& state) const {
+      return state.geoContext;
+    }
+
+    /// Access to the navigation direction
+    ///
+    /// @param state [in] The stepping state (thread-local cache)
+    NavigationDirection steppingDirection(const State& state) const {
+      return state.navDir;
+    }
+
+    /// Access to the stepping tolerance
+    ///
+    /// @param state [in] The stepping state (thread-local cache)
+    double steppingTolerance(const State& state) const {
+      return state.tolerance;
+    }
+
+    /// Access to the accumulated path
+    ///
+    /// @param state [in] The stepping state (thread-local cache)
+    double accumulatedPath(const State& state) const {
+      return state.pathAccumulated;
+    }
+
     Intersection3D::Status updateSurfaceStatus(
         State& state, const Surface& surface,
         const BoundaryCheck& bcheck) const {
       return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck);
-    }
-
-    template <typename object_intersection_t>
-    void updateStepSize(State& state,
-                        const object_intersection_t& oIntersection,
-                        bool release = true) const {
-      detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
-    }
-
-    void setStepSize(
-        State& state, double stepSize,
-        ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-      state.previousStepSize = state.stepSize;
-      state.stepSize.update(stepSize, stype, true);
-    }
-
-    void releaseStepSize(State& state) const {
-      state.stepSize.release(ConstrainedStep::actor);
-    }
-
-    std::string outputStepSize(const State& state) const {
-      return state.stepSize.toString();
     }
 
     BoundState boundState(State& state, const Surface& surface, bool /*unused*/

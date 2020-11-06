@@ -71,6 +71,13 @@ struct Stepper {
 
   /// Access method - momentum
   double momentum(const SteppingState& state) const { return state.p; }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  NavigationDirection steppingDirection(const SteppingState& /*state*/) const {
+    return forward;
+  }
 };
 
 /// @brief mockup of navigation state

@@ -156,11 +156,11 @@ class DirectNavigator {
             state.navigation.surfaceSequence.end()) {
           ACTS_VERBOSE("Next surface candidate is  "
                        << (*state.navigation.nextSurfaceIter)->geometryId());
-          stepper.releaseStepSize(state.stepping);
+          stepper.stepControl.release(state.stepping);
         }
       } else if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE("Next surface reachable at distance  "
-                     << stepper.outputStepSize(state.stepping));
+                     << stepper.stepControl.output(state.stepping));
       }
     }
   }
@@ -199,7 +199,7 @@ class DirectNavigator {
         ++state.navigation.nextSurfaceIter;
       } else {
         ACTS_VERBOSE("Navigation stepSize set to "
-                     << stepper.outputStepSize(state.stepping));
+                     << stepper.stepControl.output(state.stepping));
       }
     } else {
       // Set the navigation break

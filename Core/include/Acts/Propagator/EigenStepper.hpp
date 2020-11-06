@@ -12,10 +12,12 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/ConstrainedStepControl.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -42,6 +44,17 @@ using namespace Acts::UnitLiterals;
 /// with s being the arc length of the track, q the charge of the particle,
 /// p the momentum magnitude and B the magnetic field
 ///
+/// Depending on the extions chosen from the extension list, either a pure
+/// Runge-Kutta numerical integration of the equation of motion (see above),
+/// or transport through material dense volumes is done.
+///
+/// A nested State object guarantees for the thread-local caching of the
+/// transport parameters. This state object is provided by the Propagator
+/// and the stepper is used to interpret the non-trivial internal parameters,
+/// e.g. the current global position is gathered through:
+///
+///   auto position = stepper.position(state);
+///
 template <typename bfield_t,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
@@ -55,12 +68,24 @@ class EigenStepper {
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = bfield_t;
 
+  using StateBase =
+      StepperState<EigenStepper<bfield_t, extensionlist_t, auctioneer_t> >;
+
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
-  /// by the propagator
-  struct State {
-    State() = delete;
+  /// by the propagator.
+  ///
+  /// The Stepper and the extensions are allowed to directly manipulate
+  /// the state for perormance reasons, while all actors & aborters
+  /// have to go through the public method interface
+  struct State final : public StateBase {
+    /// Access control to state: Stepper
+    friend EigenStepper<bfield_t, extensionlist_t, auctioneer_t>;
+    /// Access control to state: Default extension
+    friend DefaultExtension;
+    /// Access control to state: Dense extension
+    friend DenseEnvironmentExtension;
 
     /// Constructor from the initial track parameters
     ///
@@ -78,73 +103,13 @@ class EigenStepper {
                    const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(static_cast<int>(par.charge())),
-          navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
-          tolerance(stolerance),
-          fieldCache(mctx),
-          geoContext(gctx) {
-      pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
-
-      // Init the jacobian matrix if needed
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
-        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
-      }
-    }
-
-    /// Internal free vector parameters
-    FreeVector pars = FreeVector::Zero();
-
-    /// The charge as the free vector can be 1/p or q/p
-    int q = 1;
-
-    /// Covariance matrix (and indicator)
-    /// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
-    /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
-
-    /// Accummulated path length state
-    double pathAccumulated = 0.;
-
-    /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
-
-    /// Last performed step (for overstep limit calculation)
-    double previousStepSize = 0.;
-
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
+        : StateBase(gctx, mctx, par, ndir, ssize, stolerance),
+          fieldCache(mctx) {}
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
     typename BField::Cache fieldCache;
-
-    /// The geometry context
-    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// List of algorithmic extensions
     extensionlist_t extension;
@@ -163,7 +128,13 @@ class EigenStepper {
     } stepData;
   };
 
+  using StepControl = ConstrainedStepControl<
+      EigenStepper<bfield_t, extensionlist_t, auctioneer_t> >;
+  StepControl stepControl;
+
   /// Constructor requires knowledge of the detector's magnetic field
+  ///
+  /// @param bField The magnetic field provided to the state
   EigenStepper(BField bField);
 
   /// @brief Resets the state
@@ -221,6 +192,55 @@ class EigenStepper {
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
+  /// Access to the current geometry context
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const GeometryContext& geometryContext(const State& state) const {
+    return state.geoContext;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  NavigationDirection steppingDirection(const State& state) const {
+    return state.navDir;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  /// @param sdir [in] stepping direction
+  void setSteppingDirection(State& state, NavigationDirection sdir) const {
+    state.navDir = sdir;
+  }
+
+  /// Access to the stepping tolerance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double steppingTolerance(const State& state) const { return state.tolerance; }
+
+  /// Access to the accumulated path
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double accumulatedPath(const State& state) const {
+    return state.pathAccumulated;
+  }
+
+  /// Reset to the accumulated path
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  void resetAccumulatedPath(State& state) const {
+    state.pathAccumulated = 0;
+    ;
+  }
+
+  /// Indicate if the covariance has to be transported
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  bool transportCovariance(const State& state) const {
+    return state.covTransport;
+  }
+
   /// Update surface status
   ///
   /// It checks the status to the reference surface & updates
@@ -233,47 +253,6 @@ class EigenStepper {
       State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(*this, state,
                                                            surface, bcheck);
-  }
-
-  /// Update step size
-  ///
-  /// This method intersects the provided surface and update the navigation
-  /// step estimation accordingly (hence it changes the state). It also
-  /// returns the status of the intersection to trigger onSurface in case
-  /// the surface is reached.
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param release [in] boolean to trigger step size release
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
-    detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
-  }
-
-  /// Set Step size - explicitely with a double
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param stepSize [in] The step size value
-  /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-    state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
-  }
-
-  /// Release the Step size
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
-  }
-
-  /// Output the Step Size - single component
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  std::string outputStepSize(const State& state) const {
-    return state.stepSize.toString();
   }
 
   /// Overstep limit
@@ -332,6 +311,21 @@ class EigenStepper {
   /// @param [in] up the updated momentum value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const;
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] delta The change that may be applied to it
+  ///
+  void updateBoundVariance(State& state, BoundIndices bIndex,
+                           double delta) const;
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] cov the bound covariance matrix to be updated
+  ///
+  void updateBoundCovariance(State& state, Covariance cov) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

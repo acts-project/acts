@@ -76,8 +76,8 @@ struct PointwiseMaterialInteraction {
         qOverP(q / momentum),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
-        performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir) {}
+        performCovarianceTransport(stepper.transportCovariance(state.stepping)),
+        nav(stepper.steppingDirection(state.stepping)) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -134,15 +134,15 @@ struct PointwiseMaterialInteraction {
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // update track parameters and covariance
+    // @TODO - this has to go
     stepper.update(state.stepping, pos, dir, nextP, time);
     // Update covariance matrix
-    NoiseUpdateMode mode = (nav == forward) ? addNoise : removeNoise;
-    state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(
-        state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, mode);
-    state.stepping.cov(eBoundTheta, eBoundTheta) = updateVariance(
-        state.stepping.cov(eBoundTheta, eBoundTheta), varianceTheta, mode);
-    state.stepping.cov(eBoundQOverP, eBoundQOverP) = updateVariance(
-        state.stepping.cov(eBoundQOverP, eBoundQOverP), varianceQoverP, mode);
+    stepper.updateBoundVariance(state.stepping, eBoundPhi,
+                                static_cast<int>(nav) * variancePhi);
+    stepper.updateBoundVariance(state.stepping, eBoundTheta,
+                                static_cast<int>(nav) * varianceTheta);
+    stepper.updateBoundVariance(state.stepping, eBoundQOverP,
+                                static_cast<int>(nav) * varianceQoverP);
   }
 
  private:

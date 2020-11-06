@@ -98,6 +98,7 @@ int main(int argc, char* argv[]) {
                                   ptInGeV * UnitConstants::GeV, 1_e, optCov);
 
   double totalPathLength = 0;
+  unsigned int nsteps = 0;
   size_t num_iters = 0;
   const auto propagation_bench_result = Acts::Test::microBenchmark(
       [&] {
@@ -108,12 +109,14 @@ int main(int argc, char* argv[]) {
                      << " in " << r.steps << " steps");
         }
         totalPathLength += r.pathLength;
+        nsteps += r.steps;
         ++num_iters;
         return r;
       },
       1, toys);
 
   ACTS_INFO("Execution stats: " << propagation_bench_result);
+  ACTS_INFO("average number of steps  = " << nsteps / num_iters);
   ACTS_INFO("average path length = " << totalPathLength / num_iters / 1_mm
                                      << "mm");
   return 0;

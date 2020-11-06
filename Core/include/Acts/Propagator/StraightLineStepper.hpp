@@ -15,7 +15,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/ConstrainedStepControl.hpp"
+#include "Acts/Propagator/StepperState.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -32,6 +33,14 @@ namespace Acts {
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
+///
+/// A nested State object guarantees for the thread-local caching of the
+/// transport parameters. This state object is provided by the Propagator
+/// and the stepper is used to interpret the non-trivial internal parameters,
+/// e.g. the current global position is gathered through:
+///
+///   auto position = stepper.position(state);
+///
 class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
@@ -41,90 +50,13 @@ class StraightLineStepper {
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
   using BField = NullBField;
 
-  /// State for track parameter propagation
-  ///
-  struct State {
-    State() = delete;
-
-    /// Constructor from the initial track parameters
-    ///
-    /// @tparam parameters_t the Type of the track parameters
-    ///
-    /// @param [in] gctx is the context object for the geometery
-    /// @param [in] mctx is the context object for the magnetic field
-    /// @param [in] par The track parameters at start
-    /// @param [in] ndir is the navigation direction
-    /// @param [in] ssize is the (absolute) maximum step size
-    /// @param [in] stolerance is the stepping tolerance
-    template <typename parameters_t>
-    explicit State(std::reference_wrapper<const GeometryContext> gctx,
-                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
-                   const parameters_t& par, NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
-        : q(static_cast<int>(par.charge())),
-          navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
-          tolerance(stolerance),
-          geoContext(gctx) {
-      pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
-      pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
-      if (par.covariance()) {
-        // Get the reference surface for navigation
-        const auto& surface = par.referenceSurface();
-        // set the covariance transport flag to true and copy
-        covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
-        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
-      }
-    }
-
-    /// Jacobian from local to the global frame
-    BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
-
-    /// Pure transport jacobian part from runge kutta integration
-    FreeMatrix jacTransport = FreeMatrix::Identity();
-
-    /// The full jacobian of the transport entire transport
-    Jacobian jacobian = Jacobian::Identity();
-
-    /// The propagation derivative
-    FreeVector derivative = FreeVector::Zero();
-
-    /// Internal free vector parameters
-    FreeVector pars = FreeVector::Zero();
-
-    /// The charge as the free vector can be 1/p or q/p
-    int q = 1;
-
-    /// Boolean to indiciate if you need covariance transport
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
-
-    /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
-
-    /// accummulated path length state
-    double pathAccumulated = 0.;
-
-    /// adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
-
-    // Previous step size for overstep estimation (ignored for SL stepper)
-    double previousStepSize = 0.;
-
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
-
-    // Cache the geometry context of this propagation
-    std::reference_wrapper<const GeometryContext> geoContext;
-  };
-
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
-  using state_type = State;
+  using State = StepperState<StraightLineStepper>;
+
+  /// The control mechanism for the constrained step size
+  using StepControl = ConstrainedStepControl<StraightLineStepper>;
+  StepControl stepControl;
 
   StraightLineStepper() = default;
 
@@ -182,6 +114,55 @@ class StraightLineStepper {
   /// @param state [in] The stepping state (thread-local cache)
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
+  /// Access to the current geometry context
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const GeometryContext& geometryContext(const State& state) const {
+    return state.geoContext;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  NavigationDirection steppingDirection(const State& state) const {
+    return state.navDir;
+  }
+
+  /// Access to the navigation direction
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  /// @param sdir [in] stepping direction
+  void setSteppingDirection(State& state, NavigationDirection sdir) const {
+    state.navDir = sdir;
+  }
+
+  /// Access to the stepping tolerance
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double steppingTolerance(const State& state) const { return state.tolerance; }
+
+  /// Access to the accumulated path
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double accumulatedPath(const State& state) const {
+    return state.pathAccumulated;
+  }
+
+  /// Reset to the accumulated path
+  ///
+  /// @param state [in, out] The stepping state (thread-local cache)
+  void resetAccumulatedPath(State& state) const {
+    state.pathAccumulated = 0;
+    ;
+  }
+
+  /// Indicate if the covariance has to be transported
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  bool transportCovariance(const State& state) const {
+    return state.covTransport;
+  }
+
   /// Overstep limit
   ///
   /// @param state The stepping state (thread-local cache)
@@ -203,46 +184,6 @@ class StraightLineStepper {
       State& state, const Surface& surface, const BoundaryCheck& bcheck) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
         *this, state, surface, bcheck);
-  }
-
-  /// Update step size
-  ///
-  /// It checks the status to the reference surface & updates
-  /// the step size accordingly
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
-  /// @param release [in] boolean to trigger step size release
-  template <typename object_intersection_t>
-  void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
-    detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
-                                                      release);
-  }
-
-  /// Set Step size - explicitely with a double
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param stepSize [in] The step size value
-  /// @param stype [in] The step size type to be set
-  void setStepSize(State& state, double stepSize,
-                   ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-    state.previousStepSize = state.stepSize;
-    state.stepSize.update(stepSize, stype, true);
-  }
-
-  /// Release the Step size
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  void releaseStepSize(State& state) const {
-    state.stepSize.release(ConstrainedStep::actor);
-  }
-
-  /// Output the Step Size - single component
-  ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  std::string outputStepSize(const State& state) const {
-    return state.stepSize.toString();
   }
 
   /// Create and return the bound state at the current position
@@ -291,6 +232,21 @@ class StraightLineStepper {
   /// @param [in] time the updated time value
   void update(State& state, const Vector3D& uposition,
               const Vector3D& udirection, double up, double time) const;
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] change The delta that may be applied to it
+  ///
+  void updateBoundVariance(State& state, BoundIndices bIndex,
+                           double delta) const;
+
+  /// @brief Convenience method for better readability
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] cov the bound covariance matrix to be updated
+  ///
+  void updateBoundCovariance(State& state, Covariance cov) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_EQUAL(esState.jacTransport, FreeMatrix::Identity());
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
-  BOOST_CHECK(!esState.covTransport);
+  BOOST_CHECK(!esState.transportCovariance());
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
@@ -389,15 +389,17 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the step size modification in the context of a surface
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, es.position(esState),
-                               esState.navDir * es.direction(esState), false),
+      targetSurface->intersect(
+          esState.geometryContext(), es.position(esState),
+          esState.steppingDirection() * es.direction(esState), false),
       false);
   CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
   esState.stepSize = ndir * stepSize;
   es.updateStepSize(
       esState,
-      targetSurface->intersect(esState.geoContext, es.position(esState),
-                               esState.navDir * es.direction(esState), false),
+      targetSurface->intersect(
+          esState.geometryContext(), es.position(esState),
+          esState.steppingDirection() * es.direction(esState), false),
       true);
   CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
 

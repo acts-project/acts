@@ -467,11 +467,11 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, 5_cm);
+  stepper.stepControl.set(state, 5_cm);
   BOOST_CHECK_EQUAL(state.previousStepSize, navDir * stepSize);
   BOOST_CHECK_EQUAL(state.stepSize, 5_cm);
 
-  stepper.releaseStepSize(state);
+  stepper.stepControl.release(state);
   BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
 }
 
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
                     navDir * distance);
 
   // test the step size modification in the context of a surface
-  stepper.updateStepSize(
+  stepper.stepControl.update(
       state,
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
 
   // start with a different step size
   state.stepSize = navDir * stepSize;
-  stepper.updateStepSize(
+  stepper.stepControl.update(
       state,
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),

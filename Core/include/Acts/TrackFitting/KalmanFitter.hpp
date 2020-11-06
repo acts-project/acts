@@ -280,15 +280,15 @@ class KalmanFitter {
         // -> Check outlier behavior
         // -> Fill strack state information & update stepper information if
         // non-outlier
-        if (state.stepping.navDir == forward and not result.smoothed and
-            not result.forwardFiltered) {
+        if (stepper.steppingDirection(state.stepping) == forward and
+            not result.smoothed and not result.forwardFiltered) {
           ACTS_VERBOSE("Perform forward filter step");
           auto res = filter(surface, state, stepper, result);
           if (!res.ok()) {
             ACTS_ERROR("Error in forward filter: " << res.error());
             result.result = res.error();
           }
-        } else if (state.stepping.navDir == backward and
+        } else if (stepper.steppingDirection(state.stepping) == backward and
                    result.forwardFiltered) {
           ACTS_VERBOSE("Perform backward filter step");
           auto res = backwardFilter(surface, state, stepper, result);
@@ -303,7 +303,7 @@ class KalmanFitter {
       // when all track states have been handled or the navigation is breaked,
       // reset navigation&stepping before run backward filtering or
       // proceed to run smoothing
-      if (state.stepping.navDir == forward) {
+      if (stepper.steppingDirection(state.stepping) == forward) {
         if (result.measurementStates == inputMeasurements.size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
@@ -333,7 +333,8 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or state.stepping.navDir == backward) {
+      if (result.smoothed or
+          stepper.steppingDirection(state.stepping) == backward) {
         if (targetSurface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using backward filtering mode
@@ -635,7 +636,7 @@ class KalmanFitter {
 
         // No backward filtering for last measurement state, but still update
         // with material effects
-        if (state.stepping.navDir == backward and
+        if (stepper.steppingDirection(state.stepping) == backward and
             surface == state.navigation.startSurface) {
           materialInteractor(surface, state, stepper);
           return Result<void>::success();
@@ -720,20 +721,20 @@ class KalmanFitter {
         if (surface->associatedDetectorElement() != nullptr) {
           ACTS_VERBOSE("Detected hole on " << surface->geometryId()
                                            << " in backward filtering");
-          if (state.stepping.covTransport) {
+          if (stepper.transportCovariance(state.stepping)) {
             stepper.covarianceTransport(state.stepping, *surface);
           }
         } else {
           ACTS_VERBOSE("Detected in-sensitive surface "
                        << surface->geometryId() << " in backward filtering");
-          if (state.stepping.covTransport) {
+          if (stepper.transportCovariance(state.stepping)) {
             stepper.covarianceTransport(state.stepping);
           }
         }
 
         // Not creating bound state here, so need manually reinitialize
         // jacobian
-        state.stepping.jacobian = BoundMatrix::Identity();
+        stepper.updateBoundCovariance(state.stepping, BoundMatrix::Identity());
 
         // Update state and stepper with material effects
         materialInteractor(surface, state, stepper);
@@ -864,11 +865,11 @@ class KalmanFitter {
                          state.options.geoContext, firstMeasurement),
                      firstMeasurement.smoothedCovariance());
       // Reverse the propagation direction
-      state.stepping.stepSize =
-          ConstrainedStep(-1. * state.options.maxStepSize);
-      state.stepping.navDir = backward;
+      stepper.stepControl.set(state.stepping,
+                              ConstrainedStep(-1. * state.options.maxStepSize));
+      stepper.setSteppingDirection(state.stepping, backward);
       // Set accumulatd path to zero before targeting surface
-      state.stepping.pathAccumulated = 0.;
+      stepper.resetAccumulatedPath(state.stepping);
 
       return Result<void>::success();
     }

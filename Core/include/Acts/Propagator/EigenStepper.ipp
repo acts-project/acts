@@ -78,6 +78,19 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::updateBoundVariance(State& state,
+                                                      BoundIndices bIndex,
+                                                      double delta) const {
+  state.cov(bIndex, bIndex) += delta;
+}
+
+template <typename B, typename E, typename A>
+void Acts::EigenStepper<B, E, A>::updateBoundCovariance(State& state,
+                                                        Covariance cov) const {
+  state.cov = std::move(cov);
+}
+
+template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
                               state.derivative, state.jacToGlobal,

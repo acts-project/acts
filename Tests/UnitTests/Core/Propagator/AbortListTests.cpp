@@ -54,16 +54,44 @@ struct NavigatorState {
 /// This is a simple cache struct to mimic the
 /// Propagator state
 struct PropagatorState {
-  // This is a simple cache struct to mimic the
-  // Stepper cache in the propagation
-  struct StepperState {
-    // Accummulated path length cache
-    double pathAccumulated = 0.;
-    // Navigation direction
+  /// This is a simple cache struct to mimic the
+  /// Stepper cache in the propagation
+  struct State {
+    friend Stepper;
+    friend ConstrainedStepControl<Stepper>;
+
+    /// Position
+    Vector4D pos4 = Vector4D(0., 0., 0., 0.);
+
+    /// Direction
+    Vector3D dir = Vector3D(1., 0., 0.);
+
+    /// Momentum
+    double p;
+
+    /// Charge
+    double q;
+
+    /// the navigation direction
     NavigationDirection navDir = forward;
+
+    // accummulated path length cache
+    double pathAccumulated = 0.;
+
     // adaptive sep size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize = ConstrainedStep(100_cm);
+
+    // Previous step size for overstep estimation (ignored here)
+    double previousStepSize = 0.;
+
+    /// The tolerance for the stepping
+    double tolerance = s_onSurfaceTolerance;
+
+    GeometryContext geoContext = GeometryContext();
   };
+
+  using StepControl = ConstrainedStepControl<Stepper>;
+  StepControl stepControl;
 
   /// emulate the options template
   struct Options {

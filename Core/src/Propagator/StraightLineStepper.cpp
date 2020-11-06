@@ -45,6 +45,16 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
   state.pars[eFreeQOverP] = state.q / up;
 }
 
+void StraightLineStepper::updateBoundVariance(State& state, BoundIndices bIndex,
+                                              double delta) const {
+  state.cov(bIndex, bIndex) += delta;
+}
+
+void StraightLineStepper::updateBoundCovariance(State& state,
+                                                Covariance cov) const {
+  state.cov = std::move(cov);
+}
+
 void StraightLineStepper::covarianceTransport(State& state) const {
   detail::covarianceTransport(state.cov, state.jacobian, state.jacTransport,
                               state.derivative, state.jacToGlobal,
