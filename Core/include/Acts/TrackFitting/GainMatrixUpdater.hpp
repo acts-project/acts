@@ -59,7 +59,7 @@ class GainMatrixUpdater {
     auto filtered = trackState.filtered();
     auto filteredCovariance = trackState.filteredCovariance();
 
-    // default error represents an invalid non-error state, no need for optional
+    // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
     visit_measurement(
         trackState.calibrated(), trackState.calibratedCovariance(),
