@@ -54,7 +54,7 @@ class GainMatrixSmoother {
     ACTS_VERBOSE("Start smoothing from previous track state at index: "
                  << prev_ts.previous());
 
-    // default error represents an invalid non-error state, no need for optional
+    // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
     trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &error,
                                                    &logger](auto ts) {
