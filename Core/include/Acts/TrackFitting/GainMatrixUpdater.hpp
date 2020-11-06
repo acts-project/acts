@@ -76,7 +76,7 @@ class GainMatrixUpdater {
           ACTS_VERBOSE("Calibrated measurement covariance:\n"
                        << calibratedCovariance);
 
-          ActsMatrix<Scalar, kMeasurementSize, eBoundSize> H =
+          const ActsMatrix<Scalar, kMeasurementSize, eBoundSize> H =
               trackState.projector()
                   .template topLeftCorner<kMeasurementSize, eBoundSize>();
 
