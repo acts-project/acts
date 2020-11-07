@@ -21,7 +21,7 @@ class MLTrackClassifier : public OnnxRuntimeBase {
 
  public:
   /// @brief The labels for track quality
-  enum TrackLabels { good, duplicate, fake };
+  enum class TrackLabels { eGood, eDuplicate, eFake };
 
   /// @brief Predict the track label
   ///

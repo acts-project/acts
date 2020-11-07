@@ -15,7 +15,7 @@
 Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
     std::vector<float>& inputFeatures, const double& decisionThreshProb) const {
   // check that the decision threshold is a probability
-  if ((decisionThreshProb < 0.) || (decisionThreshProb > 1.)) {
+  if (!((0. <= decisionThreshProb) && (decisionThreshProb <= 1.))) {
     throw std::invalid_argument(
         "predictTrackLabel: Decision threshold "
         "probability is not in [0, 1].");
@@ -29,9 +29,9 @@ Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
   // the output layer computes how confident the network is that the track is a
   // duplicate, so need to convert that to a label
   if (outputProbability > decisionThreshProb) {
-    return TrackLabels::duplicate;
+    return TrackLabels::eDuplicate;
   }
-  return TrackLabels::good;
+  return TrackLabels::eGood;
 }
 
 // function that checks if the predicted track label is duplicate
@@ -40,5 +40,5 @@ bool Acts::MLTrackClassifier::isDuplicate(
   Acts::MLTrackClassifier::TrackLabels predictedLabel =
       Acts::MLTrackClassifier::predictTrackLabel(inputFeatures,
                                                  decisionThreshProb);
-  return predictedLabel == Acts::MLTrackClassifier::TrackLabels::duplicate;
+  return predictedLabel == Acts::MLTrackClassifier::TrackLabels::eDuplicate;
 }
