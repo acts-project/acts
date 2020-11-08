@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#ifdef ACTS_PLUGIN_ONNX
 #include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
+#endif
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -192,22 +194,24 @@ int runRecCKFTracks(int argc, char* argv[],
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;
+#ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
   // Path to default demo ML model for track classification
   std::string currentFilePath = __FILE__;
   std::string commonPath =
       currentFilePath.substr(0, currentFilePath.find("RecCKFTracks"));
   std::string demoModelPath = commonPath + "MLAmbiguityResolutionDemo.onnx";
-  perfWriterCfg.onnxModelFilename = demoModelPath;
-  // Change the line below if you want to use ML track classification
-  perfWriterCfg.useMLTrackClassifier = false;
+  // Threshold probability for neural network to classify track as duplicate
+  double decisionThreshProb = 0.5;
+  // Use ML model for track classification in CKFPerformanceWriter
+  perfWriterCfg.useMLTrackClassifier = true;
   // Initialize OnnxRuntime plugin
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
-  Acts::MLTrackClassifier neuralNetworkClassifier(
-      env, perfWriterCfg.onnxModelFilename.c_str());
+  Acts::MLTrackClassifier neuralNetworkClassifier(env, demoModelPath.c_str());
   perfWriterCfg.duplicatedPredictor =
       std::bind(&Acts::MLTrackClassifier::isDuplicate, &neuralNetworkClassifier,
-                std::placeholders::_1, std::placeholders::_2);
+                std::placeholders::_1, decisionThreshProb);
+#endif
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 

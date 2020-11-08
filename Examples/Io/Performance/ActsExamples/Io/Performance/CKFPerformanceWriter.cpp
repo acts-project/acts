@@ -175,8 +175,8 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         inputFeatures[0] = trajState.nMeasurements;
         inputFeatures[1] = trajState.nOutliers;
         inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
-        bool isDuplicated =
-            m_cfg.duplicatedPredictor(inputFeatures, m_cfg.decisionThreshProb);
+        // predict if current trajectory is 'duplicate'
+        bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
         // Fill the duplication rate
         m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
                                    isDuplicated);

@@ -57,15 +57,10 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     size_t nMeasurementsMin = 9;
     /// Min transverse momentum
     double ptMin = 1_GeV;
-    /// path to ML model in ONNX format
-    std::string onnxModelFilename = "test.onnx";
     /// flag to use neural network for track classification
     bool useMLTrackClassifier = false;
-    /// threshold probability for neural network to classify track as duplicate
-    double decisionThreshProb = 0.5;
     /// function to check if neural network predicted track label is duplicate
-    std::function<bool(std::vector<float>&, const double&)>
-        duplicatedPredictor = nullptr;
+    std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };
 
   /// Construct from configuration and log level.
