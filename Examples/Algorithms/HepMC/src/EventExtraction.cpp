@@ -227,10 +227,9 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
           break;
         }
       }
-      if(vertexFound)
-      {
+      if (vertexFound) {
         break;
-	  }
+      }
     }
     fractions.push_back(std::make_tuple(simParticle, particleToInteraction,
                                         finalStateParticles));
