@@ -13,6 +13,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -44,9 +46,6 @@ using MeasurementResolutionMap =
 
 /// Result struct for generated measurements and outliers.
 struct Measurements {
-  // use shared_ptr to provide stable memory addresses. unique_ptr would be
-  // clearer, but that makes the type non-copyable and very hard to use.
-  std::vector<std::shared_ptr<Acts::FittableMeasurement<TestSourceLink>>> store;
   std::vector<TestSourceLink> sourceLinks;
   std::vector<TestSourceLink> outlierSourceLinks;
 };
@@ -72,14 +71,6 @@ struct MeasurementsCreator {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
     using namespace Acts::UnitLiterals;
-    using VariantMeasurement = Acts::FittableMeasurement<TestSourceLink>;
-    using MeasurementLoc0 =
-        Acts::Measurement<TestSourceLink, Acts::BoundIndices, Acts::eBoundLoc0>;
-    using MeasurementLoc1 =
-        Acts::Measurement<TestSourceLink, Acts::BoundIndices, Acts::eBoundLoc1>;
-    using MeasurementLoc01 =
-        Acts::Measurement<TestSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
-                          Acts::eBoundLoc1>;
 
     const auto& logger = state.options.logger;
 
@@ -116,65 +107,31 @@ struct MeasurementsCreator {
     Vector2D stddev(resolution.stddev[0], resolution.stddev[1]);
     SymMatrix2D cov = stddev.cwiseProduct(stddev).asDiagonal();
 
-    const VariantMeasurement* measPtr = nullptr;
-    const VariantMeasurement* outlierPtr = nullptr;
     if (resolution.type == MeasurementType::eLoc0) {
-      // create measurement w/ dummy source link
-      double parMeas = loc[0] + stddev[0] * normalDist(*rng);
-      measPtr = result.store
-                    .emplace_back(std::make_shared<VariantMeasurement>(
-                        MeasurementLoc0(surface.getSharedPtr(), {},
-                                        cov.topLeftCorner<1, 1>(), parMeas)))
-                    .get();
-      // create outlier w/ dummy source link
-      double parOutlier = parMeas + distanceOutlier;
-      outlierPtr =
-          result.store
-              .emplace_back(std::make_shared<VariantMeasurement>(
-                  MeasurementLoc0(surface.getSharedPtr(), {},
-                                  cov.topLeftCorner<1, 1>(), parOutlier)))
-              .get();
+      double val = loc[0] + stddev[0] * normalDist(*rng);
+      double out = val + distanceOutlier;
+      result.sourceLinks.emplace_back(eBoundLoc0, val, cov(0, 0), geoId,
+                                      sourceId);
+      result.outlierSourceLinks.emplace_back(eBoundLoc0, out, cov(0, 0), geoId,
+                                             sourceId);
     } else if (resolution.type == MeasurementType::eLoc1) {
-      // create measurement w/ dummy source link
       // yes, using stddev[0] and cov(0,0) is correct here. this accesses the
       // first configuration parameter not the first local coordinate.
-      double parMeas = loc[1] + stddev[0] * normalDist(*rng);
-      measPtr = result.store
-                    .emplace_back(std::make_shared<VariantMeasurement>(
-                        MeasurementLoc1(surface.getSharedPtr(), {},
-                                        cov.topLeftCorner<1, 1>(), parMeas)))
-                    .get();
-      // create outlier w/ dummy source link
-      double parOutlier = parMeas + distanceOutlier;
-      outlierPtr =
-          result.store
-              .emplace_back(std::make_shared<VariantMeasurement>(
-                  MeasurementLoc1(surface.getSharedPtr(), {},
-                                  cov.topLeftCorner<1, 1>(), parOutlier)))
-              .get();
+      double val = loc[1] + stddev[0] * normalDist(*rng);
+      double out = val + distanceOutlier;
+      result.sourceLinks.emplace_back(eBoundLoc1, val, cov(0, 0), geoId,
+                                      sourceId);
+      result.outlierSourceLinks.emplace_back(eBoundLoc1, out, cov(0, 0), geoId,
+                                             sourceId);
     } else if (resolution.type == MeasurementType::eLoc01) {
-      // create measurement w/ dummy source link
-      Vector2D parMeas = loc;
-      loc[0] += stddev[0] * normalDist(*rng);
-      loc[1] += stddev[1] * normalDist(*rng);
-      measPtr =
-          result.store
-              .emplace_back(std::make_shared<VariantMeasurement>(
-                  MeasurementLoc01(surface.getSharedPtr(), {}, cov, parMeas)))
-              .get();
-      // create outlier w/ dummy source link
-      Vector2D parOutlier = parMeas;
-      parOutlier[0] += distanceOutlier;
-      parOutlier[1] -= distanceOutlier;
-      outlierPtr = result.store
-                       .emplace_back(std::make_shared<VariantMeasurement>(
-                           MeasurementLoc01(surface.getSharedPtr(), {}, cov,
-                                            parOutlier)))
-                       .get();
+      Vector2D val = loc + stddev.cwiseProduct(
+                               Vector2D(normalDist(*rng), normalDist(*rng)));
+      Vector2D out = val + Vector2D(distanceOutlier, -distanceOutlier);
+      result.sourceLinks.emplace_back(eBoundLoc0, eBoundLoc1, val, cov, geoId,
+                                      sourceId);
+      result.outlierSourceLinks.emplace_back(eBoundLoc0, eBoundLoc1, out, cov,
+                                             geoId, sourceId);
     }
-
-    result.sourceLinks.emplace_back(*measPtr, sourceId);
-    result.outlierSourceLinks.emplace_back(*outlierPtr, sourceId);
   }
 };
 
@@ -201,9 +158,8 @@ Measurements createMeasurements(const propagator_t& propagator,
   creator.sourceId = sourceId;
 
   // Launch and collect the measurements
-  return propagator.propagate(trackParameters, options)
-      .value()
-      .template get<Measurements>();
+  auto result = propagator.propagate(trackParameters, options).value();
+  return result.template get<Measurements>();
 }
 
 }  // namespace Test
