@@ -79,7 +79,7 @@ class EigenStepper {
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(static_cast<int>(par.charge())),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -105,7 +105,7 @@ class EigenStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    int q = 1;
+    double q = 1;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;

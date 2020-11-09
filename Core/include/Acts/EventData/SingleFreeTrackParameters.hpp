@@ -28,7 +28,6 @@ namespace Acts {
 template <class charge_t>
 class SingleFreeTrackParameters {
  public:
-  static constexpr bool s_boundRepresentation = false;
   using Scalar = FreeScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
