@@ -73,7 +73,7 @@ class EigenStepper {
     ///
     /// @note the covariance matrix is copied when needed
     template <typename parameters_t,
-              std::enable_if_t<parameters_t::is_local_representation, int> = 0>
+              std::enable_if_t<parameters_t::s_boundRepresentation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
