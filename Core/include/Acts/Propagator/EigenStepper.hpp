@@ -62,7 +62,7 @@ class EigenStepper {
   struct State {
     State() = delete;
 
-    /// Constructor from the initial track parameters
+    /// Constructor from the initial bound track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
@@ -72,7 +72,8 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename parameters_t>
+    template <typename parameters_t,
+              std::enable_if_t<parameters_t::is_local_representation, int> = 0>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
                    const parameters_t& par, NavigationDirection ndir = forward,
@@ -87,7 +88,7 @@ class EigenStepper {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
+      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
 
       // Init the jacobian matrix if needed
       if (par.covariance()) {
