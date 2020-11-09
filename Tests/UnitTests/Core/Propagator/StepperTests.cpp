@@ -45,7 +45,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
-static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
+static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), eps);
+  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), eps);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), eps);
   BOOST_CHECK(curvPars.covariance().has_value());
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto boundState = es.boundState(esState, *plane);
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), eps);
+  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
   CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), eps);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), eps);
   BOOST_CHECK(boundPars.covariance().has_value());
