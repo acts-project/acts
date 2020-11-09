@@ -72,14 +72,14 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename parameters_t,
-              std::enable_if_t<parameters_t::s_boundRepresentation, int> = 0>
+    template <typename charge_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
-                   const parameters_t& par, NavigationDirection ndir = forward,
+                   const SingleBoundTrackParameters<charge_t>& par,
+                   NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(static_cast<int>(par.charge())),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -105,7 +105,7 @@ class EigenStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    int q = 1;
+    double q = 1;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
