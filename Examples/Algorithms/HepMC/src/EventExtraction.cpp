@@ -209,6 +209,7 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
     ActsExamples::SimParticle particleToInteraction;
     std::vector<ActsExamples::SimParticle> finalStateParticles;
     // Search the process vertex
+    bool vertexFound = false;
     for (const auto& vertex : event.vertices()) {
       const std::vector<std::string> attributes = vertex->attribute_names();
       for (const auto& attribute : attributes) {
@@ -222,8 +223,14 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
           passedMaterial(particleToInteraction, vertex, procID);
           // Record the final state particles
           finalStateParticles = outgoingParticles(vertex, procID);
+          vertexFound = true;
+          break;
         }
       }
+      if(vertexFound)
+      {
+        break;
+	  }
     }
     fractions.push_back(std::make_tuple(simParticle, particleToInteraction,
                                         finalStateParticles));
