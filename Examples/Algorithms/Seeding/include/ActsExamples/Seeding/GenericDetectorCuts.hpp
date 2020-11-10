@@ -91,7 +91,6 @@ GenericDetectorCuts<SpacePoint>::cutPerMiddleSP(
     size_t itLength = std::min(seeds.size(), size_t(m_cfg.maxSeedSize));
     // don't cut first element
     for (size_t i = 1; i < itLength; i++) {
-      std::cout << seeds[i].first << std::endl;
       if (seeds[i].first > m_cfg.keepWeight ||
           seeds[i].second->sp[0]->radius() > m_cfg.minRadius) {
         newSeedsVector.push_back(std::move(seeds[i]));
