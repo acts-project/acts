@@ -355,7 +355,6 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   sls.update(slsState, freeParams, 2 * (*bp.covariance()));
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
-  CHECK_CLOSE_REL(sls.momentum(slsState), 2. * absMom, eps);
   BOOST_CHECK_EQUAL(sls.charge(slsState), 1. * charge);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
