@@ -106,8 +106,9 @@ ActsExamples::TrackFittingAlgorithm::fitTrack(
     const Acts::KalmanFitterOptions<MeasurementCalibrator,
                                     Acts::VoidOutlierFinder>& options,
     const std::vector<const Acts::Surface*>& surfSequence) const {
-  if (m_cfg.directNavigation)
+  if (m_cfg.directNavigation) {
     return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
+  }
 
   return m_cfg.fit(sourceLinks, initialParameters, options);
 }

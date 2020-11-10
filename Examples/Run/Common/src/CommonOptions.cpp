@@ -63,11 +63,6 @@ void ActsExamples::Options::addGeometryOptions(
       "Sub detectors for the output writing");
 }
 
-void ActsExamples::Options::addFittingOptions(
-    boost::program_options::options_description& opt) {
-  opt.add_options()("directed-navigation", value<bool>()->default_value(false),
-                    "Fit tracks with DirectNavigator");
-}
 void ActsExamples::Options::addMaterialOptions(
     boost::program_options::options_description& opt) {
   opt.add_options()(

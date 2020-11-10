@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,7 +36,6 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
 
   const auto& protoTracks =
       ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  ;
   const auto& simHits =
       ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
   const auto& simHitsMap =
@@ -53,19 +52,21 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
     sortedProtoTrack.reserve(protoTrack.size());
     trackHitList.clear();
 
-    if (protoTrack.empty())
+    if (protoTrack.empty()) {
       continue;
+    }
 
     for (const auto hit : protoTrack) {
       const auto simHitIndex = simHitsMap.find(hit)->second;
       auto simHit = simHits.nth(simHitIndex);
-      auto simHitRadius = simHit->position().norm();
-      trackHitList.insert(std::make_pair(simHitRadius, hit));
+      auto simHitTime = simHit->time();
+      trackHitList.insert(std::make_pair(simHitTime, hit));
     }
 
-    /// Map will now be sorted by truth hit radius
-    for (auto const& [rad, hit] : trackHitList)
+    /// Map will now be sorted by truth hit time
+    for (auto const& [time, hit] : trackHitList) {
       sortedProtoTrack.emplace_back(hit);
+    }
 
     sortedTracks.emplace_back(std::move(sortedProtoTrack));
   }
