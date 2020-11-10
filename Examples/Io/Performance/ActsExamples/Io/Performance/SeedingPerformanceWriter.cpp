@@ -84,35 +84,36 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-									 const AlgorithmContext& ctx,
-									 const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+    const AlgorithmContext& ctx,
+    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
   // Read truth particles from input collection
   const auto& particles =
-    ctx.eventStore.get<ActsExamples::SimParticleContainer>(
-							   m_cfg.inputParticles);
+      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
+          m_cfg.inputParticles);
 
   size_t nSeeds = 0;
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
   const HitParticlesMap hitParticlesMap =
-    ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-      ProtoTrack ptrack{seed->sp()[0]->Id(), seed->sp()[1]->Id() ,seed->sp()[2]->Id() };
+      ProtoTrack ptrack{seed->sp()[0]->Id(), seed->sp()[1]->Id(),
+                        seed->sp()[2]->Id()};
       std::vector<ParticleHitCount> particleHitCounts;
       identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
       if (particleHitCounts.size() > 0) {
         for (const auto& prt : particleHitCounts) {
-	  if( prt.hitCount == 3){
-	    auto it = truthCount.try_emplace(prt.particleId, 0u).first; 
-	    it->second += 1;
-	    nMatchedSeeds++;
-	    break;
-	  }
+          if (prt.hitCount == 3) {
+            auto it = truthCount.try_emplace(prt.particleId, 0u).first;
+            it->second += 1;
+            nMatchedSeeds++;
+            break;
+          }
         }
       }
     }
@@ -138,7 +139,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }
 
-  ACTS_INFO("Number of seeds: " << nSeeds);  
+  ACTS_INFO("Number of seeds: " << nSeeds);
   m_nTotalSeeds += nSeeds;
   m_nTotalMatchedSeeds += nMatchedSeeds;
   m_nTotalParticles += particles.size();

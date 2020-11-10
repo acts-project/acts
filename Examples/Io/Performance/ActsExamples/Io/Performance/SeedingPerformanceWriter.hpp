@@ -44,7 +44,6 @@ class SeedingPerformanceWriter final
     EffPlotTool::Config effPlotToolConfig;
   };
 
-
   /// Construct from configuration and log level.
   SeedingPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
   ~SeedingPerformanceWriter() override;
