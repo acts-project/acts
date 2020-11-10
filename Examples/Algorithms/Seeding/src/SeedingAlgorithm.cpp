@@ -77,45 +77,45 @@ std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  Acts::SeedfinderConfig<SimSpacePoint> config;
+  Acts::SeedfinderConfig<SimSpacePoint> finderConf;
   // silicon detector max
-  config.rMax = 200.;
-  config.deltaRMin = 1.;
-  config.deltaRMax = 60.;
-  config.collisionRegionMin = -250;
-  config.collisionRegionMax = 250.;
-  config.zMin = -2000.;
-  config.zMax = 2000.;
-  config.maxSeedsPerSpM = 1;
-  config.cotThetaMax = 7.40627;  // 2.7 eta
-  config.sigmaScattering = 2.25;
-  config.radLengthPerSeed = 0.1;
-  config.minPt = 500.;
-  config.bFieldInZ = 0.00199724;
-  config.beamPos = {0., 0.};
-  config.impactMax = 3.;
+  finderConf.rMax = m_cfg.rMax;
+  finderConf.deltaRMin = m_cfg.deltaRMin;
+  finderConf.deltaRMax = m_cfg.deltaRMax;
+  finderConf.collisionRegionMin = m_cfg.collisionRegionMin;
+  finderConf.collisionRegionMax = m_cfg.collisionRegionMax;
+  finderConf.zMin = m_cfg.zMin;
+  finderConf.zMax = m_cfg.zMax;
+  finderConf.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
+  finderConf.cotThetaMax = m_cfg.cotThetaMax;
+  finderConf.sigmaScattering = m_cfg.sigmaScattering;
+  finderConf.radLengthPerSeed = m_cfg.radLengthPerSeed;
+  finderConf.minPt = m_cfg.minPt;
+  finderConf.bFieldInZ = m_cfg.bFieldInZ;
+  finderConf.beamPos = m_cfg.beamPos;
+  finderConf.impactMax = m_cfg.impactMax;
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = config.bFieldInZ;
-  gridConf.minPt = config.minPt;
-  gridConf.rMax = config.rMax;
-  gridConf.zMax = config.zMax;
-  gridConf.zMin = config.zMin;
-  gridConf.deltaRMax = config.deltaRMax;
-  gridConf.cotThetaMax = config.cotThetaMax;
+  gridConf.bFieldInZ = m_cfg.bFieldInZ;
+  gridConf.minPt = m_cfg.minPt;
+  gridConf.rMax = m_cfg.rMax;
+  gridConf.zMax = m_cfg.zMax;
+  gridConf.zMin = m_cfg.zMin;
+  gridConf.deltaRMax = m_cfg.deltaRMax;
+  gridConf.cotThetaMax = m_cfg.cotThetaMax;
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
   Acts::SeedFilterConfig sfconf;
-  sfconf.maxSeedsPerSpM = config.maxSeedsPerSpM;
+  sfconf.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
   Acts::GenericDetectorCuts<SimSpacePoint> detectorCuts =
       Acts::GenericDetectorCuts<SimSpacePoint>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
+  finderConf.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
       Acts::SeedFilter<SimSpacePoint>(sfconf, &detectorCuts));
-  Acts::Seedfinder<SimSpacePoint> seedFinder(config);
+  Acts::Seedfinder<SimSpacePoint> seedFinder(finderConf);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SimSpacePoint& sp, float, float,
@@ -154,7 +154,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(gridConf);
   auto spGroup = Acts::BinnedSPGroup<SimSpacePoint>(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), config);
+      std::move(grid), finderConf);
 
   std::vector<std::vector<Acts::Seed<SimSpacePoint>>> seedVector;
   auto groupIt = spGroup.begin();
