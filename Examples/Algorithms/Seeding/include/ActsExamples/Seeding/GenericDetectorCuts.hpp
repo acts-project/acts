@@ -14,6 +14,16 @@ namespace Acts {
 template <typename SpacePoint>
 class GenericDetectorCuts : public IExperimentCuts<SpacePoint> {
  public:
+  struct Config {
+    int maxSeedSize = 5;
+    float cutRadius = 200.;
+    float cutWeight = 380.;
+    float weight_outer = 400.;
+    float weight_inner = 200.;
+    float keepWeight = 200.;
+    float minRadius = 43.;
+  };
+
   /// Returns seed weight bonus/malus depending on detector considerations.
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
@@ -40,6 +50,9 @@ class GenericDetectorCuts : public IExperimentCuts<SpacePoint> {
       std::vector<
           std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
           seeds) const;
+
+ private:
+  Config m_cfg;
 };
 
 template <typename SpacePoint>
@@ -48,11 +61,11 @@ float GenericDetectorCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
-  if (bottom.radius() > 200) {
-    weight = 400;
+  if (bottom.radius() > m_cfg.cutRadius) {
+    weight = m_cfg.weight_outer;
   }
-  if (top.radius() < 200) {
-    weight = 200;
+  if (top.radius() < m_cfg.cutRadius) {
+    weight = m_cfg.weight_inner;
   }
   return weight;
 }
@@ -62,7 +75,7 @@ bool GenericDetectorCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
     const InternalSpacePoint<SpacePoint>&,
     const InternalSpacePoint<SpacePoint>&) const {
-  return !(b.radius() > 200. && weight < 380.);
+  return !(b.radius() > m_cfg.cutRadius && weight < m_cfg.cutWeight);
 }
 
 template <typename SpacePoint>
@@ -75,10 +88,12 @@ GenericDetectorCuts<SpacePoint>::cutPerMiddleSP(
       newSeedsVector;
   if (seeds.size() > 1) {
     newSeedsVector.push_back(std::move(seeds[0]));
-    size_t itLength = std::min(seeds.size(), size_t(5));
+    size_t itLength = std::min(seeds.size(), size_t(m_cfg.maxSeedSize));
     // don't cut first element
     for (size_t i = 1; i < itLength; i++) {
-      if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.) {
+      std::cout << seeds[i].first << std::endl;
+      if (seeds[i].first > m_cfg.keepWeight ||
+          seeds[i].second->sp[0]->radius() > m_cfg.minRadius) {
         newSeedsVector.push_back(std::move(seeds[i]));
       }
     }
