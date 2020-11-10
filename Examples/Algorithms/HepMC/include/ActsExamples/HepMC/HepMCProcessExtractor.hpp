@@ -21,29 +21,37 @@ class G4RunManager;
 
 namespace ActsExamples {
 
+/// Stores the initial properties of a particle, the properties before the
+/// interaction and the particle properties after the interaction
+struct ExtractedSimulationProcess {
+  SimParticle initial;
+  SimParticle before;
+  std::vector<SimParticle> after;
+};
+               
 /// @brief This class extracts a certain process from a HepMC event record.
-class EventExtraction final : public ActsExamples::BareAlgorithm {
+class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
  public:
   /// @class Config
   struct Config {
     /// The input collection
     std::string inputEvents;
     /// The output collection
-    std::string outputEventFraction = "event-fraction";
+    std::string outputSimulationProcesses = "event-fraction";
     /// The process that should be extracted
     std::string extractionProcess;
 
     /// Minimum absolute value of considered PDG IDs
-    int minAbsPdg = 40;
+    int absPdgMin = 40;
     /// Maximum absolute value of considered PDG IDs
-    int maxAbsPdg = 2212;
+    int absPdgMax = 2212;
     /// Minimum momentum of considered particles
     double pMin = 50. * Acts::UnitConstants::MeV;
   };
 
   /// Constructor
-  EventExtraction(Config&& cnf, Acts::Logging::Level level);
-  ~EventExtraction();
+  HepMCProcessExtractor(Config&& cnf, Acts::Logging::Level level);
+  ~HepMCProcessExtractor();
 
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/HepMC/EventExtraction.hpp"
+#include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 #include <stdexcept>
@@ -16,11 +16,6 @@
 #include <HepMC3/GenVertex.h>
 
 namespace {
-/// Stores the initial properties of a particle, the properties before the
-/// interaction and the particle properties after the interaction
-using Particles =
-    std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-               std::vector<ActsExamples::SimParticle>>;
 
 /// @brief This method searches for an outgoing particle from a vertex
 ///
@@ -28,7 +23,7 @@ using Particles =
 /// @param [in] id The track ID of the particle
 ///
 /// @return The particle pointer if found, else nullptr
-HepMC3::ConstGenParticlePtr processParticle(HepMC3::ConstGenVertexPtr vertex,
+HepMC3::ConstGenParticlePtr searchProcessParticleById(HepMC3::ConstGenVertexPtr vertex,
                                             const int id) {
   // Loop over all outgoing particles
   for (const auto& particle : vertex->particles_out()) {
@@ -36,7 +31,8 @@ HepMC3::ConstGenParticlePtr processParticle(HepMC3::ConstGenVertexPtr vertex,
         particle->attribute<HepMC3::IntAttribute>("TrackID")->value();
     // Compare ID
     if (trackid == id)
-      return particle;
+    {
+      return particle;}
   }
   return nullptr;
 }
@@ -44,11 +40,11 @@ HepMC3::ConstGenParticlePtr processParticle(HepMC3::ConstGenVertexPtr vertex,
 /// @brief This method collects the material in X_0 and L_0 a particle has
 /// passed from its creation up to a certain vertex.
 ///
-/// @param [in, out] particle The particle that get the passed material attached
 /// @param [in] vertex The end vertex of the collection
 /// @param [in] id The track ID
-void passedMaterial(ActsExamples::SimParticle& particle,
-                    const HepMC3::ConstGenVertexPtr& vertex, const int id) {
+/// @param [in, out] particle The particle that get the passed material attached
+void setPassedMaterial(
+                    const HepMC3::ConstGenVertexPtr& vertex, const int id, ActsExamples::SimParticle& particle) {
   double x0 = 0.;
   double l0 = 0.;
   HepMC3::ConstGenParticlePtr currentParticle = nullptr;
@@ -85,12 +81,12 @@ void passedMaterial(ActsExamples::SimParticle& particle,
 /// @param [in] trackID The track ID of the ingoing particle
 ///
 /// @return Vector containing the outgoing particles from a vertex
-std::vector<ActsExamples::SimParticle> outgoingParticles(
+std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
     HepMC3::ConstGenVertexPtr vertex, const int trackID) {
   std::vector<ActsExamples::SimParticle> finalStateParticles;
 
   // Identify the ingoing particle in the outgoing particles
-  HepMC3::ConstGenParticlePtr procPart = processParticle(vertex, trackID);
+  HepMC3::ConstGenParticlePtr procPart = searchProcessParticleById(vertex, trackID);
 
   // Test whether this particle survives or dies
   HepMC3::ConstGenVertexPtr endVertex = procPart->end_vertex();
@@ -103,15 +99,15 @@ std::vector<ActsExamples::SimParticle> outgoingParticles(
         ActsExamples::HepMC3Particle::particle(procPart));
   } else {
     // Store the leftovers if it dies
-    for (const HepMC3::ConstGenParticlePtr procPartOut :
+    for (const HepMC3::ConstGenParticlePtr& procPartOut :
          endVertex->particles_out())
       if (procPartOut->attribute<HepMC3::IntAttribute>("TrackID")->value() ==
               trackID &&
           procPartOut->end_vertex()) {
         for (const HepMC3::ConstGenParticlePtr dyingPartOut :
-             procPartOut->end_vertex()->particles_out())
+             procPartOut->end_vertex()->particles_out()){
           finalStateParticles.push_back(
-              ActsExamples::HepMC3Particle::particle(dyingPartOut));
+              ActsExamples::HepMC3Particle::particle(dyingPartOut));}
       }
   }
 
@@ -124,7 +120,7 @@ std::vector<ActsExamples::SimParticle> outgoingParticles(
           endVertex->attribute<HepMC3::VectorDoubleAttribute>(att)->value();
       const HepMC3::FourVector& pos4 = endVertex->position();
       const int id = stoi(att.substr(att.find("-") + 1));
-      HepMC3::ConstGenParticlePtr genParticle = processParticle(endVertex, id);
+      HepMC3::ConstGenParticlePtr genParticle = searchProcessParticleById(endVertex, id);
       ActsFatras::Barcode barcode = ActsFatras::Barcode().setParticle(id);
       auto pid = static_cast<Acts::PdgParticle>(genParticle->pid());
 
@@ -145,25 +141,24 @@ std::vector<ActsExamples::SimParticle> outgoingParticles(
 
 /// @brief This method filters and sorts the recorded interactions.
 ///
-/// @param [in, out] interactions The recorded interactions
 /// @param [in] cfg Configuration of the filtering
-void filterAndSort(std::vector<Particles>& interactions,
-                   const ActsExamples::EventExtraction::Config& cfg) {
-  for (Particles& interaction : interactions) {
-    for (auto cit = std::get<2>(interaction).cbegin();
-         cit != std::get<2>(interaction).cend();) {
+/// @param [in, out] interactions The recorded interactions
+void filterAndSort(const ActsExamples::HepMCProcessExtractor::Config& cfg, std::vector<ActsExamples::ExtractedSimulationProcess>& interactions) {
+  for (auto& interaction : interactions) {
+    for (auto cit = interaction.after.cbegin();
+         cit != interaction.after.cend();) {
       // Test whether a particle fulfills the conditions
-      if (cit->pdg() < cfg.minAbsPdg || cit->pdg() > cfg.maxAbsPdg ||
-          cit->absMomentum() < cfg.pMin)
-        std::get<2>(interaction).erase(cit);
-      else
-        cit++;
+      if (cit->pdg() < cfg.absPdgMin || cit->pdg() > cfg.absPdgMax ||
+          cit->absMomentum() < cfg.pMin){
+        interaction.after.erase(cit);}
+      else{
+        cit++;}
     }
   }
 
   // Sort the particles based on their momentum
-  for (Particles& interaction : interactions) {
-    std::sort(std::get<2>(interaction).begin(), std::get<2>(interaction).end(),
+  for (auto& interaction : interactions) {
+    std::sort(interaction.after.begin(), interaction.after.end(),
               [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
                 return a.absMomentum() > b.absMomentum();
               });
@@ -171,16 +166,16 @@ void filterAndSort(std::vector<Particles>& interactions,
 }
 }  // namespace
 
-ActsExamples::EventExtraction::~EventExtraction() {}
+ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() {}
 
-ActsExamples::EventExtraction::EventExtraction(
-    ActsExamples::EventExtraction::Config&& cnf, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("EventExtraction", level),
+ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
+    ActsExamples::HepMCProcessExtractor::Config&& cnf, Acts::Logging::Level level)
+    : ActsExamples::BareAlgorithm("HepMCProcessExtractor", level),
       m_cfg(std::move(cnf)) {
   if (m_cfg.inputEvents.empty()) {
     throw std::invalid_argument("Missing input event collection");
   }
-  if (m_cfg.outputEventFraction.empty()) {
+  if (m_cfg.outputSimulationProcesses.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
   if (m_cfg.extractionProcess.empty()) {
@@ -188,17 +183,17 @@ ActsExamples::EventExtraction::EventExtraction(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
+ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Retrieve the initial particles
   const auto events =
       context.eventStore.get<std::vector<HepMC3::GenEvent>>(m_cfg.inputEvents);
 
-  std::vector<Particles> fractions;
+  std::vector<ActsExamples::ExtractedSimulationProcess> fractions;
   for (const HepMC3::GenEvent& event : events) {
     // Fast exit
-    if (event.particles().empty() || event.vertices().empty())
-      break;
+    if (event.particles().empty() || event.vertices().empty()){
+      break;}
 
     // Get the initial particle
     HepMC3::ConstGenParticlePtr initialParticle = event.particles()[0];
@@ -220,9 +215,9 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
           particleToInteraction =
               HepMC3Particle::particle(vertex->particles_in()[0]);
           // Attach passed material to the particle
-          passedMaterial(particleToInteraction, vertex, procID);
+          setPassedMaterial(vertex, procID, particleToInteraction);
           // Record the final state particles
-          finalStateParticles = outgoingParticles(vertex, procID);
+          finalStateParticles = selectOutgoingParticles(vertex, procID);
           vertexFound = true;
           break;
         }
@@ -231,17 +226,17 @@ ActsExamples::ProcessCode ActsExamples::EventExtraction::execute(
         break;
       }
     }
-    fractions.push_back(std::make_tuple(simParticle, particleToInteraction,
-                                        finalStateParticles));
+    fractions.push_back(ActsExamples::ExtractedSimulationProcess{simParticle, particleToInteraction,
+                                        finalStateParticles});
   }
 
   // Filter and sort the record
-  filterAndSort(fractions, m_cfg);
+  filterAndSort(m_cfg, fractions);
 
   ACTS_INFO(events.size() << " processed");
 
   // Write the recorded material to the event store
-  context.eventStore.add(m_cfg.outputEventFraction, std::move(fractions));
+  context.eventStore.add(m_cfg.outputSimulationProcesses, std::move(fractions));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
