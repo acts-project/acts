@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
                    CKFSourceLinkSelector(sourcelinkSelectorConfig),
                    LoggerWrapper{*logger}, PropagatorPlainOptions(), rSurface);
 
-    // Found the track(s)
+    // Find the track(s)
     auto combKalmanFilterRes = cKF.findTracks(sourcelinks, rStart, ckfOptions);
     BOOST_CHECK(combKalmanFilterRes.ok());
 
@@ -331,6 +331,16 @@ BOOST_AUTO_TEST_CASE(comb_kalman_filter_zero_field) {
       // Check if there are fake hits from other tracks
       BOOST_CHECK_EQUAL(numFakeHit, 0);
     }
+
+    // Construct a starting parameter near the tracker exit
+    Vector3D rPosOuter(-1. * rPos.x(), rPos.y(), rPos.z());
+    CurvilinearTrackParameters rStartOuter(makeVector4(rPosOuter, 42_ns), rPhi,
+                                           rTheta, 1_GeV, 1_e, cov);
+    // Reset the navigation direction
+    ckfOptions.propagatorPlainOptions.direction = backward;
+    // Find the track(s)
+    combKalmanFilterRes = cKF.findTracks(sourcelinks, rStartOuter, ckfOptions);
+    BOOST_CHECK(combKalmanFilterRes.ok());
   }
 }
 
