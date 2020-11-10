@@ -1228,19 +1228,17 @@ class AtlasStepper {
       sA[2] = C6 * Sl;
 
       // Evaluate the time propagation
-      state.stepping.pVector[3] +=
-          h * std::hypot(1, state.options.mass / momentum(state.stepping));
-      state.stepping.pVector[59] =
+      double dtds =
           std::hypot(1, state.options.mass / momentum(state.stepping));
+      state.stepping.pVector[3] += h * dtds;
+      state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl =
-            h * state.options.mass * state.options.mass *
-            charge(state.stepping) /
-            (momentum(state.stepping) *
-             std::hypot(1., state.options.mass / momentum(state.stepping)));
+        double dtdl = h * state.options.mass * state.options.mass *
+                      charge(state.stepping) /
+                      (momentum(state.stepping) * dtds);
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation
