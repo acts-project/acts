@@ -30,7 +30,7 @@ struct ExtractedSimulationProcess {
   SimParticle before;
   std::vector<SimParticle> after;
 };
-
+               
 /// @brief This class extracts a certain process from a HepMC event record.
 class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
  public:

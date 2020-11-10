@@ -25,16 +25,16 @@ namespace {
 /// @param [in] id The track ID of the particle
 ///
 /// @return The particle pointer if found, else nullptr
-HepMC3::ConstGenParticlePtr searchProcessParticleById(
-    HepMC3::ConstGenVertexPtr vertex, const int id) {
+HepMC3::ConstGenParticlePtr searchProcessParticleById(HepMC3::ConstGenVertexPtr vertex,
+                                            const int id) {
   // Loop over all outgoing particles
   for (const auto& particle : vertex->particles_out()) {
     const int trackid =
         particle->attribute<HepMC3::IntAttribute>("TrackID")->value();
     // Compare ID
-    if (trackid == id) {
-      return particle;
-    }
+    if (trackid == id)
+    {
+      return particle;}
   }
   return nullptr;
 }
@@ -45,8 +45,8 @@ HepMC3::ConstGenParticlePtr searchProcessParticleById(
 /// @param [in] vertex The end vertex of the collection
 /// @param [in] id The track ID
 /// @param [in, out] particle The particle that get the passed material attached
-void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
-                       ActsExamples::SimParticle& particle) {
+void setPassedMaterial(
+                    const HepMC3::ConstGenVertexPtr& vertex, const int id, ActsExamples::SimParticle& particle) {
   double x0 = 0.;
   double l0 = 0.;
   HepMC3::ConstGenParticlePtr currentParticle = nullptr;
@@ -88,8 +88,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
   std::vector<ActsExamples::SimParticle> finalStateParticles;
 
   // Identify the ingoing particle in the outgoing particles
-  HepMC3::ConstGenParticlePtr procPart =
-      searchProcessParticleById(vertex, trackID);
+  HepMC3::ConstGenParticlePtr procPart = searchProcessParticleById(vertex, trackID);
 
   // Test whether this particle survives or dies
   HepMC3::ConstGenVertexPtr endVertex = procPart->end_vertex();
@@ -110,8 +109,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
         for (const HepMC3::ConstGenParticlePtr& dyingPartOut :
              procPartOut->end_vertex()->particles_out()) {
           finalStateParticles.push_back(
-              ActsExamples::HepMC3Particle::particle(dyingPartOut));
-        }
+              ActsExamples::HepMC3Particle::particle(dyingPartOut));}
       }
   }
 
@@ -124,8 +122,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
           endVertex->attribute<HepMC3::VectorDoubleAttribute>(att)->value();
       const HepMC3::FourVector& pos4 = endVertex->position();
       const int id = stoi(att.substr(att.find("-") + 1));
-      HepMC3::ConstGenParticlePtr genParticle =
-          searchProcessParticleById(endVertex, id);
+      HepMC3::ConstGenParticlePtr genParticle = searchProcessParticleById(endVertex, id);
       ActsFatras::Barcode barcode = ActsFatras::Barcode().setParticle(id);
       auto pid = static_cast<Acts::PdgParticle>(genParticle->pid());
 
@@ -148,9 +145,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
 ///
 /// @param [in] cfg Configuration of the filtering
 /// @param [in, out] interactions The recorded interactions
-void filterAndSort(
-    const ActsExamples::HepMCProcessExtractor::Config& cfg,
-    std::vector<ActsExamples::ExtractedSimulationProcess>& interactions) {
+void filterAndSort(const ActsExamples::HepMCProcessExtractor::Config& cfg, std::vector<ActsExamples::ExtractedSimulationProcess>& interactions) {
   for (auto& interaction : interactions) {
     for (auto cit = interaction.after.cbegin();
          cit != interaction.after.cend();) {
@@ -200,9 +195,8 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
   std::vector<ActsExamples::ExtractedSimulationProcess> fractions;
   for (const HepMC3::GenEvent& event : events) {
     // Fast exit
-    if (event.particles().empty() || event.vertices().empty()) {
-      break;
-    }
+    if (event.particles().empty() || event.vertices().empty()){
+      break;}
 
     // Get the initial particle
     HepMC3::ConstGenParticlePtr initialParticle = event.particles()[0];
@@ -235,8 +229,8 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
         break;
       }
     }
-    fractions.push_back(ActsExamples::ExtractedSimulationProcess{
-        simParticle, particleToInteraction, finalStateParticles});
+    fractions.push_back(ActsExamples::ExtractedSimulationProcess{simParticle, particleToInteraction,
+                                        finalStateParticles});
   }
 
   // Filter and sort the record
