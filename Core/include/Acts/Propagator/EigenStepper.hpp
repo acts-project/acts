@@ -64,6 +64,8 @@ class EigenStepper {
 
     /// Constructor from the initial bound track parameters
     ///
+    /// @tparam charge_t Type of the bound parameter charge
+    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
@@ -105,7 +107,7 @@ class EigenStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    double q = 1;
+    double q = 1.;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters

@@ -46,23 +46,26 @@ class StraightLineStepper {
   struct State {
     State() = delete;
 
-    /// Constructor from the initial track parameters
+    /// Constructor from the initial bound track parameters
     ///
-    /// @tparam parameters_t the Type of the track parameters
+    /// @tparam charge_t Type of the bound parameter charge
     ///
-    /// @param [in] gctx is the context object for the geometery
+    /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir is the navigation direction
-    /// @param [in] ssize is the (absolute) maximum step size
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
-    template <typename parameters_t>
+    ///
+    /// @note the covariance matrix is copied when needed
+    template <typename charge_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
-                   const parameters_t& par, NavigationDirection ndir = forward,
+                   const SingleBoundTrackParameters<charge_t>& par,
+                   NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(static_cast<int>(par.charge())),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -70,7 +73,7 @@ class StraightLineStepper {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
       pars.template segment<3>(eFreeDir0) = par.unitDirection();
       pars[eFreeTime] = par.time();
-      pars[eFreeQOverP] = par.charge() / par.absoluteMomentum();
+      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
       if (par.covariance()) {
         // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
@@ -97,7 +100,7 @@ class StraightLineStepper {
     FreeVector pars = FreeVector::Zero();
 
     /// The charge as the free vector can be 1/p or q/p
-    int q = 1;
+    double q = 1.;
 
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
@@ -169,7 +172,7 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs(1. / state.pars[eFreeQOverP]);
+    return std::abs(state.q / state.pars[eFreeQOverP]);
   }
 
   /// Charge access
