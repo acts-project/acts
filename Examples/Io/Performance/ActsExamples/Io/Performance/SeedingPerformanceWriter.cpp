@@ -10,6 +10,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 
 #include <numeric>
 #include <set>
@@ -82,72 +83,37 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
   return ProcessCode::SUCCESS;
 }
 
-std::set<ActsFatras::Barcode>
-ActsExamples::SeedingPerformanceWriter::identifySharedParticles(
-    const HitParticlesMap& hitParticlesMap,
-    const Acts::Seed<SimSpacePoint>* seed) const {
-  auto particles0 = getTruthParticles(hitParticlesMap, seed->sp()[0]->Id());
-  auto particles1 = getTruthParticles(hitParticlesMap, seed->sp()[1]->Id());
-  auto particles2 = getTruthParticles(hitParticlesMap, seed->sp()[2]->Id());
-
-  std::set<ActsFatras::Barcode> tmp;
-  set_intersection(particles0.begin(), particles0.end(), particles1.begin(),
-                   particles1.end(), std::inserter(tmp, tmp.end()));
-
-  std::set<ActsFatras::Barcode> prtsInCommon;
-  set_intersection(particles2.begin(), particles2.end(), tmp.begin(), tmp.end(),
-                   std::inserter(prtsInCommon, prtsInCommon.end()));
-  return prtsInCommon;
-}
-
-// get truth particles that are a part of this space point
-std::vector<ActsFatras::Barcode>
-ActsExamples::SeedingPerformanceWriter::getTruthParticles(
-    const HitParticlesMap& hitParticlesMap, const std::size_t hit_id) const {
-  std::vector<ActsExamples::ParticleHitCount> particleHitCount;
-  std::vector<ActsFatras::Barcode> particles;
-  for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hit_id))) {
-    auto particleId = hitParticle.second;
-    // search for existing particle in the existing hit counts
-    auto isSameParticle = [=](const ParticleHitCount& phc) {
-      return (phc.particleId == particleId);
-    };
-    auto it = std::find_if(particleHitCount.begin(), particleHitCount.end(),
-                           isSameParticle);
-    if (it == particleHitCount.end()) {
-      particles.push_back(particleId);
-    }
-  }
-  return particles;
-}
-
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-    const AlgorithmContext& ctx,
-    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+									 const AlgorithmContext& ctx,
+									 const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
   // Read truth particles from input collection
   const auto& particles =
-      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
-          m_cfg.inputParticles);
+    ctx.eventStore.get<ActsExamples::SimParticleContainer>(
+							   m_cfg.inputParticles);
 
   size_t nSeeds = 0;
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
   const HitParticlesMap hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+    ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-
-      auto prtsInCommon = identifySharedParticles(hitParticlesMap, seed);
-      if (prtsInCommon.size() > 0) {
-        for (const auto& prt : prtsInCommon) {
-          auto it = truthCount.try_emplace(prt, 0u).first;
-          it->second += 1;
+      ProtoTrack ptrack{seed->sp()[0]->Id(), seed->sp()[1]->Id() ,seed->sp()[2]->Id() };
+      std::vector<ParticleHitCount> particleHitCounts;
+      identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
+      if (particleHitCounts.size() > 0) {
+        for (const auto& prt : particleHitCounts) {
+	  if( prt.hitCount == 3){
+	    auto it = truthCount.try_emplace(prt.particleId, 0u).first; 
+	    it->second += 1;
+	    nMatchedSeeds++;
+	    break;
+	  }
         }
-        nMatchedSeeds++;
       }
     }
   }
@@ -172,7 +138,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }
 
-  ACTS_INFO("Number of seeds: " << nSeeds);
+  ACTS_INFO("Number of seeds: " << nSeeds);  
   m_nTotalSeeds += nSeeds;
   m_nTotalMatchedSeeds += nMatchedSeeds;
   m_nTotalParticles += particles.size();

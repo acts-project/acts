@@ -42,20 +42,8 @@ class SeedingPerformanceWriter final
 
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
-    // FakeRatePlotTool::Config fakeRatePlotToolConfig;
-    // DuplicationPlotTool::Config duplicationPlotToolConfig;
   };
 
-  /// @brief Finds all the particles that are in common to all space points in
-  /// the seed.
-  /// @param seed The seed to be analyzed
-  std::set<ActsFatras::Barcode> identifySharedParticles(
-      const ActsExamples::IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-      const Acts::Seed<SimSpacePoint>* seed) const;
-
-  std::vector<ActsFatras::Barcode> getTruthParticles(
-      const ActsExamples::IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-      const std::size_t hit_id) const;
 
   /// Construct from configuration and log level.
   SeedingPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
