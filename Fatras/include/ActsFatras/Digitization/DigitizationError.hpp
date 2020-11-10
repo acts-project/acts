@@ -16,7 +16,8 @@ namespace ActsFatras {
 enum class DigitizationError {
   SmearingOutOfRange,
   SmearingError,
-  NoSurfaceDefined
+  UndefinedSurface,
+  MaskingError
 };
 
 namespace detail {

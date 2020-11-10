@@ -218,9 +218,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       trackMomenta[iTrack] += deltaP;
 
       // correct for 2PI / PI periodicity
-      auto correctedPhiTheta = detail::ensureThetaBounds(
+      const auto correctedPhiTheta = detail::normalizePhiTheta(
           trackMomenta[iTrack][0], trackMomenta[iTrack][1]);
-
       trackMomenta[iTrack][0] = correctedPhiTheta.first;
       trackMomenta[iTrack][1] = correctedPhiTheta.second;
 

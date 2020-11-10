@@ -175,12 +175,14 @@ struct GenericDenseEnvironmentExtension {
         g / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
-    state.stepping.p = newMomentum;
+    state.stepping.pars[eFreeQOverP] =
+        stepper.charge(state.stepping) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
     using std::hypot;
     state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
     // Update time
-    state.stepping.t += (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
+    state.stepping.pars[eFreeTime] +=
+        (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
 
     return true;
   }

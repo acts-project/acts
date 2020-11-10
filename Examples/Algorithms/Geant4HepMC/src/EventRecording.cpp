@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
-
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
@@ -20,7 +19,7 @@
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
 
-#include <HepMC3/GenEvent.h>
+#include <HepMC3/GenParticle.h>
 
 ActsExamples::EventRecording::~EventRecording() {
   m_runManager = nullptr;
@@ -45,10 +44,12 @@ ActsExamples::EventRecording::EventRecording(
   m_runManager->SetUserInitialization(m_cfg.detectorConstruction.release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::RunAction());
-  m_runManager->SetUserAction(new ActsExamples::EventAction());
+  m_runManager->SetUserAction(
+      new ActsExamples::EventAction(m_cfg.processesCombine));
   m_runManager->SetUserAction(
       new ActsExamples::PrimaryGeneratorAction(m_cfg.seed1, m_cfg.seed2));
-  m_runManager->SetUserAction(new ActsExamples::SteppingAction());
+  m_runManager->SetUserAction(
+      new ActsExamples::SteppingAction(m_cfg.processesReject));
   m_runManager->Initialize();
 }
 
@@ -73,14 +74,69 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
     // Begin with the simulation
     m_runManager->BeamOn(1);
 
+    // Test if the event was aborted
+    if (SteppingAction::instance()->eventAborted()) {
+      continue;
+    }
+
+    // Set event start time
     HepMC3::GenEvent event = ActsExamples::EventAction::instance()->event();
-    HepMC3::FourVector shift(0., 0., 0., part.time());
+    HepMC3::FourVector shift(0., 0., 0., part.time() / Acts::UnitConstants::mm);
     event.shift_position_by(shift);
 
-    // Store the result
-    events.push_back(std::move(event));
+    // Set beam particle properties
+    const Acts::Vector4D momentum4 =
+        part.momentum4() / Acts::UnitConstants::GeV;
+    HepMC3::FourVector beamMom4(momentum4[0], momentum4[1], momentum4[2],
+                                momentum4[3]);
+    auto beamParticle = event.particles()[0];
+    beamParticle->set_momentum(beamMom4);
+    beamParticle->set_pid(part.pdg());
+
+    if (m_cfg.processSelect.empty()) {
+      // Store the result
+      events.push_back(std::move(event));
+    } else {
+      bool storeEvent = false;
+      // Test if the event has a process of interest in it
+      for (const auto& vertex : event.vertices()) {
+        if (vertex->id() == -1) {
+          vertex->add_particle_in(beamParticle);
+        }
+        const std::vector<std::string> vertexAttributes =
+            vertex->attribute_names();
+        for (const auto& att : vertexAttributes) {
+          if ((vertex->attribute_as_string(att).find(m_cfg.processSelect) !=
+               std::string::npos) &&
+              !vertex->particles_in().empty() &&
+              vertex->particles_in()[0]->attribute<HepMC3::IntAttribute>(
+                  "TrackID") &&
+              vertex->particles_in()[0]
+                      ->attribute<HepMC3::IntAttribute>("TrackID")
+                      ->value() == 1) {
+            storeEvent = true;
+            break;
+          }
+        }
+        if (storeEvent) {
+          break;
+        }
+      }
+      // Store the result
+      if (storeEvent) {
+        // Remove vertices without outgoing particles
+        for (auto it = event.vertices().crbegin();
+             it != event.vertices().crend(); it++) {
+          if ((*it)->particles_out().empty()) {
+            event.remove_vertex(*it);
+          }
+        }
+        events.push_back(std::move(event));
+      }
+    }
   }
 
+  ACTS_INFO(initialParticles.size() << " initial particles provided");
   ACTS_INFO(events.size() << " tracks generated");
 
   // Write the recorded material to the event store
