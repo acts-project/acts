@@ -86,17 +86,20 @@ PropagationOutput PropagationAlgorithm<propagator_t>::executeTest(
     options.maxStepSize = m_cfg.maxStepSize;
 
     // Propagate using the propagator
-    const auto& result =
-        m_cfg.propagator.propagate(startParameters, options).value();
-    auto steppingResults = result.template get<SteppingLogger::result_type>();
+    auto result = m_cfg.propagator.propagate(startParameters, options);
+    if (result.ok()) {
+      const auto& resultValue = result.value();
+      auto steppingResults =
+          resultValue.template get<SteppingLogger::result_type>();
 
-    // Set the stepping result
-    pOutput.first = std::move(steppingResults.steps);
-    // Also set the material recording result - if configured
-    if (m_cfg.recordMaterialInteractions) {
-      auto materialResult =
-          result.template get<MaterialInteractor::result_type>();
-      pOutput.second = std::move(materialResult);
+      // Set the stepping result
+      pOutput.first = std::move(steppingResults.steps);
+      // Also set the material recording result - if configured
+      if (m_cfg.recordMaterialInteractions) {
+        auto materialResult =
+            resultValue.template get<MaterialInteractor::result_type>();
+        pOutput.second = std::move(materialResult);
+      }
     }
   }
   return pOutput;

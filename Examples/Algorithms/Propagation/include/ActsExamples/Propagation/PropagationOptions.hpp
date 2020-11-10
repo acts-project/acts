@@ -78,7 +78,7 @@ void addPropagationOptions(aopt_t& opt) {
       "Transverse momentum range for proprapolated tracks [in GeV].")(
       "prop-max-stepsize", po::value<double>()->default_value(3_m),
       "Maximum step size for the propagation [in mm].")(
-      "prop-pt-loopers", po::value<double>()->default_value(300_MeV),
+      "prop-pt-loopers", po::value<double>()->default_value(500_MeV),
       "Transverse momentum below which loops are being detected [in GeV].");
 }
 
