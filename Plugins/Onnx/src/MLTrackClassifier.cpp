@@ -22,7 +22,7 @@ Acts::MLTrackClassifier::TrackLabels Acts::MLTrackClassifier::predictTrackLabel(
   }
 
   // run the model over the input
-  float* outputTensor = runONNXInference(inputFeatures);
+  std::vector<float> outputTensor = runONNXInference(inputFeatures);
   // this is binary classification, so only need first value
   float outputProbability = outputTensor[0];
 

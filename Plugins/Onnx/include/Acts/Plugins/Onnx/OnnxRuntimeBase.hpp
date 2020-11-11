@@ -29,12 +29,14 @@ class OnnxRuntimeBase {
   /// @brief Default destructor
   ~OnnxRuntimeBase() = default;
 
+ protected:
   /// @brief Run the ONNX inference function
   ///
   /// @param inputTensorValues The input feature values used for prediction
   ///
-  /// @return Pointer to output values
-  float* runONNXInference(std::vector<float>& inputTensorValues) const;
+  /// @return The output (predicted) values
+  std::vector<float> runONNXInference(
+      std::vector<float>& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties
@@ -42,6 +44,7 @@ class OnnxRuntimeBase {
   std::vector<const char*> m_inputNodeNames;
   std::vector<int64_t> m_inputNodeDims;
   std::vector<const char*> m_outputNodeNames;
+  std::vector<int64_t> m_outputNodeDims;
 };
 
 }  // namespace Acts

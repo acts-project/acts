@@ -52,12 +52,24 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
   // iterate over all output nodes and get the name
   for (size_t i = 0; i < numOutputNodes; i++) {
     m_outputNodeNames[i] = m_session->GetOutputName(i, allocator);
+
+    // get the dimensions of the output nodes
+    // here we assume that all output nodes have the dimensions
+    Ort::TypeInfo outputTypeInfo = m_session->GetOutputTypeInfo(i);
+    auto tensorInfo = outputTypeInfo.GetTensorTypeAndShapeInfo();
+    m_outputNodeDims = tensorInfo.GetShape();
+    // fix for symbolic dim = -1 from python
+    for (size_t j = 0; j < m_outputNodeDims.size(); j++) {
+      if (m_outputNodeDims[j] < 0) {
+        m_outputNodeDims[j] = 1;
+      }
+    }
   }
 }
 
 // inference function using ONNX runtime
 // the function assumes that the model has 1 input node and 1 output node
-float* Acts::OnnxRuntimeBase::runONNXInference(
+std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
     std::vector<float>& inputTensorValues) const {
   // create input tensor object from data values
   // note: this assumes the model has only 1 input node
@@ -88,5 +100,11 @@ float* Acts::OnnxRuntimeBase::runONNXInference(
   // get pointer to output tensor float values
   // note: this assumes the model has only 1 output node
   float* outputTensor = outputTensors.front().GetTensorMutableData<float>();
-  return outputTensor;
+
+  // get the output values
+  std::vector<float> outputTensorValues(m_outputNodeDims[1]);
+  for (size_t i = 0; i < outputTensorValues.size(); i++) {
+    outputTensorValues[i] = outputTensor[i];
+  }
+  return outputTensorValues;
 }
