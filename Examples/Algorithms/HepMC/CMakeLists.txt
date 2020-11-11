@@ -1,16 +1,16 @@
 add_library(
-  ActsExamplesProcessExtraction SHARED
+  ActsExamplesHepMC SHARED
   src/HepMCProcessExtractor.cpp)
 target_include_directories(
-  ActsExamplesProcessExtraction
+  ActsExamplesHepMC
   SYSTEM PUBLIC ${HEPMC3_INCLUDE_DIR})
 target_include_directories(
-  ActsExamplesProcessExtraction
+  ActsExamplesHepMC
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
-  ActsExamplesProcessExtraction
+  ActsExamplesHepMC
   PUBLIC ActsCore ActsExamplesFramework ActsExamplesIoHepMC3)
 
 install(
-  TARGETS ActsExamplesProcessExtraction
+  TARGETS ActsExamplesHepMC
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
