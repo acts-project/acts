@@ -137,7 +137,7 @@ const auto ckfLogger =
 const auto ckfZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
 const auto ckfZero = CombinatorialKalmanFilter(ckfZeroPropagator);
 
-std::default_random_engine rng(4212352341961);
+std::default_random_engine rng(421235);
 
 }  // namespace
 
