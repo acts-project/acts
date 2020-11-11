@@ -99,6 +99,9 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
+  // Vector of input features for neural network classification
+  std::vector<float> inputFeatures(3);
+
   // Loop over all trajectories
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
@@ -170,8 +173,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Currently, the network used for this example can only handle
       // good/duplicate classification, so need to manually exclude fake tracks
       if (m_cfg.useMLTrackClassifier && !isFake) {
-        // create vector of input features for neural network
-        std::vector<float> inputFeatures(3);
         inputFeatures[0] = trajState.nMeasurements;
         inputFeatures[1] = trajState.nOutliers;
         inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
