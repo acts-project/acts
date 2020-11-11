@@ -101,7 +101,7 @@ class PropagationAlgorithm : public BareAlgorithm {
     /// pt range
     std::pair<double, double> ptRange = {100_MeV, 100_GeV};
     /// looper protection
-    double ptLoopers = 300_MeV;
+    double ptLoopers = 500_MeV;
 
     /// Max step size steering
     double maxStepSize = 3_m;
