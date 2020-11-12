@@ -8,26 +8,25 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
-#include <exception>
-#include <vector>
+#include <iomanip>
+#include <iosfwd>
+#include <memory>
+#include <stdexcept>
 
 namespace Acts {
 
-class Surface;
 class CylinderBounds;
 class RadialBounds;
 class PlanarBounds;
-class IVisualization3D;
 
 /// @class CylinderVolumeBounds
 ///

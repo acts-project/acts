@@ -39,7 +39,7 @@ namespace detail {
 /// @param [in, out] transportJacobian Global jacobian since the last reset
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
 /// parameters
-/// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
+/// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] covTransport Decision whether the covariance transport should be
@@ -55,7 +55,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
     std::reference_wrapper<const GeometryContext> geoContext,
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath, const Surface& surface);
 
 /// Create and return a curvilinear state at the current position
@@ -67,7 +67,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
 /// @param [in, out] transportJacobian Global jacobian since the last reset
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
 /// parameters
-/// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
+/// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] covTransport Decision whether the covariance transport should be
@@ -81,7 +81,7 @@ std::tuple<BoundTrackParameters, BoundMatrix, double> boundState(
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
@@ -93,7 +93,7 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @param [in, out] transportJacobian Global jacobian since the last reset
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
 /// parameters
-/// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
+/// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] parameters Free, nominal parametrisation
 /// @param [in] surface is the surface to which the covariance is
@@ -103,7 +103,7 @@ void covarianceTransport(
     std::reference_wrapper<const GeometryContext> geoContext,
     BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
-    BoundToFreeMatrix& jacobianLocalToGlobal, const FreeVector& parameters,
+    BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
     const Surface& surface);
 
 /// @brief Method for on-demand transport of the covariance to a new frame at
@@ -114,13 +114,13 @@ void covarianceTransport(
 /// @param [in, out] transportJacobian Global jacobian since the last reset
 /// @param [in, out] derivatives Path length derivatives of the free, nominal
 /// parameters
-/// @param [in, out] jacobianLocalToGlobal Projection jacobian of the last bound
+/// @param [in, out] jacToGlobal Projection jacobian of the last bound
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 void covarianceTransport(BoundSymMatrix& covarianceMatrix,
                          BoundMatrix& jacobian, FreeMatrix& transportJacobian,
                          FreeVector& derivatives,
-                         BoundToFreeMatrix& jacobianLocalToGlobal,
+                         BoundToFreeMatrix& jacToGlobal,
                          const Vector3D& direction);
 }  // namespace detail
 }  // namespace Acts

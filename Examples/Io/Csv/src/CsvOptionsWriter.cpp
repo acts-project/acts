@@ -35,6 +35,15 @@ ActsExamples::Options::readCsvParticleWriterConfig(
   return cfg;
 }
 
+ActsExamples::CsvSimHitWriter::Config
+ActsExamples::Options::readCsvSimHitWriterConfig(const Variables& vm) {
+  ActsExamples::CsvSimHitWriter::Config cfg;
+  if (not vm["output-dir"].empty()) {
+    cfg.outputDir = vm["output-dir"].as<std::string>();
+  }
+  return cfg;
+}
+
 ActsExamples::CsvPlanarClusterWriter::Config
 ActsExamples::Options::readCsvPlanarClusterWriterConfig(
     const ActsExamples::Options::Variables& vm) {

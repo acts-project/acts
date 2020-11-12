@@ -34,8 +34,8 @@ void basicChecks(bool circleCase = false) {
                                 rY, start, direction)
                           : detail::IntersectionHelper2D::intersectEllipse(
                                 rX, rY, start, direction);
-  BOOST_CHECK(not nosol.first);
-  BOOST_CHECK(not nosol.second);
+  BOOST_CHECK(not nosol[0]);
+  BOOST_CHECK(not nosol[1]);
 
   start = Vector2D(4., -4.);
   auto twosol = circleCase ? detail::IntersectionHelper2D::intersectCircle(
@@ -43,8 +43,8 @@ void basicChecks(bool circleCase = false) {
                            : detail::IntersectionHelper2D::intersectEllipse(
                                  rX, rY, start, direction);
 
-  BOOST_CHECK(twosol.first);
-  BOOST_CHECK(twosol.second);
+  BOOST_CHECK(twosol[0]);
+  BOOST_CHECK(twosol[1]);
 
   start = Vector2D(-4., 10.);
   direction = Vector2D(1., 0.);
@@ -54,9 +54,9 @@ void basicChecks(bool circleCase = false) {
                             : detail::IntersectionHelper2D::intersectEllipse(
                                   rX, rY, start, direction);
 
-  BOOST_CHECK(onesolY.first);
-  CHECK_CLOSE_ABS(onesolY.first.position.x(), 0., s_epsilon);
-  BOOST_CHECK(not onesolY.second);
+  BOOST_CHECK(onesolY[0]);
+  CHECK_CLOSE_ABS(onesolY[0].position.x(), 0., s_epsilon);
+  BOOST_CHECK(not onesolY[1]);
 
   start = Vector2D(rX, -4);
   direction = Vector2D(0., 1.);
@@ -66,9 +66,9 @@ void basicChecks(bool circleCase = false) {
                             : detail::IntersectionHelper2D::intersectEllipse(
                                   rX, rY, start, direction);
 
-  BOOST_CHECK(onesolX.first);
-  CHECK_CLOSE_ABS(onesolX.first.position.y(), 0., s_epsilon);
-  BOOST_CHECK(not onesolX.second);
+  BOOST_CHECK(onesolX[0]);
+  CHECK_CLOSE_ABS(onesolX[0].position.y(), 0., s_epsilon);
+  BOOST_CHECK(not onesolX[1]);
 }
 
 /// Unit test for creating Ellipse intersection
@@ -78,15 +78,29 @@ BOOST_AUTO_TEST_CASE(LineLineIntersection) {
 
   // Not possible
   auto solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(5., 3.), Vector2D(6., 4), start, dir);
+      Vector2D(5., 3.), Vector2D(6., 4), start, dir.normalized());
 
   BOOST_CHECK(not solution);
 
   // Possible
   solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(5., 3.), Vector2D(3., -1.), start, dir);
+      Vector2D(5., 3.), Vector2D(3., -1.), start, dir.normalized());
 
   BOOST_CHECK(solution);
+
+  // In principle possible, but out of bound
+  start = Vector2D(2, 3);
+  dir = Vector2D(2, 1).normalized();
+
+  solution = detail::IntersectionHelper2D::intersectSegment(
+      Vector2D(-1., -2.5), Vector2D(3., 2.5), start, dir);
+
+  BOOST_CHECK(solution);
+
+  solution = detail::IntersectionHelper2D::intersectSegment(
+      Vector2D(-1., -2.5), Vector2D(3., 2.5), start, dir, true);
+
+  BOOST_CHECK(not solution);
 }
 
 /// Unit test for creating Ellipse intersection
@@ -105,17 +119,17 @@ BOOST_AUTO_TEST_CASE(EllipseIntersection) {
       radiusX, radiusY, start, direction);
 
   // Numerically checked / per hand calculated
-  BOOST_CHECK(solution.first);
+  BOOST_CHECK(solution[0]);
 
-  CHECK_CLOSE_ABS(solution.first.position.x(), -283.68, 0.01);
-  CHECK_CLOSE_ABS(solution.first.position.y(), -213.47, 0.01);
-  BOOST_CHECK(solution.first.pathLength > 0.);
+  CHECK_CLOSE_ABS(solution[0].position.x(), -283.68, 0.01);
+  CHECK_CLOSE_ABS(solution[0].position.y(), -213.47, 0.01);
+  BOOST_CHECK(solution[0].pathLength > 0.);
 
-  BOOST_CHECK(solution.second);
+  BOOST_CHECK(solution[1]);
 
-  CHECK_CLOSE_ABS(solution.second.position.x(), 433.65, 0.01);
-  CHECK_CLOSE_ABS(solution.second.position.y(), 73.46, 0.01);
-  BOOST_CHECK(solution.second.pathLength > 0.);
+  CHECK_CLOSE_ABS(solution[1].position.x(), 433.65, 0.01);
+  CHECK_CLOSE_ABS(solution[1].position.y(), 73.46, 0.01);
+  BOOST_CHECK(solution[1].pathLength > 0.);
 
   // Reverse checks will be done with circle (same code)
 }
@@ -135,17 +149,17 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
   // Numerically checked / per hand calculated
-  BOOST_CHECK(solution.first);
+  BOOST_CHECK(solution[0]);
 
-  CHECK_CLOSE_ABS(solution.first.position.x(), -266.771, 0.001);
-  CHECK_CLOSE_ABS(solution.first.position.y(), -66.771, 0.001);
-  BOOST_CHECK(solution.first.pathLength > 0.);
+  CHECK_CLOSE_ABS(solution[0].position.x(), -266.771, 0.001);
+  CHECK_CLOSE_ABS(solution[0].position.y(), -66.771, 0.001);
+  BOOST_CHECK(solution[0].pathLength > 0.);
 
-  BOOST_CHECK(solution.second);
+  BOOST_CHECK(solution[1]);
 
-  CHECK_CLOSE_ABS(solution.second.position.x(), 66.771, 0.001);
-  CHECK_CLOSE_ABS(solution.second.position.y(), 266.771, 0.001);
-  BOOST_CHECK(solution.second.pathLength > 0.);
+  CHECK_CLOSE_ABS(solution[1].position.x(), 66.771, 0.001);
+  CHECK_CLOSE_ABS(solution[1].position.y(), 266.771, 0.001);
+  BOOST_CHECK(solution[1].pathLength > 0.);
 
   // Reverse
   start = Vector2D(1500., 1700.);
@@ -153,30 +167,30 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
-  BOOST_CHECK(solution.first);
-  CHECK_CLOSE_ABS(solution.first.position.x(), 66.771, 0.001);
-  CHECK_CLOSE_ABS(solution.first.position.y(), 266.771, 0.001);
-  BOOST_CHECK(solution.first.pathLength < 0.);
+  BOOST_CHECK(solution[0]);
+  CHECK_CLOSE_ABS(solution[0].position.x(), 66.771, 0.001);
+  CHECK_CLOSE_ABS(solution[0].position.y(), 266.771, 0.001);
+  BOOST_CHECK(solution[0].pathLength < 0.);
 
-  BOOST_CHECK(solution.second);
-  CHECK_CLOSE_ABS(solution.second.position.x(), -266.771, 0.001);
-  CHECK_CLOSE_ABS(solution.second.position.y(), -66.771, 0.001);
-  BOOST_CHECK(solution.second.pathLength < 0.);
+  BOOST_CHECK(solution[1]);
+  CHECK_CLOSE_ABS(solution[1].position.x(), -266.771, 0.001);
+  CHECK_CLOSE_ABS(solution[1].position.y(), -66.771, 0.001);
+  BOOST_CHECK(solution[1].pathLength < 0.);
 
   // Reverse with reverse direction
   direction = Vector2D(-1., -1.).normalized();
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
-  BOOST_CHECK(solution.first);
-  CHECK_CLOSE_ABS(solution.first.position.x(), 66.771, 0.001);
-  CHECK_CLOSE_ABS(solution.first.position.y(), 266.771, 0.001);
-  BOOST_CHECK(solution.first.pathLength > 0.);
+  BOOST_CHECK(solution[0]);
+  CHECK_CLOSE_ABS(solution[0].position.x(), 66.771, 0.001);
+  CHECK_CLOSE_ABS(solution[0].position.y(), 266.771, 0.001);
+  BOOST_CHECK(solution[0].pathLength > 0.);
 
-  BOOST_CHECK(solution.second);
-  CHECK_CLOSE_ABS(solution.second.position.x(), -266.771, 0.001);
-  CHECK_CLOSE_ABS(solution.second.position.y(), -66.771, 0.001);
-  BOOST_CHECK(solution.second.pathLength > 0.);
+  BOOST_CHECK(solution[1]);
+  CHECK_CLOSE_ABS(solution[1].position.x(), -266.771, 0.001);
+  CHECK_CLOSE_ABS(solution[1].position.y(), -66.771, 0.001);
+  BOOST_CHECK(solution[1].pathLength > 0.);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -19,7 +19,7 @@ information to group simulated hits into tracks) and fits them.
 
 .. code-block:: console
 
-   $ <build>/bin/ActsRecTruthTracks \
+   $ <build>/bin/ActsExampleTruthTracksGeneric \
        --input-dir=data/sim_trackML/ttbar_mu200 \
        --bf-value=0 0 2 \
        --output-dir=data/reco_trackML/ttbar_mu200

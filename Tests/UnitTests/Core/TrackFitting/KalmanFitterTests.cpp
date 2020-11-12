@@ -271,7 +271,10 @@ struct MinimalOutlierFinder {
         });
 
     // In case the chi2 is too small
-    if (std::abs(chi2) < chi2Tolerance) {
+    if (chi2 < chi2Tolerance) {
+      if (chi2 < 0) {
+        std::cout << "WARNING: negative Chi2: " << chi2 << "found" << std::endl;
+      }
       return false;
     }
     // The chisq distribution
@@ -399,7 +402,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
 
   KalmanFitter kFitter(rPropagator);
 
-  // Fit the track
+  // Test 1: The nominal fit
   auto fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedTrack = *fitRes;
@@ -415,7 +418,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   BOOST_CHECK_EQUAL(stateRowIndices.at(fittedTrack.trackTip), 30);
   BOOST_CHECK_EQUAL(trackParamsCov.rows(), 6 * eBoundSize);
 
-  // Make sure it is deterministic
+  // Test 2: Make sure it is deterministic
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedAgainTrack = *fitRes;
@@ -426,7 +429,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   CHECK_CLOSE_ABS(fittedParameters.parameters().template tail<1>(),
                   fittedAgainParameters.parameters().template tail<1>(), 1e-5);
 
-  // Fit without target surface
+  // Test 3: Fit without target surface
   kfOptions.referenceSurface = nullptr;
   fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
@@ -442,7 +445,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[3], sourcelinks[2], sourcelinks[1],
       sourcelinks[4], sourcelinks[5], sourcelinks[0]};
 
-  // Make sure it works for shuffled measurements as well
+  // Test 4: Make sure it works for shuffled measurements as well
   fitRes = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedShuffledTrack = *fitRes;
@@ -460,7 +463,7 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[0], sourcelinks[1], sourcelinks[2], sourcelinks[4],
       sourcelinks[5]};
 
-  // Make sure it works for shuffled measurements as well
+  // Test 5: Make sure it works for measurements with holes as well
   fitRes = kFitter.fit(measurementsWithHole, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedWithHoleTrack = *fitRes;
@@ -488,29 +491,6 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
                                          fittedWithHoleParameters.parameters(),
                                          1e-6));
 
-  // Run KF fit in backward filtering mode
-  kfOptions.backwardFiltering = true;
-  // Fit the track
-  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
-  BOOST_CHECK(fitRes.ok());
-  auto fittedWithBwdFiltering = *fitRes;
-  // Check the filtering and smoothing status flag
-  BOOST_CHECK(fittedWithBwdFiltering.forwardFiltered);
-  BOOST_CHECK(not fittedWithBwdFiltering.smoothed);
-
-  // Count the number of 'smoothed' states
-  auto trackTip = fittedWithBwdFiltering.trackTip;
-  auto mj = fittedWithBwdFiltering.fittedStates;
-  size_t nSmoothed = 0;
-  mj.visitBackwards(trackTip, [&](const auto& state) {
-    if (state.hasSmoothed())
-      nSmoothed++;
-  });
-  BOOST_CHECK_EQUAL(nSmoothed, 6u);
-
-  // Reset to use smoothing formalism
-  kfOptions.backwardFiltering = false;
-
   // Extract outliers from result of propagation.
   // This vector owns the outliers
   std::vector<FittableMeasurement<TestSourceLink>> outliers = std::move(
@@ -522,14 +502,14 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
       sourcelinks[2], TestSourceLink(outliers[3]),
       sourcelinks[4], sourcelinks[5]};
 
-  // Make sure it works with one outlier
+  // Test 6: Make sure it works with one outlier
   fitRes = kFitter.fit(measurementsWithOneOutlier, rStart, kfOptions);
   BOOST_CHECK(fitRes.ok());
   auto& fittedWithOneOutlier = *fitRes;
 
   // Count the number of outliers
-  trackTip = fittedWithOneOutlier.trackTip;
-  mj = fittedWithOneOutlier.fittedStates;
+  auto trackTip = fittedWithOneOutlier.trackTip;
+  auto mj = fittedWithOneOutlier.fittedStates;
   size_t nOutliers = 0;
   mj.visitBackwards(trackTip, [&](const auto& state) {
     auto typeFlags = state.typeFlags();
@@ -538,6 +518,63 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
     }
   });
   BOOST_CHECK_EQUAL(nOutliers, 1u);
+
+  // Test 7: Run reversed filtering as smoothing
+  kfOptions.reversedFiltering = true;
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+  auto fittedWithReversedFiltering = *fitRes;
+  // Check the filtering and smoothing status flag
+  BOOST_CHECK(fittedWithReversedFiltering.reversed);
+  BOOST_CHECK(not fittedWithReversedFiltering.smoothed);
+
+  // Count the number of 'smoothed' states
+  trackTip = fittedWithReversedFiltering.trackTip;
+  mj = fittedWithReversedFiltering.fittedStates;
+  size_t nSmoothed = 0;
+  mj.visitBackwards(trackTip, [&](const auto& state) {
+    if (state.hasSmoothed())
+      nSmoothed++;
+  });
+  BOOST_CHECK_EQUAL(nSmoothed, 6u);
+
+  // Reset to use smoothing formalism
+  kfOptions.reversedFiltering = false;
+
+  // Test 8: Target surface near the tracker exit
+  // Construct a boundless plane surface near the tracker exit
+  Vector3D center(3._m, 0., 0.);
+  Vector3D normal(1., 0., 0.);
+  auto pSurface = Surface::makeShared<PlaneSurface>(center, normal);
+  kfOptions.referenceSurface = pSurface.get();
+  fitRes = kFitter.fit(sourcelinks, rStart, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+
+  // Test 9: Run filtering in outward->inward with starting parameters near the
+  // tracker exit Construct a curvilinear parameters near the tracker exit
+  Vector4D rPos4Outer(3._m, 10_um * gauss(generator), 100_um * gauss(generator),
+                      42_ns);
+  CurvilinearTrackParameters rStartOuter(rPos4Outer, rDir, 1_e / 1_GeV, cov);
+  // Reset the target surface and navigation direction
+  kfOptions.referenceSurface = &rStartOuter.referenceSurface();
+  kfOptions.propagatorPlainOptions.direction = backward;
+  fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+
+  // Test 10: Similar to test 9, but run reversed filtering as smoothing
+  kfOptions.reversedFiltering = true;
+  fitRes = kFitter.fit(sourcelinks, rStartOuter, kfOptions);
+  BOOST_CHECK(fitRes.ok());
+
+  // Count the number of 'smoothed' states
+  trackTip = (*fitRes).trackTip;
+  mj = (*fitRes).fittedStates;
+  nSmoothed = 0;
+  mj.visitBackwards(trackTip, [&](const auto& state) {
+    if (state.hasSmoothed())
+      nSmoothed++;
+  });
+  BOOST_CHECK_EQUAL(nSmoothed, 6u);
 }
 
 }  // namespace Test

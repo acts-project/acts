@@ -25,7 +25,7 @@ Currently, there are two configurable criteria to select compatible source links
 
 .. code-block:: console
 
-   $ <build>/bin/ActsRecCKFTracks \
+   $ <build>/bin/ActsExampleCKFTracksGeneric \
        --input-dir=data/sim_trackML/ttbar_mu200 \
        --bf-value=0 0 2 \
        --ckf-slselection-chi2max 15 \

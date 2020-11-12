@@ -317,43 +317,42 @@ class Surface : public virtual GeometryObject,
                                                 const Vector3D& position,
                                                 const Vector3D& momentum) const;
 
-  /// Initialize the jacobian from local to global
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from local to global which the surface knows best,
+  /// hence the calculation is done here.
+  ///
+  /// @note In priciple, the input could also be a free parameters
+  /// vector as it could be transformed to a bound parameters. But the transform
+  /// might fail in case the parameters is not on surface. To avoid the check
+  /// inside this function, it takes directly the bound parameters as input
+  /// (then the check might be done where this function is called).
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
-  /// @param pars is the parameter vector
-  virtual void initJacobianToGlobal(const GeometryContext& gctx,
-                                    BoundToFreeMatrix& jacobian,
-                                    const Vector3D& position,
-                                    const Vector3D& direction,
-                                    const BoundVector& pars) const;
+  /// @param boundParams is the bound parameters vector
+  ///
+  /// @return Jacobian from local to global
+  virtual BoundToFreeMatrix jacobianLocalToGlobal(
+      const GeometryContext& gctx, const BoundVector& boundParams) const;
 
-  /// Initialize the jacobian from global to local
-  /// the surface knows best, hence the calculation is done here.
-  /// The jacobian is assumed to be initialised, so only the
-  /// relevant entries are filled
+  /// Calculate the jacobian from global to local which the surface knows best,
+  /// hence the calculation is done here.
+  ///
+  /// @note It assumes the input free parameters is on surface, hence no
+  /// onSurface check is done inside this function.
   ///
   /// @todo this mixes track parameterisation and geometry
   /// should move to :
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
-  /// @param jacobian is the jacobian to be initialized
-  /// @param position is the global position of the parameters
-  /// @param direction is the direction at of the parameters
   /// @param gctx The current geometry context object, e.g. alignment
-  virtual void initJacobianToLocal(const GeometryContext& gctx,
-                                   FreeToBoundMatrix& jacobian,
-                                   const Vector3D& position,
-                                   const Vector3D& direction) const;
+  /// @param parameters is the free parameters
+  ///
+  /// @return Jacobian from global to local
+  virtual FreeToBoundMatrix jacobianGlobalToLocal(
+      const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of path length at the geometry constraint or
   /// point-of-closest-approach w.r.t. free parameters. The calculation is
@@ -502,6 +501,5 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
-#include "Acts/Surfaces/detail/Surface.ipp"
-
 }  // namespace Acts
+#include "Acts/Surfaces/detail/Surface.ipp"

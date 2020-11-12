@@ -155,10 +155,6 @@ void setupSimulationAlgorithms(
     sequencer.addWriter(std::make_shared<ActsExamples::CsvParticleWriter>(
         writeInitial, logLevel));
 
-    //--------------------------------------------------------------------------
-    // SimHit write test
-    //--------------------------------------------------------------------------
-
     // write simulated hits collection
     ActsExamples::CsvSimHitWriter::Config writeSimHits;
     writeSimHits.inputSimHits = fatras.outputSimHits;
