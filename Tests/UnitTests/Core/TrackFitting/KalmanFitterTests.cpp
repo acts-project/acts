@@ -157,7 +157,7 @@ std::default_random_engine rng(42);
 
 BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
 
-BOOST_AUTO_TEST_CASE(ZeroField) {
+BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
@@ -167,6 +167,8 @@ BOOST_AUTO_TEST_CASE(ZeroField) {
   KalmanFitterOptions<TestSourceLinkCalibrator, VoidOutlierFinder> kfOptions(
       geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(), VoidOutlierFinder(),
       LoggerWrapper{*kfLogger}, PropagatorPlainOptions());
+  // this is the default option. set anyways for consistency
+  kfOptions.referenceSurface = nullptr;
 
   auto res = kfZero.fit(sourceLinks, start, kfOptions);
   BOOST_REQUIRE(res.ok());
@@ -494,9 +496,13 @@ BOOST_AUTO_TEST_CASE(GlobalCovariance) {
       detail::globalTrackParametersCovariance(val.fittedStates, val.trackTip);
   BOOST_CHECK_EQUAL(trackParamsCov.rows(), sourceLinks.size() * eBoundSize);
   BOOST_CHECK_EQUAL(stateRowIndices.size(), sourceLinks.size());
-  // TODO where does the reference value come from? can this be computed from
-  // #measurements or something similar?
-  BOOST_CHECK_EQUAL(stateRowIndices.at(val.trackTip), 30);
+  // Each smoothed track state will have eBoundSize rows/cols in the global
+  // covariance. stateRowIndices is a map of the starting row/index with the
+  // state tip as the key. Thus, the last track state (i.e. the state
+  // corresponding val.trackTip) has a starting row/index = eBoundSize *
+  // (nMeasurements - 1), i.e. 6*(6-1) = 30.
+  BOOST_CHECK_EQUAL(stateRowIndices.at(val.trackTip),
+                    eBoundSize * (nMeasurements - 1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
