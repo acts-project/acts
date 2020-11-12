@@ -19,14 +19,14 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
-      state.covTransport && transportCov, state.pathAccumulated, surface);
+      state.covTransport and transportCov, state.pathAccumulated, surface);
 }
 
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport && transportCov,
+      state.jacToGlobal, state.pars, state.covTransport and transportCov,
       state.pathAccumulated);
 }
 
@@ -42,7 +42,7 @@ void StraightLineStepper::update(State& state, const Vector3D& uposition,
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = state.q / up;
+  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
 }
 
 void StraightLineStepper::covarianceTransport(State& state) const {

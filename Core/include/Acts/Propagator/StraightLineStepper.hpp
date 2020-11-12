@@ -344,7 +344,7 @@ class StraightLineStepper {
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * state.options.mass * state.options.mass *
-                (state.stepping.q == 0. ? 1. : state.stepping.q) / (p * dtds);
+                state.stepping.pars[eFreeQOverP] / dtds;
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;
       // Update jacobian and derivative
