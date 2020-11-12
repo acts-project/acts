@@ -41,142 +41,176 @@ namespace {
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using StraightPropagator =
-    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-using ConstantFieldStepper = Acts::EigenStepper<Acts::ConstantBField>;
-using ConstantFieldPropagator =
-    Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+struct Detector {
+  // expected number of measurements for the given detector
+  size_t numMeasurements = 6u;
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
-using CombinatorialKalmanFilter =
-    Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, KalmanUpdater,
-                                    KalmanSmoother>;
+  // geometry
+  CubicTrackingGeometry store;
+  std::shared_ptr<const Acts::TrackingGeometry> geometry;
 
-// Construct a straight-line propagator.
-StraightPropagator makeStraightPropagator(
-    std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator navigator(std::move(geo));
-  navigator.resolvePassive = false;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
-  Acts::StraightLineStepper stepper;
-  return StraightPropagator(std::move(stepper), std::move(navigator));
-}
-
-// Construct a propagator using a constant magnetic field along z.
-ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator navigator(std::move(geo));
-  navigator.resolvePassive = false;
-  navigator.resolveMaterial = true;
-  navigator.resolveSensitive = true;
-  Acts::ConstantBField field(Acts::Vector3D(0.0, 0.0, bz));
-  ConstantFieldStepper stepper(std::move(field));
-  return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
-}
-
-// Construct multiple initial track parameters.
-std::vector<Acts::CurvilinearTrackParameters> makeParameters() {
-  // create common covariance matrix from reasonable standard deviations
-  Acts::BoundVector stddev;
-  stddev[Acts::eBoundLoc0] = 100_um;
-  stddev[Acts::eBoundLoc1] = 100_um;
-  stddev[Acts::eBoundTime] = 25_ns;
-  stddev[Acts::eBoundPhi] = 2_degree;
-  stddev[Acts::eBoundTheta] = 2_degree;
-  stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
-  // all tracks close to the transverse plane along the x axis w/ small
-  // variations in position, direction.
-  Acts::Vector4D mPos0(-3_m, 0.0, 0.0, 1_ns);
-  Acts::Vector4D mPos1(-3_m, -15_mm, -15_mm, 2_ns);
-  Acts::Vector4D mPos2(-3_m, 15_mm, 15_mm, -1_ns);
-  return {
-      {mPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
-      {mPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
-      {mPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+  // resolutions
+  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+  MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
+  MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
+  MeasurementResolutionMap resolutions = {
+      {Acts::GeometryIdentifier().setVolume(2), resPixel},
+      {Acts::GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(3).setLayer(4), resStrip1},
+      {Acts::GeometryIdentifier().setVolume(3).setLayer(6), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(3).setLayer(8), resStrip1},
   };
-}
 
-const Acts::GeometryContext geoCtx;
-const Acts::MagneticFieldContext magCtx;
-const Acts::CalibrationContext calCtx;
-
-// detector geometry
-CubicTrackingGeometry geometryStore(geoCtx);
-const auto geometry = geometryStore();
-// expected number of measurements for the given detector
-constexpr size_t nMeasurements = 6u;
-
-// detector resolutions
-const MeasurementResolution resPixel = {MeasurementType::eLoc01,
-                                        {25_um, 50_um}};
-const MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-const MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
-const MeasurementResolutionMap resolutions = {
-    {Acts::GeometryIdentifier().setVolume(2), resPixel},
-    {Acts::GeometryIdentifier().setVolume(3).setLayer(2), resStrip0},
-    {Acts::GeometryIdentifier().setVolume(3).setLayer(4), resStrip1},
-    {Acts::GeometryIdentifier().setVolume(3).setLayer(6), resStrip0},
-    {Acts::GeometryIdentifier().setVolume(3).setLayer(8), resStrip1},
+  Detector(const Acts::GeometryContext geoCtx)
+      : store(geoCtx), geometry(store()) {}
 };
 
-// source link selection configurtion.
-const Acts::CKFSourceLinkSelector::Config selectBestSourceLinkOnly = {
-    // global default: no chi2 cut, only one source link per surface
-    {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
+struct Fixture {
+  using StraightPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  using ConstantFieldStepper = Acts::EigenStepper<Acts::ConstantBField>;
+  using ConstantFieldPropagator =
+      Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+
+  using KalmanUpdater = Acts::GainMatrixUpdater;
+  using KalmanSmoother = Acts::GainMatrixSmoother;
+  using CombinatorialKalmanFilter =
+      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, KalmanUpdater,
+                                      KalmanSmoother>;
+  using CombinatorialKalmanFilterOptions =
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
+                                             Acts::CKFSourceLinkSelector>;
+
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  Acts::CalibrationContext calCtx;
+
+  Detector detector;
+
+  // track parameters before and after the detector
+  std::vector<Acts::CurvilinearTrackParameters> startParameters;
+  std::vector<Acts::CurvilinearTrackParameters> endParameters;
+  const Acts::Surface* referenceSurface = nullptr;
+
+  // generated measurements
+  std::vector<std::shared_ptr<Acts::FittableMeasurement<TestSourceLink>>>
+      measurementsStore;
+  std::vector<TestSourceLink> sourceLinks;
+
+  // CKF implementation to be tested
+  CombinatorialKalmanFilter ckf;
+  // configuration for the source link selector
+  Acts::CKFSourceLinkSelector::Config sourceLinkSelectorCfg = {
+      // global default: no chi2 cut, only one source link per surface
+      {Acts::GeometryIdentifier(), {std::numeric_limits<double>::max(), 1u}},
+  };
+
+  std::unique_ptr<const Acts::Logger> logger;
+
+  Fixture(double bz)
+      : detector(geoCtx),
+        ckf(makeConstantFieldPropagator(detector.geometry, bz)),
+        logger(Acts::getDefaultLogger("CkfTest", Acts::Logging::INFO)) {
+    // construct initial parameters
+    // create common covariance matrix from reasonable standard deviations
+    Acts::BoundVector stddev;
+    stddev[Acts::eBoundLoc0] = 100_um;
+    stddev[Acts::eBoundLoc1] = 100_um;
+    stddev[Acts::eBoundTime] = 25_ns;
+    stddev[Acts::eBoundPhi] = 2_degree;
+    stddev[Acts::eBoundTheta] = 2_degree;
+    stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
+    Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+    // all tracks close to the transverse plane along the x axis w/ small
+    // variations in position, direction.
+    Acts::Vector4D mPos0(-3_m, 0.0, 0.0, 1_ns);
+    Acts::Vector4D mPos1(-3_m, -15_mm, -15_mm, 2_ns);
+    Acts::Vector4D mPos2(-3_m, 15_mm, 15_mm, -1_ns);
+    startParameters = {
+        {mPos0, 0_degree, 90_degree, 1_GeV, 1_e, cov},
+        {mPos1, -1_degree, 91_degree, 1_GeV, 1_e, cov},
+        {mPos2, 1_degree, 89_degree, 1_GeV, -1_e, cov},
+    };
+    for (const auto& start : startParameters) {
+      Acts::Vector4D pos = start.fourPosition(geoCtx);
+      pos[Acts::ePos0] = 3_m;
+      endParameters.emplace_back(pos, start.unitDirection(),
+                                 start.absoluteMomentum(), start.charge());
+    }
+
+    // use first track parameter surface as reference
+    referenceSurface = &startParameters.front().referenceSurface();
+
+    // create some measurements
+    auto measPropagator = makeStraightPropagator(detector.geometry);
+    std::default_random_engine rng(421235);
+    for (size_t trackId = 0u; trackId < startParameters.size(); ++trackId) {
+      auto measurements = createMeasurements(
+          measPropagator, geoCtx, magCtx, startParameters[trackId],
+          detector.resolutions, rng, trackId);
+      for (auto& fm : measurements.store) {
+        measurementsStore.emplace_back(std::move(fm));
+      }
+      for (auto& sl : measurements.sourceLinks) {
+        sourceLinks.emplace_back(std::move(sl));
+      }
+    }
+  }
+
+  // Construct a straight-line propagator.
+  static StraightPropagator makeStraightPropagator(
+      std::shared_ptr<const Acts::TrackingGeometry> geo) {
+    Acts::Navigator navigator(std::move(geo));
+    navigator.resolvePassive = false;
+    navigator.resolveMaterial = true;
+    navigator.resolveSensitive = true;
+    Acts::StraightLineStepper stepper;
+    return StraightPropagator(std::move(stepper), std::move(navigator));
+  }
+
+  // Construct a propagator using a constant magnetic field along z.
+  static ConstantFieldPropagator makeConstantFieldPropagator(
+      std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
+    Acts::Navigator navigator(std::move(geo));
+    navigator.resolvePassive = false;
+    navigator.resolveMaterial = true;
+    navigator.resolveSensitive = true;
+    Acts::ConstantBField field(Acts::Vector3D(0.0, 0.0, bz));
+    ConstantFieldStepper stepper(std::move(field));
+    return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
+  }
+
+  CombinatorialKalmanFilterOptions makeCkfOptions() const {
+    return CombinatorialKalmanFilterOptions(
+        geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
+        Acts::CKFSourceLinkSelector(sourceLinkSelectorCfg),
+        Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions(),
+        referenceSurface);
+  }
 };
-
-// simulation propagator
-const auto simPropagator = makeStraightPropagator(geometry);
-
-// reconstruction propagator and fitter
-const auto ckfLogger =
-    Acts::getDefaultLogger("KalmanFilter", Acts::Logging::INFO);
-const auto ckfZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
-const auto ckfZero = CombinatorialKalmanFilter(ckfZeroPropagator);
-
-std::default_random_engine rng(421235);
 
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(TrackFindingCombinatorialKalmanFilter)
 
-BOOST_AUTO_TEST_CASE(ZeroField) {
-  auto tracks = makeParameters();
+BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
+  Fixture f(0_T);
 
-  // simulate all tracks and generate a combined set of resulting sourcelinks
-  std::vector<std::shared_ptr<Acts::FittableMeasurement<TestSourceLink>>> store;
-  std::vector<TestSourceLink> sourceLinks;
-  for (size_t trackId = 0u; trackId < tracks.size(); ++trackId) {
-    auto measurements =
-        createMeasurements(simPropagator, geoCtx, magCtx, tracks[trackId],
-                           resolutions, rng, trackId);
-    BOOST_REQUIRE_EQUAL(measurements.sourceLinks.size(), nMeasurements);
-
-    for (auto& fm : measurements.store) {
-      store.emplace_back(std::move(fm));
-    }
-    for (auto& sl : measurements.sourceLinks) {
-      sourceLinks.emplace_back(std::move(sl));
-    }
-  }
-
-  // use one of the parameter surfaces as reference surface for the
-  // all reconstructed tracks
-  Acts::CombinatorialKalmanFilterOptions<TestSourceLinkCalibrator,
-                                         Acts::CKFSourceLinkSelector>
-      ckfOptions(geoCtx, magCtx, calCtx, TestSourceLinkCalibrator(),
-                 Acts::CKFSourceLinkSelector(selectBestSourceLinkOnly),
-                 Acts::LoggerWrapper{*ckfLogger},
-                 Acts::PropagatorPlainOptions(),
-                 &tracks.front().referenceSurface());
+  auto options = f.makeCkfOptions();
+  // this is the default option. set anyways for consistency
+  options.propagatorPlainOptions.direction = Acts::forward;
 
   // run the CKF for each initial track state
-  for (size_t trackId = 0u; trackId < tracks.size(); ++trackId) {
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    BOOST_TEST_INFO("initial parameters before detector:\n"
+                    << f.startParameters[trackId]);
+
     // find the tracks
-    auto res = ckfZero.findTracks(sourceLinks, tracks[trackId], ckfOptions);
+    auto res =
+        f.ckf.findTracks(f.sourceLinks, f.startParameters[trackId], options);
+    if (not res.ok()) {
+      BOOST_TEST_INFO(res.error() << " " << res.error().message());
+    }
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
@@ -192,7 +226,44 @@ BOOST_AUTO_TEST_CASE(ZeroField) {
           numHits += 1u;
           numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
         });
-    BOOST_CHECK_EQUAL(numHits, nMeasurements);
+    BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
+    BOOST_CHECK_EQUAL(numMissmatchedHits, 0u);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
+  Fixture f(0_T);
+
+  auto options = f.makeCkfOptions();
+  options.propagatorPlainOptions.direction = Acts::backward;
+
+  // run the CKF for each final track state
+  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
+    BOOST_TEST_INFO("initial parameters after detector:\n"
+                    << f.endParameters[trackId]);
+
+    // find the tracks
+    auto res =
+        f.ckf.findTracks(f.sourceLinks, f.endParameters[trackId], options);
+    if (not res.ok()) {
+      BOOST_TEST_INFO(res.error() << " " << res.error().message());
+    }
+    BOOST_REQUIRE(res.ok());
+
+    auto val = *res;
+    // with the given source link selection cuts, only one trajectory for the
+    // given input parameters should be found.
+    BOOST_CHECK_EQUAL(val.trackTips.size(), 1u);
+    // check purity of first found track
+    // find the number of hits not originating from the right track
+    size_t numHits = 0u;
+    size_t numMissmatchedHits = 0u;
+    val.fittedStates.visitBackwards(
+        val.trackTips.front(), [&](const auto& trackState) {
+          numHits += 1u;
+          numMissmatchedHits += (trackId != trackState.uncalibrated().sourceId);
+        });
+    BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(numMissmatchedHits, 0u);
   }
 }
