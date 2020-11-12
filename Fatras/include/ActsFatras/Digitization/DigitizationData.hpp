@@ -13,7 +13,6 @@
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
 
-#include <functional>
 #include <unordered_set>
 
 namespace Acts {
@@ -21,32 +20,6 @@ class Surface;
 }  // namespace Acts
 
 namespace ActsFatras {
-
-class Hit;
-
-/// Digitization input to be used by the digitizers to harmonize
-/// the interface
-///
-struct DigitizationInput {
-  std::reference_wrapper<const Hit> hit;
-  std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  const Acts::Surface* surface = nullptr;
-  Acts::BinUtility segmentation;
-
-  /// Only valid constructor, wraps the @param hit_,
-  /// the  and optionally the @param surface_
-  DigitizationInput(
-      std::reference_wrapper<const Hit> hit_,
-      std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-      const Acts::Surface* surface_ = nullptr,
-      Acts::BinUtility segmentation_ = Acts::BinUtility())
-      : hit(hit_),
-        geoContext(geoContext_),
-        surface(surface_),
-        segmentation(segmentation_) {}
-
-  DigitizationInput() = delete;
-};
 
 /// A single cell definition: index, cell central value
 using Cell = std::pair<unsigned int, double>;
