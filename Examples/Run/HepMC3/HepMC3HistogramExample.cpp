@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/HepMC/EventExtraction.hpp"
+#include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/Root/RootNuclearInteractionParametersWriter.hpp"
@@ -37,17 +37,17 @@ int main(int argc, char** argv) {
   auto hepMC3ReaderConfig = ActsExamples::Options::readHepMC3ReaderOptions(vm);
   hepMC3ReaderConfig.outputEvents = "hepmc-events";
 
-  ActsExamples::EventExtraction::Config extractionConfig;
+  ActsExamples::HepMCProcessExtractor::Config extractionConfig;
   extractionConfig.inputEvents = hepMC3ReaderConfig.outputEvents;
   extractionConfig.extractionProcess = "Inelastic";
 
   ActsExamples::RootNuclearInteractionParametersWriter::Config writerCfg;
-  writerCfg.inputEventFractions = extractionConfig.outputEventFraction;
+  writerCfg.inputSimulationProcesses = extractionConfig.outputSimulationProcesses;
 
   // Add to the sequencer
   sequencer.addReader(std::make_shared<ActsExamples::HepMC3AsciiReader>(
       hepMC3ReaderConfig, logLevel));
-  sequencer.addAlgorithm(std::make_shared<ActsExamples::EventExtraction>(
+  sequencer.addAlgorithm(std::make_shared<ActsExamples::HepMCProcessExtractor>(
       std::move(extractionConfig), logLevel));
   sequencer.addWriter(
       std::make_shared<ActsExamples::RootNuclearInteractionParametersWriter>(

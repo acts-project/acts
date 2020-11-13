@@ -14,7 +14,7 @@ target_link_libraries(
   ActsExampleHepMC3Histogram
   PRIVATE
     ActsCore ActsExamplesCommon
-    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesEventExtraction ActsExamplesIoRoot
+    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC ActsExamplesIoRoot
     Boost::program_options)
     
 install(

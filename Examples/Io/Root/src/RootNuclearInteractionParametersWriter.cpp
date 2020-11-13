@@ -272,7 +272,7 @@ void recordKinematicParametrisation(
 			gDirectory->WriteObject(
 			  distributionsMom[i],
 			  ("MomentumDistributionHistogram_" + std::to_string(i)).c_str());
-	  } // TODO: write distributions here
+	  }
 	  gDirectory->WriteObject(&momDistributions[i].first, ("MomentumDistributionBinBorders_" + std::to_string(i)).c_str());
 	  gDirectory->WriteObject(&momDistributions[i].second, ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
 	  delete (distributionsMom[i]);
@@ -298,10 +298,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::
     RootNuclearInteractionParametersWriter(
         const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg,
         Acts::Logging::Level lvl)
-    : WriterT(cfg.inputEventFractions, "RootNuclearInteractionParametersWriter",
+    : WriterT(cfg.inputSimulationProcesses, "RootNuclearInteractionParametersWriter",
               lvl),
       m_cfg(cfg) {
-  if (m_cfg.inputEventFractions.empty()) {
+  if (m_cfg.inputSimulationProcesses.empty()) {
     throw std::invalid_argument("Missing input collection");
   }
   if (m_cfg.outputFilename.empty()) {

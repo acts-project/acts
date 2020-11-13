@@ -30,7 +30,7 @@ class RootNuclearInteractionParametersWriter final
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
-    std::string inputEventFractions;
+    std::string inputSimulationProcesses;
     /// output directory.
     std::string outputDir;
     /// output filename.
@@ -47,7 +47,7 @@ class RootNuclearInteractionParametersWriter final
     
     unsigned int multiplicityMax = 10;
     bool writeHistograms = true;
-    unsigned int nSimulatedEvents = 0;
+    //~ unsigned int nSimulatedEvents = 0;
   };
 
   /// Constructor
