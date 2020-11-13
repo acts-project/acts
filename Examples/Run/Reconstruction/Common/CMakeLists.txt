@@ -5,18 +5,34 @@ add_library(
 target_include_directories(
   ActsExamplesRecTracksCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-target_link_libraries(
-  ActsExamplesRecTracksCommon
-  PUBLIC
-    ActsExamplesFramework
-    ActsExamplesCommon
-    ActsExamplesDigitization
-    ActsExamplesTrackFitting
-    ActsExamplesTrackFinding
-    ActsExamplesMagneticField
-    ActsExamplesTruthTracking
-    ActsExamplesIoCsv
-    ActsExamplesIoPerformance)    
+if(ACTS_BUILD_PLUGIN_ONNX)
+  target_link_libraries(
+    ActsExamplesRecTracksCommon
+    PUBLIC
+      ActsExamplesFramework
+      ActsExamplesCommon
+      ActsExamplesDigitization
+      ActsExamplesTrackFitting
+      ActsExamplesTrackFinding
+      ActsExamplesMagneticField
+      ActsExamplesTruthTracking
+      ActsExamplesIoCsv
+      ActsExamplesIoPerformance
+      ActsPluginOnnx)
+else()
+  target_link_libraries(
+    ActsExamplesRecTracksCommon
+    PUBLIC
+      ActsExamplesFramework
+      ActsExamplesCommon
+      ActsExamplesDigitization
+      ActsExamplesTrackFitting
+      ActsExamplesTrackFinding
+      ActsExamplesMagneticField
+      ActsExamplesTruthTracking
+      ActsExamplesIoCsv
+      ActsExamplesIoPerformance)
+endif()
 
 install(
   TARGETS ActsExamplesRecTracksCommon
