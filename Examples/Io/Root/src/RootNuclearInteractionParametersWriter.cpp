@@ -61,29 +61,25 @@ void labelEvents(
 /// @brief This method parametrises and stores recursively a parametrisation of
 /// the final state kinematics in a nuclear interaction
 ///
-/// @tparam multiplicity_t The final state multiplicity
 /// @param [in] eventFractionCollection The event storage
 /// @param [in] interactionType The interaction type that will be parametrised
 /// @param [in] cfg Configuration that steers the binning of histograms
-template <unsigned int multiplicity_t>
 void recordKinematicParametrisation(
     const std::vector<NuclearInteractionParametrisation::EventFraction>&
         eventFractionCollection,
-    bool interactionType,
+    bool interactionType, unsigned int multiplicity,
     const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg) {
-  gDirectory->mkdir(std::to_string(multiplicity_t).c_str());
-  gDirectory->cd(std::to_string(multiplicity_t).c_str());
+  gDirectory->mkdir(std::to_string(multiplicity).c_str());
+  gDirectory->cd(std::to_string(multiplicity).c_str());
 
   // Parametrise the momentum und invarian mass distributions
   const auto momentumParameters =
-      NuclearInteractionParametrisation::buildMomentumParameters<
-          multiplicity_t>(eventFractionCollection, interactionType,
+      NuclearInteractionParametrisation::buildMomentumParameters(eventFractionCollection, multiplicity, interactionType,
                           cfg.momentumBins);
   std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
       distributionsMom = momentumParameters.second;
   const auto invariantMassParameters =
-      NuclearInteractionParametrisation::buildInvariantMassParameters<
-          multiplicity_t>(eventFractionCollection, interactionType,
+      NuclearInteractionParametrisation::buildInvariantMassParameters(eventFractionCollection, multiplicity, interactionType,
                           cfg.invariantMassBins);
   std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
       distributionsInvMass = invariantMassParameters.second;
@@ -91,7 +87,7 @@ void recordKinematicParametrisation(
   // Fast exit in case of no events
   if (!distributionsMom.empty() && !distributionsInvMass.empty()) {
     // Write the eigenspace components for the momenta
-    NuclearInteractionParametrisation::EigenspaceComponents<multiplicity_t + 1>
+    NuclearInteractionParametrisation::EigenspaceComponents
         esComponentsMom = momentumParameters.first;
 
     auto momEigenVal = std::get<0>(esComponentsMom);
@@ -109,7 +105,7 @@ void recordKinematicParametrisation(
     gDirectory->WriteObject(&momVecMean, "MomentumMean");
 
     // Write the eigenspace components for the invariant masses
-    NuclearInteractionParametrisation::EigenspaceComponents<multiplicity_t + 1>
+    NuclearInteractionParametrisation::EigenspaceComponents
         esComponentsInvMass = invariantMassParameters.first;
 
     auto invMassEigenVal = std::get<0>(esComponentsInvMass);
@@ -128,34 +124,30 @@ void recordKinematicParametrisation(
     gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
     gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
 
-    // Write the distributions
-    for (unsigned int i = 0; i <= multiplicity_t; i++) {
-      gDirectory->WriteObject(
-          distributionsMom[i],
-          ("MomentumDistribution_" + std::to_string(i)).c_str());
-      delete (distributionsMom[i]);
-    }
-    for (unsigned int i = 0; i < multiplicity_t; i++) {
-      gDirectory->WriteObject(
-          distributionsInvMass[i],
-          ("InvariantMassDistribution_" + std::to_string(i)).c_str());
-      delete (distributionsInvMass[i]);
-    }
+
+	// Write the distributions
+	for (unsigned int i = 0; i <= multiplicity; i++) {
+		if(cfg.writeHistograms)
+		{
+			gDirectory->WriteObject(
+			  distributionsMom[i],
+			  ("MomentumDistribution_" + std::to_string(i)).c_str());
+	  } // TODO: write distributions here
+	  delete (distributionsMom[i]);
+	}
+	for (unsigned int i = 0; i < multiplicity; i++) {
+		if(cfg.writeHistograms)
+		{
+		  gDirectory->WriteObject(
+			  distributionsInvMass[i],
+			  ("InvariantMassDistribution_" + std::to_string(i)).c_str());
+	  }
+	  delete (distributionsInvMass[i]);
+	}
   }
 
   gDirectory->cd("..");
-  // Repeat for (multiplicity - 1)
-  recordKinematicParametrisation<multiplicity_t - 1>(eventFractionCollection,
-                                                     interactionType, cfg);
 }
-/// Recursion break
-template <>
-void recordKinematicParametrisation<0>(
-    const std::vector<NuclearInteractionParametrisation::
-                          EventFraction>& /*eventFractionCollection*/,
-    bool /*interactionType*/,
-    const ActsExamples::RootNuclearInteractionParametersWriter::
-        Config& /*cfg*/) {}
 }  // namespace
 
 ActsExamples::RootNuclearInteractionParametersWriter::
@@ -169,7 +161,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
     throw std::invalid_argument("Missing input collection");
   }
   if (m_cfg.outputFilename.empty()) {
-    throw std::invalid_argument("Missing output filename");
+    throw std::invalid_argument("Missing output filename for parameters");
   }
 }
 
@@ -200,7 +192,8 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   const auto nuclearInteractionProbability = NuclearInteractionParametrisation::
       cumulativeNuclearInteractionProbability(m_eventFractionCollection,
                                               m_cfg.interactionProbabilityBins);
-  gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteraction");
+  if(m_cfg.writeHistograms)
+	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteraction");
   delete (nuclearInteractionProbability);
 
   // Write the interaction type proability
@@ -232,11 +225,19 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
       NuclearInteractionParametrisation::cumulativeMultiplicityProbability(
           m_eventFractionCollection);
   gDirectory->cd("soft");
-  gDirectory->WriteObject(multiplicity.first, "Multiplicity");
-  recordKinematicParametrisation<5>(m_eventFractionCollection, true, m_cfg);
+  if(m_cfg.writeHistograms)
+	gDirectory->WriteObject(multiplicity.first, "Multiplicity");
+  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
+  {
+	  recordKinematicParametrisation(m_eventFractionCollection, true, 5, m_cfg);
+  }
   gDirectory->cd("../hard");
-  gDirectory->WriteObject(multiplicity.second, "Multiplicity");
-  recordKinematicParametrisation<5>(m_eventFractionCollection, false, m_cfg);
+  if(m_cfg.writeHistograms)
+	gDirectory->WriteObject(multiplicity.second, "Multiplicity");
+  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
+  {
+	recordKinematicParametrisation(m_eventFractionCollection, false, 5, m_cfg);
+  }
   delete (multiplicity.first);
   delete (multiplicity.second);
 

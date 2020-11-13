@@ -52,6 +52,60 @@ float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
 }
 }  // namespace
 
+std::pair<Vector, Matrix>
+calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& events) {
+  // Calculate the mean
+  Vector mean = Vector::Zero(multiplicity);
+  for (const std::vector<float>& event : events)
+    for (unsigned int j = 0; j < multiplicity; j++)
+      mean[j] += event[j];
+  mean /= (float)events.size();
+
+  // Calculate the covariance matrix
+  Matrix covariance = Matrix::Zero(multiplicity, multiplicity);
+  for (unsigned int i = 0; i < multiplicity; i++)
+    for (unsigned int j = 0; j < multiplicity; j++)
+      for (unsigned int k = 0; k < events.size(); k++)
+        covariance(i, j) += (events[k][i] - mean[i]) * (events[k][j] - mean[j]);
+  covariance /= (float)events.size();
+
+  return std::make_pair(mean, covariance);
+}
+
+EigenspaceComponents calculateEigenspace(
+    const Vector& mean,
+    const Matrix& covariance) {
+  // Calculate eigenvalues and eigenvectors
+  //~ Eigen::EigenSolver<Matrix<multiplicity_t>> es(covariance);
+  Eigen::EigenSolver<Matrix> es(covariance);
+  Vector eigenvalues = es.eigenvalues().real();
+  Matrix eigenvectors = es.eigenvectors().real();
+  // Transform the mean vector into eigenspace
+  Vector meanEigenspace = eigenvectors * mean;
+
+  return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
+}
+
+Parametrisation buildMomentumParameters(
+    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins) {
+  // Strip off data
+  auto momenta = prepateMomenta(events, multiplicity, soft);
+
+  // Build histos
+  ProbabilityDistributions histos = buildMomPerMult(momenta, nBins);
+
+  // Build normal distribution
+  auto momentaGaussian = convertEventToGaussian(histos, momenta);
+  auto meanAndCovariance =
+      calculateMeanAndCovariance(multiplicity, momentaGaussian);
+  // Calculate the transformation into the eigenspace of the covariance matrix
+  EigenspaceComponents eigenspaceElements =
+      calculateEigenspace(meanAndCovariance.first,
+                                              meanAndCovariance.second);
+  // Calculate the the cumulative distributions
+  return std::make_pair(eigenspaceElements, histos);
+}
+
 EventProperties prepateMomenta(const EventCollection& events,
                                unsigned int multiplicity,
                                bool soft)  // TODO: build enum instead of bool
@@ -155,6 +209,27 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
     }
   }
   return result;
+}
+
+Parametrisation buildInvariantMassParameters(
+    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins) {
+  // Strip off data
+  auto invariantMasses = prepareInvariantMasses(events, multiplicity, soft);
+
+  // Build histos
+  ProbabilityDistributions histos = buildMomPerMult(invariantMasses, nBins);
+
+  // Build normal distribution
+  auto invariantMassesGaussian =
+      convertEventToGaussian(histos, invariantMasses);
+  auto meanAndCovariance =
+      calculateMeanAndCovariance(multiplicity, invariantMassesGaussian);
+  // Calculate the transformation into the eigenspace of the covariance matrix
+  EigenspaceComponents eigenspaceElements =
+      calculateEigenspace(meanAndCovariance.first,
+                                              meanAndCovariance.second);
+  // Calculate the the cumulative distributions
+  return std::make_pair(eigenspaceElements, histos);
 }
 
 std::unordered_map<int, std::unordered_map<int, float>>

@@ -50,16 +50,11 @@ using EventCollection = std::vector<EventFraction>;
 using EventProperties = std::vector<std::vector<float>>;
 using ProbabilityDistributions = std::vector<TH1F*>;
 using CumulativeDistribution = TH1F*;
-template <unsigned int length_t>
-using Vector = Acts::ActsVectorF<length_t>;
-template <unsigned int length_t>
-using Matrix = Acts::ActsSymMatrixF<length_t>;
-template <unsigned int length_t>
+using Vector = Acts::ActsVectorXf;
+using Matrix = Acts::ActsMatrixXf;
 using EigenspaceComponents =
-    std::tuple<Vector<length_t>, Matrix<length_t>, Vector<length_t>>;
-template <unsigned int multiplicity_t>
-using Parametrisation = std::pair<EigenspaceComponents<multiplicity_t + 1>,
-                                  std::vector<CumulativeDistribution>>;
+    std::tuple<Vector, Matrix, Vector>;
+using Parametrisation = std::pair<EigenspaceComponents, std::vector<CumulativeDistribution>>;
 
 /// @brief This method scales the final state momenta by the initial momentum
 ///
@@ -96,83 +91,34 @@ EventProperties convertEventToGaussian(const ProbabilityDistributions& histos,
 /// @brief Calculate the mean and the covariance matrix of a final state
 /// property
 ///
-/// @tparam multiplicity_t The final state multiplicity + 1
 /// @param [in] events The storage of a property with fixed multiplicity and
 /// interaction type
 ///
 /// @return Pair containing the mean and the covariance matrix
-template <unsigned int multiplicity_t>
-std::pair<Vector<multiplicity_t>, Matrix<multiplicity_t>>
-calculateMeanAndCovariance(const EventProperties& events) {
-  // Calculate the mean
-  Vector<multiplicity_t> mean = Vector<multiplicity_t>::Zero();
-  for (const std::vector<float>& event : events)
-    for (unsigned int j = 0; j < multiplicity_t; j++)
-      mean[j] += event[j];
-  mean /= (float)events.size();
-
-  // Calculate the covariance matrix
-  Matrix<multiplicity_t> covariance = Matrix<multiplicity_t>::Zero();
-  for (unsigned int i = 0; i < multiplicity_t; i++)
-    for (unsigned int j = 0; j < multiplicity_t; j++)
-      for (unsigned int k = 0; k < events.size(); k++)
-        covariance(i, j) += (events[k][i] - mean[i]) * (events[k][j] - mean[j]);
-  covariance /= (float)events.size();
-
-  return std::make_pair(mean, covariance);
-}
+std::pair<Vector, Matrix>
+calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& events);
 
 /// @brief Calculate the eigenvalues, eigenvectors and the mean in eigenspace
 ///
-/// @tparam multiplicity_t The final state multiplicity + 1
 /// @param [in] mean The mean of the normal distribution
 /// @param [in] covariance The covariance matrix of the normal distribution
 ///
 /// @return Tuple containing the eigenvalues, eigenvectors and the mean in
 /// eigenspace
-template <unsigned int multiplicity_t>
-EigenspaceComponents<multiplicity_t> calculateEigenspace(
-    const Vector<multiplicity_t>& mean,
-    const Matrix<multiplicity_t>& covariance) {
-  // Calculate eigenvalues and eigenvectors
-  Eigen::EigenSolver<Matrix<multiplicity_t>> es(covariance);
-  Vector<multiplicity_t> eigenvalues = es.eigenvalues().real();
-  Matrix<multiplicity_t> eigenvectors = es.eigenvectors().real();
-  // Transform the mean vector into eigenspace
-  Vector<multiplicity_t> meanEigenspace = eigenvectors * mean;
-
-  return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
-}
+EigenspaceComponents calculateEigenspace(
+    const Vector& mean,
+    const Matrix& covariance);
 
 /// @brief This function calculates all components required for simulating final
 /// state momenta
 ///
-/// @tparam multiplicity_t The final state multiplicity that will be considered
 /// @param [in] events The event storage
 /// @param [in] soft Decision whether soft interactions should be considered
 /// @param [in] nBins The number of bins in the histograms
 ///
 /// @return Pair storing all components
-template <unsigned int multiplicity_t>
-Parametrisation<multiplicity_t> buildMomentumParameters(
-    const EventCollection& events, bool soft, unsigned int nBins) {
-  // Strip off data
-  auto momenta = prepateMomenta(events, multiplicity_t, soft);
-
-  // Build histos
-  ProbabilityDistributions histos = buildMomPerMult(momenta, nBins);
-
-  // Build normal distribution
-  auto momentaGaussian = convertEventToGaussian(histos, momenta);
-  auto meanAndCovariance =
-      calculateMeanAndCovariance<multiplicity_t + 1>(momentaGaussian);
-  // Calculate the transformation into the eigenspace of the covariance matrix
-  EigenspaceComponents<multiplicity_t + 1> eigenspaceElements =
-      calculateEigenspace<multiplicity_t + 1>(meanAndCovariance.first,
-                                              meanAndCovariance.second);
-  // Calculate the the cumulative distributions
-  return std::make_pair(eigenspaceElements, histos);
-}
+Parametrisation buildMomentumParameters(
+    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins);
 
 /// @brief This method calculates the final state particles invariant masses
 ///
@@ -187,33 +133,13 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
 /// @brief This function calculates all components required for simulating final
 /// state invariant masses
 ///
-/// @tparam multiplicity_t The final state multiplicity that will be considered
 /// @param [in] events The event storage
 /// @param [in] soft Decision whether soft interactions should be considered
 /// @param [in] nBins The number of bins in the histograms
 ///
 /// @return Pair storing all components
-template <unsigned int multiplicity_t>
-Parametrisation<multiplicity_t> buildInvariantMassParameters(
-    const EventCollection& events, bool soft, unsigned int nBins) {
-  // Strip off data
-  auto invariantMasses = prepareInvariantMasses(events, multiplicity_t, soft);
-
-  // Build histos
-  ProbabilityDistributions histos = buildMomPerMult(invariantMasses, nBins);
-
-  // Build normal distribution
-  auto invariantMassesGaussian =
-      convertEventToGaussian(histos, invariantMasses);
-  auto meanAndCovariance =
-      calculateMeanAndCovariance<multiplicity_t + 1>(invariantMassesGaussian);
-  // Calculate the transformation into the eigenspace of the covariance matrix
-  EigenspaceComponents<multiplicity_t + 1> eigenspaceElements =
-      calculateEigenspace<multiplicity_t + 1>(meanAndCovariance.first,
-                                              meanAndCovariance.second);
-  // Calculate the the cumulative distributions
-  return std::make_pair(eigenspaceElements, histos);
-}
+Parametrisation buildInvariantMassParameters(
+    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins);
 
 /// @brief This method evaluates the cumulative probabilities for a given
 /// particle type to produce a particle type

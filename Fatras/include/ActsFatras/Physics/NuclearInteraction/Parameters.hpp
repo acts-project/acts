@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Utilities/Definitions.hpp"
-#include <any>
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -26,9 +25,6 @@ struct Parameters {
 
   /// @brief Nested struct for the storage of the kinematic parametrisations for
   /// a given final state multiplicity
-  ///
-  /// @tparam multiplicity_t Final state multiplicity
-  template <unsigned int multiplicity_t>
   struct ParametersWithFixedMultiplicity {
     ParametersWithFixedMultiplicity(
         Distributions&& momenta, std::vector<float>& eValMom,
@@ -48,21 +44,21 @@ struct Parameters {
     /// Generation-wise distributions
     Distributions momentumDistributions;
     /// Eigenvalues
-    Acts::ActsVectorF<multiplicity_t + 1> eigenvaluesMomentum;
+    Acts::ActsVectorXf eigenvaluesMomentum;
     /// Eigenvectors
-    Acts::ActsSymMatrixF<multiplicity_t + 1> eigenvectorsMomentum;
+    Acts::ActsMatrixXf eigenvectorsMomentum;
     /// Mean in eigenspace
-    Acts::ActsVectorF<multiplicity_t + 1> meanMomentum;
+    Acts::ActsVectorXf meanMomentum;
 
     /// Invariant mass parameters
     /// Generation-wise distributions
     Distributions invariantMassDistributions;
     /// Eigenvalues
-    Acts::ActsVectorF<multiplicity_t> eigenvaluesInvariantMass;
+    Acts::ActsVectorXf eigenvaluesInvariantMass;
     /// Eigenvectors
-    Acts::ActsSymMatrixF<multiplicity_t> eigenvectorsInvariantMass;
+    Acts::ActsMatrixXf eigenvectorsInvariantMass;
     /// Mean in eigenspace
-    Acts::ActsVectorF<multiplicity_t> meanInvariantMass;
+    Acts::ActsVectorXf meanInvariantMass;
   };
 
   /// Initial momentum
@@ -78,9 +74,9 @@ struct Parameters {
   /// Multiplicity in hard interactions
   CumulativeDistribution hardMultiplicity;
   /// Kinematic distributions in soft interactions
-  std::vector<std::any> softKinematicParameters;
+  std::vector<ParametersWithFixedMultiplicity> softKinematicParameters;
   /// Kinematic distributions in hard interactions
-  std::vector<std::any> hardKinematicParameters;
+  std::vector<ParametersWithFixedMultiplicity> hardKinematicParameters;
 };
 
 /// Parametrisation of a single particle

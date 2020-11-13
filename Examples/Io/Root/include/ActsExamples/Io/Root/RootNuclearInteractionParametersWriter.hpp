@@ -37,13 +37,16 @@ class RootNuclearInteractionParametersWriter final
     std::string outputFilename = "parameters.root";
     /// file access mode.
     std::string fileMode = "RECREATE";
-
+	
     /// Number of bins used for the interaction probability distributions
     unsigned int interactionProbabilityBins = 1e6;
     /// Number of bins used for the momentum distributions
     unsigned int momentumBins = 1e6;
     /// Number of bins used for the invariant mass distributions
     unsigned int invariantMassBins = 1e6;
+    
+    unsigned int multiplicityMax = 10;
+    bool writeHistograms = true;
   };
 
   /// Constructor
