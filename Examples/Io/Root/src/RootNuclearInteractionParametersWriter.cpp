@@ -34,6 +34,10 @@ void labelEvents(
       else
         maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
     }
+    
+    // Label the initial momentum
+    event.initialMomentum = event.initialParticle.absMomentum();
+    
     // Label the indication that the interacting particle carries most of the
     // momentum
     event.soft = (maxMom > maxMomOthers);
@@ -146,39 +150,6 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist) 
   reduceMap(histoBorders, normalisedHistoContents);
   return std::make_pair(histoBorders, normalisedHistoContents);
 }
-
-/// @brief This method transforms a probability distribution into components
-/// that represent the cumulative probability distribution
-///
-/// @note This method is used to avoid Root dependencies afterwards by
-/// decomposing the histogram
-/// @param [in] hist The probability distribution
-/// @param [in] integral Scaling factor of the distribution
-///
-/// @return Pair containing the bin borders and the bin content
-//~ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist, double integral) {
-  //~ // Build the components
-  //~ std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
-
-  //~ const int nBins = hist->GetNbinsX();
-  //~ std::vector<double>& histoContents = std::get<1>(map);
-
-  //~ // Fast exit if the histogram is empty
-  //~ if(histoContents.empty())
-	//~ return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
-
-  //~ // Set the bin content
-  //~ std::vector<uint32_t> normalisedHistoContents(nBins);
-  //~ const double invIntegral = 1. / integral;
-  //~ for (int iBin = 0; iBin < nBins; ++iBin) {
-    //~ normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
-  //~ }
-
-  //~ std::vector<float> histoBorders = std::get<0>(map);
-  //~ reduceMap(histoBorders, normalisedHistoContents);
-
-  //~ return std::make_pair(histoBorders, normalisedHistoContents);
-//~ }
 
 /// @brief This method builds decomposed cumulative probability distributions
 /// out of a vector of proability distributions
@@ -324,10 +295,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   TFile tf(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
   gDirectory->mkdir(
-      std::to_string(m_eventFractionCollection[0].initialParticle.absMomentum())
+      std::to_string(m_eventFractionCollection[0].initialMomentum)
           .c_str());
   gDirectory->cd(
-      std::to_string(m_eventFractionCollection[0].initialParticle.absMomentum())
+      std::to_string(m_eventFractionCollection[0].initialMomentum)
           .c_str());
   gDirectory->mkdir("soft");
   gDirectory->mkdir("hard");
@@ -380,7 +351,7 @@ gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
 
   for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
   {
-	  recordKinematicParametrisation(m_eventFractionCollection, true, 5, m_cfg);
+	  recordKinematicParametrisation(m_eventFractionCollection, true, i, m_cfg);
   }
   gDirectory->cd("../hard");
   if(m_cfg.writeHistograms)
@@ -389,9 +360,9 @@ const auto multProbHard = buildMap(multiplicity.second);
 gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
 gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
 
-  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
+  for(unsigned int i = 0; i <= m_cfg.multiplicityMax; i++)
   {
-	recordKinematicParametrisation(m_eventFractionCollection, false, 5, m_cfg);
+	recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
   }
   delete (multiplicity.first);
   delete (multiplicity.second);
@@ -407,8 +378,7 @@ ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
     const std::vector<
-        std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                   std::vector<ActsExamples::SimParticle>>>& event) {
+        ExtractedSimulationProcess>& event) {
   // Convert the tuple to use additional categorisation variables
   std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());

@@ -21,7 +21,7 @@ struct Parameters {
   using CumulativeDistribution =
       std::pair<std::vector<float>, std::vector<uint32_t>>;
   using Distributions = std::vector<CumulativeDistribution>;
-  using PdgMap = std::unordered_map<int, std::unordered_map<int, float>>;
+  using PdgMap = std::vector<std::pair<int, std::vector<std::pair<int, float>>>>;
 
   /// @brief Nested struct for the storage of the kinematic parametrisations for
   /// a given final state multiplicity
@@ -80,8 +80,8 @@ struct Parameters {
 };
 
 /// Parametrisation of a single particle
-using Parametrisation = std::map<float, Parameters>;
+using Parametrisation = std::vector<std::pair<float, Parameters>>;
 /// Parametrisation of multiple particles
-using MultiParticleParametrisation = std::unordered_map<int, Parametrisation>;
+using MultiParticleParametrisation = std::vector<std::pair<int, Parametrisation>>;
 }  // namespace detail
 }  // namespace ActsFatras

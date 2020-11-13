@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
 
 #include <unordered_map>
 #include <TH1F.h>
@@ -25,12 +26,10 @@ struct EventFraction {
   ///
   /// @param [in] event Tuple containing the inital particle, the particle
   /// before the interaction and all final state particles after the interaction
-  EventFraction(std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                           std::vector<ActsExamples::SimParticle>>
-                    event)
-      : initialParticle(std::get<0>(event)),
-        interactingParticle(std::get<1>(event)),
-        finalParticles(std::get<2>(event)) {}
+  EventFraction(const ActsExamples::ExtractedSimulationProcess& event)
+      : initialParticle(event.initial),
+        interactingParticle(event.before),
+        finalParticles(event.after) {}
 
   /// The initial particle
   ActsExamples::SimParticle initialParticle;
@@ -43,6 +42,8 @@ struct EventFraction {
   bool soft = false;
   /// The final state multiplicity
   unsigned int multiplicity = 0;
+  /// The initial momentum of the particle
+  float initialMomentum = 0.;
 };
 
 static constexpr uint32_t s_MaxValue = UINT32_MAX;

@@ -25,8 +25,7 @@ namespace ActsExamples {
 /// all parts are calculated and written to file.
 class RootNuclearInteractionParametersWriter final
     : public WriterT<std::vector<
-          std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                     std::vector<ActsExamples::SimParticle>>>> {
+          ExtractedSimulationProcess>> {
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
@@ -47,7 +46,6 @@ class RootNuclearInteractionParametersWriter final
     
     unsigned int multiplicityMax = 10;
     bool writeHistograms = true;
-    //~ unsigned int nSimulatedEvents = 0;
   };
 
   /// Constructor
@@ -69,8 +67,7 @@ class RootNuclearInteractionParametersWriter final
   ProcessCode writeT(
       const AlgorithmContext& /*ctx*/,
       const std::vector<
-          std::tuple<ActsExamples::SimParticle, ActsExamples::SimParticle,
-                     std::vector<ActsExamples::SimParticle>>>& event)
+          ExtractedSimulationProcess>& event)
       final override;
 
  private:
