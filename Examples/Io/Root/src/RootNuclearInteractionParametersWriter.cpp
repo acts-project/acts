@@ -58,6 +58,144 @@ void labelEvents(
   }
 }
 
+/// @brief This method builds components for transforming a probability distribution into components that represent the cumulative probability distribution
+///
+/// @param [in] hist The probability distribution
+///
+/// @return Tuple containing the bin borders, the non-normalised cumulative distribution and the sum over all entries
+std::tuple<std::vector<float>, std::vector<double>, double>
+buildNotNormalisedMap(TH1F const* hist) {
+  // Retrieve the number of bins & borders
+  const int nBins = hist->GetNbinsX();
+  std::vector<float> histoBorders(nBins + 1);
+
+  // Fill the cumulative histogram
+  double integral = 0.;
+  std::vector<double> temp_HistoContents(nBins);
+  int iBin;
+  for (iBin = 0; iBin < nBins; iBin++) {
+    float binval = hist->GetBinContent(iBin + 1);
+    // Avoid negative bin values
+    if (binval < 0) {
+      binval = 0.;
+    }
+    // Store the value
+    integral += binval;
+    temp_HistoContents[iBin] = integral;
+  }
+
+  // Ensure that content is available
+  if (integral == 0.) {
+    histoBorders.clear();
+    temp_HistoContents.clear();
+    return std::make_tuple(histoBorders, temp_HistoContents, integral);
+  }
+
+  // Set the bin borders
+  for (iBin = 1; iBin <= nBins; iBin++)
+    histoBorders[iBin - 1] = hist->GetXaxis()->GetBinLowEdge(iBin);
+  histoBorders[nBins] = hist->GetXaxis()->GetXmax();
+
+  return std::make_tuple(histoBorders, temp_HistoContents, integral);
+}
+
+/// @brief This function combines neighbouring bins with the same value
+///
+/// @param [in, out] histoBorders The borders of the bins
+/// @param [in, out] histoContents The content of each bin
+void reduceMap(std::vector<float>& histoBorders, std::vector<uint32_t>& histoContents)
+{
+	for(auto cit = histoContents.cbegin(); cit != histoContents.cend(); cit++)
+	{
+		while(std::next(cit, 1) != histoContents.end() && *cit == *std::next(cit, 1))
+		{
+			const auto distance = std::distance(histoContents.cbegin(), std::next(cit, 1));
+			// Remove the bin
+			histoBorders.erase(histoBorders.begin() + distance);
+			histoContents.erase(histoContents.begin() + distance);
+		}
+	}
+}
+
+/// @brief This method transforms a probability distribution into components
+/// that represent the cumulative probability distribution
+///
+/// @note This method is used to avoid Root dependencies afterwards by
+/// decomposing the histogram
+/// @param [in] hist The probability distribution
+///
+/// @return Pair containing the bin borders and the bin content
+std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist) {
+  // Build the components
+  std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
+  const int nBins = hist->GetNbinsX();
+  std::vector<double>& histoContents = std::get<1>(map);
+  
+  // Fast exit if the histogram is empty
+  if(histoContents.empty())
+	return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+
+  // Set the bin content
+  std::vector<uint32_t> normalisedHistoContents(nBins);
+  const double invIntegral = 1. / std::get<2>(map);
+  for (int iBin = 0; iBin < nBins; ++iBin) {
+    normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
+  }
+  
+  auto histoBorders = std::get<0>(map);
+  reduceMap(histoBorders, normalisedHistoContents);
+  return std::make_pair(histoBorders, normalisedHistoContents);
+}
+
+/// @brief This method transforms a probability distribution into components
+/// that represent the cumulative probability distribution
+///
+/// @note This method is used to avoid Root dependencies afterwards by
+/// decomposing the histogram
+/// @param [in] hist The probability distribution
+/// @param [in] integral Scaling factor of the distribution
+///
+/// @return Pair containing the bin borders and the bin content
+//~ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist, double integral) {
+  //~ // Build the components
+  //~ std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
+
+  //~ const int nBins = hist->GetNbinsX();
+  //~ std::vector<double>& histoContents = std::get<1>(map);
+
+  //~ // Fast exit if the histogram is empty
+  //~ if(histoContents.empty())
+	//~ return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+
+  //~ // Set the bin content
+  //~ std::vector<uint32_t> normalisedHistoContents(nBins);
+  //~ const double invIntegral = 1. / integral;
+  //~ for (int iBin = 0; iBin < nBins; ++iBin) {
+    //~ normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
+  //~ }
+
+  //~ std::vector<float> histoBorders = std::get<0>(map);
+  //~ reduceMap(histoBorders, normalisedHistoContents);
+
+  //~ return std::make_pair(histoBorders, normalisedHistoContents);
+//~ }
+
+/// @brief This method builds decomposed cumulative probability distributions
+/// out of a vector of proability distributions
+///
+/// @param [in] histos Vector of probability distributions
+///
+/// @return Vector containing the decomposed cumulative probability
+/// distributions
+std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> buildMaps(
+    const std::vector<TH1F*>& histos) {
+  std::vector<std::pair<std::vector<float>, std::vector<uint32_t>>> maps;
+  for (auto& h : histos) {
+    maps.push_back(buildMap(h));
+  }
+  return maps;
+}
+
 /// @brief This method parametrises and stores recursively a parametrisation of
 /// the final state kinematics in a nuclear interaction
 ///
@@ -124,6 +262,8 @@ void recordKinematicParametrisation(
     gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
     gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
 
+	const auto momDistributions = buildMaps(distributionsMom);
+	const auto invMassDistributions = buildMaps(distributionsInvMass);
 
 	// Write the distributions
 	for (unsigned int i = 0; i <= multiplicity; i++) {
@@ -131,8 +271,10 @@ void recordKinematicParametrisation(
 		{
 			gDirectory->WriteObject(
 			  distributionsMom[i],
-			  ("MomentumDistribution_" + std::to_string(i)).c_str());
+			  ("MomentumDistributionHistogram_" + std::to_string(i)).c_str());
 	  } // TODO: write distributions here
+	  gDirectory->WriteObject(&momDistributions[i].first, ("MomentumDistributionBinBorders_" + std::to_string(i)).c_str());
+	  gDirectory->WriteObject(&momDistributions[i].second, ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
 	  delete (distributionsMom[i]);
 	}
 	for (unsigned int i = 0; i < multiplicity; i++) {
@@ -140,8 +282,10 @@ void recordKinematicParametrisation(
 		{
 		  gDirectory->WriteObject(
 			  distributionsInvMass[i],
-			  ("InvariantMassDistribution_" + std::to_string(i)).c_str());
+			  ("InvariantMassDistributionHistogram_" + std::to_string(i)).c_str());
 	  }
+	  gDirectory->WriteObject(&invMassDistributions[i].first, ("InvariantMassDistributionBinBorders_" + std::to_string(i)).c_str());
+	  gDirectory->WriteObject(&invMassDistributions[i].second, ("InvariantMassDistributionBinContents_" + std::to_string(i)).c_str());
 	  delete (distributionsInvMass[i]);
 	}
   }
@@ -193,7 +337,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
       cumulativeNuclearInteractionProbability(m_eventFractionCollection,
                                               m_cfg.interactionProbabilityBins);
   if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteraction");
+	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteractionHistogram");
+const auto mapNIprob = buildMap(nuclearInteractionProbability);
+gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
+gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
   delete (nuclearInteractionProbability);
 
   // Write the interaction type proability
@@ -223,17 +370,25 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   // Write the multiplicity and kinematics distribution
   const auto multiplicity =
       NuclearInteractionParametrisation::cumulativeMultiplicityProbability(
-          m_eventFractionCollection);
+          m_eventFractionCollection, m_cfg.multiplicityMax);
   gDirectory->cd("soft");
   if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(multiplicity.first, "Multiplicity");
+	gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
+const auto multProbSoft = buildMap(multiplicity.first);
+gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
+gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
+
   for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
   {
 	  recordKinematicParametrisation(m_eventFractionCollection, true, 5, m_cfg);
   }
   gDirectory->cd("../hard");
   if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(multiplicity.second, "Multiplicity");
+	gDirectory->WriteObject(multiplicity.second, "MultiplicityHistogram");
+const auto multProbHard = buildMap(multiplicity.second);
+gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
+gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
+
   for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
   {
 	recordKinematicParametrisation(m_eventFractionCollection, false, 5, m_cfg);

@@ -157,7 +157,7 @@ cumulativePDGprobability(const EventCollection& events);
 ///
 /// @return Pair containing the distribution for soft and hard processes
 std::pair<CumulativeDistribution, CumulativeDistribution>
-cumulativeMultiplicityProbability(const EventCollection& events);
+cumulativeMultiplicityProbability(const EventCollection& events, unsigned int multiplicityMax);
 
 /// @brief This method evaluates the probability that a nuclear interaction is a
 /// soft interaction

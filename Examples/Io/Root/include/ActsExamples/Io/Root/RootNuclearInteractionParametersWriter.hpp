@@ -47,6 +47,7 @@ class RootNuclearInteractionParametersWriter final
     
     unsigned int multiplicityMax = 10;
     bool writeHistograms = true;
+    unsigned int nSimulatedEvents = 0;
   };
 
   /// Constructor

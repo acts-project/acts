@@ -267,7 +267,7 @@ cumulativePDGprobability(const EventCollection& events) {
 }
 
 std::pair<CumulativeDistribution, CumulativeDistribution>
-cumulativeMultiplicityProbability(const EventCollection& events) {
+cumulativeMultiplicityProbability(const EventCollection& events, unsigned int multiplicityMax) {
   // Find the range of both histogram
   unsigned int minSoft = std::numeric_limits<unsigned int>::max();
   unsigned int maxSoft = 0;
@@ -284,13 +284,16 @@ cumulativeMultiplicityProbability(const EventCollection& events) {
   }
 
   // Build and fill the histograms
-  TH1F* softHisto = new TH1F("", "", maxSoft + 1, minSoft, maxSoft);
-  TH1F* hardHisto = new TH1F("", "", maxHard + 1, minHard, maxHard);
+  TH1F* softHisto = new TH1F("", "", maxSoft + 1, minSoft, std::min(maxSoft, multiplicityMax));
+  TH1F* hardHisto = new TH1F("", "", maxHard + 1, minHard, std::min(maxHard, multiplicityMax));
   for (const EventFraction& event : events) {
+	if(event.multiplicity <= multiplicityMax)
+	{
     if (event.soft)
       softHisto->Fill(event.multiplicity);
     else
       hardHisto->Fill(event.multiplicity);
+	}
   }
 
   return std::make_pair(softHisto, hardHisto);
