@@ -270,7 +270,7 @@ Acts::Result<void> Acts::
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
-        if (not trkAtVtx.isLinearized){
+        if (not trkAtVtx.isLinearized) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
               vertexingOptions.geoContext, vertexingOptions.magFieldContext,
@@ -280,7 +280,7 @@ Acts::Result<void> Acts::
           }
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
-        } else if(state.vtxInfoMap[vtx].relinearize) {
+        } else if (state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
               vertexingOptions.geoContext, vertexingOptions.magFieldContext,
@@ -291,7 +291,6 @@ Acts::Result<void> Acts::
           state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
-          
         }
         // Update the vertex with the new track
         KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
@@ -346,7 +345,7 @@ void Acts::AdaptiveMultiVertexFitter<
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
-      if(trkAtVtx.trackWeight > m_cfg.minWeight){
+      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
       }
     }

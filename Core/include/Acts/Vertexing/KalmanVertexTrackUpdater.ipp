@@ -22,8 +22,6 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   // Check if linearized state exists
   if (linTrack.covarianceAtPCA.determinant() == 0.) {
     // Track has no linearized state, returning w/o update
-    std::cout << "RETURNING WITHOUT UPDATE... track is linearized:" << track.isLinearized << std::endl;
-    std::cout << "old chi2/ndf: " << track.chi2Track << "," << track.ndf << std::endl;
     return;
   }
 
@@ -110,7 +108,6 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   track.chi2Track = chi2;
   track.ndf = 2 * track.trackWeight;
 
-  std::cout << "chi2/ndf: " << track.chi2Track << "," << track.ndf << std::endl;
   return;
 }
 
