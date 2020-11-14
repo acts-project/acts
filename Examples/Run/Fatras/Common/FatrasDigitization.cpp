@@ -85,6 +85,7 @@ void setupDigitization(
       clusterWriterCsv.inputClusters = digi.outputClusters;
       clusterWriterCsv.inputSimHits = digi.inputSimHits;
       clusterWriterCsv.outputDir = outputDir;
+      clusterWriterCsv.trackingGeometry = trackingGeometry;
       sequencer.addWriter(
           std::make_shared<CsvPlanarClusterWriter>(clusterWriterCsv, logLevel));
     }
