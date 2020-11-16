@@ -40,6 +40,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_BUILD_PLUGIN_AUTODIFF=on
       - name: Build
         run: ${SETUP} && cmake --build build -- 
       - name: Unit tests
@@ -86,6 +87,7 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=on
+          -DACTS_BUILD_PLUGIN_AUTODIFF=on
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
