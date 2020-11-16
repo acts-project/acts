@@ -151,6 +151,40 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist) 
   return std::make_pair(histoBorders, normalisedHistoContents);
 }
 
+/// @brief This method transforms a probability distribution into components
+/// that represent the cumulative probability distribution
+///
+/// @note This method is used to avoid Root dependencies afterwards by
+/// decomposing the histogram
+/// @param [in] hist The probability distribution
+/// @param [in] integral Scaling factor of the distribution
+/// @note If @p integral is less than the actual integral of the histogram then the latter is used.
+///
+/// @return Pair containing the bin borders and the bin content
+std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist, double integral) {
+  // Build the components
+  std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
+
+  const int nBins = hist->GetNbinsX();
+  std::vector<double>& histoContents = std::get<1>(map);
+
+  // Fast exit if the histogram is empty
+  if(histoContents.empty())
+	return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+
+  // Set the bin content
+  std::vector<uint32_t> normalisedHistoContents(nBins);
+  const double invIntegral = 1. / std::max(integral, std::get<2>(map));
+  for (int iBin = 0; iBin < nBins; ++iBin) {
+    normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
+  }
+
+  std::vector<float> histoBorders = std::get<0>(map);
+  reduceMap(histoBorders, normalisedHistoContents);
+
+  return std::make_pair(histoBorders, normalisedHistoContents);
+}
+
 /// @brief This method builds decomposed cumulative probability distributions
 /// out of a vector of proability distributions
 ///
@@ -313,7 +347,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   
   if(m_cfg.writeHistograms)
 	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteractionHistogram");
-const auto mapNIprob = buildMap(nuclearInteractionProbability);
+const auto mapNIprob = buildMap(nuclearInteractionProbability, m_cfg.nSimulatedEvents);
 gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
 gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
   delete (nuclearInteractionProbability);
