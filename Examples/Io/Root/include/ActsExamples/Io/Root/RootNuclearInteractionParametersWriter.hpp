@@ -43,9 +43,12 @@ class RootNuclearInteractionParametersWriter final
     unsigned int momentumBins = 1e6;
     /// Number of bins used for the invariant mass distributions
     unsigned int invariantMassBins = 1e6;
-    
+    /// The highest final state multiplicity that will considered
     unsigned int multiplicityMax = 10;
+    /// Choice whether the histograms should be written to file
     bool writeHistograms = true;
+    /// Number of simulated histograms
+    unsigned int nSimulatedEvents = 0;
   };
 
   /// Constructor

@@ -195,44 +195,46 @@ void recordKinematicParametrisation(
 
   // Fast exit in case of no events
   if (!distributionsMom.empty() && !distributionsInvMass.empty()) {
-    // Write the eigenspace components for the momenta
-    NuclearInteractionParametrisation::EigenspaceComponents
-        esComponentsMom = momentumParameters.first;
+	  if(multiplicity > 1)
+	  {
+		// Write the eigenspace components for the momenta
+		NuclearInteractionParametrisation::EigenspaceComponents
+			esComponentsMom = momentumParameters.first;
 
-    auto momEigenVal = std::get<0>(esComponentsMom);
-    auto momEigenVec = std::get<1>(esComponentsMom);
-    auto momMean = std::get<2>(esComponentsMom);
-    std::vector<float> momVecVal(momEigenVal.data(),
-                                 momEigenVal.data() + momEigenVal.size());
-    std::vector<float> momVecVec(momEigenVec.data(),
-                                 momEigenVec.data() + momEigenVec.size());
-    std::vector<float> momVecMean(momMean.data(),
-                                  momMean.data() + momMean.size());
+		auto momEigenVal = std::get<0>(esComponentsMom);
+		auto momEigenVec = std::get<1>(esComponentsMom);
+		auto momMean = std::get<2>(esComponentsMom);
+		std::vector<float> momVecVal(momEigenVal.data(),
+									 momEigenVal.data() + momEigenVal.size());
+		std::vector<float> momVecVec(momEigenVec.data(),
+									 momEigenVec.data() + momEigenVec.size());
+		std::vector<float> momVecMean(momMean.data(),
+									  momMean.data() + momMean.size());
 
-    gDirectory->WriteObject(&momVecVal, "MomentumEigenvalues");
-    gDirectory->WriteObject(&momVecVec, "MomentumEigenvectors");
-    gDirectory->WriteObject(&momVecMean, "MomentumMean");
+		gDirectory->WriteObject(&momVecVal, "MomentumEigenvalues");
+		gDirectory->WriteObject(&momVecVec, "MomentumEigenvectors");
+		gDirectory->WriteObject(&momVecMean, "MomentumMean");
 
-    // Write the eigenspace components for the invariant masses
-    NuclearInteractionParametrisation::EigenspaceComponents
-        esComponentsInvMass = invariantMassParameters.first;
+		// Write the eigenspace components for the invariant masses
+		NuclearInteractionParametrisation::EigenspaceComponents
+			esComponentsInvMass = invariantMassParameters.first;
 
-    auto invMassEigenVal = std::get<0>(esComponentsInvMass);
-    auto invMassEigenVec = std::get<1>(esComponentsInvMass);
-    auto invMassMean = std::get<2>(esComponentsInvMass);
-    std::vector<float> invMassVecVal(
-        invMassEigenVal.data(),
-        invMassEigenVal.data() + invMassEigenVal.size());
-    std::vector<float> invMassVecVec(
-        invMassEigenVec.data(),
-        invMassEigenVec.data() + invMassEigenVec.size());
-    std::vector<float> invMassVecMean(invMassMean.data(),
-                                      invMassMean.data() + invMassMean.size());
+		auto invMassEigenVal = std::get<0>(esComponentsInvMass);
+		auto invMassEigenVec = std::get<1>(esComponentsInvMass);
+		auto invMassMean = std::get<2>(esComponentsInvMass);
+		std::vector<float> invMassVecVal(
+			invMassEigenVal.data(),
+			invMassEigenVal.data() + invMassEigenVal.size());
+		std::vector<float> invMassVecVec(
+			invMassEigenVec.data(),
+			invMassEigenVec.data() + invMassEigenVec.size());
+		std::vector<float> invMassVecMean(invMassMean.data(),
+										  invMassMean.data() + invMassMean.size());
 
-    gDirectory->WriteObject(&invMassVecVal, "InvariantMassEigenvalues");
-    gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
-    gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
-
+		gDirectory->WriteObject(&invMassVecVal, "InvariantMassEigenvalues");
+		gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
+		gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
+	}
 	const auto momDistributions = buildMaps(distributionsMom);
 	const auto invMassDistributions = buildMaps(distributionsInvMass);
 
@@ -304,23 +306,30 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   gDirectory->mkdir("hard");
 
   // Write the nuclear interaction probability
+  ACTS_DEBUG("Starting parametrisation of nuclear interaction probability");
   const auto nuclearInteractionProbability = NuclearInteractionParametrisation::
       cumulativeNuclearInteractionProbability(m_eventFractionCollection,
                                               m_cfg.interactionProbabilityBins);
+  
   if(m_cfg.writeHistograms)
 	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteractionHistogram");
 const auto mapNIprob = buildMap(nuclearInteractionProbability);
 gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
 gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
   delete (nuclearInteractionProbability);
+ACTS_DEBUG("Nuclear interaction probability parametrised");
 
+ACTS_DEBUG("Starting calulcation of probability of interaction type");
   // Write the interaction type proability
   const auto softProbability =
       NuclearInteractionParametrisation::softProbability(
           m_eventFractionCollection);
+
   gDirectory->WriteObject(&softProbability, "SoftInteraction");
+ACTS_DEBUG("Calulcation of probability of interaction type finished");
 
   // Write the PDG id production distribution
+ACTS_DEBUG("Starting calulcation of transition probabilities betweend PDG IDs");
   const auto pdgIdMap =
       NuclearInteractionParametrisation::cumulativePDGprobability(
           m_eventFractionCollection);
@@ -334,14 +343,19 @@ gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
       targetPdgProbability.push_back(producedPdgIdMap.second);
     }
   }
+
   gDirectory->WriteObject(&branchingPdgIds, "BranchingPdgIds");
   gDirectory->WriteObject(&targetPdgIds, "TargetPdgIds");
   gDirectory->WriteObject(&targetPdgProbability, "TargetPdgProbability");
+ACTS_DEBUG("Calulcation of transition probabilities betweend PDG IDs finished");
 
   // Write the multiplicity and kinematics distribution
+ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");
   const auto multiplicity =
       NuclearInteractionParametrisation::cumulativeMultiplicityProbability(
           m_eventFractionCollection, m_cfg.multiplicityMax);
+ACTS_DEBUG("Parametrisation of multiplicity probabilities finished");
+
   gDirectory->cd("soft");
   if(m_cfg.writeHistograms)
 	gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
@@ -351,7 +365,9 @@ gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
 
   for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
   {
+ACTS_DEBUG("Starting parametrisation of final state kinematics for soft " + std::to_string(i) + " particle(s) final state");
 	  recordKinematicParametrisation(m_eventFractionCollection, true, i, m_cfg);
+ACTS_DEBUG("Parametrisation of final state kinematics for soft " + std::to_string(i) + " particle(s) final state finished");
   }
   gDirectory->cd("../hard");
   if(m_cfg.writeHistograms)
@@ -360,9 +376,11 @@ const auto multProbHard = buildMap(multiplicity.second);
 gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
 gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
 
-  for(unsigned int i = 0; i <= m_cfg.multiplicityMax; i++)
+  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
   {
+ACTS_DEBUG("Starting parametrisation of final state kinematics for hard " + std::to_string(i) + " particle(s) final state");
 	recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
+ACTS_DEBUG("Parametrisation of final state kinematics for hard " + std::to_string(i) + " particle(s) final state finished");
   }
   delete (multiplicity.first);
   delete (multiplicity.second);
