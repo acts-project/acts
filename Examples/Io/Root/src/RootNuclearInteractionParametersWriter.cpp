@@ -34,10 +34,10 @@ void labelEvents(
       else
         maxMomOthers = std::max(p.absMomentum(), maxMomOthers);
     }
-    
+
     // Label the initial momentum
     event.initialMomentum = event.initialParticle.absMomentum();
-    
+
     // Label the indication that the interacting particle carries most of the
     // momentum
     event.soft = (maxMom > maxMomOthers);
@@ -62,11 +62,14 @@ void labelEvents(
   }
 }
 
-/// @brief This method builds components for transforming a probability distribution into components that represent the cumulative probability distribution
+/// @brief This method builds components for transforming a probability
+/// distribution into components that represent the cumulative probability
+/// distribution
 ///
 /// @param [in] hist The probability distribution
 ///
-/// @return Tuple containing the bin borders, the non-normalised cumulative distribution and the sum over all entries
+/// @return Tuple containing the bin borders, the non-normalised cumulative
+/// distribution and the sum over all entries
 std::tuple<std::vector<float>, std::vector<double>, double>
 buildNotNormalisedMap(TH1F const* hist) {
   // Retrieve the number of bins & borders
@@ -107,18 +110,18 @@ buildNotNormalisedMap(TH1F const* hist) {
 ///
 /// @param [in, out] histoBorders The borders of the bins
 /// @param [in, out] histoContents The content of each bin
-void reduceMap(std::vector<float>& histoBorders, std::vector<uint32_t>& histoContents)
-{
-	for(auto cit = histoContents.cbegin(); cit != histoContents.cend(); cit++)
-	{
-		while(std::next(cit, 1) != histoContents.end() && *cit == *std::next(cit, 1))
-		{
-			const auto distance = std::distance(histoContents.cbegin(), std::next(cit, 1));
-			// Remove the bin
-			histoBorders.erase(histoBorders.begin() + distance);
-			histoContents.erase(histoContents.begin() + distance);
-		}
-	}
+void reduceMap(std::vector<float>& histoBorders,
+               std::vector<uint32_t>& histoContents) {
+  for (auto cit = histoContents.cbegin(); cit != histoContents.cend(); cit++) {
+    while (std::next(cit, 1) != histoContents.end() &&
+           *cit == *std::next(cit, 1)) {
+      const auto distance =
+          std::distance(histoContents.cbegin(), std::next(cit, 1));
+      // Remove the bin
+      histoBorders.erase(histoBorders.begin() + distance);
+      histoContents.erase(histoContents.begin() + distance);
+    }
+  }
 }
 
 /// @brief This method transforms a probability distribution into components
@@ -129,23 +132,26 @@ void reduceMap(std::vector<float>& histoBorders, std::vector<uint32_t>& histoCon
 /// @param [in] hist The probability distribution
 ///
 /// @return Pair containing the bin borders and the bin content
-std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist) {
+std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
+    TH1F const* hist) {
   // Build the components
-  std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
+  std::tuple<std::vector<float>, std::vector<double>, double> map =
+      buildNotNormalisedMap(hist);
   const int nBins = hist->GetNbinsX();
   std::vector<double>& histoContents = std::get<1>(map);
-  
+
   // Fast exit if the histogram is empty
-  if(histoContents.empty())
-	return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+  if (histoContents.empty())
+    return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
 
   // Set the bin content
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::get<2>(map);
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] =
+        UINT32_MAX * (histoContents[iBin] * invIntegral);
   }
-  
+
   auto histoBorders = std::get<0>(map);
   reduceMap(histoBorders, normalisedHistoContents);
   return std::make_pair(histoBorders, normalisedHistoContents);
@@ -158,25 +164,29 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist) 
 /// decomposing the histogram
 /// @param [in] hist The probability distribution
 /// @param [in] integral Scaling factor of the distribution
-/// @note If @p integral is less than the actual integral of the histogram then the latter is used.
+/// @note If @p integral is less than the actual integral of the histogram then
+/// the latter is used.
 ///
 /// @return Pair containing the bin borders and the bin content
-std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist, double integral) {
+std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
+                                                              double integral) {
   // Build the components
-  std::tuple<std::vector<float>, std::vector<double>, double> map = buildNotNormalisedMap(hist);
+  std::tuple<std::vector<float>, std::vector<double>, double> map =
+      buildNotNormalisedMap(hist);
 
   const int nBins = hist->GetNbinsX();
   std::vector<double>& histoContents = std::get<1>(map);
 
   // Fast exit if the histogram is empty
-  if(histoContents.empty())
-	return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+  if (histoContents.empty())
+    return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
 
   // Set the bin content
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::max(integral, std::get<2>(map));
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] = UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] =
+        UINT32_MAX * (histoContents[iBin] * invIntegral);
   }
 
   std::vector<float> histoBorders = std::get<0>(map);
@@ -217,84 +227,93 @@ void recordKinematicParametrisation(
 
   // Parametrise the momentum und invarian mass distributions
   const auto momentumParameters =
-      NuclearInteractionParametrisation::buildMomentumParameters(eventFractionCollection, multiplicity, interactionType,
-                          cfg.momentumBins);
+      NuclearInteractionParametrisation::buildMomentumParameters(
+          eventFractionCollection, multiplicity, interactionType,
+          cfg.momentumBins);
   std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
       distributionsMom = momentumParameters.second;
   const auto invariantMassParameters =
-      NuclearInteractionParametrisation::buildInvariantMassParameters(eventFractionCollection, multiplicity, interactionType,
-                          cfg.invariantMassBins);
+      NuclearInteractionParametrisation::buildInvariantMassParameters(
+          eventFractionCollection, multiplicity, interactionType,
+          cfg.invariantMassBins);
   std::vector<NuclearInteractionParametrisation::CumulativeDistribution>
       distributionsInvMass = invariantMassParameters.second;
 
   // Fast exit in case of no events
   if (!distributionsMom.empty() && !distributionsInvMass.empty()) {
-	  if(multiplicity > 1)
-	  {
-		// Write the eigenspace components for the momenta
-		NuclearInteractionParametrisation::EigenspaceComponents
-			esComponentsMom = momentumParameters.first;
+    if (multiplicity > 1) {
+      // Write the eigenspace components for the momenta
+      NuclearInteractionParametrisation::EigenspaceComponents esComponentsMom =
+          momentumParameters.first;
 
-		auto momEigenVal = std::get<0>(esComponentsMom);
-		auto momEigenVec = std::get<1>(esComponentsMom);
-		auto momMean = std::get<2>(esComponentsMom);
-		std::vector<float> momVecVal(momEigenVal.data(),
-									 momEigenVal.data() + momEigenVal.size());
-		std::vector<float> momVecVec(momEigenVec.data(),
-									 momEigenVec.data() + momEigenVec.size());
-		std::vector<float> momVecMean(momMean.data(),
-									  momMean.data() + momMean.size());
+      auto momEigenVal = std::get<0>(esComponentsMom);
+      auto momEigenVec = std::get<1>(esComponentsMom);
+      auto momMean = std::get<2>(esComponentsMom);
+      std::vector<float> momVecVal(momEigenVal.data(),
+                                   momEigenVal.data() + momEigenVal.size());
+      std::vector<float> momVecVec(momEigenVec.data(),
+                                   momEigenVec.data() + momEigenVec.size());
+      std::vector<float> momVecMean(momMean.data(),
+                                    momMean.data() + momMean.size());
 
-		gDirectory->WriteObject(&momVecVal, "MomentumEigenvalues");
-		gDirectory->WriteObject(&momVecVec, "MomentumEigenvectors");
-		gDirectory->WriteObject(&momVecMean, "MomentumMean");
+      gDirectory->WriteObject(&momVecVal, "MomentumEigenvalues");
+      gDirectory->WriteObject(&momVecVec, "MomentumEigenvectors");
+      gDirectory->WriteObject(&momVecMean, "MomentumMean");
 
-		// Write the eigenspace components for the invariant masses
-		NuclearInteractionParametrisation::EigenspaceComponents
-			esComponentsInvMass = invariantMassParameters.first;
+      // Write the eigenspace components for the invariant masses
+      NuclearInteractionParametrisation::EigenspaceComponents
+          esComponentsInvMass = invariantMassParameters.first;
 
-		auto invMassEigenVal = std::get<0>(esComponentsInvMass);
-		auto invMassEigenVec = std::get<1>(esComponentsInvMass);
-		auto invMassMean = std::get<2>(esComponentsInvMass);
-		std::vector<float> invMassVecVal(
-			invMassEigenVal.data(),
-			invMassEigenVal.data() + invMassEigenVal.size());
-		std::vector<float> invMassVecVec(
-			invMassEigenVec.data(),
-			invMassEigenVec.data() + invMassEigenVec.size());
-		std::vector<float> invMassVecMean(invMassMean.data(),
-										  invMassMean.data() + invMassMean.size());
+      auto invMassEigenVal = std::get<0>(esComponentsInvMass);
+      auto invMassEigenVec = std::get<1>(esComponentsInvMass);
+      auto invMassMean = std::get<2>(esComponentsInvMass);
+      std::vector<float> invMassVecVal(
+          invMassEigenVal.data(),
+          invMassEigenVal.data() + invMassEigenVal.size());
+      std::vector<float> invMassVecVec(
+          invMassEigenVec.data(),
+          invMassEigenVec.data() + invMassEigenVec.size());
+      std::vector<float> invMassVecMean(
+          invMassMean.data(), invMassMean.data() + invMassMean.size());
 
-		gDirectory->WriteObject(&invMassVecVal, "InvariantMassEigenvalues");
-		gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
-		gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
-	}
-	const auto momDistributions = buildMaps(distributionsMom);
-	const auto invMassDistributions = buildMaps(distributionsInvMass);
+      gDirectory->WriteObject(&invMassVecVal, "InvariantMassEigenvalues");
+      gDirectory->WriteObject(&invMassVecVec, "InvariantMassEigenvectors");
+      gDirectory->WriteObject(&invMassVecMean, "InvariantMassMean");
+    }
+    const auto momDistributions = buildMaps(distributionsMom);
+    const auto invMassDistributions = buildMaps(distributionsInvMass);
 
-	// Write the distributions
-	for (unsigned int i = 0; i <= multiplicity; i++) {
-		if(cfg.writeHistograms)
-		{
-			gDirectory->WriteObject(
-			  distributionsMom[i],
-			  ("MomentumDistributionHistogram_" + std::to_string(i)).c_str());
-	  }
-	  gDirectory->WriteObject(&momDistributions[i].first, ("MomentumDistributionBinBorders_" + std::to_string(i)).c_str());
-	  gDirectory->WriteObject(&momDistributions[i].second, ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
-	  delete (distributionsMom[i]);
-	}
-	for (unsigned int i = 0; i < multiplicity; i++) {
-		if(cfg.writeHistograms)
-		{
-		  gDirectory->WriteObject(
-			  distributionsInvMass[i],
-			  ("InvariantMassDistributionHistogram_" + std::to_string(i)).c_str());
-	  }
-	  gDirectory->WriteObject(&invMassDistributions[i].first, ("InvariantMassDistributionBinBorders_" + std::to_string(i)).c_str());
-	  gDirectory->WriteObject(&invMassDistributions[i].second, ("InvariantMassDistributionBinContents_" + std::to_string(i)).c_str());
-	  delete (distributionsInvMass[i]);
-	}
+    // Write the distributions
+    for (unsigned int i = 0; i <= multiplicity; i++) {
+      if (cfg.writeHistograms) {
+        gDirectory->WriteObject(
+            distributionsMom[i],
+            ("MomentumDistributionHistogram_" + std::to_string(i)).c_str());
+      }
+      gDirectory->WriteObject(
+          &momDistributions[i].first,
+          ("MomentumDistributionBinBorders_" + std::to_string(i)).c_str());
+      gDirectory->WriteObject(
+          &momDistributions[i].second,
+          ("MomentumDistributionBinContents_" + std::to_string(i)).c_str());
+      delete (distributionsMom[i]);
+    }
+    for (unsigned int i = 0; i < multiplicity; i++) {
+      if (cfg.writeHistograms) {
+        gDirectory->WriteObject(
+            distributionsInvMass[i],
+            ("InvariantMassDistributionHistogram_" + std::to_string(i))
+                .c_str());
+      }
+      gDirectory->WriteObject(
+          &invMassDistributions[i].first,
+          ("InvariantMassDistributionBinBorders_" + std::to_string(i)).c_str());
+      gDirectory->WriteObject(
+          &invMassDistributions[i].second,
+          ("InvariantMassDistributionBinContents_" + std::to_string(i))
+              .c_str());
+      delete (distributionsInvMass[i]);
+    }
   }
 
   gDirectory->cd("..");
@@ -305,8 +324,8 @@ ActsExamples::RootNuclearInteractionParametersWriter::
     RootNuclearInteractionParametersWriter(
         const ActsExamples::RootNuclearInteractionParametersWriter::Config& cfg,
         Acts::Logging::Level lvl)
-    : WriterT(cfg.inputSimulationProcesses, "RootNuclearInteractionParametersWriter",
-              lvl),
+    : WriterT(cfg.inputSimulationProcesses,
+              "RootNuclearInteractionParametersWriter", lvl),
       m_cfg(cfg) {
   if (m_cfg.inputSimulationProcesses.empty()) {
     throw std::invalid_argument("Missing input collection");
@@ -331,11 +350,9 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   TFile tf(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
   gDirectory->mkdir(
-      std::to_string(m_eventFractionCollection[0].initialMomentum)
-          .c_str());
+      std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
   gDirectory->cd(
-      std::to_string(m_eventFractionCollection[0].initialMomentum)
-          .c_str());
+      std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
   gDirectory->mkdir("soft");
   gDirectory->mkdir("hard");
 
@@ -344,26 +361,29 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   const auto nuclearInteractionProbability = NuclearInteractionParametrisation::
       cumulativeNuclearInteractionProbability(m_eventFractionCollection,
                                               m_cfg.interactionProbabilityBins);
-  
-  if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(nuclearInteractionProbability, "NuclearInteractionHistogram");
-const auto mapNIprob = buildMap(nuclearInteractionProbability, m_cfg.nSimulatedEvents);
-gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
-gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
-  delete (nuclearInteractionProbability);
-ACTS_DEBUG("Nuclear interaction probability parametrised");
 
-ACTS_DEBUG("Starting calulcation of probability of interaction type");
+  if (m_cfg.writeHistograms)
+    gDirectory->WriteObject(nuclearInteractionProbability,
+                            "NuclearInteractionHistogram");
+  const auto mapNIprob =
+      buildMap(nuclearInteractionProbability, m_cfg.nSimulatedEvents);
+  gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
+  gDirectory->WriteObject(&mapNIprob.second, "NuclearInteractionBinContents");
+  delete (nuclearInteractionProbability);
+  ACTS_DEBUG("Nuclear interaction probability parametrised");
+
+  ACTS_DEBUG("Starting calulcation of probability of interaction type");
   // Write the interaction type proability
   const auto softProbability =
       NuclearInteractionParametrisation::softProbability(
           m_eventFractionCollection);
 
   gDirectory->WriteObject(&softProbability, "SoftInteraction");
-ACTS_DEBUG("Calulcation of probability of interaction type finished");
+  ACTS_DEBUG("Calulcation of probability of interaction type finished");
 
   // Write the PDG id production distribution
-ACTS_DEBUG("Starting calulcation of transition probabilities betweend PDG IDs");
+  ACTS_DEBUG(
+      "Starting calulcation of transition probabilities betweend PDG IDs");
   const auto pdgIdMap =
       NuclearInteractionParametrisation::cumulativePDGprobability(
           m_eventFractionCollection);
@@ -381,40 +401,43 @@ ACTS_DEBUG("Starting calulcation of transition probabilities betweend PDG IDs");
   gDirectory->WriteObject(&branchingPdgIds, "BranchingPdgIds");
   gDirectory->WriteObject(&targetPdgIds, "TargetPdgIds");
   gDirectory->WriteObject(&targetPdgProbability, "TargetPdgProbability");
-ACTS_DEBUG("Calulcation of transition probabilities betweend PDG IDs finished");
+  ACTS_DEBUG(
+      "Calulcation of transition probabilities betweend PDG IDs finished");
 
   // Write the multiplicity and kinematics distribution
-ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");
+  ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");
   const auto multiplicity =
       NuclearInteractionParametrisation::cumulativeMultiplicityProbability(
           m_eventFractionCollection, m_cfg.multiplicityMax);
-ACTS_DEBUG("Parametrisation of multiplicity probabilities finished");
+  ACTS_DEBUG("Parametrisation of multiplicity probabilities finished");
 
   gDirectory->cd("soft");
-  if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
-const auto multProbSoft = buildMap(multiplicity.first);
-gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
-gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
+  if (m_cfg.writeHistograms)
+    gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
+  const auto multProbSoft = buildMap(multiplicity.first);
+  gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
+  gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
 
-  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
-  {
-ACTS_DEBUG("Starting parametrisation of final state kinematics for soft " + std::to_string(i) + " particle(s) final state");
-	  recordKinematicParametrisation(m_eventFractionCollection, true, i, m_cfg);
-ACTS_DEBUG("Parametrisation of final state kinematics for soft " + std::to_string(i) + " particle(s) final state finished");
+  for (unsigned int i = 1; i <= m_cfg.multiplicityMax; i++) {
+    ACTS_DEBUG("Starting parametrisation of final state kinematics for soft " +
+               std::to_string(i) + " particle(s) final state");
+    recordKinematicParametrisation(m_eventFractionCollection, true, i, m_cfg);
+    ACTS_DEBUG("Parametrisation of final state kinematics for soft " +
+               std::to_string(i) + " particle(s) final state finished");
   }
   gDirectory->cd("../hard");
-  if(m_cfg.writeHistograms)
-	gDirectory->WriteObject(multiplicity.second, "MultiplicityHistogram");
-const auto multProbHard = buildMap(multiplicity.second);
-gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
-gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
+  if (m_cfg.writeHistograms)
+    gDirectory->WriteObject(multiplicity.second, "MultiplicityHistogram");
+  const auto multProbHard = buildMap(multiplicity.second);
+  gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
+  gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");
 
-  for(unsigned int i = 1; i <= m_cfg.multiplicityMax; i++)
-  {
-ACTS_DEBUG("Starting parametrisation of final state kinematics for hard " + std::to_string(i) + " particle(s) final state");
-	recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
-ACTS_DEBUG("Parametrisation of final state kinematics for hard " + std::to_string(i) + " particle(s) final state finished");
+  for (unsigned int i = 1; i <= m_cfg.multiplicityMax; i++) {
+    ACTS_DEBUG("Starting parametrisation of final state kinematics for hard " +
+               std::to_string(i) + " particle(s) final state");
+    recordKinematicParametrisation(m_eventFractionCollection, false, i, m_cfg);
+    ACTS_DEBUG("Parametrisation of final state kinematics for hard " +
+               std::to_string(i) + " particle(s) final state finished");
   }
   delete (multiplicity.first);
   delete (multiplicity.second);
@@ -429,8 +452,7 @@ ACTS_DEBUG("Parametrisation of final state kinematics for hard " + std::to_strin
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::writeT(
     const AlgorithmContext& /*ctx*/,
-    const std::vector<
-        ExtractedSimulationProcess>& event) {
+    const std::vector<ExtractedSimulationProcess>& event) {
   // Convert the tuple to use additional categorisation variables
   std::vector<NuclearInteractionParametrisation::EventFraction> eventFractions;
   eventFractions.reserve(event.size());

@@ -53,9 +53,9 @@ using ProbabilityDistributions = std::vector<TH1F*>;
 using CumulativeDistribution = TH1F*;
 using Vector = Acts::ActsVectorXf;
 using Matrix = Acts::ActsMatrixXf;
-using EigenspaceComponents =
-    std::tuple<Vector, Matrix, Vector>;
-using Parametrisation = std::pair<EigenspaceComponents, std::vector<CumulativeDistribution>>;
+using EigenspaceComponents = std::tuple<Vector, Matrix, Vector>;
+using Parametrisation =
+    std::pair<EigenspaceComponents, std::vector<CumulativeDistribution>>;
 
 /// @brief This method scales the final state momenta by the initial momentum
 ///
@@ -96,8 +96,8 @@ EventProperties convertEventToGaussian(const ProbabilityDistributions& histos,
 /// interaction type
 ///
 /// @return Pair containing the mean and the covariance matrix
-std::pair<Vector, Matrix>
-calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& events);
+std::pair<Vector, Matrix> calculateMeanAndCovariance(
+    unsigned int multiplicity, const EventProperties& events);
 
 /// @brief Calculate the eigenvalues, eigenvectors and the mean in eigenspace
 ///
@@ -106,9 +106,8 @@ calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& eve
 ///
 /// @return Tuple containing the eigenvalues, eigenvectors and the mean in
 /// eigenspace
-EigenspaceComponents calculateEigenspace(
-    const Vector& mean,
-    const Matrix& covariance);
+EigenspaceComponents calculateEigenspace(const Vector& mean,
+                                         const Matrix& covariance);
 
 /// @brief This function calculates all components required for simulating final
 /// state momenta
@@ -118,8 +117,9 @@ EigenspaceComponents calculateEigenspace(
 /// @param [in] nBins The number of bins in the histograms
 ///
 /// @return Pair storing all components
-Parametrisation buildMomentumParameters(
-    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins);
+Parametrisation buildMomentumParameters(const EventCollection& events,
+                                        unsigned int multiplicity, bool soft,
+                                        unsigned int nBins);
 
 /// @brief This method calculates the final state particles invariant masses
 ///
@@ -139,8 +139,9 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
 /// @param [in] nBins The number of bins in the histograms
 ///
 /// @return Pair storing all components
-Parametrisation buildInvariantMassParameters(
-    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins);
+Parametrisation buildInvariantMassParameters(const EventCollection& events,
+                                             unsigned int multiplicity,
+                                             bool soft, unsigned int nBins);
 
 /// @brief This method evaluates the cumulative probabilities for a given
 /// particle type to produce a particle type
@@ -158,7 +159,8 @@ cumulativePDGprobability(const EventCollection& events);
 ///
 /// @return Pair containing the distribution for soft and hard processes
 std::pair<CumulativeDistribution, CumulativeDistribution>
-cumulativeMultiplicityProbability(const EventCollection& events, unsigned int multiplicityMax);
+cumulativeMultiplicityProbability(const EventCollection& events,
+                                  unsigned int multiplicityMax);
 
 /// @brief This method evaluates the probability that a nuclear interaction is a
 /// soft interaction

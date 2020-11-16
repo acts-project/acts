@@ -42,7 +42,8 @@ int main(int argc, char** argv) {
   extractionConfig.extractionProcess = "Inelastic";
 
   ActsExamples::RootNuclearInteractionParametersWriter::Config writerCfg;
-  writerCfg.inputSimulationProcesses = extractionConfig.outputSimulationProcesses;
+  writerCfg.inputSimulationProcesses =
+      extractionConfig.outputSimulationProcesses;
 
   // Add to the sequencer
   sequencer.addReader(std::make_shared<ActsExamples::HepMC3AsciiReader>(

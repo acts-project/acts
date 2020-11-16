@@ -24,8 +24,7 @@ namespace ActsExamples {
 /// event loop newly provided events are stored until the end of the run. Then
 /// all parts are calculated and written to file.
 class RootNuclearInteractionParametersWriter final
-    : public WriterT<std::vector<
-          ExtractedSimulationProcess>> {
+    : public WriterT<std::vector<ExtractedSimulationProcess>> {
  public:
   struct Config {
     /// Input collection to map measured hits to simulated hits.
@@ -36,7 +35,7 @@ class RootNuclearInteractionParametersWriter final
     std::string outputFilename = "parameters.root";
     /// file access mode.
     std::string fileMode = "RECREATE";
-	
+
     /// Number of bins used for the interaction probability distributions
     unsigned int interactionProbabilityBins = 1e6;
     /// Number of bins used for the momentum distributions
@@ -69,9 +68,7 @@ class RootNuclearInteractionParametersWriter final
   /// m_eventFractionCollection
   ProcessCode writeT(
       const AlgorithmContext& /*ctx*/,
-      const std::vector<
-          ExtractedSimulationProcess>& event)
-      final override;
+      const std::vector<ExtractedSimulationProcess>& event) final override;
 
  private:
   Config m_cfg;             ///< The config class

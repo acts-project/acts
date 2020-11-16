@@ -52,8 +52,8 @@ float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
 }
 }  // namespace
 
-std::pair<Vector, Matrix>
-calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& events) {
+std::pair<Vector, Matrix> calculateMeanAndCovariance(
+    unsigned int multiplicity, const EventProperties& events) {
   // Calculate the mean
   Vector mean = Vector::Zero(multiplicity);
   for (const std::vector<float>& event : events)
@@ -72,9 +72,8 @@ calculateMeanAndCovariance(unsigned int multiplicity, const EventProperties& eve
   return std::make_pair(mean, covariance);
 }
 
-EigenspaceComponents calculateEigenspace(
-    const Vector& mean,
-    const Matrix& covariance) {
+EigenspaceComponents calculateEigenspace(const Vector& mean,
+                                         const Matrix& covariance) {
   // Calculate eigenvalues and eigenvectors
   //~ Eigen::EigenSolver<Matrix<multiplicity_t>> es(covariance);
   Eigen::EigenSolver<Matrix> es(covariance);
@@ -86,8 +85,9 @@ EigenspaceComponents calculateEigenspace(
   return std::make_tuple(eigenvalues, eigenvectors, meanEigenspace);
 }
 
-Parametrisation buildMomentumParameters(
-    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins) {
+Parametrisation buildMomentumParameters(const EventCollection& events,
+                                        unsigned int multiplicity, bool soft,
+                                        unsigned int nBins) {
   // Strip off data
   auto momenta = prepateMomenta(events, multiplicity, soft);
 
@@ -100,8 +100,7 @@ Parametrisation buildMomentumParameters(
       calculateMeanAndCovariance(multiplicity, momentaGaussian);
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
-      calculateEigenspace(meanAndCovariance.first,
-                                              meanAndCovariance.second);
+      calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
   // Calculate the the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
@@ -211,8 +210,9 @@ EventProperties prepareInvariantMasses(const EventCollection& events,
   return result;
 }
 
-Parametrisation buildInvariantMassParameters(
-    const EventCollection& events, unsigned int multiplicity, bool soft, unsigned int nBins) {
+Parametrisation buildInvariantMassParameters(const EventCollection& events,
+                                             unsigned int multiplicity,
+                                             bool soft, unsigned int nBins) {
   // Strip off data
   auto invariantMasses = prepareInvariantMasses(events, multiplicity, soft);
 
@@ -226,8 +226,7 @@ Parametrisation buildInvariantMassParameters(
       calculateMeanAndCovariance(multiplicity, invariantMassesGaussian);
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
-      calculateEigenspace(meanAndCovariance.first,
-                                              meanAndCovariance.second);
+      calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
   // Calculate the the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
@@ -267,7 +266,8 @@ cumulativePDGprobability(const EventCollection& events) {
 }
 
 std::pair<CumulativeDistribution, CumulativeDistribution>
-cumulativeMultiplicityProbability(const EventCollection& events, unsigned int multiplicityMax) {
+cumulativeMultiplicityProbability(const EventCollection& events,
+                                  unsigned int multiplicityMax) {
   // Find the range of both histogram
   unsigned int minSoft = std::numeric_limits<unsigned int>::max();
   unsigned int maxSoft = 0;
@@ -284,16 +284,17 @@ cumulativeMultiplicityProbability(const EventCollection& events, unsigned int mu
   }
 
   // Build and fill the histograms
-  TH1F* softHisto = new TH1F("", "", std::min(maxSoft, multiplicityMax) + 1, minSoft, std::min(maxSoft, multiplicityMax));
-  TH1F* hardHisto = new TH1F("", "", std::max(maxHard, multiplicityMax) + 1, minHard, std::min(maxHard, multiplicityMax));
+  TH1F* softHisto = new TH1F("", "", std::min(maxSoft, multiplicityMax) + 1,
+                             minSoft, std::min(maxSoft, multiplicityMax));
+  TH1F* hardHisto = new TH1F("", "", std::max(maxHard, multiplicityMax) + 1,
+                             minHard, std::min(maxHard, multiplicityMax));
   for (const EventFraction& event : events) {
-	if(event.multiplicity <= multiplicityMax)
-	{
-    if (event.soft)
-      softHisto->Fill(event.multiplicity);
-    else
-      hardHisto->Fill(event.multiplicity);
-	}
+    if (event.multiplicity <= multiplicityMax) {
+      if (event.soft)
+        softHisto->Fill(event.multiplicity);
+      else
+        hardHisto->Fill(event.multiplicity);
+    }
   }
 
   return std::make_pair(softHisto, hardHisto);
