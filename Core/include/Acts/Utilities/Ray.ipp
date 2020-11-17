@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 
 template <typename value_t, size_t DIM>
 Acts::Ray<value_t, DIM>::Ray(const VertexType& origin, const VertexType& dir)

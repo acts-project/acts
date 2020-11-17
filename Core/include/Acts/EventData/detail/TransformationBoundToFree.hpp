@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 

@@ -8,7 +8,7 @@
 
 #include "Acts/Material/Material.hpp"
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <cmath>
 #include <ostream>

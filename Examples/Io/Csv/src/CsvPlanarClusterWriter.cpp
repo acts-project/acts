@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"

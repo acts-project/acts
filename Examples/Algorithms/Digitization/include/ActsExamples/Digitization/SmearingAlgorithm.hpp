@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"

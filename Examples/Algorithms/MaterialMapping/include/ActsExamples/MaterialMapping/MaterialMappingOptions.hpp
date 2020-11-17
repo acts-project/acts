@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <iostream>

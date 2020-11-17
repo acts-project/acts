@@ -8,10 +8,10 @@
 
 #include "DetUtils.h"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include "DD4hep/CartesianGridXZ.h"
 
