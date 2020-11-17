@@ -74,26 +74,6 @@ class IVisualization3D {
   ///
   virtual void clear() = 0;
 
-  /// Below are helper functions, which share the same interface as the ones
-  /// above, but explicitly accept float values (instead of double), converts
-  /// them and calls the above methods.
-  ///
-
-  /// @copydoc Acts::IVisualization3D::vertex(const Vector3D&, ColorRGB)
-  ///
-  void vertex(const Vector3F& vtx, ColorRGB color = {120, 120, 120});
-
-  /// @copydoc Acts::IVisualization3D::face(std::vector<Vector3F>&, ColorRGB)
-  ///
-  void face(const std::vector<Vector3F>& vtxs,
-            ColorRGB color = {120, 120, 120});
-
-  ///  @copydoc Acts::IVisualization3D::line(const Vector3F&, const Vector3F&,
-  /// ColorRGB)
-  ///
-  void line(const Vector3F& a, const Vector3F& b,
-            ColorRGB color = {120, 120, 120});
-
  protected:
   /// Helper: check for extension
   ///

@@ -458,8 +458,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // float  step = (max - min) / float(n);
     // for (size_t i = 0; i <= n; i++) {
     // for (size_t j = 0; j <= n; j++) {
-    // ActsVectorF<2> dir    = {1, 0};
-    // ActsVectorF<2> origin = {min + step * i, min + step * j};
+    // ActsVector<float,2> dir    = {1, 0};
+    // ActsVector<float,2> origin = {min + step * i, min + step * j};
     // origin.x() *= 1.10;  // visual
     // Eigen::Rotation2D<float> rot(2 * M_PI / float(n) * i);
     // float                    angle = 0.5 * M_PI / n * j;
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     using Box = AxisAlignedBoundingBox<Object, float, 2>;
     Object o;
-    Box::Size size(ActsVectorF<2>(2, 2));
+    Box::Size size(ActsVector<float, 2>(2, 2));
 
     n = 10;
     float minx = -20;
@@ -574,7 +574,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           boxes.emplace_back(
-              &o, ActsVectorF<2>{minx + i * stepx, miny + j * stepy}, size);
+              &o, ActsVector<float, 2>{minx + i * stepx, miny + j * stepy},
+              size);
           std::stringstream st;
           st << boxes.size() - 1;
 
@@ -609,7 +610,8 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // BEGIN VISUAL PARAMETER TEST
 
     // size_t n_vtx   = 1;
-    // auto make = [&](double angle, ActsVectorF<3> origin, std::ofstream& os)
+    // auto make = [&](double angle, ActsVector<float,3> origin, std::ofstream&
+    // os)
     // {
     // helper.clear();
     // float    far = 1;
@@ -636,7 +638,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // for (size_t i = 0; i <= s; i++) {
     // for (size_t j = 0; j <= s; j++) {
     // for (size_t k = 0; k <= s; k++) {
-    // ActsVectorF<3> origin(
+    // ActsVector<float,3> origin(
     // min + i * step, min + j * step, min + k * step);
     //// std::cout << origin.transpose() << std::endl;
     // make(M_PI / 4., origin, os);
@@ -650,12 +652,11 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // n_vtx             = 1;
     // Eigen::Affine3f rot;
     // for (size_t i = 0; i <= n; i++) {
-    // ActsVectorF<3> origin(i * 4, 0, 0);
-    // rot = Eigen::AngleAxisf(M_PI / float(n) * i, ActsVectorF<3>::UnitY());
-    // float          angle = (M_PI / 2.) / float(n) * (1 + i);
-    // ActsVectorF<3> dir(1, 0, 0);
-    // Frustum3       fr(origin, rot * dir, angle);
-    // fr.draw(helper, 2);
+    // ActsVector<float,3> origin(i * 4, 0, 0);
+    // rot = Eigen::AngleAxisf(M_PI / float(n) * i,
+    // ActsVector<float,3>::UnitY()); float          angle = (M_PI / 2.) /
+    // float(n) * (1 + i); ActsVector<float,3> dir(1, 0, 0); Frustum3 fr(origin,
+    // rot * dir, angle); fr.draw(helper, 2);
     //}
 
     // os << helper << std::flush;
@@ -850,14 +851,15 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, float, 3>;
-      Box::Size size(ActsVectorF<3>(2, 2, 2));
+      Box::Size size(ActsVector<float, 3>(2, 2, 2));
 
       size_t idx = 0;
 
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVectorF<3> pos(min + i * step, min + j * step, min + k * step);
+            ActsVector<float, 3> pos(min + i * step, min + j * step,
+                                     min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -899,17 +901,17 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // for (size_t i = 0; i <= s; i++) {
     // for (size_t j = 0; j <= s; j++) {
     // for (size_t k = 0; k <= s; k++) {
-    // ActsVectorF<3> origin(
+    // ActsVector<float,3> origin(
     // min + i * step, min + j * step, min + k * step);
-    // ActsVectorF<3> dir(1, 0, 0);
+    // ActsVector<float,3> dir(1, 0, 0);
 
     // Eigen::Affine3f rot;
     // rot = Eigen::AngleAxisf(M_PI / float(s) * i,
-    // ActsVectorF<3>::UnitX())
+    // ActsVector<float,3>::UnitX())
     //* Eigen::AngleAxisf(M_PI / float(s) * j,
-    // ActsVectorF<3>::UnitY())
+    // ActsVector<float,3>::UnitY())
     //* Eigen::AngleAxisf(M_PI / float(s) * k,
-    // ActsVectorF<3>::UnitZ());
+    // ActsVector<float,3>::UnitZ());
 
     // Frustum34 fr(origin, rot * dir, angle);
     // fr.draw(helper, 1);
@@ -924,12 +926,12 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // n_vtx    = 1;
     // for (size_t i = 0; i <= n; i++) {
-    // ActsVectorF<3>  origin(i * 4, 0, 0);
+    // ActsVector<float,3>  origin(i * 4, 0, 0);
     // Eigen::Affine3f rot;
     // rot   = Eigen::AngleAxisf(M_PI / float(n) * i,
-    // ActsVectorF<3>::UnitY());
+    // ActsVector<float,3>::UnitY());
     // angle = (M_PI / 2.) / float(n) * (1 + i);
-    // ActsVectorF<3> dir(1, 0, 0);
+    // ActsVector<float,3> dir(1, 0, 0);
     // Frustum34      fr(origin, rot * dir, angle);
     // fr.draw(helper, 2);
     //}
@@ -1113,13 +1115,14 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
       Object o;
       using Box = AxisAlignedBoundingBox<Object, float, 3>;
-      Box::Size size(ActsVectorF<3>(2, 2, 2));
+      Box::Size size(ActsVector<float, 3>(2, 2, 2));
 
       size_t idx = 0;
       for (size_t i = 0; i <= n; i++) {
         for (size_t j = 0; j <= n; j++) {
           for (size_t k = 0; k <= n; k++) {
-            ActsVectorF<3> pos(min + i * step, min + j * step, min + k * step);
+            ActsVector<float, 3> pos(min + i * step, min + j * step,
+                                     min + k * step);
             Box bb(&o, pos, size);
 
             std::array<int, 3> color = {255, 0, 0};
@@ -1145,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 5 Sides") {
     using Frustum = Frustum<float, 3, 5>;
     using Box = AxisAlignedBoundingBox<Object, float, 3>;
-    Box::Size size(ActsVectorF<3>(2, 2, 2));
+    Box::Size size(ActsVector<float, 3>(2, 2, 2));
 
     Object o;
 
@@ -1167,7 +1170,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 10 Sides") {
     using Frustum = Frustum<float, 3, 10>;
     using Box = AxisAlignedBoundingBox<Object, float, 3>;
-    using vec3 = ActsVectorF<3>;
+    using vec3 = ActsVector<float, 3>;
     Box::Size size(vec3(2, 2, 2));
 
     Object o;
