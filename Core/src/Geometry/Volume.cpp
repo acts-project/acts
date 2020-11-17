@@ -8,8 +8,8 @@
 
 #include "Acts/Geometry/Volume.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <iostream>
 

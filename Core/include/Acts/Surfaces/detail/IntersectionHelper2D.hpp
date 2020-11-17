@@ -10,7 +10,7 @@
 
 #include <array>
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {

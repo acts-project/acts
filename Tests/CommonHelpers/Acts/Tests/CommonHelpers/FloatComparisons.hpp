@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 
 #include <algorithm>
 #include <limits>

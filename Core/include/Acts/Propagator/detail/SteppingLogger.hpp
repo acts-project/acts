@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <memory>
 #include <vector>

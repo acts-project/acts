@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/Vertex.hpp"

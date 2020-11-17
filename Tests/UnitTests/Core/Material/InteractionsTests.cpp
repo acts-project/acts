@@ -9,10 +9,10 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace data = boost::unit_test::data;
 using namespace Acts::UnitLiterals;

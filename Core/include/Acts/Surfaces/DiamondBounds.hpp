@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <algorithm>
 #include <array>
