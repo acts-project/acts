@@ -41,6 +41,7 @@
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+#include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -106,12 +107,12 @@ void setupSimulationAlgorithms(
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, MinP>;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
       ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
-      HitSurfaceSelector>;
+      HitSurfaceSelector, ActsFatras::VoidPostPropagationInteractor>;
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, MinP>;
   using NeutralSimulator = ActsFatras::ParticleSimulator<
-      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface>;
+      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface, ActsFatras::VoidPostPropagationInteractor>;
   // full simulator type for charged and neutrals
   using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                           NeutralSelector, NeutralSimulator>;

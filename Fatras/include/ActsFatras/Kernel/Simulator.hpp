@@ -37,8 +37,9 @@ namespace ActsFatras {
 /// @tparam propagator_t is the type of the underlying propagator
 /// @tparam physics_list_t is the type of the simulated physics list
 /// @tparam hit_surface_selector_t is the type that selects hit surfaces
+/// @tparam post_propagation_interactor_t Type that allows to stop the propagation and manipulate the result after the propagation
 template <typename propagator_t, typename physics_list_t,
-          typename hit_surface_selector_t>
+          typename hit_surface_selector_t, typename post_propagation_interactor_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
@@ -75,7 +76,7 @@ struct ParticleSimulator {
 
     // propagator-related additional types
     using Interactor =
-        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t>;
+        detail::Interactor<generator_t, physics_list_t, hit_surface_selector_t, post_propagation_interactor_t>;
     using InteractorResult = typename Interactor::result_type;
     using Actions = Acts::ActionList<Interactor>;
     using Abort = Acts::AbortList<typename Interactor::ParticleNotAlive,
@@ -93,13 +94,17 @@ struct ParticleSimulator {
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;
     interactor.particle = particle;
+    auto& postPropagationInteractor = options.abortList.template get<typename Interactor::ParticleNotAlive>().postPropagationInteractor;
+    postPropagationInteractor.setAbortConditions(generator, particle);
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.position4(), particle.unitDirection(), particle.absMomentum(),
         particle.charge());
     auto result = propagator.propagate(start, options);
     if (result.ok()) {
-      return result.value().template get<InteractorResult>();
+	  auto& interactorResult = result.value().template get<InteractorResult>();
+	  postPropagationInteractor(generator, interactorResult);
+      return interactorResult;
     } else {
       return result.error();
     }
