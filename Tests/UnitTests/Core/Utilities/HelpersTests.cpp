@@ -43,11 +43,6 @@ BOOST_AUTO_TEST_CASE(phi_helper_test) {
   Vector3D v(0, 1, 0);
   CHECK_CLOSE_ABS(phi(v), M_PI / 2., 1e-9);
 
-  // should work with dynamic types as well
-  ActsVectorXd v2{3};
-  v2 << 0, 1, 0;
-  CHECK_CLOSE_ABS(phi(v2), M_PI / 2., 1e-9);
-
   MyStruct s;
   BOOST_CHECK_EQUAL(phi(s), 42u);
 }
@@ -55,23 +50,12 @@ BOOST_AUTO_TEST_CASE(phi_helper_test) {
 BOOST_AUTO_TEST_CASE(perp_helper_test) {
   Vector3D v(1, 2, 3);
   CHECK_CLOSE_ABS(perp(v), std::sqrt(1 + 2 * 2), 1e-9);
-
-  // should work with dynamic types as well
-  ActsVectorXd v2{3};
-  v2 << 1, 2, 3;
-  CHECK_CLOSE_ABS(perp(v2), std::sqrt(1 + 2 * 2), 1e-9);
 }
 
 BOOST_AUTO_TEST_CASE(theta_eta_test_helper) {
   Vector3D v(1, 2, 3);
   CHECK_CLOSE_ABS(theta(v), 0.640522, 1e-5);
   CHECK_CLOSE_ABS(eta(v), 1.10359, 1e-5);
-
-  // should work with dynamic types as well
-  ActsVectorXd v2{3};
-  v2 << 1, 2, 3;
-  CHECK_CLOSE_ABS(theta(v2), 0.640522, 1e-5);
-  CHECK_CLOSE_ABS(eta(v2), 1.10359, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(cross_test_helper) {
@@ -85,20 +69,6 @@ BOOST_AUTO_TEST_CASE(cross_test_helper) {
     exp << -2, -1, 0, 4, 2, 0, -2, -1, 0;
 
     CHECK_CLOSE_ABS(act, exp, 1e-9);
-  }
-
-  // should work with dynamic types as well
-  {
-    ActsVectorXd v{3};
-    v << 1, 2, 3;
-    ActsMatrixXd mat{3, 3};
-    mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
-
-    ActsMatrixXd act = cross(mat, v);
-    ActsMatrixXd exp{3, 3};
-    exp << -2, -1, 0, 4, 2, 0, -2, -1, 0;
-
-    BOOST_CHECK(act.isApprox(exp, 1e-9));
   }
 }
 
