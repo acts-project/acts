@@ -15,23 +15,22 @@ class G4VPhysicalVolume;
 
 namespace ActsFatras {
 /// @brief This class produces a dummy Geant4 detector
-class G4DetectorConstruction : public G4VUserDetectorConstruction
-{
-public:
-/// Destructor
+class G4DetectorConstruction : public G4VUserDetectorConstruction {
+ public:
+  /// Destructor
   ~G4DetectorConstruction();
 
-/// @brief Interface method for Geant4
+  /// @brief Interface method for Geant4
   G4VPhysicalVolume* Construct();
 
-private:
-/// @brief This method builds a dummy Geant4 detector
+ private:
+  /// @brief This method builds a dummy Geant4 detector
   void dummyDetector();
 
   // Logical volume
-  G4LogicalVolume*          m_worldLog = nullptr;
+  G4LogicalVolume* m_worldLog = nullptr;
 
   // Physical volume
-  G4VPhysicalVolume*        m_worldPhys = nullptr;
+  G4VPhysicalVolume* m_worldPhys = nullptr;
 };
-}
+}  // namespace ActsFatras

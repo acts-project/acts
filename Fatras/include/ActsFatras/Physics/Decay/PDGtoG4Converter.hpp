@@ -12,32 +12,31 @@
 
 class G4ParticleDefinition;
 
-namespace ActsFatras
-{
-	/// @brief This class converts a PDG ID into a corresponding Geant4 particle.
-  class PDGtoG4Converter
-  {
-  public:
-    /// Constructor
-    PDGtoG4Converter();
+namespace ActsFatras {
+/// @brief This class converts a PDG ID into a corresponding Geant4 particle.
+class PDGtoG4Converter {
+ public:
+  /// Constructor
+  PDGtoG4Converter();
 
-/// @brief Converts a PDG ID into the corresponding Geant4 particle
-///
-/// @param [in] pdgCode The PDG ID
-///
-/// @return Pointer to the Geant4 particle
-G4ParticleDefinition* getParticleDefinition( int pdgCode) const;
+  /// @brief Converts a PDG ID into the corresponding Geant4 particle
+  ///
+  /// @param [in] pdgCode The PDG ID
+  ///
+  /// @return Pointer to the Geant4 particle
+  G4ParticleDefinition* getParticleDefinition(int pdgCode) const;
 
-  private:
-    /// @brief This method fills the internal storage with Geant4 particles and their PDG IDs for later lookup
-    void fillPredefinedParticles();
-    
-/// @brief This method adds a certain Particle to the internal storage
-///
-/// @param [in] pDef The Geant4 particle that will be added
-void addParticle( G4ParticleDefinition* pDef);
-    
-    /// The internal storage consisting of PDG ID and the Geant4 particle
-    std::unordered_map<int,G4ParticleDefinition*> m_pdgG4ParticleMap;
-  };
-}
+ private:
+  /// @brief This method fills the internal storage with Geant4 particles and
+  /// their PDG IDs for later lookup
+  void fillPredefinedParticles();
+
+  /// @brief This method adds a certain Particle to the internal storage
+  ///
+  /// @param [in] pDef The Geant4 particle that will be added
+  void addParticle(G4ParticleDefinition* pDef);
+
+  /// The internal storage consisting of PDG ID and the Geant4 particle
+  std::unordered_map<int, G4ParticleDefinition*> m_pdgG4ParticleMap;
+};
+}  // namespace ActsFatras
