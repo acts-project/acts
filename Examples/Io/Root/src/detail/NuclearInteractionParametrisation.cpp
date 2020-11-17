@@ -12,6 +12,8 @@
 #include <Eigen/Eigenvalues>
 #include <TMath.h>
 
+#include <iostream>
+
 namespace NuclearInteractionParametrisation {
 namespace {
 
@@ -46,9 +48,9 @@ float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
                     const ActsExamples::SimParticle::Vector4& fourVector2) {
   ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
   const ActsExamples::SimParticle::Scalar energy = sum[Acts::eEnergy];
-  ActsExamples::SimParticle::Vector3 momentum =
-      sum.template segment<3>(Acts::eMom0);
-  return std::sqrt(energy * energy - momentum.norm());
+  ActsExamples::SimParticle::Scalar momentum =
+      sum.template segment<3>(Acts::eMom0).norm();
+  return std::sqrt(energy * energy - momentum * momentum);
 }
 }  // namespace
 
@@ -318,14 +320,16 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
   float min = std::numeric_limits<float>::max();
   float max = 0.;
   for (const EventFraction& event : events) {
-    min = std::min((float)event.initialParticle.pathInL0(), min);
-    max = std::max((float)event.initialParticle.pathInL0(), max);
+    min = std::min((float)event.interactingParticle.pathInL0(), min);
+    max = std::max((float)event.interactingParticle.pathInL0(), max);
   }
 
   // Fill the histogram
   TH1F* histo = new TH1F("", "", interactionProbabilityBins, min, max);
   for (const EventFraction& event : events)
-    histo->Fill(event.initialParticle.pathInL0());
+  {
+    histo->Fill(event.interactingParticle.pathInL0());
+  }
 
   // Build the distributions
   return histo;  // TODO: in this case the normalisation is not taking into
