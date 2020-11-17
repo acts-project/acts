@@ -270,7 +270,7 @@ Acts::Result<void> Acts::
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
-        if (not trkAtVtx.isLinearized) {
+        if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
               vertexingOptions.geoContext, vertexingOptions.magFieldContext,
@@ -278,17 +278,11 @@ Acts::Result<void> Acts::
           if (!result.ok()) {
             return result.error();
           }
-          trkAtVtx.linearizedState = *result;
-          trkAtVtx.isLinearized = true;
-        } else if (state.vtxInfoMap[vtx].relinearize) {
-          auto result = linearizer.linearizeTrack(
-              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
-              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-              state.linearizerState);
-          if (!result.ok()) {
-            return result.error();
+
+          if (trkAtVtx.isLinearized) {
+            state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
           }
-          state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
+
           trkAtVtx.linearizedState = *result;
           trkAtVtx.isLinearized = true;
         }
