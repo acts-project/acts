@@ -8,8 +8,17 @@ add_library(
   src/EventData/ProcessType.cpp
   src/Kernel/SimulatorError.cpp
   src/Physics/StandardPhysicsLists.cpp
+  src/Physics/Decay/Decay.cpp
+  src/Physics/Decay/PDGtoG4Converter.cpp
+  src/Physics/Decay/G4DetectorConstruction.cpp
   src/Utilities/LandauDistribution.cpp
   src/Utilities/ParticleData.cpp)
+target_compile_definitions(
+  ActsFatras
+  PUBLIC ${Geant4_DEFINITIONS})
+target_include_directories(
+  ActsFatras
+  SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
 target_compile_features(
   ActsFatras
   PUBLIC cxx_std_17)
@@ -20,7 +29,7 @@ target_include_directories(
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(
   ActsFatras
-  PUBLIC ActsCore)
+  PUBLIC ActsCore ${Geant4_LIBRARIES})
 
 install(
   TARGETS ActsFatras
