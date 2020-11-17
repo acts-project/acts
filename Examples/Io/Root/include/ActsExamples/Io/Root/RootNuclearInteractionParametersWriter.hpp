@@ -11,7 +11,6 @@
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Root/detail/NuclearInteractionParametrisation.hpp"
-//~ #include "ActsExamples/Utilities/detail/ExtractedSimulationProcess.hpp"
 
 #include <mutex>
 #include <vector>

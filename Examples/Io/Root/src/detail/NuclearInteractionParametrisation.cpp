@@ -326,8 +326,7 @@ CumulativeDistribution cumulativeNuclearInteractionProbability(
 
   // Fill the histogram
   TH1F* histo = new TH1F("", "", interactionProbabilityBins, min, max);
-  for (const EventFraction& event : events)
-  {
+  for (const EventFraction& event : events) {
     histo->Fill(event.interactingParticle.pathInL0());
   }
 
