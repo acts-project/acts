@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
+#include "ActsExamples/Utilities/detail/ExtractedSimulationProcess.hpp"
 
 #include <unordered_map>
 #include <TH1F.h>
