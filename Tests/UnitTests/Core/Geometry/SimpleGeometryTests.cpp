@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 using namespace Acts::UnitLiterals;
 

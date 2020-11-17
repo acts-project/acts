@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 
 #include <type_traits>
 

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <autodiff/forward.hpp>
 #include <autodiff/forward/eigen.hpp>

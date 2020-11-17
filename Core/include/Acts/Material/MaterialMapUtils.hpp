@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 

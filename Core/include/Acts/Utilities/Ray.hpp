@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 namespace Acts {

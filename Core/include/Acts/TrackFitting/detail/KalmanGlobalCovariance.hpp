@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <unordered_map>
 

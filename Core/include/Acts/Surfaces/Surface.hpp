@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/AlignmentDefinitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
@@ -17,10 +19,8 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
-#include "Acts/Utilities/AlignmentDefinitions.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 

@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include "TrackingVolumeCreation.hpp"
 

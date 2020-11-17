@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 
 #include <functional>

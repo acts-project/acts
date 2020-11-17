@@ -10,8 +10,8 @@
 
 #include <utility>
 
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace ActsFatras {

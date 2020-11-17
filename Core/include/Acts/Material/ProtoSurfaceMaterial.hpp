@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Definitions.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <iosfwd>
 

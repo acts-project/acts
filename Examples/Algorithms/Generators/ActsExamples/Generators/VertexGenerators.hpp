@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Definitions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <random>

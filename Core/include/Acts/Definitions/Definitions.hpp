@@ -8,7 +8,9 @@
 
 #pragma once
 
-#include "Acts/Utilities/AlgebraDefinitions.hpp"
+#include "Acts/Definitions/AlgebraDefinitions.hpp"
+
+#include <limits>
 
 namespace Acts {
 
