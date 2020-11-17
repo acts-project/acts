@@ -22,6 +22,7 @@
 
 namespace Acts {
 
+/// This is the Scalar used for all EDM and Geometry based object
 using AlgebraScalar = double;
 
 // Eigen definitions
@@ -57,13 +58,6 @@ using ActsMatrixXd = ActsMatrixX<AlgebraScalar>;
 template <typename T>
 using ActsVectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 
-using ActsVectorXd = ActsVectorX<AlgebraScalar>;
-
-template <typename T>
-using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
-
-using ActsRowVectorXd = ActsRowVectorX<AlgebraScalar>;
-
 /// @defgroup fixed-algebra-types Fixed-size vector/matrix e.g. for coordinates
 ///
 /// These predefined types should always be used when handling the coordinate
@@ -85,12 +79,10 @@ using SymMatrix4D = ActsSymMatrix<AlgebraScalar, 4>;
 // pure translation transformations
 using Translation2D = Eigen::Translation<AlgebraScalar, 2>;
 using Translation3D = Eigen::Translation<AlgebraScalar, 3>;
-using Translation4D = Eigen::Translation<AlgebraScalar, 4>;
 
 // linear (rotation) matrices
 using RotationMatrix2D = Eigen::Matrix<AlgebraScalar, 2, 2>;
 using RotationMatrix3D = Eigen::Matrix<AlgebraScalar, 3, 3>;
-using RotationMatrix4D = Eigen::Matrix<AlgebraScalar, 4, 4>;
 
 // pure rotation transformations. only available in 2d and 3d
 using Rotation2D = Eigen::Rotation2D<AlgebraScalar>;
@@ -100,9 +92,7 @@ using AngleAxis3D = Eigen::AngleAxis<AlgebraScalar>;
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix
 // - 3d affine stored as 4x4 matrix
-// - 4d affine compact stored as 4x5 matrix
 using Transform2D = Eigen::Transform<AlgebraScalar, 2, Eigen::AffineCompact>;
 using Transform3D = Eigen::Transform<AlgebraScalar, 3, Eigen::Affine>;
-using Transform4D = Eigen::Transform<AlgebraScalar, 4, Eigen::AffineCompact>;
 
 }  // namespace Acts
