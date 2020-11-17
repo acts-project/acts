@@ -76,10 +76,12 @@ class GridDensityVertexFinder {
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
     // The main density grid
-    ActsVectorF<mainGridSize> mainGrid = ActsVectorF<mainGridSize>::Zero();
+    ActsVector<float, mainGridSize> mainGrid =
+        ActsVector<float, mainGridSize>::Zero();
     // Map to store z-bin and track grid (i.e. the density contribution of
     // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*, std::pair<int, ActsVectorF<trkGridSize>>>
+    std::map<const InputTrack_t*,
+             std::pair<int, ActsVector<float, trkGridSize>>>
         binAndTrackGridMap;
 
     // Map to store bool if track has passed track selection or not

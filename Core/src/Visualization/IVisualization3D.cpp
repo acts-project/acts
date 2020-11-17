@@ -8,26 +8,6 @@
 
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-void Acts::IVisualization3D::vertex(const Vector3F& vtx, ColorRGB color) {
-  Vector3D vtxd = vtx.template cast<double>();
-  vertex(vtxd, color);
-}
-
-void Acts::IVisualization3D::face(const std::vector<Vector3F>& vtxs,
-                                  ColorRGB color) {
-  std::vector<Vector3D> vtxsd;
-  std::transform(vtxs.begin(), vtxs.end(), std::back_inserter(vtxsd),
-                 [](auto& v) { return v.template cast<double>(); });
-  face(vtxsd, color);
-}
-
-void Acts::IVisualization3D::line(const Vector3F& a, const Vector3F& b,
-                                  ColorRGB color) {
-  Vector3D ad = a.template cast<double>();
-  Vector3D bd = b.template cast<double>();
-  line(ad, bd, color);
-}
-
 bool Acts::IVisualization3D::hasExtension(const std::string& path) const {
   return (path.find(".") != std::string::npos);
 }
