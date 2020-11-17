@@ -349,8 +349,12 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   // The file
   TFile tf(m_cfg.outputFilename.c_str(), m_cfg.fileMode.c_str());
   gDirectory->cd();
-  gDirectory->mkdir(std::to_string(m_eventFractionCollection[0].initialParticle.pdg()).c_str());
-  gDirectory->cd(std::to_string(m_eventFractionCollection[0].initialParticle.pdg()).c_str());
+  gDirectory->mkdir(
+      std::to_string(m_eventFractionCollection[0].initialParticle.pdg())
+          .c_str());
+  gDirectory->cd(
+      std::to_string(m_eventFractionCollection[0].initialParticle.pdg())
+          .c_str());
   gDirectory->mkdir(
       std::to_string(m_eventFractionCollection[0].initialMomentum).c_str());
   gDirectory->cd(
