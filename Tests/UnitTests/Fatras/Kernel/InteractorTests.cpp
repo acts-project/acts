@@ -14,8 +14,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "ActsFatras/Kernel/detail/Interactor.hpp"
-#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
+#include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <limits>
 #include <random>
@@ -80,7 +80,8 @@ struct Fixture {
   using Generator = std::ranlux48;
   using Interactor =
       typename ActsFatras::detail::Interactor<Generator, MockPhysicsList,
-                                              SurfaceSelector, VoidPostPropagationInteractor>;
+                                              SurfaceSelector,
+                                              VoidPostPropagationInteractor>;
   using InteractorResult = typename Interactor::result_type;
 
   Generator generator;

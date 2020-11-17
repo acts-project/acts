@@ -34,6 +34,7 @@
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
@@ -41,7 +42,6 @@
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
-#include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -112,7 +112,8 @@ void setupSimulationAlgorithms(
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, MinP>;
   using NeutralSimulator = ActsFatras::ParticleSimulator<
-      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface, ActsFatras::VoidPostPropagationInteractor>;
+      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface,
+      ActsFatras::VoidPostPropagationInteractor>;
   // full simulator type for charged and neutrals
   using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                           NeutralSelector, NeutralSimulator>;

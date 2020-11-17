@@ -19,11 +19,11 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
 #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
-#include "ActsFatras/Kernel/detail/VoidPostPropagationInteractor.hpp"
 
 #include <algorithm>
 #include <random>
@@ -72,12 +72,14 @@ using ChargedPhysicsList =
                             SplitEnergyLoss>;
 using ChargedSimulator =
     ActsFatras::ParticleSimulator<ChargedPropagator, ChargedPhysicsList,
-                                  ActsFatras::EverySurface, ActsFatras::VoidPostPropagationInteractor>;
+                                  ActsFatras::EverySurface,
+                                  ActsFatras::VoidPostPropagationInteractor>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
 using NeutralSimulator =
     ActsFatras::ParticleSimulator<NeutralPropagator, ActsFatras::PhysicsList<>,
-                                  ActsFatras::NoSurface, ActsFatras::VoidPostPropagationInteractor>;
+                                  ActsFatras::NoSurface,
+                                  ActsFatras::VoidPostPropagationInteractor>;
 // full simulator type for charged and neutrals
 using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                         NeutralSelector, NeutralSimulator>;

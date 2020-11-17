@@ -31,7 +31,8 @@ namespace detail {
 /// @tparam physics_list_t is a simulation physics lists
 /// @tparam hit_surface_selector_t is a selector of sensitive hit surfaces
 template <typename generator_t, typename physics_list_t,
-          typename hit_surface_selector_t, typename post_propagation_interactor_t>
+          typename hit_surface_selector_t,
+          typename post_propagation_interactor_t>
 struct Interactor {
   using result_type = SimulationResult;
 
@@ -43,11 +44,13 @@ struct Interactor {
     template <typename propagator_state_t, typename stepper_t>
     constexpr bool operator()(propagator_state_t &, const stepper_t &,
                               const result_type &result) const {
-	  return not result.isAlive || postPropagationInteractor(result.pathInX0, result.pathInL0, result.particle.time());
+      return not result.isAlive ||
+             postPropagationInteractor(result.pathInX0, result.pathInL0,
+                                       result.particle.time());
     }
-    
-      /// Action that only occurs if the propagation ends
-	post_propagation_interactor_t postPropagationInteractor;
+
+    /// Action that only occurs if the propagation ends
+    post_propagation_interactor_t postPropagationInteractor;
   };
 
   /// Random number generator used for the simulation.
