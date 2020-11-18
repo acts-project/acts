@@ -24,8 +24,8 @@ namespace Acts {
 
 /// This is the Scalar used for all EDM and Geometry based object,
 /// can be customised.
-#ifdef ACTS_CUSTOM_SCALAR
-using AlgebraScalar = ACTS_CUSTOM_SCALAR;
+#ifdef ACTS_CUSTOM_SCALARTYPE
+using AlgebraScalar = ACTS_CUSTOM_SCALARTYPE;
 #else
 using AlgebraScalar = double;
 #endif
