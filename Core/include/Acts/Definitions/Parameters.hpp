@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/AlgebraDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <type_traits>
 

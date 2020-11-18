@@ -8,7 +8,7 @@
 
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObjectSorter.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/NavigationLayer.hpp"

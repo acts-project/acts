@@ -10,7 +10,7 @@
 // BinUtility.h, Acts project
 ///////////////////////////////////////////////////////////////////
 #pragma once
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"

@@ -13,8 +13,7 @@
 #pragma once
 #include <limits>
 
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 namespace Acts {
 
 ///  @struct Intersection

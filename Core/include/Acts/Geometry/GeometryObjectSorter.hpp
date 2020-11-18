@@ -14,8 +14,7 @@
 // clang-format on
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <functional>
 
 namespace Acts {

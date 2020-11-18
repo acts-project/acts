@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"

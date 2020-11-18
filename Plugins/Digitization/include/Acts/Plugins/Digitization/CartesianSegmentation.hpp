@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"

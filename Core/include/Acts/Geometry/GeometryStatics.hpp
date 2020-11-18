@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Definitions/AlgebraDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 /// Define statics for Geometry in Tracking
 ///

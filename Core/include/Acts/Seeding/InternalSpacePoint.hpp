@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <array>
 #include <cmath>
 #include <limits>

@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell

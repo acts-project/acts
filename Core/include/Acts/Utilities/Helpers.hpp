@@ -6,14 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// AlgebraHelper.h, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
