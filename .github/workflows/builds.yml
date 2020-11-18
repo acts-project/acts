@@ -6,7 +6,7 @@ on:
     branches:
       - master
       - 'release/**'
-    
+
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
 
