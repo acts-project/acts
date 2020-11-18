@@ -23,7 +23,7 @@
 namespace Acts {
 
 /// This is the Scalar used for all EDM and Geometry based object
-using AlgebraScalar = float;
+using AlgebraScalar = double;
 
 template <typename T, unsigned int rows, unsigned int cols>
 using ActsMatrix = Eigen::Matrix<T, rows, cols>;

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"

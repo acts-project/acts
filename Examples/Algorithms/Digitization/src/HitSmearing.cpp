@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/Index.hpp"

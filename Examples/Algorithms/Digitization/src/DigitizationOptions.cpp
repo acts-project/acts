@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"

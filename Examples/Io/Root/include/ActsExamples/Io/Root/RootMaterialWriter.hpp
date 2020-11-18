@@ -13,7 +13,7 @@
 #pragma once
 
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include <Acts/Definitions/Definitions.hpp>
+#include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>

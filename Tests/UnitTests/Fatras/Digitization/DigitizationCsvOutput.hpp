@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <fstream>
 
 namespace ActsFatras {

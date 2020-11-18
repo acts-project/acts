@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
