@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"

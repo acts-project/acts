@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/EventData/detail/DifferenceCalculator.hpp"
 #include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"

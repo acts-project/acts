@@ -11,7 +11,7 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"

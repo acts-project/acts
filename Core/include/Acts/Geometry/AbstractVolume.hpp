@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Volume.hpp"
 

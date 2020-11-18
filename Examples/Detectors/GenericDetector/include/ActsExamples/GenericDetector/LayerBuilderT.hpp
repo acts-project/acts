@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"

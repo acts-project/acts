@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"

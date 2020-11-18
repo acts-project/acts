@@ -14,7 +14,7 @@
 #include <random>
 #include <vector>
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"

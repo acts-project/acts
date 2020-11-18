@@ -8,26 +8,27 @@
 
 #pragma once
 
-#include "Acts/Definitions/AlgebraDefinitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <limits>
 
 namespace Acts {
 
 /// Tolerance for bein numerical equal for geometry building
-static constexpr double s_epsilon = 3 * std::numeric_limits<double>::epsilon();
+static constexpr AlgebraScalar s_epsilon =
+    3 * std::numeric_limits<AlgebraScalar>::epsilon();
 
 /// Tolerance for being on Surface
 ///
 /// @note This is intentionally given w/o an explicit unit to avoid having
 ///       to include the units header unneccessarily. With the native length
 ///       unit of mm this corresponds to 0.1um.
-static constexpr double s_onSurfaceTolerance = 1e-4;
+static constexpr AlgebraScalar s_onSurfaceTolerance = 1e-4;
 
 /// Tolerance for not being within curvilinear projection
 /// this allows using the same curvilinear frame to eta = 6,
 /// validity tested with IntegrationTests/PropagationTest
-static constexpr double s_curvilinearProjTolerance = 0.999995;
+static constexpr AlgebraScalar s_curvilinearProjTolerance = 0.999995;
 
 /// @enum NavigationDirection
 /// The navigation direciton is always with

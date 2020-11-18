@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 

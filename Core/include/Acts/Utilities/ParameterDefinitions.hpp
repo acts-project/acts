@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <type_traits>
 
 // The user can override the (track) parameter ordering and underlying scalar

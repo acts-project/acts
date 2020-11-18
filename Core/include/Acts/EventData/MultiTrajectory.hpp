@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/ParameterDefinitions.hpp"
+#include "Acts/Definitions/Parameters.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
