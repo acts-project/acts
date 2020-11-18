@@ -32,7 +32,7 @@ jobs:
         # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >
           stat ${SETUP} &&
-          source ${SETUP} &&
+          . ${SETUP} &&
           mkdir build && cd build &&
           cmake ..
           -GNinja
@@ -41,20 +41,20 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
       - name: Build
-        run: source ${SETUP} && cmake --build build -- 
+        run: . ${SETUP} && cmake --build build -- 
       - name: Unit tests
-        run: source ${SETUP} && cmake --build build -- test
+        run: . ${SETUP} && cmake --build build -- test
       - name: Integration tests
-        run: source ${SETUP} && cmake --build build -- integrationtests
+        run: . ${SETUP} && cmake --build build -- integrationtests
       - name: Install
-        run: source ${SETUP} && cmake --build build -- install
+        run: . ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
         with:
           name: acts-${{ matrix.image }}
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          source ${SETUP} &&
+          . ${SETUP} &&
           mkdir build-downstream && cd build-downstream &&
           cmake ../Tests/DownstreamProject
           -GNinja
@@ -62,9 +62,9 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
-        run: source ${SETUP} && cmake --build build-downstream --
+        run: . ${SETUP} && cmake --build build-downstream --
       - name: Downstream run
-        run: source ${SETUP} && ./build-downstream/bin/ShowActsVersion
+        run: . ${SETUP} && ./build-downstream/bin/ShowActsVersion
   macos:
     runs-on: macos-10.15
     env:
