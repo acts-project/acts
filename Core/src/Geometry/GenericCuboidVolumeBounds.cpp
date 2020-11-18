@@ -87,7 +87,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     // z is normal in local coordinates
     // Volume local to surface local
     Transform3D vol2srf;
-    vol2srf = (Eigen::Quaternion<double>().setFromTwoVectors(
+    vol2srf = (Eigen::Quaternion<Transform3D::Scalar>().setFromTwoVectors(
         normal, Vector3D::UnitZ()));
 
     vol2srf = vol2srf * Translation3D(-ctrd);
