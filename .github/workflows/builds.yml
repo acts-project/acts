@@ -21,18 +21,17 @@ jobs:
           - centos7-lcg96
           - ubuntu2004
     env:
-      SETUP: CI/null_setup.sh
+      SETUP: true
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
-        run: echo "SETUP=/opt/lcg_view/setup.sh" >> $GITHUB_ENV
+        run: echo "SETUP='. /opt/lcg_view/setup.sh'" >> $GITHUB_ENV
       - name: Configure
         # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >
-          stat ${SETUP} &&
-          . ${SETUP} &&
+          ${SETUP} &&
           mkdir build && cd build &&
           cmake ..
           -GNinja
@@ -41,20 +40,20 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_BUILD_EVERYTHING=on
       - name: Build
-        run: . ${SETUP} && cmake --build build -- 
+        run: ${SETUP} && cmake --build build -- 
       - name: Unit tests
-        run: . ${SETUP} && cmake --build build -- test
+        run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
-        run: . ${SETUP} && cmake --build build -- integrationtests
+        run: ${SETUP} && cmake --build build -- integrationtests
       - name: Install
-        run: . ${SETUP} && cmake --build build -- install
+        run: ${SETUP} && cmake --build build -- install
       - uses: actions/upload-artifact@v2
         with:
           name: acts-${{ matrix.image }}
           path: ${{ env.INSTALL_DIR }}
       - name: Downstream configure
         run: >
-          . ${SETUP} &&
+          ${SETUP} &&
           mkdir build-downstream && cd build-downstream &&
           cmake ../Tests/DownstreamProject
           -GNinja
@@ -62,9 +61,9 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
-        run: . ${SETUP} && cmake --build build-downstream --
+        run: ${SETUP} && cmake --build build-downstream --
       - name: Downstream run
-        run: . ${SETUP} && ./build-downstream/bin/ShowActsVersion
+        run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
   macos:
     runs-on: macos-10.15
     env:
