@@ -22,8 +22,13 @@
 
 namespace Acts {
 
-/// This is the Scalar used for all EDM and Geometry based object
+/// This is the Scalar used for all EDM and Geometry based object,
+/// can be customised.
+#ifdef ACTS_CUSTOM_SCALAR
+using AlgebraScalar = ACTS_CUSTOM_SCALAR;
+#else
 using AlgebraScalar = double;
+#endif
 
 template <typename T, unsigned int rows, unsigned int cols>
 using ActsMatrix = Eigen::Matrix<T, rows, cols>;
