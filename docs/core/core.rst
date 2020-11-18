@@ -7,6 +7,8 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
 .. toctree::
    :maxdepth: 1
 
+   definitions/algebra
+   definitions/units
    eventdata
    geometry
    magnetic_field
@@ -15,5 +17,4 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    seeding
    utilities/grid_axis
    utilities/logging
-   utilities/units
    visualization/visualization
