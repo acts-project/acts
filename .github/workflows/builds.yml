@@ -6,10 +6,6 @@ on:
     branches:
       - master
       - 'release/**'
-
-defaults:
-  run:
-    shell: bash
     
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
@@ -31,7 +27,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
-        run: echo "SETUP=.\ /opt/lcg_view/setup.sh" >> $GITHUB_ENV
+        run: echo 'SETUP=". /opt/lcg_view/setup.sh"' >> $GITHUB_ENV
       - name: Configure
         # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >
