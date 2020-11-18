@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Definitions.hpp"
+#include "Acts/Definitions/AlgebraDefinitions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
@@ -75,13 +75,13 @@ struct BoundTrackParametersConceptImpl {
   constexpr static bool hasMethodPositionFromContext =
       identical_to<Vector3D, ReturnTypePositionFromContext, const T>;
   constexpr static bool hasMethodTime =
-      identical_to<double, ReturnTypeTime, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeTime, const T>;
   constexpr static bool hasMethodUnitDirection =
       identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
   constexpr static bool hasMethodAbsoluteMomentum =
-      identical_to<double, ReturnTypeAbsoluteMomentum, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =
-      identical_to<double, ReturnTypeCharge, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeCharge, const T>;
   constexpr static bool hasMethodReferenceSurface =
       identical_to<const Surface&, ReturnTypeReferenceSurface, const T>;
 
@@ -132,13 +132,13 @@ struct FreeTrackParametersConceptImpl {
   constexpr static bool hasMethodPosition =
       identical_to<Vector3D, ReturnTypePosition, const T>;
   constexpr static bool hasMethodTime =
-      identical_to<double, ReturnTypeTime, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeTime, const T>;
   constexpr static bool hasMethodUnitDirection =
       identical_to<Vector3D, ReturnTypeUnitDirection, const T>;
   constexpr static bool hasMethodAbsoluteMomentum =
-      identical_to<double, ReturnTypeAbsoluteMomentum, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeAbsoluteMomentum, const T>;
   constexpr static bool hasMethodCharge =
-      identical_to<double, ReturnTypeCharge, const T>;
+      identical_to<TypeScalar<T>, ReturnTypeCharge, const T>;
 
   // provide meaningful error messages in case of non-compliance
   static_assert(hasTypeScalar, "Scalar type is missing");
