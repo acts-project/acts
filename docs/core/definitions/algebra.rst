@@ -9,7 +9,8 @@ The basic scalar type can be defined via this file and is set per default to `do
    #ifdef ACTS_CUSTOM_SCALAR
    using AlgebraScalar = ACTS_CUSTOM_SCALAR;
    #else 
-   using AlgebraScalar = double;#endif
+   using AlgebraScalar = double;
+   #endif
 
 It is recommended within the code to deduce the Scalar type from the Event Data object, e.g.
 
