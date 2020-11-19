@@ -120,7 +120,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   for (const auto& particle : particles) {
     const auto it1 = truthCount.find(particle.particleId());
     bool isMatched = false;
-    bool isDuplicated = false;
     int nMatchedSeedsForParticle = 0;
     if (it1 != truthCount.end()) {
       isMatched = true;
@@ -129,8 +128,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       if (nMatchedSeedsForParticle > 1)
        {nDuplicatedParticles++;}
     }
-    if (isDuplicated)
-      nDuplicatedParticles++;
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }
 
