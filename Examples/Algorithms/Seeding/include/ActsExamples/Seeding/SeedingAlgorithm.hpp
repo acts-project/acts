@@ -11,6 +11,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
@@ -53,6 +55,12 @@ class SeedingAlgorithm final : public BareAlgorithm {
     Acts::Vector2D beamPos = {0., 0.};
     float impactMax = 3.;
     std::vector<int> seedVolumes = {7, 8, 9};
+
+    Acts::SeedfinderConfig<SimSpacePoint> finderConf;
+
+    Acts::SeedFilterConfig sfconf;
+
+    Acts::SpacePointGridConfig gridConf;
   };
 
   /// Construct the digitization algorithm.
