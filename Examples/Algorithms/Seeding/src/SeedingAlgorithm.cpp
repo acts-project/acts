@@ -27,7 +27,6 @@
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
-#include "ActsExamples/Seeding/GenericDetectorCuts.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -111,10 +110,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       Acts::BinFinder<SimSpacePoint>());
   Acts::SeedFilterConfig sfconf;
   sfconf.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  Acts::GenericDetectorCuts<SimSpacePoint> detectorCuts =
-      Acts::GenericDetectorCuts<SimSpacePoint>();
   finderConf.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-      Acts::SeedFilter<SimSpacePoint>(sfconf, &detectorCuts));
+      Acts::SeedFilter<SimSpacePoint>(sfconf));
   Acts::Seedfinder<SimSpacePoint> seedFinder(finderConf);
 
   // covariance tool, sets covariances per spacepoint as required
