@@ -57,7 +57,7 @@ enum BoundIndices : unsigned int {
 };
 
 /// Underlying fundamental Scalar type for bound track parameters.
-using BoundScalar = AlgebraScalar;
+using BoundScalar = ActsScalar;
 
 /// Components of a free track parameters vector.
 ///
@@ -86,7 +86,7 @@ enum FreeIndices : unsigned int {
 };
 
 /// Underlying fundamental Scalar type for free track parameters.
-using FreeScalar = AlgebraScalar;
+using FreeScalar = ActsScalar;
 
 }  // namespace Acts
 #endif

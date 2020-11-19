@@ -20,7 +20,7 @@ namespace Acts {
 
 /// A constrained step class for the steppers
 struct ConstrainedStep {
-  using StepScalar = AlgebraScalar;
+  using StepScalar = ActsScalar;
 
   /// the types of constraints
   /// from accuracy - this can vary up and down given a good step estimator

@@ -48,7 +48,7 @@ class Grid final {
   /// constant reference type to values stored
   using const_reference = const value_type&;
   /// type for points in d-dimensional grid space
-  using point_t = std::array<AlgebraScalar, DIM>;
+  using point_t = std::array<ActsScalar, DIM>;
   /// index type using local bin indices along each axis
   using index_t = std::array<size_t, DIM>;
 
@@ -164,7 +164,7 @@ class Grid final {
   ///
   /// @pre All local bin indices must be a valid index for the corresponding
   ///      axis (excluding the under-/overflow bins for each axis).
-  std::array<AlgebraScalar, DIM> binCenter(const index_t& localBins) const {
+  std::array<ActsScalar, DIM> binCenter(const index_t& localBins) const {
     return grid_helper::getBinCenter(localBins, m_axes);
   }
 
@@ -330,19 +330,19 @@ class Grid final {
   ///
   /// @note This function is available only if the following conditions are
   /// fulfilled:
-  /// - Given @c U and @c V of value type @c T as well as two @c AlgebraScalar
+  /// - Given @c U and @c V of value type @c T as well as two @c ActsScalar
   /// @c a and @c b, then the following must be a valid expression <tt>a * U + b
   /// * V</tt> yielding an object which is (implicitly) convertible to @c T.
   /// - @c Point must represent a d-dimensional position and support
   /// coordinate access using @c operator[] which should return a @c
-  /// AlgebraScalar (or a value which is implicitly convertible). Coordinate
+  /// ActsScalar (or a value which is implicitly convertible). Coordinate
   /// indices must start at 0.
   /// @note Bin values are interpreted as being the field values at the
   /// lower-left corner of the corresponding hyper-box.
   template <class Point, typename U = T,
             typename = std::enable_if_t<
-                can_interpolate<Point, std::array<AlgebraScalar, DIM>,
-                                std::array<AlgebraScalar, DIM>, U>::value>>
+                can_interpolate<Point, std::array<ActsScalar, DIM>,
+                                std::array<ActsScalar, DIM>, U>::value>>
   T interpolate(const Point& point) const {
     // there are 2^DIM corner points used during the interpolation
     constexpr size_t nCorners = 1 << DIM;
