@@ -24,7 +24,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl){
+      m_effPlotTool(m_cfg.effPlotToolConfig, lvl) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing input seeds collection");
   }
@@ -79,19 +79,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
-									 const AlgorithmContext& ctx,
-									 const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
+    const AlgorithmContext& ctx,
+    const std::vector<std::vector<Acts::Seed<SimSpacePoint>>>& seedVector) {
   // Read truth particles from input collection
   const auto& particles =
-    ctx.eventStore.get<ActsExamples::SimParticleContainer>(
-							   m_cfg.inputParticles);
+      ctx.eventStore.get<ActsExamples::SimParticleContainer>(
+          m_cfg.inputParticles);
 
   size_t nSeeds = 0;
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
   const HitParticlesMap hitParticlesMap =
-    ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
 
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
@@ -102,13 +102,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       std::vector<ParticleHitCount> particleHitCounts;
       identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
 
-      if ( particleHitCounts.size() ==1 ){
-      	auto prt = particleHitCounts.at(0);
-      	if (prt.hitCount == 3 ){
-      	  auto it = truthCount.try_emplace(prt.particleId, 0u).first;
-      	  it->second += 1;
-      	  nMatchedSeeds++;
-      	}
+      if (particleHitCounts.size() == 1) {
+        auto prt = particleHitCounts.at(0);
+        if (prt.hitCount == 3) {
+          auto it = truthCount.try_emplace(prt.particleId, 0u).first;
+          it->second += 1;
+          nMatchedSeeds++;
+        }
       }
     }
   }
@@ -124,8 +124,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
       isMatched = true;
       nMatchedParticles++;
       nMatchedSeedsForParticle = it1->second;
-      if (nMatchedSeedsForParticle > 1)
-	{nDuplicatedParticles++;}
+      if (nMatchedSeedsForParticle > 1) {
+        nDuplicatedParticles++;
+      }
     }
     m_effPlotTool.fill(m_effPlotCache, particle, isMatched);
   }

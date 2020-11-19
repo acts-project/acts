@@ -29,8 +29,8 @@ struct SimSpacePoint {
 };
 
 inline bool operator==(SimSpacePoint a, SimSpacePoint b) {
-  return (a.m_index == b.m_index &&
-	  a.m_x == b.m_x && a.m_y == b.m_y && a.m_z == b.m_z &&
-	  a.varianceR == b.varianceR && a.varianceZ == b.varianceZ);
+  return (a.m_index == b.m_index && a.m_x == b.m_x && a.m_y == b.m_y &&
+          a.m_z == b.m_z && a.varianceR == b.varianceR &&
+          a.varianceZ == b.varianceZ);
 }
 }  // namespace ActsExamples
