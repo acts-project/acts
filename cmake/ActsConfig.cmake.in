@@ -63,7 +63,7 @@ if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
 if(PluginAutodiff IN_LIST Acts_COMPONENTS)
-  find_dependency(autodiff @autodiff_VERSION@ CONFIG)
+  find_dependency(autodiff @autodiff_VERSION@ CONFIG EXACT)
 endif()
 
 # load **all** available components. we can not just include the requested
