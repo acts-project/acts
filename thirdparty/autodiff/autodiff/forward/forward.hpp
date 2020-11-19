@@ -1016,7 +1016,7 @@ template<typename R, enableif<isExpr<R>>...> constexpr auto abs(R&& r) -> AbsExp
 template<typename R, enableif<isExpr<R>>...> constexpr auto abs2(R&& r) { return std::forward<R>(r) * std::forward<R>(r); }
 template<typename R, enableif<isExpr<R>>...> constexpr auto conj(R&& r) { return std::forward<R>(r); }
 template<typename R, enableif<isExpr<R>>...> constexpr auto real(R&& r) { return std::forward<R>(r); }
-template<typename R, enableif<isExpr<R>>...> constexpr auto imag(R&& r) { return 0.0; }
+template<typename R, enableif<isExpr<R>>...> constexpr auto imag(R&&) { return 0.0; }
 template<typename R, enableif<isExpr<R>>...> constexpr auto erf(R&& r) -> ErfExpr<R> { return { r }; }
 
 //=====================================================================================================================
@@ -1744,9 +1744,8 @@ constexpr void apply(Dual<T, G>& self, SqrtOp)
 template<typename T, typename G>
 constexpr void apply(Dual<T, G>& self, AbsOp)
 {
-    const T aux = self.val;
+    self.grad *= self.val < T(0) ? G(-1) : (self.val > T(0) ? G(1) : G(0));
     self.val = abs(self.val);
-    self.grad *= aux / self.val;
 }
 
 template<typename T, typename G>

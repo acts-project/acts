@@ -834,13 +834,15 @@ struct AbsExpr : UnaryExpr<T>
     virtual void propagate(const T& wprime)
     {
         if(x->val < 0.0) x->propagate(-wprime);
-        else x->propagate(wprime);
+        else if (x->val > 0.0) x->propagate(wprime);
+        else x->propagate(T(0));
     }
 
     virtual void propagatex(const ExprPtr<T>& wprime)
     {
         if(x->val < 0.0) x->propagatex(-wprime);
-        else x->propagatex(wprime);
+        else if (x->val > 0.0) x->propagatex(wprime);
+        else x->propagate(T(0));
     }
 };
 
@@ -1004,7 +1006,7 @@ template<typename T> ExprPtr<T> abs(const ExprPtr<T>& x) { return std::make_shar
 template<typename T> ExprPtr<T> abs2(const ExprPtr<T>& x) { return x * x; }
 template<typename T> ExprPtr<T> conj(const ExprPtr<T>& x) { return x; }
 template<typename T> ExprPtr<T> real(const ExprPtr<T>& x) { return x; }
-template<typename T> ExprPtr<T> imag(const ExprPtr<T>& x) { return constant<T>(0.0); }
+template<typename T> ExprPtr<T> imag(const ExprPtr<T>&) { return constant<T>(0.0); }
 template<typename T> ExprPtr<T> erf(const ExprPtr<T>& x) { return std::make_shared<ErfExpr<T>>(erf(x->val), x); }
 
 //------------------------------------------------------------------------------
@@ -1237,7 +1239,7 @@ auto val(const ExprPtr<T>& x)
 /// Return the derivatives of a variable y with respect to all independent variables.
 template<typename T>
 [[deprecated("Use method `derivatives(y, wrt(a, b, c,...)` instead.")]]
-auto derivatives(const T& y)
+auto derivatives(const T&)
 {
     static_assert(!std::is_same_v<T,T>, "Method derivatives(const var&) has been deprecated. Use method derivatives(y, wrt(a, b, c,...) instead.");
 }
@@ -1245,7 +1247,7 @@ auto derivatives(const T& y)
 /// Return the derivatives of a variable y with respect to all independent variables.
 template<typename T>
 [[deprecated("Use method derivativesx(y, wrt(a, b, c,...) instead.")]]
-auto derivativesx(const T& y)
+auto derivativesx(const T&)
 {
     static_assert(!std::is_same_v<T,T>, "Method derivativesx(const var&) has been deprecated. Use method derivativesx(y, wrt(a, b, c,...) instead.");
 }
