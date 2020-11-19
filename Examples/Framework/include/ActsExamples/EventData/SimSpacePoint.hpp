@@ -23,7 +23,7 @@ struct SimSpacePoint {
   // VarianceR/Z of the SP position.
   float varianceR;
   float varianceZ;
-  size_t Id() const { return m_Id; }
+  size_t index() const { return m_Id; }
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }
