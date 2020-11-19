@@ -36,17 +36,17 @@ class IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  virtual std::vector<AlgebraScalar> getBinEdges() const = 0;
+  virtual std::vector<ActsScalar> getBinEdges() const = 0;
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  virtual AlgebraScalar getMin() const = 0;
+  virtual ActsScalar getMin() const = 0;
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  virtual AlgebraScalar getMax() const = 0;
+  virtual ActsScalar getMax() const = 0;
 
   /// @brief get total number of bins
   ///

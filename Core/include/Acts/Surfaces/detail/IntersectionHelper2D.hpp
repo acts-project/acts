@@ -38,8 +38,8 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
-  static std::array<Intersection2D, 2> intersectEllipse(AlgebraScalar Rx,
-                                                        AlgebraScalar Ry,
+  static std::array<Intersection2D, 2> intersectEllipse(ActsScalar Rx,
+                                                        ActsScalar Ry,
                                                         const Vector2D& origin,
                                                         const Vector2D& dir);
 
@@ -51,7 +51,7 @@ struct IntersectionHelper2D {
   ///
   /// @return the intersection points
   static inline std::array<Intersection2D, 2> intersectCircle(
-      AlgebraScalar R, const Vector2D& origin, const Vector2D& dir) {
+      ActsScalar R, const Vector2D& origin, const Vector2D& dir) {
     return intersectEllipse(R, R, origin, dir);
   }
 
@@ -66,9 +66,9 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
-  static Intersection2D intersectCircleSegment(AlgebraScalar R,
-                                               AlgebraScalar phiMin,
-                                               AlgebraScalar phiMax,
+  static Intersection2D intersectCircleSegment(ActsScalar R,
+                                               ActsScalar phiMin,
+                                               ActsScalar phiMax,
                                                const Vector2D& origin,
                                                const Vector2D& dir);
 

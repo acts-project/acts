@@ -32,7 +32,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 class Volume : public virtual GeometryObject {
  public:
-  using BoundingBox = AxisAlignedBoundingBox<Volume, AlgebraScalar, 3>;
+  using BoundingBox = AxisAlignedBoundingBox<Volume, ActsScalar, 3>;
 
   /// Explicit constructor with shared arguments
   ///

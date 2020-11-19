@@ -33,7 +33,7 @@ enum AlignmentIndices : unsigned int {
 };
 
 /// Underlying fundamental Scalar type for alignment parameters.
-using AlignmentScalar = AlgebraScalar;
+using AlignmentScalar = ActsScalar;
 
 // Matrix and vector types related to alignment parameters.
 using AlignmentVector = ActsVector<AlignmentScalar, eAlignmentSize>;
