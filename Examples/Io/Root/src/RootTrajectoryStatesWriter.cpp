@@ -384,11 +384,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_moduleID.push_back(geoID.sensitive());
 
         // get local position
-        Acts::Vector2D local(meas.parameters()[Acts::eBoundLoc0],
-                             meas.parameters()[Acts::eBoundLoc1]);
+        Acts::Vector2 local(meas.parameters()[Acts::eBoundLoc0],
+                            meas.parameters()[Acts::eBoundLoc1]);
         // get global position
-        Acts::Vector3D mom(1, 1, 1);
-        Acts::Vector3D global =
+        Acts::Vector3 mom(1, 1, 1);
+        Acts::Vector3 global =
             surface.localToGlobal(ctx.geoContext, local, mom);
 
         // get measurement covariance

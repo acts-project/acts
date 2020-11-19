@@ -51,24 +51,24 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
 }
 
 Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
   oSurfaces.reserve(6);
 
   // Face surfaces xy
-  RotationMatrix3D trapezoidRotation(transform.rotation());
-  Vector3D trapezoidX(trapezoidRotation.col(0));
-  Vector3D trapezoidY(trapezoidRotation.col(1));
-  Vector3D trapezoidZ(trapezoidRotation.col(2));
-  Vector3D trapezoidCenter(transform.translation());
+  RotationMatrix3 trapezoidRotation(transform.rotation());
+  Vector3 trapezoidX(trapezoidRotation.col(0));
+  Vector3 trapezoidY(trapezoidRotation.col(1));
+  Vector3 trapezoidZ(trapezoidRotation.col(2));
+  Vector3 trapezoidCenter(transform.translation());
 
   //   (1) - At negative local z
-  auto nzTransform = transform * Translation3D(0., 0., -get(eHalfLengthZ));
+  auto nzTransform = transform * Translation3(0., 0., -get(eHalfLengthZ));
   auto sf =
       Surface::makeShared<PlaneSurface>(nzTransform, m_faceXYTrapezoidBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (2) - At positive local z
-  auto pzTransform = transform * Translation3D(0., 0., get(eHalfLengthZ));
+  auto pzTransform = transform * Translation3(0., 0., get(eHalfLengthZ));
   sf = Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 
@@ -78,19 +78,19 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
 
   // Face surfaces yz
   // (3) - At point B, attached to beta opening angle
-  Vector3D fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
-  auto fbTransform =
-      transform * Translation3D(fbPosition) *
-      AngleAxis3D(-0.5 * M_PI + get(eBeta), Vector3D(0., 0., 1.)) * s_planeYZ;
+  Vector3 fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
+  auto fbTransform = transform * Translation3(fbPosition) *
+                     AngleAxis3(-0.5 * M_PI + get(eBeta), Vector3(0., 0., 1.)) *
+                     s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
 
   // (4) - At point A, attached to alpha opening angle
-  Vector3D faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
+  Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
   auto faTransform =
-      transform * Translation3D(faPosition) *
-      AngleAxis3D(-0.5 * M_PI + get(eAlpha), Vector3D(0., 0., 1.)) * s_planeYZ;
+      transform * Translation3(faPosition) *
+      AngleAxis3(-0.5 * M_PI + get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
@@ -98,13 +98,13 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   // Face surfaces zx
   //   (5) - At negative local y
   auto nxTransform =
-      transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX;
+      transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(nxTransform,
                                          m_faceZXRectangleBoundsBottom);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (6) - At positive local y
   auto pxTransform =
-      transform * Translation3D(topShift, get(eHalfLengthY), 0.) * s_planeZX;
+      transform * Translation3(topShift, get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(pxTransform,
                                          m_faceZXRectangleBoundsTop);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
@@ -129,15 +129,14 @@ void Acts::TrapezoidVolumeBounds::buildSurfaceBounds() {
       get(eHalfLengthZ), get(eHalfLengthXposY));
 }
 
-bool Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos,
-                                         double tol) const {
+bool Acts::TrapezoidVolumeBounds::inside(const Vector3& pos, double tol) const {
   if (std::abs(pos.z()) > get(eHalfLengthZ) + tol) {
     return false;
   }
   if (std::abs(pos.y()) > get(eHalfLengthY) + tol) {
     return false;
   }
-  Vector2D locp(pos.x(), pos.y());
+  Vector2 locp(pos.x(), pos.y());
   bool inside(m_faceXYTrapezoidBounds->inside(
       locp, BoundaryCheck(true, true, tol, tol)));
   return inside;
@@ -148,32 +147,32 @@ std::ostream& Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const {
 }
 
 Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
   double minx = get(eHalfLengthXnegY);
   double maxx = get(eHalfLengthXposY);
   double haley = get(eHalfLengthY);
   double halez = get(eHalfLengthZ);
 
-  std::array<Vector3D, 8> vertices = {{{-minx, -haley, -halez},
-                                       {+minx, -haley, -halez},
-                                       {-maxx, +haley, -halez},
-                                       {+maxx, +haley, -halez},
-                                       {-minx, -haley, +halez},
-                                       {+minx, -haley, +halez},
-                                       {-maxx, +haley, +halez},
-                                       {+maxx, +haley, +halez}}};
+  std::array<Vector3, 8> vertices = {{{-minx, -haley, -halez},
+                                      {+minx, -haley, -halez},
+                                      {-maxx, +haley, -halez},
+                                      {+maxx, +haley, -halez},
+                                      {-minx, -haley, +halez},
+                                      {+minx, -haley, +halez},
+                                      {-maxx, +haley, +halez},
+                                      {+maxx, +haley, +halez}}};
 
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   if (trf != nullptr) {
     transform = *trf;
   }
 
-  Vector3D vmin = transform * vertices[0];
-  Vector3D vmax = transform * vertices[0];
+  Vector3 vmin = transform * vertices[0];
+  Vector3 vmax = transform * vertices[0];
 
   for (size_t i = 1; i < 8; i++) {
-    const Vector3D vtx = transform * vertices[i];
+    const Vector3 vtx = transform * vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);
   }

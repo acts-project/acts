@@ -57,10 +57,10 @@ struct PropagatorState {
     /// Stepper cache in the propagation
     struct State {
       /// Position
-      Vector4D pos4 = Vector4D(0., 0., 0., 0.);
+      Vector4 pos4 = Vector4(0., 0., 0., 0.);
 
       /// Direction
-      Vector3D dir = Vector3D(1., 0., 0.);
+      Vector3 dir = Vector3(1., 0., 0.);
 
       /// Momentum
       double p;
@@ -93,7 +93,7 @@ struct PropagatorState {
                     const double /*unused*/) const {}
 
     /// Global particle position accessor
-    Vector3D position(const State& state) const {
+    Vector3 position(const State& state) const {
       return state.pos4.segment<3>(Acts::ePos0);
     }
 
@@ -101,7 +101,7 @@ struct PropagatorState {
     double time(const State& state) const { return state.pos4[Acts::eTime]; }
 
     /// Momentum direction accessor
-    Vector3D direction(const State& state) const { return state.dir; }
+    Vector3 direction(const State& state) const { return state.dir; }
 
     /// Momentum accessor
     double momentum(const State& state) const { return state.p; }
@@ -165,8 +165,8 @@ struct PropagatorState {
     void update(State& /*state*/, const FreeVector& /*pars*/,
                 const Covariance& /*cov*/) const {}
 
-    void update(State& /*state*/, const Vector3D& /*uposition*/,
-                const Vector3D& /*udirection*/, double /*up*/,
+    void update(State& /*state*/, const Vector3& /*uposition*/,
+                const Vector3& /*udirection*/, double /*up*/,
                 double /*time*/) const {}
 
     void covarianceTransport(State& /*state*/) const {}
@@ -174,9 +174,9 @@ struct PropagatorState {
     void covarianceTransport(State& /*unused*/,
                              const Surface& /*surface*/) const {}
 
-    Vector3D getField(State& /*state*/, const Vector3D& /*pos*/) const {
+    Vector3 getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
-      return Vector3D(0., 0., 0.);
+      return Vector3(0., 0., 0.);
     }
   };
 
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
   navigator.resolvePassive = false;
 
   // position and direction vector
-  Vector4D position4(0., 0., 0, 0);
-  Vector3D momentum(1., 1., 0);
+  Vector4 position4(0., 0., 0, 0);
+  Vector3 momentum(1., 1., 0);
 
   // the propagator cache
   PropagatorState state;
@@ -394,8 +394,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.resolvePassive = false;
 
   // position and direction vector
-  Vector4D position4(0., 0., 0, 0);
-  Vector3D momentum(1., 1., 0);
+  Vector4 position4(0., 0., 0, 0);
+  Vector3 momentum(1., 1., 0);
 
   // the propagator cache
   PropagatorState state;

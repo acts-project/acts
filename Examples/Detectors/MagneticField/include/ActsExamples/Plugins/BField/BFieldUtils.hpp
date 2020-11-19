@@ -58,7 +58,7 @@ namespace txt {
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
                                    std::array<size_t, 2> nBinsRZ)>
@@ -112,8 +112,8 @@ fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+    Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
+    Acts::detail::EquidistantAxis>>
 fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                                     std::array<size_t, 3> nBinsXYZ)>
                    localToGlobalBin,
@@ -159,7 +159,7 @@ namespace root {
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
 fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
                                    std::array<size_t, 2> nBinsRZ)>
@@ -209,8 +209,8 @@ fieldMapperRZ(std::function<size_t(std::array<size_t, 2> binsRZ,
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>
+    Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
+    Acts::detail::EquidistantAxis>>
 fieldMapperXYZ(std::function<size_t(std::array<size_t, 3> binsXYZ,
                                     std::array<size_t, 3> nBinsXYZ)>
                    localToGlobalBin,

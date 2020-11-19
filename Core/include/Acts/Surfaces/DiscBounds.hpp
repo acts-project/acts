@@ -34,7 +34,7 @@ class DiscBounds : public SurfaceBounds {
   /// number of segments returned
   ///
   /// @return vector for vertices in 2D
-  virtual std::vector<Vector2D> vertices(unsigned int lseg) const = 0;
+  virtual std::vector<Vector2> vertices(unsigned int lseg) const = 0;
 
   /// Returns a reference radius for binning
   virtual double binningValueR() const = 0;

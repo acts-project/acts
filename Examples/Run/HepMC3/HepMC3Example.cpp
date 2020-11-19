@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     std::cout << "[mm]" << std::endl;
   else if (lengthUnit(genevt) == Acts::UnitConstants::cm)
     std::cout << "[cm]" << std::endl;
-  Acts::Vector3D evtPos = eventPos(genevt);
+  Acts::Vector3 evtPos = eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
             << evtPos(2) << std::endl;
   std::cout << "Event time: " << eventTime(genevt) << std::endl;

@@ -16,12 +16,12 @@ Acts::FreeVector Acts::detail::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,
     const Acts::BoundVector& boundParams) {
   // convert angles to global unit direction vector
-  Vector3D direction = makeDirectionUnitFromPhiTheta(boundParams[eBoundPhi],
-                                                     boundParams[eBoundTheta]);
+  Vector3 direction = makeDirectionUnitFromPhiTheta(boundParams[eBoundPhi],
+                                                    boundParams[eBoundTheta]);
 
   // convert local position to global position vector
-  Vector2D local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
-  Vector3D position = surface.localToGlobal(geoCtx, local, direction);
+  Vector2 local(boundParams[eBoundLoc0], boundParams[eBoundLoc1]);
+  Vector3 position = surface.localToGlobal(geoCtx, local, direction);
 
   // construct full free-vector. time and q/p stay as-is.
   FreeVector freeParams = FreeVector::Zero();

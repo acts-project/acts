@@ -7,12 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void PlyVisualization3D<T>::vertex(const Vector3D& vtx, ColorRGB color) {
+void PlyVisualization3D<T>::vertex(const Vector3& vtx, ColorRGB color) {
   m_vertices.emplace_back(vtx.template cast<ValueType>(), color);
 }
 
 template <typename T>
-void PlyVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
+void PlyVisualization3D<T>::face(const std::vector<Vector3>& vtxs,
                                  ColorRGB color) {
   FaceType idxs;
   idxs.reserve(vtxs.size());
@@ -24,14 +24,14 @@ void PlyVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
 }
 
 template <typename T>
-void PlyVisualization3D<T>::faces(const std::vector<Vector3D>& vtxs,
+void PlyVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
                                   const std::vector<FaceType>&,
                                   ColorRGB color) {
   face(vtxs, color);
 }
 
 template <typename T>
-void PlyVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
+void PlyVisualization3D<T>::line(const Vector3& a, const Vector3& b,
                                  ColorRGB color) {
   vertex(a, color);
   size_t idx_a = m_vertices.size() - 1;

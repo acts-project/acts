@@ -99,12 +99,12 @@ class ParameterSet {
 
  public:
   using Scalar = detail::ParametersScalar<parameter_indices_t>;
-  using ParametersVector = ActsVector<Scalar, kNumberOfParameters>;
+  using ParametersVector = Vector<Scalar, kNumberOfParameters>;
   /// Vector type containing all parameters from the same space
-  using FullParametersVector = ActsVector<Scalar, kSizeMax>;
-  using CovarianceMatrix = ActsSymMatrix<Scalar, kNumberOfParameters>;
+  using FullParametersVector = Vector<Scalar, kSizeMax>;
+  using CovarianceMatrix = SymMatrix<Scalar, kNumberOfParameters>;
   /// Projection matrix to project full parameters into the configured space.
-  using ProjectionMatrix = ActsMatrix<Scalar, kNumberOfParameters, kSizeMax>;
+  using ProjectionMatrix = Matrix<Scalar, kNumberOfParameters, kSizeMax>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix

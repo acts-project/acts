@@ -126,9 +126,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       const auto& simHit = *ih;
       const auto simHitIdx = simHits.index_of(ih);
 
-      Acts::Vector2D localIntersect =
+      Acts::Vector2 localIntersect =
           (invTransfrom * simHit.position()).head<2>();
-      Acts::Vector3D localDirection =
+      Acts::Vector3 localDirection =
           invTransfrom.linear() * simHit.unitDirection();
 
       // compute digitization steps
@@ -171,14 +171,14 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       // get the segmentation & find the corresponding cell id
       const Acts::Segmentation& segmentation = dg.digitizer->segmentation();
       auto binUtility = segmentation.binUtility();
-      Acts::Vector2D localPosition(localX, localY);
+      Acts::Vector2 localPosition(localX, localY);
       // @todo remove unneccesary conversion
       // size_t bin0 = binUtility.bin(localPosition, 0);
       // size_t bin1 = binUtility.bin(localPosition, 1);
       // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});
 
       // the covariance is currently set to some arbitrary value.
-      Acts::SymMatrix3D cov;
+      Acts::SymMatrix3 cov;
       cov << 0.05, 0., 0., 0., 0.05, 0., 0., 0.,
           900. * Acts::UnitConstants::ps * Acts::UnitConstants::ps;
 

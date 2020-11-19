@@ -67,9 +67,8 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 }
 
 template <typename B, typename E, typename A>
-void Acts::EigenStepper<B, E, A>::update(State& state,
-                                         const Vector3D& uposition,
-                                         const Vector3D& udirection, double up,
+void Acts::EigenStepper<B, E, A>::update(State& state, const Vector3& uposition,
+                                         const Vector3& udirection, double up,
                                          double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
@@ -123,7 +122,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     half_h = h * 0.5;
 
     // Second Runge-Kutta point
-    const Vector3D pos1 = pos + half_h * dir + h2 * 0.125 * sd.k1;
+    const Vector3 pos1 = pos + half_h * dir + h2 * 0.125 * sd.k1;
     sd.B_middle = getField(state.stepping, pos1);
     if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
                                      half_h, sd.k1)) {
@@ -137,7 +136,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     }
 
     // Last Runge-Kutta point
-    const Vector3D pos2 = pos + h * dir + h2 * 0.5 * sd.k3;
+    const Vector3 pos2 = pos + h * dir + h2 * 0.5 * sd.k3;
     sd.B_last = getField(state.stepping, pos2);
     if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
                                      sd.k3)) {

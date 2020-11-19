@@ -34,7 +34,7 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-typedef std::pair<const Acts::Surface*, Acts::Vector3D> SurfacePosition;
+typedef std::pair<const Acts::Surface*, Acts::Vector3> SurfacePosition;
 
 /// @class LayerBuilderT
 ///

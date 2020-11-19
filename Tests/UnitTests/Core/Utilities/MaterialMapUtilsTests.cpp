@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
   // Check if filled value is expected value in rz
-  Vector3D pos0_rz(0., 0., 0.);
-  Vector3D pos1_rz(1., 0., 1.);
-  Vector3D pos2_rz(0., 2., 2.);
+  Vector3 pos0_rz(0., 0., 0.);
+  Vector3 pos1_rz(1., 0., 1.);
+  Vector3 pos2_rz(0., 2., 2.);
   auto value0_rz = mapper_rz.getMaterial(pos0_rz);
   auto value1_rz = mapper_rz.getMaterial(pos1_rz);
   auto value2_rz = mapper_rz.getMaterial(pos2_rz);
@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(materialmap_creation) {
   CHECK_CLOSE_ABS(value2_rz.parameters(), mat2_rz.parameters(), 1e-9);
 
   // Check if filled value is expected value in xyz
-  Vector3D pos0_xyz(0., 0., 0.);
-  Vector3D pos1_xyz(1., 1., 1.);
-  Vector3D pos2_xyz(2., 2., 2.);
+  Vector3 pos0_xyz(0., 0., 0.);
+  Vector3 pos1_xyz(1., 1., 1.);
+  Vector3 pos2_xyz(2., 2., 2.);
   auto value0_xyz = mapper_xyz.getMaterial(pos0_xyz);
   auto value1_xyz = mapper_xyz.getMaterial(pos1_xyz);
   auto value2_xyz = mapper_xyz.getMaterial(pos2_xyz);

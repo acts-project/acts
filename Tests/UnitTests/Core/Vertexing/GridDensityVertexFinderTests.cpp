@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
     // The position of the particle
-    Vector3D pos(xdist(gen), ydist(gen), 0);
+    Vector3 pos(xdist(gen), ydist(gen), 0);
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
     if ((i % 4) == 0) {
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
-    Vector3D result = (*res).back().position();
+    Vector3 result = (*res).back().position();
     if (debugMode) {
       std::cout << "Vertex position result: " << result << std::endl;
     }
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        perigeeSurface, geoContext, Vector4(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
-    Vector3D result = (*res).back().position();
+    Vector3 result = (*res).back().position();
     if (debugMode) {
       std::cout << "Vertex position after first fill: " << result << std::endl;
     }
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   }
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    Vector3D result = (*res2).back().position();
+    Vector3 result = (*res2).back().position();
     if (debugMode) {
       std::cout
           << "Vertex position after removing tracks near first density peak: "
@@ -237,14 +237,14 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Covariance covMat = Covariance::Identity();
 
   // Perigee surface for track parameters
-  Vector3D pos0{0, 0, 0};
+  Vector3 pos0{0, 0, 0};
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(pos0);
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
-  constraintVtx.setCovariance(ActsSymMatrixD<3>::Identity());
+  constraintVtx.setCovariance(ActsSymMatrix<3>::Identity());
   vertexingOptions.vertexConstraint = constraintVtx;
 
   using Finder = GridDensityVertexFinder<mainGridSize, trkGridSize>;
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
-        perigeeSurface, geoContext, Vector4D(x, y, z, 0),
+        perigeeSurface, geoContext, Vector4(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
   }
 
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   if (res.ok()) {
     BOOST_CHECK(!(*res).empty());
-    ActsSymMatrixD<3> cov = (*res).back().covariance();
+    ActsSymMatrix<3> cov = (*res).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     if (debugMode) {

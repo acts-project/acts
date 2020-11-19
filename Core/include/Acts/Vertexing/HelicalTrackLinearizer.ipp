@@ -11,10 +11,10 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundTrackParameters& params, const Vector4D& linPoint,
+        const BoundTrackParameters& params, const Vector4& linPoint,
         const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
-  Vector3D linPointPos = VectorHelpers::position(linPoint);
+  Vector3 linPointPos = VectorHelpers::position(linPoint);
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
@@ -35,7 +35,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
 
   BoundVector paramsAtPCA = endParams->parameters();
-  Vector4D positionAtPCA = Vector4D::Zero();
+  Vector4 positionAtPCA = Vector4::Zero();
   {
     auto pos = endParams->position(gctx);
     positionAtPCA[ePos0] = pos[ePos0];
@@ -69,7 +69,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
   double sgnH = (qOvP < 0.) ? -1 : 1;
 
-  Vector3D momentumAtPCA(phiV, th, qOvP);
+  Vector3 momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
   double Bz = m_cfg.bField.getField(VectorHelpers::position(positionAtPCA),
@@ -116,7 +116,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  ActsMatrix<BoundScalar, eBoundSize, 4> positionJacobian;
+  ActsMatrix<eBoundSize, 4> positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;
@@ -138,7 +138,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(5, 3) = 1;
 
   // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
-  ActsMatrixD<eBoundSize, 3> momentumJacobian;
+  ActsMatrix<eBoundSize, 3> momentumJacobian;
   momentumJacobian.setZero();
 
   double R = X * cosPhiV + Y * sinPhiV;
@@ -174,8 +174,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
                           momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  ActsSymMatrixD<5> parWeight =
-      (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
+  ActsSymMatrix<5> parWeight = (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
 
   BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
   weightAtPCA.block<5, 5>(0, 0) = parWeight;

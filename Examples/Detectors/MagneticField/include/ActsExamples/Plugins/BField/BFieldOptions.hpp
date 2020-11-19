@@ -35,12 +35,12 @@ class ScalableBField;
 }  // namespace ActsExamples
 
 using InterpolatedMapper2D = Acts::InterpolatedBFieldMapper<
-    Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+    Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>;
 
 using InterpolatedMapper3D = Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
-    Acts::Vector3D, Acts::detail::EquidistantAxis,
-    Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis>>;
+    Acts::Vector3, Acts::detail::EquidistantAxis, Acts::detail::EquidistantAxis,
+    Acts::detail::EquidistantAxis>>;
 
 using InterpolatedBFieldMap2D =
     Acts::InterpolatedBFieldMap<InterpolatedMapper2D>;

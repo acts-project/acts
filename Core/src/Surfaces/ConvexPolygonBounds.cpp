@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
 std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
-  std::vector<Vector2D> vtxs = vertices();
+  std::vector<Vector2> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
   for (size_t i = 0; i < vtxs.size(); i++) {
     const auto& vtx = vtxs[i];
@@ -32,7 +32,7 @@ std::vector<double> Acts::ConvexPolygonBoundsBase::values() const {
 }
 
 Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::ConvexPolygonBounds(
-    const std::vector<Vector2D>& vertices)
+    const std::vector<Vector2>& vertices)
     : m_vertices(vertices.begin(), vertices.end()),
       m_boundingBox(makeBoundingBox(vertices)) {}
 
@@ -42,11 +42,11 @@ Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::type() const {
 }
 
 bool Acts::ConvexPolygonBounds<Acts::PolygonDynamic>::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
+    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_vertices);
 }
 
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<
+std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<
     Acts::PolygonDynamic>::vertices(unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }

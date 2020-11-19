@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
@@ -84,12 +84,11 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BoundTrackParameters params7(perigeeSurface, paramVec7, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  Vector<float, mainGridSize> mainGrid(Vector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, Vector<float, trkGridSize>> binAndTrackGrid;
 
   // Adds tracks too far away in transverse distance
   binAndTrackGrid = grid.addTrack(params3, mainGrid);
@@ -100,14 +99,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
-  auto zeroGrid = ActsVector<float, mainGridSize>::Zero();
+  auto zeroGrid = Vector<float, mainGridSize>::Zero();
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
   // Now add track 1 and 2 to grid, seperately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  mainGrid = ActsVector<float, mainGridSize>::Zero();
+  mainGrid = Vector<float, mainGridSize>::Zero();
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(maxBin, mainGridSize / 2 + 1);
 
   // Check if error is thrown for empty grid
-  mainGrid = ActsVector<float, mainGridSize>::Zero();
+  mainGrid = Vector<float, mainGridSize>::Zero();
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
 
@@ -190,18 +189,17 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  Vector<float, mainGridSize> mainGrid(Vector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, Acts::Vector<float, trkGridSize>> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
@@ -250,18 +248,17 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  Vector<float, mainGridSize> mainGrid(Vector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, Acts::Vector<float, trkGridSize>> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);

@@ -7,13 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename T>
-void ObjVisualization3D<T>::vertex(const Vector3D& vtx, ColorRGB color) {
+void ObjVisualization3D<T>::vertex(const Vector3& vtx, ColorRGB color) {
   m_vertexColors[m_vertices.size()] = color;
   m_vertices.push_back(vtx.template cast<ValueType>());
 }
 
 template <typename T>
-void ObjVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
+void ObjVisualization3D<T>::line(const Vector3& a, const Vector3& b,
                                  ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_lineColors[m_lines.size()] = color;
@@ -25,7 +25,7 @@ void ObjVisualization3D<T>::line(const Vector3D& a, const Vector3D& b,
 }
 
 template <typename T>
-void ObjVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
+void ObjVisualization3D<T>::face(const std::vector<Vector3>& vtxs,
                                  ColorRGB color) {
   if (color != ColorRGB{0, 0, 0}) {
     m_faceColors[m_faces.size()] = color;
@@ -40,7 +40,7 @@ void ObjVisualization3D<T>::face(const std::vector<Vector3D>& vtxs,
 }
 
 template <typename T>
-void ObjVisualization3D<T>::faces(const std::vector<Vector3D>& vtxs,
+void ObjVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
                                   const std::vector<FaceType>& faces,
                                   ColorRGB color) {
   // No faces given - call the face() method

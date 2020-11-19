@@ -15,7 +15,7 @@
 
 using namespace Acts::UnitLiterals;
 
-Acts::Volume::Volume(const Transform3D& transform,
+Acts::Volume::Volume(const Transform3& transform,
                      std::shared_ptr<const VolumeBounds> volbounds)
     : GeometryObject(),
       m_transform(transform),
@@ -25,7 +25,7 @@ Acts::Volume::Volume(const Transform3D& transform,
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
           nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
 
-Acts::Volume::Volume(const Volume& vol, const Transform3D& shift)
+Acts::Volume::Volume(const Volume& vol, const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * vol.m_transform),
       m_itransform(m_transform.inverse()),
@@ -34,8 +34,8 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D& shift)
       m_orientedBoundingBox(m_volumeBounds->boundingBox(
           nullptr, {0.05_mm, 0.05_mm, 0.05_mm}, this)) {}
 
-Acts::Vector3D Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
-                                             Acts::BinningValue bValue) const {
+Acts::Vector3 Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
+                                            Acts::BinningValue bValue) const {
   // for most of the binning types it is actually the center,
   // just for R-binning types the
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
@@ -56,8 +56,8 @@ Acts::Volume& Acts::Volume::operator=(const Acts::Volume& vol) {
   return *this;
 }
 
-bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
-  Acts::Vector3D posInVolFrame((transform().inverse()) * gpos);
+bool Acts::Volume::inside(const Acts::Vector3& gpos, double tol) const {
+  Acts::Vector3 posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }
 
@@ -67,7 +67,7 @@ std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
 }
 
 Acts::Volume::BoundingBox Acts::Volume::boundingBox(
-    const Vector3D& envelope) const {
+    const Vector3& envelope) const {
   return m_volumeBounds->boundingBox(&m_transform, envelope, this);
 }
 

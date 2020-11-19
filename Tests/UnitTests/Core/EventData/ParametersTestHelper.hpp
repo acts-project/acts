@@ -18,8 +18,8 @@ namespace Acts {
 namespace Test {
 
 template <typename Parameter>
-void consistencyCheck(const Parameter& pars, const Vector3D& position,
-                      const Vector3D& momentum, double charge, double time,
+void consistencyCheck(const Parameter& pars, const Vector3& position,
+                      const Vector3& momentum, double charge, double time,
                       std::array<double, eBoundSize> values) {
   // check parameter vector
   CHECK_CLOSE_ABS(pars.parameters()[eBoundLoc0], values[0],

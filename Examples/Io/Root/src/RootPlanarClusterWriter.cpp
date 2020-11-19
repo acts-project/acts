@@ -111,15 +111,15 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information: position, @todo coveraiance
     auto parameters = cluster.parameters();
-    Acts::Vector2D local(parameters[Acts::BoundIndices::eBoundLoc0],
-                         parameters[Acts::BoundIndices::eBoundLoc1]);
+    Acts::Vector2 local(parameters[Acts::BoundIndices::eBoundLoc0],
+                        parameters[Acts::BoundIndices::eBoundLoc1]);
 
     /// prepare for calculating the
-    Acts::Vector3D mom(1, 1, 1);
+    Acts::Vector3 mom(1, 1, 1);
     // the cluster surface
     const auto& clusterSurface = cluster.referenceObject();
     // transform local into global position information
-    Acts::Vector3D pos =
+    Acts::Vector3 pos =
         clusterSurface.localToGlobal(ctx.geoContext, local, mom);
     // identification
     m_volumeID = geoId.volume();
@@ -164,7 +164,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       const auto& simHit = *it;
 
       // local position to be calculated
-      Acts::Vector2D lPosition{0., 0.};
+      Acts::Vector2 lPosition{0., 0.};
       auto lpResult = clusterSurface.globalToLocal(
           ctx.geoContext, simHit.position(), simHit.unitDirection());
       if (not lpResult.ok()) {

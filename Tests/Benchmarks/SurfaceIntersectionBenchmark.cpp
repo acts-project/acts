@@ -44,8 +44,8 @@ GeometryContext tgContext = GeometryContext();
 
 // Create a test plane in 10 m distance
 // Some random transform
-Transform3D at = Transform3D::Identity() * Translation3D(0_m, 0_m, 10_m) *
-                 AngleAxis3D(0.15, Vector3D(1.2, 1.2, 0.12).normalized());
+Transform3 at = Transform3::Identity() * Translation3(0_m, 0_m, 10_m) *
+                AngleAxis3(0.15, Vector3(1.2, 1.2, 0.12).normalized());
 
 // Define the Plane surface
 auto rb = std::make_shared<RectangleBounds>(1_m, 1_m);
@@ -63,10 +63,10 @@ auto aCylinder = Surface::makeShared<CylinderSurface>(at, std::move(cb));
 auto aStraw = Surface::makeShared<StrawSurface>(at, 50_cm, 2_m);
 
 // The orgin of our attempts for plane, disc and cylinder
-Vector3D origin(0., 0., 0.);
+Vector3 origin(0., 0., 0.);
 
 // The origin for straw/line attempts
-Vector3D originStraw(0.3_m, -0.2_m, 11_m);
+Vector3 originStraw(0.3_m, -0.2_m, 11_m);
 
 template <typename surface_t>
 MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
@@ -77,7 +77,7 @@ MicroBenchmarkResult intersectionTest(const surface_t& surface, double phi,
   double cosTheta = std::cos(theta);
   double sinTheta = std::sin(theta);
 
-  Vector3D direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
+  Vector3 direction(cosPhi * sinTheta, sinPhi * sinTheta, cosTheta);
 
   return Acts::Test::microBenchmark(
       [&] {

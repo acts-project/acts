@@ -73,7 +73,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @param lposition is the local position to be checked (in polar
   /// coordinates)
   /// @param bcheck is the boundary check directive
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Output Method for std::ostream
@@ -123,7 +123,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @note that the number of segments are ignored for this surface
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg) const final;
+  std::vector<Vector2> vertices(unsigned int lseg) const final;
 
  private:
   std::array<double, eSize> m_values;
@@ -139,13 +139,13 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  Vector2D toLocalCartesian(const Vector2D& lposition) const;
+  Vector2 toLocalCartesian(const Vector2& lposition) const;
 
   /// Jacobian
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates
-  ActsMatrixD<2, 2> jacobianToLocalCartesian(const Vector2D& lposition) const;
+  ActsMatrix<2, 2> jacobianToLocalCartesian(const Vector2& lposition) const;
 };
 
 inline double DiscTrapezoidBounds::rMin() const {

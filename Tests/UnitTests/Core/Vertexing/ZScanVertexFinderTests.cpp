@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+        Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());
-      Vector3D result = (*res).back().position();
+      Vector3 result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1_mm);
     }
   }
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+        Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Create position of vertex and perigee surface
     double x = vXYDist(gen);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
 
     if (res.ok()) {
       BOOST_CHECK(!(*res).empty());
-      Vector3D result = (*res).back().position();
+      Vector3 result = (*res).back().position();
       CHECK_CLOSE_ABS(result[eZ], z, 1_mm);
     }
   }

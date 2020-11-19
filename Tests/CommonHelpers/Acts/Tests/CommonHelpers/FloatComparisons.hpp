@@ -213,7 +213,7 @@ predicate_result compare(const Eigen::DenseBase<T>& val,
 }
 
 // Eigen transform frontend
-predicate_result compare(const Transform3D& val, const Transform3D& ref,
+predicate_result compare(const Transform3& val, const Transform3& ref,
                          ScalarComparison&& compareImpl) {
   return matrixCompare(val.matrix(), ref.matrix(), std::move(compareImpl));
 }
@@ -258,8 +258,8 @@ boost::test_tools::predicate_result checkCloseOrSmall(const T& val,
 
 template <typename Scalar, int dim>
 boost::test_tools::predicate_result checkCloseCovariance(
-    const ActsSymMatrix<Scalar, dim>& val,
-    const ActsSymMatrix<Scalar, dim>& ref, double tol) {
+    const Acts::SymMatrix<Scalar, dim>& val,
+    const Acts::SymMatrix<Scalar, dim>& ref, double tol) {
   static_assert(dim != Eigen::Dynamic,
                 "Dynamic-size matrices are currently unsupported.");
 

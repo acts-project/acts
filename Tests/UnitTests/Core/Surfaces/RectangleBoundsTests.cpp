@@ -30,7 +30,7 @@ void dumpVertices(const RectangleBounds& r) {
     std::cout << "(" << i[0] << ", " << i[1] << ")" << std::endl;
   }
 }
-bool approximatelyEqual(const Vector2D& a, const Vector2D& b) {
+bool approximatelyEqual(const Vector2& a, const Vector2& b) {
   const double dif0 = std::abs(a[0] - b[0]);
   const double dif1 = std::abs(a[1] - b[1]);
   const double tol = 1e-9;
@@ -90,16 +90,16 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsProperties) {
   BOOST_CHECK_EQUAL(rect.halfLengthX(), 10.);
   BOOST_CHECK_EQUAL(rect.halfLengthY(), 5.);
 
-  CHECK_CLOSE_ABS(rect.min(), Vector2D(-halfX, -halfY), 1e-6);
-  CHECK_CLOSE_ABS(rect.max(), Vector2D(halfX, halfY), 1e-6);
+  CHECK_CLOSE_ABS(rect.min(), Vector2(-halfX, -halfY), 1e-6);
+  CHECK_CLOSE_ABS(rect.max(), Vector2(halfX, halfY), 1e-6);
 
-  const std::vector<Vector2D> coords = {
+  const std::vector<Vector2> coords = {
       {-10., -5.}, {10., -5.}, {10., 5.}, {-10., 5.}};
   // equality, ensure ordering is ok
   const auto& rectVertices = rect.vertices();
   BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(), coords.cend(),
                                 rectVertices.cbegin(), rectVertices.cend());
-  const Vector2D pointA{1.0, 1.0};
+  const Vector2 pointA{1.0, 1.0};
   // distance is signed, from boundary to point. (doesn't seem right, given
   BoundaryCheck bcheck(true, true);
   BOOST_CHECK(rect.inside(pointA, bcheck));

@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<> rDist(0, R * 1.5);
   std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
-  auto genPos = [&]() -> Acts::Vector3D {
+  auto genPos = [&]() -> Acts::Vector3 {
     const double z = zDist(rng), r = rDist(rng), phi = phiDist(rng);
     return {r * std::cos(phi), r * std::sin(phi), z};
   };

@@ -52,7 +52,7 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
   std::vector<double> yPos;
   std::vector<double> zPos;
   // components of magnetic field on grid points
-  std::vector<Acts::Vector3D> bField;
+  std::vector<Acts::Vector3> bField;
   // reserve estimated size
   xPos.reserve(nPoints);
   yPos.reserve(nPoints);
@@ -73,7 +73,7 @@ InterpolatedBFieldMap::FieldMapper<3, 3> readFieldXYZ(
     xPos.push_back(x);
     yPos.push_back(y);
     zPos.push_back(z);
-    bField.push_back(Acts::Vector3D(bx, by, bz));
+    bField.push_back(Acts::Vector3(bx, by, bz));
   }
   map_file.close();
 

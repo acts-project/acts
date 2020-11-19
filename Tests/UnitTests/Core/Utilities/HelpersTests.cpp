@@ -40,7 +40,7 @@ struct MyStruct {
 };
 
 BOOST_AUTO_TEST_CASE(phi_helper_test) {
-  Vector3D v(0, 1, 0);
+  Vector3 v(0, 1, 0);
   CHECK_CLOSE_ABS(phi(v), M_PI / 2., 1e-9);
 
   MyStruct s;
@@ -48,24 +48,24 @@ BOOST_AUTO_TEST_CASE(phi_helper_test) {
 }
 
 BOOST_AUTO_TEST_CASE(perp_helper_test) {
-  Vector3D v(1, 2, 3);
+  Vector3 v(1, 2, 3);
   CHECK_CLOSE_ABS(perp(v), std::sqrt(1 + 2 * 2), 1e-9);
 }
 
 BOOST_AUTO_TEST_CASE(theta_eta_test_helper) {
-  Vector3D v(1, 2, 3);
+  Vector3 v(1, 2, 3);
   CHECK_CLOSE_ABS(theta(v), 0.640522, 1e-5);
   CHECK_CLOSE_ABS(eta(v), 1.10359, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(cross_test_helper) {
   {
-    Vector3D v(1, 2, 3);
-    ActsMatrixD<3, 3> mat;
+    Vector3 v(1, 2, 3);
+    ActsMatrix<3, 3> mat;
     mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
 
-    ActsMatrixD<3, 3> act = cross(mat, v);
-    ActsMatrixD<3, 3> exp;
+    ActsMatrix<3, 3> act = cross(mat, v);
+    ActsMatrix<3, 3> exp;
     exp << -2, -1, 0, 4, 2, 0, -2, -1, 0;
 
     CHECK_CLOSE_ABS(act, exp, 1e-9);
@@ -73,17 +73,17 @@ BOOST_AUTO_TEST_CASE(cross_test_helper) {
 }
 
 BOOST_AUTO_TEST_CASE(toString_test_helper) {
-  ActsMatrixD<3, 3> mat;
+  ActsMatrix<3, 3> mat;
   mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
   std::string out;
   out = toString(mat);
   BOOST_CHECK(out.size() > 0);
 
-  Translation3D trl{Vector3D{1, 2, 3}};
+  Translation3 trl{Vector3{1, 2, 3}};
   out = toString(trl);
   BOOST_CHECK(out.size() > 0);
 
-  Transform3D trf;
+  Transform3 trf;
   trf = trl;
   out = toString(trf);
   BOOST_CHECK(out.size() > 0);
@@ -129,17 +129,17 @@ BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
 }
 
 BOOST_AUTO_TEST_CASE(VectorHelpersPosition) {
-  Vector4D pos4 = Vector4D::Constant(-1);
+  Vector4 pos4 = Vector4::Constant(-1);
   pos4[ePos0] = 1;
   pos4[ePos1] = 2;
   pos4[ePos2] = 3;
-  BOOST_CHECK_EQUAL(position(pos4), Vector3D(1, 2, 3));
+  BOOST_CHECK_EQUAL(position(pos4), Vector3(1, 2, 3));
 
   FreeVector params = FreeVector::Constant(-1);
   params[eFreePos0] = 1;
   params[eFreePos1] = 2;
   params[eFreePos2] = 3;
-  BOOST_CHECK_EQUAL(position(params), Vector3D(1, 2, 3));
+  BOOST_CHECK_EQUAL(position(params), Vector3(1, 2, 3));
 }
 
 template <size_t I>

@@ -35,15 +35,15 @@ BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
 BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
   // PerigeeSurface default constructor is deleted
   //
-  /// Constructor with Vector3D
-  Vector3D unitXYZ{1., 1., 1.};
+  /// Constructor with Vector3
+  Vector3 unitXYZ{1., 1., 1.};
   auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
   BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(unitXYZ)->type(),
                     Surface::Perigee);
   //
   /// Constructor with transform
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(pTransform)->type(),
                     Surface::Perigee);
   //
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
 /// Unit test for testing PerigeeSurface properties
 BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
   /// Test clone method
-  Vector3D unitXYZ{1., 1., 1.};
+  Vector3 unitXYZ{1., 1., 1.};
   auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
   //
   /// Test type (redundant)
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceProperties) {
 }
 
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
-  Vector3D unitXYZ{1., 1., 1.};
-  Vector3D invalidPosition{0.0, 0.0, 0.0};
+  Vector3 unitXYZ{1., 1., 1.};
+  Vector3 invalidPosition{0.0, 0.0, 0.0};
   auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
   auto perigeeSurfaceObject2 = Surface::makeShared<PerigeeSurface>(unitXYZ);
   auto assignedPerigeeSurface =

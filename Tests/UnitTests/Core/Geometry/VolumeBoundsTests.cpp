@@ -25,9 +25,9 @@ BOOST_AUTO_TEST_CASE(VolumeBoundsTest) {
   // s_planeYZ
   // s_planeZX
 
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   auto rotXY = s_planeXY.rotation();
   BOOST_CHECK(rotXY.col(0).isApprox(xaxis));

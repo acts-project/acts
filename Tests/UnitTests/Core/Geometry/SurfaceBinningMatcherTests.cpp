@@ -25,7 +25,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(PlaneSurfaceMatcher) {
-  auto identity = Transform3D::Identity();
+  auto identity = Transform3::Identity();
 
   double rMin = 5.;
   double rMax = 10.;

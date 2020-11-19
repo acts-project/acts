@@ -55,13 +55,13 @@ struct Scattering {
     // draw the scattering angle
     const auto theta = angle(generator, slab, particle);
 
-    Acts::Vector3D direction = particle.unitDirection();
+    Acts::Vector3 direction = particle.unitDirection();
     // construct the combined rotation to the scattered direction
-    Acts::RotationMatrix3D rotation(
+    Acts::RotationMatrix3 rotation(
         // rotation of the scattering deflector axis relative to the reference
-        Acts::AngleAxis3D(psi, direction) *
+        Acts::AngleAxis3(psi, direction) *
         // rotation by the scattering angle around the deflector axis
-        Acts::AngleAxis3D(theta, Acts::makeCurvilinearUnitU(direction)));
+        Acts::AngleAxis3(theta, Acts::makeCurvilinearUnitU(direction)));
     direction.applyOnTheLeft(rotation);
     particle.setDirection(direction);
 

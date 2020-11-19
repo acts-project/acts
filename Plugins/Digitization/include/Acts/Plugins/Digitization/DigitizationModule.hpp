@@ -74,7 +74,7 @@ class DigitizationModule {
       const DigitizationCell& exitCids) const;
 
   /// Get the digitization cell from a position
-  const DigitizationCell cell(const Vector2D& position) const;
+  const DigitizationCell cell(const Vector2& position) const;
 
   /// Return the module thickness
   double halfThickness() const;
@@ -100,16 +100,16 @@ class DigitizationModule {
   /// @param end is the end position of the step
   ///
   /// @return stepSurfaces are the surfaces to test
-  const SurfacePtrVector stepSurfaces(const Vector3D& start,
-                                      const Vector3D& end) const;
+  const SurfacePtrVector stepSurfaces(const Vector3& start,
+                                      const Vector3& end) const;
 
   /// Fill the associated digitsation cell from this start and end position,
   /// correct for lorentz effect if needed
   ///
   /// @param start is the start position of the step
   /// @param end is the end position of the step
-  const DigitizationStep digitizationStep(const Vector3D& start,
-                                          const Vector3D& end) const;
+  const DigitizationStep digitizationStep(const Vector3& start,
+                                          const Vector3& end) const;
 
   /// Return the bounding surfaces inlcuding top and bottom
   const SurfacePtrVector& boundarySurfaces() const;
@@ -182,7 +182,7 @@ inline const SurfacePtrVector& DigitizationModule::segmentationSurfacesY()
 }
 
 inline const DigitizationStep DigitizationModule::digitizationStep(
-    const Vector3D& start, const Vector3D& end) const {
+    const Vector3& start, const Vector3& end) const {
   return m_segmentation->digitizationStep(start, end, m_halfThickness,
                                           m_readoutDirection, m_lorentzAngle);
 }

@@ -27,8 +27,8 @@ namespace detail {
 /// @brief the step information for
 struct Step {
   ConstrainedStep stepSize = 0.;
-  Vector3D position = Vector3D(0., 0., 0.);
-  Vector3D momentum = Vector3D(0., 0., 0.);
+  Vector3 position = Vector3(0., 0., 0.);
+  Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
   const TrackingVolume* volume = nullptr;
 };

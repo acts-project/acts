@@ -15,7 +15,7 @@
 #include <utility>
 
 Acts::AbstractVolume::AbstractVolume(
-    const Transform3D& transform, std::shared_ptr<const VolumeBounds> volbounds)
+    const Transform3& transform, std::shared_ptr<const VolumeBounds> volbounds)
     : Volume(transform, std::move(volbounds)) {
   createBoundarySurfaces();
 }

@@ -41,7 +41,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   // let's loop over the (sorted) volumes
   for (auto& tVolume : volumes) {
     // get the binning position
-    Vector3D binningPosition = tVolume->binningPosition(gctx, bValue);
+    Vector3 binningPosition = tVolume->binningPosition(gctx, bValue);
     double binningBorder = tVolume->volumeBounds().binningBorder(bValue);
     // get the center value according to the bin
     double value = tVolume->binningPositionValue(gctx, bValue);

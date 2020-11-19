@@ -22,12 +22,11 @@ struct TGeoPrimitivesHelper {
   /// @param rotationMatrixCol2
   /// And translation
   /// @param translation
-  static inline Transform3D makeTransform(
-      const Eigen::Vector3d& rotationMatrixCol0,
-      const Eigen::Vector3d& rotationMatrixCol1,
-      const Eigen::Vector3d& rotationMatrixCol2,
-      const Eigen::Vector3d& translation) {
-    Transform3D trf;
+  static inline Transform3 makeTransform(const Vector3& rotationMatrixCol0,
+                                         const Vector3& rotationMatrixCol1,
+                                         const Vector3& rotationMatrixCol2,
+                                         const Vector3& translation) {
+    Transform3 trf;
     trf.matrix().block(0, 0, 3, 1) = rotationMatrixCol0;
     trf.matrix().block(0, 1, 3, 1) = rotationMatrixCol1;
     trf.matrix().block(0, 2, 3, 1) = rotationMatrixCol2;

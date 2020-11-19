@@ -31,17 +31,17 @@ namespace Acts {
 /// Mock track object with minimal methods implemented for compilation
 class MockTrack {
  public:
-  MockTrack(const Vector3D& mom, const Vector3D& pos) : m_mom(mom), m_pos(pos) {
+  MockTrack(const Vector3& mom, const Vector3& pos) : m_mom(mom), m_pos(pos) {
     // nop
   }
 
-  Vector3D momentum() const { return m_mom; }
+  Vector3 momentum() const { return m_mom; }
 
-  Vector3D position() const { return m_pos; }
+  Vector3 position() const { return m_pos; }
 
  private:
-  Vector3D m_mom;
-  Vector3D m_pos;
+  Vector3 m_mom;
+  Vector3 m_pos;
 };
 
 namespace Test {
@@ -59,12 +59,12 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub().type());
   SurfaceStub original;
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original).type());
-  Translation3D translation{0., 1., 2.};
-  Transform3D transform(translation);
+  Translation3 translation{0., 1., 2.};
+  Transform3 transform(translation);
   BOOST_CHECK_EQUAL(Surface::Other,
                     SurfaceStub(tgContext, original, transform).type());
   // need some cruft to make the next one work
-  auto pTransform = Transform3D(translation);
+  auto pTransform = Transform3(translation);
   std::shared_ptr<const Acts::PlanarBounds> p =
       std::make_shared<const RectangleBounds>(5., 10.);
   DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   // build a test object , 'surface'
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
-  Vector3D reference{0., 1., 2.};
-  Translation3D translation{0., 1., 2.};
-  auto pTransform = Transform3D(translation);
+  Vector3 reference{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
+  auto pTransform = Transform3(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
   auto pMaterial =
       std::make_shared<const HomogeneousSurfaceMaterial>(makePercentSlab());
@@ -95,18 +95,18 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   // center()
   CHECK_CLOSE_OR_SMALL(reference, surface.center(tgContext), 1e-6, 1e-9);
   // insideBounds
-  Vector2D localPosition{0.1, 3.0};
+  Vector2 localPosition{0.1, 3.0};
   BOOST_CHECK(surface.insideBounds(localPosition));
-  Vector2D outside{20., 20.};
+  Vector2 outside{20., 20.};
   BOOST_CHECK(!surface.insideBounds(
       outside));  // fails: m_bounds only in derived classes
-  Vector3D mom{100., 200., 300.};
+  Vector3 mom{100., 200., 300.};
   // isOnSurface
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom, false));
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
                                   true));  // need to improve bounds()
   // referenceFrame()
-  RotationMatrix3D unitary;
+  RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
   auto referenceFrame = surface.referenceFrame(
       tgContext, reference, mom);  // need more complex case to test
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   auto normal = surface.Surface::normal(tgContext,
                                         reference);  // needs more complex
                                                      // test
-  Vector3D zero{0., 0., 0.};
+  Vector3 zero{0., 0., 0.};
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
   // surfaceMaterial()
@@ -133,11 +133,11 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   // build some test objects
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
-  Vector3D reference{0., 1., 2.};
-  Translation3D translation1{0., 1., 2.};
-  Translation3D translation2{1., 1., 2.};
-  auto pTransform1 = Transform3D(translation1);
-  auto pTransform2 = Transform3D(translation2);
+  Vector3 reference{0., 1., 2.};
+  Translation3 translation1{0., 1., 2.};
+  Translation3 translation2{1., 1., 2.};
+  auto pTransform1 = Transform3(translation1);
+  auto pTransform2 = Transform3(translation2);
   // build a planeSurface to be compared
   auto planeSurface =
       Surface::makeShared<PlaneSurface>(pTransform1, pPlanarBound);

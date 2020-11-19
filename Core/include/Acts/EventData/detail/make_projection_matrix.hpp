@@ -31,12 +31,12 @@ struct make_projection_matrix;
 // build projection matrix by iteratively stacking row vectors
 template <unsigned int columns, unsigned int i, unsigned int... N>
 struct make_projection_matrix<columns, i, N...> {
-  static ActsMatrixD<sizeof...(N) + 1, columns> init() {
-    ActsRowVectorD<columns> v;
+  static ActsMatrix<sizeof...(N) + 1, columns> init() {
+    ActsRowVector<columns> v;
     v.setZero();
     v(i) = 1;
 
-    ActsMatrixD<sizeof...(N) + 1, columns> m;
+    ActsMatrix<sizeof...(N) + 1, columns> m;
     m.row(0) << v;
     m.block(1, 0, sizeof...(N), columns)
         << make_projection_matrix<columns, N...>::init();
@@ -48,8 +48,8 @@ struct make_projection_matrix<columns, i, N...> {
 // projection matrix for a single local parameter is a simple row vector
 template <unsigned int columns, unsigned int i>
 struct make_projection_matrix<columns, i> {
-  static ActsRowVectorD<columns> init() {
-    ActsRowVectorD<columns> v;
+  static ActsRowVector<columns> init() {
+    ActsRowVector<columns> v;
     v.setZero();
     v(i) = 1;
     return v;

@@ -104,9 +104,9 @@ struct StepCollector {
   ///
   struct this_result {
     // Position of the propagator after each step
-    std::vector<Vector3D> position;
+    std::vector<Vector3> position;
     // Momentum of the propagator after each step
-    std::vector<Vector3D> momentum;
+    std::vector<Vector3> momentum;
   };
 
   using result_type = this_result;
@@ -134,10 +134,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   NavigationDirection ndir = backward;
   double stepSize = 123.;
   double tolerance = 234.;
-  ConstantBField bField(Vector3D(1., 2.5, 33.33));
+  ConstantBField bField(Vector3(1., 2.5, 33.33));
 
-  Vector3D pos(1., 2., 3.);
-  Vector3D dir(4., 5., 6.);
+  Vector3 pos(1., 2., 3.);
+  Vector3 dir(4., 5., 6.);
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
@@ -186,11 +186,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   NavigationDirection ndir = backward;
   double stepSize = 123.;
   double tolerance = 234.;
-  ConstantBField bField(Vector3D(1., 2.5, 33.33));
+  ConstantBField bField(Vector3(1., 2.5, 33.33));
 
   // Construct the parameters
-  Vector3D pos(1., 2., 3.);
-  Vector3D dir = Vector3D(4., 5., 6.).normalized();
+  Vector3 pos(1., 2., 3.);
+  Vector3 dir = Vector3(4., 5., 6.).normalized();
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
@@ -237,8 +237,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., eps);
 
   // Test the update method
-  Vector3D newPos(2., 4., 8.);
-  Vector3D newMom(3., 9., 27.);
+  Vector3 newPos(2., 4., 8.);
+  Vector3 newMom(3., 9., 27.);
   double newTime(321.);
   es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
@@ -283,8 +283,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Test the state reset
   // Construct the parameters
-  Vector3D pos2(1.5, -2.5, 3.5);
-  Vector3D dir2 = Vector3D(4.5, -5.5, 6.5).normalized();
+  Vector3 pos2(1.5, -2.5, 3.5);
+  Vector3 dir2 = Vector3(4.5, -5.5, 6.5).normalized();
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
@@ -504,9 +504,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
-  const Vector3D startMom = 1_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 1_GeV, 1_e,
+  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startMom = 1_GeV * startDir;
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_GeV, 1_e,
                                         cov);
 
   // Create action list for surface collection
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   EigenStepper<
       ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
@@ -618,9 +618,9 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
-  const Vector3D startMom = 5_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 5_GeV, 1_e,
+  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startMom = 5_GeV * startDir;
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 5_GeV, 1_e,
                                         cov);
 
   // Create action list for surface collection
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   EigenStepper<
       ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   naviDet.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4D::Zero(), 0_degree, 90_degree, 5_GeV,
+  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree, 5_GeV,
                                   1_e, Covariance::Identity());
 
   // Create action list for surface collection
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   propOpts.maxStepSize = 1.5_m;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3D(0., 1_T, 0.));
+  ConstantBField bField(Vector3(0., 1_T, 0.));
   EigenStepper<
       ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,
@@ -879,7 +879,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
       resultDef.get<typename StepCollector::result_type>();
 
   // Check the exit situation of the first volume
-  std::pair<Vector3D, Vector3D> endParams, endParamsControl;
+  std::pair<Vector3, Vector3> endParams, endParamsControl;
   for (unsigned int i = 0; i < stepResultDef.position.size(); i++) {
     if (1_m - stepResultDef.position[i].x() < 1e-4) {
       endParams =
@@ -959,14 +959,14 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 // valid in this case.
 BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   double rotationAngle = M_PI * 0.5;
-  Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-  Vector3D yPos(0., 1., 0.);
-  Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
+  Vector3 yPos(0., 1., 0.);
+  Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
   MaterialSlab matProp(makeBeryllium(), 0.5_mm);
 
   CuboidVolumeBuilder cvb;
   CuboidVolumeBuilder::SurfaceConfig sConf1;
-  sConf1.position = Vector3D(0.3_m, 0., 0.);
+  sConf1.position = Vector3(0.3_m, 0., 0.);
   sConf1.rotation.col(0) = xPos;
   sConf1.rotation.col(1) = yPos;
   sConf1.rotation.col(2) = zPos;
@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   lConf1.surfaceCfg = sConf1;
 
   CuboidVolumeBuilder::SurfaceConfig sConf2;
-  sConf2.position = Vector3D(0.6_m, 0., 0.);
+  sConf2.position = Vector3(0.6_m, 0., 0.);
   sConf2.rotation.col(0) = xPos;
   sConf2.rotation.col(1) = yPos;
   sConf2.rotation.col(2) = zPos;
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   naviVac.resolveSensitive = true;
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4D::Zero(), 0_degree, 90_degree,
+  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
                                   1_e / 1_GeV, Covariance::Identity());
 
   // Set options for propagator
@@ -1054,7 +1054,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   propOpts.maxSteps = 10000;
 
   // Build stepper and propagator
-  ConstantBField bField(Vector3D(0., 0., 0.));
+  ConstantBField bField(Vector3(0., 0., 0.));
   EigenStepper<
       ConstantBField,
       StepperExtensionList<DefaultExtension, DenseEnvironmentExtension>,

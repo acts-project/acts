@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_access_test) {
   // Constructor from arguments
   HomogeneousVolumeMaterial hsm(mat);
 
-  auto mat3d = hsm.material(Vector3D{0., 0., 0.});
+  auto mat3d = hsm.material(Vector3{0., 0., 0.});
 
   // Test equality of the copy
   BOOST_CHECK_EQUAL(mat, mat3d);

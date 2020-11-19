@@ -64,7 +64,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   static constexpr size_t num_vertices = N;
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
-  using vertex_array = std::array<Vector2D, num_vertices>;
+  using vertex_array = std::array<Vector2, num_vertices>;
   /// Expose number of parameters as a template parameter
   ///
   static constexpr size_t eSize = 2 * N;
@@ -80,7 +80,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// This will throw if the vector size does not match `num_vertices`.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2D>& vertices) noexcept(false);
+  ConvexPolygonBounds(const std::vector<Vector2>& vertices) noexcept(false);
 
   /// Constructor from a fixed size array of vertices.
   /// This will throw if the vertices do not form a convex polygon.
@@ -101,7 +101,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param lposition The local position to check
   /// @param bcheck The `BoundaryCheck` object handling tolerances.
   /// @return Whether the points is inside
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -112,7 +112,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
   /// Return a rectangle bounds object that encloses this polygon.
   /// @return The rectangular bounds
@@ -145,7 +145,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// Constructor from a vector of vertices, to facilitate construction.
   /// This will throw if the vertices do not form a convex polygon.
   /// @param vertices The list of vertices.
-  ConvexPolygonBounds(const std::vector<Vector2D>& vertices);
+  ConvexPolygonBounds(const std::vector<Vector2>& vertices);
 
   /// Return the bounds type of this bounds object.
   /// @return The bounds type
@@ -156,7 +156,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @param lposition The local position to check
   /// @param bcheck The `BoundaryCheck` object handling tolerances.
   /// @return Whether the points is inside
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -167,7 +167,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
   ///
   /// Return a rectangle bounds object that encloses this polygon.
@@ -176,7 +176,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   const RectangleBounds& boundingBox() const final;
 
  private:
-  boost::container::small_vector<Vector2D, 10> m_vertices;
+  boost::container::small_vector<Vector2, 10> m_vertices;
   RectangleBounds m_boundingBox;
 
   /// Return whether this bounds class is in fact convex

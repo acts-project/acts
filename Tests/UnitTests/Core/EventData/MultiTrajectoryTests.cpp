@@ -36,7 +36,7 @@ CurvilinearTrackParameters make_params() {
   // generate arbitrary positive, definite matrix
   Covariance rnd = Covariance::Random();
   Covariance cov = rnd.transpose() * rnd;
-  return {Vector4D(0, 0, 1, 0), Vector3D(1, 10, 40), 1000, -1, cov};
+  return {Vector4(0, 0, 1, 0), Vector3(1, 10, 40), 1000, -1, cov};
 }
 
 using ParVec_t = BoundTrackParameters::ParametersVector;
@@ -71,17 +71,17 @@ struct TestTrackState {
 template <typename track_state_t>
 auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
                     size_t dim = 3) {
-  auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
-                                                 Vector3D{0., 0., 1.});
+  auto plane = Surface::makeShared<PlaneSurface>(Vector3{0., 0., 0.},
+                                                 Vector3{0., 0., 1.});
 
   std::unique_ptr<FittableMeasurement<TestSourceLink>> fm;
   TestTrackState pc;
 
   if (dim == 3) {
-    ActsMatrixD<3, 3> mCov;
+    ActsMatrix<3, 3> mCov;
     mCov.setRandom();
 
-    Vector3D mPar;
+    Vector3 mPar;
     mPar.setRandom();
     Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1,
                 eBoundQOverP>
@@ -106,10 +106,10 @@ auto fillTrackState(track_state_t& ts, TrackStatePropMask mask,
       ts.setCalibrated(*pc.meas3d);
     }
   } else if (dim == 2) {
-    ActsMatrixD<2, 2> mCov;
+    ActsMatrix<2, 2> mCov;
     mCov.setRandom();
 
-    Vector2D mPar;
+    Vector2 mPar;
     mPar.setRandom();
     Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> meas{
         plane, {}, mCov, mPar[0], mPar[1]};
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk) {
 
   size_t measdim = ts.effectiveCalibrated().rows();
 
-  ActsMatrixXd eff{measdim, measdim};
+  ActsDynamicMatrix eff{measdim, measdim};
   eff.setRandom();
   ts.effectiveCalibratedCovariance() = eff;
   BOOST_CHECK_EQUAL(cts.effectiveCalibratedCovariance(), eff);
@@ -518,9 +518,9 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), pc.meas3d->projector());
 
   // create new measurement
-  SymMatrix2D mCov;
+  SymMatrix2 mCov;
   mCov.setRandom();
-  Vector2D mPar;
+  Vector2 mPar;
   mPar.setRandom();
   Measurement<TestSourceLink, BoundIndices, eBoundLoc0, eBoundLoc1> m2{
       pc.meas3d->referenceObject().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
 
   // check if overallocated part is zeroed correctly
-  ActsVectorD<maxmeasdim> mParFull;
+  ActsVector<maxmeasdim> mParFull;
   mParFull.setZero();
   mParFull.head(2) = mPar;
   BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(trackstate_reassignment) {
   mCovFull.topLeftCorner(2, 2) = mCov;
   BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
-  ActsMatrixD<maxmeasdim, eBoundSize> projFull;
+  ActsMatrix<maxmeasdim, eBoundSize> projFull;
   projFull.setZero();
   projFull.topLeftCorner(m2.size(), eBoundSize) = m2.projector();
   BOOST_CHECK_EQUAL(ts.projector(), projFull);
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(storage_consistency) {
   BOOST_CHECK_EQUAL(pc.meas3d->sourceLink(), ts.uncalibrated());
 
   // full projector, should be exactly equal
-  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrix<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       fullProj;
   fullProj.setZero();
   fullProj.topLeftCorner(pc.meas3d->size(), eBoundSize) =

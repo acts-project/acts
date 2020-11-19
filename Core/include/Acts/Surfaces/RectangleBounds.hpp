@@ -56,7 +56,7 @@ class RectangleBounds : public PlanarBounds {
   ///
   /// @param min The left bottom corner
   /// @param max The right top corning
-  RectangleBounds(const Vector2D& min, const Vector2D& max) noexcept(false)
+  RectangleBounds(const Vector2& min, const Vector2& max) noexcept(false)
       : m_min(min), m_max(max) {
     checkConsistency();
   }
@@ -74,7 +74,7 @@ class RectangleBounds : public PlanarBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -85,7 +85,7 @@ class RectangleBounds : public PlanarBounds {
   /// @note the number of segements is ignored in this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;
@@ -107,15 +107,15 @@ class RectangleBounds : public PlanarBounds {
 
   /// Get the min vertex defining the bounds
   /// @return The min vertex
-  const Vector2D& min() const;
+  const Vector2& min() const;
 
   /// Get the max vertex defining the bounds
   /// @return The max vertex
-  const Vector2D& max() const;
+  const Vector2& max() const;
 
  private:
-  Vector2D m_min;
-  Vector2D m_max;
+  Vector2 m_min;
+  Vector2 m_max;
 
   /// Check the input values for consistency, will throw a logic_exception
   /// if consistency is not given
@@ -126,11 +126,11 @@ inline SurfaceBounds::BoundsType RectangleBounds::type() const {
   return SurfaceBounds::eRectangle;
 }
 
-inline const Vector2D& RectangleBounds::min() const {
+inline const Vector2& RectangleBounds::min() const {
   return m_min;
 }
 
-inline const Vector2D& RectangleBounds::max() const {
+inline const Vector2& RectangleBounds::max() const {
   return m_max;
 }
 

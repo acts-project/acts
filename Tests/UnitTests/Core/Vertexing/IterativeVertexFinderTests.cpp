@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       }
       // Create perigee surface
       std::shared_ptr<PerigeeSurface> perigeeSurface =
-          Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+          Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       double z = vZDist(gen);
 
       // True vertex
-      Vertex<BoundTrackParameters> trueV(Vector3D(x, y, z));
+      Vertex<BoundTrackParameters> trueV(Vector3(x, y, z));
       std::vector<TrackAtVertex<BoundTrackParameters>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       int count = 1;
       std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
-        Vector3D pos = vertex.position();
+        Vector3 pos = vertex.position();
         std::cout << count << ". True Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
                   << std::endl;
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::cout << "----- Reco vertices -----" << std::endl;
       count = 1;
       for (const auto& vertex : vertexCollection) {
-        Vector3D pos = vertex.position();
+        Vector3 pos = vertex.position();
         std::cout << count << ". Reco Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
                   << std::endl;
@@ -283,10 +283,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // Check if all vertices have been found with close z-values
     bool allVerticesFound = true;
     for (const auto& trueVertex : trueVertices) {
-      Vector4D truePos = trueVertex.fullPosition();
+      Vector4 truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
       for (const auto& recoVertex : vertexCollection) {
-        Vector4D recoPos = recoVertex.fullPosition();
+        Vector4 recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
         if (zDistance < 2_mm) {
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       }
       // Create perigee surface
       std::shared_ptr<PerigeeSurface> perigeeSurface =
-          Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+          Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
@@ -393,7 +393,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       double z = vZDist(gen);
 
       // True vertex
-      Vertex<InputTrack> trueV(Vector3D(x, y, z));
+      Vertex<InputTrack> trueV(Vector3(x, y, z));
       std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       int count = 1;
       std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
-        Vector3D pos = vertex.position();
+        Vector3 pos = vertex.position();
         std::cout << count << ". True Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
                   << std::endl;
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::cout << "----- Reco vertices -----" << std::endl;
       count = 1;
       for (const auto& vertex : vertexCollectionUT) {
-        Vector3D pos = vertex.position();
+        Vector3 pos = vertex.position();
         std::cout << count << ". Reco Vertex:\t Position:"
                   << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
                   << std::endl;
@@ -501,10 +501,10 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Check if all vertices have been found with close z-values
     bool allVerticesFound = true;
     for (const auto& trueVertex : trueVertices) {
-      Vector4D truePos = trueVertex.fullPosition();
+      Vector4 truePos = trueVertex.fullPosition();
       bool currentVertexFound = false;
       for (const auto& recoVertex : vertexCollectionUT) {
-        Vector4D recoPos = recoVertex.fullPosition();
+        Vector4 recoPos = recoVertex.fullPosition();
         // check only for close z distance
         double zDistance = std::abs(truePos[eZ] - recoPos[eZ]);
         if (zDistance < 2_mm) {

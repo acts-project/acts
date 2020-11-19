@@ -20,18 +20,18 @@ namespace Test {
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
   // a few valid intersections
   // all positively sortered
-  Intersection3D fIp(Vector3D(0., 1., 0.), 1.,
+  Intersection3D fIp(Vector3(0., 1., 0.), 1.,
                      Intersection3D::Status::reachable);
-  Intersection3D sIp(Vector3D(0., 2., 0.), 2.,
+  Intersection3D sIp(Vector3(0., 2., 0.), 2.,
                      Intersection3D::Status::reachable);
-  Intersection3D tIp(Vector3D(0., 3., 0.), 3.,
+  Intersection3D tIp(Vector3(0., 3., 0.), 3.,
                      Intersection3D::Status::reachable);
   BOOST_CHECK(bool(fIp));
   BOOST_CHECK(bool(sIp));
   BOOST_CHECK(bool(tIp));
 
   // a non-valid intersection
-  Intersection3D nIp(Vector3D(3., 3., 0.), 3.,
+  Intersection3D nIp(Vector3(3., 3., 0.), 3.,
                      Intersection3D::Status::unreachable);
   BOOST_CHECK(!bool(nIp));
 
@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(bool(tfnsnpIntersections[4]), false);
 
   /// let's make a bunch of negative solution
-  Intersection3D fIn(Vector3D(0., -1., 0.), -1.,
+  Intersection3D fIn(Vector3(0., -1., 0.), -1.,
                      Intersection3D::Status::reachable);
-  Intersection3D sIn(Vector3D(0., -2., 0.), -2.,
+  Intersection3D sIn(Vector3(0., -2., 0.), -2.,
                      Intersection3D::Status::reachable);
-  Intersection3D tIn(Vector3D(0., -3., 0.), -3.,
+  Intersection3D tIn(Vector3(0., -3., 0.), -3.,
                      Intersection3D::Status::reachable);
 
   std::vector<Intersection3D> tsfnIntersections = {tIn, sIn, fIn};
@@ -124,8 +124,7 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(pnsolutions[5].pathLength, 3.);
 
   // sort intersections with zero path length
-  Intersection3D zI(Vector3D(0., 0., 0.), 0.,
-                    Intersection3D::Status::onSurface);
+  Intersection3D zI(Vector3(0., 0., 0.), 0., Intersection3D::Status::onSurface);
   std::vector<Intersection3D> tszfpIntersections = {tIp, sIp, zI, fIp};
 
   std::sort(tszfpIntersections.begin(), tszfpIntersections.end());
@@ -154,36 +153,36 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
 
 /// test of the object intersection class
 BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
-  auto psf6 = Surface::makeShared<PlaneSurface>(Vector3D(6., 0., 0.),
-                                                Vector3D(1., 0., 0.));
-  auto psf7 = Surface::makeShared<PlaneSurface>(Vector3D(7., 0., 0.),
-                                                Vector3D(1., 0., 0.));
-  auto psf8 = Surface::makeShared<PlaneSurface>(Vector3D(8., 0., 0.),
-                                                Vector3D(1., 0., 0.));
-  auto psf9 = Surface::makeShared<PlaneSurface>(Vector3D(9., 0., 0.),
-                                                Vector3D(1., 0., 0.));
-  auto psf10 = Surface::makeShared<PlaneSurface>(Vector3D(10., 0., 0.),
-                                                 Vector3D(1., 0., 0.));
+  auto psf6 = Surface::makeShared<PlaneSurface>(Vector3(6., 0., 0.),
+                                                Vector3(1., 0., 0.));
+  auto psf7 = Surface::makeShared<PlaneSurface>(Vector3(7., 0., 0.),
+                                                Vector3(1., 0., 0.));
+  auto psf8 = Surface::makeShared<PlaneSurface>(Vector3(8., 0., 0.),
+                                                Vector3(1., 0., 0.));
+  auto psf9 = Surface::makeShared<PlaneSurface>(Vector3(9., 0., 0.),
+                                                Vector3(1., 0., 0.));
+  auto psf10 = Surface::makeShared<PlaneSurface>(Vector3(10., 0., 0.),
+                                                 Vector3(1., 0., 0.));
 
   using PlaneIntersection = ObjectIntersection<PlaneSurface>;
 
-  PlaneIntersection int6(Intersection3D(Vector3D(6., 0., 0.), 6.,
+  PlaneIntersection int6(Intersection3D(Vector3(6., 0., 0.), 6.,
                                         Intersection3D::Status::reachable),
                          psf6.get());
-  PlaneIntersection int7(Intersection3D(Vector3D(7., 0., 0.), 7.,
+  PlaneIntersection int7(Intersection3D(Vector3(7., 0., 0.), 7.,
                                         Intersection3D::Status::reachable),
                          psf7.get());
-  PlaneIntersection int8(Intersection3D(Vector3D(8., 0., 0.), 8.,
+  PlaneIntersection int8(Intersection3D(Vector3(8., 0., 0.), 8.,
                                         Intersection3D::Status::reachable),
                          psf8.get());
-  PlaneIntersection int9a(Intersection3D(Vector3D(9., 0., 0.), 9.,
+  PlaneIntersection int9a(Intersection3D(Vector3(9., 0., 0.), 9.,
                                          Intersection3D::Status::reachable),
                           psf9.get());
   PlaneIntersection int9b(
-      Intersection3D(Vector3D(9., 1., 0.), std::sqrt(9. * 9. + 1.),
+      Intersection3D(Vector3(9., 1., 0.), std::sqrt(9. * 9. + 1.),
                      Intersection3D::Status::reachable),
       psf9.get());
-  PlaneIntersection int10(Intersection3D(Vector3D(10., 0., 0.), 10.,
+  PlaneIntersection int10(Intersection3D(Vector3(10., 0., 0.), 10.,
                                          Intersection3D::Status::reachable),
                           psf10.get());
 

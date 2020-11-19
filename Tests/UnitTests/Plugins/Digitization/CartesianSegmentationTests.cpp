@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
   // check the lorentz angle - let's take the second one
   auto nLorentzPlane = segSurfacesXPL[2]->normal(tgContext);
 
-  Vector3D nNominal(1., 0., 0.);
+  Vector3 nNominal(1., 0., 0.);
   double tAngle = acos(nLorentzPlane.dot(nNominal));
 
   CHECK_CLOSE_REL(tAngle, lAngle, 0.001);

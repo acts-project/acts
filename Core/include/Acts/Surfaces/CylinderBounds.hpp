@@ -82,7 +82,7 @@ class CylinderBounds : public SurfaceBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
@@ -91,7 +91,7 @@ class CylinderBounds : public SurfaceBounds {
   /// @param position is the position in the cylinder frame
   /// @param bcheck is the boundary check directive
   /// @return boolean indicator for operation success
-  bool inside3D(const Vector3D& position,
+  bool inside3D(const Vector3& position,
                 const BoundaryCheck& bcheck = true) const;
 
   /// Access to the bound values
@@ -116,10 +116,10 @@ class CylinderBounds : public SurfaceBounds {
 
   /// Helper method to shift into the phi-frame
   /// @param lposition the polar coordinates in the global frame
-  Vector2D shifted(const Vector2D& lposition) const;
+  Vector2 shifted(const Vector2& lposition) const;
 
   /// Return the jacobian into the polar coordinate
-  ActsMatrixD<2, 2> jacobian() const;
+  ActsMatrix<2, 2> jacobian() const;
 };
 
 inline std::vector<double> CylinderBounds::values() const {

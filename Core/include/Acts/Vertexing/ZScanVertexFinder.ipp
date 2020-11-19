@@ -98,9 +98,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   }
 
   // constraint x()/y() equals 0 if no constraint
-  Vector4D output(vertexingOptions.vertexConstraint.position().x(),
-                  vertexingOptions.vertexConstraint.position().y(), ZResult,
-                  vertexingOptions.vertexConstraint.time());
+  Vector4 output(vertexingOptions.vertexConstraint.position().x(),
+                 vertexingOptions.vertexConstraint.position().y(), ZResult,
+                 vertexingOptions.vertexConstraint.time());
   Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex

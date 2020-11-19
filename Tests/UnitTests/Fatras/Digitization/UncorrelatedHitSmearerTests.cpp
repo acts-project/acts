@@ -64,7 +64,7 @@ const auto gid =
 
 auto rec = std::make_shared<Acts::RectangleBounds>(1000, 1000);
 auto tSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
-    Acts::Transform3D::Identity(), rec);
+    Acts::Transform3::Identity(), rec);
 
 }  // namespace
 

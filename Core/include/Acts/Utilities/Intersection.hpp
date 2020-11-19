@@ -30,9 +30,9 @@ struct Intersection {
   };
 
   /// Position of the intersection
-  ActsVectorD<DIM> position = ActsVectorD<DIM>::Zero();
+  ActsVector<DIM> position = ActsVector<DIM>::Zero();
   /// Signed path length to the intersection (if valid)
-  typename ActsVectorD<DIM>::Scalar pathLength{
+  typename ActsVector<DIM>::Scalar pathLength{
       std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
   Status status{Status::unreachable};
@@ -42,7 +42,7 @@ struct Intersection {
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  Intersection(const ActsVectorD<DIM>& sinter, double slength, Status sstatus)
+  Intersection(const ActsVector<DIM>& sinter, double slength, Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
   /// Default constructor

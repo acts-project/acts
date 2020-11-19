@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double stepSize = 123.;
   double tolerance = 234.;
 
-  Vector3D pos(1., 2., 3.);
-  Vector3D dir(4., 5., 6.);
+  Vector3 pos(1., 2., 3.);
+  Vector3 dir(4., 5., 6.);
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double tolerance = 234.;
 
   // Construct the parameters
-  Vector3D pos(1., 2., 3.);
-  Vector3D dir = Vector3D(4., 5., 6.).normalized();
+  Vector3 pos(1., 2., 3.);
+  Vector3 dir = Vector3(4., 5., 6.).normalized();
   double time = 7.;
   double absMom = 8.;
   double charge = -1.;
@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(std::get<2>(curvState), 0., 1e-6);
 
   // Test the update method
-  Vector3D newPos(2., 4., 8.);
-  Vector3D newMom(3., 9., 27.);
+  Vector3 newPos(2., 4., 8.);
+  Vector3 newMom(3., 9., 27.);
   double newTime(321.);
   sls.update(slsState, newPos, newMom.normalized(), newMom.norm(), newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   /// Test the state reset
   // Construct the parameters
-  Vector3D pos2(1.5, -2.5, 3.5);
-  Vector3D dir2 = Vector3D(4.5, -5.5, 6.5).normalized();
+  Vector3 pos2(1.5, -2.5, 3.5);
+  Vector3 dir2 = Vector3(4.5, -5.5, 6.5).normalized();
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;

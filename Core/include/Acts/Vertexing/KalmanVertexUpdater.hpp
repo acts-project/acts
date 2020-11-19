@@ -24,11 +24,11 @@ namespace KalmanVertexUpdater {
 
 /// Cache object to store matrix information
 struct MatrixCache {
-  Vector3D newVertexPos = Vector3D::Zero();
-  ActsSymMatrixD<3> newVertexCov = ActsSymMatrixD<3>::Zero();
-  ActsSymMatrixD<3> newVertexWeight = ActsSymMatrixD<3>::Zero();
-  ActsSymMatrixD<3> oldVertexWeight = ActsSymMatrixD<3>::Zero();
-  ActsSymMatrixD<3> momWeightInv = ActsSymMatrixD<3>::Zero();
+  Vector3 newVertexPos = Vector3::Zero();
+  ActsSymMatrix<3> newVertexCov = ActsSymMatrix<3>::Zero();
+  ActsSymMatrix<3> newVertexWeight = ActsSymMatrix<3>::Zero();
+  ActsSymMatrix<3> oldVertexWeight = ActsSymMatrix<3>::Zero();
+  ActsSymMatrix<3> momWeightInv = ActsSymMatrix<3>::Zero();
 };
 
 /// @brief Updates vertex with knowledge of new track

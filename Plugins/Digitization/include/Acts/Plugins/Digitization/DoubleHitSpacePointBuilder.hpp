@@ -28,7 +28,7 @@ struct DoubleHitSpacePointConfig {
   /// Allowed increase of strip length wrt gaps between strips
   double stripLengthGapTolerance = 0.01;
   /// Assumed position of the vertex
-  Vector3D vertex = {0., 0., 0.};
+  Vector3 vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
 };
@@ -87,21 +87,21 @@ class SpacePointBuilder<SpacePoint<Cluster>> {
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  Vector2D localCoords(const Cluster& cluster) const;
+  Vector2 localCoords(const Cluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  Vector3D globalCoords(const GeometryContext& gctx,
-                        const Cluster& cluster) const;
+  Vector3 globalCoords(const GeometryContext& gctx,
+                       const Cluster& cluster) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  std::pair<Vector3D, Vector3D> endsOfStrip(const GeometryContext& gctx,
-                                            const Cluster& cluster) const;
+  std::pair<Vector3, Vector3> endsOfStrip(const GeometryContext& gctx,
+                                          const Cluster& cluster) const;
 };
 }  // namespace Acts
 #include "Acts/Plugins/Digitization/detail/DoubleHitSpacePointBuilder.ipp"

@@ -38,7 +38,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   ///
   /// @return shared pointer to a PlaneLayer
   static MutableLayerPtr create(
-      const Transform3D& transform, std::shared_ptr<const PlanarBounds> pbounds,
+      const Transform3& transform, std::shared_ptr<const PlanarBounds> pbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::active) {
@@ -74,7 +74,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  PlaneLayer(const Transform3D& transform,
+  PlaneLayer(const Transform3& transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
              double thickness = 0.,
@@ -85,7 +85,7 @@ class PlaneLayer : virtual public PlaneSurface, public Layer {
   ///
   /// @param pla is the plain layer to be coped
   /// @param shift is the additional shift applied after copying
-  PlaneLayer(const PlaneLayer& pla, const Transform3D& shift);
+  PlaneLayer(const PlaneLayer& pla, const Transform3& shift);
 };
 
 }  // namespace Acts

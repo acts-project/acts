@@ -26,9 +26,9 @@ using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
 ///
 BOOST_AUTO_TEST_CASE(measurement_initialization) {
   auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 3, 10);
 
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.04, 0, 0, 0.1;
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
       cylinder, {}, cov, -0.1, 0.45);
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
   std::default_random_engine generator(42);
 
   // Create a measurement on a cylinder
-  SymMatrix2D covc;
+  SymMatrix2 covc;
   covc << 0.04, 0, 0, 0.1;
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mc(
       cylinder, {}, std::move(covc), -0.1, 0.45);
@@ -68,13 +68,13 @@ BOOST_AUTO_TEST_CASE(measurement_initialization) {
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>>
       caMeasurements{std::move(mcCopy), std::move(mcAssigned)};
 
-  auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),
-                                                 Vector3D(1., 0., 0.));
-  ActsSymMatrixD<1> covp;
+  auto plane = Surface::makeShared<PlaneSurface>(Vector3(0., 0., 0.),
+                                                 Vector3(1., 0., 0.));
+  ActsSymMatrix<1> covp;
   covp << 0.01;
   MeasurementType<BoundIndices::eBoundLoc0> mp(plane, {}, std::move(covp), 0.1);
 
-  SymMatrix2D covpp;
+  SymMatrix2 covpp;
   covpp << 0.01, 0., 0., 0.02;
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> mpp(
       plane, {}, std::move(covpp), 0.1, 0.2);

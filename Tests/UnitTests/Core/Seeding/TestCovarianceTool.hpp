@@ -25,14 +25,14 @@ class CovarianceTool {
   /// @param sigma is multiplied with the combined alignment and covariance
   /// errors
   template <typename SpacePoint>
-  Acts::Vector2D getCovariances(const SpacePoint* sp, float zAlign = 0,
-                                float rAlign = 0, float sigma = 1);
+  Acts::Vector2 getCovariances(const SpacePoint* sp, float zAlign = 0,
+                               float rAlign = 0, float sigma = 1);
 };
 template <typename SpacePoint>
-inline Acts::Vector2D CovarianceTool::getCovariances(const SpacePoint* sp,
-                                                     float zAlign, float rAlign,
-                                                     float sigma) {
-  Acts::Vector2D cov;
+inline Acts::Vector2 CovarianceTool::getCovariances(const SpacePoint* sp,
+                                                    float zAlign, float rAlign,
+                                                    float sigma) {
+  Acts::Vector2 cov;
   cov[0] = ((*sp).varianceR + rAlign * rAlign) * sigma;
   cov[1] = ((*sp).varianceZ + zAlign * zAlign) * sigma;
   return cov;

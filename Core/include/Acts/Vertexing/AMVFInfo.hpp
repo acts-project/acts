@@ -21,7 +21,7 @@ template <typename input_track_t>
 struct VertexInfo {
   VertexInfo() = default;
 
-  VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4D& pos)
+  VertexInfo(const Acts::Vertex<input_track_t>& vtx, const Acts::Vector4& pos)
       : constraintVertex(vtx),
         linPoint(pos),
         oldPosition(pos),
@@ -31,13 +31,13 @@ struct VertexInfo {
   Acts::Vertex<input_track_t> constraintVertex;
 
   // The linearization point
-  Acts::Vector4D linPoint{Acts::Vector4D::Zero()};
+  Acts::Vector4 linPoint{Acts::Vector4::Zero()};
 
   // Old position from last iteration
-  Acts::Vector4D oldPosition{Acts::Vector4D::Zero()};
+  Acts::Vector4 oldPosition{Acts::Vector4::Zero()};
 
   // The seed position
-  Acts::Vector4D seedPosition{Acts::Vector4D::Zero()};
+  Acts::Vector4 seedPosition{Acts::Vector4::Zero()};
 
   // Needs relinearization bool
   bool relinearize = true;

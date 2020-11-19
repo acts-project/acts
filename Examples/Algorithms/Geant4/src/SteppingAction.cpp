@@ -85,8 +85,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     const auto& rawPos = step->GetPreStepPoint()->GetPosition();
     const auto& rawDir = step->GetPreStepPoint()->GetMomentum();
     Acts::MaterialInteraction mInteraction;
-    mInteraction.position = Acts::Vector3D(rawPos.x(), rawPos.y(), rawPos.z());
-    mInteraction.direction = Acts::Vector3D(rawDir.x(), rawDir.y(), rawDir.z());
+    mInteraction.position = Acts::Vector3(rawPos.x(), rawPos.y(), rawPos.z());
+    mInteraction.direction = Acts::Vector3(rawDir.x(), rawDir.y(), rawDir.z());
     mInteraction.direction.normalized();
     mInteraction.materialSlab = slab;
     m_materialSteps.push_back(mInteraction);
@@ -117,16 +117,16 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
     //     m_tracksteps.emplace_back(
     //         0,
     //         0,  // set Acts::GeometryIdentifier = 0 and Barcode = 0
-    //         Acts::ActsVectorD<4>(trkPos.x() * Acts::UnitConstants::mm,
+    //         Acts::ActsVector<4>(trkPos.x() * Acts::UnitConstants::mm,
     //                              trkPos.y() * Acts::UnitConstants::mm,
     //                              trkPos.z() * Acts::UnitConstants::mm,
     //                              trkTime * Acts::UnitConstants::ns),  // pos4
-    //         Acts::ActsVectorD<4>(
+    //         Acts::ActsVector<4>(
     //             par4Mom.px() * Acts::UnitConstants::MeV,
     //             par4Mom.py() * Acts::UnitConstants::MeV,
     //             par4Mom.pz() * Acts::UnitConstants::MeV,
     //             par4Mom.e() * Acts::UnitConstants::MeV),  // before4
-    //         Acts::ActsVectorD<4>(0, 0, 0, 0));            // after4
+    //         Acts::ActsVector<4>(0, 0, 0, 0));            // after4
     //   }
   }
 }

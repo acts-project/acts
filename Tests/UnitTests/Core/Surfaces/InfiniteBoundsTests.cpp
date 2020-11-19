@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties) {
   BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::eBoundless);
 
   /// test for inside()
-  const Vector2D anyVector{0., 1.};
+  const Vector2 anyVector{0., 1.};
   const BoundaryCheck anyBoundaryCheck(true);
   BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
 

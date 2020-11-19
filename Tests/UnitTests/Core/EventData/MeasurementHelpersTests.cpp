@@ -26,12 +26,12 @@ using FittableMeasurement = FittableMeasurement<TestSourceLink>;
 BOOST_AUTO_TEST_CASE(getSurface_test) {
   auto cylinderBounds = std::make_shared<CylinderBounds>(3, 10);
 
-  auto cylinder = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+  auto cylinder = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                        cylinderBounds);
-  auto cylinder2 = Surface::makeShared<CylinderSurface>(Transform3D::Identity(),
+  auto cylinder2 = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
                                                         cylinderBounds);
 
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.04, 0, 0, 0.1;
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
       cylinder, {}, std::move(cov), -0.1, 0.45);
@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE(getSurface_test) {
 
 BOOST_AUTO_TEST_CASE(getSize_test) {
   auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 3, 10);
 
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.04, 0, 0, 0.1;
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1> m(
       cylinder, {}, std::move(cov), -0.1, 0.45);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(getSize_test) {
   FittableMeasurement fm = m;
   BOOST_CHECK_EQUAL(MeasurementHelpers::getSize(fm), 2u);
 
-  ActsSymMatrixD<3> cov3;
+  ActsSymMatrix<3> cov3;
   cov.setRandom();
   MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1,
                   BoundIndices::eBoundTime>

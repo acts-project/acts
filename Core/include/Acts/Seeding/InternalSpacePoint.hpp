@@ -22,9 +22,9 @@ class InternalSpacePoint {
 
  public:
   InternalSpacePoint() = delete;
-  InternalSpacePoint(const SpacePoint& sp, const Acts::Vector3D& globalPos,
-                     const Acts::Vector2D& offsetXY,
-                     const Acts::Vector2D& variance);
+  InternalSpacePoint(const SpacePoint& sp, const Acts::Vector3& globalPos,
+                     const Acts::Vector2& offsetXY,
+                     const Acts::Vector2& variance);
 
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
@@ -57,8 +57,8 @@ class InternalSpacePoint {
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const SpacePoint& sp, const Acts::Vector3D& globalPos,
-    const Acts::Vector2D& offsetXY, const Acts::Vector2D& variance)
+    const SpacePoint& sp, const Acts::Vector3& globalPos,
+    const Acts::Vector2& offsetXY, const Acts::Vector2& variance)
     : m_sp(sp) {
   m_x = globalPos.x() - offsetXY.x();
   m_y = globalPos.y() - offsetXY.y();

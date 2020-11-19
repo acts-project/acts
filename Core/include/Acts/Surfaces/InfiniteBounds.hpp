@@ -34,7 +34,7 @@ class InfiniteBounds : public SurfaceBounds {
   /// ignores input parameters
   ///
   /// @return always true
-  bool inside(const Vector2D& /*lposition*/,
+  bool inside(const Vector2& /*lposition*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }

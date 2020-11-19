@@ -20,11 +20,11 @@ struct VolumeMaterialInteraction {
   /// Data from the propagation state
   const TrackingVolume* volume;
   /// The particle current position
-  const Vector3D pos;
+  const Vector3 pos;
   /// The particle current time
   const double time;
   /// The particle current direction
-  const Vector3D dir;
+  const Vector3 dir;
   /// The particle current momentum
   const double momentum;
   /// The particle current charge

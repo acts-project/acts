@@ -63,9 +63,9 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
     const Acts::PlanarModuleCluster& cluster = entry.second;
     // local cluster information
     const auto& parameters = cluster.parameters();
-    Acts::Vector2D localPos(parameters[0], parameters[1]);
-    Acts::Vector3D globalFakeMom(1, 1, 1);
-    Acts::Vector3D globalPos = cluster.referenceObject().localToGlobal(
+    Acts::Vector2 localPos(parameters[0], parameters[1]);
+    Acts::Vector3 globalFakeMom(1, 1, 1);
+    Acts::Vector3 globalPos = cluster.referenceObject().localToGlobal(
         ctx.geoContext, localPos, globalFakeMom);
 
     // encoded geometry identifier

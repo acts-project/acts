@@ -39,8 +39,8 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 /// @brief mockup of stepping state
 struct SteppingState {
   /// Parameters
-  Vector3D pos = Vector3D(0., 0., 0.);
-  Vector3D dir = Vector3D(0., 0., 1);
+  Vector3 pos = Vector3(0., 0., 0.);
+  Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
 
   NavigationDirection navDir = NavigationDirection::forward;
@@ -48,7 +48,7 @@ struct SteppingState {
 
 /// @brief mockup of stepping state
 struct Stepper {
-  Vector3D field = Vector3D(0., 0., 2_T);
+  Vector3 field = Vector3(0., 0., 2_T);
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
@@ -57,17 +57,16 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Vector3D getField(SteppingState& /*unused*/,
-                    const Vector3D& /*unused*/) const {
+  Vector3 getField(SteppingState& /*unused*/, const Vector3& /*unused*/) const {
     // get the field from the cell
     return field;
   }
 
   /// Access method - position
-  Vector3D position(const SteppingState& state) const { return state.pos; }
+  Vector3 position(const SteppingState& state) const { return state.pos; }
 
   /// Access method - direction
-  Vector3D direction(const SteppingState& state) const { return state.dir; }
+  Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
   double momentum(const SteppingState& state) const { return state.p; }
@@ -122,7 +121,7 @@ BOOST_DATA_TEST_CASE(
   (void)deltaPhi;
 
   PropagatorState pState;
-  pState.stepping.dir = Vector3D(cos(phi), sin(phi), 0.);
+  pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
   pState.stepping.p = 100_MeV;
 
   Stepper pStepper;
@@ -179,7 +178,7 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4D(0, 0, 0, 42), phi, theta, p, q);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext, getDummyLogger());

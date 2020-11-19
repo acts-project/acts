@@ -56,8 +56,8 @@ class GeometryObject {
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual Vector3D binningPosition(const GeometryContext& gctx,
-                                   BinningValue bValue) const = 0;
+  virtual Vector3 binningPosition(const GeometryContext& gctx,
+                                  BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///

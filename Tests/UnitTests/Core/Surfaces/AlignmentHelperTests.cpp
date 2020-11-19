@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   const double beta = 0;
   const double gamma = M_PI / 2;
   // rotation around x axis
-  AngleAxis3D rotX(alpha, Vector3D(1., 0., 0.));
+  AngleAxis3 rotX(alpha, Vector3(1., 0., 0.));
   // rotation around y axis
-  AngleAxis3D rotY(beta, Vector3D(0., 1., 0.));
+  AngleAxis3 rotY(beta, Vector3(0., 1., 0.));
   // rotation around z axis
-  AngleAxis3D rotZ(gamma, Vector3D(0., 0., 1.));
+  AngleAxis3 rotZ(gamma, Vector3(0., 0., 1.));
   double sz = std::sin(gamma);
   double cz = std::cos(gamma);
   double sy = std::sin(beta);
@@ -43,38 +43,38 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   // [ cz*cy  cz*sy*sx-cx*sz  sz*sx+cz*cx*sy ]
   // [ cy*sz  cz*cx+sz*sy*sx  cx*sz*sy-cz*sx ]
   // [ -sy    cy*sx           cy*cx          ]
-  RotationMatrix3D expRot = RotationMatrix3D::Zero();
-  expRot.col(0) = Vector3D(cz * cy, cy * sz, -sy);
+  RotationMatrix3 expRot = RotationMatrix3::Zero();
+  expRot.col(0) = Vector3(cz * cy, cy * sz, -sy);
   expRot.col(1) =
-      Vector3D(cz * sy * sx - cx * sz, cz * cx + sz * sy * sx, cy * sx);
+      Vector3(cz * sy * sx - cx * sz, cz * cx + sz * sy * sx, cy * sx);
   expRot.col(2) =
-      Vector3D(sz * sx + cz * cx * sy, cx * sz * sy - cz * sx, cy * cx);
+      Vector3(sz * sx + cz * cx * sy, cx * sz * sy - cz * sx, cy * cx);
 
   // Calculate the expected derivative of local x axis to its rotation
-  RotationMatrix3D expRotToXAxis = RotationMatrix3D::Zero();
-  expRotToXAxis.col(0) = Vector3D(0, 0, 0);
-  expRotToXAxis.col(1) = Vector3D(-cz * sy, -sz * sy, -cy);
-  expRotToXAxis.col(2) = Vector3D(-sz * cy, cz * cy, 0);
+  RotationMatrix3 expRotToXAxis = RotationMatrix3::Zero();
+  expRotToXAxis.col(0) = Vector3(0, 0, 0);
+  expRotToXAxis.col(1) = Vector3(-cz * sy, -sz * sy, -cy);
+  expRotToXAxis.col(2) = Vector3(-sz * cy, cz * cy, 0);
 
   // Calculate the expected derivative of local y axis to its rotation
-  RotationMatrix3D expRotToYAxis = RotationMatrix3D::Zero();
+  RotationMatrix3 expRotToYAxis = RotationMatrix3::Zero();
   expRotToYAxis.col(0) =
-      Vector3D(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
-  expRotToYAxis.col(1) = Vector3D(cz * cy * sx, sz * cy * sx, -sy * sx);
+      Vector3(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
+  expRotToYAxis.col(1) = Vector3(cz * cy * sx, sz * cy * sx, -sy * sx);
   expRotToYAxis.col(2) =
-      Vector3D(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
+      Vector3(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
 
   // Calculate the expected derivative of local z axis to its rotation
-  RotationMatrix3D expRotToZAxis = RotationMatrix3D::Zero();
+  RotationMatrix3 expRotToZAxis = RotationMatrix3::Zero();
   expRotToZAxis.col(0) =
-      Vector3D(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
-  expRotToZAxis.col(1) = Vector3D(cz * cy * cx, sz * cy * cx, -sy * cx);
+      Vector3(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
+  expRotToZAxis.col(1) = Vector3(cz * cy * cx, sz * cy * cx, -sy * cx);
   expRotToZAxis.col(2) =
-      Vector3D(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
+      Vector3(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
   // Construct a transform
-  Translation3D translation(Vector3D(0., 0., 0.));
-  Transform3D transform(translation);
+  Translation3 translation(Vector3(0., 0., 0.));
+  Transform3 transform(translation);
   // Rotation with rotZ * rotY * rotX
   transform *= rotZ;
   transform *= rotY;
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   CHECK_CLOSE_ABS(rotToLocalZAxis, expRotToZAxis, 1e-15);
 
   // (b) Test with identity rotation matrix
-  RotationMatrix3D iRotation = RotationMatrix3D::Identity();
+  RotationMatrix3 iRotation = RotationMatrix3::Identity();
 
   // Call the alignment helper to calculate the derivative of local frame axes
   // w.r.t its rotation

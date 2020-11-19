@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(PolyhedronTest) {
-  std::vector<Vector3D> tvertices = {Vector3D(-1, -1, 0.), Vector3D(1., -1, 0.),
-                                     Vector3D(0., 1., 0.)};
+  std::vector<Vector3> tvertices = {Vector3(-1, -1, 0.), Vector3(1., -1, 0.),
+                                    Vector3(0., 1., 0.)};
   std::vector<std::vector<size_t>> tfaces = {{0, 1, 2}};
 
   Polyhedron triangle(tvertices, tfaces, tfaces);
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
   objVis.write("Polyhedron_Triangle");
   objVis.clear();
 
-  std::vector<Vector3D> rvertices = {Vector3D(-1, -2, 0.), Vector3D(1., -2, 0.),
-                                     Vector3D(1., -1., 0.),
-                                     Vector3D(-1., -1., 0.)};
+  std::vector<Vector3> rvertices = {Vector3(-1, -2, 0.), Vector3(1., -2, 0.),
+                                    Vector3(1., -1., 0.),
+                                    Vector3(-1., -1., 0.)};
   std::vector<std::vector<size_t>> rfaces = {{0, 1, 2, 3}};
   std::vector<std::vector<size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
   Polyhedron rectangle(rvertices, rfaces, rmesh);
@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(PolyhedronTest) {
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
   // Test a rectangle in x-y plane (at z == 0)
-  std::vector<Vector3D> rvertices = {Vector3D(-1, -2, 0.), Vector3D(1., -2, 0.),
-                                     Vector3D(1., -1., 0.),
-                                     Vector3D(-1., -1., 0.)};
+  std::vector<Vector3> rvertices = {Vector3(-1, -2, 0.), Vector3(1., -2, 0.),
+                                    Vector3(1., -1., 0.),
+                                    Vector3(-1., -1., 0.)};
 
   std::vector<std::vector<size_t>> rfaces = {{0, 1, 2, 3}};
   std::vector<std::vector<size_t>> rmesh = {{0, 1, 2}, {2, 3, 0}};
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
   CHECK_CLOSE_ABS(rExtent.max(binPhi), VectorHelpers::phi(rvertices[2]), 1e-6);
 
   // Now shift the Extent
-  Vector3D shift(-1., 0., 1.);
-  Transform3D shiftedTransform = Transform3D::Identity();
+  Vector3 shift(-1., 0., 1.);
+  Transform3 shiftedTransform = Transform3::Identity();
   shiftedTransform.pretranslate(shift);
   rExtent = rectangle.extent(shiftedTransform);
   CHECK_CLOSE_ABS(rExtent.min(binX), -2., 1e-6);
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronExtent) {
   CHECK_CLOSE_ABS(rExtent.max(binZ), 1., 1e-6);
 
   // Test a rectangle in yz - pane (at x == 3)
-  rvertices = {Vector3D(3_mm, -5_mm, -10_mm), Vector3D(3_mm, 5_mm, -10_mm),
-               Vector3D(3_mm, 5_mm, 10_mm), Vector3D(3_mm, -5_mm, 10_mm)};
+  rvertices = {Vector3(3_mm, -5_mm, -10_mm), Vector3(3_mm, 5_mm, -10_mm),
+               Vector3(3_mm, 5_mm, 10_mm), Vector3(3_mm, -5_mm, 10_mm)};
 
   rectangle = Polyhedron(rvertices, rfaces, rmesh);
   rExtent = rectangle.extent();

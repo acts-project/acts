@@ -47,7 +47,7 @@ namespace Acts {
 struct MaterialCollector {
   struct this_result {
     std::vector<Material> matTrue;
-    std::vector<Vector3D> position;
+    std::vector<Vector3> position;
   };
   using result_type = this_result;
 
@@ -87,29 +87,29 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
 
   // Build a vacuum volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;
-  vCfg1.position = Vector3D(0.5_m, 0., 0.);
-  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg1.position = Vector3(0.5_m, 0., 0.);
+  vCfg1.length = Vector3(1_m, 1_m, 1_m);
   vCfg1.name = "Vacuum volume";
   vCfg1.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu1);
 
   // Build a material volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
-  vCfg2.position = Vector3D(1.5_m, 0., 0.);
-  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg2.position = Vector3(1.5_m, 0., 0.);
+  vCfg2.length = Vector3(1_m, 1_m, 1_m);
   vCfg2.name = "First material volume";
   vCfg2.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu2);
 
   // Build another material volume with different material
   CuboidVolumeBuilder::VolumeConfig vCfg3;
-  vCfg3.position = Vector3D(2.5_m, 0., 0.);
-  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg3.position = Vector3(2.5_m, 0., 0.);
+  vCfg3.length = Vector3(1_m, 1_m, 1_m);
   vCfg3.name = "Second material volume";
   vCfg3.volumeMaterial = std::make_shared<const ProtoVolumeMaterial>(bu3);
 
   // Configure world
   CuboidVolumeBuilder::Config cfg;
-  cfg.position = Vector3D(1.5_m, 0., 0.);
-  cfg.length = Vector3D(3_m, 1_m, 1_m);
+  cfg.position = Vector3(1.5_m, 0., 0.);
+  cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
   GeometryContext gc;
@@ -154,32 +154,32 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Build a vacuum volume
   CuboidVolumeBuilder::VolumeConfig vCfg1;
-  vCfg1.position = Vector3D(0.5_m, 0., 0.);
-  vCfg1.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg1.position = Vector3(0.5_m, 0., 0.);
+  vCfg1.length = Vector3(1_m, 1_m, 1_m);
   vCfg1.name = "Vacuum volume";
   vCfg1.volumeMaterial =
       std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Build a material volume
   CuboidVolumeBuilder::VolumeConfig vCfg2;
-  vCfg2.position = Vector3D(1.5_m, 0., 0.);
-  vCfg2.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg2.position = Vector3(1.5_m, 0., 0.);
+  vCfg2.length = Vector3(1_m, 1_m, 1_m);
   vCfg2.name = "First material volume";
   vCfg2.volumeMaterial =
       std::make_shared<HomogeneousVolumeMaterial>(makeSilicon());
 
   // Build another material volume with different material
   CuboidVolumeBuilder::VolumeConfig vCfg3;
-  vCfg3.position = Vector3D(2.5_m, 0., 0.);
-  vCfg3.length = Vector3D(1_m, 1_m, 1_m);
+  vCfg3.position = Vector3(2.5_m, 0., 0.);
+  vCfg3.length = Vector3(1_m, 1_m, 1_m);
   vCfg3.name = "Second material volume";
   vCfg3.volumeMaterial =
       std::make_shared<const HomogeneousVolumeMaterial>(Material());
 
   // Configure world
   CuboidVolumeBuilder::Config cfg;
-  cfg.position = Vector3D(1.5_m, 0., 0.);
-  cfg.length = Vector3D(3_m, 1_m, 1_m);
+  cfg.position = Vector3(1.5_m, 0., 0.);
+  cfg.length = Vector3(3_m, 1_m, 1_m);
   cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
 
   GeometryContext gc;
@@ -208,8 +208,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Sample the Material in the detector
   RecordedMaterialVolumePoint matRecord;
   for (unsigned int i = 0; i < 1e4; i++) {
-    Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
-    std::vector<Vector3D> volPos;
+    Vector3 pos(disX(gen), disYZ(gen), disYZ(gen));
+    std::vector<Vector3> volPos;
     volPos.push_back(pos);
     Material tv =
         (detector->lowestTrackingVolume(gc, pos)->volumeMaterial() != nullptr)
@@ -222,8 +222,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
 
   // Build the material grid
   Grid3D Grid = createGrid(xAxis, yAxis, zAxis);
-  std::function<Vector3D(Vector3D)> transfoGlobalToLocal =
-      [](Vector3D pos) -> Vector3D {
+  std::function<Vector3(Vector3)> transfoGlobalToLocal =
+      [](Vector3 pos) -> Vector3 {
     return {pos.x(), pos.y(), pos.z()};
   };
   MaterialGrid3D matGrid =
@@ -235,8 +235,8 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
   // Set some start parameters
-  Vector4D pos4(0., 0., 0., 42_ns);
-  Vector3D dir(1., 0., 0.);
+  Vector4 pos4(0., 0., 0., 42_ns);
+  Vector3 dir(1., 0., 0.);
   NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
 
   MagneticFieldContext mc;

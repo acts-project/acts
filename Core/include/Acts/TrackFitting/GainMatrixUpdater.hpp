@@ -67,22 +67,23 @@ class GainMatrixUpdater {
         [&](const auto calibrated, const auto calibratedCovariance) {
           constexpr size_t kMeasurementSize =
               decltype(calibrated)::RowsAtCompileTime;
+
           using Scalar = typename decltype(calibrated)::Scalar;
-          using ParametersVector = ActsVector<Scalar, kMeasurementSize>;
-          using CovarianceMatrix = ActsSymMatrix<Scalar, kMeasurementSize>;
+          using ParametersVector = Vector<Scalar, kMeasurementSize>;
+          using CovarianceMatrix = SymMatrix<Scalar, kMeasurementSize>;
 
           ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
           ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
           ACTS_VERBOSE("Calibrated measurement covariance:\n"
                        << calibratedCovariance);
 
-          const ActsMatrix<Scalar, kMeasurementSize, eBoundSize> H =
+          const Matrix<Scalar, kMeasurementSize, eBoundSize> H =
               trackState.projector()
                   .template topLeftCorner<kMeasurementSize, eBoundSize>();
 
           ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-          const ActsMatrix<Scalar, eBoundSize, kMeasurementSize> K =
+          const Matrix<Scalar, eBoundSize, kMeasurementSize> K =
               predictedCovariance * H.transpose() *
               (H * predictedCovariance * H.transpose() + calibratedCovariance)
                   .inverse();

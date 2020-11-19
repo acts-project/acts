@@ -18,12 +18,12 @@ Acts::SurfaceBounds::BoundsType Acts::TrapezoidBounds::type() const {
   return SurfaceBounds::eTrapezoid;
 }
 
-bool Acts::TrapezoidBounds::inside(const Acts::Vector2D& lposition,
+bool Acts::TrapezoidBounds::inside(const Acts::Vector2& lposition,
                                    const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, vertices());
 }
 
-std::vector<Acts::Vector2D> Acts::TrapezoidBounds::vertices(
+std::vector<Acts::Vector2> Acts::TrapezoidBounds::vertices(
     unsigned int /*lseg*/) const {
   double minhx = get(TrapezoidBounds::eHalfLengthXnegY);
   double maxhx = get(TrapezoidBounds::eHalfLengthXposY);

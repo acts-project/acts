@@ -51,12 +51,12 @@ struct DigitizationStep final {
   double stepLength{0.};   /// this is the path length within the cell
   double driftLength{0.};  /// this is the path length of the setp center to the
                            /// readout surface
-  DigitizationCell stepCell;      /// this is the cell identifier of the segment
-  Vector3D stepEntry;             /// this is the Entry point into the segment
-  Vector3D stepExit;              /// this is the Exit point from the segment
-  Vector2D stepReadoutProjected;  /// this is the projected position at the
-                                  /// readout surface
-  Vector2D stepCellCenter;        /// this is the cell position
+  DigitizationCell stepCell;     /// this is the cell identifier of the segment
+  Vector3 stepEntry;             /// this is the Entry point into the segment
+  Vector3 stepExit;              /// this is the Exit point from the segment
+  Vector2 stepReadoutProjected;  /// this is the projected position at the
+                                 /// readout surface
+  Vector2 stepCellCenter;        /// this is the cell position
 
   /// Standard constructor
   DigitizationStep()
@@ -76,9 +76,9 @@ struct DigitizationStep final {
   /// @param projectedPosition is the position on the readout surface
   /// @param cellPosition is the nominal position of the cell
   DigitizationStep(double sl, double dl, const DigitizationCell& dc,
-                   const Vector3D& entryP, const Vector3D& exitP,
-                   const Vector2D& projectedPosition,
-                   const Vector2D& cellPosition)
+                   const Vector3& entryP, const Vector3& exitP,
+                   const Vector2& projectedPosition,
+                   const Vector2& cellPosition)
       : stepLength(sl),
         driftLength(dl),
         stepCell(dc),

@@ -91,9 +91,9 @@ std::vector<ActsExamples::SimParticle> ActsExamples::HepMC3Vertex::particlesOut(
   return genParticlesToActs(vertex->particles_out());
 }
 
-Acts::Vector3D ActsExamples::HepMC3Vertex::position(
+Acts::Vector3 ActsExamples::HepMC3Vertex::position(
     const std::shared_ptr<HepMC3::GenVertex> vertex) {
-  Acts::Vector3D vec;
+  Acts::Vector3 vec;
   vec(0) = vertex->position().x();
   vec(1) = vertex->position().y();
   vec(2) = vertex->position().z();
@@ -136,7 +136,7 @@ void ActsExamples::HepMC3Vertex::removeParticleOut(
 }
 
 void ActsExamples::HepMC3Vertex::position(
-    const std::shared_ptr<HepMC3::GenVertex> vertex, Acts::Vector3D pos) {
+    const std::shared_ptr<HepMC3::GenVertex> vertex, Acts::Vector3 pos) {
   HepMC3::FourVector fVec(pos(0), pos(1), pos(2), vertex->position().t());
   vertex->set_position(fVec);
 }

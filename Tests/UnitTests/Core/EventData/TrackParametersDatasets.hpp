@@ -29,12 +29,12 @@ using namespace Acts;
 // inputs, i.e. no angles or strictly positive radii.
 const auto surfaces = bdata::make(std::vector<std::shared_ptr<const Surface>>{
     Surface::makeShared<CylinderSurface>(
-        Transform3D::Identity(), 10 /* radius */, 100 /* half-length z */),
+        Transform3::Identity(), 10 /* radius */, 100 /* half-length z */),
     // TODO perigee roundtrip local->global->local does not seem to work
-    // Surface::makeShared<PerigeeSurface>(Vector3D(0, 0, -1.5)),
-    Surface::makeShared<PlaneSurface>(Vector3D::Zero(), Vector3D::UnitX()),
-    Surface::makeShared<PlaneSurface>(Vector3D::Zero(), Vector3D::UnitY()),
-    Surface::makeShared<PlaneSurface>(Vector3D::Zero(), Vector3D::UnitZ()),
+    // Surface::makeShared<PerigeeSurface>(Vector3(0, 0, -1.5)),
+    Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitX()),
+    Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitY()),
+    Surface::makeShared<PlaneSurface>(Vector3::Zero(), Vector3::UnitZ()),
 });
 // positions
 const auto posAngle = bdata::xrange(-M_PI, M_PI, 0.25);

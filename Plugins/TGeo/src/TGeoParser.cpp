@@ -56,11 +56,11 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
       const Double_t* translation = transform.GetTranslation();
 
       // Create a eigen transform
-      Vector3D t(options.unit * translation[0], options.unit * translation[1],
-                 options.unit * translation[2]);
-      Vector3D cx(rotation[0], rotation[3], rotation[6]);
-      Vector3D cy(rotation[1], rotation[4], rotation[7]);
-      Vector3D cz(rotation[2], rotation[5], rotation[8]);
+      Vector3 t(options.unit * translation[0], options.unit * translation[1],
+                options.unit * translation[2]);
+      Vector3 cx(rotation[0], rotation[3], rotation[6]);
+      Vector3 cy(rotation[1], rotation[4], rotation[7]);
+      Vector3 cz(rotation[2], rotation[5], rotation[8]);
       auto etrf = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 
       bool accept = true;
@@ -76,7 +76,7 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
         for (auto x : std::vector<double>{-dx, dx}) {
           for (auto y : std::vector<double>{-dy, dy}) {
             for (auto z : std::vector<double>{-dz, dz}) {
-              Vector3D edge = etrf * Vector3D(x, y, z);
+              Vector3 edge = etrf * Vector3(x, y, z);
               for (auto& check : options.parseRanges) {
                 double val = VectorHelpers::cast(edge, check.first);
                 if (val < check.second.first or val > check.second.second) {

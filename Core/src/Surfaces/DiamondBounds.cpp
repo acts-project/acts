@@ -17,12 +17,12 @@ Acts::SurfaceBounds::BoundsType Acts::DiamondBounds::type() const {
   return SurfaceBounds::eDiamond;
 }
 
-bool Acts::DiamondBounds::inside(const Acts::Vector2D& lposition,
+bool Acts::DiamondBounds::inside(const Acts::Vector2& lposition,
                                  const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, vertices());
 }
 
-std::vector<Acts::Vector2D> Acts::DiamondBounds::vertices(
+std::vector<Acts::Vector2> Acts::DiamondBounds::vertices(
     unsigned int /*lseg*/) const {
   // Vertices starting at lower left (min rel. phi)
   // counter-clockwise

@@ -25,7 +25,7 @@
 #include <stdexcept>
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<Acts::Vector3D, 8>& vertices) noexcept(false)
+    const std::array<Acts::Vector3, 8>& vertices) noexcept(false)
     : m_vertices(vertices) {
   construct();
 }
@@ -36,12 +36,12 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     : m_vertices() {
   for (size_t iv = 0; iv < 8; ++iv) {
     m_vertices[iv] =
-        Vector3D(values[iv * 3], values[iv * 3 + 1], values[iv * 3 + 2]);
+        Vector3(values[iv * 3], values[iv * 3 + 1], values[iv * 3 + 2]);
   }
   construct();
 }
 
-bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
+bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3& gpos,
                                              double tol) const {
   constexpr std::array<size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
@@ -61,11 +61,11 @@ bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
 }
 
 Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
-    const Transform3D& transform) const {
+    const Transform3& transform) const {
   OrientedSurfaces oSurfaces;
 
   // approximate cog of the volume
-  Vector3D cog(0, 0, 0);
+  Vector3 cog(0, 0, 0);
 
   for (size_t i = 0; i < 8; i++) {
     cog += m_vertices[i];
@@ -76,33 +76,33 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
   auto make_surface = [&](const auto& a, const auto& b, const auto& c,
                           const auto& d) -> void {
     // calculate centroid of these points
-    Vector3D ctrd = (a + b + c + d) / 4.;
+    Vector3 ctrd = (a + b + c + d) / 4.;
     // create normal
-    const Vector3D ab = b - a, ac = c - a;
-    Vector3D normal = ab.cross(ac).normalized();
+    const Vector3 ab = b - a, ac = c - a;
+    Vector3 normal = ab.cross(ac).normalized();
 
     NavigationDirection nDir = ((cog - d).dot(normal) < 0) ? backward : forward;
 
     // build transform from z unit to normal
     // z is normal in local coordinates
     // Volume local to surface local
-    Transform3D vol2srf;
-    vol2srf = (Eigen::Quaternion<Transform3D::Scalar>().setFromTwoVectors(
-        normal, Vector3D::UnitZ()));
+    Transform3 vol2srf;
+    vol2srf = (Eigen::Quaternion<Transform3::Scalar>().setFromTwoVectors(
+        normal, Vector3::UnitZ()));
 
-    vol2srf = vol2srf * Translation3D(-ctrd);
+    vol2srf = vol2srf * Translation3(-ctrd);
 
     // now calculate position of vertices in surface local frame
-    Vector3D a_l, b_l, c_l, d_l;
+    Vector3 a_l, b_l, c_l, d_l;
     a_l = vol2srf * a;
     b_l = vol2srf * b;
     c_l = vol2srf * c;
     d_l = vol2srf * d;
 
-    std::vector<Vector2D> vertices({{a_l.x(), a_l.y()},
-                                    {b_l.x(), b_l.y()},
-                                    {c_l.x(), c_l.y()},
-                                    {d_l.x(), d_l.y()}});
+    std::vector<Vector2> vertices({{a_l.x(), a_l.y()},
+                                   {b_l.x(), b_l.y()},
+                                   {c_l.x(), c_l.y()},
+                                   {d_l.x(), d_l.y()}});
 
     auto polyBounds = std::make_shared<const ConvexPolygonBounds<4>>(vertices);
     auto srfTrf = transform * vol2srf.inverse();
@@ -136,7 +136,7 @@ std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
 void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   // calculate approximate center of gravity first, so we can make sure
   // the normals point inwards
-  Vector3D cog(0, 0, 0);
+  Vector3 cog(0, 0, 0);
 
   for (size_t i = 0; i < 8; i++) {
     cog += m_vertices[i];
@@ -149,8 +149,8 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
   auto handle_face = [&](const auto& a, const auto& b, const auto& c,
                          const auto& d) {
     // we assume a b c d to be counter clockwise
-    const Vector3D ab = b - a, ac = c - a;
-    Vector3D normal = ab.cross(ac).normalized();
+    const Vector3 ab = b - a, ac = c - a;
+    Vector3 normal = ab.cross(ac).normalized();
 
     if ((cog - a).dot(normal) < 0) {
       // normal points outwards, flip normal
@@ -158,7 +158,7 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
     }
 
     // get rid of -0 values if present
-    normal += Vector3D::Zero();
+    normal += Vector3::Zero();
 
     // check if d is on the surface
     if (std::abs((a - d).dot(normal)) > 1e-6) {
@@ -191,11 +191,11 @@ std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
 }
 
 Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
-    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Acts::Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  Vector3D vmin, vmax;
+  Vector3 vmin, vmax;
 
-  Transform3D transform = Transform3D::Identity();
+  Transform3 transform = Transform3::Identity();
   if (trf != nullptr) {
     transform = *trf;
   }
@@ -204,7 +204,7 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
   vmax = transform * m_vertices[0];
 
   for (size_t i = 1; i < 8; i++) {
-    Vector3D vtx = transform * m_vertices[i];
+    Vector3 vtx = transform * m_vertices[i];
     vmin = vmin.cwiseMin(vtx);
     vmax = vmax.cwiseMax(vtx);
   }
@@ -213,10 +213,10 @@ Acts::Volume::BoundingBox Acts::GenericCuboidVolumeBounds::boundingBox(
 }
 
 void Acts::GenericCuboidVolumeBounds::draw(IVisualization3D& helper,
-                                           const Transform3D& transform) const {
+                                           const Transform3& transform) const {
   auto draw_face = [&](const auto& a, const auto& b, const auto& c,
                        const auto& d) {
-    helper.face(std::vector<Vector3D>(
+    helper.face(std::vector<Vector3>(
         {transform * a, transform * b, transform * c, transform * d}));
   };
 

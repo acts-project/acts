@@ -77,11 +77,11 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
   BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::eLine);
 
   /// test for inside()
-  const Vector2D origin{0., 0.};
-  const Vector2D atRadius{0.5, 10.};
-  const Vector2D beyondEnd{0.0, 30.0};
-  const Vector2D unitZ{0.0, 1.0};
-  const Vector2D unitR{1.0, 0.0};
+  const Vector2 origin{0., 0.};
+  const Vector2 atRadius{0.5, 10.};
+  const Vector2 beyondEnd{0.0, 30.0};
+  const Vector2 unitZ{0.0, 1.0};
+  const Vector2 unitR{1.0, 0.0};
   const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
   // This fails because the bounds are not inclusive.
   BOOST_CHECK(
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(LineBoundsProperties) {
 
   /// Test negative redius inside
 
-  BOOST_CHECK(lineBoundsObject.inside(Vector2D{-0.2, 10},
+  BOOST_CHECK(lineBoundsObject.inside(Vector2{-0.2, 10},
                                       trueBoundaryCheckWithTolerance));
-  BOOST_CHECK(!lineBoundsObject.inside(Vector2D{-0.8, 10},
+  BOOST_CHECK(!lineBoundsObject.inside(Vector2{-0.8, 10},
                                        trueBoundaryCheckWithTolerance));
 
   /// test for r()

@@ -36,7 +36,7 @@ namespace VolumeView3DTest {
 static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
   auto gctx = GeometryContext();
-  auto identity = Transform3D::Identity();
+  auto identity = Transform3::Identity();
   std::stringstream cStream;
 
   double halfPhiSector = M_PI / 4.;
@@ -48,7 +48,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   // Cuboid surface section
   auto box = std::make_shared<CuboidVolumeBounds>(4., 3., 6.);
   auto cuboid = std::make_shared<AbstractVolume>(identity, box);
-  GeometryView3D::drawVolume(helper, *cuboid, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cuboid, gctx, Transform3::Identity(),
                              vConfig);
   helper.write(std::string("Volumes_CuboidVolume") + tag);
   helper.write(cStream);
@@ -60,7 +60,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto solidCone =
       std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 5., 5., 0., M_PI);
   auto cone = std::make_shared<AbstractVolume>(identity, solidCone);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeSolid");
   helper.write(cStream);
@@ -70,7 +70,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto cutOffCone =
       std::make_shared<ConeVolumeBounds>(0., 0., 0.45, 8., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffCone);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeSolidCutOff");
   helper.write(cStream);
@@ -80,7 +80,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto cutOffHollowCone =
       std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5, 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCone);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeConeCone");
   helper.write(cStream);
@@ -90,7 +90,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto cutOffHollowSectoralCone =
       std::make_shared<ConeVolumeBounds>(0.35, 7., 0.45, 8., 5., 0., 0.456);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowSectoralCone);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeConeConeSectoral");
   helper.write(cStream);
@@ -100,7 +100,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto cutOffHollowCylCone =
       std::make_shared<ConeVolumeBounds>(1., 0.45, 8., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowCylCone);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeConeCylinder");
   helper.write(cStream);
@@ -110,7 +110,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto cutOffHollowConeCyl =
       std::make_shared<ConeVolumeBounds>(12., 0.35, 7., 5., 0., M_PI);
   cone = std::make_shared<AbstractVolume>(identity, cutOffHollowConeCyl);
-  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cone, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_ConeVolumeCylinderCone");
   helper.write(cStream);
@@ -125,7 +125,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto fullCylinder =
       std::make_shared<CylinderVolumeBounds>(0., cylinderOuterR, cylinderHalfZ);
   auto cylinder = std::make_shared<AbstractVolume>(identity, fullCylinder);
-  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_CylinderVolumeFull");
   helper.write(cStream);
@@ -134,7 +134,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
-  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_CylinderVolumeTube");
   helper.write(cStream);
@@ -143,7 +143,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   tubeCylinder = std::make_shared<CylinderVolumeBounds>(
       cylinderInnerR, cylinderOuterR, cylinderHalfZ, halfPhiSector);
   cylinder = std::make_shared<AbstractVolume>(identity, tubeCylinder);
-  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *cylinder, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_CylinderVolumeTubeSector");
   helper.write(cStream);
@@ -151,7 +151,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   //----------------------------------------------------
   // Trapezoid volume section
-  std::array<Vector3D, 8> vertices;
+  std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
                {2, 0, 0},
                {2, 1, 0},
@@ -162,7 +162,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
                {0, 1, 1}}};
   auto genericCuboid = std::make_shared<GenericCuboidVolumeBounds>(vertices);
   auto generic = std::make_shared<AbstractVolume>(identity, genericCuboid);
-  GeometryView3D::drawVolume(helper, *generic, gctx, Transform3D::Identity(),
+  GeometryView3D::drawVolume(helper, *generic, gctx, Transform3::Identity(),
                              vConfig);
   helper.write("Volumes_GenericCuboidVolume");
   helper.write(cStream);
@@ -173,7 +173,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   auto trapezoid = std::make_shared<TrapezoidVolumeBounds>(2., 4., 5., 6.);
   auto trapezoidVolume = std::make_shared<AbstractVolume>(identity, trapezoid);
   GeometryView3D::drawVolume(helper, *trapezoidVolume, gctx,
-                             Transform3D::Identity(), vConfig);
+                             Transform3::Identity(), vConfig);
   helper.write("Volumes_TrapezoidVolume");
   helper.write(cStream);
   helper.clear();

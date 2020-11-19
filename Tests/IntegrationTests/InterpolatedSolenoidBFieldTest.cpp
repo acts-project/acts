@@ -58,7 +58,7 @@ auto makeFieldMap(const SolenoidBField& field) {
       solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
   // I know this is the correct grid type
   using Grid_t =
-      Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
+      Acts::detail::Grid<Acts::Vector2, Acts::detail::EquidistantAxis,
                          Acts::detail::EquidistantAxis>;
   const Grid_t& grid = mapper.getGrid();
   using index_t = Grid_t::index_t;
@@ -73,7 +73,7 @@ auto makeFieldMap(const SolenoidBField& field) {
         // under or overflow bin
       } else {
         point_t lowerLeft = grid.lowerLeftBinEdge(index);
-        Vector2D B = grid.atLocalBins(index);
+        Vector2 B = grid.atLocalBins(index);
         ostr << i << ";" << j << ";" << lowerLeft[0] << ";" << lowerLeft[1];
         ostr << ";" << B[0] << ";" << B[1] << std::endl;
       }
@@ -116,9 +116,9 @@ BOOST_DATA_TEST_CASE(
     std::cout << index << std::endl;
   }
 
-  Vector3D pos(r * std::cos(phi), r * std::sin(phi), z);
-  Vector3D B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
-  Vector3D Bm = bFieldMap.getField(pos) / Acts::UnitConstants::T;
+  Vector3 pos(r * std::cos(phi), r * std::sin(phi), z);
+  Vector3 B = bSolenoidField.getField(pos) / Acts::UnitConstants::T;
+  Vector3 Bm = bFieldMap.getField(pos) / Acts::UnitConstants::T;
 
   // test less than 5% deviation
   if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {

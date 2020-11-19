@@ -38,7 +38,7 @@ while (h != 0.) {
   // Second point
   //
   if (!Helix) {
-    const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
+    const Vector3 pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
     f = getField(cache, pos);
   } else {
     f = f0;
@@ -58,7 +58,7 @@ while (h != 0.) {
   // Last point
   //
   if (!Helix) {
-    const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
+    const Vector3 pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
     f = getField(cache, pos);
   } else {
     f = f0;
@@ -89,7 +89,7 @@ const auto tryRungeKuttaStep = [&](const double h) -> bool {
   half_h = h * 0.5;
 
   // Second Runge-Kutta point
-  const Vector3D pos1 = state.stepping.pos + half_h * state.stepping.dir
+  const Vector3 pos1 = state.stepping.pos + half_h * state.stepping.dir
       + h2 * 0.125 * sd.k1;
   sd.B_middle = getField(state.stepping, pos1);
   if (!state.stepping.extension.k2(
@@ -104,7 +104,7 @@ const auto tryRungeKuttaStep = [&](const double h) -> bool {
   }
 
   // Last Runge-Kutta point
-  const Vector3D pos2
+  const Vector3 pos2
       = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
   sd.B_last = getField(state.stepping, pos2);
   if (!state.stepping.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {

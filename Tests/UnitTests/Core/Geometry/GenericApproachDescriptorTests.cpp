@@ -51,12 +51,12 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorConstruction) {
 /// Unit test for testing GenericApproachDescriptor properties
 BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
                      *utf::expected_failures(1)) {
-  Vector3D origin{
+  Vector3 origin{
       0.,
       0.,
       0.,
   };
-  Vector3D zDir{0., 0., 1.};
+  Vector3 zDir{0., 0., 1.};
   BoundaryCheck bcheck{true};
   //
   std::vector<std::shared_ptr<const Surface>> someSurfaces{
@@ -85,12 +85,12 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
 /// - for the approach estimate, there is no overstepping tolerance
 /// allowed
 BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
-  Vector3D origin{0., -0.5, 1.};
-  Vector3D direction{0., 1., 0.};
+  Vector3 origin{0., -0.5, 1.};
+  Vector3 direction{0., 1., 0.};
   BoundaryCheck bcheck{true};
 
   auto conCyl =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 10., 20.);
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 10., 20.);
 
   std::vector<std::shared_ptr<const Surface>> approachSurface = {conCyl};
 

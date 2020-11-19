@@ -31,7 +31,7 @@ Open the file in your editor and let's start setting up the AMVF. We will start 
 Let's start with setting up a constant magnetic field:
 ```cpp
 // Set up the magnetic field
-Acts::ConstantBField bField(Acts::Vector3D(0., 0., 2_T));
+Acts::ConstantBField bField(Acts::Vector3(0., 0., 2_T));
 ```
 We need the ```Acts::Propagator``` with the ```Acts::EigenStepper```:
 ```cpp

@@ -7,23 +7,23 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename Cluster>
-Acts::Vector2D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
+Acts::Vector2 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::localCoords(
     const Cluster& cluster) const {
   // Local position information
   auto par = cluster.parameters();
-  Acts::Vector2D local(par[Acts::BoundIndices::eBoundLoc0],
-                       par[Acts::BoundIndices::eBoundLoc1]);
+  Acts::Vector2 local(par[Acts::BoundIndices::eBoundLoc0],
+                      par[Acts::BoundIndices::eBoundLoc1]);
   return local;
 }
 
 template <typename Cluster>
-Acts::Vector3D Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
+Acts::Vector3 Acts::SpacePointBuilder<Acts::SpacePoint<Cluster>>::globalCoords(
     const GeometryContext& gctx, const Cluster& cluster) const {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceObject();
 
   // Transform local into global position information
-  Acts::Vector3D mom(1., 1., 1.);
+  Acts::Vector3 mom(1., 1., 1.);
   return clusterSurface.localToGlobal(gctx, localCoords(cluster), mom);
 }
 

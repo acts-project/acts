@@ -32,9 +32,9 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   std::vector<double> zPos = {0., 1., 2.};
 
   // create b field in rz
-  std::vector<Acts::Vector2D> bField_rz;
+  std::vector<Acts::Vector2> bField_rz;
   for (int i = 0; i < 9; i++) {
-    bField_rz.push_back(Acts::Vector2D(i, i));
+    bField_rz.push_back(Acts::Vector2(i, i));
   }
 
   auto localToGlobalBin_rz = [](std::array<size_t, 2> binsRZ,
@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
   // create b field in xyz
-  std::vector<Acts::Vector3D> bField_xyz;
+  std::vector<Acts::Vector3> bField_xyz;
   for (int i = 0; i < 27; i++) {
-    bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    bField_xyz.push_back(Acts::Vector3(i, i, i));
   }
 
   auto localToGlobalBin_xyz = [](std::array<size_t, 3> binsXYZ,
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
   // check if filled value is expected value in rz
-  Acts::Vector3D pos0_rz(0., 0., 0.);
-  Acts::Vector3D pos1_rz(1., 0., 1.);
-  Acts::Vector3D pos2_rz(0., 2., 2.);
+  Acts::Vector3 pos0_rz(0., 0., 0.);
+  Acts::Vector3 pos1_rz(1., 0., 1.);
+  Acts::Vector3 pos2_rz(0., 2., 2.);
   auto value0_rz = mapper_rz.getField(pos0_rz);
   auto value1_rz = mapper_rz.getField(pos1_rz);
   auto value2_rz = mapper_rz.getField(pos2_rz);
@@ -97,9 +97,9 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
       bField_rz.at(localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
   auto b2_rz =
       bField_rz.at(localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
-  Acts::Vector3D bField0_rz(b0_rz.x(), 0., b0_rz.y());
-  Acts::Vector3D bField1_rz(b1_rz.x(), 0., b1_rz.y());
-  Acts::Vector3D bField2_rz(0., b2_rz.x(), b2_rz.y());
+  Acts::Vector3 bField0_rz(b0_rz.x(), 0., b0_rz.y());
+  Acts::Vector3 bField1_rz(b1_rz.x(), 0., b1_rz.y());
+  Acts::Vector3 bField2_rz(0., b2_rz.x(), b2_rz.y());
   // check the value
   // in rz case field is phi symmetric (check radius)
   CHECK_CLOSE_ABS(perp(value0_rz), perp(bField0_rz), 1e-9);
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
   CHECK_CLOSE_ABS(value2_rz.z(), bField2_rz.z(), 1e-9);
 
   // check if filled value is expected value in rz
-  Acts::Vector3D pos0_xyz(0., 0., 0.);
-  Acts::Vector3D pos1_xyz(1., 1., 1.);
-  Acts::Vector3D pos2_xyz(2., 2., 2.);
+  Acts::Vector3 pos0_xyz(0., 0., 0.);
+  Acts::Vector3 pos1_xyz(1., 1., 1.);
+  Acts::Vector3 pos2_xyz(2., 2., 2.);
   auto value0_xyz = mapper_xyz.getField(pos0_xyz);
   auto value1_xyz = mapper_xyz.getField(pos1_xyz);
   auto value2_xyz = mapper_xyz.getField(pos2_xyz);
@@ -142,9 +142,9 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   std::vector<double> yPos = {0., 1., 2.};
   std::vector<double> zPos = {0., 1., 2.};
   // the bfield values in rz
-  std::vector<Acts::Vector2D> bField_rz;
+  std::vector<Acts::Vector2> bField_rz;
   for (int i = 0; i < 9; i++) {
-    bField_rz.push_back(Acts::Vector2D(i, i));
+    bField_rz.push_back(Acts::Vector2(i, i));
   }
   // the field mapper in rz
   auto mapper_rz = Acts::fieldMapperRZ(
@@ -168,9 +168,9 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
   // the bfield values in xyz
-  std::vector<Acts::Vector3D> bField_xyz;
+  std::vector<Acts::Vector3> bField_xyz;
   for (int i = 0; i < 27; i++) {
-    bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    bField_xyz.push_back(Acts::Vector3(i, i, i));
   }
   // the field mapper in xyz
   auto mapper_xyz = Acts::fieldMapperXYZ(
@@ -193,11 +193,11 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // always assigned to the left boundary)
   BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
-  Acts::Vector3D pos0(1.2, 1.3, 1.4);
-  Acts::Vector3D pos1(1.2, 1.3, -1.4);
-  Acts::Vector3D pos2(-1.2, 1.3, 1.4);
-  Acts::Vector3D pos3(1.2, -1.3, 1.4);
-  Acts::Vector3D pos4(-1.2, -1.3, 1.4);
+  Acts::Vector3 pos0(1.2, 1.3, 1.4);
+  Acts::Vector3 pos1(1.2, 1.3, -1.4);
+  Acts::Vector3 pos2(-1.2, 1.3, 1.4);
+  Acts::Vector3 pos3(1.2, -1.3, 1.4);
+  Acts::Vector3 pos4(-1.2, -1.3, 1.4);
 
   auto value0_rz = mapper_rz.getField(pos0);
   auto value1_rz = mapper_rz.getField(pos1);
@@ -266,9 +266,9 @@ BOOST_DATA_TEST_CASE(
     zPos.push_back(i * stepZ);
   }
   // bfield in rz
-  std::vector<Acts::Vector2D> bField_rz;
+  std::vector<Acts::Vector2> bField_rz;
   for (size_t i = 0; i < nBins * nBins; i++) {
-    bField_rz.push_back(Acts::Vector2D(i * bStepR, i * bStepZ));
+    bField_rz.push_back(Acts::Vector2(i * bStepR, i * bStepZ));
   }
   // the mapper in rz
   auto mapper_rz = Acts::fieldMapperRZ(
@@ -290,9 +290,9 @@ BOOST_DATA_TEST_CASE(
   CHECK_CLOSE_ABS(mapper_rz.getMax(), maxima_rz, 1e-10);
 
   // bfield in xyz
-  std::vector<Acts::Vector3D> bField_xyz;
+  std::vector<Acts::Vector3> bField_xyz;
   for (size_t i = 0; i < nBins * nBins * nBins; i++) {
-    bField_xyz.push_back(Acts::Vector3D(i * bStepR, i * bStepR, i * bStepZ));
+    bField_xyz.push_back(Acts::Vector3(i * bStepR, i * bStepR, i * bStepZ));
   }
   // the mapper in xyz
   auto mapper_xyz = Acts::fieldMapperXYZ(
@@ -316,11 +316,11 @@ BOOST_DATA_TEST_CASE(
   // always assigned to the left boundary)
   CHECK_CLOSE_REL(mapper_xyz.getMax(), maxima_xyz, 1e-10);
 
-  Acts::Vector3D pos0(x, y, z);
-  Acts::Vector3D pos1(x, y, -z);
-  Acts::Vector3D pos2(-x, y, z);
-  Acts::Vector3D pos3(x, -y, z);
-  Acts::Vector3D pos4(-x, -y, z);
+  Acts::Vector3 pos0(x, y, z);
+  Acts::Vector3 pos1(x, y, -z);
+  Acts::Vector3 pos2(-x, y, z);
+  Acts::Vector3 pos3(x, -y, z);
+  Acts::Vector3 pos4(-x, -y, z);
 
   auto value0_rz = mapper_rz.getField(pos0);
   auto value1_rz = mapper_rz.getField(pos1);

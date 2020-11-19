@@ -103,7 +103,7 @@ struct Interactor {
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.unitDirection());
       if (lpResult.ok()) {
-        Acts::Vector2D local(0., 0.);
+        Acts::Vector2 local(0., 0.);
 
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);

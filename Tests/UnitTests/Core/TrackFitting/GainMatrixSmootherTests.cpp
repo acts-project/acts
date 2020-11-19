@@ -33,14 +33,14 @@ GeometryContext tgContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   // Make dummy measurement
-  auto plane1 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 1,
-                                                  Vector3D::UnitX());
-  auto plane2 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 2,
-                                                  Vector3D::UnitX());
-  auto plane3 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 3,
-                                                  Vector3D::UnitX());
+  auto plane1 =
+      Surface::makeShared<PlaneSurface>(Vector3::UnitX() * 1, Vector3::UnitX());
+  auto plane2 =
+      Surface::makeShared<PlaneSurface>(Vector3::UnitX() * 2, Vector3::UnitX());
+  auto plane3 =
+      Surface::makeShared<PlaneSurface>(Vector3::UnitX() * 3, Vector3::UnitX());
 
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<TestSourceLink> meas1(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(

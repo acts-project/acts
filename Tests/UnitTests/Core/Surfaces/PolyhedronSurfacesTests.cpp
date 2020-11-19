@@ -64,7 +64,7 @@ GeometryContext tgContext = GeometryContext();
 std::vector<std::tuple<std::string, bool, unsigned int>> testModes = {
     {"", false, 72}, {"Triangulate", true, 72}, {"Extremas", false, 1}};
 
-auto transform = std::make_shared<Transform3D>(Transform3D::Identity());
+auto transform = std::make_shared<Transform3>(Transform3::Identity());
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
@@ -233,17 +233,17 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
   double cphi = std::cos(phiSector);
   double sphi = std::sin(phiSector);
 
-  std::pair<Vector3D, Vector3D> lineA = {
-      Vector3D(0., 0., 0.), Vector3D(outerR * cphi, outerR * sphi, 0.)};
-  std::pair<Vector3D, Vector3D> lineB = {
-      Vector3D(0., 0., 0.), Vector3D(outerR * cphi, -outerR * sphi, 0.)};
+  std::pair<Vector3, Vector3> lineA = {
+      Vector3(0., 0., 0.), Vector3(outerR * cphi, outerR * sphi, 0.)};
+  std::pair<Vector3, Vector3> lineB = {
+      Vector3(0., 0., 0.), Vector3(outerR * cphi, -outerR * sphi, 0.)};
 
   double minPhi = averagePhi - phiSector;
   double maxPhi = averagePhi + phiSector;
-  lineA = {Vector3D(0., 0., 0.),
-           Vector3D(outerR * std::cos(minPhi), outerR * std::sin(minPhi), 0.)};
-  lineB = {Vector3D(0., 0., 0.),
-           Vector3D(outerR * std::cos(maxPhi), outerR * std::sin(maxPhi), 0.)};
+  lineA = {Vector3(0., 0., 0.),
+           Vector3(outerR * std::cos(minPhi), outerR * std::sin(minPhi), 0.)};
+  lineB = {Vector3(0., 0., 0.),
+           Vector3(outerR * std::cos(maxPhi), outerR * std::sin(maxPhi), 0.)};
 
   for (const auto& mode : testModes) {
     unsigned int segments = std::get<unsigned int>(mode);
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     double minPhiA = 0.75;
     double maxPhiA = 1.4;
 
-    Vector2D offset(-2., 2.);
+    Vector2 offset(-2., 2.);
 
     auto annulus = std::make_shared<AnnulusBounds>(minRadius, maxRadius,
                                                    minPhiA, maxPhiA, offset);
@@ -383,9 +383,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
   auto rectangular = std::make_shared<RectangleBounds>(rhX, rhY);
 
   // Special test for shifted plane to check rMin/rMax
-  Vector3D shift(0., shiftY, 0.);
-  auto shiftedTransform =
-      std::make_shared<Transform3D>(Transform3D::Identity());
+  Vector3 shift(0., shiftY, 0.);
+  auto shiftedTransform = std::make_shared<Transform3>(Transform3::Identity());
   shiftedTransform->pretranslate(shift);
   auto shiftedPlane =
       Surface::makeShared<PlaneSurface>(shiftedTransform, rectangular);
@@ -485,10 +484,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
 
     /// ConvextPolygonBounds test
-    std::vector<Vector2D> vtxs = {
-        Vector2D(-40_mm, -10_mm), Vector2D(-10_mm, -30_mm),
-        Vector2D(30_mm, -20_mm),  Vector2D(10_mm, 20_mm),
-        Vector2D(-20_mm, 50_mm),  Vector2D(-30_mm, 30_mm)};
+    std::vector<Vector2> vtxs = {
+        Vector2(-40_mm, -10_mm), Vector2(-10_mm, -30_mm),
+        Vector2(30_mm, -20_mm),  Vector2(10_mm, 20_mm),
+        Vector2(-20_mm, 50_mm),  Vector2(-30_mm, 30_mm)};
 
     auto sextagon = std::make_shared<ConvexPolygonBounds<6>>(vtxs);
     auto sextagonPlane = Surface::makeShared<PlaneSurface>(transform, sextagon);

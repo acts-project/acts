@@ -32,8 +32,10 @@ namespace detail {
 template <typename scalar_t>
 struct GenericDenseEnvironmentExtension {
   using Scalar = scalar_t;
-  /// @brief Vector3D replacement for the custom scalar type
-  using ThisVector3 = Acts::ActsVector<Scalar, 3>;
+
+  /// @brief Vector3 replacement for the custom scalar type, this
+  /// is needed for the auto-diff extension
+  using Vector3Type = Vector<Scalar, 3>;
 
   /// Momentum at a certain point
   Scalar currentMomentum = 0.;
@@ -99,14 +101,14 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
+         Vector3Type& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3()) {
+         const Vector3Type& kprev = Vector3Type()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
-      ThisVector3 position = stepper.position(state.stepping);
+      Vector3Type position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
@@ -252,15 +254,15 @@ struct GenericDenseEnvironmentExtension {
     auto dGdT = D.block<3, 3>(4, 4);
     auto dGdL = D.block<3, 1>(4, 7);
 
-    ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
-    ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
-    ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
-    ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
+    ActsMatrix<3, 3> dk1dT = ActsMatrix<3, 3>::Zero();
+    ActsMatrix<3, 3> dk2dT = ActsMatrix<3, 3>::Identity();
+    ActsMatrix<3, 3> dk3dT = ActsMatrix<3, 3>::Identity();
+    ActsMatrix<3, 3> dk4dT = ActsMatrix<3, 3>::Identity();
 
-    Vector3D dk1dL = Vector3D::Zero();
-    Vector3D dk2dL = Vector3D::Zero();
-    Vector3D dk3dL = Vector3D::Zero();
-    Vector3D dk4dL = Vector3D::Zero();
+    Vector3 dk1dL = Vector3::Zero();
+    Vector3 dk2dL = Vector3::Zero();
+    Vector3 dk3dL = Vector3::Zero();
+    Vector3 dk4dL = Vector3::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
     std::array<double, 4> jdL;

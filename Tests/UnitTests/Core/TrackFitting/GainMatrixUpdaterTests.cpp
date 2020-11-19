@@ -35,9 +35,9 @@ GeometryContext tgContext = GeometryContext();
 BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   // Make dummy measurement
   auto cylinder =
-      Surface::makeShared<CylinderSurface>(Transform3D::Identity(), 3, 10);
+      Surface::makeShared<CylinderSurface>(Transform3::Identity(), 3, 10);
 
-  SymMatrix2D cov;
+  SymMatrix2 cov;
   cov << 0.04, 0, 0, 0.1;
   FittableMeasurement<TestSourceLink> meas(
       MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
@@ -82,10 +82,10 @@ BOOST_AUTO_TEST_CASE(gain_matrix_updater) {
   BoundVector expPar;
   expPar << 0.0333333, 0.4625000, 1.5707963, 0.9424778, 0.0100000, 0.0000000;
 
-  Vector3D expPosition;
+  Vector3 expPosition;
   expPosition << 2.9998148, 0.0333326, 0.4625000;
 
-  Vector3D expMomentum;
+  Vector3 expMomentum;
   expMomentum << 0.0000000, 80.9016994, 58.7785252;
 
   BoundTrackParameters filtered(cylinder, ts.filtered(),

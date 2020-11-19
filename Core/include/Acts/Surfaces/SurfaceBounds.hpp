@@ -65,7 +65,7 @@ class SurfaceBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2D& lposition,
+  virtual bool inside(const Vector2& lposition,
                       const BoundaryCheck& bcheck) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes

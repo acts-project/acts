@@ -49,7 +49,7 @@ class ISurfaceMaterial {
   /// @param lp is the local position used for the (eventual) lookup
   ///
   /// @return const MaterialSlab
-  virtual const MaterialSlab& materialSlab(const Vector2D& lp) const = 0;
+  virtual const MaterialSlab& materialSlab(const Vector2& lp) const = 0;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
@@ -57,7 +57,7 @@ class ISurfaceMaterial {
   /// @param gp is the global position used for the (eventual) lookup
   ///
   /// @return const MaterialSlab
-  virtual const MaterialSlab& materialSlab(const Vector3D& gp) const = 0;
+  virtual const MaterialSlab& materialSlab(const Vector3& gp) const = 0;
 
   /// Direct access via bins to the MaterialSlab
   ///
@@ -79,7 +79,7 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector2D& lp, NavigationDirection pDir,
+  MaterialSlab materialSlab(const Vector2& lp, NavigationDirection pDir,
                             MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
@@ -90,7 +90,7 @@ class ISurfaceMaterial {
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialSlab
-  MaterialSlab materialSlab(const Vector3D& gp, NavigationDirection pDir,
+  MaterialSlab materialSlab(const Vector3& gp, NavigationDirection pDir,
                             MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
@@ -121,7 +121,7 @@ inline double ISurfaceMaterial::factor(NavigationDirection pDir,
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector2D& lp, NavigationDirection pDir,
+    const Vector2& lp, NavigationDirection pDir,
     MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(lp);
@@ -137,7 +137,7 @@ inline MaterialSlab ISurfaceMaterial::materialSlab(
 }
 
 inline MaterialSlab ISurfaceMaterial::materialSlab(
-    const Vector3D& gp, NavigationDirection pDir,
+    const Vector3& gp, NavigationDirection pDir,
     MaterialUpdateStage mStage) const {
   // The plain material properties associated to this bin
   MaterialSlab plainMatProp = materialSlab(gp);

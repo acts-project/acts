@@ -29,8 +29,7 @@ class IVisualization3D {
   /// @param vtx The vertex position
   /// @param color The color
   ///
-  virtual void vertex(const Vector3D& vtx,
-                      ColorRGB color = {120, 120, 120}) = 0;
+  virtual void vertex(const Vector3& vtx, ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a face that connects a list of vertices.
   /// @note Depending on the helper implementation, out of plane vertices might
@@ -38,7 +37,7 @@ class IVisualization3D {
   /// @param vtxs The vertices that make up the face
   /// @param color The color of the face
   ///
-  virtual void face(const std::vector<Vector3D>& vtxs,
+  virtual void face(const std::vector<Vector3>& vtxs,
                     ColorRGB color = {120, 120, 120}) = 0;
 
   /// Draw a faces that connects a list of vertices - expert only
@@ -49,7 +48,7 @@ class IVisualization3D {
   /// @param faces The face presectiotions (i.e. connecting vertices)
   /// @param color The color of the face
   ///
-  virtual void faces(const std::vector<Vector3D>& vtxs,
+  virtual void faces(const std::vector<Vector3>& vtxs,
                      const std::vector<FaceType>& faces,
                      ColorRGB color = {120, 120, 120}) = 0;
 
@@ -58,7 +57,7 @@ class IVisualization3D {
   /// @param b The end vertex
   /// @param color The color of the line
   ///
-  virtual void line(const Vector3D& a, const Vector3D& b,
+  virtual void line(const Vector3& a, const Vector3& b,
                     ColorRGB color = {120, 120, 120}) = 0;
 
   /// Write the content of the helper to an outstream.

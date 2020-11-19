@@ -41,7 +41,7 @@ class CylinderLayer : public CylinderSurface, public Layer {
   ///
   /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr create(
-      const Transform3D& transform,
+      const Transform3& transform,
       const std::shared_ptr<const CylinderBounds>& cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
@@ -79,7 +79,7 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @todo change ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  CylinderLayer(const Transform3D& transform,
+  CylinderLayer(const Transform3& transform,
                 const std::shared_ptr<const CylinderBounds>& cBounds,
                 std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
                 double thickness = 0.,
@@ -92,7 +92,7 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @param shift is the additional transform applied after cloning
   ///
   /// @return The return object is a shared pointer to the layer.
-  CylinderLayer(const CylinderLayer& cla, const Transform3D& shift);
+  CylinderLayer(const CylinderLayer& cla, const Transform3& shift);
 };
 
 }  // namespace Acts

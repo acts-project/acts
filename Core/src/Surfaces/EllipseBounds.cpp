@@ -28,7 +28,7 @@ static inline double square(double x) {
 }
 
 /// @warning This **only** works for tolerance-based checks
-bool Acts::EllipseBounds::inside(const Vector2D& lposition,
+bool Acts::EllipseBounds::inside(const Vector2& lposition,
                                  const BoundaryCheck& bcheck) const {
   double tol0 = bcheck.m_tolerance[0];
   double tol1 = bcheck.m_tolerance[1];
@@ -47,7 +47,7 @@ bool Acts::EllipseBounds::inside(const Vector2D& lposition,
   return (insidePhi && insideInner && insideOuter);
 }
 
-std::vector<Acts::Vector2D> Acts::EllipseBounds::vertices(
+std::vector<Acts::Vector2> Acts::EllipseBounds::vertices(
     unsigned int lseg) const {
   return detail::VerticesHelper::ellipsoidVertices(
       get(eInnerRx), get(eInnerRy), get(eOuterRx), get(eOuterRy),

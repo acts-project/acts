@@ -37,10 +37,10 @@ BOOST_DATA_TEST_CASE(
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
-  Vector2D loc(l0, l1);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector2 loc(l0, l1);
+  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
   // transform reference position
-  Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
+  Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);
 
   // convert free parameters to bound parameters
   {
@@ -89,7 +89,7 @@ BOOST_DATA_TEST_CASE(GlobalToCurvilinearParameters,
   const auto qOverP = q / p;
 
   GeometryContext geoCtx;
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   // convert w/ direction
   {

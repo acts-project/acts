@@ -33,7 +33,7 @@ class DetectorElementBase {
   /// Return the transform for the Element proxy mechanism
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  virtual const Transform3D& transform(const GeometryContext& gctx) const = 0;
+  virtual const Transform3& transform(const GeometryContext& gctx) const = 0;
 
   /// Return surface representation
   virtual const Surface& surface() const = 0;

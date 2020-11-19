@@ -64,7 +64,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
-      Acts::Vector3D{0., 0., 0.});
+      Acts::Vector3{0., 0., 0.});
 
   // Set the KalmanFitter options
   Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>

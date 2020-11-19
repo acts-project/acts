@@ -20,11 +20,11 @@ struct PointwiseMaterialInteraction {
   const Surface* surface;
 
   /// The particle position at the interaction.
-  const Vector3D pos = Vector3D(0., 0., 0);
+  const Vector3 pos = Vector3(0., 0., 0);
   /// The particle time at the interaction.
   const double time = 0.0;
   /// The particle direction at the interaction.
-  const Vector3D dir = Vector3D(0., 0., 0);
+  const Vector3 dir = Vector3(0., 0., 0);
   /// The particle momentum at the interaction
   const double momentum;
   /// The particle charge

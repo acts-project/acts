@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
                                 refvalues.begin(), refvalues.end());
 
   // Inside position
-  Vector3D inside({5., 10., 8.});
+  Vector3 inside({5., 10., 8.});
   // Outside positions  in x, y, z
-  std::vector<Vector3D> outsides = {
+  std::vector<Vector3> outsides = {
       {20., 1., -2.}, {1., -30., 2.}, {-1., 2., 100.}};
 
   // Inside position
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   CuboidVolumeBounds box(5, 8, 7);
-  auto cvbOrientedSurfaces = box.orientedSurfaces(Transform3D::Identity());
+  auto cvbOrientedSurfaces = box.orientedSurfaces(Transform3::Identity());
 
   BOOST_CHECK_EQUAL(cvbOrientedSurfaces.size(), 6);
 
@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
     BOOST_CHECK(!box.inside(outsideBox));
   }
 
-  Vector3D xaxis(1., 0., 0.);
-  Vector3D yaxis(0., 1., 0.);
-  Vector3D zaxis(0., 0., 1.);
+  Vector3 xaxis(1., 0., 0.);
+  Vector3 yaxis(0., 1., 0.);
+  Vector3 zaxis(0., 0., 1.);
 
   // Test the orientation of the boundary surfaces
   auto nFaceXY =

@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Constraint for vertex fit
   Vertex<BoundTrackParameters> myConstraint;
   // Some abitrary values
-  SymMatrix4D myCovMat = SymMatrix4D::Zero();
+  SymMatrix4 myCovMat = SymMatrix4::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
   myCovMat(3, 3) = 30.;
   myConstraint.setFullCovariance(std::move(myCovMat));
-  myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
+  myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
   const std::vector<const BoundTrackParameters*> emptyVector;
 
@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Vertex<BoundTrackParameters> fittedVertex =
       billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
 
-  Vector3D origin(0., 0., 0.);
+  Vector3 origin(0., 0., 0.);
   BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
-  SymMatrix4D zeroMat = SymMatrix4D::Zero();
+  SymMatrix4 zeroMat = SymMatrix4::Zero();
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
   fittedVertex =
@@ -151,13 +151,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Constraint for vertex fit
     Vertex<BoundTrackParameters> myConstraint;
     // Some abitrary values
-    SymMatrix4D myCovMat = SymMatrix4D::Zero();
+    SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
-    myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
+    myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
     VertexingOptions<BoundTrackParameters> vfOptions(geoContext,
                                                      magFieldContext);
 
@@ -168,9 +168,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     double y = vXYDist(gen);
     double z = vZDist(gen);
 
-    Vector3D vertexPosition(x, y, z);
+    Vector3 vertexPosition(x, y, z);
     std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+        Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
     // Calculate d0 and z0 corresponding to vertex position
     double d0V = sqrt(x * x + y * y);
     double z0V = z;
@@ -286,13 +286,13 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
     // Some abitrary values
-    SymMatrix4D myCovMat = SymMatrix4D::Zero();
+    SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
     myConstraint.setFullCovariance(std::move(myCovMat));
-    myConstraint.setFullPosition(Vector4D(0, 0, 0, 0));
+    myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
     VertexingOptions<InputTrack> vfOptions(geoContext, magFieldContext);
 
@@ -304,9 +304,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     double y = vXYDist(gen);
     double z = vZDist(gen);
 
-    Vector3D vertexPosition(x, y, z);
+    Vector3 vertexPosition(x, y, z);
     std::shared_ptr<PerigeeSurface> perigeeSurface =
-        Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+        Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Calculate d0 and z0 corresponding to vertex position
     double d0V = sqrt(x * x + y * y);

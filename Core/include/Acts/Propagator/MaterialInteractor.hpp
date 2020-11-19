@@ -24,11 +24,11 @@ namespace Acts {
 /// This is only nessecary recorded when configured
 struct MaterialInteraction {
   /// The particle position at the interaction.
-  Vector3D position = Vector3D(0., 0., 0);
+  Vector3 position = Vector3(0., 0., 0);
   /// The particle time at the interaction.
   double time = 0.0;
   /// The particle direction at the interaction.
-  Vector3D direction = Vector3D(0., 0., 0);
+  Vector3 direction = Vector3(0., 0., 0);
   /// The momentum change due to the interaction.
   double deltaP = 0.0;
   /// Expected phi variance due to the interactions.
@@ -215,8 +215,8 @@ struct MaterialInteractor {
   void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
     // Update the previous interaction
-    Vector3D shift = stepper.position(state.stepping) -
-                     result.materialInteractions.back().position;
+    Vector3 shift = stepper.position(state.stepping) -
+                    result.materialInteractions.back().position;
     double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
@@ -237,6 +237,6 @@ using RecordedMaterial = MaterialInteractor::Result;
 /// - this is start:  position, start momentum
 ///   and the Recorded material
 using RecordedMaterialTrack =
-    std::pair<std::pair<Acts::Vector3D, Acts::Vector3D>, RecordedMaterial>;
+    std::pair<std::pair<Acts::Vector3, Acts::Vector3>, RecordedMaterial>;
 
 }  // namespace Acts

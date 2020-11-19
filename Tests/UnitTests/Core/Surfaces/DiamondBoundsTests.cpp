@@ -79,14 +79,14 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   //
   /// Test boundingBox
   BOOST_CHECK_EQUAL(diamondBoundsObject.boundingBox(),
-                    RectangleBounds(Vector2D{-50., -10.}, Vector2D{50., 20.}));
+                    RectangleBounds(Vector2{-50., -10.}, Vector2{50., 20.}));
   //
   // clone already tested
   //
   /// Test distanceToBoundary
-  Vector2D origin(0., 0.);
-  Vector2D outsideBy10(0., 30.);
-  Vector2D inRectangle(15., 0.);
+  Vector2 origin(0., 0.);
+  Vector2 outsideBy10(0., 30.);
+  Vector2 inRectangle(15., 0.);
 
   /// Test dump
   // Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, hlengthY1,
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(DiamondBoundsProperties) {
   //
   /// Test vertices (does this need to be implemented in this class??
   // auto v=diamondBoundsObject.vertices();
-  std::vector<Vector2D> referenceVertices{
+  std::vector<Vector2> referenceVertices{
       {-minHalfX, -halfY1}, {minHalfX, -halfY1}, {midHalfX, 0.},
       {maxHalfX, halfY2},   {-maxHalfX, halfY2}, {-midHalfX, 0.}};
   const auto& actualVertices = diamondBoundsObject.vertices();

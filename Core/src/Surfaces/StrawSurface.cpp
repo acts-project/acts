@@ -17,11 +17,11 @@
 #include <iostream>
 #include <utility>
 
-Acts::StrawSurface::StrawSurface(const Transform3D& transform, double radius,
+Acts::StrawSurface::StrawSurface(const Transform3& transform, double radius,
                                  double halez)
     : GeometryObject(), LineSurface(transform, radius, halez) {}
 
-Acts::StrawSurface::StrawSurface(const Transform3D& transform,
+Acts::StrawSurface::StrawSurface(const Transform3& transform,
                                  std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), LineSurface(transform, std::move(lbounds)) {}
 
@@ -35,7 +35,7 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 
 Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
                                  const StrawSurface& other,
-                                 const Transform3D& shift)
+                                 const Transform3& shift)
     : GeometryObject(), LineSurface(gctx, other, shift) {}
 
 Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
@@ -49,11 +49,11 @@ Acts::StrawSurface& Acts::StrawSurface::operator=(const StrawSurface& other) {
 Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
   // Prepare vertices and faces
-  std::vector<Vector3D> vertices;
+  std::vector<Vector3> vertices;
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  const Transform3D& ctransform = transform(gctx);
+  const Transform3& ctransform = transform(gctx);
   // Draw the bounds if more than one segment are chosen
   if (lseg > 1) {
     double r = m_bounds->get(LineBounds::eR);
@@ -66,7 +66,7 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
         /// Helper method to create the segment
         detail::VerticesHelper::createSegment(
             vertices, {r, r}, phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
-            Vector3D(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
+            Vector3(0., 0., side * m_bounds->get(LineBounds::eHalfLengthZ)),
             ctransform);
       }
     }
@@ -76,13 +76,13 @@ Acts::Polyhedron Acts::StrawSurface::polyhedronRepresentation(
   }
 
   size_t bvertices = vertices.size();
-  Vector3D left(0, 0, -m_bounds->get(LineBounds::eHalfLengthZ));
-  Vector3D right(0, 0, m_bounds->get(LineBounds::eHalfLengthZ));
+  Vector3 left(0, 0, -m_bounds->get(LineBounds::eHalfLengthZ));
+  Vector3 right(0, 0, m_bounds->get(LineBounds::eHalfLengthZ));
   // The central wire/straw
   vertices.push_back(ctransform * left);
   vertices.push_back(ctransform * right);
   faces.push_back({bvertices, bvertices + 1});
-  vertices.push_back(ctransform * Vector3D(0., 0., 0.));
+  vertices.push_back(ctransform * Vector3(0., 0., 0.));
   triangularMesh.push_back({bvertices, bvertices + 2, bvertices + 1});
 
   return Polyhedron(vertices, faces, triangularMesh, false);

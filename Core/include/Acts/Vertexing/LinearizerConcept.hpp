@@ -33,7 +33,7 @@ METHOD_TRAIT(linTrack_t, linearizeTrack);
 
          constexpr static bool linTrack_exists = has_method<const S, Result<LinearizedTrack>,
          linTrack_t, const BoundTrackParameters&,
-                     const Vector4D&,
+                     const Vector4&,
                      const Acts::GeometryContext&,
                      const Acts::MagneticFieldContext&,
                      typename S::State&>;

@@ -47,11 +47,11 @@ class DiamondBounds : public PlanarBounds {
                 double halfYneg, double halfYpos) noexcept(false)
       : m_values({halfXnegY, halfXzeroY, halfXposY, halfYneg, halfYpos}),
         m_boundingBox(
-            Vector2D{
+            Vector2{
                 -(*std::max_element(m_values.begin(), m_values.begin() + 2)),
                 -halfYneg},
-            Vector2D{*std::max_element(m_values.begin(), m_values.begin() + 2),
-                     halfYpos}) {
+            Vector2{*std::max_element(m_values.begin(), m_values.begin() + 2),
+                    halfYpos}) {
     checkConsistency();
   }
 
@@ -61,10 +61,10 @@ class DiamondBounds : public PlanarBounds {
   DiamondBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values),
         m_boundingBox(
-            Vector2D{-(*std::max_element(values.begin(), values.begin() + 2)),
-                     -values[eHalfLengthYneg]},
-            Vector2D{*std::max_element(values.begin(), values.begin() + 2),
-                     values[eHalfLengthYpos]}) {}
+            Vector2{-(*std::max_element(values.begin(), values.begin() + 2)),
+                    -values[eHalfLengthYneg]},
+            Vector2{*std::max_element(values.begin(), values.begin() + 2),
+                    values[eHalfLengthYpos]}) {}
 
   ~DiamondBounds() override = default;
 
@@ -82,7 +82,7 @@ class DiamondBounds : public PlanarBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool inside(const Vector2D& lposition,
+  bool inside(const Vector2& lposition,
               const BoundaryCheck& bcheck) const final;
 
   /// Return the vertices
@@ -93,7 +93,7 @@ class DiamondBounds : public PlanarBounds {
   /// @note the number of segements is ignored for this representation
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2D> vertices(unsigned int lseg = 1) const final;
+  std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
 
   // Bounding box representation
   const RectangleBounds& boundingBox() const final;

@@ -29,7 +29,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
   }
   BoundsType type() const final { return SurfaceBounds::eOther; }
   std::vector<double> values() const override { return m_values; }
-  bool inside(const Vector2D& /*lpos*/,
+  bool inside(const Vector2& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
   }

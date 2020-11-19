@@ -11,17 +11,17 @@
 template <typename coll_t>
 void Acts::ConvexPolygonBoundsBase::convex_impl(
     const coll_t& vertices) noexcept(false) {
-  static_assert(std::is_same<typename coll_t::value_type, Vector2D>::value,
-                "Must be collection of Vector2D");
+  static_assert(std::is_same<typename coll_t::value_type, Vector2>::value,
+                "Must be collection of Vector2");
 
   const size_t N = vertices.size();
   for (size_t i = 0; i < N; i++) {
     size_t j = (i + 1) % N;
-    const Vector2D& a = vertices[i];
-    const Vector2D& b = vertices[j];
+    const Vector2& a = vertices[i];
+    const Vector2& b = vertices[j];
 
-    const Vector2D ab = b - a;
-    const Vector2D normal = Vector2D(ab.y(), -ab.x()).normalized();
+    const Vector2 ab = b - a;
+    const Vector2 normal = Vector2(ab.y(), -ab.x()).normalized();
 
     bool first = true;
     bool ref;
@@ -31,7 +31,7 @@ void Acts::ConvexPolygonBoundsBase::convex_impl(
         continue;
       }
 
-      const Vector2D& c = vertices[k];
+      const Vector2& c = vertices[k];
       double dot = normal.dot(c - a);
 
       if (first) {
@@ -51,7 +51,7 @@ void Acts::ConvexPolygonBoundsBase::convex_impl(
 template <typename coll_t>
 Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
     const coll_t& vertices) {
-  Vector2D vmax, vmin;
+  Vector2 vmax, vmin;
   vmax = vertices[0];
   vmin = vertices[0];
 
@@ -65,7 +65,7 @@ Acts::RectangleBounds Acts::ConvexPolygonBoundsBase::makeBoundingBox(
 
 template <int N>
 Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
-    const std::vector<Acts::Vector2D>& vertices) noexcept(false)
+    const std::vector<Acts::Vector2>& vertices) noexcept(false)
     : m_vertices(), m_boundingBox(makeBoundingBox(vertices)) {
   throw_assert(vertices.size() == N,
                "Size and number of given vertices do not match.");
@@ -87,7 +87,7 @@ Acts::ConvexPolygonBounds<N>::ConvexPolygonBounds(
     const value_array& values) noexcept(false)
     : m_vertices(), m_boundingBox(0., 0.) {
   for (size_t i = 0; i < N; i++) {
-    m_vertices[i] = Vector2D(values[2 * i], values[2 * i + 1]);
+    m_vertices[i] = Vector2(values[2 * i], values[2 * i + 1]);
   }
   makeBoundingBox(m_vertices);
   checkConsistency();
@@ -100,12 +100,12 @@ Acts::SurfaceBounds::BoundsType Acts::ConvexPolygonBounds<N>::type() const {
 
 template <int N>
 bool Acts::ConvexPolygonBounds<N>::inside(
-    const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
+    const Acts::Vector2& lposition, const Acts::BoundaryCheck& bcheck) const {
   return bcheck.isInside(lposition, m_vertices);
 }
 
 template <int N>
-std::vector<Acts::Vector2D> Acts::ConvexPolygonBounds<N>::vertices(
+std::vector<Acts::Vector2> Acts::ConvexPolygonBounds<N>::vertices(
     unsigned int /*lseg*/) const {
   return {m_vertices.begin(), m_vertices.end()};
 }

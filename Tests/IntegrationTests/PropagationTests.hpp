@@ -35,7 +35,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
     phi = 0;
   }
 
-  Vector4D pos4 = Vector4D::Zero();
+  Vector4 pos4 = Vector4::Zero();
   return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge);
 }
 
@@ -69,7 +69,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
   BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
-  Vector4D pos4 = Vector4D::Zero();
+  Vector4 pos4 = Vector4::Zero();
   return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
 }
 
@@ -85,7 +85,7 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
     phi = 0;
   }
 
-  Vector4D pos4 = Vector4D::Zero();
+  Vector4 pos4 = Vector4::Zero();
   return NeutralCurvilinearTrackParameters(pos4, phi, theta, 1 / absMom);
 }
 
@@ -153,18 +153,18 @@ inline void checkCovarianceConsistency(
 
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
-inline Acts::Transform3D makeCurvilinearTransform(
+inline Acts::Transform3 makeCurvilinearTransform(
     const Acts::SingleBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3D unitW = params.unitDirection();
+  Acts::Vector3 unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
-  Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
+  Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Zero();
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
-  Acts::Translation3D offset(params.position(geoCtx));
-  Acts::Transform3D toGlobal = offset * rotation;
+  Acts::Translation3 offset(params.position(geoCtx));
+  Acts::Transform3 toGlobal = offset * rotation;
 
   return toGlobal;
 }
@@ -178,7 +178,7 @@ struct ZCylinderSurfaceBuilder {
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
     return Acts::Surface::makeShared<Acts::CylinderSurface>(
-        Acts::Transform3D::Identity(), radius, halfz);
+        Acts::Transform3::Identity(), radius, halfz);
   }
 };
 
@@ -196,10 +196,10 @@ struct DiscSurfaceBuilder {
     // sit directly at the rho=0,phi=undefined singularity
     // TODO this is a hack do avoid issues with the numerical covariance
     //      transport that does not work well at rho=0,
-    Acts::Vector3D localOffset = Acts::Vector3D::Zero();
+    Acts::Vector3 localOffset = Acts::Vector3::Zero();
     localOffset[Acts::ePos0] = 1_cm;
     localOffset[Acts::ePos1] = -1_cm;
-    Acts::Vector3D globalOriginDelta = cl.linear() * localOffset;
+    Acts::Vector3 globalOriginDelta = cl.linear() * localOffset;
     cl.pretranslate(globalOriginDelta);
 
     return Acts::Surface::makeShared<Acts::DiscSurface>(cl);
@@ -224,7 +224,7 @@ struct ZStrawSurfaceBuilder {
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
-        Acts::Transform3D(Acts::Translation3D(params.position(geoCtx))));
+        Acts::Transform3(Acts::Translation3(params.position(geoCtx))));
   }
 };
 

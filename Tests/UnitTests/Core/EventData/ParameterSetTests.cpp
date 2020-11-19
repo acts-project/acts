@@ -53,7 +53,7 @@ void check_residuals_for_bound_parameters() {
   const double min = ParameterTraits<BoundIndices, eBoundTheta>::min;
   double theta_1 = 0.7 * M_PI;
   double theta_2 = 0.4 * M_PI;
-  ActsVectorD<1> dTheta;
+  ActsVector<1> dTheta;
   dTheta << (theta_1 - theta_2);
 
   // both parameters inside bounds, difference is positive
@@ -116,7 +116,7 @@ void check_residuals_for_cyclic_parameters() {
 
   double phi_1 = 0.7 * M_PI;
   double phi_2 = 0.4 * M_PI;
-  ActsVectorD<1> dPhi;
+  ActsVector<1> dPhi;
   dPhi << (phi_1 - phi_2);
 
   ParameterSet<BoundIndices, eBoundPhi> cyclic1(std::nullopt, phi_1);
@@ -322,10 +322,10 @@ void free_random_residual_tests() {
  */
 BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   // One-dimensional constructions
-  ActsSymMatrixD<1> cov1D;
+  ActsSymMatrix<1> cov1D;
   cov1D << 0.5;
 
-  ActsVectorD<1> vec1D;
+  ActsVector<1> vec1D;
   vec1D << 0.1;
 
   ParameterSet<BoundIndices, eBoundLoc0> parSet_with_cov1D_real(cov1D, 0.1);
@@ -334,10 +334,10 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   ParameterSet<BoundIndices, eBoundLoc0> parSet_with_cov1D_vec1D(cov1D, vec1D);
 
   // Two-dimensional constructions
-  ActsSymMatrixD<2> cov2D;
+  ActsSymMatrix<2> cov2D;
   cov2D << 0.5, 0., 0.8, 0.;
 
-  ActsVectorD<2> vec2D;
+  ActsVector<2> vec2D;
   vec2D << 0.1, 0.3;
 
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1> parSet_with_cov2D_real(
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
       (ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1>::size() == 2));
 
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
@@ -359,14 +359,14 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
   double loc1 = -0.2;
   double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
                             // failed tests due to angle range corrections
-  Vector3D parValues(loc0, loc1, phi);
+  Vector3 parValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix, and three parameters as pack
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> parSet_with_cov(
       cov, loc0, loc1, phi);
 
   // parameter set with covariance matrix, and a vector
-  ActsVectorD<3> vec;
+  ActsVector<3> vec;
   vec << loc0, loc1, phi;
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi>
       parSet_with_cov_vec(cov, vec);
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(parset_consistency_tests) {
  */
 BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
   double loc1 = -0.2;
   double phi = 0.3 * M_PI;  // this should be within [-M_PI,M_PI) to avoid
                             // failed tests due to angle range corrections
-  Vector3D firstParValues(loc0, loc1, phi);
+  Vector3 firstParValues(loc0, loc1, phi);
 
   // parameter set with covariance matrix
   ParameterSet<BoundIndices, eBoundLoc0, eBoundLoc1, eBoundPhi> first(
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(parset_copy_assignment_tests) {
  */
 BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
@@ -557,36 +557,36 @@ BOOST_AUTO_TEST_CASE(parset_comparison_tests) {
  */
 BOOST_AUTO_TEST_CASE(parset_projection_tests) {
   // clang-format off
-  ActsMatrixD<1, eBoundSize> phi_proj;
+  ActsMatrix<1, eBoundSize> phi_proj;
   phi_proj << 0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<2, eBoundSize> loc0_qop_proj;
+  ActsMatrix<2, eBoundSize> loc0_qop_proj;
   loc0_qop_proj << 1, 0, 0, 0, 0, 0,
                    0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<2, eBoundSize> loc1_theta_proj;
+  ActsMatrix<2, eBoundSize> loc1_theta_proj;
   loc1_theta_proj << 0, 1, 0, 0, 0, 0,
                      0, 0, 0, 1, 0, 0;
 
-  ActsMatrixD<3, eBoundSize> loc0_loc1_phi_proj;
+  ActsMatrix<3, eBoundSize> loc0_loc1_phi_proj;
   loc0_loc1_phi_proj << 1, 0, 0, 0, 0, 0,
                         0, 1, 0, 0, 0, 0,
                         0, 0, 1, 0, 0, 0;
 
-  ActsMatrixD<4, eBoundSize> loc0_phi_theta_qop_proj;
+  ActsMatrix<4, eBoundSize> loc0_phi_theta_qop_proj;
   loc0_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0,
                              0, 0, 1, 0, 0, 0,
                              0, 0, 0, 1, 0, 0,
                              0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<5, eBoundSize> loc0_loc1_phi_theta_qop_proj;
+  ActsMatrix<5, eBoundSize> loc0_loc1_phi_theta_qop_proj;
   loc0_loc1_phi_theta_qop_proj << 1, 0, 0, 0, 0, 0,
                                   0, 1, 0, 0, 0, 0,
                                   0, 0, 1, 0, 0, 0,
                                   0, 0, 0, 1, 0, 0,
                                   0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<eBoundSize, eBoundSize>
+  ActsMatrix<eBoundSize, eBoundSize>
       loc0_loc1_phi_theta_qop_t_proj;
   loc0_loc1_phi_theta_qop_t_proj << 1, 0, 0, 0, 0, 0,
                                     0, 1, 0, 0, 0, 0,
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(parset_residual_tests) {
   const double delta_phi =
       get_cyclic_difference(second_phi, first_phi, min, max);
   const double delta_theta = second_theta - first_theta;
-  Vector3D residuals(delta_loc0, delta_phi, delta_theta);
+  Vector3 residuals(delta_loc0, delta_phi, delta_theta);
 
   ParameterSet<BoundIndices, eBoundLoc0, eBoundPhi, eBoundTheta> first(
       std::nullopt, first_loc0, first_phi, first_theta);
@@ -792,14 +792,14 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
   BOOST_CHECK((ParameterSet<FreeIndices, eFreePos0, eFreePos1>::size() == 2));
 
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  Vector3D parValues(x, y, z);
+  Vector3 parValues(x, y, z);
 
   // parameter set with covariance matrix
   ParameterSet<FreeIndices, eFreePos0, eFreePos1, eFreePos2> parSet_with_cov(
@@ -870,14 +870,14 @@ BOOST_AUTO_TEST_CASE(free_parset_consistency_tests) {
  */
 BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
   double x = 0.5;
   double y = -0.2;
   double z = 0.3;
-  Vector3D firstParValues(x, y, z);
+  Vector3 firstParValues(x, y, z);
 
   // parameter set with covariance matrix
   ParameterSet<FreeIndices, eFreePos0, eFreePos1, eFreePos2> first(cov, x, y,
@@ -924,7 +924,7 @@ BOOST_AUTO_TEST_CASE(free_parset_copy_assignment_tests) {
  */
 BOOST_AUTO_TEST_CASE(free_parset_comparison_tests) {
   // covariance matrix
-  ActsSymMatrixD<3> cov;
+  ActsSymMatrix<3> cov;
   cov << 1, 0, 0, 0, 1.2, 0.2, 0, 0.2, 0.7;
 
   // parameter values
@@ -988,36 +988,36 @@ BOOST_AUTO_TEST_CASE(free_parset_comparison_tests) {
  */
 BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
   // clang-format off
-  ActsMatrixD<1, eFreeSize> z_proj;
+  ActsMatrix<1, eFreeSize> z_proj;
   z_proj << 0, 0, 1, 0, 0, 0, 0, 0;
 
-  ActsMatrixD<2, eFreeSize> x_qop_proj;
+  ActsMatrix<2, eFreeSize> x_qop_proj;
   x_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 1;
 
-  ActsMatrixD<2, eFreeSize> y_tz_proj;
+  ActsMatrix<2, eFreeSize> y_tz_proj;
   y_tz_proj << 0, 1, 0, 0, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, 1, 0;
 
-  ActsMatrixD<3, eFreeSize> x_y_z_proj;
+  ActsMatrix<3, eFreeSize> x_y_z_proj;
   x_y_z_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                 0, 1, 0, 0, 0, 0, 0, 0,
                 0, 0, 1, 0, 0, 0, 0, 0;
 
-  ActsMatrixD<4, eFreeSize> x_z_tz_qop_proj;
+  ActsMatrix<4, eFreeSize> x_z_tz_qop_proj;
   x_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                      0, 0, 1, 0, 0, 0, 0, 0,
                      0, 0, 0, 0, 0, 0, 1, 0,
                      0, 0, 0, 0, 0, 0, 0, 1;
 
-  ActsMatrixD<5, eFreeSize> x_y_z_tz_qop_proj;
+  ActsMatrix<5, eFreeSize> x_y_z_tz_qop_proj;
   x_y_z_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                        0, 1, 0, 0, 0, 0, 0, 0,
                        0, 0, 1, 0, 0, 0, 0, 0,
                        0, 0, 0, 0, 0, 0, 1, 0,
                        0, 0, 0, 0, 0, 0, 0, 1;
 
-  ActsMatrixD<6, eFreeSize> x_y_z_t_tz_qop_proj;
+  ActsMatrix<6, eFreeSize> x_y_z_t_tz_qop_proj;
   x_y_z_t_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                          0, 1, 0, 0, 0, 0, 0, 0,
                          0, 0, 1, 0, 0, 0, 0, 0,
@@ -1025,7 +1025,7 @@ BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
                          0, 0, 0, 0, 0, 0, 1, 0,
                          0, 0, 0, 0, 0, 0, 0, 1;
 
-  ActsMatrixD<7, eFreeSize> x_y_z_t_ty_tz_qop_proj;
+  ActsMatrix<7, eFreeSize> x_y_z_t_ty_tz_qop_proj;
   x_y_z_t_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                             0, 1, 0, 0, 0, 0, 0, 0,
                             0, 0, 1, 0, 0, 0, 0, 0,
@@ -1034,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(free_parset_projection_tests) {
                             0, 0, 0, 0, 0, 0, 1, 0,
                             0, 0, 0, 0, 0, 0, 0, 1;
 
-  ActsMatrixD<eFreeSize, eFreeSize>
+  ActsMatrix<eFreeSize, eFreeSize>
       x_y_z_t_tx_ty_tz_qop_proj;
   x_y_z_t_tx_ty_tz_qop_proj << 1, 0, 0, 0, 0, 0, 0, 0,
                                0, 1, 0, 0, 0, 0, 0, 0,
@@ -1107,7 +1107,7 @@ BOOST_AUTO_TEST_CASE(free_parset_residual_tests) {
   const double delta_x = second_x - first_x;
   const double delta_y = second_y - first_y;
   const double delta_z = second_z - first_z;
-  Vector3D residuals(delta_x, delta_y, delta_z);
+  Vector3 residuals(delta_x, delta_y, delta_z);
 
   ParameterSet<FreeIndices, eFreePos0, eFreePos1, eFreePos2> first(
       std::nullopt, first_x, first_y, first_z);

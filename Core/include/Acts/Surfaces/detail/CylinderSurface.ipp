@@ -6,27 +6,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-inline Vector3D CylinderSurface::rotSymmetryAxis(
+inline Vector3 CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
-    const Transform3D& transform, const Vector3D& position,
-    const Vector3D& direction) const {
+    const Transform3& transform, const Vector3& position,
+    const Vector3& direction) const {
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
 
   // Get the transformation matrtix
   const auto& tMatrix = transform.matrix();
-  Vector3D caxis = tMatrix.block<3, 1>(0, 2).transpose();
-  Vector3D ccenter = tMatrix.block<3, 1>(0, 3).transpose();
+  Vector3 caxis = tMatrix.block<3, 1>(0, 2).transpose();
+  Vector3 ccenter = tMatrix.block<3, 1>(0, 3).transpose();
 
   // Check documentation for explanation
-  Vector3D pc = position - ccenter;
-  Vector3D pcXcd = pc.cross(caxis);
-  Vector3D ldXcd = direction.cross(caxis);
+  Vector3 pc = position - ccenter;
+  Vector3 pcXcd = pc.cross(caxis);
+  Vector3 ldXcd = direction.cross(caxis);
   double a = ldXcd.dot(ldXcd);
   double b = 2. * (ldXcd.dot(pcXcd));
   double c = pcXcd.dot(pcXcd) - (R * R);
@@ -35,8 +35,8 @@ inline detail::RealQuadraticEquation CylinderSurface::intersectionSolver(
 }
 
 inline SurfaceIntersection CylinderSurface::intersect(
-    const GeometryContext& gctx, const Vector3D& position,
-    const Vector3D& direction, const BoundaryCheck& bcheck) const {
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, const BoundaryCheck& bcheck) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation
@@ -48,7 +48,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
   }
 
   // Check the validity of the first solution
-  Vector3D solution1 = position + qe.first * direction;
+  Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
       qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
           ? Intersection3D::Status::onSurface
@@ -56,7 +56,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
 
   // Helper method for boundary check
   auto boundaryCheck =
-      [&](const Vector3D& solution,
+      [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
     if (!bcheck)
@@ -68,7 +68,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
       // Built-in local to global for speed reasons
       const auto& tMatrix = gctxTransform.matrix();
       // Create the reference vector in local
-      const Vector3D vecLocal(solution - tMatrix.block<3, 1>(0, 3));
+      const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
@@ -87,7 +87,7 @@ inline SurfaceIntersection CylinderSurface::intersect(
     return cIntersection;
   }
   // Check the validity of the second solution
-  Vector3D solution2 = position + qe.second * direction;
+  Vector3 solution2 = position + qe.second * direction;
   Intersection3D::Status status2 =
       qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
           ? Intersection3D::Status::onSurface
@@ -119,31 +119,31 @@ inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const ActsRowVector<AlignmentScalar, 3> pcRowVec =
+  const RowVector<AlignmentScalar, 3> pcRowVec =
       (position - center(gctx)).transpose();
   // The rotation
   const auto& rotation = transform(gctx).rotation();
   // The local frame x/y/z axis
-  const Vector3D localXAxis = rotation.col(0);
-  const Vector3D localYAxis = rotation.col(1);
-  const Vector3D localZAxis = rotation.col(2);
+  const Vector3 localXAxis = rotation.col(0);
+  const Vector3 localYAxis = rotation.col(1);
+  const Vector3 localZAxis = rotation.col(2);
   // The local coordinates
-  const Vector3D localPos = rotation.transpose() * position;
+  const Vector3 localPos = rotation.transpose() * position;
   const double dx = direction.dot(localXAxis);
   const double dy = direction.dot(localYAxis);
   const double dz = direction.dot(localZAxis);
   // The normalization factor
   const double norm = 1. / (1. - dz * dz);
   // The direction transpose
-  const ActsRowVector<AlignmentScalar, 3> dirRowVec = direction.transpose();
+  const RowVector<AlignmentScalar, 3> dirRowVec = direction.transpose();
   // The derivative of path w.r.t. the local axes
   // @note The following calculations assume that the intersection of the track
   // with the cylinder always satisfy: perp(localPos) = R
-  const ActsRowVector<AlignmentScalar, 3> localXAxisToPath =
+  const RowVector<AlignmentScalar, 3> localXAxisToPath =
       -2.0 * norm * (dx * pcRowVec + localPos.x() * dirRowVec);
-  const ActsRowVector<AlignmentScalar, 3> localYAxisToPath =
+  const RowVector<AlignmentScalar, 3> localYAxisToPath =
       -2.0 * norm * (dy * pcRowVec + localPos.y() * dirRowVec);
-  const ActsRowVector<AlignmentScalar, 3> localZAxisToPath =
+  const RowVector<AlignmentScalar, 3> localZAxisToPath =
       -4.0 * norm * norm * (dx * localPos.x() + dy * localPos.y()) * dz *
       dirRowVec;
   // Calculate the derivative of local frame axes w.r.t its rotation
@@ -163,13 +163,13 @@ inline AlignmentRowVector CylinderSurface::alignmentToPathDerivative(
 
 inline LocalCartesianToBoundLocalMatrix
 CylinderSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& gctx, const Vector3D& position) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
   // calculate the transformation to local coorinates
-  const Vector3D localPos = sTransform.inverse() * position;
+  const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);

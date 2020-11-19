@@ -35,7 +35,7 @@ class DetectorElementStub : public DetectorElementBase {
  public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  DetectorElementStub(const Transform3D& transform)
+  DetectorElementStub(const Transform3& transform)
       : DetectorElementBase(), m_elementTransform(std::move(transform)) {}
 
   /// Constructor for single sided detector element
@@ -46,7 +46,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
-      const Transform3D& transform, std::shared_ptr<const PlanarBounds> pBounds,
+      const Transform3& transform, std::shared_ptr<const PlanarBounds> pBounds,
       double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
@@ -65,7 +65,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
-      const Transform3D& transform, std::shared_ptr<const LineBounds> lBounds,
+      const Transform3& transform, std::shared_ptr<const LineBounds> lBounds,
       double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
@@ -85,7 +85,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param gctx The current geometry context object, e.g. alignment
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  const Transform3D& transform(const GeometryContext& gctx) const override;
+  const Transform3& transform(const GeometryContext& gctx) const override;
 
   /// Return surface associated with this detector element
   const Surface& surface() const override;
@@ -95,14 +95,14 @@ class DetectorElementStub : public DetectorElementBase {
 
  private:
   /// the transform for positioning in 3D space
-  Transform3D m_elementTransform;
+  Transform3 m_elementTransform;
   /// the surface represented by it
   std::shared_ptr<const Surface> m_elementSurface{nullptr};
   /// the element thickness
   double m_elementThickness{0.};
 };
 
-inline const Transform3D& DetectorElementStub::transform(
+inline const Transform3& DetectorElementStub::transform(
     const GeometryContext& /*gctx*/) const {
   return m_elementTransform;
 }

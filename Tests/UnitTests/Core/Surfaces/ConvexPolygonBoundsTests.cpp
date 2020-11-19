@@ -16,7 +16,7 @@
 #include <iostream>
 #include <memory>
 
-using vec2 = Acts::Vector2D;
+using vec2 = Acts::Vector2;
 template <int N>
 using poly = Acts::ConvexPolygonBounds<N>;
 
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   poly<3> triangle(vertices);
 
   RectangleBounds bb = triangle.boundingBox();
-  BOOST_CHECK_EQUAL(bb.min(), Vector2D(0, 0));
-  BOOST_CHECK_EQUAL(bb.max(), Vector2D(1., 1));
+  BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
+  BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
   BoundaryCheck bc(true);
 
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsConstruction) {
   poly<4> quad(vertices);
 
   bb = quad.boundingBox();
-  BOOST_CHECK_EQUAL(bb.min(), Vector2D(0, 0));
-  BOOST_CHECK_EQUAL(bb.max(), Vector2D(1, 1.2));
+  BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
+  BOOST_CHECK_EQUAL(bb.max(), Vector2(1, 1.2));
 
   BOOST_CHECK(quad.inside({0.2, 0.2}, bc));
   BOOST_CHECK(!quad.inside({0.4, 0.9}, bc));
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(ConvexPolygonBoundsDynamicTest) {
   poly triangle(vertices);
 
   RectangleBounds bb = triangle.boundingBox();
-  BOOST_CHECK_EQUAL(bb.min(), Vector2D(0, 0));
-  BOOST_CHECK_EQUAL(bb.max(), Vector2D(1., 1));
+  BOOST_CHECK_EQUAL(bb.min(), Vector2(0, 0));
+  BOOST_CHECK_EQUAL(bb.max(), Vector2(1., 1));
 
   BoundaryCheck bc(true);
 

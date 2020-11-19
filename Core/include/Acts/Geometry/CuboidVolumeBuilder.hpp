@@ -42,9 +42,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// PlaneSurface
   struct SurfaceConfig {
     // Center position
-    Vector3D position;
+    Vector3 position;
     // Rotation
-    RotationMatrix3D rotation = RotationMatrix3D::Identity();
+    RotationMatrix3 rotation = RotationMatrix3::Identity();
     // Bounds
     std::shared_ptr<const RectangleBounds> rBounds = nullptr;
     // Attached material
@@ -54,7 +54,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Constructor function for optional detector elements
     // Arguments are transform, rectangle bounds and thickness.
     std::function<DetectorElementBase*(
-        const Transform3D&, std::shared_ptr<const RectangleBounds>, double)>
+        const Transform3&, std::shared_ptr<const RectangleBounds>, double)>
         detElementConstructor;
   };
 
@@ -77,9 +77,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// TrackingVolume with a given number of PlaneLayers
   struct VolumeConfig {
     // Center position
-    Vector3D position;
+    Vector3 position;
     // Lengths in x,y,z
-    Vector3D length;
+    Vector3 length;
     // Configurations of its layers
     std::vector<LayerConfig> layerCfg;
     // Stored layers
@@ -97,9 +97,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @brief This struct stores the configuration of the tracking geometry
   struct Config {
     // Center position
-    Vector3D position = Vector3D(0., 0., 0.);
+    Vector3 position = Vector3(0., 0., 0.);
     // Length in x,y,z
-    Vector3D length = Vector3D(0., 0., 0.);
+    Vector3 length = Vector3(0., 0., 0.);
     // Configuration of its volumes
     std::vector<VolumeConfig> volumeCfg = {};
   };
@@ -161,7 +161,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::pair<double, double> binningRange(const GeometryContext& gctx,
                                          const VolumeConfig& cfg) const;
 
-  void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3D>>& tapVec,
+  void sortVolumes(std::vector<std::pair<TrackingVolumePtr, Vector3>>& tapVec,
                    BinningValue bValue) const;
 
   /// @brief This function builds a world TrackingVolume based on a given

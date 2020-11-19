@@ -32,7 +32,7 @@ namespace Acts {
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CylinderVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds
@@ -86,7 +86,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CutoutCylinderVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cutout cylinder bounds
@@ -140,7 +140,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
                             const CuboidVolumeBounds& cBounds,
-                            const Transform3D& transform) {
+                            const Transform3& transform) {
   // Default constructor
   BinUtility uBinUtil(transform);
   // The parameters from the cylinder bounds

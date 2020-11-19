@@ -32,7 +32,7 @@ class PlanarModuleCluster
   /// @param [in] t Timestamp of the cluster
   /// @param [in] dCells is the vector of digitization cells
   PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      DigitizationSourceLink sourceLink, ActsSymMatrixD<3> cov,
+                      DigitizationSourceLink sourceLink, ActsSymMatrix<3> cov,
                       double loc0, double loc1, double t,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)

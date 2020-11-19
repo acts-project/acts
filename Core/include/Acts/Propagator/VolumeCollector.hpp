@@ -51,8 +51,8 @@ struct VolumeSelector {
 /// The information to be writtern out per hit volume
 struct VolumeHit {
   const TrackingVolume* volume = nullptr;
-  Vector3D position;
-  Vector3D direction;
+  Vector3 position;
+  Vector3 direction;
 };
 
 /// A Volume Collector struct

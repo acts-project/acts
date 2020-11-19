@@ -56,7 +56,7 @@ static dd4hep::Ref_t createSimpleLayeredCylinder(
     // @todo use material string again layer.attr<std::string>("material"))
 
     // envVolume.placeVolume(layerVolume,
-    // dd4hep::Transform3D(dd4hep::RotationZ(0.),
+    // dd4hep::Transform3(dd4hep::RotationZ(0.),
     // transLayer));
     if (layerDet.hasAttr(_U(vis))) {
       layerVolume.setVisAttributes(lcdd, layerDet.visStr());

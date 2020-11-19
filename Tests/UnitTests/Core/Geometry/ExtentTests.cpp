@@ -27,10 +27,10 @@ BOOST_AUTO_TEST_SUITE(Geometry)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(ExtentTest) {
-  std::vector<Vector3D> vertices = {
-      Vector3D(15_mm, -3_mm, -10_mm), Vector3D(18_mm, 0_mm, -10_mm),
-      Vector3D(15_mm, 3_mm, -10_mm),  Vector3D(15_mm, -3_mm, 10_mm),
-      Vector3D(18_mm, 0_mm, 10_mm),   Vector3D(15_mm, 3_mm, 10_mm)};
+  std::vector<Vector3> vertices = {
+      Vector3(15_mm, -3_mm, -10_mm), Vector3(18_mm, 0_mm, -10_mm),
+      Vector3(15_mm, 3_mm, -10_mm),  Vector3(15_mm, -3_mm, 10_mm),
+      Vector3(18_mm, 0_mm, 10_mm),   Vector3(15_mm, 3_mm, 10_mm)};
 
   // Create an Extent
   Extent gExt;

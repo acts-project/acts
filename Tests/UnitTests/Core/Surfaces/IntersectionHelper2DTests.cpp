@@ -28,8 +28,8 @@ void basicChecks(bool circleCase = false) {
   double rX = circleCase ? rY : 5.;
 
   // Line along x - not intersecting
-  Vector2D start(12., 0.);
-  Vector2D direction(0., -1.);
+  Vector2 start(12., 0.);
+  Vector2 direction(0., -1.);
 
   auto nosol = circleCase ? detail::IntersectionHelper2D::intersectCircle(
                                 rY, start, direction)
@@ -38,7 +38,7 @@ void basicChecks(bool circleCase = false) {
   BOOST_CHECK(not nosol[0]);
   BOOST_CHECK(not nosol[1]);
 
-  start = Vector2D(4., -4.);
+  start = Vector2(4., -4.);
   auto twosol = circleCase ? detail::IntersectionHelper2D::intersectCircle(
                                  rY, start, direction)
                            : detail::IntersectionHelper2D::intersectEllipse(
@@ -47,8 +47,8 @@ void basicChecks(bool circleCase = false) {
   BOOST_CHECK(twosol[0]);
   BOOST_CHECK(twosol[1]);
 
-  start = Vector2D(-4., 10.);
-  direction = Vector2D(1., 0.);
+  start = Vector2(-4., 10.);
+  direction = Vector2(1., 0.);
 
   auto onesolY = circleCase ? detail::IntersectionHelper2D::intersectCircle(
                                   rY, start, direction)
@@ -59,8 +59,8 @@ void basicChecks(bool circleCase = false) {
   CHECK_CLOSE_ABS(onesolY[0].position.x(), 0., s_epsilon);
   BOOST_CHECK(not onesolY[1]);
 
-  start = Vector2D(rX, -4);
-  direction = Vector2D(0., 1.);
+  start = Vector2(rX, -4);
+  direction = Vector2(0., 1.);
 
   auto onesolX = circleCase ? detail::IntersectionHelper2D::intersectCircle(
                                   rY, start, direction)
@@ -74,32 +74,32 @@ void basicChecks(bool circleCase = false) {
 
 /// Unit test for creating Ellipse intersection
 BOOST_AUTO_TEST_CASE(LineLineIntersection) {
-  Vector2D start(1., 1.);
-  Vector2D dir(1., 1.);
+  Vector2 start(1., 1.);
+  Vector2 dir(1., 1.);
 
   // Not possible
   auto solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(5., 3.), Vector2D(6., 4), start, dir.normalized());
+      Vector2(5., 3.), Vector2(6., 4), start, dir.normalized());
 
   BOOST_CHECK(not solution);
 
   // Possible
   solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(5., 3.), Vector2D(3., -1.), start, dir.normalized());
+      Vector2(5., 3.), Vector2(3., -1.), start, dir.normalized());
 
   BOOST_CHECK(solution);
 
   // In principle possible, but out of bound
-  start = Vector2D(2, 3);
-  dir = Vector2D(2, 1).normalized();
+  start = Vector2(2, 3);
+  dir = Vector2(2, 1).normalized();
 
   solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(-1., -2.5), Vector2D(3., 2.5), start, dir);
+      Vector2(-1., -2.5), Vector2(3., 2.5), start, dir);
 
   BOOST_CHECK(solution);
 
   solution = detail::IntersectionHelper2D::intersectSegment(
-      Vector2D(-1., -2.5), Vector2D(3., 2.5), start, dir, true);
+      Vector2(-1., -2.5), Vector2(3., 2.5), start, dir, true);
 
   BOOST_CHECK(not solution);
 }
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(EllipseIntersection) {
   double radiusX = 450.;
   double radiusY = 275.;
 
-  Vector2D start(-500., -300.);
-  Vector2D direction = Vector2D(10., 4.).normalized();
+  Vector2 start(-500., -300.);
+  Vector2 direction = Vector2(10., 4.).normalized();
 
   auto solution = detail::IntersectionHelper2D::intersectEllipse(
       radiusX, radiusY, start, direction);
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   // Specific checks for circle
   double radius = 275.;
 
-  Vector2D start(-500., -300.);
-  Vector2D direction = Vector2D(1., 1.).normalized();
+  Vector2 start(-500., -300.);
+  Vector2 direction = Vector2(1., 1.).normalized();
 
   auto solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   BOOST_CHECK(solution[1].pathLength > 0.);
 
   // Reverse
-  start = Vector2D(1500., 1700.);
-  direction = Vector2D(1., 1.).normalized();
+  start = Vector2(1500., 1700.);
+  direction = Vector2(1., 1.).normalized();
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(CircleIntersection) {
   BOOST_CHECK(solution[1].pathLength < 0.);
 
   // Reverse with reverse direction
-  direction = Vector2D(-1., -1.).normalized();
+  direction = Vector2(-1., -1.).normalized();
   solution =
       detail::IntersectionHelper2D::intersectCircle(radius, start, direction);
 

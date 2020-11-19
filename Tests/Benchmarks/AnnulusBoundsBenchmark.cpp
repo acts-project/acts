@@ -38,21 +38,21 @@ int main(int /*argc*/, char** /*argv[]*/) {
   double maxRadius = 12.0;
   double minPhi = 0.74195;
   double maxPhi = 1.33970;
-  Vector2D offset(-2., 2.);
+  Vector2 offset(-2., 2.);
   AnnulusBounds aBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
 
   // helper to convert to expected local frame
-  auto toStripFrame = [&](const Vector2D& xy) -> Vector2D {
+  auto toStripFrame = [&](const Vector2& xy) -> Vector2 {
     auto shifted = xy + offset;
     double r = VectorHelpers::perp(shifted);
     double phi = VectorHelpers::phi(shifted);
-    return Vector2D(r, phi);
+    return Vector2(r, phi);
   };
 
-  auto random_point = [&]() -> Vector2D { return {xDist(rng), yDist(rng)}; };
+  auto random_point = [&]() -> Vector2 { return {xDist(rng), yDist(rng)}; };
 
   // for covariance based check, set up one;
-  ActsMatrixD<2, 2> cov;
+  ActsMatrix<2, 2> cov;
   cov << 1.0, 0, 0, 0.05;
 
   BoundaryCheck bcAbs{true};
@@ -63,7 +63,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
   // visualization to make sense of things
   for (size_t i = 0; i < 10000; i++) {
-    const Vector2D loc{xDist(rng), yDist(rng)};
+    const Vector2 loc{xDist(rng), yDist(rng)};
     auto locPC = toStripFrame(loc);
     bool isInsideAbs = aBounds.inside(locPC, bcAbs);
     bool isInsideTol0 = aBounds.inside(locPC, bcTol0);
@@ -77,7 +77,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
        << std::endl;
   }
 
-  std::vector<std::tuple<Vector2D, bool, std::string>> testPoints{{
+  std::vector<std::tuple<Vector2, bool, std::string>> testPoints{{
       {{7.0, 6.0}, true, "center"},
       {{3.0, 1.0}, false, "radial far out low"},
       {{5.0, 4.0}, false, "radial close out low"},
@@ -154,7 +154,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     }
 
     // Pre-rolled random points
-    std::vector<Vector2D> points(num_outside_points);
+    std::vector<Vector2> points(num_outside_points);
     std::generate(points.begin(), points.end(),
                   [&] { return toStripFrame(random_point()); });
     run_bench_with_inputs(

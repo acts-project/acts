@@ -51,7 +51,7 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
      /// @param bValue is the value in which you want to bin
      ///
      /// @return vector 3D used for the binning schema
-     virtual Vector3D
+     virtual Vector3
      binningPosition(BinningValue bValue) const = 0;
 
      /// Implement the binningValue

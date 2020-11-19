@@ -127,19 +127,19 @@ static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
 // Matrix and vector types related to bound track parameters.
 
-using BoundVector = ActsVector<BoundScalar, eBoundSize>;
-using BoundRowVector = ActsRowVector<BoundScalar, eBoundSize>;
-using BoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eBoundSize>;
-using BoundSymMatrix = ActsSymMatrix<BoundScalar, eBoundSize>;
+using BoundVector = ActsVector<eBoundSize>;
+using BoundRowVector = ActsRowVector<eBoundSize>;
+using BoundMatrix = ActsMatrix<eBoundSize, eBoundSize>;
+using BoundSymMatrix = ActsSymMatrix<eBoundSize>;
 
-using LocalCartesianToBoundLocalMatrix = ActsMatrix<BoundScalar, 2, 3>;
+using LocalCartesianToBoundLocalMatrix = ActsMatrix<2, 3>;
 
 // Matrix and vector types related to free track parameters.
 
-using FreeVector = ActsVector<FreeScalar, eFreeSize>;
-using FreeRowVector = ActsRowVector<FreeScalar, eFreeSize>;
-using FreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eFreeSize>;
-using FreeSymMatrix = ActsSymMatrix<FreeScalar, eFreeSize>;
+using FreeVector = ActsVector<eFreeSize>;
+using FreeRowVector = ActsRowVector<eFreeSize>;
+using FreeMatrix = ActsMatrix<eFreeSize, eFreeSize>;
+using FreeSymMatrix = ActsSymMatrix<eFreeSize>;
 
 // Mapping to bound track parameters.
 //
@@ -147,7 +147,7 @@ using FreeSymMatrix = ActsSymMatrix<FreeScalar, eFreeSize>;
 // bound track parameters. Thus, the bound Scalar type is sufficient
 // to retain accuracy.
 
-using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
+using FreeToBoundMatrix = ActsMatrix<eBoundSize, eFreeSize>;
 
 // Mapping to free track parameters.
 //
@@ -155,6 +155,6 @@ using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
 // free track parameters. Thus, the free Scalar type is sufficient
 // to retain accuracy.
 
-using BoundToFreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eBoundSize>;
+using BoundToFreeMatrix = ActsMatrix<eFreeSize, eBoundSize>;
 
 }  // namespace Acts
