@@ -131,9 +131,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     Acts::GeometryIdentifier geoId = entry.first;
     const Acts::PlanarModuleCluster& cluster = entry.second;
     std::size_t volumeId = geoId.volume();
-
-    if (volumeId >= 7 and volumeId <= 9) {  // pixel detector
-
+    
+    if ( std::find(m_cfg.seedVolumes.begin(), m_cfg.seedVolumes.end(), volumeId) != m_cfg.seedVolumes.end()){
       auto sp = transformSP(hit_id, cluster, ctx).release();
       spVec.push_back(sp);
     }

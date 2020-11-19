@@ -52,6 +52,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float bFieldInZ = 0.00199724;
     Acts::Vector2D beamPos = {0., 0.};
     float impactMax = 3.;
+    std::vector<int> seedVolumes = {7,8,9};
+
+
   };
 
   /// Construct the digitization algorithm.
