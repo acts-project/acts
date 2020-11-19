@@ -243,7 +243,7 @@ class AdaptiveMultiVertexFinder {
   /// @param currentConstraint Vertex constraint
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                                 const Vertex<InputTrack_t>& seedVertex) const;
+                                 Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
   ///

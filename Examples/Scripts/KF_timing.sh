@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script runs the test of KalmanFitter timing vs. pT at different eta
+# This script runs the test of KalmanFitter timing vs. p at different eta
 # using particle gun particles
 # To run the test:./KF_timing.sh -d <detector> -b <bFieldMap> -t <numTracksPerEvent> -n <numEvents>
 # In default, it will run with Generic detector in constant B field using 1 event and 100 tracks/event
@@ -10,27 +10,47 @@ help()
    echo ""
    echo "Usage: $0 -d <detector> -b <bFieldMap> -t <numTracksPerEvent> -n <numEvents>"
    echo -e "\t-d The detector type, either 'Generic' or 'DD4hep'. Optional. In default 'Generic'" 
+   echo -e "\t-x The '.xml' for DD4hep detector input. Required if the detector is 'DD4hep'. In default empty"
    echo -e "\t-b The '.txt' or '.root' file for B Field map. Optional. In default using constant BField: (0, 0, 2)"
    echo -e "\t-t The number of tracks per event. Optional. In default: 100"
    echo -e "\t-n The number of events. Optional. In default: 1"
    exit 1 # Exit script after printing help
 }
 
+if [ ! -f "ActsExampleFatrasGeneric" ]; then	
+  echo Please run this script under the directory where the executables are located 
+  exit 1
+fi
+
 #Default number of tracks/event and event
 detector=Generic
 numTracksPerEvent=100
 numEvents=1
 # Get parameters
-while getopts "d:b:t:n" opt
+while getopts "d:x:b:t:n:" opt
 do
    case "$opt" in
       d ) detector="$OPTARG" ;;
+      x ) dd4hepInput="$OPTARG" ;;
       b ) bFieldMap="$OPTARG" ;;
       t ) numTracksPerEvent="$OPTARG" ;;
       n ) numEvents="$OPTARG" ;;
       ? ) help ;; # Print help in case unknown parameter
    esac
 done
+
+#check input for DDhep input
+if [ "${detector}" == DD4hep ]; then
+   if [ -z "${dd4hepInput}" ]; then
+      echo "Empty input for --dd4hep-input. A file like $<src_dir>/Examples/Detectors/DD4hepDetector/compact/OpenDataDetector/OpenDataDetector.xml must be provided. Have to exit"
+      exit 1
+   fi 
+   if [ ! -f "${dd4hepInput}" ]; then 
+      echo "The ${dd4hepInput} does not exist!"
+      exit 1 
+   fi
+   dd4hep_input="--dd4hep-input=${dd4hepInput}"
+fi
 
 # Check input for B field
 bField='--bf-value 0 0 2'
@@ -51,20 +71,21 @@ echo "Number of tracks per event: ${numTracksPerEvent}"
 echo "Number of events: ${numEvents}"
 
 time_stamp=`date +%F%T`
-exe_dir=$PWD
+exe_dir=${PWD}
 run_dir=KalmanFitter_timing_${time_stamp}
+
 mkdir ${run_dir}
 cd ${run_dir}
 
 output_file='output.log'
-echo "*****KalmanFitter timing test vs. pT*****" > ${output_file}
+echo "*****KalmanFitter timing test vs. p*****" > ${output_file}
 echo "Test Detector: ${detector}" >> ${output_file}
 echo "BField: ${bField}" >> ${output_file}
 echo "Events: ${numEvents}" >> ${output_file}
 echo "Tracks_per_event: ${numTracksPerEvent}" >> ${output_file} 
 echo "****************************************" >> ${output_file}
 echo "*"
-echo "* job | eta | pt | fit_time_per_event" >> ${output_file}
+echo "* job | eta | p | fit_time_per_event" >> ${output_file}
 
 jobID=0
    # Loop over the pt bins 
@@ -76,17 +97,17 @@ jobID=0
          eta=$(echo "${etaBin}*0.5 + 0.25"|bc) 
 
          # Run sim
-         sim="${exe_dir}/ActsSimFatras${detector} ${bField} -n ${numEvents} --evg-input-type gun --pg-nparticles ${numTracksPerEvent} --pg-pt-range ${pt} ${pt} --pg-eta-range ${etaLow} ${etaUp}  --fatras-pmin-gev 0.1 --output-csv=1 --output-dir sim_${detector}_e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"  
+         sim="${exe_dir}/ActsExampleFatras${detector} ${dd4hep_input} ${bField} -n ${numEvents} --gen-nparticles ${numTracksPerEvent} --gen-p-gev ${pt}:${pt} --gen-eta ${etaLow}:${etaUp} --digi-geometric-3d --output-csv=1 --output-dir=data/sim_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"  
          echo "Run sim with '${sim}'"
          eval ${sim}
        
          # Run reco 
-         reco="$exe_dir/ActsRecTruthTracks ${bField} --input-dir sim_${detector}_e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt} --output-dir reco_${detector}_e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"
+         reco="$exe_dir/ActsExampleTruthTracks${detector} ${dd4hep_input} ${bField} --input-dir=data/sim_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt} --output-dir=data/reco_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}"
          echo "Run reco with '${reco}'"
          eval ${reco}
          
          # Archive with Job ID
-         mv reco_${detector}_e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}/timing.tsv timing_${jobID}.tsv
+         mv data/reco_${detector}/e${numEvents}_t${numTracksPerEvent}_eta${eta}_pt${pt}/timing.tsv timing_${jobID}.tsv
          # Extract the fitting time
          fit_time_str=`grep "Algorithm:TrackFittingAlgorithm" timing_${jobID}.tsv | awk '{print $3}'`
 	 # Make sure the fit time is fixed-point for calculation with bc

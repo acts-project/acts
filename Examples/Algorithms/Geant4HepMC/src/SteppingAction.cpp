@@ -8,6 +8,7 @@
 
 #include "SteppingAction.hpp"
 #include <stdexcept>
+#include <G4RunManager.hh>
 #include <G4Step.hh>
 #include <G4VProcess.hh>
 #include "EventAction.hpp"
@@ -23,7 +24,10 @@ ActsExamples::SteppingAction* ActsExamples::SteppingAction::instance() {
   return s_instance;
 }
 
-ActsExamples::SteppingAction::SteppingAction() : G4UserSteppingAction() {
+ActsExamples::SteppingAction::SteppingAction(
+    std::vector<std::string> eventRejectionProcess)
+    : G4UserSteppingAction(),
+      m_eventRejectionProcess(std::move(eventRejectionProcess)) {
   if (s_instance) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
@@ -36,6 +40,16 @@ ActsExamples::SteppingAction::~SteppingAction() {
 }
 
 void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
+  // Test if the event should be aborted
+  if (std::find(m_eventRejectionProcess.begin(), m_eventRejectionProcess.end(),
+                step->GetPostStepPoint()
+                    ->GetProcessDefinedStep()
+                    ->GetProcessName()) != m_eventRejectionProcess.end()) {
+    m_eventAborted = true;
+    G4RunManager::GetRunManager()->AbortEvent();
+    return;
+  }
+
   /// Store the step such that a vertex knows the position and upcoming process
   /// for a particle. The particle properties are stored as ingoing before and
   /// as outgoing after the step with the process was performed. Therefore the
@@ -79,6 +93,7 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
       auto vertex = std::make_shared<HepMC3::GenVertex>(prePos);
       vertex->add_particle_out(postParticle);
       event.add_vertex(vertex);
+      vertex->set_status(1);
       vertex->add_attribute("NextProcessOf" + trackId, process);
     } else
       // Search for an existing vertex
@@ -137,10 +152,11 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
                               std::make_shared<HepMC3::DoubleAttribute>(L0));
   postParticle->add_attribute(
       "StepLength", std::make_shared<HepMC3::DoubleAttribute>(stepLength));
+  postParticle->set_status(1);
 
   // Stop tracking the vertex if the particle dies
   if (track->GetTrackStatus() != fAlive) {
-    process = std::make_shared<HepMC3::StringAttribute>("DeathOf-" + trackId);
+    process = std::make_shared<HepMC3::StringAttribute>("Death");
     m_previousVertex->add_attribute("NextProcessOf-" + trackId, process);
     m_previousVertex = nullptr;
   }
@@ -148,4 +164,5 @@ void ActsExamples::SteppingAction::UserSteppingAction(const G4Step* step) {
 
 void ActsExamples::SteppingAction::clear() {
   m_previousVertex = nullptr;
+  m_eventAborted = false;
 }

@@ -52,7 +52,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   while (nIter < m_cfg.maxIterations &&
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
     // Initial loop over all vertices in state.vertexCollection
-
     for (auto currentVtx : state.vertexCollection) {
       VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
       currentVtxInfo.relinearize = false;
@@ -86,7 +85,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
       double weight =
           1. / m_cfg.annealingTool.getWeight(state.annealingState, 1.);
-
       currentVtx->setFullCovariance(currentVtx->fullCovariance() * weight);
 
       // Set vertexCompatibility for all TrackAtVertex objects
@@ -102,7 +100,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       m_cfg.annealingTool.anneal(state.annealingState);
     }
     isSmallShift = checkSmallShift(state);
-
     ++nIter;
   }
   // Multivertex fit is finished
@@ -262,7 +259,6 @@ Acts::Result<void> Acts::
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[vtx];
-
     for (const auto& trk : currentVtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
@@ -274,9 +270,7 @@ Acts::Result<void> Acts::
 
       if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
-        if (trkAtVtx.linearizedState.covarianceAtPCA ==
-                BoundSymMatrix::Zero() ||
-            state.vtxInfoMap[vtx].relinearize) {
+        if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
               m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
               vertexingOptions.geoContext, vertexingOptions.magFieldContext,
@@ -284,8 +278,13 @@ Acts::Result<void> Acts::
           if (!result.ok()) {
             return result.error();
           }
+
+          if (trkAtVtx.isLinearized) {
+            state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
+          }
+
           trkAtVtx.linearizedState = *result;
-          state.vtxInfoMap[vtx].linPoint = state.vtxInfoMap[vtx].oldPosition;
+          trkAtVtx.isLinearized = true;
         }
         // Update the vertex with the new track
         KalmanVertexUpdater::updateVertexWithTrack<input_track_t>(*vtx,
@@ -294,7 +293,6 @@ Acts::Result<void> Acts::
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
     }  // End loop over tracks at vertex
-
     ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
   }  // End loop over vertex collection
 
@@ -340,8 +338,10 @@ void Acts::AdaptiveMultiVertexFitter<
     input_track_t, linearizer_t>::doVertexSmoothing(State& state) const {
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
-      KalmanVertexTrackUpdater::update<input_track_t>(
-          state.tracksAtVerticesMap.at(std::make_pair(trk, vtx)), *vtx);
+      auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
+      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
+        KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
+      }
     }
   }
 }
