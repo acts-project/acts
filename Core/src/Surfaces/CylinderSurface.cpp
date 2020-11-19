@@ -182,7 +182,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
   auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
                               : detail::VerticesHelper::phiSegments(
                                     avgPhi - halfPhi, avgPhi + halfPhi,
-                                    {static_cast<AlgebraScalar>(avgPhi)});
+                                    {static_cast<ActsScalar>(avgPhi)});
 
   // Write the two bows/circles on either side
   std::vector<int> sides = {-1, 1};
