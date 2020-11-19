@@ -23,7 +23,7 @@ struct SimSpacePoint {
   // VarianceR/Z of the SP position.
   float varianceR;
   float varianceZ;
-  size_t index() const { return m_Id; }
+  size_t index() const { return m_index; }
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }
@@ -31,7 +31,7 @@ struct SimSpacePoint {
 };
 
 inline bool operator==(SimSpacePoint a, SimSpacePoint b) {
-  return (a.m_Id == b.m_Id && a.m_geoId.volume() == b.m_geoId.volume() &&
+  return (a.m_index == b.m_index && a.m_geoId.volume() == b.m_geoId.volume() &&
           a.m_geoId.layer() == b.m_geoId.layer() && a.m_x == b.m_x &&
           a.m_y == b.m_y && a.m_z == b.m_z && a.varianceR == b.varianceR &&
           a.varianceZ == b.varianceZ);

@@ -102,8 +102,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SimSpacePoint>* seed = &regionVec[i];
-      ProtoTrack ptrack{seed->sp()[0]->Id(), seed->sp()[1]->Id(),
-                        seed->sp()[2]->Id()};
+      ProtoTrack ptrack{seed->sp()[0]->index(), seed->sp()[1]->index(),
+                        seed->sp()[2]->index()};
       std::vector<ParticleHitCount> particleHitCounts;
       identifyContributingParticles(hitParticlesMap, ptrack, particleHitCounts);
       if (particleHitCounts.size() > 0) {
