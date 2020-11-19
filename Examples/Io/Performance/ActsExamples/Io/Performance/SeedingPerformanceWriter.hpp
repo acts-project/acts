@@ -62,11 +62,11 @@ class SeedingPerformanceWriter final
   EffPlotTool m_effPlotTool;
   EffPlotTool::EffPlotCache m_effPlotCache;
 
-  size_t m_nTotalSeeds;
-  size_t m_nTotalMatchedSeeds;
-  size_t m_nTotalParticles;
-  size_t m_nTotalMatchedParticles;
-  size_t m_nTotalDuplicatedParticles;
+  size_t m_nTotalSeeds = 0;
+  size_t m_nTotalMatchedSeeds = 0;
+  size_t m_nTotalParticles = 0;
+  size_t m_nTotalMatchedParticles = 0;
+  size_t m_nTotalDuplicatedParticles = 0;
 };
 
 }  // namespace ActsExamples

@@ -24,12 +24,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     Acts::Logging::Level lvl)
     : WriterT(cfg.inputSeeds, "SeedingPerformanceWriter", lvl),
       m_cfg(std::move(cfg)),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_nTotalSeeds(0),
-      m_nTotalMatchedSeeds(0),
-      m_nTotalParticles(0),
-      m_nTotalMatchedParticles(0),
-      m_nTotalDuplicatedParticles(0) {
+      m_effPlotTool(m_cfg.effPlotToolConfig, lvl){
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing input seeds collection");
   }
