@@ -12,7 +12,7 @@
 namespace ActsExamples {
 struct SimSpacePoint {
   // Hit id
-  size_t m_Id;
+  size_t m_index;
   // Global position
   float m_x;
   float m_y;
