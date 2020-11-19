@@ -125,9 +125,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     if (it1 != truthCount.end()) {
       isMatched = true;
       nMatchedParticles++;
-      nMatchedSeedsForParticle = truthCount[particle.particleId()];
+      nMatchedSeedsForParticle = it1->second;
       if (nMatchedSeedsForParticle > 1)
-        isDuplicated = true;
+       {nDuplicatedParticles++;}
     }
     if (isDuplicated)
       nDuplicatedParticles++;
