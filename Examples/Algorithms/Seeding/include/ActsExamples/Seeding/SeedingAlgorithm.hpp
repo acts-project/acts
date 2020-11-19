@@ -33,8 +33,6 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputSeeds;
     // input Clusters from the event#-hits.csv file.
     std::string inputClusters;
-    // input particles for creating proto seeds
-    std::string inputParticles;
     // used to get truth information into seeds about what particles are in what
     // space point.
     std::string inputHitParticlesMap;
@@ -66,8 +64,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
   /// Returns a space point with a particle barcode stored in .particles for
   /// each particle that made this space point.
   std::unique_ptr<ActsExamples::SimSpacePoint> transformSP(
-      std::size_t hit_id, const Acts::GeometryIdentifier geoId,
-      const Acts::PlanarModuleCluster& cluster,
+      std::size_t hit_id, const Acts::PlanarModuleCluster& cluster,
       const AlgorithmContext& ctx) const;
 
   /// @param txt is the algorithm context with event information

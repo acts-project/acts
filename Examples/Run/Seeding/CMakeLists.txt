@@ -19,14 +19,3 @@ target_link_libraries(
   ActsExampleSeeding
   PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
 
-
-# install(
-#   TARGETS
-#     ActsExamplePropagationEmpty
-#     ActsExamplePropagationGeneric
-#     ActsExamplePropagationAligned
-#     ActsExamplePropagationPayload
-#     ActsExamplePropagationTGeo
-#   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-

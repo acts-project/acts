@@ -41,17 +41,13 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument(
         "Missing clusters input collection with the hits");
   }
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input particles collection");
-  }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing output seeds collection");
   }
 }
 
 std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
-    std::size_t hit_id, const Acts::GeometryIdentifier geoId,
-    const Acts::PlanarModuleCluster& cluster,
+    std::size_t hit_id, const Acts::PlanarModuleCluster& cluster,
     const AlgorithmContext& ctx) const {
   const auto parameters = cluster.parameters();
   Acts::Vector2D localPos(parameters[0], parameters[1]);
@@ -70,7 +66,7 @@ std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
   varianceR = cov(0, 0);
   varianceZ = cov(1, 1);
   std::unique_ptr<SimSpacePoint> sp(
-      new SimSpacePoint{hit_id, x, y, z, r, geoId, varianceR, varianceZ});
+      new SimSpacePoint{hit_id, x, y, z, r, varianceR, varianceZ});
   return sp;
 }
 
@@ -126,7 +122,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
               m_cfg.inputClusters);
 
   // create the space points
-  std::size_t clustCounter = 0;
   std::vector<const SimSpacePoint*> spVec;
   // since clusters are ordered, we simply count the hit_id as we read
   // clusters. Hit_id isn't stored in a cluster. This is how
@@ -139,9 +134,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
     if (volumeId >= 7 and volumeId <= 9) {  // pixel detector
 
-      auto sp = transformSP(hit_id, geoId, cluster, ctx).release();
+      auto sp = transformSP(hit_id, cluster, ctx).release();
       spVec.push_back(sp);
-      clustCounter++;
     }
     hit_id++;
   }

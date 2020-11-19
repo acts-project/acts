@@ -78,7 +78,6 @@ int seedingExample(int argc, char* argv[],
   ActsExamples::SeedingAlgorithm::Config seeding;
   seeding.outputSeeds = "seeds";
   seeding.inputClusters = clusterReaderCfg.outputClusters;
-  seeding.inputParticles = particleReader.outputParticles;
   sequencer.addAlgorithm(
       std::make_shared<ActsExamples::SeedingAlgorithm>(seeding, logLevel));
 
@@ -86,7 +85,6 @@ int seedingExample(int argc, char* argv[],
   ActsExamples::SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = "seeds";
   seedPerfCfg.inputParticles = particleReader.outputParticles;
-  seedPerfCfg.inputClusters = clusterReaderCfg.outputClusters;
   seedPerfCfg.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
   seedPerfCfg.outputFilename = "performance.root";
   sequencer.addWriter(std::make_shared<ActsExamples::SeedingPerformanceWriter>(

@@ -18,8 +18,6 @@ struct SimSpacePoint {
   float m_y;
   float m_z;
   float m_r;
-  // volume and layer ID
-  Acts::GeometryIdentifier m_geoId;
   // VarianceR/Z of the SP position.
   float varianceR;
   float varianceZ;
@@ -31,9 +29,8 @@ struct SimSpacePoint {
 };
 
 inline bool operator==(SimSpacePoint a, SimSpacePoint b) {
-  return (a.m_index == b.m_index && a.m_geoId.volume() == b.m_geoId.volume() &&
-          a.m_geoId.layer() == b.m_geoId.layer() && a.m_x == b.m_x &&
-          a.m_y == b.m_y && a.m_z == b.m_z && a.varianceR == b.varianceR &&
-          a.varianceZ == b.varianceZ);
+  return (a.m_index == b.m_index &&
+	  a.m_x == b.m_x && a.m_y == b.m_y && a.m_z == b.m_z &&
+	  a.varianceR == b.varianceR && a.varianceZ == b.varianceZ);
 }
 }  // namespace ActsExamples
