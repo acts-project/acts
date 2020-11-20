@@ -66,8 +66,7 @@ struct IntersectionHelper2D {
   /// @param dir The Direction of intersection line
   ///
   /// @return the intersection points
-  static Intersection2D intersectCircleSegment(ActsScalar R,
-                                               ActsScalar phiMin,
+  static Intersection2D intersectCircleSegment(ActsScalar R, ActsScalar phiMin,
                                                ActsScalar phiMax,
                                                const Vector2D& origin,
                                                const Vector2D& dir);

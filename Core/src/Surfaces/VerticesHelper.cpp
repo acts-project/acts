@@ -14,8 +14,7 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   // This is to ensure that the extrema are built regardless of number
   // of segments
   std::vector<ActsScalar> phiSegments;
-  std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI,
-                                         M_PI};
+  std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
   // It does not cover the full azimuth
   if (phiMin != -M_PI or phiMax != M_PI) {
     phiSegments.push_back(phiMin);
@@ -93,8 +92,8 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
 }
 
 std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
-    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi,
-    ActsScalar halfPhi, unsigned int lseg) {
+    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi, ActsScalar halfPhi,
+    unsigned int lseg) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            lseg);
 }

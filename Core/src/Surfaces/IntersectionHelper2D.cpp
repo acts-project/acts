@@ -118,8 +118,8 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
 }
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
-    ActsScalar R, ActsScalar phiMin, ActsScalar phiMax,
-    const Vector2D& origin, const Vector2D& dir) {
+    ActsScalar R, ActsScalar phiMin, ActsScalar phiMax, const Vector2D& origin,
+    const Vector2D& dir) {
   auto intersections = intersectCircle(R, origin, dir);
   for (const auto& candidate : intersections) {
     if (candidate.pathLength > 0.) {
