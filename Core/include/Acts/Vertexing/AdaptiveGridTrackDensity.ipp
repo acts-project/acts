@@ -177,20 +177,20 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   // Find location in mainGridZValues
   auto findIter =
       std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
-  unsigned int zBin = std::distance(mainGridZValues.begin(), findIter);
+  int zBin = std::distance(mainGridZValues.begin(), findIter);
 
   const float maxValue = mainGridDensity[zBin];
   float gridValue = mainGridDensity[zBin];
 
   // Find right half-maximum bin
-  unsigned int rhmBin = zBin;
+  int rhmBin = zBin;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
     if ((zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin]) {
       break;
     }
     rhmBin += 1;
-    if (rhmBin == mainGridDensity.size()) {
+    if (rhmBin == int(mainGridDensity.size())) {
       break;
     }
     gridValue = mainGridDensity[rhmBin];
@@ -201,7 +201,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
       (maxValue / 2 - mainGridDensity[rhmBin - 1]) *
       (m_cfg.binSize / (mainGridDensity[rhmBin - 1] - mainGridDensity[rhmBin]));
   // Find left half-maximum bin
-  unsigned int lhmBin = zBin;
+  int lhmBin = zBin;
   gridValue = mainGridDensity[zBin];
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
