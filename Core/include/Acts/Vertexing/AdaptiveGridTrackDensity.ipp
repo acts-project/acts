@@ -58,7 +58,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
 }
 
 template <int trkGridSize>
-std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
+std::pair<int, Acts::ActsVectorF<trkGridSize>>
+Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
     std::vector<int>& mainGridZValues) const {
   SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
@@ -90,8 +91,7 @@ std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<tr
   }
 
   // Create the track grid
-  trackGrid =
-      createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
+  trackGrid = createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
 
   std::vector<int> zBinValues;
 
@@ -107,7 +107,7 @@ std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<tr
     // Check if track density already exists at current z position
     auto findIter =
         std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
-    
+
     if (findIter != mainGridZValues.end()) {
       // Z bin already exists
       mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] +=
@@ -127,14 +127,13 @@ std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<tr
 }
 
 template <int trkGridSize>
-void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(int zBin,
-                                   const ActsVectorF<trkGridSize>& trkGrid,
-                                   std::vector<float>& mainGridDensity,
-                                   const std::vector<int>& mainGridZValues) const {
-
+void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
+    int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+    std::vector<float>& mainGridDensity,
+    const std::vector<int>& mainGridZValues) const {
   // Find position of current z bin in mainGridZValues
   auto findIter =
-        std::find(mainGridZValues.begin(), mainGridZValues.end(), zBin);
+      std::find(mainGridZValues.begin(), mainGridZValues.end(), zBin);
   // Calculate corresponding index in mainGridDensity
   int densityIdx = std::distance(mainGridZValues.begin(), findIter);
 

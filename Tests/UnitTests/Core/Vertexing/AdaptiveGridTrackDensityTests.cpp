@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
 
   // Calculate total density
-  float densitySum0 =0;
-  for (auto& d : mainGridDensity){
+  float densitySum0 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum0 += d;
   }
 
@@ -275,19 +275,20 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
 
   // Calculate new total density
-  float densitySum1 =0;
-  for (auto& d : mainGridDensity){
+  float densitySum1 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum1 += d;
   }
 
   BOOST_CHECK(2 * densitySum0 == densitySum1);
 
   // Remove track 1
-  grid.removeTrackGridFromMainGrid(zBinAndTrack1.first, zBinAndTrack1.second, mainGridDensity, mainGridZValues);
- 
+  grid.removeTrackGridFromMainGrid(zBinAndTrack1.first, zBinAndTrack1.second,
+                                   mainGridDensity, mainGridZValues);
+
   // Calculate new total density
-  float densitySum2 =0;
-  for (auto& d : mainGridDensity){
+  float densitySum2 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum2 += d;
   }
 
@@ -300,19 +301,20 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   auto zBinAndTrack2 = grid.addTrack(params1, mainGridDensity, mainGridZValues);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
-  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2)/binSize + 1);
+  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binSize + 1);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
 
-  float densitySum3 =0;
-  for (auto& d : mainGridDensity){
+  float densitySum3 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum3 += d;
   }
 
   // Remove second track 1
-  grid.removeTrackGridFromMainGrid(zBinAndTrack0.first, zBinAndTrack0.second, mainGridDensity, mainGridZValues);
- 
-  float densitySum4 =0;
-  for (auto& d : mainGridDensity){
+  grid.removeTrackGridFromMainGrid(zBinAndTrack0.first, zBinAndTrack0.second,
+                                   mainGridDensity, mainGridZValues);
+
+  float densitySum4 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum4 += d;
   }
 
@@ -320,13 +322,14 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   CHECK_CLOSE_ABS(densitySum4, densitySum3 - densitySum0, 1e-5);
 
   // Remove last track again
-  grid.removeTrackGridFromMainGrid(zBinAndTrack2.first, zBinAndTrack2.second, mainGridDensity, mainGridZValues);
-  
+  grid.removeTrackGridFromMainGrid(zBinAndTrack2.first, zBinAndTrack2.second,
+                                   mainGridDensity, mainGridZValues);
+
   // Size should not have changed
   BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
 
-  float densitySum5 =0;
-  for (auto& d : mainGridDensity){
+  float densitySum5 = 0;
+  for (auto& d : mainGridDensity) {
     densitySum5 += d;
   }
 
