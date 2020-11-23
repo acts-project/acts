@@ -37,7 +37,7 @@ class AdaptiveGridTrackDensity {
   /// @struct Config The configuration struct
   struct Config {
     /// @param binSize_ The binSize in mm
-    Config(float binSize_) : binSize(binSize_) {}
+    Config(float binSize_ = 0.1) : binSize(binSize_) {}
 
     // Z size of one single bin in grid
     float binSize;  // mm
