@@ -92,6 +92,7 @@ set_option_if(
   ACTS_BUILD_FATRAS
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
