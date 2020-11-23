@@ -17,16 +17,16 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(std::vector<float>&
     return VertexingError::EmptyInput;
   }
 
-  int zbin = -1;
+  int zGridPos = -1;
   if (!m_cfg.useHighestSumZPosition) {
-    int zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
-    zbin = mainGridZValues[zGridPos];
+    zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
   } else {
     // Get z position with highest density sum
     // of surrounding bins
-    zbin = getHighestSumZPosition(mainGridDensity, mainGridZValues);
+    zGridPos = getHighestSumZPosition(mainGridDensity, mainGridZValues);
   }
 
+  int zbin = mainGridZValues[zGridPos];
   // Derive corresponding z value
   int sign = (zbin > 0) ? +1 : -1;
   return (zbin + sign * 0.5f) * m_cfg.binSize;
@@ -229,7 +229,6 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::
 
   // The global maximum
   int zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
-  //zbin = mainGridZValues[zGridPos];
 
   int zFirstMax = zGridPos;
   double firstDensity = mainGridDensity[zFirstMax];
