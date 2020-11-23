@@ -13,6 +13,21 @@
 
 namespace Acts {
 
+/// @class AdaptiveGridTrackDensity
+/// @brief Implements a 1-dim density grid to be filled with
+/// track Gaussian distributions. Each single track is modelled
+/// as a 2(!)-dim Gaussian distribution grid in the d0-z0 plane,
+/// but only the overlap with the z-axis (i.e. a 1-dim density
+/// vector) needs to be calculated.
+/// The position of the highest track density (of either a single
+/// bin or the sum of a certain region) can be determined.
+/// Single tracks can be cached and removed from the overall density.
+/// Unlike the GaussianGridTrackDensity, the overall density vector
+/// grows adaptively with the tracks densities being added to the grid.
+///
+/// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
+/// a single track is modelled as a (trkGridSize x trkGridSize) grid
+/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
 template <int trkGridSize = 15>
 class AdaptiveGridTrackDensity {
   // Assert odd trkGridSize
@@ -21,10 +36,7 @@ class AdaptiveGridTrackDensity {
  public:
   /// @struct Config The configuration struct
   struct Config {
-    /// @param zMinMax The minimum and maximum z-values (in mm) that
-    /// should be covered by the main 1-dim density grid along the z-axis
-    /// Note: This value together with 'mainGridSize' determines the
-    /// overall bin size to be used as seen below
+    /// @param binSize_ The binSize in mm
     Config(float binSize_) : binSize(binSize_) {}
 
     // Z size of one single bin in grid
@@ -48,7 +60,9 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Returns the z position of maximum track density
   ///
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   ///
   /// @return The z position of maximum track density
   Result<float> getMaxZPosition(std::vector<float>& mainGridDensity,
@@ -57,7 +71,9 @@ class AdaptiveGridTrackDensity {
   /// @brief Returns the z position of maximum track density and
   /// the estimated width
   ///
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   ///
   /// @return The z position of maximum track density and width
   Result<std::pair<float, float>> getMaxZPositionAndWidth(
@@ -67,7 +83,9 @@ class AdaptiveGridTrackDensity {
   /// @brief Adds a single track to the overall grid density
   ///
   /// @param trk The track to be added
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   ///
   /// @return A pair storing information about the z-bin position
   /// the track was added (int) and the 1-dim density contribution
@@ -81,36 +99,15 @@ class AdaptiveGridTrackDensity {
   /// @param zBin The center z-bin position the track needs to be
   /// removed from
   /// @param trkGrid The 1-dim density contribution of the track
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   void removeTrackGridFromMainGrid(
       int zBin, const ActsVectorF<trkGridSize>& trkGrid,
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
 
-  // private:
-  /// @brief Helper function that acutally adds the track to the
-  /// main density grid
-  ///
-  /// @param zBin The center z-bin position the track
-  /// @param trkGrid The 1-dim density contribution of the track
-  /// @param mainGrid The main 1-dim density grid along the z-axis
-  // void addTrackGridToMainGrid(int zBin, const ActsVectorF<trkGridSize>&
-  // trkGrid,
-  //                             ActsVectorF<mainGridSize>& mainGrid) const;
-
-  /// @brief Helper function that modifies the main density grid
-  /// (either adds or removes a track)
-  ///
-  /// @param zBin The center z-bin position the track
-  /// @param trkGrid The 1-dim density contribution of the track
-  /// @param mainGrid The main 1-dim density grid along the z-axis
-  /// @param modifyModeSign Sign that determines the mode of modification,
-  /// +1 for adding a track, -1 for removing a track
-  // void modifyMainGridWithTrackGrid(int zBin,
-  //                                  const ActsVectorF<trkGridSize>& trkGrid,
-  //                                  ActsVectorF<mainGridSize>& mainGrid,
-  //                                  int modifyModeSign) const;
-
+  private:
   /// @brief Function that creates a 1-dim track grid (i.e. a vector)
   /// with the correct density contribution of a track along the z-axis
   ///
@@ -128,7 +125,9 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that estimates the seed width based on the FWHM of
   /// the maximum density peak
   ///
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   /// @maxZ z-position of the maximum density value
   ///
   /// @return The width
@@ -144,7 +143,9 @@ class AdaptiveGridTrackDensity {
   /// maximum) and take the z-bin of the maximum with the highest surrounding
   /// density
   ///
-  /// @param mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   ///
   /// @return The z-bin position
   int getHighestSumZPosition(std::vector<float>& mainGridDensity,
@@ -153,7 +154,9 @@ class AdaptiveGridTrackDensity {
   /// @brief Calculates the density sum of a z-bin and its two neighboring bins
   /// as needed for 'getHighestSumZPosition'
   ///
-  /// @parem mainGrid The main 1-dim density grid along the z-axis
+  /// @param mainGridDensity The main 1-dim density grid along the z-axis
+  /// @param mainGridZValues The corresponding z-bin values of the track
+  /// densities along the z-axis
   /// @param pos The center z-bin positon
   ///
   /// @return The sum
