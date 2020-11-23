@@ -111,6 +111,15 @@ find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
 
+# Helper macro that overrides the project function in subdirectories, so 
+# we can intercept and store their versions. This is used to lock them down
+# in an installation later on.
+cmake_policy(SET CMP0048 NEW)    
+macro(project)
+    _project(${ARGN})
+    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
+
 # optional packages
 #
 # find packages explicitely for each component even if this means searching for
@@ -144,8 +153,9 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
+  set(autodiff_VERSION 0.5.11 CACHE INTERNAL "")
   if(ACTS_USE_SYSTEM_AUTODIFF)
-    find_package(autodiff 0.5.11 CONFIG REQUIRED)
+    find_package(autodiff ${autodiff_VERSION} CONFIG REQUIRED)
     message(STATUS "Using system installation of autodiff")
   else()
     add_subdirectory(thirdparty/autodiff)
