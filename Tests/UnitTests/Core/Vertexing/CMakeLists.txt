@@ -10,3 +10,5 @@ add_unittest(ZScanVertexFinder ZScanVertexFinderTests.cpp)
 add_unittest(TrackDensityVertexFinder TrackDensityVertexFinderTests.cpp)
 add_unittest(GaussianGridTrackDensity GaussianGridTrackDensityTests.cpp)
 add_unittest(GridDensityVertexFinder GridDensityVertexFinderTests.cpp)
+add_unittest(AdaptiveGridTrackDensity AdaptiveGridTrackDensityTests.cpp)
+
