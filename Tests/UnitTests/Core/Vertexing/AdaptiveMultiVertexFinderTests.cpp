@@ -16,10 +16,12 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
-#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
@@ -483,13 +485,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
 }
 
-
 /// @brief AMVF test with adaptive grid seed finder
-BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_adaptive_grid_seed_finder_test) {
+BOOST_AUTO_TEST_CASE(
+    adaptive_multi_vertex_finder_adaptive_grid_seed_finder_test) {
   // Set debug mode
   bool debugMode = false;
   if (debugMode) {
-    std::cout << "Starting AMVF test with adaptive grid seed finder..." << std::endl;
+    std::cout << "Starting AMVF test with adaptive grid seed finder..."
+              << std::endl;
   }
   // Set up constant B-Field
   ConstantBField bField(Vector3D(0., 0., 2_T));
@@ -627,7 +630,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_adaptive_grid_seed_finder_test
     BOOST_CHECK_EQUAL(found, true);
   }
 }
-
 
 }  // namespace Test
 }  // namespace Acts

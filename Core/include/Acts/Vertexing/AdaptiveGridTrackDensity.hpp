@@ -161,7 +161,8 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return The sum
   double getDensitySum(const std::vector<float>& mainGridDensity,
-                       const std::vector<int>& mainGridZValues,unsigned int pos) const;
+                       const std::vector<int>& mainGridZValues,
+                       unsigned int pos) const;
 
   Config m_cfg;
 };
