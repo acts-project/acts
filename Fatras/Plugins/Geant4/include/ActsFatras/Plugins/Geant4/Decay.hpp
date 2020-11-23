@@ -11,7 +11,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Physics/Decay/PDGtoG4Converter.hpp"
+#include "ActsFatras/Plugins/Geant4/PDGtoG4Converter.hpp"
 #include <cmath>
 #include <random>
 #include <vector>
