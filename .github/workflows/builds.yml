@@ -22,12 +22,13 @@ jobs:
           - ubuntu2004
     env:
       SETUP: true
+      SETUP_LCG: source /opt/lcg_view/setup.sh
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
       - uses: actions/checkout@v2
       - name: Define setup script
         if: contains(matrix.image, 'lcg')
-        run: echo "::set-env name=SETUP::source /opt/lcg_view/setup.sh"
+        run: echo "SETUP=${SETUP_LCG}" >> $GITHUB_ENV
       - name: Configure
         # use manual mkdir+cd. CMake on LCG95 does not like -B ... -S ...
         run: >

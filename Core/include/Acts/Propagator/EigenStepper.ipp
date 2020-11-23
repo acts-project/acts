@@ -74,7 +74,7 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = state.q / up;
+  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
 }
 
 template <typename B, typename E, typename A>
