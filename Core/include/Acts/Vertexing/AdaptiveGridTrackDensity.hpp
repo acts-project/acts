@@ -107,7 +107,7 @@ class AdaptiveGridTrackDensity {
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
 
-  private:
+ private:
   /// @brief Function that creates a 1-dim track grid (i.e. a vector)
   /// with the correct density contribution of a track along the z-axis
   ///

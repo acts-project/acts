@@ -24,7 +24,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
       couldRemoveTracks = true;
       auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
       m_cfg.gridDensity.removeTrackGridFromMainGrid(
-          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGridDensity, state.mainGridZValues);
+          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGridDensity,
+          state.mainGridZValues);
     }
     if (not couldRemoveTracks) {
       // No tracks were removed anymore
@@ -47,8 +48,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         }
         continue;
       }
-      auto binAndTrackGrid =
-          m_cfg.gridDensity.addTrack(trkParams, state.mainGridDensity, state.mainGridZValues);
+      auto binAndTrackGrid = m_cfg.gridDensity.addTrack(
+          trkParams, state.mainGridDensity, state.mainGridZValues);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
         state.binAndTrackGridMap[trk] = binAndTrackGrid;
@@ -63,7 +64,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   if (not state.mainGridDensity.empty()) {
     if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGridDensity, state.mainGridZValues);
+      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGridDensity,
+                                                       state.mainGridZValues);
 
       if (!maxZres.ok()) {
         return maxZres.error();
@@ -71,7 +73,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
       z = *maxZres;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainGridDensity, state.mainGridZValues);
+      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(
+          state.mainGridDensity, state.mainGridZValues);
 
       if (!maxZres.ok()) {
         return maxZres.error();

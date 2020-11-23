@@ -17,10 +17,11 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
+#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/GridDensityVertexFinder.hpp"
-#include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
-#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2./30.*1_mm);
+  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
   AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
@@ -190,7 +191,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2./30.*1_mm);
+  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
@@ -241,7 +242,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     BOOST_CHECK(!(*res1).empty());
     Vector3D result = (*res1).back().position();
     if (debugMode) {
-      std::cout << "Vertex position after first fill 1: " << result << std::endl;
+      std::cout << "Vertex position after first fill 1: " << result
+                << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
     zResult1 = result[eZ];
@@ -255,7 +257,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     BOOST_CHECK(!(*res2).empty());
     Vector3D result = (*res2).back().position();
     if (debugMode) {
-      std::cout << "Vertex position after first fill 2: " << result << std::endl;
+      std::cout << "Vertex position after first fill 2: " << result
+                << std::endl;
     }
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
     zResult2 = result[eZ];
@@ -291,7 +294,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     zResult1 = result[eZ];
   }
 
-   auto res4 = finder2.find(trackPtrVec, vertexingOptions, state2);
+  auto res4 = finder2.find(trackPtrVec, vertexingOptions, state2);
   if (!res4.ok()) {
     std::cout << res4.error().message() << std::endl;
   }
@@ -341,7 +344,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2./30.*1_mm);
+  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
   AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;

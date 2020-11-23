@@ -30,8 +30,7 @@ namespace Acts {
 /// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15,
-          typename vfitter_t = DummyVertexFitter<>>
+template <int trkGridSize = 15, typename vfitter_t = DummyVertexFitter<>>
 class AdaptiveGridDensityVertexFinder {
   // Assert odd trkGridSize
   static_assert(trkGridSize % 2);
