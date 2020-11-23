@@ -26,6 +26,8 @@ namespace Acts {
 /// density vector) needs to be calculated. All track contributions along the
 /// beam axis (main density grid) a superimposed and the z-value of the bin
 /// with the highest track density is returned as a vertex candidate.
+/// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
+/// version where the density grid grows bigger with added tracks.
 ///
 /// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
@@ -41,9 +43,9 @@ class AdaptiveGridDensityVertexFinder {
  public:
   /// @brief The Config struct
   struct Config {
-    ///@param zMinMax min and max z value of big z-axis grid
-    Config(float zMinMax = 100)
-        : gridDensity(typename GridDensity::Config(zMinMax)) {}
+    ///@param binSize Bin size of grid in mm
+    Config(float binSize = 0.1)
+        : gridDensity(typename GridDensity::Config(binSize)) {}
     ///@param gDensity The grid density
     Config(const GridDensity& gDensity) : gridDensity(gDensity) {}
 
