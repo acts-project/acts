@@ -121,7 +121,6 @@ BOOST_AUTO_TEST_CASE(intersect_points) {
 }
 
 BOOST_AUTO_TEST_CASE(intersect_rays) {
-
   /* temporarily removed, fails with double precision
   BOOST_TEST_CONTEXT("2D") {
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
@@ -269,113 +268,113 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     BOOST_CHECK(bb.intersect(ray));
   } */
 
-BOOST_TEST_CONTEXT("3D visualize") {
-  Object o;
+  BOOST_TEST_CONTEXT("3D visualize") {
+    Object o;
 
-  // lets make sure it also works in 3d
-  ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
-  Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
-  BOOST_CHECK(bb3.intersect(ray3));
+    // lets make sure it also works in 3d
+    ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
+    Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  PlyVisualization3D<BoundingBoxScalar> ply;
+    PlyVisualization3D<BoundingBoxScalar> ply;
 
-  ray3.draw(ply);
-  std::ofstream os("ray3d.ply");
-  os << ply << std::flush;
-  os.close();
-}
+    ray3.draw(ply);
+    std::ofstream os("ray3d.ply");
+    os << ply << std::flush;
+    os.close();
+  }
 
-BOOST_TEST_CONTEXT("3D") {
-  using VertexType3 = ObjectBBox::VertexType;
-  Object o;
+  BOOST_TEST_CONTEXT("3D") {
+    using VertexType3 = ObjectBBox::VertexType;
+    Object o;
 
-  // lets make sure it also works in 3d
-  ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
-  Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
-  BOOST_CHECK(bb3.intersect(ray3));
+    // lets make sure it also works in 3d
+    ObjectBBox bb3(&o, {-1, -1, -1}, {1, 1, 1});
+    Ray<BoundingBoxScalar, 3> ray3({0, 0, -2}, {0, 0, 1});
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  // facing away from box
-  ray3 = {{0, 0, -2}, {0, 0, -1}};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    // facing away from box
+    ray3 = {{0, 0, -2}, {0, 0, -1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {{0, 2, -2}, {0, 0, 1}};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {{0, 2, -2}, {0, 0, 1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {{0, -2, -2}, {0, 0, 1}};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {{0, -2, -2}, {0, 0, 1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  // right on slab
-  ray3 = {{0, 1, -2}, {0, 0, 1}};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    // right on slab
+    ray3 = {{0, 1, -2}, {0, 0, 1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  // right on slab - temporarily removed, fails with double precision
-  // ray3 = {{0, -1, -2}, {0, 0, 1}};
-  // BOOST_CHECK(bb3.intersect(ray3));
+    // right on slab - temporarily removed, fails with double precision
+    // ray3 = {{0, -1, -2}, {0, 0, 1}};
+    // BOOST_CHECK(bb3.intersect(ray3));
 
-  // right on slab
-  ray3 = {{-1, 0, -2}, {0, 0, 1}};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    // right on slab
+    ray3 = {{-1, 0, -2}, {0, 0, 1}};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  // right on slab - temporarily removed, fails with double precision
-  // ray3 = {{1, 0, -2}, {0, 0, 1}};
-  // BOOST_CHECK(!bb3.intersect(ray3));
+    // right on slab - temporarily removed, fails with double precision
+    // ray3 = {{1, 0, -2}, {0, 0, 1}};
+    // BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {{-0.95, 0, -2}, {0, 0, 1}};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{-0.95, 0, -2}, {0, 0, 1}};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  // some off-axis rays
-  ObjectBBox::VertexType p(0, 0, -2);
+    // some off-axis rays
+    ObjectBBox::VertexType p(0, 0, -2);
 
-  ray3 = {p, VertexType3(1, 1, 1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(1, 1, 1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(-1, 1, 1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(-1, 1, 1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(-1, -1, 1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(-1, -1, 1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(1, -1, 1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(1, -1, 1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(1.1, 0, -1) - p};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {p, VertexType3(1.1, 0, -1) - p};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(-1.1, 0, -1) - p};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {p, VertexType3(-1.1, 0, -1) - p};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(0, 1.1, -1) - p};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {p, VertexType3(0, 1.1, -1) - p};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(0, -1.1, -1) - p};
-  BOOST_CHECK(!bb3.intersect(ray3));
+    ray3 = {p, VertexType3(0, -1.1, -1) - p};
+    BOOST_CHECK(!bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(0.9, 0, -1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(0.9, 0, -1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(-0.9, 0, -1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(-0.9, 0, -1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(0, 0.9, -1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(0, 0.9, -1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {p, VertexType3(0, -0.9, -1) - p};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {p, VertexType3(0, -0.9, -1) - p};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {{0, 0, 0}, {1, 0, 0}};
-  BOOST_CHECK(bb3.intersect(ray3));
-  ray3 = {{0, 0, 0}, {0, 1, 0}};
-  BOOST_CHECK(bb3.intersect(ray3));
-  ray3 = {{0, 0, 0}, {0, 0, 1}};
-  BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{0, 0, 0}, {1, 0, 0}};
+    BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{0, 0, 0}, {0, 1, 0}};
+    BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{0, 0, 0}, {0, 0, 1}};
+    BOOST_CHECK(bb3.intersect(ray3));
 
-  ray3 = {{0, 0, 0}, {-1, 0, 0}};
-  BOOST_CHECK(bb3.intersect(ray3));
-  ray3 = {{0, 0, 0}, {0, -1, 0}};
-  BOOST_CHECK(bb3.intersect(ray3));
-  ray3 = {{0, 0, 0}, {0, 0, -1}};
-  BOOST_CHECK(bb3.intersect(ray3));
-}
+    ray3 = {{0, 0, 0}, {-1, 0, 0}};
+    BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{0, 0, 0}, {0, -1, 0}};
+    BOOST_CHECK(bb3.intersect(ray3));
+    ray3 = {{0, 0, 0}, {0, 0, -1}};
+    BOOST_CHECK(bb3.intersect(ray3));
+  }
 }  // namespace Test
 
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
@@ -1202,5 +1201,5 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     os.close();
   }
 }
-}  // namespace Acts
+}  // namespace Test
 }  // namespace Acts
