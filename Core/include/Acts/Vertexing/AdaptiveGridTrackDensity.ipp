@@ -261,10 +261,10 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::
   mainGridDensity[zSecondMax] = secondDensity;
 
   // Return the z-bin position of the highest density sum
-  if (secondSum > firstSum || secondSum > thirdSum) {
+  if (secondSum > firstSum && secondSum > thirdSum) {
     return zSecondMax;
   }
-  if (thirdSum > secondSum || thirdSum > firstSum) {
+  if (thirdSum > secondSum && thirdSum > firstSum) {
     return zThirdMax;
   }
   return zFirstMax;
