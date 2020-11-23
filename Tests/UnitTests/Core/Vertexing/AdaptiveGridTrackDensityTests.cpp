@@ -220,5 +220,119 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   BOOST_CHECK_EQUAL(*res3, z0Trk1);
 }
 
+BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
+  const int trkGridSize = 15;
+
+  double binSize = 0.1;  // mm
+
+  // Set up grid density with zMinMax
+  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+
+  // Create some test tracks
+  Covariance covMat;
+  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+
+  // Define z0 values for test tracks
+  float z0Trk1 = -0.45;
+  float z0Trk2 = -0.25;
+
+  BoundVector paramVec0;
+  paramVec0 << 0.1, z0Trk1, 0, 0, 0, 0;
+  BoundVector paramVec1;
+  paramVec1 << 0.1, z0Trk2, 0, 0, 0, 0;
+
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+
+  BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
+
+  // Start with empty grids
+  std::vector<float> mainGridDensity;
+  std::vector<int> mainGridZValues;
+
+  // Add track 0
+  auto zBinAndTrack0 = grid.addTrack(params0, mainGridDensity, mainGridZValues);
+  BOOST_CHECK(not mainGridDensity.empty());
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+  // Grid size should match trkGridSize
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
+
+  // Calculate total density
+  float densitySum0 =0;
+  for (auto& d : mainGridDensity){
+    densitySum0 += d;
+  }
+
+  // Add track 0 again
+  auto zBinAndTrack1 = grid.addTrack(params0, mainGridDensity, mainGridZValues);
+  BOOST_CHECK(not mainGridDensity.empty());
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+  // Grid size should still match trkGridSize
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
+
+  // Calculate new total density
+  float densitySum1 =0;
+  for (auto& d : mainGridDensity){
+    densitySum1 += d;
+  }
+
+  BOOST_CHECK(2 * densitySum0 == densitySum1);
+
+  // Remove track 1
+  grid.removeTrackGridFromMainGrid(zBinAndTrack1.first, zBinAndTrack1.second, mainGridDensity, mainGridZValues);
+ 
+  // Calculate new total density
+  float densitySum2 =0;
+  for (auto& d : mainGridDensity){
+    densitySum2 += d;
+  }
+
+  // Density should be old one again
+  BOOST_CHECK(densitySum0 == densitySum2);
+  // Grid size should still match trkGridSize (removal does not touch grid size)
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
+
+  // Add track 1, overlapping track 0
+  auto zBinAndTrack2 = grid.addTrack(params1, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+
+  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2)/binSize + 1);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
+
+  float densitySum3 =0;
+  for (auto& d : mainGridDensity){
+    densitySum3 += d;
+  }
+
+  // Remove second track 1
+  grid.removeTrackGridFromMainGrid(zBinAndTrack0.first, zBinAndTrack0.second, mainGridDensity, mainGridZValues);
+ 
+  float densitySum4 =0;
+  for (auto& d : mainGridDensity){
+    densitySum4 += d;
+  }
+
+  // Density should match differences of removed tracks
+  CHECK_CLOSE_ABS(densitySum4, densitySum3 - densitySum0, 1e-5);
+
+  // Remove last track again
+  grid.removeTrackGridFromMainGrid(zBinAndTrack2.first, zBinAndTrack2.second, mainGridDensity, mainGridZValues);
+  
+  // Size should not have changed
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
+
+  float densitySum5 =0;
+  for (auto& d : mainGridDensity){
+    densitySum5 += d;
+  }
+
+  // Grid is now empty after all tracks were removed
+  CHECK_CLOSE_ABS(densitySum5, 0., 1e-5);
+}
+
 }  // namespace Test
 }  // namespace Acts

@@ -126,7 +126,6 @@ std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<tr
   return {zBin, trackGrid};
 }
 
-
 template <int trkGridSize>
 void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(int zBin,
                                    const ActsVectorF<trkGridSize>& trkGrid,
@@ -142,11 +141,7 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(in
   // Go over trkGrid and remove it from mainDensityGrid
   int startEnd = int(trkGridSize - 1) / 2;
   for (int i = 0; i < trkGridSize; i++) {
-    std::cout << "\ncurrent i: " << i << std::endl;
-    std::cout << "old value in mainGrid: " << mainGridDensity[int(densityIdx + (i - startEnd))] << std::endl;
-    std::cout << "removing value...: " << trkGrid[i] << std::endl;
     mainGridDensity[int(densityIdx + (i - startEnd))] -= trkGrid[i];
-    std::cout << "new value in mainGrid: " << mainGridDensity[int(densityIdx + (i - startEnd))] << std::endl;
   }
 }
 
