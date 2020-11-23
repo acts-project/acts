@@ -72,7 +72,7 @@ class AdaptiveGridTrackDensity {
   /// @return A pair storing information about the z-bin position
   /// the track was added (int) and the 1-dim density contribution
   /// of the track itself
-  void addTrack(const BoundTrackParameters& trk,
+  std::pair<int, ActsVectorF<trkGridSize>> addTrack(const BoundTrackParameters& trk,
                 std::vector<float>& mainGridDensity,
                 std::vector<int>& mainGridZValues) const;
 
@@ -82,10 +82,10 @@ class AdaptiveGridTrackDensity {
   /// removed from
   /// @param trkGrid The 1-dim density contribution of the track
   /// @param mainGrid The main 1-dim density grid along the z-axis
-  // void removeTrackGridFromMainGrid(int zBin,
-  //                                  const ActsVectorF<trkGridSize>& trkGrid,
-  //                                  ActsVectorF<mainGridSize>& mainGrid)
-  //                                  const;
+  void removeTrackGridFromMainGrid(int zBin,
+                                   const ActsVectorF<trkGridSize>& trkGrid,
+                                   std::vector<float>& mainGridDensity,
+                                   const std::vector<int>& mainGridZValues) const;
 
   // private:
   /// @brief Helper function that acutally adds the track to the

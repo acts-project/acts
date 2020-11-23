@@ -58,7 +58,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
 }
 
 template <int trkGridSize>
-void Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
+std::pair<int, Acts::ActsVectorF<trkGridSize>> Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
     std::vector<int>& mainGridZValues) const {
   SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
@@ -81,14 +81,16 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
+  ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
+
   // Check if current track does affect grid density
   // in central bins at z-axis
   if ((std::abs(dOffset) > trkGridSize - 1) / 2.) {
-    return;
+    return {0, trackGrid};
   }
 
   // Create the track grid
-  ActsVectorF<trkGridSize> trackGrid =
+  trackGrid =
       createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
 
   std::vector<int> zBinValues;
@@ -102,14 +104,10 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   for (int i = 0; i < trkGridSize; i++) {
     int z = zBinValues[i];
 
+    // Check if track density already exists at current z position
     auto findIter =
         std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
-    // bool exists = std::binary_search(mainGridZValues.begin(),
-    // mainGridZValues.end(), z);
-    // TODO: wanted to check if element exists with findIter !=
-    // mainGridZValues.end() but if element is actually last element in list,
-    // caused problems maybe? Check if results are always the same as if we're
-    // using bineary search here
+    
     if (findIter != mainGridZValues.end()) {
       // Z bin already exists
       mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] +=
@@ -124,9 +122,34 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
       mainGridZValues.insert(it, z);
     }
   }
+
+  return {zBin, trackGrid};
 }
 
-//
+
+template <int trkGridSize>
+void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(int zBin,
+                                   const ActsVectorF<trkGridSize>& trkGrid,
+                                   std::vector<float>& mainGridDensity,
+                                   const std::vector<int>& mainGridZValues) const {
+
+  // Find position of current z bin in mainGridZValues
+  auto findIter =
+        std::find(mainGridZValues.begin(), mainGridZValues.end(), zBin);
+  // Calculate corresponding index in mainGridDensity
+  int densityIdx = std::distance(mainGridZValues.begin(), findIter);
+
+  // Go over trkGrid and remove it from mainDensityGrid
+  int startEnd = int(trkGridSize - 1) / 2;
+  for (int i = 0; i < trkGridSize; i++) {
+    std::cout << "\ncurrent i: " << i << std::endl;
+    std::cout << "old value in mainGrid: " << mainGridDensity[int(densityIdx + (i - startEnd))] << std::endl;
+    std::cout << "removing value...: " << trkGrid[i] << std::endl;
+    mainGridDensity[int(densityIdx + (i - startEnd))] -= trkGrid[i];
+    std::cout << "new value in mainGrid: " << mainGridDensity[int(densityIdx + (i - startEnd))] << std::endl;
+  }
+}
+
 template <int trkGridSize>
 Acts::ActsVectorF<trkGridSize>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
