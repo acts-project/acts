@@ -53,7 +53,7 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return The z position of maximum track density
   Result<float>
-  getMaxZPosition(const std::vector<float>& mainGridDensity,
+  getMaxZPosition(std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const;
 
   /// @brief Returns the z position of maximum track density and
@@ -63,7 +63,7 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return The z position of maximum track density and width
   Result<std::pair<float, float>>
-    getMaxZPositionAndWidth(const std::vector<float>& mainGridDensity,
+    getMaxZPositionAndWidth(std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const;
 
 
@@ -151,7 +151,8 @@ class AdaptiveGridTrackDensity {
   /// @param mainGrid The main 1-dim density grid along the z-axis
   ///
   /// @return The z-bin position
-  // int getHighestSumZPosition(ActsVectorF<mainGridSize>& mainGrid) const;
+  int getHighestSumZPosition(std::vector<float>& mainGridDensity,
+    const std::vector<int>& mainGridZValues) const;
 
   /// @brief Calculates the density sum of a z-bin and its two neighboring bins
   /// as needed for 'getHighestSumZPosition'
@@ -160,8 +161,9 @@ class AdaptiveGridTrackDensity {
   /// @param pos The center z-bin positon
   ///
   /// @return The sum
-  // double getDensitySum(const ActsVectorF<mainGridSize>& mainGrid,
-  //                      int pos) const;
+  double getDensitySum(
+    const std::vector<float>& mainGridDensity,
+    const std::vector<int>& mainGridZValues, int pos) const;
 
   Config m_cfg;
 };
