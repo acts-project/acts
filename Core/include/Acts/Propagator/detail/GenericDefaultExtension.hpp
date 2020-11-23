@@ -53,7 +53,7 @@ struct GenericDefaultExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         const int i = 0, const ActsScalar h = 0.,
          const ThisVector3& kprev = ThisVector3()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
@@ -80,7 +80,7 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
+                const ActsScalar h) const {
     propagateTime(state, stepper, h);
     return true;
   }
@@ -98,7 +98,7 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
+                const ActsScalar h, FreeMatrix& D) const {
     propagateTime(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
   }
@@ -113,7 +113,7 @@ struct GenericDefaultExtension {
   /// @param [in] h Step size
   template <typename propagator_state_t, typename stepper_t>
   void propagateTime(propagator_state_t& state, const stepper_t& stepper,
-                     const double h) const {
+                     const ActsScalar h) const {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
@@ -137,7 +137,7 @@ struct GenericDefaultExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+                       const ActsScalar h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -164,7 +164,7 @@ struct GenericDefaultExtension {
 
     D = FreeMatrix::Identity();
 
-    double half_h = h * 0.5;
+    ActsScalar half_h = h * 0.5;
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) idendity
     auto dFdT = D.block<3, 3>(0, 4);

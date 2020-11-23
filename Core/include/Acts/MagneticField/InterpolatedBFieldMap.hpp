@@ -55,8 +55,8 @@ struct InterpolatedBFieldMapper {
     /// @param [in] fieldValues field values at the hyper box corners sorted in
     ///                         the canonical order defined in Acts::interpolate
     FieldCell(std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
-              std::array<double, DIM_POS> lowerLeft,
-              std::array<double, DIM_POS> upperRight,
+              std::array<ActsScalar, DIM_POS> lowerLeft,
+              std::array<ActsScalar, DIM_POS> upperRight,
               std::array<Vector3D, N> fieldValues)
         : m_transformPos(std::move(transformPos)),
           m_lowerLeft(std::move(lowerLeft)),
@@ -96,10 +96,10 @@ struct InterpolatedBFieldMapper {
     std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
 
     /// generalized lower-left corner of the confining hyper-box
-    std::array<double, DIM_POS> m_lowerLeft;
+    std::array<ActsScalar, DIM_POS> m_lowerLeft;
 
     /// generalized upper-right corner of the confining hyper-box
-    std::array<double, DIM_POS> m_upperRight;
+    std::array<ActsScalar, DIM_POS> m_upperRight;
 
     /// @brief magnetic field vectors at the hyper-box corners
     ///
@@ -175,17 +175,17 @@ struct InterpolatedBFieldMapper {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  std::vector<double> getMin() const {
+  std::vector<ActsScalar> getMin() const {
     auto minArray = m_grid.minPosition();
-    return std::vector<double>(minArray.begin(), minArray.end());
+    return std::vector<ActsScalar>(minArray.begin(), minArray.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  std::vector<double> getMax() const {
+  std::vector<ActsScalar> getMax() const {
     auto maxArray = m_grid.maxPosition();
-    return std::vector<double>(maxArray.begin(), maxArray.end());
+    return std::vector<ActsScalar>(maxArray.begin(), maxArray.end());
   }
 
   /// @brief check whether given 3D position is inside look-up domain

@@ -25,7 +25,7 @@ namespace Acts {
 /// This helper produces output in the OBJ format. Note that colors are not
 /// supported in this implementation.
 ///
-template <typename T = double>
+template <typename T = ActsScalar>
 class ObjVisualization3D : public IVisualization3D {
  public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
@@ -43,22 +43,22 @@ class ObjVisualization3D : public IVisualization3D {
   /// Constructor that allows to set scalor and precision
   /// @param prec The output precission with std::setprecision
   /// @param scale An (optional) scaling for the writing out
-  ObjVisualization3D(unsigned int prec = 4, double scale = 1.)
+  ObjVisualization3D(unsigned int prec = 4, ValueType scale = 1.)
       : m_outputPrecision(prec), m_outputScalor(scale) {}
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3D& vtx, ColorRGB color = {0, 0, 0}) final;
+  void vertex(const VertexType& vtx, ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization3D::line()
-  void line(const Vector3D& a, const Vector3D& b,
+  void line(const VertexType& a, const VertexType& b,
             ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization3D::face()
-  void face(const std::vector<Vector3D>& vtxs,
+  void face(const std::vector<VertexType>& vtxs,
             ColorRGB color = {0, 0, 0}) final;
 
   /// @copydoc Acts::IVisualization3D::faces()
-  void faces(const std::vector<Vector3D>& vtxs,
+  void faces(const std::vector<VertexType>& vtxs,
              const std::vector<FaceType>& faces,
              ColorRGB color = {0, 0, 0}) final;
 
@@ -79,7 +79,7 @@ class ObjVisualization3D : public IVisualization3D {
  private:
   /// The output parameters
   unsigned int m_outputPrecision = 4;
-  double m_outputScalor = 1.;
+  ValueType m_outputScalor = 1.;
   /// The object data to be written
   std::vector<VertexType> m_vertices;
   std::vector<FaceType> m_faces;

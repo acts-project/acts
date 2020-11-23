@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-template <typename T = double>
+template <typename T = ActsScalar>
 
 /// @brief Helper to write out PlyVisualization3D visualization format
 class PlyVisualization3D : public IVisualization3D {
@@ -35,18 +35,18 @@ class PlyVisualization3D : public IVisualization3D {
   using VertexType = ActsVector<ValueType, 3>;
 
   /// @copydoc Acts::IVisualization3D::vertex()
-  void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;
+  void vertex(const VertexType& vtx, ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::line()
-  void face(const std::vector<Vector3D>& vtxs,
+  void face(const std::vector<VertexType>& vtxs,
             ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::faces()
-  void faces(const std::vector<Vector3D>& vtxs, const std::vector<FaceType>&,
+  void faces(const std::vector<VertexType>& vtxs, const std::vector<FaceType>&,
              ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::face()
-  void line(const Vector3D& a, const Vector3D& b,
+  void line(const VertexType& a, const VertexType& b,
             ColorRGB color = {120, 120, 120}) final;
 
   /// @copydoc Acts::IVisualization3D::write()

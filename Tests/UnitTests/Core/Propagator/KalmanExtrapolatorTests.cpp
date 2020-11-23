@@ -44,9 +44,9 @@ struct StepWiseActor {
   /// The result is the piece-wise jacobian
   struct this_result {
     std::vector<Jacobian> jacobians = {};
-    std::vector<double> paths = {};
+    std::vector<ActsScalar> paths = {};
 
-    double fullPath = 0.;
+    ActsScalar fullPath = 0.;
 
     bool finalized = false;
   };
@@ -70,7 +70,7 @@ struct StepWiseActor {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface);
       result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
-      result.paths.push_back(std::get<double>(boundState));
+      result.paths.push_back(std::get<ActsScalar>(boundState));
     }
     // Also store the jacobian and full path
     if ((state.navigation.navigationBreak or state.navigation.targetReached) and
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
   auto swJacobianTest = swResult.template get<StepWiseResult>();
 
   // (1) Path length test
-  double accPath = 0.;
+  ActsScalar accPath = 0.;
   auto swPaths = swJacobianTest.paths;
   // Sum up the step-wise paths, they are total though
   for (auto cpath = swPaths.rbegin(); cpath != swPaths.rend(); ++cpath) {

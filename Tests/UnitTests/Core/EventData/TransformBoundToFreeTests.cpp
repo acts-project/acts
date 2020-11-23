@@ -35,7 +35,7 @@ BOOST_DATA_TEST_CASE(
   GeometryContext geoCtx;
 
   Vector2D loc(l0, l1);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3D dir = makeDirectionUnitFromPhiTheta<FreeScalar>(phi, theta);
   // transform reference position
   Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);
 

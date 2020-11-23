@@ -13,7 +13,7 @@
 
 namespace Acts {
 
-std::tuple<BoundTrackParameters, BoundMatrix, double>
+std::tuple<BoundTrackParameters, BoundMatrix, ActsScalar>
 StraightLineStepper::boundState(State& state, const Surface& surface,
                                 bool transportCov) const {
   return detail::boundState(
@@ -22,7 +22,7 @@ StraightLineStepper::boundState(State& state, const Surface& surface,
       state.covTransport and transportCov, state.pathAccumulated, surface);
 }
 
-std::tuple<CurvilinearTrackParameters, BoundMatrix, double>
+std::tuple<CurvilinearTrackParameters, BoundMatrix, ActsScalar>
 StraightLineStepper::curvilinearState(State& state, bool transportCov) const {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
@@ -37,8 +37,8 @@ void StraightLineStepper::update(State& state, const FreeVector& parameters,
 }
 
 void StraightLineStepper::update(State& state, const Vector3D& uposition,
-                                 const Vector3D& udirection, double up,
-                                 double time) const {
+                                 const Vector3D& udirection, ActsScalar up,
+                                 ActsScalar time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
@@ -63,7 +63,7 @@ void StraightLineStepper::resetState(State& state,
                                      const BoundSymMatrix& cov,
                                      const Surface& surface,
                                      const NavigationDirection navDir,
-                                     const double stepSize) const {
+                                     const ActsScalar stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,

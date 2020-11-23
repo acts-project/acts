@@ -33,22 +33,22 @@ using Covariance = BoundSymMatrix;
 GeometryContext geoContext = GeometryContext();
 MagneticFieldContext magFieldContext = MagneticFieldContext();
 
-const double zVertexPos1 = 12.;
-const double zVertexPos2 = -3.;
+const ActsScalar zVertexPos1 = 12.;
+const ActsScalar zVertexPos2 = -3.;
 // x position
-std::normal_distribution<double> xdist(1_mm, 0.1_mm);
+std::normal_distribution<ActsScalar> xdist(1_mm, 0.1_mm);
 // y position
-std::normal_distribution<double> ydist(-0.7_mm, 0.1_mm);
+std::normal_distribution<ActsScalar> ydist(-0.7_mm, 0.1_mm);
 // z1 position
-std::normal_distribution<double> z1dist(zVertexPos1 * 1_mm, 1_mm);
+std::normal_distribution<ActsScalar> z1dist(zVertexPos1 * 1_mm, 1_mm);
 // z2 position
-std::normal_distribution<double> z2dist(zVertexPos2 * 1_mm, 0.5_mm);
+std::normal_distribution<ActsScalar> z2dist(zVertexPos2 * 1_mm, 0.5_mm);
 // Track pT distribution
-std::uniform_real_distribution<double> pTDist(0.1_GeV, 100_GeV);
+std::uniform_real_distribution<ActsScalar> pTDist(0.1_GeV, 100_GeV);
 // Track phi distribution
-std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
+std::uniform_real_distribution<ActsScalar> phiDist(-M_PI, M_PI);
 // Track eta distribution
-std::uniform_real_distribution<double> etaDist(-4., 4.);
+std::uniform_real_distribution<ActsScalar> etaDist(-4., 4.);
 
 ///
 /// @brief Unit test for GridDensityVertexFinder without caching
@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     }
 
     // Create momentum and charge of track
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    ActsScalar pt = pTDist(gen);
+    ActsScalar phi = phiDist(gen);
+    ActsScalar eta = etaDist(gen);
+    ActsScalar charge = etaDist(gen) > 0 ? 1 : -1;
 
     trackVec.push_back(BoundTrackParameters(
         perigeeSurface, geoContext, makeVector4(pos, 0),
@@ -164,15 +164,15 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
+    ActsScalar x = xdist(gen);
+    ActsScalar y = ydist(gen);
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
-    double z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    ActsScalar z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+    ActsScalar pt = pTDist(gen);
+    ActsScalar phi = phiDist(gen);
+    ActsScalar eta = etaDist(gen);
+    ActsScalar charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
         perigeeSurface, geoContext, Vector4D(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
@@ -264,13 +264,13 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
-    double z = z1dist(gen);
-    double pt = pTDist(gen);
-    double phi = phiDist(gen);
-    double eta = etaDist(gen);
-    double charge = etaDist(gen) > 0 ? 1 : -1;
+    ActsScalar x = xdist(gen);
+    ActsScalar y = ydist(gen);
+    ActsScalar z = z1dist(gen);
+    ActsScalar pt = pTDist(gen);
+    ActsScalar phi = phiDist(gen);
+    ActsScalar eta = etaDist(gen);
+    ActsScalar charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
         perigeeSurface, geoContext, Vector4D(x, y, z, 0),
         makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));

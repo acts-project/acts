@@ -8,7 +8,7 @@
 
 namespace bdata = boost::unit_test::data;
 using Box = Acts::Volume::BoundingBox;
-using Ray = Acts::Ray<double, 3>;
+using Ray = Acts::Ray<ActsScalar, 3>;
 
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();

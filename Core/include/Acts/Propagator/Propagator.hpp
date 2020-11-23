@@ -56,7 +56,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   unsigned int steps = 0;
 
   /// Signed distance over which the parameters were propagated
-  double pathLength = 0.;
+  ActsScalar pathLength = 0.;
 };
 
 /// @brief Class holding the trivial options in propagator options
@@ -69,7 +69,7 @@ struct PropagatorPlainOptions {
   int absPdgCode = 211;
 
   /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * UnitConstants::MeV;
+  ActsScalar mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
@@ -78,24 +78,24 @@ struct PropagatorPlainOptions {
   unsigned int maxRungeKuttaStepTrials = 10000;
 
   /// Absolute maximum step size
-  double maxStepSize = std::numeric_limits<double>::max();
+  ActsScalar maxStepSize = std::numeric_limits<ActsScalar>::max();
 
   /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
+  ActsScalar pathLimit = std::numeric_limits<ActsScalar>::max();
 
   /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
+  ActsScalar targetTolerance = s_onSurfaceTolerance;
 
   /// Loop protection step, it adapts the pathLimit
   bool loopProtection = true;
-  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+  ActsScalar loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
   // Configurations for Stepper
   /// Tolerance for the error of the integration
-  double tolerance = 1e-4;
+  ActsScalar tolerance = 1e-4;
 
   /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
+  ActsScalar stepSizeCutOff = 0.;
 };
 
 /// @brief Options for propagate() call
@@ -219,9 +219,9 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final {
   using Jacobian = BoundMatrix;
-  using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+  using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
   using CurvilinearState =
-      std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+      std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
                 "Stepper does not fulfill stepper concept.");

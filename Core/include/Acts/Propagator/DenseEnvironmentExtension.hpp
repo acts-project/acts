@@ -11,14 +11,15 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/detail/GenericDenseEnvironmentExtension.hpp"
 
 namespace Acts {
 
 /// @brief A typedef for the default GenericDenseEnvironmentExtension with
-/// double.
+/// ActsScalar.
 using DenseEnvironmentExtension =
-    detail::GenericDenseEnvironmentExtension<double>;
+    detail::GenericDenseEnvironmentExtension<ActsScalar>;
 
 template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
@@ -46,7 +47,7 @@ struct DenseStepperPropagatorOptions
   bool includeGgradient = true;
 
   /// Cut-off value for the momentum in SI units
-  double momentumCutOff = 0.;
+  ActsScalar momentumCutOff = 0.;
 
   /// @brief Expand the Options with extended aborters
   ///

@@ -8,11 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/detail/GenericDefaultExtension.hpp"
 
 namespace Acts {
 
 /// @brief A typedef for the default GenericDefaultExtension with double.
-using DefaultExtension = detail::GenericDefaultExtension<double>;
+using DefaultExtension = detail::GenericDefaultExtension<ActsScalar>;
 
 }  // namespace Acts

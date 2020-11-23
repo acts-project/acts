@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ply_test) {
                {2, 1, 1},
                {0, 1, 1}}};
   GenericCuboidVolumeBounds cubo(vertices);
-  PlyVisualization3D<double> ply;
+  PlyVisualization3D<> ply;
   cubo.draw(ply);
 
   std::ofstream os("cuboid.ply");

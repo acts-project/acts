@@ -81,14 +81,14 @@ struct SurfaceArrayCreatorFixture {
     SrfVec res;
     // TODO: The test is extremely numerically unstable in the face of upward
     //       rounding in this multiplication and division. Find out why.
-    double phiStep = 2 * M_PI / n;
+    ActsScalar phiStep = 2 * M_PI / n;
     for (size_t i = 0; i < n; ++i) {
-      double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
-      double phi = std::fma(i, phiStep, shift);
+      ActsScalar z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+      ActsScalar phi = std::fma(i, phiStep, shift);
 
       Transform3D trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(phi, Vector3D(0, 0, 1)));
       trans.translate(Vector3D(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
@@ -117,10 +117,10 @@ struct SurfaceArrayCreatorFixture {
 
       Transform3D trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(phi, Vector3D(0, 0, 1)));
       trans.translate(Vector3D(10, 0, z));
-      trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
+      trans.rotate(AngleAxis3D(incl, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(M_PI / 2., Vector3D(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<Surface> srf =
@@ -189,10 +189,10 @@ struct SurfaceArrayCreatorFixture {
         double phi = std::fma(j, phiStep, shift);
         Transform3D trans;
         trans.setIdentity();
-        trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
+        trans.rotate(AngleAxis3D(phi, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(10, 0, z));
-        trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
-        trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
+        trans.rotate(AngleAxis3D(incl, Vector3D(0, 0, 1)));
+        trans.rotate(AngleAxis3D(M_PI / 2., Vector3D(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
         std::shared_ptr<Surface> srfA =

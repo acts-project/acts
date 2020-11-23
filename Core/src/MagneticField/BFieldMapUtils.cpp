@@ -26,9 +26,9 @@ Acts::InterpolatedBFieldMapper<
 Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                                std::array<size_t, 2> nBinsRZ)>&
                         localToGlobalBin,
-                    std::vector<double> rPos, std::vector<double> zPos,
-                    std::vector<Acts::Vector2D> bField, double lengthUnit,
-                    double BFieldUnit, bool firstQuadrant) {
+                    std::vector<ActsScalar> rPos, std::vector<ActsScalar> zPos,
+                    std::vector<Acts::Vector2D> bField, ActsScalar lengthUnit,
+                    ActsScalar BFieldUnit, bool firstQuadrant) {
   // [1] Create Grid
   // sort the values
   std::sort(rPos.begin(), rPos.end());
@@ -45,14 +45,14 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   // get the minimum and maximum
   auto minMaxR = std::minmax_element(rPos.begin(), rPos.end());
   auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
-  double rMin = *minMaxR.first;
-  double zMin = *minMaxZ.first;
-  double rMax = *minMaxR.second;
-  double zMax = *minMaxZ.second;
+  ActsScalar rMin = *minMaxR.first;
+  ActsScalar zMin = *minMaxZ.first;
+  ActsScalar rMax = *minMaxR.second;
+  ActsScalar zMax = *minMaxZ.second;
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
+  ActsScalar stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
+  ActsScalar stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
   rMax += stepR;
   zMax += stepZ;
   if (firstQuadrant) {
@@ -109,10 +109,10 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector2D& field,
                             const Acts::Vector3D& pos) {
-    double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
-    if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
-      double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
+    ActsScalar r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
+    ActsScalar cos_phi, sin_phi;
+    if (r_sin_theta_2 > std::numeric_limits<ActsScalar>::min()) {
+      ActsScalar inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;
       sin_phi = pos.y() * inv_r_sin_theta;
     } else {
@@ -135,9 +135,9 @@ Acts::fieldMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, std::vector<Acts::Vector3D> bField,
-    double lengthUnit, double BFieldUnit, bool firstOctant) {
+    std::vector<ActsScalar> xPos, std::vector<ActsScalar> yPos,
+    std::vector<ActsScalar> zPos, std::vector<Acts::Vector3D> bField,
+    ActsScalar lengthUnit, ActsScalar BFieldUnit, bool firstOctant) {
   // [1] Create Grid
   // Sort the values
   std::sort(xPos.begin(), xPos.end());
@@ -161,18 +161,18 @@ Acts::fieldMapperXYZ(
   auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
   // Create the axis for the grid
   // get minima
-  double xMin = *minMaxX.first;
-  double yMin = *minMaxY.first;
-  double zMin = *minMaxZ.first;
+  ActsScalar xMin = *minMaxX.first;
+  ActsScalar yMin = *minMaxY.first;
+  ActsScalar zMin = *minMaxZ.first;
   // get maxima
-  double xMax = *minMaxX.second;
-  double yMax = *minMaxY.second;
-  double zMax = *minMaxZ.second;
+  ActsScalar xMax = *minMaxX.second;
+  ActsScalar yMax = *minMaxY.second;
+  ActsScalar zMax = *minMaxZ.second;
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
-  double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
-  double stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
-  double stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
+  ActsScalar stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
+  ActsScalar stepY = std::fabs(yMax - yMin) / (nBinsY - 1);
+  ActsScalar stepX = std::fabs(xMax - xMin) / (nBinsX - 1);
   xMax += stepX;
   yMax += stepY;
   zMax += stepZ;
@@ -251,19 +251,19 @@ Acts::fieldMapperXYZ(
 Acts::InterpolatedBFieldMapper<
     Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-Acts::solenoidFieldMapper(std::pair<double, double> rlim,
-                          std::pair<double, double> zlim,
+Acts::solenoidFieldMapper(std::pair<ActsScalar, ActsScalar> rlim,
+                          std::pair<ActsScalar, ActsScalar> zlim,
                           std::pair<size_t, size_t> nbins,
                           const SolenoidBField& field) {
-  double rMin, rMax, zMin, zMax;
+  ActsScalar rMin, rMax, zMin, zMax;
   std::tie(rMin, rMax) = rlim;
   std::tie(zMin, zMax) = zlim;
 
   size_t nBinsR, nBinsZ;
   std::tie(nBinsR, nBinsZ) = nbins;
 
-  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
-  double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
+  ActsScalar stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  ActsScalar stepR = std::abs(rMax - rMin) / (nBinsR - 1);
 
   rMax += stepR;
   zMax += stepZ;
@@ -288,10 +288,10 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector2D& bfield,
                             const Acts::Vector3D& pos) {
-    double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
-    if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
-      double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
+    ActsScalar r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
+    ActsScalar cos_phi, sin_phi;
+    if (r_sin_theta_2 > std::numeric_limits<ActsScalar>::min()) {
+      ActsScalar inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;
       sin_phi = pos.y() * inv_r_sin_theta;
     } else {

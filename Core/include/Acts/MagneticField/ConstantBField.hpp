@@ -34,7 +34,7 @@ class ConstantBField final {
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  ConstantBField(double Bx = 0., double By = 0., double Bz = 0.)
+  ConstantBField(ActsScalar Bx = 0., ActsScalar By = 0., ActsScalar Bz = 0.)
       : m_BField(Bx, By, Bz) {}
 
   /// @brief retrieve magnetic field value
@@ -103,7 +103,9 @@ class ConstantBField final {
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  void setField(double Bx, double By, double Bz) { m_BField << Bx, By, Bz; }
+  void setField(ActsScalar Bx, ActsScalar By, ActsScalar Bz) {
+    m_BField << Bx, By, Bz;
+  }
 
   /// @brief update magnetic field vector
   ///

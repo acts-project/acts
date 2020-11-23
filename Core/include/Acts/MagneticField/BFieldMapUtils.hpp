@@ -72,10 +72,11 @@ Acts::InterpolatedBFieldMapper<
 fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                          std::array<size_t, 2> nBinsRZ)>&
                   localToGlobalBin,
-              std::vector<double> rPos, std::vector<double> zPos,
-              std::vector<Acts::Vector2D> bField,
-              double lengthUnit = UnitConstants::mm,
-              double BFieldUnit = UnitConstants::T, bool firstQuadrant = false);
+              std::vector<ActsScalar> rPos, std::vector<ActsScalar> zPos,
+              std::vector<Vector2D> bField,
+              ActsScalar lengthUnit = UnitConstants::mm,
+              ActsScalar BFieldUnit = UnitConstants::T,
+              bool firstQuadrant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -133,10 +134,11 @@ Acts::InterpolatedBFieldMapper<Acts::detail::Grid<
 fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                           std::array<size_t, 3> nBinsXYZ)>&
                    localToGlobalBin,
-               std::vector<double> xPos, std::vector<double> yPos,
-               std::vector<double> zPos, std::vector<Acts::Vector3D> bField,
-               double lengthUnit = UnitConstants::mm,
-               double BFieldUnit = UnitConstants::T, bool firstOctant = false);
+               std::vector<ActsScalar> xPos, std::vector<ActsScalar> yPos,
+               std::vector<ActsScalar> zPos, std::vector<Acts::Vector3D> bField,
+               ActsScalar lengthUnit = UnitConstants::mm,
+               ActsScalar BFieldUnit = UnitConstants::T,
+               bool firstOctant = false);
 
 /// Function which takes an existing SolenoidBField instance and
 /// creates a field mapper by sampling grid points from the analytical
@@ -151,8 +153,8 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 Acts::InterpolatedBFieldMapper<
     Acts::detail::Grid<Acts::Vector2D, Acts::detail::EquidistantAxis,
                        Acts::detail::EquidistantAxis>>
-solenoidFieldMapper(std::pair<double, double> rlim,
-                    std::pair<double, double> zlim,
+solenoidFieldMapper(std::pair<ActsScalar, ActsScalar> rlim,
+                    std::pair<ActsScalar, ActsScalar> zlim,
                     std::pair<size_t, size_t> nbins,
                     const SolenoidBField& field);
 

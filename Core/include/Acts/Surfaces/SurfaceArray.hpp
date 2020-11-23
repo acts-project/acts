@@ -122,9 +122,9 @@ class SurfaceArray {
    public:
     /// @brief Specifies the local coordinate type.
     /// This resolves to @c ActsVector<DIM> for DIM > 1, else @c
-    /// std::array<double, 1>
-    using point_t =
-        std::conditional_t<DIM == 1, std::array<double, 1>, ActsVectorD<DIM>>;
+    /// std::array<ActsScalar, 1>
+    using point_t = std::conditional_t<DIM == 1, std::array<ActsScalar, 1>,
+                                       ActsVectorD<DIM>>;
     using Grid_t = detail::Grid<SurfaceVector, Axes...>;
 
     /// @brief Default constructor
@@ -135,7 +135,7 @@ class SurfaceArray {
     /// @param bValues What the axes represent (optional)
     /// @note Signature of localToGlobal and globalToLocal depends on @c DIM.
     ///       If DIM > 1, local coords are @c ActsVectorD<DIM> else
-    ///       @c std::array<double, 1>.
+    ///       @c std::array<ActsScalar, 1>.
     SurfaceGridLookup(std::function<point_t(const Vector3D&)> globalToLocal,
                       std::function<Vector3D(const point_t&)> localToGlobal,
                       std::tuple<Axes...> axes,
@@ -318,7 +318,7 @@ class SurfaceArray {
 
     /// Internal method.
     /// This is here, because apparently Eigen doesn't like Vector1D.
-    /// So SurfaceGridLookup internally uses std::array<double, 1> instead
+    /// So SurfaceGridLookup internally uses std::array<ActsSalar, 1> instead
     /// of Vector1D (see the point_t typedef). This needs to be switched here,
     /// so as not to
     /// attempt an initialization of Vector1D that Eigen will complain about.

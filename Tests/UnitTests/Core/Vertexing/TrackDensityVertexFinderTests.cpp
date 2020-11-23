@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
     trackVec.push_back(BoundTrackParameters(
         perigeeSurface, geoContext, Vector4D(x, y, z, 0),
-        makeDirectionUnitFromPhiEta(phi, eta), pt, charge, covMat));
+        makeDirectionUnitFromPhiEta<ActsScalar>(phi, eta), pt, charge, covMat));
   }
 
   std::vector<const BoundTrackParameters*> trackPtrVec;

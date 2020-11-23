@@ -62,9 +62,9 @@ MaterialMapper<detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
                      materialVectorToGridMapper,
-                 std::vector<double> rPos, std::vector<double> zPos,
+                 std::vector<ActsScalar> rPos, std::vector<ActsScalar> zPos,
                  std::vector<Material> material,
-                 double lengthUnit = UnitConstants::mm);
+                 ActsScalar lengthUnit = UnitConstants::mm);
 
 /// Method to setup the MaterialMapper
 /// @param [in] materialVectorToGridMapper Function mapping the vector of
@@ -112,8 +112,8 @@ MaterialMapper<detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                              std::array<size_t, 3> nBinsXYZ)>&
                       materialVectorToGridMapper,
-                  std::vector<double> xPos, std::vector<double> yPos,
-                  std::vector<double> zPos, std::vector<Material> material,
-                  double lengthUnit = UnitConstants::mm);
+                  std::vector<ActsScalar> xPos, std::vector<ActsScalar> yPos,
+                  std::vector<ActsScalar> zPos, std::vector<Material> material,
+                  ActsScalar lengthUnit = UnitConstants::mm);
 
 }  // namespace Acts

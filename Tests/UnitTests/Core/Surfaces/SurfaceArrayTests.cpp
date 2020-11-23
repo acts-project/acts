@@ -57,7 +57,7 @@ struct SurfaceArrayFixture {
 
       Transform3D trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(i * phiStep + shift, Vector3D(0, 0, 1)));
       trans.translate(Vector3D(r, 0, z));
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
@@ -83,10 +83,10 @@ struct SurfaceArrayFixture {
 
       Transform3D trans;
       trans.setIdentity();
-      trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(i * phiStep + shift, Vector3D(0, 0, 1)));
       trans.translate(Vector3D(10, 0, z));
-      trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
-      trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
+      trans.rotate(AngleAxis3D(incl, Vector3D(0, 0, 1)));
+      trans.rotate(AngleAxis3D(M_PI / 2., Vector3D(0, 1, 0)));
 
       auto bounds = std::make_shared<const RectangleBounds>(w, h);
       std::shared_ptr<const Surface> srf =

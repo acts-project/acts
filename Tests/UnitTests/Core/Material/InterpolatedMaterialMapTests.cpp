@@ -33,8 +33,8 @@ ActsVectorD<dim> trafoGlobalToLocal(const Vector3D& global) {
 
 BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   // Build a material cell
-  std::array<double, dim> lowerLeft{{0., 0.}};
-  std::array<double, dim> upperRight{{1., 1.}};
+  std::array<ActsScalar, dim> lowerLeft{{0., 0.}};
+  std::array<ActsScalar, dim> upperRight{{1., 1.}};
   ActsVector<float, 5> mat;
   mat << 1, 2, 3, 4, 5;
   std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
   BOOST_CHECK_EQUAL(nBins[1], 3u);
 
   // Test the lower limits
-  std::vector<double> limits = matMap.getMin();
+  std::vector<ActsScalar> limits = matMap.getMin();
   CHECK_CLOSE_ABS(limits[0], 0., 1e-4);
   CHECK_CLOSE_ABS(limits[1], 0., 1e-4);
 
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
 
   // Test the material getter with a cache
   // Build a material cell
-  std::array<double, dim> lowerLeft{{0., 0.}};
-  std::array<double, dim> upperRight{{1., 1.}};
+  std::array<ActsScalar, dim> lowerLeft{{0., 0.}};
+  std::array<ActsScalar, dim> upperRight{{1., 1.}};
   std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
 
   MaterialMapper<grid_t>::MaterialCell materialCell(

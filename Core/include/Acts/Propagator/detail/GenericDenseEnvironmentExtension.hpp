@@ -100,14 +100,15 @@ struct GenericDenseEnvironmentExtension {
   template <typename propagator_state_t, typename stepper_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          ThisVector3& knew, const Vector3D& bField, std::array<Scalar, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         const int i = 0, const ActsScalar h = 0.,
          const ThisVector3& kprev = ThisVector3()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
       ThisVector3 position = stepper.position(state.stepping);
-      material = (volumeMaterial->material(position.template cast<double>()));
+      material =
+          (volumeMaterial->material(position.template cast<ActsScalar>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = stepper.charge(state.stepping) / initialMomentum;
@@ -156,7 +157,7 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
+                const ActsScalar h) const {
     // Evaluate the new momentum
     auto newMomentum =
         stepper.momentum(state.stepping) +
@@ -202,7 +203,7 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
+                const ActsScalar h, FreeMatrix& D) const {
     return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
   }
 
@@ -217,7 +218,7 @@ struct GenericDenseEnvironmentExtension {
   /// @return Boolean flag if evaluation is valid
   template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+                       const ActsScalar h, FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -242,7 +243,7 @@ struct GenericDenseEnvironmentExtension {
     auto dir = stepper.direction(state.stepping);
 
     D = FreeMatrix::Identity();
-    const double half_h = h * 0.5;
+    const ActsScalar half_h = h * 0.5;
 
     // This sets the reference to the sub matrices
     // dFdx is already initialised as (3x3) zero
@@ -263,7 +264,7 @@ struct GenericDenseEnvironmentExtension {
     Vector3D dk4dL = Vector3D::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
-    std::array<double, 4> jdL;
+    std::array<ActsScalar, 4> jdL;
 
     // Evaluation of the rightmost column without the last term.
     jdL[0] = dLdl[0];
@@ -314,39 +315,39 @@ struct GenericDenseEnvironmentExtension {
     // The following comment lines refer to the application of the time being
     // treated as a position. Since t and qop are treated independently for now,
     // this just serves as entry point for building their relation
-    //~ double dtpp1dl = -state.options.mass * state.options.mass * qop[0] *
+    //~ ActsScalar dtpp1dl = -state.options.mass * state.options.mass * qop[0] *
     //~ qop[0] *
     //~ (3. * g + qop[0] * dgdqop(energy[0], state.options.mass,
     //~ state.options.absPdgCode,
     //~ state.options.meanEnergyLoss));
 
-    double dtp1dl = qop[0] * state.options.mass * state.options.mass /
-                    std::hypot(1, qop[0] * state.options.mass);
-    double qopNew = qop[0] + half_h * Lambdappi[0];
+    ActsScalar dtp1dl = qop[0] * state.options.mass * state.options.mass /
+                        std::hypot(1, qop[0] * state.options.mass);
+    ActsScalar qopNew = qop[0] + half_h * Lambdappi[0];
 
-    //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
+    //~ ActsScalar dtpp2dl = -state.options.mass * state.options.mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[0]) +
     //~ qopNew * dgdqop(energy[1], state.options.mass,
     //~ state.options.absPdgCode,
     //~ state.options.meanEnergyLoss));
 
-    double dtp2dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    ActsScalar dtp2dl = qopNew * state.options.mass * state.options.mass /
+                        std::hypot(1, qopNew * state.options.mass);
     qopNew = qop[0] + half_h * Lambdappi[1];
 
-    //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
+    //~ ActsScalar dtpp3dl = -state.options.mass * state.options.mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[1]) +
     //~ qopNew * dgdqop(energy[2], state.options.mass,
     //~ state.options.absPdgCode,
     //~ state.options.meanEnergyLoss));
 
-    double dtp3dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    ActsScalar dtp3dl = qopNew * state.options.mass * state.options.mass /
+                        std::hypot(1, qopNew * state.options.mass);
     qopNew = qop[0] + half_h * Lambdappi[2];
-    double dtp4dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    ActsScalar dtp4dl = qopNew * state.options.mass * state.options.mass /
+                        std::hypot(1, qopNew * state.options.mass);
 
     //~ D(3, 7) = h * state.options.mass * state.options.mass * qop[0] /
     //~ std::hypot(1., state.options.mass * qop[0])
@@ -371,13 +372,13 @@ struct GenericDenseEnvironmentExtension {
     if (state.options.meanEnergyLoss) {
       g = -computeEnergyLossMean(slab, state.options.absPdgCode,
                                  state.options.mass,
-                                 static_cast<double>(qop[0]));
+                                 static_cast<ActsScalar>(qop[0]));
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
       g = -computeEnergyLossMode(slab, state.options.absPdgCode,
                                  state.options.mass,
-                                 static_cast<double>(qop[0]));
+                                 static_cast<ActsScalar>(qop[0]));
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -389,12 +390,12 @@ struct GenericDenseEnvironmentExtension {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
               slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+              static_cast<ActsScalar>(qop[0]));
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
               slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+              static_cast<ActsScalar>(qop[0]));
         }
       }
       // Calculate term for later error propagation
@@ -414,7 +415,7 @@ struct GenericDenseEnvironmentExtension {
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
   template <typename stepper_state_t, typename stepper_t>
-  void updateEnergyLoss(const double mass, const double h,
+  void updateEnergyLoss(const ActsScalar mass, const ActsScalar h,
                         const stepper_state_t& state, const stepper_t& stepper,
                         const int i) {
     // Update parameters related to a changed momentum

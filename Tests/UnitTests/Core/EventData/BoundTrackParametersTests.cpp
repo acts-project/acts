@@ -70,7 +70,7 @@ void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3D dir = makeDirectionUnitFromPhiTheta<BoundScalar>(phi, theta);
   // convert local-to-global for reference
   const Vector2D loc(l0, l1);
   const Vector3D pos = surface->localToGlobal(geoCtx, loc, dir);

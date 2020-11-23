@@ -77,7 +77,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
     time, phi, theta, p) {
   Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3D dir = makeDirectionUnitFromPhiTheta<FreeScalar>(phi, theta);
 
   NeutralFreeTrackParameters params(pos4, phi, theta, 1 / p);
   checkParameters(params, pos4, dir, p, 0_e);
@@ -94,7 +94,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
   Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3D dir = makeDirectionUnitFromPhiTheta<FreeScalar>(phi, theta);
 
   FreeTrackParameters params(pos4, phi, theta, q / p);
   checkParameters(params, pos4, dir, p, q);
@@ -111,7 +111,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
   Vector4D pos4(x, y, z, time);
-  Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3D dir = makeDirectionUnitFromPhiTheta<FreeScalar>(phi, theta);
 
   AnyFreeTrackParameters params(pos4, phi, theta, p, q);
   checkParameters(params, pos4, dir, p, q);

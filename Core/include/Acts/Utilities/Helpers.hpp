@@ -45,7 +45,8 @@ using has_phi_method = Concepts ::is_detected<phi_method_t, T>;
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The value of the angle in the transverse plane.
 template <typename Derived>
-double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
+typename Eigen::MatrixBase<Derived>::Scalar phi(
+    const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -70,7 +71,7 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// @return The phi value
 template <typename T,
           std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
-double phi(const T& v) noexcept {
+auto phi(const T& v) noexcept {
   return v.phi();
 }
 
@@ -81,7 +82,8 @@ double phi(const T& v) noexcept {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The transverse radius value.
 template <typename Derived>
-double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
+typename Eigen::MatrixBase<Derived>::Scalar perp(
+    const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -105,7 +107,8 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The theta value
 template <typename Derived>
-double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
+typename Eigen::MatrixBase<Derived>::Scalar theta(
+    const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -128,7 +131,8 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
 /// in case of dynamic size, will abort execution if that is not the case.
 /// @return The pseudorapidity value
 template <typename Derived>
-double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
+typename Eigen::MatrixBase<Derived>::Scalar eta(
+    const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
@@ -148,7 +152,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
 ///
 /// For this method a 3D vector is required to guarantee all potential
 /// binning values.
-inline double cast(const Vector3D& position, BinningValue bval) {
+inline ActsScalar cast(const Vector3D& position, BinningValue bval) {
   switch (bval) {
     case binX:
       return position[0];
@@ -218,7 +222,7 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 
 namespace detail {
 
-inline double roundWithPrecision(double val, int precision) {
+inline ActsScalar roundWithPrecision(ActsScalar val, int precision) {
   if (val < 0 && std::abs(val) * std::pow(10, precision) < 1.) {
     return -val;
   }

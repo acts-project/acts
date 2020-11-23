@@ -41,10 +41,10 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state) const
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it takes the propagation state
-      Result<double> res = m_stepper.step(state);
+      Result<ActsScalar> res = m_stepper.step(state);
       if (res.ok()) {
         // Accumulate the path length
-        double s = *res;
+        ActsScalar s = *res;
         result.pathLength += s;
         ACTS_VERBOSE("Step with size = " << s << " performed");
       } else {
@@ -120,8 +120,8 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state(start, eOptions);
 
   static_assert(
-      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+      Concepts::has_method<const S, Result<ActsScalar>,
+                           Concepts ::Stepper::step_t, StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -188,8 +188,8 @@ auto Acts::Propagator<S, N>::propagate(
   state.navigation.targetSurface = &target;
 
   static_assert(
-      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+      Concepts ::has_method<const S, Result<ActsScalar>,
+                            Concepts ::Stepper::step_t, StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

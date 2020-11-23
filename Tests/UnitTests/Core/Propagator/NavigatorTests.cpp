@@ -45,9 +45,9 @@ struct PropagatorState {
     // comply with concept
     using Jacobian = BoundMatrix;
     using Covariance = BoundSymMatrix;
-    using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
+    using BoundState = std::tuple<BoundTrackParameters, Jacobian, ActsScalar>;
     using CurvilinearState =
-        std::tuple<CurvilinearTrackParameters, Jacobian, double>;
+        std::tuple<CurvilinearTrackParameters, Jacobian, ActsScalar>;
     using BField = int;
 
     template <typename, typename>
@@ -63,25 +63,25 @@ struct PropagatorState {
       Vector3D dir = Vector3D(1., 0., 0.);
 
       /// Momentum
-      double p;
+      ActsScalar p;
 
       /// Charge
-      double q;
+      ActsScalar q;
 
       /// the navigation direction
       NavigationDirection navDir = forward;
 
       // accummulated path length cache
-      double pathAccumulated = 0.;
+      ActsScalar pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
       ConstrainedStep stepSize = ConstrainedStep(100_cm);
 
       // Previous step size for overstep estimation (ignored here)
-      double previousStepSize = 0.;
+      ActsScalar previousStepSize = 0.;
 
       /// The tolerance for the stepping
-      double tolerance = s_onSurfaceTolerance;
+      ActsScalar tolerance = s_onSurfaceTolerance;
 
       GeometryContext geoContext = GeometryContext();
     };
@@ -90,7 +90,7 @@ struct PropagatorState {
     void resetState(State& /*unused*/, const BoundVector& /*unused*/,
                     const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
                     const NavigationDirection /*unused*/,
-                    const double /*unused*/) const {}
+                    const ActsScalar /*unused*/) const {}
 
     /// Global particle position accessor
     Vector3D position(const State& state) const {
@@ -98,19 +98,21 @@ struct PropagatorState {
     }
 
     /// Time access
-    double time(const State& state) const { return state.pos4[Acts::eTime]; }
+    ActsScalar time(const State& state) const {
+      return state.pos4[Acts::eTime];
+    }
 
     /// Momentum direction accessor
     Vector3D direction(const State& state) const { return state.dir; }
 
     /// Momentum accessor
-    double momentum(const State& state) const { return state.p; }
+    ActsScalar momentum(const State& state) const { return state.p; }
 
     /// Charge access
-    double charge(const State& state) const { return state.q; }
+    ActsScalar charge(const State& state) const { return state.q; }
 
     /// Overstep limit access
-    double overstepLimit(const State& /*state*/) const {
+    ActsScalar overstepLimit(const State& /*state*/) const {
       return s_onSurfaceTolerance;
     }
 
@@ -129,7 +131,7 @@ struct PropagatorState {
     }
 
     void setStepSize(
-        State& state, double stepSize,
+        State& state, ActsScalar stepSize,
         ConstrainedStep::Type stype = ConstrainedStep::actor) const {
       state.previousStepSize = state.stepSize;
       state.stepSize.update(stepSize, stype, true);
@@ -166,8 +168,8 @@ struct PropagatorState {
                 const Covariance& /*cov*/) const {}
 
     void update(State& /*state*/, const Vector3D& /*uposition*/,
-                const Vector3D& /*udirection*/, double /*up*/,
-                double /*time*/) const {}
+                const Vector3D& /*udirection*/, ActsScalar /*up*/,
+                ActsScalar /*time*/) const {}
 
     void covarianceTransport(State& /*state*/) const {}
 
@@ -435,7 +437,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   BOOST_CHECK(state.navigation.navLayerIter ==
               state.navigation.navLayers.begin());
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayerIter->intersection.position);
+  ActsScalar beamPipeR =
+      perp(state.navigation.navLayerIter->intersection.position);
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize, beamPipeR, s_onSurfaceTolerance);
   if (debug) {

@@ -71,7 +71,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
       = require<has_member<S, cov_transport_t, bool>,
                 has_member<S, cov_t, BoundSymMatrix>,
                 has_member<S, nav_dir_t, NavigationDirection>,
-                has_member<S, path_accumulated_t, double>,
+                has_member<S, path_accumulated_t, ActsScalar>,
                 has_member<S, step_size_t, ConstrainedStep>
                >;
 // clang-format on
@@ -91,7 +91,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
         constexpr static bool bfield_exists = exists<bfield_t, S>;
         static_assert(bfield_exists, "BField type not found");
-        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
+        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const ActsScalar>;
         static_assert(reset_state_exists, "resetState method not found");
         constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
         static_assert(get_field_exists, "getField method not found");
@@ -99,27 +99,27 @@ using step_size_t = decltype(std::declval<T>().stepSize);
         static_assert(position_exists, "position method not found");
         constexpr static bool direction_exists = has_method<const S, Vector3D, direction_t, const state&>;
         static_assert(direction_exists, "direction method not found");
-        constexpr static bool momentum_exists = has_method<const S, double, momentum_t, const state&>;
+        constexpr static bool momentum_exists = has_method<const S, ActsScalar, momentum_t, const state&>;
         static_assert(momentum_exists, "momentum method not found");
-        constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
+        constexpr static bool charge_exists = has_method<const S, ActsScalar, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
-        constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
+        constexpr static bool time_exists = has_method<const S, ActsScalar, time_t, const state&>;
         static_assert(time_exists, "time method not found");
-        constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
+        constexpr static bool overstep_exists = has_method<const S, ActsScalar, overstep_t, const state&>;
         static_assert(overstep_exists, "overstepLimit method not found");
         constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundSymMatrix&>,
-                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double, double>>;
+                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, ActsScalar, ActsScalar>>;
         static_assert(update_method_exists, "update method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&>,
                                                                     has_method<const S, void, covariance_transport_t, state&, const Surface&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");
-        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, double, ConstrainedStep::Type>;
+        constexpr static bool set_step_size_exists = has_method<const S, void, set_step_size_t, state&, ActsScalar, ConstrainedStep::Type>;
         static_assert(set_step_size_exists, "setStepSize method not found");
         constexpr static bool release_step_size_exists = has_method<const S, void, release_step_size_t, state&>;
         static_assert(release_step_size_exists, "releaseStepSize method not found");

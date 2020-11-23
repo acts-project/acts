@@ -35,7 +35,7 @@ const GeometryContext geoCtx;
 
 void runTest(const Surface& surface, double l0, double l1, double phi,
              double theta) {
-  const Vector3D dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3D dir = makeDirectionUnitFromPhiTheta<ActsScalar>(phi, theta);
 
   // convert local-to-global
   Vector3D sentinel = Vector3D::Random();

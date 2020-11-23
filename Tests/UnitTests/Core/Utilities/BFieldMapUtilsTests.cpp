@@ -26,10 +26,10 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(bfield_creation) {
   // create grid values
-  std::vector<double> rPos = {0., 1., 2.};
-  std::vector<double> xPos = {0., 1., 2.};
-  std::vector<double> yPos = {0., 1., 2.};
-  std::vector<double> zPos = {0., 1., 2.};
+  std::vector<ActsScalar> rPos = {0., 1., 2.};
+  std::vector<ActsScalar> xPos = {0., 1., 2.};
+  std::vector<ActsScalar> yPos = {0., 1., 2.};
+  std::vector<ActsScalar> zPos = {0., 1., 2.};
 
   // create b field in rz
   std::vector<Acts::Vector2D> bField_rz;
@@ -46,8 +46,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
                                        bField_rz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), zPos.size()};
-  std::vector<double> minima_rz = {0., 0.};
-  std::vector<double> maxima_rz = {3., 3.};
+  std::vector<ActsScalar> minima_rz = {0., 0.};
+  std::vector<ActsScalar> maxima_rz = {3., 3.};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
                                          bField_xyz, 1, 1, false);
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_xyz = {xPos.size(), yPos.size(), zPos.size()};
-  std::vector<double> minima_xyz = {0., 0., 0.};
-  std::vector<double> maxima_xyz = {3., 3., 3.};
+  std::vector<ActsScalar> minima_xyz = {0., 0., 0.};
+  std::vector<ActsScalar> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_CASE(bfield_creation) {
 
 BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // create grid values
-  std::vector<double> rPos = {0., 1., 2.};
-  std::vector<double> xPos = {0., 1., 2.};
-  std::vector<double> yPos = {0., 1., 2.};
-  std::vector<double> zPos = {0., 1., 2.};
+  std::vector<ActsScalar> rPos = {0., 1., 2.};
+  std::vector<ActsScalar> xPos = {0., 1., 2.};
+  std::vector<ActsScalar> yPos = {0., 1., 2.};
+  std::vector<ActsScalar> zPos = {0., 1., 2.};
   // the bfield values in rz
   std::vector<Acts::Vector2D> bField_rz;
   for (int i = 0; i < 9; i++) {
@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
 
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
-  std::vector<double> minima_rz = {0., -2.};
-  std::vector<double> maxima_rz = {3., 3.};
+  std::vector<ActsScalar> minima_rz = {0., -2.};
+  std::vector<ActsScalar> maxima_rz = {3., 3.};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   auto vec = mapper_rz.getNBins();
   auto vec0 = mapper_rz.getMin();
@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(bfield_symmetry) {
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
                                    2 * zPos.size() - 1};
-  std::vector<double> minima_xyz = {-2., -2., -2.};
-  std::vector<double> maxima_xyz = {3., 3., 3.};
+  std::vector<ActsScalar> minima_xyz = {-2., -2., -2.};
+  std::vector<ActsScalar> maxima_xyz = {3., 3., 3.};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -245,19 +245,19 @@ BOOST_DATA_TEST_CASE(
     x, y, z, index) {
   (void)index;
 
-  std::vector<double> rPos;
-  std::vector<double> xPos;
-  std::vector<double> yPos;
-  std::vector<double> zPos;
-  double maxR = 20.;
-  double maxZ = 30.;
-  double maxBr = 10.;
-  double maxBz = 20.;
+  std::vector<ActsScalar> rPos;
+  std::vector<ActsScalar> xPos;
+  std::vector<ActsScalar> yPos;
+  std::vector<ActsScalar> zPos;
+  ActsScalar maxR = 20.;
+  ActsScalar maxZ = 30.;
+  ActsScalar maxBr = 10.;
+  ActsScalar maxBz = 20.;
   size_t nBins = 10;
-  double stepR = maxR / nBins;
-  double stepZ = maxZ / nBins;
-  double bStepR = maxBr / nBins;
-  double bStepZ = maxBz / nBins;
+  ActsScalar stepR = maxR / nBins;
+  ActsScalar stepZ = maxZ / nBins;
+  ActsScalar bStepR = maxBr / nBins;
+  ActsScalar bStepZ = maxBz / nBins;
 
   for (size_t i = 0; i < nBins; i++) {
     rPos.push_back(i * stepR);
@@ -279,8 +279,8 @@ BOOST_DATA_TEST_CASE(
 
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_rz = {rPos.size(), 2 * zPos.size() - 1};
-  std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_rz = {nBins * stepR, nBins * stepZ};
+  std::vector<ActsScalar> minima_rz = {0., -((nBins - 1) * stepZ)};
+  std::vector<ActsScalar> maxima_rz = {nBins * stepR, nBins * stepZ};
   BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)
@@ -304,10 +304,10 @@ BOOST_DATA_TEST_CASE(
   // check number of bins, minima & maxima
   std::vector<size_t> nBins_xyz = {2 * xPos.size() - 1, 2 * yPos.size() - 1,
                                    2 * zPos.size() - 1};
-  std::vector<double> minima_xyz = {
+  std::vector<ActsScalar> minima_xyz = {
       -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
-  std::vector<double> maxima_xyz = {nBins * stepR, nBins * stepR,
-                                    nBins * stepZ};
+  std::vector<ActsScalar> maxima_xyz = {nBins * stepR, nBins * stepR,
+                                        nBins * stepZ};
   BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
   // check minimum (should be first value because bin values are always
   // assigned to the left boundary)

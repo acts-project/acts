@@ -31,7 +31,7 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz) {
   // definition of dummy BField
   struct BField {
-    static Vector3D value(const std::array<double, 2>& rz) {
+    static Vector3D value(const std::array<ActsScalar, 2>& rz) {
       double r = rz.at(0);
       double z = rz.at(1);
       // linear in r and z so interpolation should be exact

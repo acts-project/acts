@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(intersect_points) {
 }
 
 BOOST_AUTO_TEST_CASE(intersect_rays) {
-  /* temporarily removed, fails with double precision
+  /* temporarily removed, fails with ActsScalar precision
   BOOST_TEST_CONTEXT("2D") {
     using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 2>;
 
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray3 = {{0, 1, -2}, {0, 0, 1}};
     BOOST_CHECK(!bb3.intersect(ray3));
 
-    // right on slab - temporarily removed, fails with double precision
+    // right on slab - temporarily removed, fails with ActsScalar precision
     // ray3 = {{0, -1, -2}, {0, 0, 1}};
     // BOOST_CHECK(bb3.intersect(ray3));
 
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     ray3 = {{-1, 0, -2}, {0, 0, 1}};
     BOOST_CHECK(!bb3.intersect(ray3));
 
-    // right on slab - temporarily removed, fails with double precision
+    // right on slab - temporarily removed, fails with ActsScalar precision
     // ray3 = {{1, 0, -2}, {0, 0, 1}};
     // BOOST_CHECK(!bb3.intersect(ray3));
 
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
 }  // namespace Test
 
 BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
-  using Ray = Ray<double, 3>;
+  using Ray = Ray<ActsScalar, 3>;
 
   std::array<Vector3D, 8> vertices;
   vertices = {{{0, 0, 0},
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
   AbstractVolume vol(trf, cubo);
 
-  PlyVisualization3D<double> ply;
+  PlyVisualization3D<ActsScalar> ply;
 
   Transform3D trl = Transform3D::Identity();
   trl.translation() = trf.translation();
@@ -611,13 +611,13 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     std::ofstream os;
     size_t n = 10;
     size_t s = 5;
-    double min = -10, max = 10;
-    double step = (max - min) / double(s);
+    ActsScalar min = -10, max = 10;
+    ActsScalar step = (max - min) / ActsScalar(s);
 
     // BEGIN VISUAL PARAMETER TEST
 
     // size_t n_vtx   = 1;
-    // auto make = [&](double angle, ActsVector<BoundingBoxScalar,3> origin,
+    // auto make = [&](ActsScalar angle, ActsVector<BoundingBoxScalar,3> origin,
     // std::ofstream& os)
     // {
     // helper.clear();
@@ -893,9 +893,9 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("3D - 4 Sides") {
     using Frustum34 = Frustum<BoundingBoxScalar, 3, 4>;
     size_t n = 10;
-    double min = -10, max = 10;
+    ActsScalar min = -10, max = 10;
     size_t s = 5;
-    double step = (max - min) / double(s);
+    ActsScalar step = (max - min) / ActsScalar(s);
     std::ofstream os;
 
     // BEGIN VISUAL PARAMETER TEST
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // helper.clear();
     // os = std::ofstream("frust3d-4s_dir.ply");
 
-    // double angle = M_PI / 4.;
+    // ActsScalar angle = M_PI / 4.;
     // for (size_t i = 0; i <= s; i++) {
     // for (size_t j = 0; j <= s; j++) {
     // for (size_t k = 0; k <= s; k++) {

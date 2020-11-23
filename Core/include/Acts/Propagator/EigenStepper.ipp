@@ -19,7 +19,7 @@ void Acts::EigenStepper<B, E, A>::resetState(State& state,
                                              const BoundSymMatrix& cov,
                                              const Surface& surface,
                                              const NavigationDirection navDir,
-                                             const double stepSize) const {
+                                             const ActsScalar stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
@@ -69,8 +69,8 @@ void Acts::EigenStepper<B, E, A>::update(State& state,
 template <typename B, typename E, typename A>
 void Acts::EigenStepper<B, E, A>::update(State& state,
                                          const Vector3D& uposition,
-                                         const Vector3D& udirection, double up,
-                                         double time) const {
+                                         const Vector3D& udirection,
+                                         ActsScalar up, ActsScalar time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
@@ -94,14 +94,14 @@ void Acts::EigenStepper<B, E, A>::covarianceTransport(
 
 template <typename B, typename E, typename A>
 template <typename propagator_state_t>
-Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
+Acts::Result<Acts::ActsScalar> Acts::EigenStepper<B, E, A>::step(
     propagator_state_t& state) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
-  double error_estimate = 0.;
-  double h2, half_h;
+  ActsScalar error_estimate = 0.;
+  ActsScalar h2, half_h;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
@@ -110,7 +110,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   sd.B_first = getField(state.stepping, pos);
   if (!state.stepping.extension.validExtensionForStep(state, *this) ||
       !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first, sd.kQoP)) {
-    return 0.;
+    return static_cast<ActsScalar>(0.);
   }
 
   // The following functor starts to perform a Runge-Kutta step of a certain
@@ -145,23 +145,23 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
     }
 
     // Compute and check the local integration error estimate
-    error_estimate = std::max(
+    error_estimate = std::max<ActsScalar>(
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
               std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
         1e-20);
     return (error_estimate <= state.options.tolerance);
   };
 
-  double stepSizeScaling = 1.;
+  ActsScalar stepSizeScaling = 1.;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
   while (!tryRungeKuttaStep(state.stepping.stepSize)) {
-    stepSizeScaling =
-        std::min(std::max(0.25, std::pow((state.options.tolerance /
-                                          std::abs(2. * error_estimate)),
-                                         0.25)),
-                 4.);
+    stepSizeScaling = std::min<ActsScalar>(
+        std::max<ActsScalar>(0.25, std::pow((state.options.tolerance /
+                                             std::abs(2. * error_estimate)),
+                                            0.25)),
+        4.);
 
     state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
 
@@ -183,7 +183,7 @@ Acts::Result<double> Acts::EigenStepper<B, E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize;
+  const ActsScalar h = state.stepping.stepSize;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {

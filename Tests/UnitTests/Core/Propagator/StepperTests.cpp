@@ -45,7 +45,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
-static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
+static constexpr auto eps = 3 * std::numeric_limits<ActsScalar>::epsilon();
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
@@ -60,9 +60,9 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double mass = 42.;
-    double tolerance = 1e-4;
-    double stepSizeCutOff = 0.;
+    ActsScalar mass = 42.;
+    ActsScalar tolerance = 1e-4;
+    ActsScalar stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
   } options;
 };
@@ -72,7 +72,7 @@ struct PropState {
 ///
 struct EndOfWorld {
   /// Maximum value in x-direction of the detector
-  double maxX = 1_m;
+  ActsScalar maxX = 1_m;
 
   /// @brief Constructor
   EndOfWorld() = default;
@@ -86,7 +86,7 @@ struct EndOfWorld {
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
-    const double tolerance = state.options.targetTolerance;
+    const ActsScalar tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
         std::abs(stepper.position(state.stepping).z()) >= 0.5_m)
@@ -132,15 +132,15 @@ struct StepCollector {
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
   NavigationDirection ndir = backward;
-  double stepSize = 123.;
-  double tolerance = 234.;
+  ActsScalar stepSize = 123.;
+  ActsScalar tolerance = 234.;
   ConstantBField bField(Vector3D(1., 2.5, 33.33));
 
   Vector3D pos(1., 2., 3.);
   Vector3D dir(4., 5., 6.);
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  ActsScalar time = 7.;
+  ActsScalar absMom = 8.;
+  ActsScalar charge = -1.;
 
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
@@ -184,16 +184,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Set up some variables for the state
   NavigationDirection ndir = backward;
-  double stepSize = 123.;
-  double tolerance = 234.;
+  ActsScalar stepSize = 123.;
+  ActsScalar tolerance = 234.;
   ConstantBField bField(Vector3D(1., 2.5, 33.33));
 
   // Construct the parameters
   Vector3D pos(1., 2., 3.);
   Vector3D dir = Vector3D(4., 5., 6.).normalized();
-  double time = 7.;
-  double absMom = 8.;
-  double charge = -1.;
+  ActsScalar time = 7.;
+  ActsScalar absMom = 8.;
+  ActsScalar charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
                                 cov);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the update method
   Vector3D newPos(2., 4., 8.);
   Vector3D newMom(3., 9., 27.);
-  double newTime(321.);
+  ActsScalar newTime(321.);
   es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   PropState ps(esState);
 
   ps.stepping.covTransport = false;
-  double h = es.step(ps).value();
+  ActsScalar h = es.step(ps).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  double h2 = es.step(ps).value();
+  ActsScalar h2 = es.step(ps).value();
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
@@ -285,16 +285,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Construct the parameters
   Vector3D pos2(1.5, -2.5, 3.5);
   Vector3D dir2 = Vector3D(4.5, -5.5, 6.5).normalized();
-  double time2 = 7.5;
-  double absMom2 = 8.5;
-  double charge2 = 1.;
+  ActsScalar time2 = 7.5;
+  ActsScalar absMom2 = 8.5;
+  ActsScalar charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   ndir = forward;
-  double stepSize2 = -2. * stepSize;
+  ActsScalar stepSize2 = -2. * stepSize;
 
   // Reset all possible parameters
   EigenStepper<ConstantBField>::State esStateCopy(ps.stepping);
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+                    ndir * std::numeric_limits<ActsScalar>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -368,7 +368,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize,
+                    std::numeric_limits<ActsScalar>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -439,7 +440,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
-  double h0 = esState.stepSize;
+  ActsScalar h0 = esState.stepSize;
   es.step(ps);
   CHECK_CLOSE_ABS(h0, esState.stepSize, eps);
 
@@ -504,7 +505,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3D startDir =
+      makeDirectionUnitFromPhiTheta<ActsScalar>(0_degree, 90_degree);
   const Vector3D startMom = 1_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 1_GeV, 1_e,
                                         cov);
@@ -618,7 +620,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3D startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3D startDir =
+      makeDirectionUnitFromPhiTheta<ActsScalar>(0_degree, 90_degree);
   const Vector3D startMom = 5_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4D::Zero(), startDir, 5_GeV, 1_e,
                                         cov);
@@ -958,7 +961,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
 // Test case a). The DenseEnvironmentExtension should state that it is not
 // valid in this case.
 BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
-  double rotationAngle = M_PI * 0.5;
+  ActsScalar rotationAngle = M_PI * 0.5;
   Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3D yPos(0., 1., 0.);
   Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -1073,7 +1076,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       result.get<typename StepCollector::result_type>();
 
   // Test that momentum changes only occured at the right detector parts
-  double lastMomentum = stepResult.momentum[0].x();
+  ActsScalar lastMomentum = stepResult.momentum[0].x();
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Test for changes
     if ((stepResult.position[i].x() > 0.3_m &&

@@ -56,9 +56,9 @@ TrackingVolumePtr constructCylinderVolume(
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
       axis(bUmin, bUmax, surfaces_only.size());
   auto g2l = [](const Vector3D& glob) {
-    return std::array<double, 1>({{glob.z()}});
+    return std::array<ActsScalar, 1>({{glob.z()}});
   };
-  auto l2g = [](const std::array<double, 1>& loc) {
+  auto l2g = [](const std::array<ActsScalar, 1>& loc) {
     return Vector3D(0, 0, loc[0]);
   };
   auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
