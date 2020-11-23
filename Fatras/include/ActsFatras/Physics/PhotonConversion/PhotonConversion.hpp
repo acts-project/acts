@@ -162,13 +162,13 @@ void ActsFatras::PhotonConversion::pairProduction(generator_t& generator,
   //~ double attenuation = exp(
   //-7.777e-01*pathCorrection*mprop.thicknessInX0()*(1.-xi) ); ~ return
   //(conversionProbScaleFactor*CLHEP::RandFlat::shoot(m_randomEngine) >
-  //attenuation) ? true : false;
+  // attenuation) ? true : false;
 
   /// Transformation steps
   //~ return (CLHEP::RandFlat::shoot(m_randomEngine) < 1 - attenuation /
-  //conversionProbScaleFactor) ? true : false; ~ conversionProbScaleFactor(rnd -
-  //1) < -attenuation ~ conversionProbScaleFactor(1 - rnd) > attenuation ~
-  //ln(conversionProbScaleFactor(1 - rnd)) >
+  // conversionProbScaleFactor) ? true : false; ~ conversionProbScaleFactor(rnd
+  // - 1) < -attenuation ~ conversionProbScaleFactor(1 - rnd) > attenuation ~
+  // ln(conversionProbScaleFactor(1 - rnd)) >
   //-7/9*pathCorrection*mprop.thicknessInX0()*(1.-xi)
 
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
