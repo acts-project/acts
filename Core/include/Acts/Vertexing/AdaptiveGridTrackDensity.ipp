@@ -19,11 +19,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(const std::vector<f
 
   int zbin = -1;
   if (!m_cfg.useHighestSumZPosition) {
-    
     int zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
-
     zbin = mainGridZValues[zGridPos];
-
   } else {
     // Get z position with highest density sum
     // of surrounding bins
@@ -57,7 +54,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::
   return returnPair;
 }
 
-
 template <int trkGridSize>
 void
 Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
@@ -73,15 +69,12 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize);
 
-  std::cout << "z0/zbin: " << z0 << "," << zBin << std::endl;
-
   // Calculate the positions of the bin centers
   float binCtrD = dOffset * m_cfg.binSize;
 
   int sign = (z0 > 0) ? +1 : -1;
   float binCtrZ = (zBin + sign * 0.5f) * m_cfg.binSize;
 
-  std::cout << "binCtrZ: " << binCtrZ << std::endl;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
@@ -102,22 +95,12 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   int startEnd = int(trkGridSize - 1)/2;
 
-  std::cout << "current z values: " << std::endl;
   for(int i = 0; i < trkGridSize; i++){
-    std::cout << "zbins: " << int(zBin + (i-startEnd)) << std::endl;
     zBinValues.push_back(int(zBin + (i-startEnd)));
-  }
-
-  std::cout << "mainGridZValues before: " <<std::endl;
-
-  for(auto& bla : mainGridZValues){
-    std::cout << bla << std::endl;
   }
 
   for(int i = 0; i < trkGridSize; i++){
     int z = zBinValues[i];
-    
-    std::cout << "testing z value: " << z << std::endl;
 
     auto findIter = std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
     //bool exists = std::binary_search(mainGridZValues.begin(), mainGridZValues.end(), z);
@@ -126,11 +109,9 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     // results are always the same as if we're using bineary search here
     if(findIter != mainGridZValues.end()){
     // Z bin already exists
-      std::cout << "z exists..." << std::endl;
       mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] += trackGrid[i];
     }
     else{
-      std::cout << "z did not exist..." << std::endl;
     // Create new z bin
       auto it = std::upper_bound( mainGridZValues.begin(), mainGridZValues.end(), z );
       mainGridDensity.insert(mainGridDensity.begin() + std::distance(mainGridZValues.begin(), it), trackGrid[i]);
@@ -170,11 +151,11 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   int sign = (maxZ > 0) ? +1 : -1;
   int zMaxGridBin  = int(maxZ / m_cfg.binSize - sign * 0.5f);
 
-  std::cout << "seed width estimation... max z bin: " << zMaxGridBin << std::endl; 
 
   // Find location in mainGridZValues
   auto findIter = std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
   int zBin = std::distance(mainGridZValues.begin(), findIter);
+
 
   const float maxValue = mainGridDensity[zBin];
   float gridValue = mainGridDensity[zBin];
@@ -183,12 +164,14 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   int rhmBin = zBin;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
-    std::cout << "R:cont z values?: " << zMaxGridBin + (rhmBin - zBin) << "," << mainGridZValues[rhmBin] << std::endl;
     if( (zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin])
     {
       break;
     }
     rhmBin += 1;
+    if(rhmBin == mainGridDensity.size()){
+      break;
+    }
     gridValue = mainGridDensity[rhmBin];
   }
 
@@ -199,13 +182,15 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   int lhmBin = zBin;
   gridValue = mainGridDensity[zBin];
   while (gridValue > maxValue / 2) {
-    std::cout << "L:cont z values?: " << zMaxGridBin + (rhmBin - zBin) << "," << mainGridZValues[rhmBin] << std::endl;
     // Check if we are still operating on continous z values
-    if( (zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin])
+    if( (zMaxGridBin + (lhmBin - zBin)) != mainGridZValues[lhmBin])
     {
       break;
     }
     lhmBin -= 1;
+    if(lhmBin < 0){
+      break;
+    }
     gridValue = mainGridDensity[lhmBin];
   }
 
