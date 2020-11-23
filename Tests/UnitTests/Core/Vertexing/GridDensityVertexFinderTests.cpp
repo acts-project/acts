@@ -412,6 +412,9 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
       std::cout << "Estimated z-seed width 2: " << cov(eZ, eZ) << std::endl;
     }
   }
+
+  // Test for same seed width
+  CHECK_CLOSE_ABS(covZZ1, covZZ2, 1e-4);
 }
 
 }  // namespace Test
