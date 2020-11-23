@@ -177,13 +177,13 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   // Find location in mainGridZValues
   auto findIter =
       std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
-  int zBin = std::distance(mainGridZValues.begin(), findIter);
+  unsigned int zBin = std::distance(mainGridZValues.begin(), findIter);
 
   const float maxValue = mainGridDensity[zBin];
   float gridValue = mainGridDensity[zBin];
 
   // Find right half-maximum bin
-  int rhmBin = zBin;
+  unsigned int rhmBin = zBin;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
     if ((zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin]) {
@@ -201,7 +201,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
       (maxValue / 2 - mainGridDensity[rhmBin - 1]) *
       (m_cfg.binSize / (mainGridDensity[rhmBin - 1] - mainGridDensity[rhmBin]));
   // Find left half-maximum bin
-  int lhmBin = zBin;
+  unsigned int lhmBin = zBin;
   gridValue = mainGridDensity[zBin];
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
@@ -249,11 +249,11 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::getHighestSumZPosition(
   // one has the highest surrounding density sum (the two neighboring bins)
 
   // The global maximum
-  int zGridPos = std::distance(
+  unsigned int zGridPos = std::distance(
       mainGridDensity.begin(),
       std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
 
-  int zFirstMax = zGridPos;
+  unsigned int zFirstMax = zGridPos;
   double firstDensity = mainGridDensity[zFirstMax];
   double firstSum = getDensitySum(mainGridDensity, mainGridZValues, zFirstMax);
 
@@ -262,7 +262,7 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::getHighestSumZPosition(
   zGridPos = std::distance(
       mainGridDensity.begin(),
       std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
-  int zSecondMax = zGridPos;
+  unsigned int zSecondMax = zGridPos;
   double secondDensity = mainGridDensity[zSecondMax];
   double secondSum = 0;
   if (firstDensity - secondDensity <
@@ -275,7 +275,7 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::getHighestSumZPosition(
   zGridPos = std::distance(
       mainGridDensity.begin(),
       std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
-  int zThirdMax = zGridPos;
+  unsigned int zThirdMax = zGridPos;
   double thirdDensity = mainGridDensity[zThirdMax];
   double thirdSum = 0;
   if (firstDensity - thirdDensity <
@@ -300,7 +300,7 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::getHighestSumZPosition(
 template <int trkGridSize>
 double Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
     const std::vector<float>& mainGridDensity,
-    const std::vector<int>& mainGridZValues, int pos) const {
+    const std::vector<int>& mainGridZValues, unsigned int pos) const {
   double sum = mainGridDensity[pos];
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
