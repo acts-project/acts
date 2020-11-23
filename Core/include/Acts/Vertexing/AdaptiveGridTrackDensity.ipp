@@ -11,7 +11,8 @@
 
 template <int trkGridSize>
 Acts::Result<float>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(std::vector<float>& mainGridDensity,
+Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
+    std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const {
   if (mainGridDensity.empty() || mainGridZValues.empty()) {
     return VertexingError::EmptyInput;
@@ -19,7 +20,9 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(std::vector<float>&
 
   int zGridPos = -1;
   if (!m_cfg.useHighestSumZPosition) {
-    zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
+    zGridPos = std::distance(
+        mainGridDensity.begin(),
+        std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
   } else {
     // Get z position with highest density sum
     // of surrounding bins
@@ -34,8 +37,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(std::vector<float>&
 
 template <int trkGridSize>
 Acts::Result<std::pair<float, float>>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::
-    getMaxZPositionAndWidth(std::vector<float>& mainGridDensity,
+Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
+    std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(mainGridDensity, mainGridZValues);
@@ -45,7 +48,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::
   float maxZ = *maxZRes;
 
   // Get seed width estimate
-  auto widthRes = estimateSeedWidth(mainGridDensity, mainGridZValues,maxZ);
+  auto widthRes = estimateSeedWidth(mainGridDensity, mainGridZValues, maxZ);
   if (not widthRes.ok()) {
     return widthRes.error();
   }
@@ -55,10 +58,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::
 }
 
 template <int trkGridSize>
-void
-Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
-    const Acts::BoundTrackParameters& trk,
-    std::vector<float>& mainGridDensity,
+void Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
+    const Acts::BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
     std::vector<int>& mainGridZValues) const {
   SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
@@ -74,7 +75,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   int sign = (z0 > 0) ? +1 : -1;
   float binCtrZ = (zBin + sign * 0.5f) * m_cfg.binSize;
-
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
@@ -93,34 +93,40 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   std::vector<int> zBinValues;
 
-  int startEnd = int(trkGridSize - 1)/2;
+  int startEnd = int(trkGridSize - 1) / 2;
 
-  for(int i = 0; i < trkGridSize; i++){
-    zBinValues.push_back(int(zBin + (i-startEnd)));
+  for (int i = 0; i < trkGridSize; i++) {
+    zBinValues.push_back(int(zBin + (i - startEnd)));
   }
 
-  for(int i = 0; i < trkGridSize; i++){
+  for (int i = 0; i < trkGridSize; i++) {
     int z = zBinValues[i];
 
-    auto findIter = std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
-    //bool exists = std::binary_search(mainGridZValues.begin(), mainGridZValues.end(), z);
-    // TODO: wanted to check if element exists with findIter != mainGridZValues.end()
-    // but if element is actually last element in list, caused problems maybe? Check if
-    // results are always the same as if we're using bineary search here
-    if(findIter != mainGridZValues.end()){
-    // Z bin already exists
-      mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] += trackGrid[i];
-    }
-    else{
-    // Create new z bin
-      auto it = std::upper_bound( mainGridZValues.begin(), mainGridZValues.end(), z );
-      mainGridDensity.insert(mainGridDensity.begin() + std::distance(mainGridZValues.begin(), it), trackGrid[i]);
+    auto findIter =
+        std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
+    // bool exists = std::binary_search(mainGridZValues.begin(),
+    // mainGridZValues.end(), z);
+    // TODO: wanted to check if element exists with findIter !=
+    // mainGridZValues.end() but if element is actually last element in list,
+    // caused problems maybe? Check if results are always the same as if we're
+    // using bineary search here
+    if (findIter != mainGridZValues.end()) {
+      // Z bin already exists
+      mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] +=
+          trackGrid[i];
+    } else {
+      // Create new z bin
+      auto it =
+          std::upper_bound(mainGridZValues.begin(), mainGridZValues.end(), z);
+      mainGridDensity.insert(
+          mainGridDensity.begin() + std::distance(mainGridZValues.begin(), it),
+          trackGrid[i]);
       mainGridZValues.insert(it, z);
-    } 
+    }
   }
 }
 
-// 
+//
 template <int trkGridSize>
 Acts::ActsVectorF<trkGridSize>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
@@ -149,13 +155,12 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
   // Get z bin of max density z value
   int sign = (maxZ > 0) ? +1 : -1;
-  int zMaxGridBin  = int(maxZ / m_cfg.binSize - sign * 0.5f);
-
+  int zMaxGridBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
 
   // Find location in mainGridZValues
-  auto findIter = std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
+  auto findIter =
+      std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
   int zBin = std::distance(mainGridZValues.begin(), findIter);
-
 
   const float maxValue = mainGridDensity[zBin];
   float gridValue = mainGridDensity[zBin];
@@ -164,39 +169,39 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   int rhmBin = zBin;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
-    if( (zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin])
-    {
+    if ((zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin]) {
       break;
     }
     rhmBin += 1;
-    if(rhmBin == mainGridDensity.size()){
+    if (rhmBin == mainGridDensity.size()) {
       break;
     }
     gridValue = mainGridDensity[rhmBin];
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ1 = (maxValue / 2 - mainGridDensity[rhmBin - 1]) *
-                  (m_cfg.binSize / (mainGridDensity[rhmBin - 1] - mainGridDensity[rhmBin]));
+  float deltaZ1 =
+      (maxValue / 2 - mainGridDensity[rhmBin - 1]) *
+      (m_cfg.binSize / (mainGridDensity[rhmBin - 1] - mainGridDensity[rhmBin]));
   // Find left half-maximum bin
   int lhmBin = zBin;
   gridValue = mainGridDensity[zBin];
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continous z values
-    if( (zMaxGridBin + (lhmBin - zBin)) != mainGridZValues[lhmBin])
-    {
+    if ((zMaxGridBin + (lhmBin - zBin)) != mainGridZValues[lhmBin]) {
       break;
     }
     lhmBin -= 1;
-    if(lhmBin < 0){
+    if (lhmBin < 0) {
       break;
     }
     gridValue = mainGridDensity[lhmBin];
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ2 = (maxValue / 2 - mainGridDensity[lhmBin + 1]) *
-                  (m_cfg.binSize / (mainGridDensity[rhmBin + 1] - mainGridDensity[rhmBin]));
+  float deltaZ2 =
+      (maxValue / 2 - mainGridDensity[lhmBin + 1]) *
+      (m_cfg.binSize / (mainGridDensity[rhmBin + 1] - mainGridDensity[rhmBin]));
 
   // Approximate FWHM
   float fwhm =
@@ -207,7 +212,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
 
   return std::isnormal(width) ? width : 0.0f;
 }
-
 
 template <int trkGridSize>
 float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
@@ -221,14 +225,16 @@ float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
 }
 
 template <int trkGridSize>
-int Acts::AdaptiveGridTrackDensity<trkGridSize>::
-    getHighestSumZPosition(std::vector<float>& mainGridDensity,
+int Acts::AdaptiveGridTrackDensity<trkGridSize>::getHighestSumZPosition(
+    std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues) const {
   // Checks the first (up to) 3 density maxima, if they are close, checks which
   // one has the highest surrounding density sum (the two neighboring bins)
 
   // The global maximum
-  int zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
+  int zGridPos = std::distance(
+      mainGridDensity.begin(),
+      std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
 
   int zFirstMax = zGridPos;
   double firstDensity = mainGridDensity[zFirstMax];
@@ -236,7 +242,9 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::
 
   // Get the second highest maximum
   mainGridDensity[zFirstMax] = 0;
-  zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
+  zGridPos = std::distance(
+      mainGridDensity.begin(),
+      std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
   int zSecondMax = zGridPos;
   double secondDensity = mainGridDensity[zSecondMax];
   double secondSum = 0;
@@ -247,7 +255,9 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::
 
   // Get the third highest maximum
   mainGridDensity[zSecondMax] = 0;
-  zGridPos = std::distance(mainGridDensity.begin(), std::max_element(mainGridDensity.begin(),mainGridDensity.end()));
+  zGridPos = std::distance(
+      mainGridDensity.begin(),
+      std::max_element(mainGridDensity.begin(), mainGridDensity.end()));
   int zThirdMax = zGridPos;
   double thirdDensity = mainGridDensity[zThirdMax];
   double thirdSum = 0;
@@ -279,16 +289,15 @@ double Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
   // neighboring bins if they are still within bounds
   if (pos - 1 >= 0) {
     // Check if we are still operating on continous z values
-    if(mainGridZValues[pos] - mainGridZValues[pos - 1] == 1){
+    if (mainGridZValues[pos] - mainGridZValues[pos - 1] == 1) {
       sum += mainGridDensity[pos - 1];
     }
   }
   if (pos + 1 <= mainGridDensity.size() - 1) {
     // Check if we are still operating on continous z values
-    if(mainGridZValues[pos+1] - mainGridZValues[pos] == 1){
+    if (mainGridZValues[pos + 1] - mainGridZValues[pos] == 1) {
       sum += mainGridDensity[pos + 1];
     }
   }
   return sum;
 }
-

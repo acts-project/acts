@@ -26,7 +26,6 @@ namespace Test {
 using Covariance = BoundSymMatrix;
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
-
   const int trkGridSize = 15;
 
   double binSize = 0.1;  // mm
@@ -80,17 +79,17 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
 
   // Track should have been entirely added to both grids
   grid.addTrack(params2, mainGridDensity, mainGridZValues);
-  BOOST_CHECK_EQUAL(mainGridDensity.size(), 2*trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 2 * trkGridSize);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
-  
+
   // Track 3 has overlap of 2 bins with track 1
   grid.addTrack(params3, mainGridDensity, mainGridZValues);
-  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3*trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3 * trkGridSize - 2);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Add first track again, should *not* introduce new z entries
   grid.addTrack(params1, mainGridDensity, mainGridZValues);
-  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3*trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3 * trkGridSize - 2);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Add two more tracks and check if order is correct
@@ -98,13 +97,12 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
   grid.addTrack(params5, mainGridDensity, mainGridZValues);
   BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
- 
-  BOOST_CHECK(std::is_sorted(std::begin(mainGridZValues), std::end(mainGridZValues)));
 
+  BOOST_CHECK(
+      std::is_sorted(std::begin(mainGridZValues), std::end(mainGridZValues)));
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
-
   const int trkGridSize = 15;
 
   double binSize = 0.1;  // mm
@@ -152,14 +150,14 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   BOOST_CHECK_EQUAL(*res2, z0Trk2);
 
   // Get max position and width estimation
-  auto resWidth1 = grid.getMaxZPositionAndWidth(mainGridDensity, mainGridZValues);
+  auto resWidth1 =
+      grid.getMaxZPositionAndWidth(mainGridDensity, mainGridZValues);
   BOOST_CHECK(resWidth1.ok());
   BOOST_CHECK_EQUAL((*resWidth1).first, z0Trk2);
   BOOST_CHECK((*resWidth1).second > 0);
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
-
   const int trkGridSize = 15;
 
   double binSize = 0.1;  // mm
@@ -220,7 +218,6 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   // added densities for track 1 around its maximum should now lead to
   // a prediction at z0Trk1 again
   BOOST_CHECK_EQUAL(*res3, z0Trk1);
-
 }
 
 }  // namespace Test
