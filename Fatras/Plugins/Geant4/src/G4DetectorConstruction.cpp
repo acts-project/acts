@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsFatras/Physics/Decay/G4DetectorConstruction.hpp"
+#include "ActsFatras/Plugins/Geant4/G4DetectorConstruction.hpp"
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
