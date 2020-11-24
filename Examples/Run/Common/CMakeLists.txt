@@ -5,8 +5,7 @@ add_library(
   src/GeometryExampleBase.cpp
   src/MaterialMappingBase.cpp
   src/MaterialValidationBase.cpp
-  src/PropagationExampleBase.cpp
-  src/SeedingExampleBase.cpp)
+  src/PropagationExampleBase.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
