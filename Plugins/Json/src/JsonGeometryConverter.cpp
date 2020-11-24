@@ -556,20 +556,22 @@ void Acts::JsonGeometryConverter::convertToRep(
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
       // Ignore if the volumeID is not correct (i.e. shared boundary)
-      // if (boundaryID.value(Acts::GeometryIdentifier::volume_mask) == vid){
-      volRep.boundaries[bid] = bssfRep.surfaceMaterial();
-      volRep.boundarySurfaces[bid] = &bssfRep;
-      // }
+      if (boundaryID.volume() == vid) {
+        volRep.boundaries[bid] = bssfRep.surfaceMaterial();
+        volRep.boundarySurfaces[bid] = &bssfRep;
+      }
     } else if (m_cfg.processnonmaterial == true) {
       // if no material suface exist add a default one for the mapping
       // configuration
       Acts::GeometryIdentifier boundaryID = bssfRep.geometryId();
       geo_id_value bid = boundaryID.boundary();
-      Acts::BinUtility bUtility = DefaultBin(bssfRep);
-      Acts::ISurfaceMaterial* bMaterial =
-          new Acts::ProtoSurfaceMaterial(bUtility);
-      volRep.boundaries[bid] = bMaterial;
-      volRep.boundarySurfaces[bid] = &bssfRep;
+      if (boundaryID.volume() == vid) {
+        Acts::BinUtility bUtility = DefaultBin(bssfRep);
+        Acts::ISurfaceMaterial* bMaterial =
+            new Acts::ProtoSurfaceMaterial(bUtility);
+        volRep.boundaries[bid] = bMaterial;
+        volRep.boundarySurfaces[bid] = &bssfRep;
+      }
     }
   }
   // Write if it's good
@@ -860,7 +862,7 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
 
   // Cast the surface bound to both disk and cylinder
   const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
-  auto sTransform = surface->transform(GeometryContext());
+  auto sTransform = surface->transform(m_cfg.context);
 
   const Acts::RadialBounds* radialBounds =
       dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);

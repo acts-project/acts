@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,11 +10,11 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <algorithm>
@@ -83,7 +83,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     if (cfg.inputParticles.empty()) {
       throw std::invalid_argument("Missing particles input collection");
     }
-    if (cfg.inputHitParticlesMap.empty()) {
+    if (cfg.inputMeasurementParticlesMap.empty()) {
       throw std::invalid_argument("Missing hit-particles map input collection");
     }
     if (cfg.inputProtoTracks.empty()) {
@@ -250,8 +250,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::ProtoTrackContainer& tracks) {
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_impl->cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_impl->cfg.inputHitParticlesMap);
+  const auto& hitParticlesMap = ctx.eventStore.get<HitParticlesMap>(
+      m_impl->cfg.inputMeasurementParticlesMap);
   m_impl->write(ctx.eventNumber, particles, hitParticlesMap, tracks);
   return ProcessCode::SUCCESS;
 }

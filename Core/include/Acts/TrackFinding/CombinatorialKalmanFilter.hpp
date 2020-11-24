@@ -36,15 +36,14 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <unordered_map>
 
 namespace Acts {
 
-/// @brief struct to keep record of the track quality
+/// Track quality summary for one trajectory.
 ///
-/// This could be used to decide if a track is to be recorded when the forward
+/// This could be used to decide if a track is to be recorded when the
 /// filtering is done or to be terminated due to its bad quality
 /// @Todo: add other useful info, e.g. chi2
 struct CombinatorialKalmanFilterTipState {
@@ -60,32 +59,21 @@ struct CombinatorialKalmanFilterTipState {
   size_t nHoles = 0;
 };
 
-/// @brief Options struct how the CombinatorialKalmanFilter (CKF) is called
+/// Combined options for the combinatorial Kalman filter.
 ///
-/// @tparam source_link_selector_t The source link selector type
-///
-/// It contains the context of the CKF call, the source link selector
-/// config, the optional surface where to express the track finding/fitting
-/// result, config for material effects and whether to run smoothing to get
-/// fitted parameters
-///
-/// @note the context objects must be provided
-template <typename source_link_selector_t>
+/// @tparam calibrator_t Source link calibrator type, should be semiregular.
+/// @tparam source_link_selector_t Selector type, should be semiregular.
+template <typename calibrator_t, typename source_link_selector_t>
 struct CombinatorialKalmanFilterOptions {
-  // Broadcast the source link selector type
+  using Calibrator = calibrator_t;
   using SourceLinkSelector = source_link_selector_t;
-
-  // Broadcast the source link selector config type
-  using SourceLinkSelectorConfig = typename SourceLinkSelector::Config;
-
-  /// Deleted default constructor
-  CombinatorialKalmanFilterOptions() = delete;
 
   /// PropagatorOptions with context
   ///
   /// @param gctx The goemetry context for this track finding/fitting
   /// @param mctx The magnetic context for this track finding/fitting
   /// @param cctx The calibration context for this track finding/fitting
+  /// @param calibrator_t The source link calibrator
   /// @param slsCfg The config for the source link selector for this track
   /// finding/fitting
   /// @param logger_ The logger wrapper
@@ -99,19 +87,23 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const GeometryContext> gctx,
       std::reference_wrapper<const MagneticFieldContext> mctx,
       std::reference_wrapper<const CalibrationContext> cctx,
-      const SourceLinkSelectorConfig& slsCfg, LoggerWrapper logger_,
-      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
-      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
+      Calibrator calibrator_, SourceLinkSelector sourceLinkSelector_,
+      LoggerWrapper logger_, const PropagatorPlainOptions& pOptions,
+      const Surface* rSurface = nullptr, bool mScattering = true,
+      bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        sourcelinkSelectorConfig(slsCfg),
+        calibrator(std::move(calibrator_)),
+        sourcelinkSelector(std::move(sourceLinkSelector_)),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
         smoothing(rSmoothing),
         logger(logger_) {}
+  /// Contexts are required and the options must not be default-constructible.
+  CombinatorialKalmanFilterOptions() = delete;
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -120,8 +112,11 @@ struct CombinatorialKalmanFilterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  /// The config for the source link selector
-  SourceLinkSelectorConfig sourcelinkSelectorConfig;
+  /// The source link calibrator
+  Calibrator calibrator;
+
+  /// The source link selector
+  SourceLinkSelector sourcelinkSelector;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -160,8 +155,8 @@ struct CombinatorialKalmanFilterResult {
   std::unordered_map<const Surface*, std::unordered_map<size_t, size_t>>
       sourcelinkTips;
 
-  // Indicator if forward filtering has been done
-  bool forwardFiltered = false;
+  // Indicator if filtering has been done
+  bool filtered = false;
 
   // Indicator if smoothing has been done.
   bool smoothed = false;
@@ -185,16 +180,13 @@ struct CombinatorialKalmanFilterResult {
   Result<void> result{Result<void>::success()};
 };
 
-/// @brief CombinatorialKalmanFilter implementation of Acts as a plugin
+/// Combinatorial Kalman filter to find tracks.
 ///
-/// to the Propgator
 ///
-/// @tparam propagator_t Type of the propagation class
-/// @tparam updater_t Type of the kalman updater class
-/// @tparam smoother_t Type of the kalman smoother class
-/// @tparam source_link_selector_t Type of the source link selector class
-/// @tparam branch_stopper_t Type of the branch stopper class
-/// @tparam calibrator_t Type of the calibrator class
+/// @tparam propagator_t Type of the propagator
+/// @tparam updater_t Type of the Kalman
+/// @tparam smoother_t Type of the Kalman smoother
+/// @tparam branch_stopper_t Type of the branch stopper
 ///
 /// The CombinatorialKalmanFilter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -205,12 +197,8 @@ struct CombinatorialKalmanFilterResult {
 /// given to the Actor for further use:
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
-/// - The Smoother is called at the end of the forward track finding by the
+/// - The Smoother is called at the end of the filtering (track finding) by the
 /// Actor.
-/// - The Sourcelink selector is called during the filtering by the Actor.
-/// - The Calibrator is a dedicated calibration algorithm that allows
-///   to calibrate measurements using track information, this could be
-///    e.g. sagging for wires, module deformations, etc.
 ///
 /// Measurements are not required to be ordered for the
 /// CombinatorialKalmanFilter, measurement ordering needs to be figured out by
@@ -219,24 +207,18 @@ struct CombinatorialKalmanFilterResult {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
           typename smoother_t = VoidKalmanSmoother,
-          typename source_link_selector_t = CKFSourceLinkSelector,
-          typename branch_stopper_t = VoidBranchStopper,
-          typename calibrator_t = VoidMeasurementCalibrator>
+          typename branch_stopper_t = VoidBranchStopper>
 class CombinatorialKalmanFilter {
  public:
-  /// Shorthand definition
-  using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
-  /// The navigator type
-  using KalmanNavigator = typename propagator_t::Navigator;
-
   /// Default constructor is deleted
   CombinatorialKalmanFilter() = delete;
-
   /// Constructor from arguments
   CombinatorialKalmanFilter(propagator_t pPropagator)
       : m_propagator(std::move(pPropagator)) {}
 
  private:
+  using KalmanNavigator = typename propagator_t::Navigator;
+
   /// The propgator for the transport and material update
   propagator_t m_propagator;
 
@@ -244,10 +226,19 @@ class CombinatorialKalmanFilter {
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam calibrator_t The type of source link calibrator.
+  /// @tparam source_link_selector_t The type of compatible source links
+  /// selector.
+  ///
+  /// - The Calibrator is a dedicated calibration algorithm that allows
+  ///   to calibrate measurements using track information, this could be
+  ///    e.g. sagging for wires, module deformations, etc.
+  ///- The Sourcelink selector is called during the filtering by the Actor.
   ///
   /// The CombinatorialKalmanFilterActor does not rely on the measurements to be
   /// sorted along the track.
-  template <typename source_link_t, typename parameters_t>
+  template <typename source_link_t, typename parameters_t,
+            typename calibrator_t, typename source_link_selector_t>
   class Actor {
    public:
     using TipState = CombinatorialKalmanFilterTipState;
@@ -261,7 +252,7 @@ class CombinatorialKalmanFilter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::unordered_map<const Surface*, std::vector<source_link_t>>
+    std::unordered_map<GeometryIdentifier, std::vector<source_link_t>>
         inputMeasurements;
 
     /// Whether to consider multiple scattering.
@@ -312,7 +303,7 @@ class CombinatorialKalmanFilter {
       // Update:
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
-      if (surface != nullptr and not result.forwardFiltered) {
+      if (surface != nullptr and not result.filtered) {
         // There are three scenarios:
         // 1) The surface is in the measurement map
         // -> Select source links
@@ -337,7 +328,7 @@ class CombinatorialKalmanFilter {
       // Reset propagation state:
       // - When navigation breaks and there is stil active tip present after
       // recording&removing track tips on current surface
-      if (state.navigation.navigationBreak and not result.forwardFiltered) {
+      if (state.navigation.navigationBreak and not result.filtered) {
         // Record the tips on current surface as trajectory entry indices
         // (taking advantage of fact that those tips are consecutive in list of
         // active tips) and remove those tips from active tips
@@ -368,12 +359,12 @@ class CombinatorialKalmanFilter {
             result.activeTips.erase(result.activeTips.end() - 1);
           }
         }
-        // If no more active tip, done with forward filtering; Otherwise, reset
+        // If no more active tip, done with filtering; Otherwise, reset
         // propagation state to track state at last tip of active tips
         if (result.activeTips.empty()) {
-          ACTS_VERBOSE("Forward Kalman filtering finds "
-                       << result.trackTips.size() << " tracks");
-          result.forwardFiltered = true;
+          ACTS_VERBOSE("Kalman filtering finds " << result.trackTips.size()
+                                                 << " tracks");
+          result.filtered = true;
         } else {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
@@ -381,15 +372,15 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      // Post-processing after forward filtering
-      if (result.forwardFiltered) {
-        // Return error if forward filtering finds no tracks
+      // Post-processing after filtering phase
+      if (result.filtered) {
+        // Return error if filtering finds no tracks
         if (result.trackTips.empty()) {
           result.result =
               Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
         } else {
           if (not smoothing) {
-            ACTS_VERBOSE("Finish forward Kalman filtering");
+            ACTS_VERBOSE("Finish Kalman filtering");
             // Remember that track finding is done
             result.finished = true;
           } else {
@@ -433,21 +424,23 @@ class CombinatorialKalmanFilter {
                 state.navigation.targetReached = false;
                 result.smoothed = false;
                 result.iSmoothed++;
+                // Reverse navigation direction to start targeting for the rest
+                // tracks
+                state.stepping.navDir =
+                    (state.stepping.navDir == backward) ? forward : backward;
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
-                    ConstrainedStep(state.options.maxStepSize);
-                // Need to go back to start targeting for the rest tracks
-                state.stepping.navDir = forward;
+                    ConstrainedStep(state.stepping.navDir *
+                                    std::abs(state.options.maxStepSize));
               } else {
-                ACTS_VERBOSE(
-                    "Finish forward Kalman filtering and backward smoothing");
+                ACTS_VERBOSE("Finish Kalman filtering and smoothing");
                 // Remember that track finding is done
                 result.finished = true;
               }
             }
           }  // if run smoothing
         }    // if there are found tracks
-      }      // if forward filtering is done
+      }      // if filtering is done
     }
 
     /// @brief Kalman actor operation : reset propagation
@@ -510,18 +503,21 @@ class CombinatorialKalmanFilter {
       size_t nBranchesOnSurface = 0;
 
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface);
+      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Transport & bind the state to the current surface
-        auto boundState = stepper.boundState(state.stepping, *surface);
-        auto boundParams = std::get<BoundTrackParameters>(boundState);
+        // Transport the covariance to the surface
+        stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
+
+        // Bind the transported state to the current surface
+        auto boundState = stepper.boundState(state.stepping, *surface, false);
+        auto boundParams = std::get<BoundTrackParameters>(boundState);
 
         // Get all source links on surface
         auto& sourcelinks = sourcelink_it->second;
@@ -714,9 +710,9 @@ class CombinatorialKalmanFilter {
                        << result.activeTips.back().first);
           reset(state, stepper, result);
         } else {
-          ACTS_VERBOSE("Stop forward Kalman filtering with "
-                       << result.trackTips.size() << " found tracks");
-          result.forwardFiltered = true;
+          ACTS_VERBOSE("Stop Kalman filtering with " << result.trackTips.size()
+                                                     << " found tracks");
+          result.filtered = true;
         }
       }
 
@@ -1015,24 +1011,75 @@ class CombinatorialKalmanFilter {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-      // Obtain the smoothed parameters at first measurement state
-      auto firstMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
 
-      // Update the stepping parameters - in order to progress to destination
+      // Return in case no target surface
+      if (targetSurface == nullptr) {
+        return Result<void>::success();
+      }
+
+      // Obtain the smoothed parameters at first/last measurement state
+      auto firstCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.back());
+      auto lastCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.front());
+
+      // Lambda to get the intersection of the free params on the target surface
+      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+        return targetSurface->intersect(
+            state.geoContext, freeVector.segment<3>(eFreePos0),
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+      };
+
+      // The smoothed free params at the first/last measurement state
+      auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, firstCreatedMeasurement);
+      auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, lastCreatedMeasurement);
+      // Get the intersections of the smoothed free parameters with the target
+      // surface
+      const auto firstIntersection = target(firstParams);
+      const auto lastIntersection = target(lastParams);
+
+      // Update the stepping parameters - in order to progress to destination.
+      // At the same time, reverse navigation direction for further
+      // stepping if necessary.
+      // @note The stepping parameters is updated to the smoothed parameters at
+      // either the first measurement state or the last measurement state. It
+      // assumes the target surface is not within the first and the last
+      // smoothed measurement state. Also, whether the intersection is on
+      // surface is not checked here.
+      bool reverseDirection = false;
+      bool closerToFirstCreatedMeasurement =
+          (std::abs(firstIntersection.intersection.pathLength) <=
+           std::abs(lastIntersection.intersection.pathLength));
+      if (closerToFirstCreatedMeasurement) {
+        stepper.update(state.stepping, firstParams,
+                       firstCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (firstIntersection.intersection.pathLength < 0);
+      } else {
+        stepper.update(state.stepping, lastParams,
+                       lastCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (lastIntersection.intersection.pathLength < 0);
+      }
+      const auto& surface = closerToFirstCreatedMeasurement
+                                ? firstCreatedMeasurement.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
-          "Smoothing successful, updating stepping state, "
-          "set target surface.");
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeSmoothed(
-                         state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
-      // Reverse the propagation direction
-      state.stepping.stepSize =
-          ConstrainedStep(-1. * state.options.maxStepSize);
-      state.stepping.navDir = backward;
-      // Set accumulatd path to zero before targeting surface
-      state.stepping.pathAccumulated = 0.;
+          "Smoothing successful, updating stepping state to smoothed "
+          "parameters at surface "
+          << surface.geometryId() << ". Prepared to reach the target surface.");
+
+      // Reverse the navigation direction if necessary
+      if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
+        state.stepping.navDir =
+            (state.stepping.navDir == forward) ? backward : forward;
+      }
+      // Reset the step size
+      state.stepping.stepSize = ConstrainedStep(
+          state.stepping.navDir * std::abs(state.options.maxStepSize));
 
       return Result<void>::success();
     }
@@ -1043,24 +1090,26 @@ class CombinatorialKalmanFilter {
     /// The CombinatorialKalmanFilter smoother
     smoother_t m_smoother;
 
+    /// The measurement calibrator
+    calibrator_t m_calibrator;
+
     /// The source link selector
     source_link_selector_t m_sourcelinkSelector;
 
     /// The branch propagation stopper
     branch_stopper_t m_branchStopper;
 
-    /// The Measuremetn calibrator
-    calibrator_t m_calibrator;
-
     /// The Surface beeing
     SurfaceReached targetReached;
   };
 
-  template <typename source_link_t, typename parameters_t>
+  template <typename source_link_t, typename parameters_t,
+            typename calibrator_t, typename source_link_selector_t>
   class Aborter {
    public:
     /// Broadcast the result_type
-    using action_type = Actor<source_link_t, parameters_t>;
+    using action_type = Actor<source_link_t, parameters_t, calibrator_t,
+                              source_link_selector_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -1075,10 +1124,11 @@ class CombinatorialKalmanFilter {
 
  public:
   /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
+  /// the filter and smoother
   ///
   /// @tparam source_link_container_t Source link container type
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1092,31 +1142,34 @@ class CombinatorialKalmanFilter {
   ///
   /// @return the output as an output track
   template <typename source_link_container_t, typename start_parameters_t,
+            typename calibrator_t, typename source_link_selector_t,
             typename parameters_t = BoundTrackParameters>
   Result<CombinatorialKalmanFilterResult<
       typename source_link_container_t::value_type>>
   findTracks(const source_link_container_t& sourcelinks,
              const start_parameters_t& sParameters,
-             const CombinatorialKalmanFilterOptions<source_link_selector_t>&
-                 tfOptions) const {
-    const auto& logger = tfOptions.logger;
+             const CombinatorialKalmanFilterOptions<
+                 calibrator_t, source_link_selector_t>& tfOptions) const {
     using SourceLink = typename source_link_container_t::value_type;
     static_assert(SourceLinkConcept<SourceLink>,
                   "Source link does not fulfill SourceLinkConcept");
 
+    const auto& logger = tfOptions.logger;
+
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::unordered_map<const Surface*, std::vector<SourceLink>>
+    std::unordered_map<GeometryIdentifier, std::vector<SourceLink>>
         inputMeasurements;
     for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements[srf].emplace_back(sl);
+      inputMeasurements[sl.geometryId()].emplace_back(sl);
     }
 
     // Create the ActionList and AbortList
-    using CombinatorialKalmanFilterAborter = Aborter<SourceLink, parameters_t>;
-    using CombinatorialKalmanFilterActor = Actor<SourceLink, parameters_t>;
+    using CombinatorialKalmanFilterAborter =
+        Aborter<SourceLink, parameters_t, calibrator_t, source_link_selector_t>;
+    using CombinatorialKalmanFilterActor =
+        Actor<SourceLink, parameters_t, calibrator_t, source_link_selector_t>;
     using CombinatorialKalmanFilterResult =
         typename CombinatorialKalmanFilterActor::result_type;
     using Actors = ActionList<CombinatorialKalmanFilterActor>;
@@ -1138,9 +1191,9 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
 
-    // Set config for source link selector
-    combKalmanActor.m_sourcelinkSelector.m_config =
-        tfOptions.sourcelinkSelectorConfig;
+    // copy calibrator and source link selector
+    combKalmanActor.m_calibrator = tfOptions.calibrator;
+    combKalmanActor.m_sourcelinkSelector = tfOptions.sourcelinkSelector;
 
     // Run the CombinatorialKalmanFilter
     auto result = m_propagator.template propagate(sParameters, propOptions);
@@ -1158,7 +1211,7 @@ class CombinatorialKalmanFilter {
 
     /// The propagation could already reach max step size
     /// before the track finding is finished during two phases:
-    // -> forward filtering for track finding
+    // -> filtering for track finding
     // -> surface targeting to get fitted parameters at target surface
     // @TODO: Implement distinguishment between the above two cases if necessary
     if (combKalmanResult.result.ok() and not combKalmanResult.finished) {

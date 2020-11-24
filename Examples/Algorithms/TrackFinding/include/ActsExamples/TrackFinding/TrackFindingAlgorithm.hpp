@@ -8,31 +8,31 @@
 
 #pragma once
 
-#include <functional>
-//#include <memory>
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CKFSourceLinkSelector.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
-#include "ActsExamples/EventData/SimSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 
+#include <functional>
 #include <vector>
 
 namespace ActsExamples {
 
 class TrackFindingAlgorithm final : public BareAlgorithm {
  public:
+  /// Track finder function that takes input measurements, initial trackstate
+  /// and track finder options and returns some track-finder-specific result.
+  using TrackFinderOptions =
+      Acts::CombinatorialKalmanFilterOptions<MeasurementCalibrator,
+                                             Acts::CKFSourceLinkSelector>;
   using TrackFinderResult =
-      Acts::Result<Acts::CombinatorialKalmanFilterResult<SimSourceLink>>;
-  /// Track finding function that takes input measurements, initial trackstate
-  /// and track finder options and returns some track-finding-specific result.
-  using CKFOptions =
-      Acts::CombinatorialKalmanFilterOptions<Acts::CKFSourceLinkSelector>;
+      Acts::Result<Acts::CombinatorialKalmanFilterResult<IndexSourceLink>>;
   using TrackFinderFunction = std::function<TrackFinderResult(
-      const SimSourceLinkContainer&, const TrackParameters&,
-      const CKFOptions&)>;
+      const IndexSourceLinkContainer&, const TrackParameters&,
+      const TrackFinderOptions&)>;
 
   /// Create the track finder function implementation.
   ///
@@ -43,6 +43,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       Options::BFieldVariant magneticField);
 
   struct Config {
+    /// Input measurements collection.
+    std::string inputMeasurements;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input initial track parameter estimates for for each proto track.
@@ -66,7 +68,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const final;
 
  private:
   Config m_cfg;

@@ -8,18 +8,29 @@
 
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 
+#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
+#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <algorithm>
+#include <iosfwd>
+#include <iterator>
 #include <vector>
+#include <math.h>
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig,

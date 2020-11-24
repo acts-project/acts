@@ -17,7 +17,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <limits>
-#include <map>
 
 namespace Acts {
 
@@ -42,7 +41,7 @@ struct SourceLinkSelectorCuts {
 /// If there is no compatible source link, the source link with the mininum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
-struct CKFSourceLinkSelector {
+class CKFSourceLinkSelector {
  public:
   /// Geometry-dependent cut configuration.
   ///
@@ -188,7 +187,7 @@ struct CKFSourceLinkSelector {
     return Result<void>::success();
   }
 
-  /// The config
+ private:
   Config m_config;
 };
 

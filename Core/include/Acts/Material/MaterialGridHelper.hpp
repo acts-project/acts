@@ -9,15 +9,21 @@
 #pragma once
 
 #include "Acts/Material/AccumulatedVolumeMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <stdexcept>
+#include <array>
+#include <functional>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+
+class MaterialSlab;
 
 /// list of point used in the mapping of a volume
 using RecordedMaterialVolumePoint =

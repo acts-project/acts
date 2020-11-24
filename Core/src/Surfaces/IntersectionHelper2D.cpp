@@ -11,16 +11,17 @@
 #include <tuple>
 
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2D& s0, const Vector2D& s1, const Vector2D& origin,
-    const Vector2D& dir) {
+    const Vector2D& dir, bool boundCheck) {
   using Line = Eigen::ParametrizedLine<double, 2>;
   using Plane = Eigen::Hyperplane<double, 2>;
 
-  Vector2D ldir(s1 - s0);
-  double det = ldir.x() * dir.y() - ldir.y() * dir.x();
+  Vector2D edge(s1 - s0);
+  double det = edge.x() * dir.y() - edge.y() * dir.x();
   if (std::abs(det) < s_epsilon) {
     return Intersection2D();
   }
@@ -28,17 +29,27 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
   auto line = Line(origin, dir);
   auto d = line.intersectionParameter(Plane::Through(s0, s1));
 
-  return Intersection2D(origin + d * dir, d, Intersection2D::Status::reachable);
+  Vector2D intersection(origin + d * dir);
+  Intersection2D::Status status = Intersection2D::Status::reachable;
+  if (boundCheck) {
+    auto edgeToSol = intersection - s0;
+    if (edgeToSol.dot(edge) < 0. or edgeToSol.norm() > (edge).norm()) {
+      status = Intersection2D::Status::unreachable;
+    }
+  }
+  return Intersection2D(intersection, d, status);
 }
 
-std::pair<Acts::Intersection2D, Acts::Intersection2D>
+std::array<Acts::Intersection2D, 2>
 Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
                                                      const Vector2D& origin,
                                                      const Vector2D& dir) {
-  auto createSolution = [&](const Vector2D& sol, const Vector2D& alt)
-      -> std::pair<Acts::Intersection2D, Acts::Intersection2D> {
+  auto createSolution =
+      [&](const Vector2D& sol,
+          const Vector2D& alt) -> std::array<Acts::Intersection2D, 2> {
     Vector2D toSolD(sol - origin);
     Vector2D toAltD(alt - origin);
+
     double solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     double altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
 
@@ -103,4 +114,19 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(double Rx, double Ry,
     return createSolution(sol, alt);
   }
   return {Intersection2D(), Intersection2D()};
+}
+
+Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
+    double R, double phiMin, double phiMax, const Vector2D& origin,
+    const Vector2D& dir) {
+  auto intersections = intersectCircle(R, origin, dir);
+  for (const auto& candidate : intersections) {
+    if (candidate.pathLength > 0.) {
+      double phi = Acts::VectorHelpers::phi(candidate.position);
+      if (phi > phiMin and phi < phiMax) {
+        return candidate;
+      }
+    }
+  }
+  return Intersection2D();
 }

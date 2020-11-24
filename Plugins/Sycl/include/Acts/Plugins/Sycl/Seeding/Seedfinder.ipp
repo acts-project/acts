@@ -6,15 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
-
+// System include(s)
 #include <algorithm>
 #include <cmath>
 #include <utility>
 
-namespace Acts::Sycl {
+// SYCL plugin include(s)
+#include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
+#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
 
+namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::Seedfinder(
     Acts::SeedfinderConfig<external_spacepoint_t> config,
@@ -63,6 +64,10 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
+  // As a first step, we create Arrays of Structures (AoS)
+  // that are easily comprehensible by the GPU. This allows us
+  // less memory access operations than with simple (float) arrays.
+
   std::vector<detail::DeviceSpacePoint> deviceBottomSPs;
   std::vector<detail::DeviceSpacePoint> deviceMiddleSPs;
   std::vector<detail::DeviceSpacePoint> deviceTopSPs;
@@ -96,10 +101,13 @@ Seedfinder<external_spacepoint_t>::createSeedsForGroup(
 
   std::vector<std::vector<detail::SeedData>> seeds;
 
+  // Call the SYCL seeding algorithm
   createSeedsForGroupSycl(m_wrappedQueue, m_deviceConfig, m_deviceCuts,
                           deviceBottomSPs, deviceMiddleSPs, deviceTopSPs,
                           seeds);
 
+  // Iterate through seeds returned by the SYCL algorithm and perform the last
+  // step of filtering for fixed middle SP.
   std::vector<std::pair<
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       seedsPerSPM;

@@ -155,6 +155,9 @@ int materialValidationExample(int argc, char* argv[],
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
+  for (auto cdr : contextDecorators) {
+    sequencer.addContextDecorator(cdr);
+  }
 
   // Create the random number engine
   auto randomNumberSvcCfg = ActsExamples::Options::readRandomNumbersConfig(vm);

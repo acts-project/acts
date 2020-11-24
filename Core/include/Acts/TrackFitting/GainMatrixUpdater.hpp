@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,44 +11,32 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
-#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <memory>
-#include <variant>
-
 namespace Acts {
 
-/// @brief Update step of Kalman Filter using gain matrix formalism
+/// Kalman update step using the gain matrix formalism.
 class GainMatrixUpdater {
  public:
-  /// @brief Public call operator for the boost visitor pattern
+  /// Run the Kalman update step for a single trajectory state.
   ///
-  /// @tparam track_state_t Type of the track state for the update
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param trackState the measured track state
-  /// @param direction the navigation direction
-  ///
-  /// @return Bool indicating whether this update was 'successful'
-  /// @note Non-'successful' updates could be holes or outliers,
-  ///       which need to be treated differently in calling code.
-  template <typename track_state_t>
-  Result<void> operator()(const GeometryContext& /*gctx*/,
-                          track_state_t trackState,
-                          const NavigationDirection& direction = forward,
-                          LoggerWrapper logger = getDummyLogger()) const {
+  /// @tparam source_link_t The type of source link
+  /// @tparam kMeasurementSizeMax
+  /// @param[in] gctx The current geometry context object, e.g. alignment
+  /// @param[in,out] trackState The track state
+  /// @param[in] direction The navigation direction
+  /// @param[in] logger Where to write logging information to
+  template <typename source_link_t, size_t kMeasurementSizeMax>
+  Result<void> operator()(
+      const GeometryContext& /*gctx*/,
+      detail_lt::TrackStateProxy<source_link_t, kMeasurementSizeMax, false>&
+          trackState,
+      const NavigationDirection& direction = forward,
+      LoggerWrapper logger = getDummyLogger()) const {
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
-    // let's make sure the types are consistent
-    using SourceLink = typename track_state_t::SourceLink;
-    using TrackStateProxy =
-        typename MultiTrajectory<SourceLink>::TrackStateProxy;
-    static_assert(std::is_same_v<track_state_t, TrackStateProxy>,
-                  "Given track state type is not a track state proxy");
 
     // we should definitely have an uncalibrated measurement here
     assert(trackState.hasUncalibrated());
@@ -61,39 +49,42 @@ class GainMatrixUpdater {
 
     // read-only handles. Types are eigen maps to backing storage
     const auto predicted = trackState.predicted();
-    const auto predicted_covariance = trackState.predictedCovariance();
+    const auto predictedCovariance = trackState.predictedCovariance();
 
     ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
-    ACTS_VERBOSE("Predicted covariance:\n" << predicted_covariance);
+    ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
 
     // read-write handles. Types are eigen maps into backing storage.
     // This writes directly into the trajectory storage
     auto filtered = trackState.filtered();
-    auto filtered_covariance = trackState.filteredCovariance();
+    auto filteredCovariance = trackState.filteredCovariance();
 
-    std::optional<std::error_code> error{std::nullopt};  // assume ok
+    // default-constructed error represents success, i.e. an invalid error code
+    std::error_code error;
     visit_measurement(
         trackState.calibrated(), trackState.calibratedCovariance(),
         trackState.calibratedSize(),
-        [&](const auto calibrated, const auto calibrated_covariance) {
-          constexpr size_t measdim = decltype(calibrated)::RowsAtCompileTime;
-          using cov_t = ActsSymMatrixD<measdim>;
-          using par_t = ActsVectorD<measdim>;
+        [&](const auto calibrated, const auto calibratedCovariance) {
+          constexpr size_t kMeasurementSize =
+              decltype(calibrated)::RowsAtCompileTime;
+          using Scalar = typename decltype(calibrated)::Scalar;
+          using ParametersVector = ActsVector<Scalar, kMeasurementSize>;
+          using CovarianceMatrix = ActsSymMatrix<Scalar, kMeasurementSize>;
 
-          ACTS_VERBOSE("Measurement dimension: " << measdim);
+          ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
           ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());
           ACTS_VERBOSE("Calibrated measurement covariance:\n"
-                       << calibrated_covariance);
+                       << calibratedCovariance);
 
-          const ActsMatrixD<measdim, eBoundSize> H =
+          const ActsMatrix<Scalar, kMeasurementSize, eBoundSize> H =
               trackState.projector()
-                  .template topLeftCorner<measdim, eBoundSize>();
+                  .template topLeftCorner<kMeasurementSize, eBoundSize>();
 
           ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-          const ActsMatrixD<eBoundSize, measdim> K =
-              predicted_covariance * H.transpose() *
-              (H * predicted_covariance * H.transpose() + calibrated_covariance)
+          const ActsMatrix<Scalar, eBoundSize, kMeasurementSize> K =
+              predictedCovariance * H.transpose() *
+              (H * predictedCovariance * H.transpose() + calibratedCovariance)
                   .inverse();
 
           ACTS_VERBOSE("Gain Matrix K:\n" << K);
@@ -107,10 +98,10 @@ class GainMatrixUpdater {
           }
 
           filtered = predicted + K * (calibrated - H * predicted);
-          filtered_covariance =
-              (BoundSymMatrix::Identity() - K * H) * predicted_covariance;
+          filteredCovariance =
+              (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
           ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
-          ACTS_VERBOSE("Filtered covariance:\n" << filtered_covariance);
+          ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
 
           // calculate filtered residual
           //
@@ -119,13 +110,14 @@ class GainMatrixUpdater {
           //        EventDataView unit tests. Revisit this once Measurement
           //        overhead problems (Acts issue #350) are sorted out.
           //
-          par_t residual;
+          ParametersVector residual;
           residual = calibrated - H * filtered;
           ACTS_VERBOSE("Residual: " << residual.transpose());
 
           trackState.chi2() =
               (residual.transpose() *
-               ((cov_t::Identity() - H * K) * calibrated_covariance).inverse() *
+               ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance)
+                   .inverse() *
                residual)
                   .value();
 
@@ -133,13 +125,7 @@ class GainMatrixUpdater {
           return true;  // continue execution
         });
 
-    if (error) {
-      // error is set, return result
-      return *error;
-    }
-
-    // always succeed, no outlier logic yet
-    return Result<void>::success();
+    return error ? Result<void>::failure(error) : Result<void>::success();
   }
 };
 

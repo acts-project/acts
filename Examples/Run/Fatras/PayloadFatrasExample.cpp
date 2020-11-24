@@ -8,9 +8,8 @@
 
 #include "ActsExamples/ContextualDetector/PayloadDetector.hpp"
 
-#include "FatrasMain.hpp"
+#include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return ActsExamples::fatrasMain(argc, argv,
-                                  std::make_shared<PayloadDetector>());
+  return runFatras(argc, argv, std::make_shared<PayloadDetector>());
 }

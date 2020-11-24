@@ -40,7 +40,7 @@ using namespace Acts::UnitLiterals;
 /// dT/ds = q/p * (T x B)
 ///
 /// with s being the arc length of the track, q the charge of the particle,
-/// p its momentum and B the magnetic field
+/// p the momentum magnitude and B the magnetic field
 ///
 template <typename bfield_t,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
@@ -60,10 +60,11 @@ class EigenStepper {
   /// It contains the stepping information and is provided thread local
   /// by the propagator
   struct State {
-    /// Default constructor - deleted
     State() = delete;
 
-    /// Constructor from the initial track parameters
+    /// Constructor from the initial bound track parameters
+    ///
+    /// @tparam charge_t Type of the bound parameter charge
     ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
@@ -73,22 +74,24 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename parameters_t>
+    template <typename charge_t>
     explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
-                   const parameters_t& par, NavigationDirection ndir = forward,
+                   const SingleBoundTrackParameters<charge_t>& par,
+                   NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : pos(par.position(gctx)),
-          dir(par.unitDirection()),
-          p(par.absoluteMomentum()),
-          q(par.charge()),
-          t(par.time()),
+        : q(par.charge()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(mctx),
           geoContext(gctx) {
+      pars.template segment<3>(eFreePos0) = par.position(gctx);
+      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars[eFreeTime] = par.time();
+      pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -96,25 +99,20 @@ class EigenStepper {
         // set the covariance transport flag to true and copy
         covTransport = true;
         cov = BoundSymMatrix(*par.covariance());
-        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
-                                     par.parameters());
+        jacToGlobal = surface.jacobianLocalToGlobal(gctx, par.parameters());
       }
     }
 
-    /// Global particle position
-    Vector3D pos = Vector3D(0., 0., 0.);
+    /// Internal free vector parameters
+    FreeVector pars = FreeVector::Zero();
 
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1., 0., 0.);
-
-    /// Momentum
-    double p = 0.;
-
-    /// The charge
+    /// The charge as the free vector can be 1/p or q/p
     double q = 1.;
 
-    /// Propagated time
-    double t = 0.;
+    /// Covariance matrix (and indicator)
+    /// associated with the initial error on track parameters
+    bool covTransport = false;
+    Covariance cov = Covariance::Zero();
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -130,11 +128,6 @@ class EigenStepper {
 
     /// The propagation derivative
     FreeVector derivative = FreeVector::Zero();
-
-    /// Covariance matrix (and indicator)
-    //// associated with the initial error on track parameters
-    bool covTransport = false;
-    Covariance cov = Covariance::Zero();
 
     /// Accummulated path length state
     double pathAccumulated = 0.;
@@ -180,8 +173,8 @@ class EigenStepper {
   ///
   /// @param [in, out] state State of the stepper
   /// @param [in] boundParams Parameters in bound parametrisation
-  /// @param [in] freeParams Parameters in free parametrisation
   /// @param [in] cov Covariance matrix
+  /// @param [in] surface The reference surface of the bound parameters
   /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
@@ -203,17 +196,23 @@ class EigenStepper {
   /// Global particle position accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D position(const State& state) const { return state.pos; }
+  Vector3D position(const State& state) const {
+    return state.pars.template segment<3>(eFreePos0);
+  }
 
   /// Momentum direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  Vector3D direction(const State& state) const { return state.dir; }
+  Vector3D direction(const State& state) const {
+    return state.pars.template segment<3>(eFreeDir0);
+  }
 
-  /// Actual momentum accessor
+  /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return state.p; }
+  double momentum(const State& state) const {
+    return std::abs(state.q / state.pars[eFreeQOverP]);
+  }
 
   /// Charge access
   ///
@@ -223,7 +222,7 @@ class EigenStepper {
   /// Time access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double time(const State& state) const { return state.t; }
+  double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Update surface status
   ///
@@ -297,12 +296,14 @@ class EigenStepper {
   ///
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
+  /// @param [in] transportCov Flag steering covariance transport
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState boundState(State& state, const Surface& surface) const;
+  BoundState boundState(State& state, const Surface& surface,
+                        bool transportCov = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -310,12 +311,14 @@ class EigenStepper {
   /// to the current position and creates a curvilinear state.
   ///
   /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] transportCov Flag steering covariance transport
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState curvilinearState(State& state) const;
+  CurvilinearState curvilinearState(State& state,
+                                    bool transportCov = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///

@@ -7,9 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
+#include <iosfwd>
 
 namespace Acts {
 

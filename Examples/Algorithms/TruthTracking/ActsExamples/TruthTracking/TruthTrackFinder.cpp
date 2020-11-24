@@ -8,7 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 
-#include "ActsExamples/EventData/IndexContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -25,7 +25,7 @@ TruthTrackFinder::TruthTrackFinder(const Config& cfg, Acts::Logging::Level lvl)
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
-  if (m_cfg.inputHitParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing input hit-particles map collection");
   }
   if (m_cfg.outputProtoTracks.empty()) {
@@ -40,7 +40,7 @@ ProcessCode TruthTrackFinder::execute(const AlgorithmContext& ctx) const {
   const auto& particles =
       ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
   const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
+      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);

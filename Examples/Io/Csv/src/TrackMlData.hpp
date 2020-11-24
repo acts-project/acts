@@ -39,6 +39,34 @@ struct ParticleData {
                  vt, px, py, pz, m, q);
 };
 
+// Write out simhits before digitization (no hi_id associated)
+struct SimHitData {
+  /// Hit surface identifier. Not available in the TrackML datasets.
+  uint64_t geometry_id = 0u;
+  /// Event-unique particle identifier of the generating particle.
+  uint64_t particle_id;
+  /// True global hit position components in mm.
+  float tx, ty, tz;
+  // True global hit time in ns. Not available in the TrackML datasets.
+  float tt = 0.0f;
+  /// True particle momentum in GeV before interaction.
+  float tpx, tpy, tpz;
+  /// True particle energy in GeV before interaction.
+  /// Not available in the TrackML datasets.
+  float te = 0.0f;
+  /// True four-momentum change in GeV due to interaction.
+  /// Not available in the TrackML datasets.
+  float deltapx = 0.0f;
+  float deltapy = 0.0f;
+  float deltapz = 0.0f;
+  float deltae = 0.0f;
+  // Hit index along the trajectory. Not available in the TrackML datasets.
+  int32_t index = -1;
+
+  DFE_NAMEDTUPLE(SimHitData, particle_id, geometry_id, tx, ty, tz, tt, tpx, tpy,
+                 tpz, te, deltapx, deltapy, deltapz, deltae, index);
+};
+
 struct TruthHitData {
   /// Event-unique hit identifier. As defined for the simulated hit below and
   /// used to link back to it; same value can appear multiple times here due to

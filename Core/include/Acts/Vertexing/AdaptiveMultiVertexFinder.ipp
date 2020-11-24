@@ -165,14 +165,17 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                              const Vertex<InputTrack_t>& seedVertex) const
-    -> void {
+                              Vertex<InputTrack_t>& seedVertex) const -> void {
   if (m_cfg.useBeamSpotConstraint) {
     if (currentConstraint.fullCovariance() == SymMatrix4D::Zero()) {
       ACTS_WARNING(
           "No constraint provided, but useBeamSpotConstraint set to true.");
     }
-    if (m_cfg.useSeedConstraint) {
+    if (not m_cfg.useSeedConstraint) {
+      // Set seed vertex constraint to old constraint before seeding
+      seedVertex.setFullCovariance(currentConstraint.fullCovariance());
+    } else {
+      // Use the constraint provided by the seed finder
       currentConstraint.setFullPosition(seedVertex.fullPosition());
       currentConstraint.setFullCovariance(seedVertex.fullCovariance());
     }
@@ -549,6 +552,13 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::deleteLastVertex(
 
   // Update fitter state with removed vertex candidate
   fitterState.removeVertexFromMultiMap(vtx);
+
+  for (auto& entry : fitterState.tracksAtVerticesMap) {
+    // Delete all linearized tracks for current (bad) vertex
+    if (entry.first.second == &vtx) {
+      entry.second.isLinearized = false;
+    }
+  }
 
   // Do the fit with removed vertex
   auto fitResult = m_cfg.vertexFitter.addVtxToFit(

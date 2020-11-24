@@ -158,11 +158,14 @@ class CylinderSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
   /// @param momentum is the global momentum (ignored in this operation)
+  /// @param tolerance optional tolerance within which a point is considered
+  /// valid on surface
   ///
   /// @return a Result<Vector2D> which can be !ok() if the operation fails
-  Result<Vector2D> globalToLocal(const GeometryContext& gctx,
-                                 const Vector3D& position,
-                                 const Vector3D& momentum) const final;
+  Result<Vector2D> globalToLocal(
+      const GeometryContext& gctx, const Vector3D& position,
+      const Vector3D& momentum,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
   ///
@@ -202,6 +205,18 @@ class CylinderSurface : public Surface {
   /// @return A list of vertices and a face/facett description of it
   Polyhedron polyhedronRepresentation(const GeometryContext& gctx,
                                       size_t lseg) const override;
+
+  /// Calculate the derivative of path length at the geometry constraint or
+  /// point-of-closest-approach w.r.t. alignment parameters of the surface (i.e.
+  /// local frame origin in global 3D Cartesian coordinates and its rotation
+  /// represented with extrinsic Euler angles)
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param parameters is the free parameters
+  ///
+  /// @return Derivative of path length w.r.t. the alignment parameters
+  AlignmentRowVector alignmentToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.
   /// position in local 3D Cartesian coordinates

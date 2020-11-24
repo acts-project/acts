@@ -9,24 +9,27 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
-#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include <algorithm>
 #include <array>
 #include <limits>
+#include <memory>
+#include <ostream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
-class TrackingVolume;
-class VolumeBounds;
 class IVolumeMaterial;
 class ISurfaceMaterial;
+class ILayerBuilder;
+class IConfinedTrackingVolumeBuilder;
 
 /// @enum WrappingCondition
 enum WrappingCondition {

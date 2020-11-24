@@ -143,7 +143,8 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    BoundState boundState(State& state, const Surface& surface) const {
+    BoundState boundState(State& state, const Surface& surface, bool /*unused*/
+                          ) const {
       BoundTrackParameters parameters(surface.getSharedPtr(), tgContext,
                                       state.pos4, state.dir, state.p, state.q);
       BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -151,7 +152,8 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state) const {
+    CurvilinearState curvilinearState(State& state, bool /*unused*/
+                                      ) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
       // Create the bound state

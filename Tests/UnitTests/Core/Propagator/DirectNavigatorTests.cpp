@@ -135,7 +135,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
     // Set the surface sequence
     auto& dInitializer =
         dOptions.actionList.get<DirectNavigator::Initializer>();
-    dInitializer.surfaceSequence = surfaceSequence;
+    dInitializer.navSurfaces = surfaceSequence;
     // Surface collector configuration
     auto& dCollector = dOptions.actionList.template get<SurfaceCollector<>>();
     dCollector.selector.selectSensitive = true;

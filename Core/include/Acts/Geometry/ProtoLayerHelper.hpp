@@ -11,11 +11,15 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+
+class Surface;
 
 /// @class ProtoLayerHelper
 ///

@@ -25,6 +25,8 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 # plugins related options
+option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
+option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff library provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DIGITIZATION "Build Digitization plugin" OFF)
@@ -90,6 +92,7 @@ set_option_if(
   ACTS_BUILD_FATRAS
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
@@ -108,6 +111,15 @@ find_package(Boost 1.69 MODULE REQUIRED COMPONENTS filesystem program_options un
 find_package(Eigen3 3.2.9 CONFIG REQUIRED)
 # NOTE we use boost::filesystem instead of std::filesystem since the later
 #   is not uniformly supported even on compilers that nominally support C++17 
+
+# Helper macro that overrides the project function in subdirectories, so 
+# we can intercept and store their versions. This is used to lock them down
+# in an installation later on.
+cmake_policy(SET CMP0048 NEW)    
+macro(project)
+    _project(${ARGN})
+    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION}" CACHE INTERNAL "")
+endmacro()
 
 # optional packages
 #
@@ -139,6 +151,17 @@ if(ACTS_BUILD_PLUGIN_JSON)
     message(STATUS "Using bundled nlohmann::json")
     set(JSON_BuildTests OFF CACHE INTERNAL "")
     add_subdirectory(thirdparty/nlohmann_json)
+  endif()
+endif()
+if(ACTS_BUILD_PLUGIN_AUTODIFF)
+  set(autodiff_VERSION 0.5.11 CACHE INTERNAL "")
+  if(ACTS_USE_SYSTEM_AUTODIFF)
+    find_package(autodiff ${autodiff_VERSION} CONFIG REQUIRED)
+    message(STATUS "Using system installation of autodiff")
+  else()
+    add_subdirectory(thirdparty/autodiff)
+    add_library(autodiff::autodiff ALIAS autodiff)
+    message(STATUS "Using bundled autodiff")
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)

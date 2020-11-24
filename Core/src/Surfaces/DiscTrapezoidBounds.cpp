@@ -18,6 +18,8 @@ Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
                                                double stereo) noexcept(false)
     : m_values({halfXminR, halfXmaxR, minR, maxR, avgPhi, stereo}) {
   checkConsistency();
+  m_ymax = std::sqrt(get(eMaxR) * get(eMaxR) -
+                     get(eHalfLengthXmaxR) * get(eHalfLengthXmaxR));
 }
 
 Acts::SurfaceBounds::BoundsType Acts::DiscTrapezoidBounds::type() const {
@@ -47,8 +49,8 @@ Acts::ActsMatrixD<2, 2> Acts::DiscTrapezoidBounds::jacobianToLocalCartesian(
 bool Acts::DiscTrapezoidBounds::inside(
     const Acts::Vector2D& lposition, const Acts::BoundaryCheck& bcheck) const {
   Vector2D vertices[] = {{get(eHalfLengthXminR), get(eMinR)},
-                         {get(eHalfLengthXmaxR), get(eMaxR)},
-                         {-get(eHalfLengthXmaxR), get(eMaxR)},
+                         {get(eHalfLengthXmaxR), m_ymax},
+                         {-get(eHalfLengthXmaxR), m_ymax},
                          {-get(eHalfLengthXminR), get(eMinR)}};
   auto jacobian = jacobianToLocalCartesian(lposition);
   return bcheck.transformed(jacobian).isInside(toLocalCartesian(lposition),
@@ -61,8 +63,8 @@ std::vector<Acts::Vector2D> Acts::DiscTrapezoidBounds::vertices(
   Vector2D nAxis(cAxis.y(), -cAxis.x());
   return {get(eMinR) * cAxis - get(eHalfLengthXminR) * nAxis,
           get(eMinR) * cAxis + get(eHalfLengthXminR) * nAxis,
-          get(eMaxR) * cAxis + get(eHalfLengthXmaxR) * nAxis,
-          get(eMaxR) * cAxis - get(eHalfLengthXmaxR) * nAxis};
+          m_ymax * cAxis + get(eHalfLengthXmaxR) * nAxis,
+          m_ymax * cAxis - get(eHalfLengthXmaxR) * nAxis};
 }
 
 // ostream operator overload

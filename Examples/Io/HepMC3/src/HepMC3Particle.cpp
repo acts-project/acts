@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Plugins/HepMC3/HepMC3Particle.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
-#include "ActsExamples/Plugins/HepMC3/HepMC3Vertex.hpp"
+#include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
 
-std::unique_ptr<ActsExamples::SimParticle>
-ActsExamples::HepMC3Particle::particle(
-    const std::shared_ptr<HepMC3::GenParticle> particle) {
+ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
+    HepMC3::ConstGenParticlePtr particle) {
   // TODO this is probably not quite right
   ActsFatras::Barcode particleId;
   particleId.setParticle(particle->id());
@@ -21,7 +20,7 @@ ActsExamples::HepMC3Particle::particle(
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsMomentum(particle->momentum().p3mod());
-  return std::make_unique<SimParticle>(std::move(fw));
+  return fw;
 }
 
 int ActsExamples::HepMC3Particle::id(
@@ -32,11 +31,9 @@ int ActsExamples::HepMC3Particle::id(
 std::unique_ptr<ActsExamples::SimVertex>
 ActsExamples::HepMC3Particle::productionVertex(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
-  HepMC3Vertex simVert;
-
   // Return the vertex if it exists
   if (particle->production_vertex())
-    return simVert.processVertex(
+    return HepMC3Vertex::processVertex(
         std::make_shared<HepMC3::GenVertex>(*particle->production_vertex()));
   else
     return nullptr;
@@ -45,11 +42,9 @@ ActsExamples::HepMC3Particle::productionVertex(
 std::unique_ptr<ActsExamples::SimVertex>
 ActsExamples::HepMC3Particle::endVertex(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
-  HepMC3Vertex simVert;
-
   // Return the vertex if it exists
   if (particle->end_vertex())
-    return simVert.processVertex(
+    return HepMC3Vertex::processVertex(
         std::make_shared<HepMC3::GenVertex>(*(particle->end_vertex())));
   else
     return nullptr;

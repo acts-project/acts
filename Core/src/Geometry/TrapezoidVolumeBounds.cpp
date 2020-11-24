@@ -8,9 +8,10 @@
 
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
-#include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 

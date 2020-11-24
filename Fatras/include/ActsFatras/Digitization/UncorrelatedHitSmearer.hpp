@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/detail/ParametersSmearer.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 
@@ -22,10 +23,14 @@
 namespace ActsFatras {
 
 /// Smearing functions definition:
+///
+/// @tparam generator_t The type of the random generator.
+///
 /// - it takes the unsmeared parameter
 /// - it returns the smeared parameter and a covariance
-using SmearFunction =
-    std::function<Acts::Result<std::pair<double, double>>(double)>;
+template <typename generator_t>
+using SmearFunction = std::function<Acts::Result<std::pair<double, double>>(
+    double, generator_t&)>;
 
 /// Smearing input to be used by the smearers
 /// - this struct helps to harmonize the interface between
@@ -35,14 +40,14 @@ struct SmearInput {
   /// the  and optionally the @param surface_
   SmearInput(std::reference_wrapper<const Hit> hit_,
              std::reference_wrapper<const Acts::GeometryContext> geoContext_,
-             std::shared_ptr<const Acts::Surface> surface_ = nullptr)
+             const Acts::Surface* surface_ = nullptr)
       : hit(hit_), geoContext(geoContext_), surface(surface_) {}
 
   SmearInput() = delete;
 
   std::reference_wrapper<const Hit> hit;
   std::reference_wrapper<const Acts::GeometryContext> geoContext;
-  std::shared_ptr<const Acts::Surface> surface = nullptr;
+  const Acts::Surface* surface = nullptr;
 };
 
 /// Parameter smearer for fast digitisation for bound parameters
@@ -56,29 +61,32 @@ struct SmearInput {
 ///
 template <Acts::BoundIndices... kParameters>
 struct BoundParametersSmearer {
+  using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
+
   /// Generic implementation of a smearing meathod for bound parameters
   ///
+  /// @tparam generator_t The type of the random generator provided
   /// @tparam kParameters parameter pack describing the parameters to smear
   ///
   /// @param sInput The smearing input struct: surface and simulated hit
+  /// @param sRandom The smearing random number gnerator
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @return Smeared bound parameter set wrapped in a Result<...> object
+  template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::BoundIndices, kParameters...>>
-  operator()(const SmearInput& sInput,
-             const std::array<SmearFunction, sizeof...(kParameters)>&
-                 sFunctions) const {
-    using ParSet = Acts::ParameterSet<Acts::BoundIndices, kParameters...>;
+  operator()(const SmearInput& sInput, generator_t& sRandom,
+             const std::array<SmearFunction<generator_t>,
+                              sizeof...(kParameters)>& sFunctions) const {
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
         detail::ParametersSmearer<Acts::BoundIndices, kParameters...>;
 
     if (sInput.surface == nullptr) {
-      return Result(ActsFatras::DigitizationError::NoSurfaceDefined);
+      return Result(ActsFatras::DigitizationError::UndefinedSurface);
     }
 
     const auto& hit = sInput.hit.get();
-
     auto dir = hit.unitDirection();
     auto gltResult =
         sInput.surface->globalToLocal(sInput.geoContext, hit.position(), dir);
@@ -100,7 +108,7 @@ struct BoundParametersSmearer {
     sCovariance.setZero();
 
     auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sFunctions);
+        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
     if (not smearResult.ok()) {
       return Result(smearResult.error());
     }
@@ -115,17 +123,22 @@ template <Acts::FreeIndices... kParameters>
 struct FreeParametersSmearer {
   /// Smearing function
   ///
+  /// @tparam random_gnerator_t The type of the random generator provided
+  /// @tparam kParameters parameter pack describing the parameters to smear
+  ///
   /// @param sInput The smearing input struct with the simulated hit
+  /// @param sRandom The smearing random number gnerator
   /// @param sFunctions The smearing functions that are applied
   ///
   /// @note uncorrelated smearing of the direction using the components
   ///       is not recommended
   ///
   /// @return Smeared free parameter set wrapped in a Result<...> object
+  template <typename generator_t>
   Acts::Result<Acts::ParameterSet<Acts::FreeIndices, kParameters...>>
-  operator()(const SmearInput& sInput,
-             const std::array<SmearFunction, sizeof...(kParameters)>&
-                 sFunctions) const {
+  operator()(const SmearInput& sInput, generator_t& sRandom,
+             const std::array<SmearFunction<generator_t>,
+                              sizeof...(kParameters)>& sFunctions) const {
     using ParSet = Acts::ParameterSet<Acts::FreeIndices, kParameters...>;
     using Result = Acts::Result<ParSet>;
     using ParametersSmearer =
@@ -143,7 +156,7 @@ struct FreeParametersSmearer {
     sCovariance.setZero();
 
     auto smearResult =
-        ParametersSmearer::run(sParameters, sCovariance, sFunctions);
+        ParametersSmearer::run(sParameters, sCovariance, sRandom, sFunctions);
     if (not smearResult.ok()) {
       return Result(smearResult.error());
     }

@@ -7,16 +7,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 #include <algorithm>
+#include <memory>
 
 namespace Acts {
-
-class ConeBounds;
-class ApproachDescriptor;
 
 /// @class ConeLayer
 ///

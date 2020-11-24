@@ -14,7 +14,6 @@
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimIdentifier.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -32,7 +31,7 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
       m_cfg(cfg),
       m_outputFile(cfg.rootFile) {
   // inputClusters is already checked by base constructor
-  if (m_cfg.inputSimulatedHits.empty()) {
+  if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
   if (m_cfg.treeName.empty()) {
@@ -89,8 +88,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
-  ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                        << m_cfg.filePath << "'");
+  ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
+                                       << m_cfg.filePath << "'");
   return ProcessCode::SUCCESS;
 }
 
@@ -99,8 +98,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);

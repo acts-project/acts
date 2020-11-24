@@ -6,10 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// TrackingVolumeArrayCreator.cpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 
 #include "Acts/Geometry/GeometryObjectSorter.hpp"
@@ -18,6 +14,9 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
+#include <algorithm>
+#include <vector>
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
 Acts::TrackingVolumeArrayCreator::trackingVolumeArray(

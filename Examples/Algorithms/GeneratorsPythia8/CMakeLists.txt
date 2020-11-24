@@ -10,9 +10,8 @@ target_link_libraries(
   PUBLIC
     ActsCore
     ActsExamplesFramework ActsExamplesGenerators
-    Boost::program_options
   PRIVATE
-    Pythia8)
+    Boost::program_options Pythia8)
 
 install(
   TARGETS ActsExamplesGeneratorsPythia8

@@ -12,6 +12,8 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <iosfwd>
+
 namespace Acts {
 
 /// @class HomogeneousVolumeMaterial
@@ -20,9 +22,6 @@ namespace Acts {
 /// homogeneous material in a volume
 class HomogeneousVolumeMaterial : public IVolumeMaterial {
  public:
-  /// Default Constructor - defaulted
-  HomogeneousVolumeMaterial() = default;
-
   /// Explicit constructor
   ///
   /// @param material is the material held by this

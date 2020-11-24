@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <memory>
 #include <vector>
 
 namespace Acts {

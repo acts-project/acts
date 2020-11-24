@@ -40,53 +40,51 @@
 
 namespace Acts {
 
-/// @brief Options struct how the Fitter is called
+/// Combined options for the Kalman fitter.
 ///
-/// It contains the context of the fitter call, the outlier finder, the
-/// optional surface where to express the fit result and configurations for
-/// material effects and smoothing options
-///
-///
-/// @note the context objects must be provided
-template <typename outlier_finder_t = VoidOutlierFinder>
+/// @tparam calibrator_t Source link type, should be semiregular.
+/// @tparam outlier_finder_t Outlier finder type, shoule be semiregular.
+template <typename calibrator_t, typename outlier_finder_t>
 struct KalmanFitterOptions {
-  // Broadcast the outlier finder type
+  using Calibrator = calibrator_t;
   using OutlierFinder = outlier_finder_t;
 
-  /// Deleted default constructor
-  KalmanFitterOptions() = delete;
-
-  /// PropagatorOptions with context
+  /// PropagatorOptions with context.
   ///
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
+  /// @param calibrator_t The source link calibrator
   /// @param outlierFinder_ The outlier finder
   /// @param logger_ The logger wrapper
   /// @param pOPtions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
-  /// @param bwdFiltering Whether to run backward filtering as smoothing
+  /// @param rFiltering Whether to run filtering in reversed direction as
+  /// smoothing
   KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       std::reference_wrapper<const MagneticFieldContext> mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
-                      const OutlierFinder& outlierFinder_,
+                      Calibrator calibrator_, OutlierFinder outlierFinder_,
                       LoggerWrapper logger_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
-                      bool bwdFiltering = false)
+                      bool rFiltering = false)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        outlierFinder(outlierFinder_),
+        calibrator(std::move(calibrator_)),
+        outlierFinder(std::move(outlierFinder_)),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
-        backwardFiltering(bwdFiltering),
+        reversedFiltering(rFiltering),
         logger(logger_) {}
+  /// Contexts are required and the options must not be default-constructible.
+  KalmanFitterOptions() = delete;
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
@@ -95,7 +93,10 @@ struct KalmanFitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  /// The config for the outlier finder
+  /// The source link calibrator.
+  Calibrator calibrator;
+
+  /// The outlier finder.
   OutlierFinder outlierFinder;
 
   /// The trivial propagator options
@@ -110,8 +111,8 @@ struct KalmanFitterOptions {
   /// Whether to consider energy loss
   bool energyLoss = true;
 
-  /// Whether to run backward filtering
-  bool backwardFiltering = false;
+  /// Whether to run filtering in reversed direction
+  bool reversedFiltering = false;
 
   /// Logger
   LoggerWrapper logger;
@@ -142,14 +143,14 @@ struct KalmanFitterResult {
   // Indicator if the propagation state has been reset
   bool reset = false;
 
+  // Indicator if navigation direction has been reversed
+  bool reversed = false;
+
   // Indicator if track fitting has been done
   bool finished = false;
 
   // Measurement surfaces without hits
   std::vector<const Surface*> missedActiveSurfaces;
-
-  // Indicator if forward filtering has been done
-  bool forwardFiltered = false;
 
   // Measurement surfaces handled in both forward and backward filtering
   std::vector<const Surface*> passedAgainSurfaces;
@@ -157,15 +158,11 @@ struct KalmanFitterResult {
   Result<void> result{Result<void>::success()};
 };
 
-/// @brief Kalman fitter implementation of Acts as a plugin
-///
-/// to the Propgator
+/// Kalman fitter implementation.
 ///
 /// @tparam propagator_t Type of the propagation class
 /// @tparam updater_t Type of the kalman updater class
 /// @tparam smoother_t Type of the kalman smoother class
-/// @tparam outlier_finder_t Type of the outlier finder class
-/// @tparam calibrator_t Type of the calibrator class
 ///
 /// The Kalman filter contains an Actor and a Sequencer sub-class.
 /// The Sequencer has to be part of the Navigator of the Propagator
@@ -176,12 +173,7 @@ struct KalmanFitterResult {
 /// given to the Actor for further use:
 /// - The Updater is the implemented kalman updater formalism, it
 ///   runs via a visitor pattern through the measurements.
-/// - The Smoother is called at the end of the forward fit by the Actor.
-/// - The outlier finder is called during the filtering by the Actor.
-///   It determines if the measurement is an outlier
-/// - The Calibrator is a dedicated calibration algorithm that allows
-///   to calibrate measurements using track information, this could be
-///    e.g. sagging for wires, module deformations, etc.
+/// - The Smoother is called at the end of the filtering by the Actor.
 ///
 /// Measurements are not required to be ordered for the KalmanFilter,
 /// measurement ordering needs to be figured out by the navigation of
@@ -189,13 +181,8 @@ struct KalmanFitterResult {
 ///
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updater_t = VoidKalmanUpdater,
-          typename smoother_t = VoidKalmanSmoother,
-          typename outlier_finder_t = VoidOutlierFinder,
-          typename calibrator_t = VoidMeasurementCalibrator>
+          typename smoother_t = VoidKalmanSmoother>
 class KalmanFitter {
- public:
-  /// Shorthand definition
-  using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
   /// The navigator type
   using KalmanNavigator = typename propagator_t::Navigator;
 
@@ -203,10 +190,7 @@ class KalmanFitter {
   static constexpr bool isDirectNavigator =
       std::is_same<KalmanNavigator, DirectNavigator>::value;
 
-  /// Default constructor is deleted
-  KalmanFitter() = delete;
-
-  /// Constructor from arguments
+ public:
   KalmanFitter(propagator_t pPropagator)
       : m_propagator(std::move(pPropagator)) {}
 
@@ -218,10 +202,13 @@ class KalmanFitter {
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam calibrator_t The type of calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder class
   ///
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
-  template <typename source_link_t, typename parameters_t>
+  template <typename source_link_t, typename parameters_t,
+            typename calibrator_t, typename outlier_finder_t>
   class Actor {
    public:
     /// Broadcast the result_type
@@ -231,7 +218,7 @@ class KalmanFitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    std::map<const Surface*, source_link_t> inputMeasurements;
+    std::map<GeometryIdentifier, source_link_t> inputMeasurements;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -239,8 +226,8 @@ class KalmanFitter {
     /// Whether to consider energy loss.
     bool energyLoss = true;
 
-    /// Whether run smoothing as backward filtering
-    bool backwardFiltering = false;
+    /// Whether run reversed filtering
+    bool reversedFiltering = false;
 
     /// @brief Kalman actor operation
     ///
@@ -263,47 +250,51 @@ class KalmanFitter {
 
       // This following is added due to the fact that the navigation
       // reinitialization in reverse call cannot guarantee the navigator to
-      // target for extra layers in the backward-propagation starting volume.
+      // target for extra layers in the reversed-propagation starting volume.
       // Currently, manually set navigation stage to allow for targeting layers
-      // after all the surfaces on the backward-propagation starting layer has
+      // after all the surfaces on the reversed-propagation starting layer has
       // been processed. Otherwise, the navigation stage will be
       // Stage::boundaryTarget after navigator status call which means the extra
-      // layers on the backward-propagation starting volume won't be targeted.
+      // layers on the reversed-propagation starting volume won't be targeted.
       // @Todo: Let the navigator do all the re-initialization
-      if (result.reset and state.navigation.navSurfaceIter ==
-                               state.navigation.navSurfaces.end()) {
-        // So the navigator target call will target layers
-        state.navigation.navigationStage = KalmanNavigator::Stage::layerTarget;
-        // We only do this after the backward-propagation starting layer has
-        // been processed
-        result.reset = false;
+      if constexpr (not isDirectNavigator) {
+        if (result.reset and state.navigation.navSurfaceIter ==
+                                 state.navigation.navSurfaces.end()) {
+          // So the navigator target call will target layers
+          state.navigation.navigationStage =
+              KalmanNavigator::Stage::layerTarget;
+          // We only do this after the backward-propagation
+          // starting layer has been processed
+          result.reset = false;
+        }
       }
 
       // Update:
       // - Waiting for a current surface
       auto surface = state.navigation.currentSurface;
+      std::string direction =
+          (state.stepping.navDir == forward) ? "forward" : "backward";
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
+        // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
-        // -> Check outlier behavior
-        // -> Fill strack state information & update stepper information if
-        // non-outlier
-        if (state.stepping.navDir == forward and not result.smoothed and
-            not result.forwardFiltered) {
-          ACTS_VERBOSE("Perform forward filter step");
+        // -> Fill strack state information & update stepper information
+
+        if (not result.smoothed and not result.reversed) {
+          ACTS_VERBOSE("Perform " << direction << " filter step");
           auto res = filter(surface, state, stepper, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in forward filter: " << res.error());
+            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
           }
-        } else if (state.stepping.navDir == backward and
-                   result.forwardFiltered) {
-          ACTS_VERBOSE("Perform backward filter step");
-          auto res = backwardFilter(surface, state, stepper, result);
+        }
+        if (result.reversed) {
+          ACTS_VERBOSE("Perform " << direction << " filter step");
+          auto res = reversedFilter(surface, state, stepper, result);
           if (!res.ok()) {
-            ACTS_ERROR("Error in backward filter: " << res.error());
+            ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
           }
         }
@@ -311,21 +302,19 @@ class KalmanFitter {
 
       // Finalization:
       // when all track states have been handled or the navigation is breaked,
-      // reset navigation&stepping before run backward filtering or
+      // reset navigation&stepping before run reversed filtering or
       // proceed to run smoothing
-      if (state.stepping.navDir == forward) {
+      if (not result.smoothed and not result.reversed) {
         if (result.measurementStates == inputMeasurements.size() or
             (result.measurementStates > 0 and
              state.navigation.navigationBreak)) {
-          if (backwardFiltering and not result.forwardFiltered) {
-            ACTS_VERBOSE("Forward filtering done");
-            result.forwardFiltered = true;
-            // Start to run backward filtering:
+          if (reversedFiltering) {
+            // Start to run reversed filtering:
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
             ACTS_VERBOSE("Reverse navigation direction.");
             reverse(state, stepper, result);
-          } else if (not result.smoothed) {
+          } else {
             // --> Search the starting state to run the smoothing
             // --> Call the smoothing
             // --> Set a stop condition when all track states have been
@@ -343,14 +332,14 @@ class KalmanFitter {
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed or state.stepping.navDir == backward) {
+      if (result.smoothed or result.reversed) {
         if (targetSurface == nullptr) {
           // If no target surface provided:
-          // -> Return an error when using backward filtering mode
+          // -> Return an error when using reversed filtering mode
           // -> Fitting is finished here
-          if (backwardFiltering) {
+          if (reversedFiltering) {
             ACTS_ERROR(
-                "The target surface needed for aborting backward propagation "
+                "The target surface needed for aborting reversed propagation "
                 "is not provided");
             result.result =
                 Result<void>(KalmanFitterError::BackwardUpdateFailed);
@@ -368,8 +357,8 @@ class KalmanFitter {
           // Assign the fitted parameters
           result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
 
-          // Reset smoothed status of states missed in backward filtering
-          if (backwardFiltering) {
+          // Reset smoothed status of states missed in reversed filtering
+          if (reversedFiltering) {
             result.fittedStates.applyBackwards(
                 result.trackTip, [&](auto trackState) {
                   auto fSurface = &trackState.referenceSurface();
@@ -378,7 +367,7 @@ class KalmanFitter {
                       result.passedAgainSurfaces.end(),
                       [=](const Surface* s) { return s == fSurface; });
                   if (surface_it == result.passedAgainSurfaces.end()) {
-                    // If backward filtering missed this surface, then there is
+                    // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.data().ismoothed =
                         detail_lt::IndexData::kInvalid;
@@ -402,13 +391,21 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void reverse(propagator_state_t& state, stepper_t& stepper,
                  result_type& result) const {
-      // Remember the navigation direciton has been reserved
+      // Remember the navigation direciton has been reversed
+      result.reversed = true;
+      // The reset is used for resetting the navigation
       result.reset = true;
 
+      // Reverse navigation direction
+      state.stepping.navDir =
+          (state.stepping.navDir == forward) ? backward : forward;
+
       // Reset propagator options
-      state.options.maxStepSize = -1.0 * state.options.maxStepSize;
+      state.options.maxStepSize =
+          state.stepping.navDir * std::abs(state.options.maxStepSize);
       // Not sure if reset of pathLimit during propagation makes any sense
-      state.options.pathLimit = -1.0 * state.options.pathLimit;
+      state.options.pathLimit =
+          state.stepping.navDir * std::abs(state.options.pathLimit);
 
       // Reset stepping&navigation state using last measurement track state on
       // sensitive surface
@@ -430,14 +427,14 @@ class KalmanFitter {
           // Update the stepping state
           stepper.resetState(state.stepping, st.filtered(),
                              st.filteredCovariance(), st.referenceSurface(),
-                             backward, state.options.maxStepSize);
+                             state.stepping.navDir, state.options.maxStepSize);
 
           // For the last measurement state, smoothed is filtered
           st.smoothed() = st.filtered();
           st.smoothedCovariance() = st.filteredCovariance();
           result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
-          // Update material effects for last measurement state in backward
+          // Update material effects for last measurement state in reversed
           // direction
           materialInteractor(state.navigation.currentSurface, state, stepper);
 
@@ -461,18 +458,21 @@ class KalmanFitter {
                         const stepper_t& stepper, result_type& result) const {
       const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface);
+      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                             << " detected.");
 
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
+        // Transport the covariance to the surface
+        stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
+
+        // Bind the transported state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, false);
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
@@ -513,8 +513,8 @@ class KalmanFitter {
         // an outlier
         if (not m_outlierFinder(trackStateProxy)) {
           // Run Kalman update
-          auto updateRes =
-              m_updater(state.geoContext, trackStateProxy, forward);
+          auto updateRes = m_updater(state.geoContext, trackStateProxy,
+                                     state.stepping.navDir, logger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -617,7 +617,7 @@ class KalmanFitter {
       return Result<void>::success();
     }
 
-    /// @brief Kalman actor operation : backward update
+    /// @brief Kalman actor operation : update in reversed direction
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
@@ -627,33 +627,35 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    Result<void> backwardFilter(const Surface* surface,
+    Result<void> reversedFilter(const Surface* surface,
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
                                 result_type& result) const {
       const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface);
+      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
       if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         ACTS_VERBOSE("Measurement surface "
                      << surface->geometryId()
-                     << " detected in backward propagation.");
+                     << " detected in reversed propagation.");
 
-        // No backward filtering for last measurement state, but still update
+        // No reversed filtering for last measurement state, but still update
         // with material effects
-        if (state.stepping.navDir == backward and
-            surface == state.navigation.startSurface) {
+        if (result.reversed and surface == state.navigation.startSurface) {
           materialInteractor(surface, state, stepper);
           return Result<void>::success();
         }
 
-        // Transport & bind the state to the current surface
-        auto [boundParams, jacobian, pathLength] =
-            stepper.boundState(state.stepping, *surface);
+        // Transport the covariance to the surface
+        stepper.covarianceTransport(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
         materialInteractor(surface, state, stepper, preUpdate);
+
+        // Bind the transported state to the current surface
+        auto [boundParams, jacobian, pathLength] =
+            stepper.boundState(state.stepping, *surface, false);
 
         // Create a detached track state proxy
         auto tempTrackTip =
@@ -682,8 +684,8 @@ class KalmanFitter {
                          trackStateProxy.predicted()));
 
         // If the update is successful, set covariance and
-        auto updateRes =
-            m_updater(state.geoContext, trackStateProxy, backward, logger);
+        auto updateRes = m_updater(state.geoContext, trackStateProxy,
+                                   state.stepping.navDir, logger);
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -723,13 +725,13 @@ class KalmanFitter {
         // Transport covariance
         if (surface->associatedDetectorElement() != nullptr) {
           ACTS_VERBOSE("Detected hole on " << surface->geometryId()
-                                           << " in backward filtering");
+                                           << " in reversed filtering");
           if (state.stepping.covTransport) {
             stepper.covarianceTransport(state.stepping, *surface);
           }
         } else {
           ACTS_VERBOSE("Detected in-sensitive surface "
-                       << surface->geometryId() << " in backward filtering");
+                       << surface->geometryId() << " in reversed filtering");
           if (state.stepping.covTransport) {
             stepper.covarianceTransport(state.stepping);
           }
@@ -855,22 +857,75 @@ class KalmanFitter {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
       }
-      // Obtain the smoothed parameters at first measurement state
-      auto firstMeasurement =
-          result.fittedStates.getTrackState(measurementIndices.back());
 
-      // Update the stepping parameters - in order to progress to destination
+      // Return in case no target surface
+      if (targetSurface == nullptr) {
+        return Result<void>::success();
+      }
+
+      // Obtain the smoothed parameters at first/last measurement state
+      auto firstCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.back());
+      auto lastCreatedMeasurement =
+          result.fittedStates.getTrackState(measurementIndices.front());
+
+      // Lambda to get the intersection of the free params on the target surface
+      auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
+        return targetSurface->intersect(
+            state.geoContext, freeVector.segment<3>(eFreePos0),
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+      };
+
+      // The smoothed free params at the first/last measurement state
+      auto firstParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, firstCreatedMeasurement);
+      auto lastParams = MultiTrajectoryHelpers::freeSmoothed(
+          state.options.geoContext, lastCreatedMeasurement);
+      // Get the intersections of the smoothed free parameters with the target
+      // surface
+      const auto firstIntersection = target(firstParams);
+      const auto lastIntersection = target(lastParams);
+
+      // Update the stepping parameters - in order to progress to destination.
+      // At the same time, reverse navigation direction for further
+      // stepping if necessary.
+      // @note The stepping parameters is updated to the smoothed parameters at
+      // either the first measurement state or the last measurement state. It
+      // assumes the target surface is not within the first and the last
+      // smoothed measurement state. Also, whether the intersection is on
+      // surface is not checked here.
+      bool reverseDirection = false;
+      bool closerToFirstCreatedMeasurement =
+          (std::abs(firstIntersection.intersection.pathLength) <=
+           std::abs(lastIntersection.intersection.pathLength));
+      if (closerToFirstCreatedMeasurement) {
+        stepper.update(state.stepping, firstParams,
+                       firstCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (firstIntersection.intersection.pathLength < 0);
+      } else {
+        stepper.update(state.stepping, lastParams,
+                       lastCreatedMeasurement.smoothedCovariance());
+        reverseDirection = (lastIntersection.intersection.pathLength < 0);
+      }
+      const auto& surface = closerToFirstCreatedMeasurement
+                                ? firstCreatedMeasurement.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
       ACTS_VERBOSE(
-          "Smoothing successful, updating stepping state, "
-          "set target surface.");
-      stepper.update(state.stepping,
-                     MultiTrajectoryHelpers::freeSmoothed(
-                         state.options.geoContext, firstMeasurement),
-                     firstMeasurement.smoothedCovariance());
-      // Reverse the propagation direction
-      state.stepping.stepSize =
-          ConstrainedStep(-1. * state.options.maxStepSize);
-      state.stepping.navDir = backward;
+          "Smoothing successful, updating stepping state to smoothed "
+          "parameters at surface "
+          << surface.geometryId() << ". Prepared to reach the target surface.");
+
+      // Reverse the navigation direction if necessary
+      if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
+        state.stepping.navDir =
+            (state.stepping.navDir == forward) ? backward : forward;
+      }
+      // Reset the step size
+      state.stepping.stepSize = ConstrainedStep(
+          state.stepping.navDir * std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
@@ -883,21 +938,23 @@ class KalmanFitter {
     /// The Kalman smoother
     smoother_t m_smoother;
 
+    /// The measurement calibrator
+    calibrator_t m_calibrator;
+
     /// The outlier finder
     outlier_finder_t m_outlierFinder;
-
-    /// The Measuremetn calibrator
-    calibrator_t m_calibrator;
 
     /// The Surface beeing
     SurfaceReached targetReached;
   };
 
-  template <typename source_link_t, typename parameters_t>
+  template <typename source_link_t, typename parameters_t,
+            typename calibrator_t, typename outlier_finder_t>
   class Aborter {
    public:
     /// Broadcast the result_type
-    using action_type = Actor<source_link_t, parameters_t>;
+    using action_type =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
 
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
@@ -912,11 +969,12 @@ class KalmanFitter {
 
  public:
   /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
+  /// the filter and smoother/reversed filter
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam calibrator_t Type of the source link calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -929,12 +987,13 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename calibrator_t, typename outlier_finder_t,
             typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions<outlier_finder_t>& kfOptions) const
-      -> std::enable_if_t<!isDirectNavigator,
-                          Result<KalmanFitterResult<source_link_t>>> {
+           const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions)
+      const -> std::enable_if_t<!isDirectNavigator,
+                                Result<KalmanFitterResult<source_link_t>>> {
     const auto& logger = kfOptions.logger;
 
     static_assert(SourceLinkConcept<source_link_t>,
@@ -943,15 +1002,16 @@ class KalmanFitter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::map<const Surface*, source_link_t> inputMeasurements;
+    std::map<GeometryIdentifier, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      inputMeasurements.emplace(sl.geometryId(), sl);
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t, parameters_t>;
-    using KalmanActor = Actor<source_link_t, parameters_t>;
+    using KalmanAborter =
+        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanActor =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
@@ -969,9 +1029,8 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
-
-    // Set config for outlier finder
+    kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
+    kalmanActor.m_calibrator = kfOptions.calibrator;
     kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
     // Run the fitter
@@ -1003,11 +1062,12 @@ class KalmanFitter {
   }
 
   /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
+  /// the filter and smoother/reversed filter
   ///
-  /// @tparam source_link_t Source link type identifying uncalibrated input
-  /// measurements.
+  /// @tparam source_link_t Type of the source link
   /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam calibrator_t Type of the source link calibrator
+  /// @tparam outlier_finder_t Type of the outlier finder
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param sourcelinks The fittable uncalibrated measurements
@@ -1021,10 +1081,11 @@ class KalmanFitter {
   ///
   /// @return the output as an output track
   template <typename source_link_t, typename start_parameters_t,
+            typename calibrator_t, typename outlier_finder_t,
             typename parameters_t = BoundTrackParameters>
   auto fit(const std::vector<source_link_t>& sourcelinks,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions<outlier_finder_t>& kfOptions,
+           const KalmanFitterOptions<calibrator_t, outlier_finder_t>& kfOptions,
            const std::vector<const Surface*>& sSequence) const
       -> std::enable_if_t<isDirectNavigator,
                           Result<KalmanFitterResult<source_link_t>>> {
@@ -1035,22 +1096,23 @@ class KalmanFitter {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
-    std::map<const Surface*, source_link_t> inputMeasurements;
+    std::map<GeometryIdentifier, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
-      const Surface* srf = &sl.referenceSurface();
-      inputMeasurements.emplace(srf, sl);
+      inputMeasurements.emplace(sl.geometryId(), sl);
     }
 
     // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<source_link_t, parameters_t>;
-    using KalmanActor = Actor<source_link_t, parameters_t>;
+    using KalmanAborter =
+        Aborter<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
+    using KalmanActor =
+        Actor<source_link_t, parameters_t, calibrator_t, outlier_finder_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
     using Aborters = AbortList<KalmanAborter>;
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
+        kfOptions.geoContext, kfOptions.magFieldContext, logger);
 
     // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1061,15 +1123,15 @@ class KalmanFitter {
     kalmanActor.targetSurface = kfOptions.referenceSurface;
     kalmanActor.multipleScattering = kfOptions.multipleScattering;
     kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.backwardFiltering = kfOptions.backwardFiltering;
-
+    kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
+    kalmanActor.m_calibrator = kfOptions.calibrator;
     // Set config for outlier finder
-    kalmanActor.m_outlierFinder.m_config = kfOptions.outlierFinderConfig;
+    kalmanActor.m_outlierFinder = kfOptions.outlierFinder;
 
     // Set the surface sequence
     auto& dInitializer =
         kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
-    dInitializer.surfaceSequence = sSequence;
+    dInitializer.navSurfaces = sSequence;
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions);

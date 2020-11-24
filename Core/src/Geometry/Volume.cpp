@@ -12,7 +12,6 @@
 #include "Acts/Utilities/Units.hpp"
 
 #include <iostream>
-#include <utility>
 
 using namespace Acts::UnitLiterals;
 

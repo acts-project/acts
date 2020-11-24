@@ -77,3 +77,5 @@ The Acts project contains copies of the following external packages:
     licensed under the MIT license.
 -   [JSON for Modern C++](https://github.com/nlohmann/json) by Niels Lohmann
     licensed under the MIT License.
+-   [autodiff](https://github.com/autodiff/autodiff/) by Allan Leal licensed
+    under the MIT license.

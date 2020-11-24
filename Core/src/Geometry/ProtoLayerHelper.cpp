@@ -9,6 +9,10 @@
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <iosfwd>
 
 std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,

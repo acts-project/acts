@@ -22,6 +22,7 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
+#include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
 #include <string>
@@ -147,6 +148,7 @@ int processGeometry(int argc, char* argv[],
       jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
       jmConverterCfg.processnonmaterial =
           vm["mat-output-allmaterial"].template as<bool>();
+      jmConverterCfg.context = context.geoContext;
       // The writer
       ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmConverterCfg),
                                                materialFileName + ".json");

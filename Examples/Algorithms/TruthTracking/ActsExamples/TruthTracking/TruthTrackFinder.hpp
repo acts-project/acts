@@ -25,7 +25,7 @@ class TruthTrackFinder final : public BareAlgorithm {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
     /// The input hit-particles map collection.
-    std::string inputHitParticlesMap;
+    std::string inputMeasurementParticlesMap;
     /// The output proto tracks collection.
     std::string outputProtoTracks;
   };

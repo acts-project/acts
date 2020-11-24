@@ -8,6 +8,13 @@
 
 #include "Acts/Material/MaterialGridHelper.hpp"
 
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <cmath>
+#include <stdexcept>
+#include <tuple>
+
 Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
                               std::array<double, 3> gridAxis2) {
   // get the number of bins
