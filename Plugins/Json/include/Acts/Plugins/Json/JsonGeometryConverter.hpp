@@ -136,6 +136,8 @@ class JsonGeometryConverter {
     std::string surfacerangekey = "srange";
     /// The default logger
     std::shared_ptr<const Logger> logger;
+    /// Default geometry context to extract surface tranforms
+    GeometryContext context = GeometryContext();
     /// The name of the writer
     std::string name = "";
 
