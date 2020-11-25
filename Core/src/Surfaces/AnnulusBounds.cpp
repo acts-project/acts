@@ -336,7 +336,7 @@ Acts::Vector2D Acts::AnnulusBounds::stripXYToModulePC(
 
 Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
     const Vector2D& a, const Vector2D& b, const Vector2D& p,
-    const ActsMatrixD<2, 2>& weight) const {
+    const ActsSymMatrixD<2>& weight) const {
   using Scalar = Vector2D::Scalar;
   // connecting vector
   auto n = b - a;
@@ -352,7 +352,7 @@ Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
 }
 
 double Acts::AnnulusBounds::squaredNorm(const Vector2D& v,
-                                        const ActsMatrixD<2, 2>& weight) const {
+                                        const ActsSymMatrixD<2>& weight) const {
   return (v.transpose() * weight * v).value();
 }
 
