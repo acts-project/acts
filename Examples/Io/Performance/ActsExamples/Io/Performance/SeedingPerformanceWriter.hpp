@@ -30,7 +30,7 @@ class SeedingPerformanceWriter final
  public:
   struct Config {
     /// Input hit to particles map
-    std::string inputHitParticlesMap;
+    std::string inputMeasurementParticlesMap;
     /// Input truth particles collection.
     std::string inputParticles;
     /// Input seeds to be analyzed.

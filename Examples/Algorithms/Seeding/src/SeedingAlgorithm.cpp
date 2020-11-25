@@ -25,20 +25,22 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
-
 #include <iostream>
 #include <stdexcept>
 
 using SimSpacePoint = ActsExamples::SimSpacePoint;
+using ConcreteMeasurement =
+  Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
+		      Acts::eBoundLoc1>;
+
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputClusters.empty()) {
+  if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument(
-        "Missing clusters input collection with the hits");
+        "Missing measurement input collection with the hits");
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing output seeds collection");
@@ -75,17 +77,20 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 }
 
 std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
-    std::size_t hit_id, const Acts::PlanarModuleCluster& cluster,
+    // unsigned int hit_id, const Acts::PlanarModuleCluster& cluster,
+    const unsigned int hit_id,
+    const ConcreteMeasurement meas,
     const AlgorithmContext& ctx) const {
-  const auto parameters = cluster.parameters();
+  // const auto parameters = cluster.parameters();
+  const auto parameters = meas.parameters();  
   Acts::Vector2D localPos(parameters[0], parameters[1]);
   Acts::Vector3D globalPos(0, 0, 0);
   Acts::Vector3D globalFakeMom(1, 1, 1);
 
   // transform local into global position information
-  globalPos = cluster.referenceObject().localToGlobal(ctx.geoContext, localPos,
+  globalPos = meas.referenceObject().localToGlobal(ctx.geoContext, localPos,
                                                       globalFakeMom);
-  auto cov = cluster.covariance();
+  auto cov = meas.covariance();
   float x, y, z, r, varianceR, varianceZ;
   x = globalPos.x();
   y = globalPos.y();
@@ -95,6 +100,7 @@ std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
   varianceZ = cov(1, 1);
   std::unique_ptr<SimSpacePoint> sp(
       new SimSpacePoint{hit_id, x, y, z, r, varianceR, varianceZ});
+
   return sp;
 }
 
@@ -113,25 +119,22 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     return {sp.varianceR, sp.varianceZ};
   };
 
-  const auto& clusters =
-      ctx.eventStore
-          .get<ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>>(
-              m_cfg.inputClusters);
+  const auto& measurements =
+      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
   // create the space points
   std::vector<const SimSpacePoint*> spVec;
-  // since clusters are ordered, we simply count the hit_id as we read
-  // clusters. Hit_id isn't stored in a cluster. This is how
-  // CsvPlanarClusterWriter did it.
-  std::size_t hit_id = 0;
-  for (const auto& entry : clusters) {
-    Acts::GeometryIdentifier geoId = entry.first;
-    const Acts::PlanarModuleCluster& cluster = entry.second;
-    std::size_t volumeId = geoId.volume();
+  unsigned int hit_id = 0;
+  for (const auto& fullMeas : measurements) {
+
+    const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
+    const auto& surface = meas.referenceObject();
+    const auto& geoId = surface.geometryId();
+    unsigned int volumeId = geoId.volume();
 
     if (std::find(m_cfg.seedVolumes.begin(), m_cfg.seedVolumes.end(),
                   volumeId) != m_cfg.seedVolumes.end()) {
-      auto sp = transformSP(hit_id, cluster, ctx).release();
+      auto sp = transformSP(hit_id, meas, ctx).release();
       spVec.push_back(sp);
     }
     hit_id++;

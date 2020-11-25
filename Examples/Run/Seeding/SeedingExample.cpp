@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
+#include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
@@ -18,10 +21,14 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include <Acts/Utilities/Units.hpp>
+
 #include <memory>
 
 #include <boost/program_options.hpp>
+
+using namespace Acts::UnitLiterals;
+using namespace ActsExamples;
 
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
@@ -29,67 +36,79 @@ int main(int argc, char* argv[]) {
 
   // Setup and parse options
 
-  auto desc = ActsExamples::Options::makeDefaultOptions();
-  ActsExamples::Options::addSequencerOptions(desc);
-  ActsExamples::Options::addGeometryOptions(desc);
-  ActsExamples::Options::addMaterialOptions(desc);
-  ActsExamples::Options::addOutputOptions(desc);
-  ActsExamples::Options::addInputOptions(desc);
+  auto desc = Options::makeDefaultOptions();
+  Options::addSequencerOptions(desc);
+  Options::addRandomNumbersOptions(desc);
+  Options::addGeometryOptions(desc);
+  Options::addMaterialOptions(desc);
+  Options::addOutputOptions(desc);
+  Options::addInputOptions(desc);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
-  auto vm = ActsExamples::Options::parse(desc, argc, argv);
+  auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
   }
-  ActsExamples::Sequencer sequencer(
-      ActsExamples::Options::readSequencerConfig(vm));
+  Sequencer sequencer(Options::readSequencerConfig(vm));
 
   // Now read the standard options
-  auto logLevel = ActsExamples::Options::readLogLevel(vm);
+  auto logLevel = Options::readLogLevel(vm);
 
   // The geometry, material and decoration
-  auto geometry = ActsExamples::Geometry::build(vm, detector);
+  auto geometry = Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
+  auto rnd =
+      std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
+
   // Add the decorator to the sequencer
   for (auto cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
   // Read particles (initial states) and clusters from CSV files
-  auto particleReader = ActsExamples::Options::readCsvParticleReaderConfig(vm);
+  auto particleReader = Options::readCsvParticleReaderConfig(vm);
   particleReader.inputStem = "particles_initial";
   particleReader.outputParticles = "particles_initial";
-  sequencer.addReader(std::make_shared<ActsExamples::CsvParticleReader>(
-      particleReader, logLevel));
+  sequencer.addReader(
+      std::make_shared<CsvParticleReader>(particleReader, logLevel));
 
-  // Read clusters from CSV files
-  auto clusterReaderCfg =
-      ActsExamples::Options::readCsvPlanarClusterReaderConfig(vm);
-  clusterReaderCfg.trackingGeometry = tGeometry;
-  clusterReaderCfg.outputClusters = "clusters";
-  clusterReaderCfg.outputHitIds = "hit_ids";
-  clusterReaderCfg.outputHitParticlesMap = "hit_particles_map";
-  clusterReaderCfg.outputSimulatedHits = "hits";
-  sequencer.addReader(std::make_shared<ActsExamples::CsvPlanarClusterReader>(
-      clusterReaderCfg, logLevel));
+  // Read truth hits from CSV files
+  auto simHitReaderCfg = Options::readCsvSimHitReaderConfig(vm);
+  simHitReaderCfg.inputStem = "simhits";
+  simHitReaderCfg.outputSimHits = "simhits";
+  sequencer.addReader(
+      std::make_shared<CsvSimHitReader>(simHitReaderCfg, logLevel));
+
+  // Create smeared measurements
+  HitSmearing::Config hitSmearingCfg;
+  hitSmearingCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  hitSmearingCfg.outputMeasurements = "measurements";
+  hitSmearingCfg.outputSourceLinks = "sourcelinks";
+  hitSmearingCfg.outputMeasurementParticlesMap = "measurement_particles_map";
+  hitSmearingCfg.outputMeasurementSimHitsMap = "measurement_simhits_map";
+  hitSmearingCfg.sigmaLoc0 = 25_um;
+  hitSmearingCfg.sigmaLoc1 = 100_um;
+  hitSmearingCfg.randomNumbers = rnd;
+  hitSmearingCfg.trackingGeometry = tGeometry;
+  sequencer.addAlgorithm(
+      std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
 
   // Seeding algorithm
-  ActsExamples::SeedingAlgorithm::Config seeding;
+  SeedingAlgorithm::Config seeding;
   seeding.outputSeeds = "seeds";
-  seeding.inputClusters = clusterReaderCfg.outputClusters;
-  sequencer.addAlgorithm(
-      std::make_shared<ActsExamples::SeedingAlgorithm>(seeding, logLevel));
+  seeding.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  sequencer.addAlgorithm(std::make_shared<SeedingAlgorithm>(seeding, logLevel));
 
   // Performance Writer
-  ActsExamples::SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputSeeds = "seeds";
+  SeedingPerformanceWriter::Config seedPerfCfg;
+  seedPerfCfg.inputSeeds = seeding.outputSeeds;
   seedPerfCfg.inputParticles = particleReader.outputParticles;
-  seedPerfCfg.inputHitParticlesMap = clusterReaderCfg.outputHitParticlesMap;
+  seedPerfCfg.inputMeasurementParticlesMap = hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputFilename = "performance.root";
-  sequencer.addWriter(std::make_shared<ActsExamples::SeedingPerformanceWriter>(
-      seedPerfCfg, logLevel));
+  sequencer.addWriter(
+      std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
   return sequencer.run();
 }

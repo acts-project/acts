@@ -15,7 +15,8 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <memory>
 #include <set>
 #include <string>
@@ -33,8 +34,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
   struct Config {
     /// Output collection of clusters.
     std::string outputSeeds;
-    // input Clusters from the event#-hits.csv file.
-    std::string inputClusters;
+    // input measurements from hit smearing algorithm
+    std::string inputMeasurements;
     // used to get truth information into seeds about what particles are in what
     // space point.
     std::string inputHitParticlesMap;
@@ -73,7 +74,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
   /// Returns a space point with a particle barcode stored in .particles for
   /// each particle that made this space point.
   std::unique_ptr<ActsExamples::SimSpacePoint> transformSP(
-      std::size_t hit_id, const Acts::PlanarModuleCluster& cluster,
+      const unsigned int hit_id,
+      const Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0, Acts::eBoundLoc1> meas,
       const AlgorithmContext& ctx) const;
 
   /// @param txt is the algorithm context with event information

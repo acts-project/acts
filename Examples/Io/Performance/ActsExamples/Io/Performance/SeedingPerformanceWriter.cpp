@@ -10,7 +10,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
+#include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <numeric>
 #include <set>
@@ -34,7 +34,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.outputFilename.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.inputHitParticlesMap.empty()) {
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
 
@@ -90,9 +90,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
   size_t nMatchedSeeds = 0;
   // Map from particles to how many times they were successfully found by a seed
   std::unordered_map<ActsFatras::Barcode, std::size_t> truthCount;
-  const HitParticlesMap hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputHitParticlesMap);
-
+  ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto hitParticlesMap =    ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+      
   for (auto& regionVec : seedVector) {
     nSeeds += regionVec.size();
     for (size_t i = 0; i < regionVec.size(); i++) {

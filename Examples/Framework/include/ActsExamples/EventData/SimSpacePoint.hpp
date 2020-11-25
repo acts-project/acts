@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include "ActsExamples/Validation/ProtoTrackClassification.hpp"
 namespace ActsExamples {
 struct SimSpacePoint {
   // Hit id
-  size_t m_index;
+  unsigned int m_index;
   // Global position
   float m_x;
   float m_y;
@@ -21,7 +20,7 @@ struct SimSpacePoint {
   // VarianceR/Z of the SP position.
   float varianceR;
   float varianceZ;
-  size_t index() const { return m_index; }
+  unsigned int index() const { return m_index; }
   float x() const { return m_x; }
   float y() const { return m_y; }
   float z() const { return m_z; }
