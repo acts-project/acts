@@ -862,7 +862,7 @@ void Acts::JsonGeometryConverter::addSurfaceToJson(json& sjson,
 
   // Cast the surface bound to both disk and cylinder
   const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
-  auto sTransform = surface->transform(GeometryContext());
+  auto sTransform = surface->transform(m_cfg.context);
 
   const Acts::RadialBounds* radialBounds =
       dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
