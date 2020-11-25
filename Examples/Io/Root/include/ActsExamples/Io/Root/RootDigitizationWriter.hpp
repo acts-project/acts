@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Parameters.hpp"
+#include "Acts/Definitions/TrackParameterization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"

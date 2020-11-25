@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Parameters.hpp"
+#include "Acts/Definitions/TrackParameterization.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 

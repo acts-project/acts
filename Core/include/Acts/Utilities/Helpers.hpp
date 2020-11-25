@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Definitions/Parameters.hpp"
+#include "Acts/Definitions/TrackParameterization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 

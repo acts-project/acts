@@ -8,7 +8,7 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Parameters.hpp"
+#include "Acts/Definitions/TrackParameterization.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
 #include <cfloat>

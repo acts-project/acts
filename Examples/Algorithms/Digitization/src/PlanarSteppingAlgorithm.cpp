@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
-#include "Acts/Definitions/Parameters.hpp"
+#include "Acts/Definitions/TrackParameterization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"

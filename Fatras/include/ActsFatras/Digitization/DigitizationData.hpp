@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Acts/Definitions/Parameters.hpp>
+#include <Acts/Definitions/TrackParameterization.hpp>
 #include <Acts/EventData/ParameterSet.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
