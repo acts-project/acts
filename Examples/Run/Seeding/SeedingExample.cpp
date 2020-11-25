@@ -105,7 +105,8 @@ int main(int argc, char* argv[]) {
   SeedingPerformanceWriter::Config seedPerfCfg;
   seedPerfCfg.inputSeeds = seeding.outputSeeds;
   seedPerfCfg.inputParticles = particleReader.outputParticles;
-  seedPerfCfg.inputMeasurementParticlesMap = hitSmearingCfg.outputMeasurementParticlesMap;
+  seedPerfCfg.inputMeasurementParticlesMap =
+      hitSmearingCfg.outputMeasurementParticlesMap;
   seedPerfCfg.outputFilename = "performance.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));

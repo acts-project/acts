@@ -30,9 +30,8 @@
 
 using SimSpacePoint = ActsExamples::SimSpacePoint;
 using ConcreteMeasurement =
-  Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
-		      Acts::eBoundLoc1>;
-
+    Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices,
+                      Acts::eBoundLoc0, Acts::eBoundLoc1>;
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -78,18 +77,17 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
     // unsigned int hit_id, const Acts::PlanarModuleCluster& cluster,
-    const unsigned int hit_id,
-    const ConcreteMeasurement meas,
+    const unsigned int hit_id, const ConcreteMeasurement meas,
     const AlgorithmContext& ctx) const {
   // const auto parameters = cluster.parameters();
-  const auto parameters = meas.parameters();  
+  const auto parameters = meas.parameters();
   Acts::Vector2D localPos(parameters[0], parameters[1]);
   Acts::Vector3D globalPos(0, 0, 0);
   Acts::Vector3D globalFakeMom(1, 1, 1);
 
   // transform local into global position information
   globalPos = meas.referenceObject().localToGlobal(ctx.geoContext, localPos,
-                                                      globalFakeMom);
+                                                   globalFakeMom);
   auto cov = meas.covariance();
   float x, y, z, r, varianceR, varianceZ;
   x = globalPos.x();
@@ -126,7 +124,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   std::vector<const SimSpacePoint*> spVec;
   unsigned int hit_id = 0;
   for (const auto& fullMeas : measurements) {
-
     const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
     const auto& surface = meas.referenceObject();
     const auto& geoId = surface.geometryId();

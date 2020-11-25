@@ -13,10 +13,10 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <memory>
 #include <set>
 #include <string>
@@ -75,7 +75,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
   /// each particle that made this space point.
   std::unique_ptr<ActsExamples::SimSpacePoint> transformSP(
       const unsigned int hit_id,
-      const Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0, Acts::eBoundLoc1> meas,
+      const Acts::Measurement<IndexSourceLink, Acts::BoundIndices,
+                              Acts::eBoundLoc0, Acts::eBoundLoc1>
+          meas,
       const AlgorithmContext& ctx) const;
 
   /// @param txt is the algorithm context with event information
