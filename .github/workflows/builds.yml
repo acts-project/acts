@@ -76,7 +76,7 @@ jobs:
           brew install cmake eigen ninja
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && curl -SL https://acts.web.cern.ch/ACTS/ci/macOS/deps.43e0201.tar.gz | tar -xzC /usr/local/acts
+          && curl -SL https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz | tar -xzC /usr/local/acts
       - name: Configure
         run: >
           cmake -B build -S .
