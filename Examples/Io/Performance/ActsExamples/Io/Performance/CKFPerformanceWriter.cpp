@@ -172,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       // Use neural network classification for duplication rate plots
       // Currently, the network used for this example can only handle
       // good/duplicate classification, so need to manually exclude fake tracks
-      if (m_cfg.useMLTrackClassifier && !isFake) {
+      if (m_cfg.duplicatedPredictor && !isFake) {
         inputFeatures[0] = trajState.nMeasurements;
         inputFeatures[1] = trajState.nOutliers;
         inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
@@ -186,7 +186,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   }    // end all multiTrajectories
 
   // Use truth-based classification for duplication rate plots
-  if (!m_cfg.useMLTrackClassifier) {
+  if (!m_cfg.duplicatedPredictor) {
     // Loop over all truth-matched reco tracks for duplication rate plots
     for (auto& [particleId, matchedTracks] : matched) {
       // Sort the reco tracks matched to this particle by the number of majority

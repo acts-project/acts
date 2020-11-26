@@ -57,8 +57,6 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     size_t nMeasurementsMin = 9;
     /// Min transverse momentum
     double ptMin = 1_GeV;
-    /// flag to use neural network for track classification
-    bool useMLTrackClassifier = false;
     /// function to check if neural network predicted track label is duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };

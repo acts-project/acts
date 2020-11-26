@@ -31,9 +31,11 @@
 #include <Acts/Utilities/Units.hpp>
 
 #include <memory>
+#include <boost/filesystem.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
+using namespace boost::filesystem;
 using namespace std::placeholders;
 
 int runRecCKFTracks(int argc, char* argv[],
@@ -197,14 +199,12 @@ int runRecCKFTracks(int argc, char* argv[],
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
   // Path to default demo ML model for track classification
-  std::string currentFilePath = __FILE__;
-  std::string commonPath =
-      currentFilePath.substr(0, currentFilePath.find("RecCKFTracks"));
-  std::string demoModelPath = commonPath + "MLAmbiguityResolutionDemo.onnx";
+  path currentFilePath(__FILE__);
+  path parentPath = currentFilePath.parent_path();
+  path demoModelPath =
+      canonical(parentPath / "MLAmbiguityResolutionDemo.onnx").native();
   // Threshold probability for neural network to classify track as duplicate
   double decisionThreshProb = 0.5;
-  // Use ML model for track classification in CKFPerformanceWriter
-  perfWriterCfg.useMLTrackClassifier = true;
   // Initialize OnnxRuntime plugin
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
   Acts::MLTrackClassifier neuralNetworkClassifier(env, demoModelPath.c_str());
