@@ -197,4 +197,16 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 // not needed anymore. undef to prevent littering the namespace
 #undef ACTS_DEFINE_UNIT_LITERAL
 }  // namespace UnitLiterals
+
+/// Physical constants in native units.
+///
+/// Unit constants are intentionally not listed.
+namespace PhysicalConstants {
+/// Reduced Planck constant h/2*pi.
+///
+/// Computed from CODATA 2018 constants to double precision.
+inline constexpr double hbar =
+    6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
+}  // namespace PhysicalConstants
+
 }  // namespace Acts
