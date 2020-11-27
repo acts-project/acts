@@ -16,7 +16,13 @@ target_link_libraries(
     ActsExamplesMagneticField
     ActsExamplesTruthTracking
     ActsExamplesIoCsv
-    ActsExamplesIoPerformance)    
+    ActsExamplesIoPerformance)
+if(ACTS_BUILD_PLUGIN_ONNX)
+  target_compile_definitions(
+    ActsExamplesRecTracksCommon PUBLIC ACTS_PLUGIN_ONNX)
+  target_link_libraries(
+    ActsExamplesRecTracksCommon PUBLIC ActsPluginOnnx)
+endif()
 
 install(
   TARGETS ActsExamplesRecTracksCommon
