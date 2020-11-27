@@ -25,7 +25,7 @@ namespace Acts {
 /// Unlike the GaussianGridTrackDensity, the overall density vector
 /// grows adaptively with the tracks densities being added to the grid.
 ///
-/// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
+/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
 template <int trkGridSize = 15>
