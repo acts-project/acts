@@ -92,7 +92,7 @@ struct ParticleSimulator {
     interactor.generator = &generator;
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;
-    interactor.particle = particle;
+    interactor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
@@ -205,7 +205,7 @@ struct Simulator {
       //
       // WARNING the initial particle state output container will be modified
       //         during iteration. New secondaries are added to and failed
-      //         particles might be removed. to avoid issues, access must always
+      //         particles might be removed. To avoid issues, access must always
       //         occur via indices.
       auto iinitial = simulatedParticlesInitial.size();
       simulatedParticlesInitial.push_back(inputParticle);
