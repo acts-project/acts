@@ -85,7 +85,7 @@ struct ParticleSimulator {
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx,
                               Acts::LoggerWrapper{*localLogger});
-    options.absPdgCode = particle.pdg();
+    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options
     auto &interactor = options.actionList.template get<Interactor>();
