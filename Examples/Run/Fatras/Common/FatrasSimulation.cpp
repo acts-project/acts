@@ -34,6 +34,7 @@
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Process.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheBloch.hpp"
 #include "ActsFatras/Physics/EnergyLoss/BetheHeitler.hpp"
 #include "ActsFatras/Physics/Scattering/Highland.hpp"
@@ -106,12 +107,14 @@ void setupSimulationAlgorithms(
       ActsFatras::CombineAnd<ActsFatras::ChargedSelector, MinP>;
   using ChargedSimulator = ActsFatras::ParticleSimulator<
       ChargedPropagator, ActsFatras::ChargedElectroMagneticPhysicsList,
-      HitSurfaceSelector>;
+      HitSurfaceSelector, ActsFatras::NoDecay>;
   // neutral particles w/o physics and no hits
   using NeutralSelector =
       ActsFatras::CombineAnd<ActsFatras::NeutralSelector, MinP>;
-  using NeutralSimulator = ActsFatras::ParticleSimulator<
-      NeutralPropagator, ActsFatras::PhysicsList<>, ActsFatras::NoSurface>;
+  using NeutralSimulator =
+      ActsFatras::ParticleSimulator<NeutralPropagator,
+                                    ActsFatras::PhysicsList<>,
+                                    ActsFatras::NoSurface, ActsFatras::NoDecay>;
   // full simulator type for charged and neutrals
   using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                           NeutralSelector, NeutralSimulator>;
