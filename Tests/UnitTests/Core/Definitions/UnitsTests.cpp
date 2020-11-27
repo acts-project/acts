@@ -17,7 +17,7 @@ using namespace Acts::UnitLiterals;
 
 static constexpr auto eps = std::numeric_limits<double>::epsilon();
 
-BOOST_AUTO_TEST_SUITE(UtilitiesUnits)
+BOOST_AUTO_TEST_SUITE(DefinitionsUnits)
 
 BOOST_AUTO_TEST_CASE(Length) {
   CHECK_CLOSE_REL(1_m, 1e-3_km, eps);
