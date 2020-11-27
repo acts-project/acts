@@ -29,7 +29,7 @@ namespace Acts {
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
 ///
-/// @tparam trkGridSize The 2(!)-dim grid size of a single track, i.e.
+/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
 template <int trkGridSize = 15, typename vfitter_t = DummyVertexFitter<>>
