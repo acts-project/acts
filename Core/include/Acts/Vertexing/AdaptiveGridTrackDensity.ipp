@@ -151,7 +151,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     float distCtrZ) const {
   ActsVectorF<trkGridSize> trackGrid(ActsVectorF<trkGridSize>::Zero());
 
-  int i = (trkGridSize - 1) / 2 + offset;
+  float i = (trkGridSize - 1) / 2 + offset;
   float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
 
   // Loop over columns
