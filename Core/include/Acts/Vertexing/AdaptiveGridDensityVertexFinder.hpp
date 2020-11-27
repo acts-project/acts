@@ -24,7 +24,7 @@ namespace Acts {
 /// Each single track is modelled as a 2-dim Gaussian distribution grid
 /// in the d0-z0 plane, but only the overlap with the z-axis (i.e. a 1-dim
 /// density vector) needs to be calculated. All track contributions along the
-/// beam axis (main density grid) are superimposed and the z-value of the bin
+/// beam axis (main density vector) are superimposed and the z-value of the bin
 /// with the highest track density is returned as a vertex candidate.
 /// Unlike the GridDensityVertexFinder, this seeder implements an adaptive
 /// version where the density grid grows bigger with added tracks.
@@ -74,7 +74,7 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // The main density grid
+    // The main density vector
     std::vector<float> mainGridDensity;
     // Vector holding corresponding z bin values
     std::vector<int> mainGridZValues;

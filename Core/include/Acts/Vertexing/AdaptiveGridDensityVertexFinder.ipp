@@ -127,7 +127,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::
     return false;
   }
 
-  // Calculate track density quantities
+  // Calculate track density quantities to check if track can easily
+  // be considered as 2-dim Gaussian distribution without causing problems
   double constantTerm =
       -(d0 * d0 * covZZ + z0 * z0 * covDD + 2. * d0 * z0 * covDZ) /
       (2. * covDeterminant);

@@ -122,8 +122,8 @@ class AdaptiveGridTrackDensity {
                                            float distCtrD,
                                            float distCtrZ) const;
 
-  /// @brief Function that estimates the seed width based on the FWHM of
-  /// the maximum density peak
+  /// @brief Function that estimates the seed width based on the full width
+  /// at half maximum (FWHM) of the maximum density peak
   ///
   /// @param mainGridDensity The main 1-dim density grid along the z-axis
   /// @param mainGridZValues The corresponding z-bin values of the track
