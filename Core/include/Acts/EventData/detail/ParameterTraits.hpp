@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParameterization.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 
 #include <algorithm>
 #include <cmath>

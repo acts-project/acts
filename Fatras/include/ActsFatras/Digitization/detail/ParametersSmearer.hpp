@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParameterization.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace ActsFatras {

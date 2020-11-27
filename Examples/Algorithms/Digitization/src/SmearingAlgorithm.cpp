@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 
-#include "Acts/Definitions/TrackParameterization.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"

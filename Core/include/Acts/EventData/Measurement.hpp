@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParameterization.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
