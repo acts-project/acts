@@ -35,9 +35,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat;
-  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  Covariance covMat(Covariance::Identity());
 
   BoundVector paramVec0;
   paramVec0 << 100.0, -0.45, 0, 0, 0, 0;
@@ -112,9 +110,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat;
-  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  Covariance covMat(Covariance::Identity());
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
@@ -169,9 +165,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat;
-  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  Covariance covMat(Covariance::Identity());
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
@@ -230,9 +224,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat;
-  covMat << 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1;
+  Covariance covMat(Covariance::Identity());
 
   // Define z0 values for test tracks
   float z0Trk1 = -0.45;
