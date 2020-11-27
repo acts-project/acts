@@ -8,10 +8,10 @@
 
 #include "ActsExamples/Plugins/BField/BFieldOptions.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Plugins/BField/BFieldUtils.hpp"
 #include "ActsExamples/Plugins/BField/ScalableBField.hpp"
 #include "ActsExamples/Utilities/Options.hpp"

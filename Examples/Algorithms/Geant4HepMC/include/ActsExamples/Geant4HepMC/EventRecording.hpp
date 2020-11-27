@@ -10,8 +10,8 @@
 
 #include <memory>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"

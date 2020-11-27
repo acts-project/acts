@@ -8,9 +8,9 @@
 
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetectorElement.hpp"
 #include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"

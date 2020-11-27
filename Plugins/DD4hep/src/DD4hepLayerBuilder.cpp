@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
@@ -25,7 +26,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <boost/algorithm/string.hpp>
 

@@ -179,10 +179,10 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
   double halfPhi = bounds().get(CylinderBounds::eHalfPhiSector);
 
   // Get the phi segments from the helper - ensures extra points
-  auto phiSegs = fullCylinder
-                     ? detail::VerticesHelper::phiSegments()
-                     : detail::VerticesHelper::phiSegments(
-                           avgPhi - halfPhi, avgPhi + halfPhi, {avgPhi});
+  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
+                              : detail::VerticesHelper::phiSegments(
+                                    avgPhi - halfPhi, avgPhi + halfPhi,
+                                    {static_cast<ActsScalar>(avgPhi)});
 
   // Write the two bows/circles on either side
   std::vector<int> sides = {-1, 1};

@@ -8,8 +8,8 @@
 
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Options.hpp"

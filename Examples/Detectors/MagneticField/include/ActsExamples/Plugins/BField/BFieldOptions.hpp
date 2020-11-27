@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities//Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/GridFwd.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"

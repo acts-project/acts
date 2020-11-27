@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"

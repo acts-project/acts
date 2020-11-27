@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <cmath>
 #include <memory>

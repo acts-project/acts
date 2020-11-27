@@ -11,6 +11,7 @@
 
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
@@ -19,7 +20,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "DigitizationCsvOutput.hpp"
 #include "PlanarSurfaceTestBeds.hpp"

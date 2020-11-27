@@ -8,10 +8,10 @@
 
 #include "ActsExamples/Io/Root/RootDigitizationWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"

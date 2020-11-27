@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>

@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
@@ -16,7 +17,6 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,

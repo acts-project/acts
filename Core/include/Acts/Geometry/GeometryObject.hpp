@@ -8,11 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {

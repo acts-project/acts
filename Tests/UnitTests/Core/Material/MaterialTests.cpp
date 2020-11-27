@@ -9,10 +9,10 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <limits>
 
@@ -72,11 +72,11 @@ BOOST_DATA_TEST_CASE(EncodingDecodingRoundtrip,
                      }),
                      material) {
   // encode material
-  Acts::ActsVectorF<5> numbers0 = material.parameters();
+  Acts::ActsVector<float, 5> numbers0 = material.parameters();
   // construct from encoded numbers
   Acts::Material fromNumbers(numbers0);
   // encode material again
-  Acts::ActsVectorF<5> numbers1 = fromNumbers.parameters();
+  Acts::ActsVector<float, 5> numbers1 = fromNumbers.parameters();
 
   BOOST_CHECK_EQUAL(material, fromNumbers);
   BOOST_CHECK_EQUAL(numbers0, numbers1);

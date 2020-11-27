@@ -8,10 +8,10 @@
 
 #include <boost/test/data/test_case.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <cstdint>

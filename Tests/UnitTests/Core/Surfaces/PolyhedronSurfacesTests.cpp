@@ -40,9 +40,9 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 // Straw Surface
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <fstream>

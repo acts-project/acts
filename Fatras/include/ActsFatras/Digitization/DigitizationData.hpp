@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include <Acts/Definitions/TrackParametrization.hpp>
 #include <Acts/EventData/ParameterSet.hpp>
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/Utilities/BinUtility.hpp>
-#include <Acts/Utilities/ParameterDefinitions.hpp>
 
 #include <functional>
 #include <unordered_set>

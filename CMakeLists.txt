@@ -219,6 +219,10 @@ if(ACTS_BUILD_DOCS)
   find_package(Sphinx REQUIRED)
 endif()
 
+if(ACTS_CUSTOM_SCALARTYPE)
+    message(STATUS "Building Acts with custom scalar type: "${ACTS_CUSTOM_SCALARTYPE} )
+endif()
+
 # core library, core plugins, and other components
 add_component(Core Core)
 add_subdirectory(Plugins)

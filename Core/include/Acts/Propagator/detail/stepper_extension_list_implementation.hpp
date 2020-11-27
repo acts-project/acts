@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 /// @note The used variables in this file are:
 ///
 /// @tparam N Size of the tuple @p obs_tuple
