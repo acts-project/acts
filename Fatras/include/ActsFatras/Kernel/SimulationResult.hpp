@@ -8,7 +8,12 @@
 
 #pragma once
 
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <iosfwd>
 #include <limits>
+#include <vector>
 
 namespace ActsFatras {
 
@@ -21,6 +26,8 @@ enum class SimulationParticleStatus {
   /// Particle has decayed.
   eDecayed,
 };
+
+std::ostream& operator<<(std::ostream& os, SimulationParticleStatus status);
 
 /// Single particle simulation result (and intermediate state).
 ///
