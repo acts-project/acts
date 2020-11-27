@@ -138,7 +138,7 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
   int densityIdx = std::distance(mainGridZValues.begin(), findIter);
 
   // Go over trkGrid and remove it from mainDensityGrid
-  int startEnd = int(trkGridSize - 1) / 2;
+  int startEnd = int((trkGridSize - 1) / 2);
   for (int i = 0; i < trkGridSize; i++) {
     mainGridDensity[int(densityIdx + (i - startEnd))] -= trkGrid[i];
   }
