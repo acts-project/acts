@@ -97,6 +97,17 @@ BOOST_AUTO_TEST_CASE(MassEnergy) {
   CHECK_CLOSE_REL(1.782662e-24_g, 1_GeV, eps);
 }
 
+BOOST_AUTO_TEST_CASE(DecayWidthTime) {
+  using Acts::PhysicalConstants::hbar;
+  // lifetime is hbar / decay-width
+  // pion
+  CHECK_CLOSE_REL(hbar / 2.5284e-17_GeV, 26.032746062598505_ns, 1e-7);
+  // muon
+  CHECK_CLOSE_REL(hbar / 2.9959847e-19_GeV, 2.1969803498887713_us, 1e-7);
+  // top
+  CHECK_CLOSE_REL(hbar / 1.42_GeV, 4.635295432723526e-10_fs, 1e-7);
+}
+
 BOOST_AUTO_TEST_CASE(Charge) {
   CHECK_CLOSE_REL(1_C, 1.602176634e19_e, eps);
 }
@@ -113,6 +124,13 @@ BOOST_AUTO_TEST_CASE(MomentumRadius) {
   CHECK_CLOSE_REL(1_GeV / (2_e * 1_T), 166.8_cm, 1e-3);
   CHECK_CLOSE_REL(1_GeV / (1_e * 4_T), 83.39_cm, 1e-3);
   CHECK_CLOSE_REL(1_GeV / (2_e * 2_T), 83.39_cm, 1e-3);
+}
+
+BOOST_AUTO_TEST_CASE(PhysicalConstants) {
+  using namespace Acts::PhysicalConstants;
+  // see https://en.wikipedia.org/wiki/Planck_constant
+  CHECK_CLOSE_REL(hbar, 6.62607015e-34 * 1_J * 1_s / (2 * M_PI), 1e-6);
+  CHECK_CLOSE_REL(hbar, 4.135667696e-15 * 1_eV * 1_s / (2 * M_PI), 1e-7);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
