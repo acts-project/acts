@@ -8,10 +8,10 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorHelper.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include "DD4hep/CartesianGridXY.h"
 

@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryObjectSorter.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/NavigationLayer.hpp"
@@ -20,7 +21,6 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <algorithm>
 #include <cmath>

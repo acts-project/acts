@@ -13,8 +13,7 @@
 #pragma once
 #include <limits>
 
-#include "Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 namespace Acts {
 
 ///  @struct Intersection
@@ -31,9 +30,10 @@ struct Intersection {
   };
 
   /// Position of the intersection
-  ActsVector<double, DIM> position = ActsVector<double, DIM>::Zero();
+  ActsVectorD<DIM> position = ActsVectorD<DIM>::Zero();
   /// Signed path length to the intersection (if valid)
-  double pathLength{std::numeric_limits<double>::infinity()};
+  typename ActsVectorD<DIM>::Scalar pathLength{
+      std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
   Status status{Status::unreachable};
 
@@ -42,8 +42,7 @@ struct Intersection {
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param svalid is a boolean indicating if intersection is valid
-  Intersection(const ActsVector<double, DIM>& sinter, double slength,
-               Status sstatus)
+  Intersection(const ActsVectorD<DIM>& sinter, double slength, Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
   /// Default constructor

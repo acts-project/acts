@@ -10,7 +10,7 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include <Acts/Utilities/Units.hpp>
+#include <Acts/Definitions/Units.hpp>
 
 #include <cstdlib>
 #include <utility>

@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <limits>
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 namespace Acts {
@@ -53,7 +53,7 @@ class Ray {
 
   /// Write information on this instance to an outstream.
   /// @param os The out stream
-  /// @return The out stream given as a nargument
+  /// @return The out stream given as an argument
   std::ostream& toStream(std::ostream& os) const;
 
   /// Helper to draw this ray using a given visualization helper.
@@ -78,8 +78,7 @@ std::ostream& operator<<(std::ostream& os, const Ray<T, D>& ray) {
   return os;
 }
 
-using Ray3F = Ray<float, 3>;
-using Ray3D = Ray<double, 3>;
+using Ray3D = Ray<ActsScalar, 3>;
 
 }  // namespace Acts
 

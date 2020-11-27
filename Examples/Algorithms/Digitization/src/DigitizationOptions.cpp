@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Digitization/DigitizationOptions.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 

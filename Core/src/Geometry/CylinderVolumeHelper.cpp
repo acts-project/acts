@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -29,7 +30,6 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <algorithm>
 #include <cmath>

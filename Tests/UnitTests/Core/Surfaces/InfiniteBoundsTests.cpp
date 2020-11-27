@@ -10,8 +10,8 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

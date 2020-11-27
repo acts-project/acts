@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <sstream>
 
