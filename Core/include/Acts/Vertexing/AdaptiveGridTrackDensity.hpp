@@ -16,7 +16,7 @@ namespace Acts {
 /// @class AdaptiveGridTrackDensity
 /// @brief Implements a 1-dim density grid to be filled with
 /// track Gaussian distributions. Each single track is modelled
-/// as a 2(!)-dim Gaussian distribution grid in the d0-z0 plane,
+/// as a 2-dim Gaussian distribution grid in the d0-z0 plane,
 /// but only the overlap with the z-axis (i.e. a 1-dim density
 /// vector) needs to be calculated.
 /// The position of the highest track density (of either a single
