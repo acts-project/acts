@@ -5,6 +5,7 @@ add_library(
   src/Digitization/PlanarSurfaceMask.cpp
   src/EventData/Particle.cpp
   src/EventData/ProcessType.cpp
+  src/Kernel/SimulationResult.cpp
   src/Kernel/SimulatorError.cpp
   src/Physics/StandardPhysicsLists.cpp
   src/Utilities/LandauDistribution.cpp
