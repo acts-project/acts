@@ -35,17 +35,20 @@ namespace ActsFatras {
 /// Single particle simulator with a fixed propagator and physics list.
 ///
 /// @tparam propagator_t is the type of the underlying propagator
-/// @tparam physics_list_t is the type of the simulated physics list
+/// @tparam physics_list_t is the type of the interaction physics list
 /// @tparam hit_surface_selector_t is the type that selects hit surfaces
+/// @tparam decay_t is the type of the decay module
 template <typename propagator_t, typename physics_list_t,
-          typename hit_surface_selector_t>
+          typename hit_surface_selector_t, typename decay_t>
 struct ParticleSimulator {
   /// How and within which geometry to propagate the particle.
   propagator_t propagator;
-  /// What should be simulated. Will be copied to the per-call interactor.
+  /// Interactions to be simulated. Will be copied to the per-call interactor.
   physics_list_t physics;
   /// Where hits are registiered. Will be copied to the per-call interactor.
   hit_surface_selector_t selectHitSurface;
+  /// Decay module.
+  decay_t decay;
   /// Local logger for debug output.
   std::shared_ptr<const Acts::Logger> localLogger = nullptr;
 
@@ -93,20 +96,31 @@ struct ParticleSimulator {
     interactor.physics = physics;
     interactor.selectHitSurface = selectHitSurface;
     interactor.initialParticle = particle;
+    interactor.properTimeLimit =
+        decay.generateProperTimeLimit(generator, particle);
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.unitDirection(),
         particle.absoluteMomentum(), particle.charge());
     auto result = propagator.propagate(start, options);
-    if (result.ok()) {
-      return result.value().template get<InteractorResult>();
-    } else {
+    if (not result.ok()) {
       return result.error();
     }
+    auto &value = result.value().template get<InteractorResult>();
+
+    // add decay products to the generated particles if the particle has decayed
+    if (value.particleStatus == SimulationParticleStatus::eDecayed) {
+      auto descendants = decay.generateDescendants(generator, value.particle);
+      for (auto &&descendant : descendants) {
+        value.generatedParticles.emplace_back(std::move(descendant));
+      }
+    }
+
+    return std::move(value);
   }
 };
 
-/// Fatras multi-particle simulator.
+/// Multi-particle simulator.
 ///
 /// @tparam charged_selector_t Callable selector type for charged particles
 /// @tparam charged_simulator_t Single particle simulator for charged particles
