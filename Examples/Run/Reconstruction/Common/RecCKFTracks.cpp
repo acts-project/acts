@@ -7,6 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
+#ifdef ACTS_PLUGIN_ONNX
+#include "Acts/Plugins/Onnx/MLTrackClassifier.hpp"
+#endif
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -28,9 +31,12 @@
 #include <Acts/Utilities/Units.hpp>
 
 #include <memory>
+#include <boost/filesystem.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
+using namespace boost::filesystem;
+using namespace std::placeholders;
 
 int runRecCKFTracks(int argc, char* argv[],
                     std::shared_ptr<ActsExamples::IBaseDetector> detector) {
@@ -184,11 +190,28 @@ int runRecCKFTracks(int argc, char* argv[],
 
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
+  perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
   perfWriterCfg.inputParticles = inputParticles;
   perfWriterCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   perfWriterCfg.outputDir = outputDir;
+#ifdef ACTS_PLUGIN_ONNX
+  // Onnx plugin related options
+  // Path to default demo ML model for track classification
+  path currentFilePath(__FILE__);
+  path parentPath = currentFilePath.parent_path();
+  path demoModelPath =
+      canonical(parentPath / "MLAmbiguityResolutionDemo.onnx").native();
+  // Threshold probability for neural network to classify track as duplicate
+  double decisionThreshProb = 0.5;
+  // Initialize OnnxRuntime plugin
+  Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "MLTrackClassifier");
+  Acts::MLTrackClassifier neuralNetworkClassifier(env, demoModelPath.c_str());
+  perfWriterCfg.duplicatedPredictor =
+      std::bind(&Acts::MLTrackClassifier::isDuplicate, &neuralNetworkClassifier,
+                std::placeholders::_1, decisionThreshProb);
+#endif
   sequencer.addWriter(
       std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
