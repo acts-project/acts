@@ -89,7 +89,7 @@ std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
   globalPos = meas.referenceObject().localToGlobal(ctx.geoContext, localPos,
                                                    globalFakeMom);
   auto cov_local = meas.covariance();
-  auto rframe = surf.referenceFrame(ctx.geoContext,globalPos,globalFakeMom);
+  auto rframe = surf.referenceFrame(ctx.geoContext, globalPos, globalFakeMom);
   auto jacToGlobal = rframe.topLeftCorner<3, 2>();
   auto cov_global = jacToGlobal * cov_local * jacToGlobal.transpose();
 

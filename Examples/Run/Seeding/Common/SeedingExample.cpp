@@ -5,10 +5,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Digitization/HitSmearing.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
@@ -30,10 +29,8 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int main(int argc, char* argv[]) {
-  // --------------------------------------------------------------------------------
-  GenericDetector detector;
-
+int runSeedingExample(int argc, char* argv[],
+                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // Setup and parse options
 
   auto desc = Options::makeDefaultOptions();
@@ -45,7 +42,7 @@ int main(int argc, char* argv[]) {
   Options::addInputOptions(desc);
 
   // Add specific options for this geometry
-  detector.addOptions(desc);
+  detector->addOptions(desc);
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
     return EXIT_FAILURE;
@@ -56,7 +53,7 @@ int main(int argc, char* argv[]) {
   auto logLevel = Options::readLogLevel(vm);
 
   // The geometry, material and decoration
-  auto geometry = Geometry::build(vm, detector);
+  auto geometry = Geometry::build(vm, *detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
   auto rnd =

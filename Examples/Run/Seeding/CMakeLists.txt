@@ -1,21 +1,18 @@
-set(_common_libraries
-  ActsCore
-  ActsExamplesFramework
-  ActsExamplesPropagation
-  ActsExamplesSeeding
-  ActsExamplesCommon
-  ActsExamplesMagneticField
-  ActsExamplesIoObj
-  ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
-
+# shared code 
+add_subdirectory(Common)
 
 add_executable(
-  ActsExampleSeeding
-  SeedingExample.cpp)
+  ActsExampleSeedingGeneric
+  GenericSeedingExample.cpp)
 
 target_link_libraries(
-  ActsExampleSeeding
-  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+  ActsExampleSeedingGeneric
+  PRIVATE
+    ActsExamplesSeedingCommon
+    ActsExamplesDetectorGeneric    
+)
 
+install(
+  TARGETS
+    ActsExampleSeedingGeneric
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
