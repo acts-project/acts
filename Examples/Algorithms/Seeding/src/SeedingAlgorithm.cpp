@@ -76,26 +76,30 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 }
 
 std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
-    // unsigned int hit_id, const Acts::PlanarModuleCluster& cluster,
     const unsigned int hit_id, const ConcreteMeasurement meas,
     const AlgorithmContext& ctx) const {
-  // const auto parameters = cluster.parameters();
   const auto parameters = meas.parameters();
   Acts::Vector2D localPos(parameters[0], parameters[1]);
   Acts::Vector3D globalPos(0, 0, 0);
   Acts::Vector3D globalFakeMom(1, 1, 1);
 
   // transform local into global position information
+  const auto& surf = meas.referenceObject();
+
   globalPos = meas.referenceObject().localToGlobal(ctx.geoContext, localPos,
                                                    globalFakeMom);
-  auto cov = meas.covariance();
+  auto cov_local = meas.covariance();
+  auto rframe = surf.referenceFrame(ctx.geoContext,globalPos,globalFakeMom);
+  auto jacToGlobal = rframe.topLeftCorner<3, 2>();
+  auto cov_global = jacToGlobal * cov_local * jacToGlobal.transpose();
+
   float x, y, z, r, varianceR, varianceZ;
   x = globalPos.x();
   y = globalPos.y();
   z = globalPos.z();
   r = std::sqrt(x * x + y * y);
-  varianceR = cov(0, 0);
-  varianceZ = cov(1, 1);
+  varianceR = cov_global(0, 0);
+  varianceZ = cov_global(1, 1);
   std::unique_ptr<SimSpacePoint> sp(
       new SimSpacePoint{hit_id, x, y, z, r, varianceR, varianceZ});
 
