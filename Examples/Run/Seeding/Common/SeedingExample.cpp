@@ -96,6 +96,21 @@ int runSeedingExample(int argc, char* argv[],
   SeedingAlgorithm::Config seeding;
   seeding.outputSeeds = "seeds";
   seeding.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  seeding.rMax = 200.;
+  seeding.deltaRMax = 60.;
+  seeding.collisionRegionMin = -250;
+  seeding.collisionRegionMax = 250.;
+  seeding.zMin = -2000.;
+  seeding.zMax = 2000.;
+  seeding.maxSeedsPerSpM = 1;
+  seeding.cotThetaMax = 7.40627;  // 2.7 eta
+  seeding.sigmaScattering = 2.25;
+  seeding.radLengthPerSeed = 0.1;
+  seeding.minPt = 500.;
+  seeding.bFieldInZ = 0.00199724;
+  seeding.beamPos = {0., 0.};
+  seeding.impactMax = 3.;
+  seeding.seedVolumes = {7, 8, 9};
   sequencer.addAlgorithm(std::make_shared<SeedingAlgorithm>(seeding, logLevel));
 
   // Performance Writer
