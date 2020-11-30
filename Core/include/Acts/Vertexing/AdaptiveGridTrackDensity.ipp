@@ -82,7 +82,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
-  ActsVector<float, trkGridSize> trackGrid(ActsVector<float, trkGridSize>::Zero());
+  ActsVector<float, trkGridSize> trackGrid(
+      ActsVector<float, trkGridSize>::Zero());
 
   // Check if current track does affect grid density
   // in central bins at z-axis
@@ -149,7 +150,8 @@ Acts::ActsVector<float, trkGridSize>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     int offset, const Acts::SymMatrix2D& cov, float distCtrD,
     float distCtrZ) const {
-  ActsVector<float, trkGridSize> trackGrid(ActsVector<float, trkGridSize>::Zero());
+  ActsVector<float, trkGridSize> trackGrid(
+      ActsVector<float, trkGridSize>::Zero());
 
   float i = (trkGridSize - 1) / 2 + offset;
   float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;

@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -118,9 +118,10 @@ class AdaptiveGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  ActsVector<float, trkGridSize> createTrackGrid(int offset, const SymMatrix2D& cov,
-                                           float distCtrD,
-                                           float distCtrZ) const;
+  ActsVector<float, trkGridSize> createTrackGrid(int offset,
+                                                 const SymMatrix2D& cov,
+                                                 float distCtrD,
+                                                 float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
