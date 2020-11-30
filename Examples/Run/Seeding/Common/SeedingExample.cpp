@@ -93,29 +93,36 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<HitSmearing>(hitSmearingCfg, logLevel));
 
   // Seeding algorithm
-  SeedingAlgorithm::Config seeding;
-  seeding.outputSeeds = "seeds";
-  seeding.inputMeasurements = hitSmearingCfg.outputMeasurements;
-  seeding.rMax = 200.;
-  seeding.deltaRMax = 60.;
-  seeding.collisionRegionMin = -250;
-  seeding.collisionRegionMax = 250.;
-  seeding.zMin = -2000.;
-  seeding.zMax = 2000.;
-  seeding.maxSeedsPerSpM = 1;
-  seeding.cotThetaMax = 7.40627;  // 2.7 eta
-  seeding.sigmaScattering = 2.25;
-  seeding.radLengthPerSeed = 0.1;
-  seeding.minPt = 500.;
-  seeding.bFieldInZ = 0.00199724;
-  seeding.beamPos = {0., 0.};
-  seeding.impactMax = 3.;
-  seeding.seedVolumes = {7, 8, 9};
-  sequencer.addAlgorithm(std::make_shared<SeedingAlgorithm>(seeding, logLevel));
+  SeedingAlgorithm::Config seedingCfg;
+  seedingCfg.outputSeeds = "seeds";
+  seedingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  seedingCfg.rMax = 200.;
+  seedingCfg.deltaRMax = 60.;
+  seedingCfg.collisionRegionMin = -250;
+  seedingCfg.collisionRegionMax = 250.;
+  seedingCfg.zMin = -2000.;
+  seedingCfg.zMax = 2000.;
+  seedingCfg.maxSeedsPerSpM = 1;
+  seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
+  seedingCfg.sigmaScattering = 50;
+  seedingCfg.radLengthPerSeed = 0.1;
+  seedingCfg.minPt = 500.;
+  seedingCfg.bFieldInZ = 0.00199724;
+  seedingCfg.beamPos = {0., 0.};
+  seedingCfg.impactMax = 3.;
+  seedingCfg.barrelVolume = 8;
+  seedingCfg.barrelLayers = {2, 4, 6};
+  seedingCfg.posEndcapVolume = 9;
+  seedingCfg.posEndcapLayers = {2, 4, 6, 8};
+  seedingCfg.negEndcapVolume = 7;
+  seedingCfg.negEndcapLayers = {14, 12, 10, 8};
+
+  sequencer.addAlgorithm(
+      std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
   // Performance Writer
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputSeeds = seeding.outputSeeds;
+  seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
   seedPerfCfg.inputParticles = particleReader.outputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;

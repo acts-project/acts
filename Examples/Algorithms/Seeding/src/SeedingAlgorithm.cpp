@@ -132,12 +132,26 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const auto& surface = meas.referenceObject();
     const auto& geoId = surface.geometryId();
     unsigned int volumeId = geoId.volume();
+    unsigned int layerId = geoId.layer();
 
-    if (std::find(m_cfg.seedVolumes.begin(), m_cfg.seedVolumes.end(),
-                  volumeId) != m_cfg.seedVolumes.end()) {
-      auto sp = transformSP(hit_id, meas, ctx).release();
-      spVec.push_back(sp);
-    }
+    // volumes and layers for seed finding
+    if (volumeId == m_cfg.barrelVolume) {
+      if (std::find(m_cfg.barrelLayers.begin(), m_cfg.barrelLayers.end(),
+                    layerId) == m_cfg.barrelLayers.end())
+        continue;
+    } else if (volumeId == m_cfg.posEndcapVolume) {
+      if (std::find(m_cfg.posEndcapLayers.begin(), m_cfg.posEndcapLayers.end(),
+                    layerId) == m_cfg.posEndcapLayers.end())
+        continue;
+    } else if (volumeId == m_cfg.negEndcapVolume) {
+      if (std::find(m_cfg.negEndcapLayers.begin(), m_cfg.negEndcapLayers.end(),
+                    layerId) == m_cfg.negEndcapLayers.end())
+        continue;
+    } else
+      continue;
+
+    auto sp = transformSP(hit_id, meas, ctx).release();
+    spVec.push_back(sp);
     hit_id++;
   }
   Acts::SeedfinderConfig<SimSpacePoint> fconf = m_cfg.finderConf;
