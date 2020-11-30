@@ -55,12 +55,12 @@ class SeedingAlgorithm final : public BareAlgorithm {
     float bFieldInZ = 0.00199724;
     Acts::Vector2D beamPos = {0., 0.};
     float impactMax = 3.;
-    int barrelVolume = 8;
-    std::vector<int> barrelLayers = {2, 4, 6};
-    int posEndcapVolume = 9;
-    std::vector<int> posEndcapLayers = {2, 4, 6, 8};
-    int negEndcapVolume = 7;
-    std::vector<int> negEndcapLayers = {14, 12, 10, 8};
+    unsigned int barrelVolume = 8;
+    std::vector<unsigned int> barrelLayers = {2, 4, 6};
+    unsigned int posEndcapVolume = 9;
+    std::vector<unsigned int> posEndcapLayers = {2, 4, 6, 8};
+    unsigned int negEndcapVolume = 7;
+    std::vector<unsigned int> negEndcapLayers = {14, 12, 10, 8};
 
     Acts::SeedfinderConfig<SimSpacePoint> finderConf;
 
