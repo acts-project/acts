@@ -34,7 +34,9 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
-  // Create some test tracks
+  // Create some test tracks in such a way that some tracks
+  //  e.g. overlap and that certain tracks need to be inserted
+  // between two other tracks
   Covariance covMat(Covariance::Identity());
 
   BoundVector paramVec0;
