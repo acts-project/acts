@@ -13,8 +13,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 
 namespace bdata = boost::unit_test::data;

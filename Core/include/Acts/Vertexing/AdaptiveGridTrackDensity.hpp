@@ -8,7 +8,7 @@
 
 #pragma once
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -90,7 +90,7 @@ class AdaptiveGridTrackDensity {
   /// @return A pair storing information about the z-bin position
   /// the track was added (int) and the 1-dim density contribution
   /// of the track itself
-  std::pair<int, ActsVectorF<trkGridSize>> addTrack(
+  std::pair<int, ActsVector<float, trkGridSize>> addTrack(
       const BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
       std::vector<int>& mainGridZValues) const;
 
@@ -103,7 +103,7 @@ class AdaptiveGridTrackDensity {
   /// @param mainGridZValues The corresponding z-bin values of the track
   /// densities along the z-axis
   void removeTrackGridFromMainGrid(
-      int zBin, const ActsVectorF<trkGridSize>& trkGrid,
+      int zBin, const ActsVector<float, trkGridSize>& trkGrid,
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
 
@@ -118,7 +118,7 @@ class AdaptiveGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  ActsVectorF<trkGridSize> createTrackGrid(int offset, const SymMatrix2D& cov,
+  ActsVector<float, trkGridSize> createTrackGrid(int offset, const SymMatrix2D& cov,
                                            float distCtrD,
                                            float distCtrZ) const;
 

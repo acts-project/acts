@@ -17,7 +17,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
