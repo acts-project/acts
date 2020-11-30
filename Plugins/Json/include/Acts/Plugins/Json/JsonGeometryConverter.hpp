@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Surfaces/Surface.hpp>
@@ -136,6 +136,8 @@ class JsonGeometryConverter {
     std::string surfacerangekey = "srange";
     /// The default logger
     std::shared_ptr<const Logger> logger;
+    /// Default geometry context to extract surface tranforms
+    GeometryContext context = GeometryContext();
     /// The name of the writer
     std::string name = "";
 

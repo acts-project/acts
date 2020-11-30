@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <numeric>
 #include <utility>

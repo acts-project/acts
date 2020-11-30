@@ -8,7 +8,7 @@
 
 #include "SteppingAction.hpp"
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <stdexcept>
 

@@ -14,7 +14,7 @@
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Utilities/Units.hpp>
+#include <Acts/Definitions/Units.hpp>
 
 #include <cstdlib>
 #include <memory>

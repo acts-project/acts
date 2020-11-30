@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <cstdint>
@@ -25,7 +26,7 @@ namespace ActsFatras {
 /// thus stored as two separate four-vectors.
 class Hit {
  public:
-  using Scalar = double;
+  using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<Scalar, 3>;
   using Vector4 = Acts::ActsVector<Scalar, 4>;
 

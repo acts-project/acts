@@ -11,9 +11,9 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -24,7 +24,7 @@ namespace Acts {
 namespace Test {
 
 constexpr unsigned int dim = 2;
-using grid_t = detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+using grid_t = detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
                             detail::EquidistantAxis>;
 
 ActsVectorD<dim> trafoGlobalToLocal(const Vector3D& global) {
@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test) {
   // Build a material cell
   std::array<double, dim> lowerLeft{{0., 0.}};
   std::array<double, dim> upperRight{{1., 1.}};
-  ActsVectorF<5> mat;
+  ActsVector<float, 5> mat;
   mat << 1, 2, 3, 4, 5;
-  std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
+  std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
 
   MaterialMapper<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialMapper_test) {
 
   // The material mapping grid
   auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
-  ActsVectorF<5> mat;
+  ActsVector<float, 5> mat;
   mat << 1, 2, 3, 4, 5;
 
   for (size_t i = 0; i < grid.size(); i++) {
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
 
   // The material mapping grid
   auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
-  ActsVectorF<5> mat;
+  ActsVector<float, 5> mat;
   mat << 1, 2, 3, 4, 5;
 
   for (size_t i = 0; i < grid.size(); i++) {
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test) {
   // Build a material cell
   std::array<double, dim> lowerLeft{{0., 0.}};
   std::array<double, dim> upperRight{{1., 1.}};
-  std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
+  std::array<ActsVector<float, 5>, 4> matArray = {mat, mat, mat, mat};
 
   MaterialMapper<grid_t>::MaterialCell materialCell(
       trafoGlobalToLocal, lowerLeft, upperRight, matArray);

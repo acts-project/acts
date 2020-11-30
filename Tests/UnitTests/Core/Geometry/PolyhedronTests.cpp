@@ -11,10 +11,10 @@
 #include <boost/test/unit_test.hpp>
 
 // Helper
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 

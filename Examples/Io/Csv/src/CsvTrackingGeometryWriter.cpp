@@ -9,12 +9,12 @@
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
 #include "ActsExamples/Utilities/Paths.hpp"
+#include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
 #include <Acts/Plugins/Digitization/DigitizationModule.hpp>
 #include <Acts/Plugins/Identification/IdentifiedDetectorElement.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Units.hpp>
 
 #include <iostream>
 #include <sstream>

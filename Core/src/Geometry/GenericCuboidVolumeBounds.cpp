@@ -8,12 +8,12 @@
 
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
 #include <algorithm>
@@ -87,7 +87,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     // z is normal in local coordinates
     // Volume local to surface local
     Transform3D vol2srf;
-    vol2srf = (Eigen::Quaternion<double>().setFromTwoVectors(
+    vol2srf = (Eigen::Quaternion<Transform3D::Scalar>().setFromTwoVectors(
         normal, Vector3D::UnitZ()));
 
     vol2srf = vol2srf * Translation3D(-ctrd);

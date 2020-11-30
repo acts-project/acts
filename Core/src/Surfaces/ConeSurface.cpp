@@ -201,7 +201,8 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   // Get the phi segments from the helper
   auto phiSegs = fullCone ? detail::VerticesHelper::phiSegments()
                           : detail::VerticesHelper::phiSegments(
-                                avgPhi - hPhiSec, avgPhi + hPhiSec, {avgPhi});
+                                avgPhi - hPhiSec, avgPhi + hPhiSec,
+                                {static_cast<ActsScalar>(avgPhi)});
 
   // Negative cone if exists
   std::vector<double> coneSides;

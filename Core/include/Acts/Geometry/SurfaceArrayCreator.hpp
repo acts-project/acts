@@ -8,16 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
@@ -42,6 +42,8 @@ using SurfaceMatrix = std::vector<SurfaceVector>;
 using V3Vector = std::vector<Vector3D>;
 using V3Matrix = std::vector<V3Vector>;
 
+using AxisScalar = Vector3D::Scalar;
+
 /// @class SurfaceArrayCreator
 ///
 /// It is designed create sub surface arrays to be ordered on Surfaces
@@ -56,14 +58,14 @@ class SurfaceArrayCreator {
     BinningType bType;
     BinningValue bValue;
     size_t nBins;
-    double min;
-    double max;
-    std::vector<double> binEdges;
+    AxisScalar min;
+    AxisScalar max;
+    std::vector<AxisScalar> binEdges;
 
-    size_t getBin(double x) const {
+    size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
-        double w = (max - min) / nBins;
+        AxisScalar w = (max - min) / nBins;
         return std::floor((x - min) / w);
       } else {
         // variable

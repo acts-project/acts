@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <cstdlib>

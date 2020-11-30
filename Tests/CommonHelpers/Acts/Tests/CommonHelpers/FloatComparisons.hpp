@@ -10,8 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <algorithm>
 #include <limits>
 

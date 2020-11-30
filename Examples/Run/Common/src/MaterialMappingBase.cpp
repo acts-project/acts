@@ -61,10 +61,26 @@ int materialMappingExample(int argc, char* argv[],
   // The geometry, material and decoration
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
+  auto contextDecorators = geometry.second;
+  for (auto cdr : contextDecorators) {
+    sequencer.addContextDecorator(cdr);
+  }
+
+  ActsExamples::WhiteBoard contextBoard(
+      Acts::getDefaultLogger("contextBoard", logLevel));
+
+  // The geometry context
+  ActsExamples::AlgorithmContext context(0, 0, contextBoard);
+
+  /// Decorate the context
+  for (auto& cdr : contextDecorators) {
+    if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
+      throw std::runtime_error("Failed to decorate event context");
+  }
 
   /// Default contexts
-  Acts::GeometryContext geoContext;
-  Acts::MagneticFieldContext mfContext;
+  Acts::GeometryContext geoContext = context.geoContext;
+  Acts::MagneticFieldContext mfContext = context.magFieldContext;
 
   // Straight line stepper
   using SlStepper = Acts::StraightLineStepper;
@@ -172,6 +188,7 @@ int materialMappingExample(int argc, char* argv[],
     jmConverterCfg.processVolumes =
         vm["mat-output-volumes"].template as<bool>();
     jmConverterCfg.writeData = vm["mat-output-data"].template as<bool>();
+    jmConverterCfg.context = geoContext;
     // The writer
     ActsExamples::JsonMaterialWriter jmwImpl(jmConverterCfg,
                                              materialFileName + ".json");

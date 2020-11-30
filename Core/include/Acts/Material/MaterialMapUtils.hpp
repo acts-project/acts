@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -57,7 +57,7 @@ class Material;
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+MaterialMapper<detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
                             detail::EquidistantAxis>>
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
@@ -107,7 +107,7 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
 /// @param [in] lengthUnit The unit of the grid points
-MaterialMapper<detail::Grid<ActsVectorF<5>, detail::EquidistantAxis,
+MaterialMapper<detail::Grid<ActsVector<float, 5>, detail::EquidistantAxis,
                             detail::EquidistantAxis, detail::EquidistantAxis>>
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                              std::array<size_t, 3> nBinsXYZ)>&

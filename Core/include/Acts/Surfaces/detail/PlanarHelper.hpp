@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
@@ -31,10 +31,10 @@ static Intersection3D intersect(const Transform3D& transform,
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
   const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
   // It is solvable, so go on
-  double denom = direction.dot(pnormal);
+  ActsScalar denom = direction.dot(pnormal);
   if (denom != 0.0) {
     // Translate that into a path
-    double path = (pnormal.dot((pcenter - position))) / (denom);
+    ActsScalar path = (pnormal.dot((pcenter - position))) / (denom);
     // Is valid hence either on surface or reachable
     Intersection3D::Status status =
         (path * path < s_onSurfaceTolerance * s_onSurfaceTolerance)

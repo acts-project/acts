@@ -8,7 +8,7 @@
 
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 #include <ios>
 #include <stdexcept>
