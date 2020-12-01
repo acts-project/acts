@@ -12,10 +12,11 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
-#include <climits>
+
 #include <cmath>
-#include <exception>
+#include <limits>
 #include <random>
+#include <utility>
 
 namespace ActsExamples {
 namespace Digitization {
@@ -183,99 +184,6 @@ struct Digital {
           std::pair<double, double>(svalue, (higher - lower) / std::sqrt(12.)));
     }
     return ActsFatras::DigitizationError::SmearingError;
-  }
-};
-
-template <size_t kSize>
-using SmearFunctions =
-    std::array<ActsFatras::SmearFunction<RandomEngine>, kSize>;
-
-template <size_t kSize>
-using FncTypes = std::array<int, kSize>;
-
-template <size_t kSize>
-using FncParameters = std::array<std::vector<double>, kSize>;
-
-/// Struct to generate smearing functions from arguments.
-///
-struct SmearingFunctionGenerator {
-  /// Generate function that unrolls the templated kSizeension.
-  ///
-  /// @tparam kSize The kSizeension of the smearing function array
-  /// @tparam kIndex is the entry that is currently filled
-  ///
-  /// @param functions[in,out] The smearing functions that are generated
-  /// @param types The smearing function type (Gauss as default)
-  /// @param pars The parameters for the smearing function
-  template <size_t kSize, size_t kIndex>
-  void generateFunction(SmearFunctions<kSize>& functions,
-                        const FncTypes<kSize>& types,
-                        const FncParameters<kSize>& pars) noexcept(false) {
-    switch (types[kIndex]) {
-      case 0: {
-        if (pars[kIndex].empty()) {
-          throw std::invalid_argument(
-              "Smearers: invalid input for Gauss smearing.");
-        }
-        functions[kIndex] = Gauss(pars[kIndex][0]);
-      } break;
-
-      case 1: {
-        if (pars[kIndex].size() < 3) {
-          throw std::invalid_argument(
-              "Smearers: invalid input for truncated Gauss smearing.");
-        }
-        functions[kIndex] =
-            GaussTrunc(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
-      } break;
-
-      case 2: {
-        if (pars[kIndex].size() < 3) {
-          throw std::invalid_argument(
-              "Smearers: invalid input for clipped Gauss smearing.");
-        }
-        functions[kIndex] =
-            GaussClipped(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
-      } break;
-
-      case 3: {
-        if (pars[kIndex].size() < 3) {
-          throw std::invalid_argument(
-              "Smearers: invalid input for Uniform smearing.");
-        }
-        functions[kIndex] =
-            Uniform(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
-      } break;
-
-      case 4: {
-        if (pars[kIndex].size() < 3) {
-          throw std::invalid_argument(
-              "Smearers: invalid input for Digital smearing.");
-        }
-        functions[kIndex] =
-            Digital(pars[kIndex][0], {pars[kIndex][1], pars[kIndex][2]});
-      } break;
-    }
-
-    if constexpr (kIndex > 0) {
-      generateFunction<kSize, kIndex - 1>(functions, types, pars);
-    }
-  }
-
-  /// Generate call for simear function generation.
-  ///
-  /// @tparam kSize The templated kSizeenstion type
-  ///
-  /// @param types The smearing function type (Gauss as default)
-  /// @param pars The parameters for the smearing function
-  ///
-  /// @return a properly kSizeensioned resultion function array
-  template <size_t kSize>
-  SmearFunctions<kSize> generate(const FncTypes<kSize>& types,
-                                 const FncParameters<kSize>& pars) {
-    SmearFunctions<kSize> sFunctions;
-    generateFunction<kSize, kSize - 1>(sFunctions, types, pars);
-    return sFunctions;
   }
 };
 

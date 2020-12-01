@@ -14,9 +14,10 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
-#include <array>
 #include <memory>
 #include <string>
+#include <variant>
+#include <vector>
 
 namespace Acts {
 class Surface;
@@ -25,32 +26,18 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// SmearingAlgorithm that turns simulated hits into measuremetns for Fitting
-///
-/// Different smearing functions can be configured for a list of supported
-/// smearers (see below).
+/// Algorithm that turns simulated hits into measurements by truth smearing.
 class SmearingAlgorithm final : public BareAlgorithm {
  public:
-  template <Acts::BoundIndices... kParameters>
-  using Smearer = std::pair<ActsFatras::BoundParametersSmearer<kParameters...>,
-                            std::array<ActsFatras::SmearFunction<RandomEngine>,
-                                       sizeof...(kParameters)>>;
-
-  /// Supported smears for this example are
-  /// - strip type (either in loc0 or loc1)
-  /// - pixel type (in loc0 and loc1)
-  /// - pixel type with direction
-  /// - all above in a timed flavor
-  using SupportedSmearer = std::variant<
-      Smearer<Acts::eBoundLoc0>, Smearer<Acts::eBoundLoc1>,
-      Smearer<Acts::eBoundLoc0, Acts::eBoundLoc1>,
-      Smearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
-              Acts::eBoundTheta>,
-      Smearer<Acts::eBoundLoc0, Acts::eBoundTime>,
-      Smearer<Acts::eBoundLoc1, Acts::eBoundTime>,
-      Smearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime>,
-      Smearer<Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundPhi,
-              Acts::eBoundTheta, Acts::eBoundTime>>;
+  struct ParameterSmearerConfig {
+    // Which parameter does this apply to.
+    Acts::BoundIndices index = Acts::eBoundSize;
+    // The smearing function for this parameter.
+    ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
+  };
+  // The configured indices must be unique, i.e. each one can only appear once
+  // in a smearer configuration.
+  using SmearerConfig = std::vector<ParameterSmearerConfig>;
 
   struct Config {
     /// Input collection of simulated hits.
@@ -68,9 +55,7 @@ class SmearingAlgorithm final : public BareAlgorithm {
     /// Random numbers tool.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// The smearers per GeometryIdentifier
-    Acts::GeometryHierarchyMap<SupportedSmearer> smearers;
-    /// flag misconfiguration
-    bool configured = false;
+    Acts::GeometryHierarchyMap<SmearerConfig> smearers;
   };
 
   /// Construct the smearing algorithm.
@@ -86,8 +71,26 @@ class SmearingAlgorithm final : public BareAlgorithm {
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
-  /// The configuration struct containing the smearers
+  // support up to 4d measurements
+  using Smearer =
+      std::variant<ActsFatras::BoundParametersSmearer<RandomEngine, 1u>,
+                   ActsFatras::BoundParametersSmearer<RandomEngine, 2u>,
+                   ActsFatras::BoundParametersSmearer<RandomEngine, 3u>,
+                   ActsFatras::BoundParametersSmearer<RandomEngine, 4u>>;
+
   Config m_cfg;
+  Acts::GeometryHierarchyMap<Smearer> m_smearers;
+
+  /// Construct a fixed-size smearer from a configuration.
+  template <size_t kSize>
+  static Smearer makeSmearer(const SmearerConfig& cfg) {
+    ActsFatras::BoundParametersSmearer<RandomEngine, kSize> impl;
+    for (size_t i = 0; i < kSize; ++i) {
+      impl.indices[i] = cfg.at(i).index;
+      impl.smearFunctions[i] = cfg.at(i).smearFunction;
+    }
+    return impl;
+  }
 };
 
 }  // namespace ActsExamples
