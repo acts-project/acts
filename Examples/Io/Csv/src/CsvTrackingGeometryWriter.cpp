@@ -94,12 +94,12 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
     auto boundValues = surface.bounds().values();
     if (boundValues.size() == 2) {
       data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_maxhu = boundValues[0] / Acts::UnitConstants::mm;
+      data.module_hv = boundValues[1] / Acts::UnitConstants::mm;
     } else if (boundValues.size() == 3) {
       data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_maxhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_hv = boundValues[2] / Acts::UnitConstants::mm;
     }
     // get the pitch from the digitization module
     const auto* detElement =
