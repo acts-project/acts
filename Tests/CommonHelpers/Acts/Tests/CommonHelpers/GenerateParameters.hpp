@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 
 #include <cmath>
 #include <random>
@@ -29,7 +28,6 @@ inline auto generateParametersCovariance(generator_t& rng)
   using ParametersVector = Acts::ActsVector<Scalar, kSize>;
   using CovarianceMatrix = Acts::ActsSymMatrix<Scalar, kSize>;
 
-  // TODO generate within the parameter limits
   std::normal_distribution<Scalar> distNormal(0, 1);
   std::uniform_real_distribution<Scalar> distCorr(-1, 1);
 
