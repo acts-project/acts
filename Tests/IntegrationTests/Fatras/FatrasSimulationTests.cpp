@@ -19,6 +19,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsFatras/Kernel/PhysicsList.hpp"
 #include "ActsFatras/Kernel/Simulator.hpp"
+#include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/StandardPhysicsLists.hpp"
 #include "ActsFatras/Selectors/ChargeSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
@@ -72,12 +73,13 @@ using ChargedPhysicsList =
                             SplitEnergyLoss>;
 using ChargedSimulator =
     ActsFatras::ParticleSimulator<ChargedPropagator, ChargedPhysicsList,
-                                  ActsFatras::EverySurface>;
+                                  ActsFatras::EverySurface,
+                                  ActsFatras::NoDecay>;
 // all neutral particles w/o physics and no hits
 using NeutralSelector = ActsFatras::NeutralSelector;
 using NeutralSimulator =
     ActsFatras::ParticleSimulator<NeutralPropagator, ActsFatras::PhysicsList<>,
-                                  ActsFatras::NoSurface>;
+                                  ActsFatras::NoSurface, ActsFatras::NoDecay>;
 // full simulator type for charged and neutrals
 using Simulator = ActsFatras::Simulator<ChargedSelector, ChargedSimulator,
                                         NeutralSelector, NeutralSimulator>;
