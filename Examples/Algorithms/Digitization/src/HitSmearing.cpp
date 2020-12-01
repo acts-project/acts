@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -51,9 +52,6 @@ ActsExamples::HitSmearing::HitSmearing(const Config& cfg,
 ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
     const AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
-  using ConcreteMeasurement =
-      Acts::Measurement<IndexSourceLink, Acts::BoundIndices, Acts::eBoundLoc0,
-                        Acts::eBoundLoc1>;
 
   // retrieve input
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
@@ -107,7 +105,8 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
       // measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
       IndexSourceLink sourceLink(moduleGeoId, hitIdx);
-      ConcreteMeasurement meas(surface->getSharedPtr(), sourceLink, cov, loc);
+      auto meas = Acts::makeMeasurement(sourceLink, loc, cov, Acts::eBoundLoc0,
+                                        Acts::eBoundLoc1);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
