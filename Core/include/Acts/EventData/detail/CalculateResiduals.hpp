@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cassert>
