@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
@@ -21,9 +21,7 @@ namespace {
 
 using namespace Acts;
 
-// meta-programming type list of scalar type + subspace type combintations
-// to be tested.
-
+// meta-programming type list of scalar type + subspace type combinations
 // clang-format off
 using ScalarsAndFixedSizeSubspaces = std::tuple<
   std::tuple<float, detail::FixedSizeSubspace<2u, 1u>>,

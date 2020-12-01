@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-
-#include <Eigen/Core>
 
 namespace Acts {
 namespace detail {
@@ -69,14 +69,13 @@ class FixedSizeSubspace {
                 "Subspace can only be as large as the full space");
 
   template <typename source_t>
-  using SubspaceVectorFor = Eigen::Matrix<typename source_t::Scalar, kSize, 1>;
+  using SubspaceVectorFor = ActsVector<typename source_t::Scalar, kSize>;
   template <typename source_t>
-  using FullspaceVectorFor =
-      Eigen::Matrix<typename source_t::Scalar, kFullSize, 1>;
+  using FullspaceVectorFor = ActsVector<typename source_t::Scalar, kFullSize>;
   template <typename scalar_t>
-  using ProjectionMatrix = Eigen::Matrix<scalar_t, kSize, kFullSize>;
+  using ProjectionMatrix = ActsMatrix<scalar_t, kSize, kFullSize>;
   template <typename scalar_t>
-  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, kSize>;
+  using ExpansionMatrix = ActsMatrix<scalar_t, kFullSize, kSize>;
 
   // the functionality could also be implemented using a std::bitset where each
   // bit corresponds to an axis in the fullspace and set bits indicate which
