@@ -84,6 +84,10 @@ namespace Acts {
 ///     double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
 ///
 
+/// @note A helper script is available in
+///   `Core/scripts/print_units_physical_constants.py` to validate some of the
+///   numerical values.
+
 namespace UnitConstants {
 // Length, native unit mm
 constexpr double fm = 1e-12;
