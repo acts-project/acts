@@ -10,6 +10,8 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -19,8 +21,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 
 namespace Acts {
 
@@ -31,8 +32,8 @@ enum AlignmentIndices : unsigned int {
   eAlignmentSize,
 };
 
-/// Underlying fundamental scalar type for alignment parameters.
-using AlignmentScalar = double;
+/// Underlying fundamental Scalar type for alignment parameters.
+using AlignmentScalar = ActsScalar;
 
 // Matrix and vector types related to alignment parameters.
 using AlignmentVector = ActsVector<AlignmentScalar, eAlignmentSize>;

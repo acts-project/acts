@@ -8,11 +8,11 @@
 
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"

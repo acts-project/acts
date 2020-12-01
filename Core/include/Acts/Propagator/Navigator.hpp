@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -16,7 +17,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <iomanip>
 #include <iterator>

@@ -10,11 +10,12 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -30,8 +31,8 @@ GeometryContext geoContext = GeometryContext();
 
 BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Define the size of the grids
-  const int mainGridSize = 400;
-  const int trkGridSize = 15;
+  const size_t mainGridSize = 400;
+  const size_t trkGridSize = 15;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
@@ -83,11 +84,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BoundTrackParameters params7(perigeeSurface, paramVec7, covMat);
 
   // The grid to be filled
-  ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
+  ActsVector<float, mainGridSize> mainGrid(
+      ActsVector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVectorF<trkGridSize>> binAndTrackGrid;
+  std::pair<int, ActsVector<float, trkGridSize>> binAndTrackGrid;
 
   // Adds tracks too far away in transverse distance
   binAndTrackGrid = grid.addTrack(params3, mainGrid);
@@ -98,13 +100,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
-  BOOST_CHECK_EQUAL(mainGrid, ActsVectorF<mainGridSize>::Zero());
+  auto zeroGrid = ActsVector<float, mainGridSize>::Zero();
+  BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
   // Now add track 1 and 2 to grid, seperately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  mainGrid = ActsVectorF<mainGridSize>::Zero();
+  mainGrid = ActsVector<float, mainGridSize>::Zero();
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
@@ -136,7 +139,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(maxBin, mainGridSize / 2 + 1);
 
   // Check if error is thrown for empty grid
-  mainGrid = ActsVectorF<mainGridSize>::Zero();
+  mainGrid = ActsVector<float, mainGridSize>::Zero();
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
 
@@ -193,11 +196,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
+  ActsVector<float, mainGridSize> mainGrid(
+      ActsVector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVectorF<trkGridSize>> binAndTrackGrid;
+  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
@@ -252,11 +256,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVectorF<mainGridSize> mainGrid(ActsVectorF<mainGridSize>::Zero());
+  ActsVector<float, mainGridSize> mainGrid(
+      ActsVector<float, mainGridSize>::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVectorF<trkGridSize>> binAndTrackGrid;
+  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);

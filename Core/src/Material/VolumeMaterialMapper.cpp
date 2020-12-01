@@ -45,9 +45,10 @@ using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
 using Grid3D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
-using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
+using MaterialGrid2D =
+    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis>;
 using MaterialGrid3D =
-    Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
+    Acts::detail::Grid<Acts::ActsVector<float, 5>, EAxis, EAxis, EAxis>;
 
 }  // namespace
 

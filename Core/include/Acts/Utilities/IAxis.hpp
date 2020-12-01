@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <vector>
@@ -35,17 +36,17 @@ class IAxis {
 
   /// @brief Return a vector of bin edges
   /// @return Vector which contains the bin edges
-  virtual std::vector<double> getBinEdges() const = 0;
+  virtual std::vector<ActsScalar> getBinEdges() const = 0;
 
   /// @brief get minimum of binning range
   ///
   /// @return minimum of binning range
-  virtual double getMin() const = 0;
+  virtual ActsScalar getMin() const = 0;
 
   /// @brief get maximum of binning range
   ///
   /// @return maximum of binning range
-  virtual double getMax() const = 0;
+  virtual ActsScalar getMax() const = 0;
 
   /// @brief get total number of bins
   ///

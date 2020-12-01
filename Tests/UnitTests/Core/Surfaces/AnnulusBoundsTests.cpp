@@ -17,7 +17,7 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {

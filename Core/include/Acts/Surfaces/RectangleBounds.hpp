@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
 #include <cassert>

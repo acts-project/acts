@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -24,8 +26,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 
 #include <vector>
 

@@ -8,7 +8,7 @@
 
 #include <boost/test/data/test_case.hpp>
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 
 namespace ActsTests {
 namespace PropagationDatasets {

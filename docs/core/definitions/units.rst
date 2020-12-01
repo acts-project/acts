@@ -96,7 +96,7 @@ Examples:
 
 .. code-block:: cpp
 
-   #include <Acts/include/Utilities/Units.hpp>
+   #include <Acts/include/Definitions/Units.hpp>
    using namespace Acts::UnitLiterals;
    
    // define input values w/ units (via unit constants)

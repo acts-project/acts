@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/DiscLayer.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -16,7 +17,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <vector>

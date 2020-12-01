@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
 #include "Acts/Plugins/Digitization/Segmentation.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <memory>
 

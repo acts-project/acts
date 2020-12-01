@@ -17,8 +17,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <stdexcept>
 

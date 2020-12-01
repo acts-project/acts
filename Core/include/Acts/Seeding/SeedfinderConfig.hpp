@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 namespace Acts {
 // forward declaration to avoid cyclic dependence
 template <typename T>

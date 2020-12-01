@@ -10,9 +10,9 @@
 
 #include <memory>
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"

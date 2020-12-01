@@ -20,9 +20,8 @@ Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
-  m_rotationStripPC =
-      Eigen::Translation<double, 2>(Vector2D(0, -get(eAveragePhi)));
-  m_translation = Eigen::Translation<double, 2>(m_moduleOrigin);
+  m_rotationStripPC = Translation2D(Vector2D(0, -get(eAveragePhi)));
+  m_translation = Translation2D(m_moduleOrigin);
 
   m_shiftXY = m_moduleOrigin * -1;
   m_shiftPC =
@@ -104,10 +103,10 @@ std::vector<Acts::Vector2D> Acts::AnnulusBounds::vertices(
     std::vector<Acts::Vector2D> rvertices;
 
     using VectorHelpers::phi;
-    std::vector<double> phisInner = detail::VerticesHelper::phiSegments(
+    auto phisInner = detail::VerticesHelper::phiSegments(
         phi(m_inRightStripXY - m_moduleOrigin),
         phi(m_inLeftStripXY - m_moduleOrigin));
-    std::vector<double> phisOuter = detail::VerticesHelper::phiSegments(
+    auto phisOuter = detail::VerticesHelper::phiSegments(
         phi(m_outLeftStripXY - m_moduleOrigin),
         phi(m_outRightStripXY - m_moduleOrigin));
 
@@ -260,7 +259,7 @@ bool Acts::AnnulusBounds::inside(const Vector2D& lposition,
 
     double B = cosDPhiPhiStrip;
     double C = -sinDPhiPhiStrip;
-    Eigen::Matrix<double, 2, 2> jacobianStripPCToModulePC;
+    ActsMatrixD<2, 2> jacobianStripPCToModulePC;
     jacobianStripPCToModulePC(0, 0) = (B * O_x + C * O_y + r_strip) / sqrtA;
     jacobianStripPCToModulePC(0, 1) =
         r_strip * (B * O_y + O_x * sinDPhiPhiStrip) / sqrtA;
@@ -337,7 +336,8 @@ Acts::Vector2D Acts::AnnulusBounds::stripXYToModulePC(
 
 Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
     const Vector2D& a, const Vector2D& b, const Vector2D& p,
-    const Eigen::Matrix<double, 2, 2>& weight) const {
+    const ActsSymMatrixD<2>& weight) const {
+  using Scalar = Vector2D::Scalar;
   // connecting vector
   auto n = b - a;
   // squared norm of line
@@ -345,16 +345,19 @@ Acts::Vector2D Acts::AnnulusBounds::closestOnSegment(
   // weighted scalar product of line to point and segment line
   auto u = ((p - a).transpose() * weight * n).value() / f;
   // clamp to [0, 1], convert to point
-  return std::min(std::max(u, 0.0), 1.0) * n + a;
+  return std::min(std::max(u, static_cast<Scalar>(0.0)),
+                  static_cast<Scalar>(1.0)) *
+             n +
+         a;
 }
 
-double Acts::AnnulusBounds::squaredNorm(
-    const Vector2D& v, const Eigen::Matrix<double, 2, 2>& weight) const {
+double Acts::AnnulusBounds::squaredNorm(const Vector2D& v,
+                                        const ActsSymMatrixD<2>& weight) const {
   return (v.transpose() * weight * v).value();
 }
 
 Acts::Vector2D Acts::AnnulusBounds::moduleOrigin() const {
-  return Eigen::Rotation2D<double>(get(eAveragePhi)) * m_moduleOrigin;
+  return Rotation2D(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 // Ostream operator overload

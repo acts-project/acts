@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <array>
