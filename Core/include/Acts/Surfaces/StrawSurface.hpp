@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

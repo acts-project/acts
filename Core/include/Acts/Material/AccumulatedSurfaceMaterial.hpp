@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <array>
 #include <memory>

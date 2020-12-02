@@ -12,9 +12,9 @@
 
 #include "Acts/Plugins/Digitization/PlanarModuleStepper.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(

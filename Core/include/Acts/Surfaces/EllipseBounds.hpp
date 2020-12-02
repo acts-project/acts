@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>

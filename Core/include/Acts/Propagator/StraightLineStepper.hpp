@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -18,7 +19,6 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 

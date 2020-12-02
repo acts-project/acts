@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>

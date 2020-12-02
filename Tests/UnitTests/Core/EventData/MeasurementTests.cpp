@@ -8,11 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <random>
 

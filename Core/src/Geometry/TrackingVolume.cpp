@@ -711,7 +711,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
     Ray3D obj(position, sdir);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
-    Acts::Frustum<double, 3, 4> obj(position, sdir, angle);
+    Acts::Frustum<ActsScalar, 3, 4> obj(position, sdir, angle);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 

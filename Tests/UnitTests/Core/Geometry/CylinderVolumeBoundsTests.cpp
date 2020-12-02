@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -16,7 +17,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

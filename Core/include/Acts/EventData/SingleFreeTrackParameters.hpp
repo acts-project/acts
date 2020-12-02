@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <cassert>

@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <iosfwd>
 

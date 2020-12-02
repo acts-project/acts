@@ -9,12 +9,12 @@
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 
 #include "ActsExamples/Utilities/Paths.hpp"
+#include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Plugins/Digitization/CartesianSegmentation.hpp>
 #include <Acts/Plugins/Digitization/DigitizationModule.hpp>
 #include <Acts/Plugins/Identification/IdentifiedDetectorElement.hpp>
 #include <Acts/Surfaces/Surface.hpp>
-#include <Acts/Utilities/Units.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -94,12 +94,12 @@ void writeSurface(SurfaceWriter& writer, const Acts::Surface& surface,
     auto boundValues = surface.bounds().values();
     if (boundValues.size() == 2) {
       data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_maxhu = boundValues[0] / Acts::UnitConstants::mm;
+      data.module_hv = boundValues[1] / Acts::UnitConstants::mm;
     } else if (boundValues.size() == 3) {
       data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[0] / Acts::UnitConstants::mm;
-      data.module_minhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_maxhu = boundValues[1] / Acts::UnitConstants::mm;
+      data.module_hv = boundValues[2] / Acts::UnitConstants::mm;
     }
     // get the pitch from the digitization module
     const auto* detElement =

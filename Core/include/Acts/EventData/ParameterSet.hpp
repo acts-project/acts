@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/DifferenceCalculator.hpp"
 #include "Acts/EventData/detail/ValueCorrector.hpp"
 #include "Acts/EventData/detail/full_parameter_set.hpp"
 #include "Acts/EventData/detail/initialize_parameter_set.hpp"
 #include "Acts/EventData/detail/make_projection_matrix.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/MPL/are_sorted.hpp"
 #include "Acts/Utilities/detail/MPL/are_within.hpp"
 #include "Acts/Utilities/detail/MPL/at_index.hpp"

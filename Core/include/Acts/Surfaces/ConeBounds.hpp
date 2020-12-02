@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>

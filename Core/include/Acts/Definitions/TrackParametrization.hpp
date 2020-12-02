@@ -8,17 +8,18 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <type_traits>
 
-// The user can override the (track) parameter ordering and underlying scalar
-// type. If the variable is defined, it must point to a header file that
-// contains the same enum and type definitions for bound and free track
-// parameters as well as space points as given below.
+// The user can override the (track) parameter ordering and underlying
+// Scalar type. If the variable is defined, it must point to a header
+// file that contains the same enum and type definitions for bound and free
+// track parameters as well as space points as given below.
 #ifdef ACTS_PARAMETER_DEFINITIONS_HEADER
 #include ACTS_PARAMETER_DEFINITIONS_HEADER
 #else
+
 namespace Acts {
 
 // Note:
@@ -55,8 +56,8 @@ enum BoundIndices : unsigned int {
   eBoundSize,
 };
 
-/// Underlying fundamental scalar type for bound track parameters.
-using BoundScalar = double;
+/// Underlying fundamental Scalar type for bound track parameters.
+using BoundScalar = ActsScalar;
 
 /// Components of a free track parameters vector.
 ///
@@ -84,8 +85,8 @@ enum FreeIndices : unsigned int {
   eFreeSize,
 };
 
-/// Underlying fundamental scalar type for free track parameters.
-using FreeScalar = double;
+/// Underlying fundamental Scalar type for free track parameters.
+using FreeScalar = ActsScalar;
 
 }  // namespace Acts
 #endif
@@ -122,7 +123,7 @@ static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
 static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
 // The following matrix and vector types are automatically derived from the
-// indices enums and scalar typedefs.
+// indices enums and Scalar typedefs.
 
 // Matrix and vector types related to bound track parameters.
 
@@ -143,7 +144,7 @@ using FreeSymMatrix = ActsSymMatrix<FreeScalar, eFreeSize>;
 // Mapping to bound track parameters.
 //
 // Assumes that matrices represent maps from another space into the space of
-// bound track parameters. Thus, the bound scalar type is sufficient
+// bound track parameters. Thus, the bound Scalar type is sufficient
 // to retain accuracy.
 
 using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
@@ -151,7 +152,7 @@ using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
 // Mapping to free track parameters.
 //
 // Assumes that matrices represent maps from another space into the space of
-// free track parameters. Thus, the free scalar type is sufficient
+// free track parameters. Thus, the free Scalar type is sufficient
 // to retain accuracy.
 
 using BoundToFreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eBoundSize>;

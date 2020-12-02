@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include <array>
 #include <vector>
 
