@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <random>
@@ -62,7 +63,12 @@ inline auto generateParametersCovariance(generator_t& rng)
 /// Generate a random bound parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateBoundParametersCovariance(generator_t& rng) {
-  return generateParametersCovariance<BoundScalar, eBoundSize>(rng);
+  auto parCov = generateParametersCovariance<BoundScalar, eBoundSize>(rng);
+  auto [phi, theta] = detail::normalizePhiTheta(parCov.first[eBoundPhi],
+                                                parCov.first[eBoundTheta]);
+  parCov.first[eBoundPhi] = phi;
+  parCov.first[eBoundTheta] = theta;
+  return parCov;
 }
 
 /// Generate a random free parameters vector and covariance matrix.
