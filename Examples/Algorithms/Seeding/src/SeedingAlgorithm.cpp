@@ -17,9 +17,8 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"

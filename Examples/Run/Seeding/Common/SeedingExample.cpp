@@ -19,8 +19,8 @@
 #include "ActsExamples/Seeding/SeedingAlgorithm.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Utilities/Units.hpp>
 
 #include <memory>
 

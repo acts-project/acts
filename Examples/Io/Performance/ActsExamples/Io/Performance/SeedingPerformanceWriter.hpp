@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Utilities/Units.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
