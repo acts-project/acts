@@ -8,10 +8,12 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <memory>
 #include <mutex>
 
 class TFile;
@@ -42,6 +44,8 @@ class RootPlanarClusterWriter
     std::string fileMode = "RECREATE";  ///< file access mode
     std::string treeName = "clusters";  ///< name of the output tree
     TFile* rootFile = nullptr;          ///< common root file
+    /// Tracking geometry required to access global-to-local transforms.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with
