@@ -96,6 +96,7 @@ int runSeedingExample(int argc, char* argv[],
   SeedingAlgorithm::Config seedingCfg;
   seedingCfg.outputSeeds = "seeds";
   seedingCfg.inputMeasurements = hitSmearingCfg.outputMeasurements;
+  seedingCfg.trackingGeometry = tGeometry;
   seedingCfg.rMax = 200.;
   seedingCfg.deltaRMax = 60.;
   seedingCfg.collisionRegionMin = -250;

@@ -8,22 +8,21 @@
 
 #pragma once
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+
 #include <memory>
-#include <set>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace Acts {
-class PlanarModuleStepper;
+class Surface;
+class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -36,9 +35,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputSeeds;
     // input measurements from hit smearing algorithm
     std::string inputMeasurements;
-    // used to get truth information into seeds about what particles are in what
-    // space point.
-    std::string inputHitParticlesMap;
+    /// Tracking geometry for surface lookup.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
 
     float rMax = 200.;
     float deltaRMin = 1.;
@@ -69,28 +67,24 @@ class SeedingAlgorithm final : public BareAlgorithm {
     Acts::SpacePointGridConfig gridConf;
   };
 
-  /// Construct the digitization algorithm.
+  /// Construct the seeding algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   SeedingAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
-  /// @param cluster The hit with local hit information
-  /// Returns a space point with a particle barcode stored in .particles for
-  /// each particle that made this space point.
-  std::unique_ptr<ActsExamples::SimSpacePoint> transformSP(
-      const unsigned int hit_id,
-      const Acts::Measurement<IndexSourceLink, Acts::BoundIndices,
-                              Acts::eBoundLoc0, Acts::eBoundLoc1>
-          meas,
-      const AlgorithmContext& ctx) const;
-
+  /// Run the seeding algorithm.
+  ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
  private:
   Config m_cfg;
+
+  std::unique_ptr<ActsExamples::SimSpacePoint> makeSpacePoint(
+      const Measurement& measurement, const Acts::Surface& surface,
+      const Acts::GeometryContext& geoCtx) const;
 };
 
 }  // namespace ActsExamples
