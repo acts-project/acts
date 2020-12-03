@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+
+#include <memory>
+
 namespace Acts {
+
 // forward declaration to avoid cyclic dependence
 template <typename T>
 class SeedFilter;
@@ -101,4 +105,5 @@ struct SeedfinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 };
+
 }  // namespace Acts
