@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 #include <iosfwd>
 #include <limits>
 
@@ -37,7 +36,7 @@ namespace Acts {
 ///   the future.
 class Material {
  public:
-  using ParametersVector = Acts::ActsVectorF<5>;
+  using ParametersVector = Acts::ActsVector<float, 5>;
 
   // Both mass and molar density are stored as a float and can thus not be
   // distinguished by their types. Just changing the last element in the

@@ -8,13 +8,13 @@
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 
-std::vector<double> Acts::detail::VerticesHelper::phiSegments(
-    double phiMin, double phiMax, const std::vector<double>& phiRefs,
-    double phiTolerance) {
+std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
+    ActsScalar phiMin, ActsScalar phiMax,
+    const std::vector<ActsScalar>& phiRefs, ActsScalar phiTolerance) {
   // This is to ensure that the extrema are built regardless of number
   // of segments
-  std::vector<double> phiSegments;
-  std::vector<double> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
+  std::vector<ActsScalar> phiSegments;
+  std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
   // It does not cover the full azimuth
   if (phiMin != -M_PI or phiMax != M_PI) {
     phiSegments.push_back(phiMin);
@@ -32,7 +32,7 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
     for (const auto& phiRef : phiRefs) {
       // Trying to find the right patch
       auto match = std::find_if(
-          phiSegments.begin(), phiSegments.end(), [&](double phiSeg) {
+          phiSegments.begin(), phiSegments.end(), [&](ActsScalar phiSeg) {
             return std::abs(phiSeg - phiRef) < phiTolerance;
           });
       if (match == phiSegments.end()) {
@@ -45,8 +45,9 @@ std::vector<double> Acts::detail::VerticesHelper::phiSegments(
 }
 
 std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
-    double innerRx, double innerRy, double outerRx, double outerRy,
-    double avgPhi, double halfPhi, unsigned int lseg) {
+    ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
+    ActsScalar outerRy, ActsScalar avgPhi, ActsScalar halfPhi,
+    unsigned int lseg) {
   // List of vertices counter-clockwise starting at smallest phi w.r.t center,
   // for both inner/outer ring/segment
   std::vector<Vector2D> rvertices;  // return vertices
@@ -91,20 +92,20 @@ std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::ellipsoidVertices(
 }
 
 std::vector<Acts::Vector2D> Acts::detail::VerticesHelper::circularVertices(
-    double innerR, double outerR, double avgPhi, double halfPhi,
+    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi, ActsScalar halfPhi,
     unsigned int lseg) {
   return ellipsoidVertices(innerR, innerR, outerR, outerR, avgPhi, halfPhi,
                            lseg);
 }
 
 bool Acts::detail::VerticesHelper::onHyperPlane(
-    const std::vector<Acts::Vector3D>& vertices, double tolerance) {
+    const std::vector<Acts::Vector3D>& vertices, ActsScalar tolerance) {
   // Obvious always on one surface
   if (vertices.size() < 4) {
     return true;
   }
   // Create the hyperplane
-  auto hyperPlane = Eigen::Hyperplane<double, 3>::Through(
+  auto hyperPlane = Eigen::Hyperplane<ActsScalar, 3>::Through(
       vertices[0], vertices[1], vertices[2]);
   for (size_t ip = 3; ip < vertices.size(); ++ip) {
     if (hyperPlane.absDistance(vertices[ip]) > tolerance) {

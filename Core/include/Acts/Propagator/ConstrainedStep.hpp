@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include <algorithm>
 #include <array>
 #include <iomanip>
@@ -20,6 +20,8 @@ namespace Acts {
 
 /// A constrained step class for the steppers
 struct ConstrainedStep {
+  using Scalar = ActsScalar;
+
   /// the types of constraints
   /// from accuracy - this can vary up and down given a good step estimator
   /// from actor    - this would be a typical navigation step
@@ -28,9 +30,9 @@ struct ConstrainedStep {
   enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };
 
   /// the step size tuple
-  std::array<double, 4> values = {
-      {std::numeric_limits<double>::max(), std::numeric_limits<double>::max(),
-       std::numeric_limits<double>::max(), std::numeric_limits<double>::max()}};
+  std::array<Scalar, 4> values = {
+      {std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max(),
+       std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max()}};
 
   /// The Navigation direction
   NavigationDirection direction = forward;
@@ -42,12 +44,12 @@ struct ConstrainedStep {
   ///
   /// @param value is the new value to be updated
   /// @param type is the constraint type
-  void update(const double& value, Type type, bool releaseStep = false) {
+  void update(const Scalar& value, Type type, bool releaseStep = false) {
     if (releaseStep) {
       release(type);
     }
     // The check the current value and set it if appropriate
-    double cValue = values[type];
+    Scalar cValue = values[type];
     values[type] = std::abs(cValue) < std::abs(value) ? cValue : value;
   }
 
@@ -57,7 +59,7 @@ struct ConstrainedStep {
   ///
   /// @param type is the constraint type to be released
   void release(Type type) {
-    double mvalue = (direction == forward)
+    Scalar mvalue = (direction == forward)
                         ? (*std::max_element(values.begin(), values.end()))
                         : (*std::min_element(values.begin(), values.end()));
     values[type] = mvalue;
@@ -65,7 +67,7 @@ struct ConstrainedStep {
 
   /// constructor from double
   /// @paramn value is the user given initial value
-  ConstrainedStep(double value) : direction(value > 0. ? forward : backward) {
+  ConstrainedStep(Scalar value) : direction(value > 0. ? forward : backward) {
     values[accuracy] *= direction;
     values[actor] *= direction;
     values[aborter] *= direction;
@@ -77,7 +79,7 @@ struct ConstrainedStep {
   /// exposed to the Propagator, this adapts also the direction
   ///
   /// @param value is the new accuracy value
-  ConstrainedStep& operator=(const double& value) {
+  ConstrainedStep& operator=(const Scalar& value) {
     /// set the accuracy value
     values[accuracy] = value;
     // set/update the direction
@@ -87,7 +89,7 @@ struct ConstrainedStep {
 
   /// Cast operator to double, returning the min/max value
   /// depending on the direction
-  operator double() const {
+  operator Scalar() const {
     if (direction == forward) {
       return (*std::min_element(values.begin(), values.end()));
     }
@@ -97,17 +99,17 @@ struct ConstrainedStep {
   /// Access to a specific value
   ///
   /// @param type is the resquested parameter type
-  double value(Type type) const { return values[type]; }
+  Scalar value(Type type) const { return values[type]; }
 
   /// Return the maximum step constraint
   /// @return The max step constraint
-  double max() const {
+  Scalar max() const {
     return (*std::max_element(values.begin(), values.end()));
   }
 
   /// Return the minimum step constraint
   /// @return The min step constraint
-  double min() const {
+  Scalar min() const {
     return (*std::min_element(values.begin(), values.end()));
   }
 
@@ -131,9 +133,9 @@ inline std::string ConstrainedStep::toString() const {
 
   // Helper method to avoid unreadable screen output
   auto streamValue = [&](ConstrainedStep cstep) -> void {
-    double val = values[cstep];
+    Scalar val = values[cstep];
     dstream << std::setw(5);
-    if (std::abs(val) == std::numeric_limits<double>::max()) {
+    if (std::abs(val) == std::numeric_limits<Scalar>::max()) {
       dstream << (val > 0 ? "+∞" : "-∞");
     } else {
       dstream << val;

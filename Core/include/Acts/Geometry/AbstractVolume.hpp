@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/Volume.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 
 #include <memory>
 #include <vector>

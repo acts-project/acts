@@ -12,7 +12,7 @@
 /// to generate smeared track parameters. Use this pseudo-reconstructed
 /// tracks as the input to the vertex finder.
 
-#include "Acts/Utilities/Units.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"

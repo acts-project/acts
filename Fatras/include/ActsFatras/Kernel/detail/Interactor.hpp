@@ -82,7 +82,7 @@ struct Interactor {
     // avoid having a clumsy `initialized` flag by reconstructing the particle
     // state directly from the propagation state; using only the identity
     // parameters from the initial particle state.
-    const auto before =
+    const Particle before =
         Particle(particle)
             // include passed material from the initial particle state
             .setMaterialPassed(particle.pathInX0() + result.pathInX0,
@@ -93,7 +93,7 @@ struct Interactor {
             .setAbsMomentum(stepper.momentum(state.stepping));
     // we want to keep the particle state before and after the interaction.
     // since the particle is modified in-place we need a copy.
-    auto after = before;
+    Particle after = before;
 
     // interactions only make sense if there is material to interact with.
     if (surface.surfaceMaterial()) {
@@ -103,8 +103,7 @@ struct Interactor {
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
                                             before.unitDirection());
       if (lpResult.ok()) {
-        Acts::Vector2D local(0., 0.);
-
+        Acts::Vector2D local = lpResult.value();
         Acts::MaterialSlab slab =
             surface.surfaceMaterial()->materialSlab(local);
 

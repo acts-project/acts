@@ -61,7 +61,7 @@ namespace Acts {
 ///
 /// Examples:
 ///
-///     #include "Acts/include/Utilities/Units.hpp"
+///     #include "Acts/include/Definitions/Units.hpp"
 ///     using namespace Acts::UnitLiterals;
 ///
 ///     // define input values w/ units (via unit constants)
@@ -83,6 +83,10 @@ namespace Acts {
 ///     double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
 ///     double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
 ///
+
+/// @note A helper script is available in
+///   `Core/scripts/print_units_physical_constants.py` to validate some of the
+///   numerical values.
 
 namespace UnitConstants {
 // Length, native unit mm
@@ -125,6 +129,7 @@ constexpr double keV = 1e-6;
 constexpr double MeV = 1e-3;
 constexpr double GeV = 1.0;
 constexpr double TeV = 1e3;
+constexpr double J = 6241509074.460763 * GeV;
 // atomic mass unit u
 constexpr double u = 0.93149410242;
 //     1eV/c² == 1.782662e-36kg
@@ -183,6 +188,7 @@ ACTS_DEFINE_UNIT_LITERAL(keV)
 ACTS_DEFINE_UNIT_LITERAL(MeV)
 ACTS_DEFINE_UNIT_LITERAL(GeV)
 ACTS_DEFINE_UNIT_LITERAL(TeV)
+ACTS_DEFINE_UNIT_LITERAL(J)
 ACTS_DEFINE_UNIT_LITERAL(u)
 ACTS_DEFINE_UNIT_LITERAL(g)
 ACTS_DEFINE_UNIT_LITERAL(kg)
@@ -195,4 +201,16 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 // not needed anymore. undef to prevent littering the namespace
 #undef ACTS_DEFINE_UNIT_LITERAL
 }  // namespace UnitLiterals
+
+/// Physical constants in native units.
+///
+/// Unit constants are intentionally not listed.
+namespace PhysicalConstants {
+/// Reduced Planck constant h/2*pi.
+///
+/// Computed from CODATA 2018 constants to double precision.
+inline constexpr double hbar =
+    6.582119569509066e-25 * UnitConstants::GeV * UnitConstants::s;
+}  // namespace PhysicalConstants
+
 }  // namespace Acts

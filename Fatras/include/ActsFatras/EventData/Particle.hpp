@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
@@ -22,7 +23,7 @@ namespace ActsFatras {
 /// Simulation particle information and kinematic state.
 class Particle {
  public:
-  using Scalar = double;
+  using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<Scalar, 3>;
   using Vector4 = Acts::ActsVector<Scalar, 4>;
 

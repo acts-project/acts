@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
@@ -198,11 +198,10 @@ class AnnulusBounds : public DiscBounds {
   /// Private helper method
   Vector2D closestOnSegment(const Vector2D& a, const Vector2D& b,
                             const Vector2D& p,
-                            const Eigen::Matrix<double, 2, 2>& weight) const;
+                            const ActsSymMatrixD<2>& weight) const;
 
   /// Private helper mehtod
-  double squaredNorm(const Vector2D& v,
-                     const Eigen::Matrix<double, 2, 2>& weight) const;
+  double squaredNorm(const Vector2D& v, const ActsSymMatrixD<2>& weight) const;
 };
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {

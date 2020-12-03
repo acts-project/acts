@@ -8,8 +8,7 @@
 
 #include "Acts/Geometry/ConeLayer.hpp"
 
-#include "Acts/Utilities/Definitions.hpp"
-
+#include "Acts/Definitions/Algebra.hpp"
 Acts::ConeLayer::ConeLayer(const Transform3D& transform,
                            std::shared_ptr<const ConeBounds> cbounds,
                            std::unique_ptr<SurfaceArray> surfaceArray,

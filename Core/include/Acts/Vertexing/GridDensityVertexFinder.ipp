@@ -35,7 +35,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
       return seedVec;
     }
   } else {
-    state.mainGrid = ActsVectorF<mainGridSize>::Zero();
+    state.mainGrid = ActsVector<float, mainGridSize>::Zero();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_extractParameters(*trk);
@@ -59,7 +59,7 @@ auto Acts::GridDensityVertexFinder<mainGridSize, trkGridSize, vfitter_t>::find(
 
   double z = 0;
   double width = 0;
-  if (state.mainGrid != ActsVectorF<mainGridSize>::Zero()) {
+  if (state.mainGrid != ActsVector<float, mainGridSize>::Zero()) {
     if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
       auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGrid);

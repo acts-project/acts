@@ -44,7 +44,6 @@ constexpr auto epsDir = 0.125_mrad;
 constexpr auto epsMom = 1_eV;
 // relative covariance tolerance
 constexpr auto epsCov = 0.00125;
-constexpr bool showDebug = false;
 
 constexpr auto bz = 2_T;
 

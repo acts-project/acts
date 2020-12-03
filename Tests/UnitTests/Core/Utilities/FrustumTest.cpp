@@ -22,6 +22,8 @@ BOOST_AUTO_TEST_SUITE(Utilities)
 BOOST_AUTO_TEST_CASE(frustum_construction) {
   output_test_stream output;
 
+  using Vector2F = ActsVector<float, 2>;
+
   using Frustum2f2 = Frustum<float, 2, 2>;
   Frustum2f2 fr({1, 0}, {0, 2}, M_PI / 2.);
 
@@ -34,6 +36,8 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   fr.svg(output, 200, 200);
   BOOST_CHECK(!output.is_empty(true));
 
+  using Vector3F = ActsVector<float, 3>;
+
   using Frustum3f3 = Frustum<float, 3, 3>;
   Frustum3f3 fr33({1, 0, 0}, {0, 2, 1}, M_PI / 2.);
 
@@ -45,7 +49,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
 
   PlyVisualization3D<float> hlp;
   // compile call to draw, does not actually test anything
-  fr33.draw(hlp);
+  // fr33.draw(hlp);
 
   using Frustum3f4 = Frustum<float, 3, 4>;
   Frustum3f4 fr34({1, 0, 0}, {0, 2, 1}, M_PI / 2.);
@@ -56,7 +60,7 @@ BOOST_AUTO_TEST_CASE(frustum_construction) {
   const auto& normals34 = fr34.normals();
   BOOST_CHECK_EQUAL(normals34.size(), 5u);
 
-  fr34.draw(hlp);
+  // fr34.draw(hlp);
 }
 BOOST_AUTO_TEST_SUITE_END()
 

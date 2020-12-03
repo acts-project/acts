@@ -34,6 +34,7 @@ option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
+option(ACTS_BUILD_PLUGIN_ONNX "Build Onnx plugin" OFF)
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -92,6 +93,7 @@ set_option_if(
   ACTS_BUILD_FATRAS
   ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 
 # additional configuration and tools
 include(GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
@@ -163,6 +165,9 @@ if(ACTS_BUILD_PLUGIN_AUTODIFF)
     message(STATUS "Using bundled autodiff")
   endif()
 endif()
+if(ACTS_BUILD_PLUGIN_ONNX)
+  find_package(OnnxRuntime REQUIRED)
+endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
 endif()
@@ -212,6 +217,10 @@ endif()
 if(ACTS_BUILD_DOCS)
   find_package(Doxygen 1.8.11 REQUIRED)
   find_package(Sphinx REQUIRED)
+endif()
+
+if(ACTS_CUSTOM_SCALARTYPE)
+    message(STATUS "Building Acts with custom scalar type: "${ACTS_CUSTOM_SCALARTYPE} )
 endif()
 
 # core library, core plugins, and other components
