@@ -25,7 +25,6 @@ using CovarianceMatrix = Acts::BoundSymMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 const Acts::GeometryContext tgContext;
-const Acts::Test::TestSourceLinkCalibrator calibrator;
 
 }  // namespace
 
