@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 
 #include <cmath>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -72,5 +73,8 @@ constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
          (lhs.varianceZ() == rhs.varianceZ());
 }
+
+/// Container of space points.
+using SimSpacePointContainer = std::vector<SimSpacePoint>;
 
 }  // namespace ActsExamples
