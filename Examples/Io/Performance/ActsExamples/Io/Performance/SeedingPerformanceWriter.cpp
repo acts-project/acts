@@ -8,14 +8,13 @@
 
 #include "SeedingPerformanceWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <numeric>
-#include <set>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <TFile.h>
 

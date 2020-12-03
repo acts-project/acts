@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -17,7 +16,8 @@
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
 #include <mutex>
-#include <set>
+#include <string>
+#include <vector>
 
 class TFile;
 class TTree;

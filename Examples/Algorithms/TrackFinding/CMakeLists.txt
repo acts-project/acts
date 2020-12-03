@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesTrackFinding SHARED
+  src/SeedingAlgorithm.cpp
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
   src/TrackFindingOptions.cpp)
