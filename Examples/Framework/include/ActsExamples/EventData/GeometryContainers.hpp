@@ -13,6 +13,7 @@
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <utility>
 
@@ -154,6 +155,40 @@ inline auto selectModule(const GeometryIdMultiset<T>& container,
       container,
       Acts::GeometryIdentifier().setVolume(volume).setLayer(layer).setSensitive(
           module));
+}
+
+/// Select all elements for the lowest non-zero identifier component.
+///
+/// Zero values of lower components are interpreted as wildcard search patterns
+/// that select all element at the given geometry hierarchy and below. This only
+/// applies to the lower components and not to intermediate zeros.
+///
+/// Examples:
+/// - volume=2,layer=0,module=3 -> select all elements in the module
+/// - volume=1,layer=2,module=0 -> select all elements in the layer
+/// - volume=3,layer=0,module=0 -> select all elements in the volume
+///
+/// @note An identifier with all components set to zero selects the whole input
+///   container.
+/// @note Boundary and approach surfaces do not really fit into the geometry
+///   hierarchy and must be set to zero for the selection. If they are set on an
+///   input identifier, the behaviour of this search method is undefined.
+template <typename T>
+inline Range<typename GeometryIdMultiset<T>::const_iterator>
+selectLowestNonZeroGeometryObject(const GeometryIdMultiset<T>& container,
+                                  Acts::GeometryIdentifier geoId) {
+  assert((geoId.boundary() == 0u) and "Boundary component must be zero");
+  assert((geoId.approach() == 0u) and "Approach component must be zero");
+
+  if (geoId.sensitive() != 0u) {
+    return selectModule(container, geoId);
+  } else if (geoId.layer() != 0u) {
+    return selectLayer(container, geoId);
+  } else if (geoId.volume() != 0u) {
+    return selectVolume(container, geoId);
+  } else {
+    return makeRange(container.begin(), container.end());
+  }
 }
 
 /// Iterate over groups of elements belonging to each module/ sensitive surface.
