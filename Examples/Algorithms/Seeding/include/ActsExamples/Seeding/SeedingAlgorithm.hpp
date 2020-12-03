@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -59,12 +59,6 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::vector<unsigned int> posEndcapLayers = {2, 4, 6, 8};
     unsigned int negEndcapVolume = 7;
     std::vector<unsigned int> negEndcapLayers = {14, 12, 10, 8};
-
-    Acts::SeedfinderConfig<SimSpacePoint> finderConf;
-
-    Acts::SeedFilterConfig sfconf;
-
-    Acts::SpacePointGridConfig gridConf;
   };
 
   /// Construct the seeding algorithm.
@@ -81,6 +75,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  Acts::SpacePointGridConfig m_gridCfg;
+  Acts::SeedfinderConfig<SimSpacePoint> m_finderCfg;
 
   std::unique_ptr<ActsExamples::SimSpacePoint> makeSpacePoint(
       const Measurement& measurement, const Acts::Surface& surface,

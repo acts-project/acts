@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Seeding/SeedingAlgorithm.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
@@ -15,10 +16,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimVertex.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -38,34 +36,35 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing tracking geometry");
   }
 
-  // silicon detector max
-  m_cfg.finderConf.rMax = m_cfg.rMax;
-  m_cfg.finderConf.deltaRMin = m_cfg.deltaRMin;
-  m_cfg.finderConf.deltaRMax = m_cfg.deltaRMax;
-  m_cfg.finderConf.collisionRegionMin = m_cfg.collisionRegionMin;
-  m_cfg.finderConf.collisionRegionMax = m_cfg.collisionRegionMax;
-  m_cfg.finderConf.zMin = m_cfg.zMin;
-  m_cfg.finderConf.zMax = m_cfg.zMax;
-  m_cfg.finderConf.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  m_cfg.finderConf.cotThetaMax = m_cfg.cotThetaMax;
-  m_cfg.finderConf.sigmaScattering = m_cfg.sigmaScattering;
-  m_cfg.finderConf.radLengthPerSeed = m_cfg.radLengthPerSeed;
-  m_cfg.finderConf.minPt = m_cfg.minPt;
-  m_cfg.finderConf.bFieldInZ = m_cfg.bFieldInZ;
-  m_cfg.finderConf.beamPos = m_cfg.beamPos;
-  m_cfg.finderConf.impactMax = m_cfg.impactMax;
+  m_gridCfg.bFieldInZ = m_cfg.bFieldInZ;
+  m_gridCfg.minPt = m_cfg.minPt;
+  m_gridCfg.rMax = m_cfg.rMax;
+  m_gridCfg.zMax = m_cfg.zMax;
+  m_gridCfg.zMin = m_cfg.zMin;
+  m_gridCfg.deltaRMax = m_cfg.deltaRMax;
+  m_gridCfg.cotThetaMax = m_cfg.cotThetaMax;
 
-  m_cfg.sfconf.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
-  m_cfg.finderConf.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-          Acts::SeedFilter<SimSpacePoint>(m_cfg.sfconf));
-  m_cfg.gridConf.bFieldInZ = m_cfg.bFieldInZ;
-  m_cfg.gridConf.minPt = m_cfg.minPt;
-  m_cfg.gridConf.rMax = m_cfg.rMax;
-  m_cfg.gridConf.zMax = m_cfg.zMax;
-  m_cfg.gridConf.zMin = m_cfg.zMin;
-  m_cfg.gridConf.deltaRMax = m_cfg.deltaRMax;
-  m_cfg.gridConf.cotThetaMax = m_cfg.cotThetaMax;
+  // construct seed filter
+  Acts::SeedFilterConfig filterCfg;
+  filterCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
+  m_finderCfg.seedFilter = std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
+      Acts::SeedFilter<SimSpacePoint>(filterCfg));
+
+  m_finderCfg.rMax = m_cfg.rMax;
+  m_finderCfg.deltaRMin = m_cfg.deltaRMin;
+  m_finderCfg.deltaRMax = m_cfg.deltaRMax;
+  m_finderCfg.collisionRegionMin = m_cfg.collisionRegionMin;
+  m_finderCfg.collisionRegionMax = m_cfg.collisionRegionMax;
+  m_finderCfg.zMin = m_cfg.zMin;
+  m_finderCfg.zMax = m_cfg.zMax;
+  m_finderCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
+  m_finderCfg.cotThetaMax = m_cfg.cotThetaMax;
+  m_finderCfg.sigmaScattering = m_cfg.sigmaScattering;
+  m_finderCfg.radLengthPerSeed = m_cfg.radLengthPerSeed;
+  m_finderCfg.minPt = m_cfg.minPt;
+  m_finderCfg.bFieldInZ = m_cfg.bFieldInZ;
+  m_finderCfg.beamPos = m_cfg.beamPos;
+  m_finderCfg.impactMax = m_cfg.impactMax;
 }
 
 std::unique_ptr<ActsExamples::SimSpacePoint>
@@ -116,8 +115,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>());
 
-  Acts::Seedfinder<SimSpacePoint> seedFinder(m_cfg.finderConf);
-
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SimSpacePoint& sp, float, float, float) -> Acts::Vector2 {
     return {sp.varianceR(), sp.varianceZ()};
@@ -164,19 +161,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     spVec.push_back(sp);
     hit_id++;
   }
-  Acts::SeedfinderConfig<SimSpacePoint> fconf = m_cfg.finderConf;
-  std::unique_ptr<Acts::SpacePointGrid<SimSpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConf);
-
-  auto spGroup = Acts::BinnedSPGroup<SimSpacePoint>(
-      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), fconf);
+  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_gridCfg);
+  Acts::BinnedSPGroup<SimSpacePoint> spGroup(spVec.begin(), spVec.end(), ct,
+                                             bottomBinFinder, topBinFinder,
+                                             std::move(grid), m_finderCfg);
+  Acts::Seedfinder<SimSpacePoint> finder(m_finderCfg);
 
   std::vector<std::vector<Acts::Seed<SimSpacePoint>>> seedVector;
   auto groupIt = spGroup.begin();
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
-    seedVector.push_back(seedFinder.createSeedsForGroup(
+    seedVector.push_back(finder.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
   }
 
