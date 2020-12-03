@@ -8,28 +8,68 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+
+#include <cmath>
+
 namespace ActsExamples {
-struct SimSpacePoint {
-  // Hit id
-  unsigned int m_index;
+
+/// Space point representation of a measurement suitable for track seeding.
+class SimSpacePoint {
+ public:
+  template <typename position_t, typename covariance_t>
+  SimSpacePoint(const Eigen::MatrixBase<position_t>& pos,
+                const Eigen::MatrixBase<covariance_t>& cov, Index index)
+      : m_x(pos[Acts::ePos0]),
+        m_y(pos[Acts::ePos1]),
+        m_z(pos[Acts::ePos2]),
+        m_r(std::hypot(m_x, m_y)),
+        //      r = sqrt(x² + y²)
+        //  dr/dx = (1 / sqrt(x² + y²)) * 2 * x = 2 * x / r
+        // var(r) = (dr/dx)² * var(x) + (dr/dy)² * var(y)
+        //        = (4 / r²) * (x² * var(x) + y*2 * var(y))
+        m_varianceR(
+            (4 / (m_r * m_r)) *
+            (m_x * m_x * static_cast<float>(cov(Acts::ePos0, Acts::ePos0)) +
+             m_y * m_y * static_cast<float>(cov(Acts::ePos1, Acts::ePos1)))),
+        m_varianceZ(cov(Acts::ePos2, Acts::ePos2)),
+        m_index(index) {
+    EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
+    EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(covariance_t, 3, 3);
+  }
+
+  constexpr float x() const { return m_x; }
+  constexpr float y() const { return m_y; }
+  constexpr float z() const { return m_z; }
+  constexpr float r() const { return m_r; }
+  constexpr float varianceR() const { return m_varianceR; }
+  constexpr float varianceZ() const { return m_varianceZ; }
+
+  constexpr Index index() const { return m_index; }
+
+ private:
   // Global position
   float m_x;
   float m_y;
   float m_z;
   float m_r;
-  // VarianceR/Z of the SP position.
-  float varianceR;
-  float varianceZ;
-  unsigned int index() const { return m_index; }
-  float x() const { return m_x; }
-  float y() const { return m_y; }
-  float z() const { return m_z; }
-  float r() const { return m_r; }
+  // VarianceR/Z of the global position
+  float m_varianceR;
+  float m_varianceZ;
+  // Index of the underlying measurement/ hit
+  Index m_index;
 };
 
-inline bool operator==(SimSpacePoint a, SimSpacePoint b) {
-  return (a.m_index == b.m_index && a.m_x == b.m_x && a.m_y == b.m_y &&
-          a.m_z == b.m_z && a.varianceR == b.varianceR &&
-          a.varianceZ == b.varianceZ);
+constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
+  // TODO would it be sufficient to check just the index under the assumption
+  //   that the same measurement index always produces the same space point?
+  // no need to check r since it is fully defined by x/y
+  return (lhs.index() == rhs.index()) and (lhs.x() == rhs.x()) and
+         (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
+         (lhs.varianceR() == rhs.varianceR()) and
+         (lhs.varianceZ() == rhs.varianceZ());
 }
+
 }  // namespace ActsExamples

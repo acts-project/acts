@@ -120,7 +120,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SimSpacePoint& sp, float, float, float) -> Acts::Vector2 {
-    return {sp.varianceR, sp.varianceZ};
+    return {sp.varianceR(), sp.varianceZ()};
   };
 
   const auto& measurements =
