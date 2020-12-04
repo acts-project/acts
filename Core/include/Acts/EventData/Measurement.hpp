@@ -576,8 +576,9 @@ auto makeMeasurement(source_link_t source,
                      indices_t index0, tail_indices_t... tailIndices)
     -> FixedSizeMeasurement<source_link_t, indices_t,
                             1u + sizeof...(tail_indices_t)> {
-  indices_t indices[1u + sizeof...(tail_indices_t)] = {index0, tailIndices...};
-  return {std::move(source), indices, params, cov};
+  using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
+  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
+          cov};
 }
 
 namespace detail {
