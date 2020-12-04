@@ -406,24 +406,15 @@ using FittableVolumeMeasurement =
 /// @tparam indices_t Parameter index type, determines the full parameter space
 /// @tparam kSize Size of the parameter subset.
 ///
-/// The measurement is templated on the measurement subspace size and its
-/// content (indices) is defined at runtime. In previous implementations,
-/// the measurement was templated directly on the subspace indices. This lead to
-/// a combinatorial explosion and severe penalty during compilation since all
-/// possible combinations need to be considered for the measurement variant.
-/// However, for the computations only the size of the measurement subspace is
-/// relevant.
-///
-/// The measurement intenionally does not store a pointer/reference to the
-/// explicit reference object in the geometry hierarchy, i.e. the surface or
-/// volume. The reference object can already be identified via the geometry
-/// identifier provided by the source link. Since a measurement
-/// **must** be anchored within the geometry hierarchy, all measurement surfaces
-/// and volumes **must** provide valid geometry identifiers. In all use-cases,
-/// e.g. Kalman filtering, a pointer/reference to the reference object is
-/// available before the measurement is accessed; e.g. the propagator provides
-/// the surface pointer during navigation, which is then used to lookup possible
-/// measurements.
+/// The measurement intentionally does not store a pointer/reference to the
+/// reference object in the geometry hierarchy, i.e. the surface or volume. The
+/// reference object can already be identified via the geometry identifier
+/// provided by the source link. Since a measurement **must** be anchored within
+/// the geometry hierarchy, all measurement surfaces and volumes **must**
+/// provide valid geometry identifiers. In all use-cases, e.g. Kalman filtering,
+/// a pointer/reference to the reference object is available before the
+/// measurement is accessed; e.g. the propagator provides the surface pointer
+/// during navigation, which is then used to lookup possible measurements.
 ///
 /// The pointed-to geometry object would differ depending on the parameter type.
 /// This means either, that there needs to be an additional variable type or
