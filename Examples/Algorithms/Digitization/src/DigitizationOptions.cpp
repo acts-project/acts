@@ -48,9 +48,9 @@ void ActsExamples::Options::addDigitizationOptions(
   opt("digi-smear-parameters",
       value<read_range>()->multitoken()->default_value({}),
       "Smearing Input: smear parameters depending on the smearing type, 1 "
-      "parameter for simple gauss, 3 for all others (1 parameter, 2 absolute "
+      "parameter for simple gauss, 4 for all others (1 parameter, 2 absolute "
       "range "
-      "values, 1 range indicator: both neg < 0, pos/neg = 0, both pos > 0).");
+      "values, 1 range indicator: both neg < 0, neg/pos = 0, both pos > 0).");
 }
 
 namespace {
@@ -66,24 +66,47 @@ enum SmearingTypes : int {
 constexpr size_t numConfigParametersForType(int type) {
   // Gaussian smearing requires only a width/standard deviation parameter
   // Everything else requires a width and a range
-  return (static_cast<SmearingTypes>(type) == eGauss) ? 1u : 3u;
+  return (static_cast<SmearingTypes>(type) == eGauss) ? 1u : 4u;
 }
 
 ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
 makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
   using namespace ActsExamples::Digitization;
 
+  // this is an artifact from the command line parsing. all numbers must be
+  // positive, so we need to determine the signs of the range limits with an
+  // additional parameter. see command line flag documentation above for
+  // details.
+  double signLow = 1;
+  double signHigh = 1;
+  if (smearingType != eGauss) {
+    if (parameters[3u] < 0) {
+      signLow = -1;
+      signHigh = -1;
+    } else if (0 < parameters[3u]) {
+      signLow = 1;
+      signHigh = 1;
+    } else {
+      signLow = -1;
+      signHigh = 1;
+    }
+  }
+
   switch (smearingType) {
     case eGauss:
       return Gauss(parameters[0]);
     case eGaussTruncated:
-      return GaussTrunc(parameters[0], {parameters[1u], parameters[2u]});
+      return GaussTrunc(parameters[0],
+                        {signLow * parameters[1u], signHigh * parameters[2u]});
     case eGaussClipped:
-      return GaussClipped(parameters[0], {parameters[1u], parameters[2u]});
+      return GaussClipped(
+          parameters[0], {signLow * parameters[1u], signHigh * parameters[2u]});
     case eUniform:
-      return Uniform(parameters[0], {parameters[1u], parameters[2u]});
+      return Uniform(parameters[0],
+                     {signLow * parameters[1u], signHigh * parameters[2u]});
     case eDigital:
-      return Digital(parameters[0], {parameters[1u], parameters[2u]});
+      return Digital(parameters[0],
+                     {signLow * parameters[1u], signHigh * parameters[2u]});
   }
   return nullptr;
 }
