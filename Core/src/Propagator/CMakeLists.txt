@@ -2,6 +2,7 @@ target_sources_local(
   ActsCore
   PRIVATE
     EigenStepperError.cpp
+    PropagatorError.cpp
     StraightLineStepper.cpp
     detail/PointwiseMaterialInteraction.cpp
     detail/CovarianceEngine.cpp
