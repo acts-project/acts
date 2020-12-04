@@ -89,32 +89,20 @@ class FixedSizeSubspace {
  public:
   /// Construct from a container of axis indices.
   ///
-  /// @tparam index_container_t Forward-iterable Container for indices
-  /// @param indices Ordered, unique axis indices, must contain kSize entries
-  template <typename index_container_t>
-  constexpr FixedSizeSubspace(const index_container_t& indices) {
-    // this way of iteration imposes least constraints on the input container
-    auto idx = std::begin(indices);
-    auto end = std::end(indices);
-    size_t istore = 0u;
-    // limit iteration both by input and storage size
-    for (; (idx != end) and (istore < kSize); ++idx, ++istore) {
-      // verify inputs
-      assert((*idx < kFullSize) and
+  /// @tparam index_t Input index type, must be convertible to uint8_t
+  /// @param indices Unique, ordered indices
+  template <typename index_t>
+  constexpr FixedSizeSubspace(const std::array<index_t, kSize>& indices) {
+    for (size_t i = 0u; i < kSize; ++i) {
+      assert((indices[i] < kFullSize) and
              "Axis indices must be within the full space");
-      if (0u < istore) {
-        assert((m_axes[istore - 1u] < *idx) and
-               "Axis indices must be strongly ordered and unique");
+      if (0u < i) {
+        assert((indices[i - 1u] < indices[i]) and
+               "Axis indices must be unique and ordered");
       }
-      // assign stored axis
-      m_axes[istore] = static_cast<uint8_t>(*idx);
     }
-    assert((istore == kSize) and "Not enough input indices");
-    assert((idx == end) and "Too many input indices");
-    // if there are missing input indices, fill the axes with invalid values
-    // this is a defensive measure for non-debug builds to provoke segfaults
-    for (; istore < kSize; ++istore) {
-      m_axes[istore] = UINT8_MAX;
+    for (size_t i = 0; i < kSize; ++i) {
+      m_axes[i] = static_cast<uint8_t>(indices[i]);
     }
   }
   // The subset can not be constructed w/o defining its axis indices.
