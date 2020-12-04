@@ -488,19 +488,19 @@ class FixedSizeMeasurement {
   FixedSizeMeasurement& operator=(FixedSizeMeasurement&&) = default;
 
   /// Source link that connects to the underlying detector readout.
-  constexpr const source_link_t& sourceLink() const { return m_source; }
+  const source_link_t& sourceLink() const { return m_source; }
 
   /// Number of measured parameters.
   static constexpr size_t size() { return kSize; }
 
   /// Check if a specific parameter is part of this measurement.
-  constexpr bool contains(indices_t i) const { return m_subspace.contains(i); }
+  bool contains(indices_t i) const { return m_subspace.contains(i); }
 
   /// Measured parameters values.
-  constexpr const ParametersVector& parameters() const { return m_params; }
+  const ParametersVector& parameters() const { return m_params; }
 
   /// Measured parameters covariance.
-  constexpr const CovarianceMatrix& covariance() const { return m_cov; }
+  const CovarianceMatrix& covariance() const { return m_cov; }
 
   /// Projection matrix from the full space into the measured subspace.
   ProjectionMatrix projector() const {
