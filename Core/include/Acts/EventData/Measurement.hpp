@@ -453,7 +453,6 @@ class FixedSizeMeasurement {
 
   /// Construct from source link, subset indices, and measured data.
   ///
-  /// @tparam index_container_t Forward-iterable Container for indices
   /// @tparam parameters_t Input parameters vector type
   /// @tparam covariance_t Input covariance matrix type
   /// @param source The link that connects to the underlying detector readout
@@ -463,9 +462,9 @@ class FixedSizeMeasurement {
   ///
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
-  template <typename index_container_t, typename parameters_t,
-            typename covariance_t>
-  FixedSizeMeasurement(source_link_t source, const index_container_t& indices,
+  template <typename parameters_t, typename covariance_t>
+  FixedSizeMeasurement(source_link_t source,
+                       const std::array<indices_t, kSize>& indices,
                        const Eigen::MatrixBase<parameters_t>& params,
                        const Eigen::MatrixBase<covariance_t>& cov)
       : m_source(std::move(source)),
