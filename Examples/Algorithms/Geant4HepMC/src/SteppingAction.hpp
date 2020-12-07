@@ -9,11 +9,11 @@
 #pragma once
 
 #include <vector>
-#include <G4UserSteppingAction.hh>
-#include <globals.hh>
 
+#include <G4UserSteppingAction.hh>
 #include <HepMC3/GenParticle.h>
 #include <HepMC3/GenVertex.h>
+#include <globals.hh>
 
 namespace ActsExamples {
 

@@ -6,14 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <algorithm>
-#include <chrono>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <random>
-#include <vector>
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -21,6 +13,14 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <random>
+#include <vector>
 
 using namespace Acts;
 

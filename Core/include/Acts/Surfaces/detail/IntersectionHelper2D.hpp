@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include <array>
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <array>
 
 namespace Acts {
 namespace detail {
