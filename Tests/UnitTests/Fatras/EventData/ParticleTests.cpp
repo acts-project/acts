@@ -32,13 +32,13 @@ BOOST_AUTO_TEST_CASE(Construct) {
   BOOST_CHECK_EQUAL(particle.particleId(), pid);
   BOOST_CHECK_EQUAL(particle.pdg(), PdgParticle::eProton);
   // particle is at rest at the origin
-  BOOST_CHECK_EQUAL(particle.position4(), Particle::Vector4::Zero());
+  BOOST_CHECK_EQUAL(particle.fourPosition(), Particle::Vector4::Zero());
   BOOST_CHECK_EQUAL(particle.position(), Particle::Vector3::Zero());
   BOOST_CHECK_EQUAL(particle.time(), Particle::Scalar(0));
-  BOOST_CHECK_EQUAL(particle.position4().x(), particle.position().x());
-  BOOST_CHECK_EQUAL(particle.position4().y(), particle.position().y());
-  BOOST_CHECK_EQUAL(particle.position4().z(), particle.position().z());
-  BOOST_CHECK_EQUAL(particle.position4().w(), particle.time());
+  BOOST_CHECK_EQUAL(particle.fourPosition().x(), particle.position().x());
+  BOOST_CHECK_EQUAL(particle.fourPosition().y(), particle.position().y());
+  BOOST_CHECK_EQUAL(particle.fourPosition().z(), particle.position().z());
+  BOOST_CHECK_EQUAL(particle.fourPosition().w(), particle.time());
   // particle direction is undefined, but must be normalized
   CHECK_CLOSE_REL(particle.unitDirection().norm(), 1, eps);
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), Particle::Scalar(0));

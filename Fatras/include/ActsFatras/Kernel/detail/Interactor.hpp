@@ -142,7 +142,7 @@ struct Interactor {
       result.hits.emplace_back(
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
-          Hit::Scalar(0.5) * (before.position4() + after.position4()),
+          Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
           before.momentum4(), after.momentum4(), result.hits.size());
     }
 

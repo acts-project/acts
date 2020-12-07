@@ -131,7 +131,7 @@ class Particle {
   constexpr Scalar mass() const { return m_mass; }
 
   /// Space-time position four-vector.
-  constexpr const Vector4 &position4() const { return m_position4; }
+  constexpr const Vector4 &fourPosition() const { return m_position4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_position4.segment<3>(Acts::ePos0); }
   /// Time coordinate.
