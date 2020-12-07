@@ -21,6 +21,7 @@ target_sources_local(
     StrawSurface.cpp
     Surface.cpp
     SurfaceArray.cpp
+    SurfaceError.cpp
     TrapezoidBounds.cpp
     detail/AlignmentHelper.cpp
     VerticesHelper.cpp

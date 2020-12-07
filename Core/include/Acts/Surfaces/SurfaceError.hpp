@@ -8,41 +8,17 @@
 
 #pragma once
 
-#include <string>        // for string printing
-#include <system_error>  // bring in std::error_code et al
+#include <system_error>
 
 namespace Acts {
-// This is the custom error code enum
-enum class SurfaceError { GlobalPositionNotOnSurface = 1 };
 
-namespace detail {
-// Define a custom error code category derived from std::error_category
-class SurfaceErrorCategory : public std::error_category {
- public:
-  // Return a short descriptive name for the category
-  const char* name() const noexcept final { return "SurfaceError"; }
-  // Return what each enum means in text
-  std::string message(int c) const final {
-    switch (static_cast<SurfaceError>(c)) {
-      case SurfaceError::GlobalPositionNotOnSurface:
-        return "Global to local transformation failed: position not on "
-               "surface.";
-      default:
-        return "unknown";
-    }
-  }
+enum class SurfaceError {
+  // ensure all values are non-zero
+  GlobalPositionNotOnSurface = 1,
 };
-}  // namespace detail
 
-// Declare a global function returning a static instance of the custom category
-extern inline const detail::SurfaceErrorCategory& SurfaceErrorCategory() {
-  static detail::SurfaceErrorCategory c;
-  return c;
-}
+std::error_code make_error_code(Acts::SurfaceError e);
 
-inline std::error_code make_error_code(Acts::SurfaceError e) {
-  return {static_cast<int>(e), Acts::SurfaceErrorCategory()};
-}
 }  // namespace Acts
 
 namespace std {
