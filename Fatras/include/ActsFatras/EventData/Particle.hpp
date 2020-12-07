@@ -137,7 +137,7 @@ class Particle {
   /// Time coordinate.
   Scalar time() const { return m_position4[Acts::eTime]; }
   /// Energy-momentum four-vector.
-  Vector4 momentum4() const {
+  Vector4 fourMomentum() const {
     Vector4 mom4;
     // stored direction is always normalized
     mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];

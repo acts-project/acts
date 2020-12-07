@@ -31,7 +31,7 @@ std::vector<ActsExamples::SimParticle> genParticlesToActs(
 HepMC3::GenParticlePtr actsParticleToGen(
     std::shared_ptr<ActsExamples::SimParticle> actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
-  const auto mom = actsParticle->momentum4();
+  const auto mom = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom[0], mom[1], mom[2], mom[3]);
   // Create HepMC3::GenParticle
   HepMC3::GenParticle genParticle(vec, actsParticle->pdg());

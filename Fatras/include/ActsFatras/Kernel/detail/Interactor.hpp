@@ -143,7 +143,7 @@ struct Interactor {
           surface.geometryId(), before.particleId(),
           // the interaction could potentially modify the particle position
           Hit::Scalar(0.5) * (before.fourPosition() + after.fourPosition()),
-          before.momentum4(), after.momentum4(), result.hits.size());
+          before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
     // continue the propagation with the modified parameters

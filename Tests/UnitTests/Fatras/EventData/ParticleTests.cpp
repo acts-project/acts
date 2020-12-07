@@ -55,10 +55,10 @@ BOOST_AUTO_TEST_CASE(CorrectEnergy) {
 
   BOOST_CHECK_EQUAL(particle.mass(), 1_GeV);
   // check that the particle has some input energy
-  BOOST_CHECK_EQUAL(particle.momentum4().x(), 2_GeV);
-  BOOST_CHECK_EQUAL(particle.momentum4().y(), 0_GeV);
-  BOOST_CHECK_EQUAL(particle.momentum4().z(), 0_GeV);
-  BOOST_CHECK_EQUAL(particle.momentum4().w(), std::hypot(1_GeV, 2_GeV));
+  BOOST_CHECK_EQUAL(particle.fourMomentum().x(), 2_GeV);
+  BOOST_CHECK_EQUAL(particle.fourMomentum().y(), 0_GeV);
+  BOOST_CHECK_EQUAL(particle.fourMomentum().z(), 0_GeV);
+  BOOST_CHECK_EQUAL(particle.fourMomentum().w(), std::hypot(1_GeV, 2_GeV));
   BOOST_CHECK_EQUAL(particle.transverseMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.absoluteMomentum(), 2_GeV);
   BOOST_CHECK_EQUAL(particle.energy(), std::hypot(1_GeV, 2_GeV));
