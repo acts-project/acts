@@ -13,10 +13,10 @@
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
 
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <string>
-#include <fstream>
 
 using namespace Acts::UnitLiterals;
 
@@ -69,7 +69,6 @@ int main(int argc, char* argv[]) {
   std::ofstream os{"bfield_bench.csv"};
 
   auto csv = [&](const std::string& name, auto res) {
-
     os << name << "," << res.run_timings.size() << "," << res.iters_per_run
        << "," << res.totalTime().count() << "," << res.runTimeMedian().count()
        << "," << 1.96 * res.runTimeError().count() << ","
@@ -80,8 +79,8 @@ int main(int argc, char* argv[]) {
   };
 
   os << "name,runs,iters,total_time,run_time_median,run_time_error,iter_"
-               "time_average,iter_time_error"
-            << std::endl;
+        "time_average,iter_time_error"
+     << std::endl;
 
   // SolenoidBField lookup is so slow that the cost of generating a random field
   // lookup position is negligible in comparison...
@@ -117,11 +116,10 @@ int main(int argc, char* argv[]) {
   std::cout << map_rand_result << std::endl;
   csv("interp_nocache_random", map_rand_result);
 
-
   // - This variation of the first benchmark uses a fixed position again, but
   //   uses the cache infrastructure to evaluate how much of an impact it has on
-  //   performance in this scenario. We expect this to improve performance as the
-  //   the cache will always be valid for the fixed point.
+  //   performance in this scenario. We expect this to improve performance as
+  //   the the cache will always be valid for the fixed point.
   {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;
@@ -133,9 +131,9 @@ int main(int argc, char* argv[]) {
   }
 
   // - This variation of the second benchmark again generates random positions
-  //   and uses the cache infrastructure to evaluate the impact on performance. We
-  //   expect this to deteriorate performance, as the cache will most likely be
-  //   invalid and need to be recreated, on top of the underlying lookup.
+  //   and uses the cache infrastructure to evaluate the impact on performance.
+  //   We expect this to deteriorate performance, as the cache will most likely
+  //   be invalid and need to be recreated, on top of the underlying lookup.
   {
     std::cout << "Benchmarking cached random interpolated field lookup: "
               << std::flush;
@@ -146,12 +144,11 @@ int main(int argc, char* argv[]) {
     csv("interp_cache_random", map_rand_result_cache);
   }
 
-
   // - The fourth benchmark tests a more 'realistic' access pattern than fixed
-  //   or random positions: it advances along a straight line (which is close to a
-  //   slightly curved line which happens in particle propagation). This instance
-  //   does not use the cache infrastructure, so is effectively close to the
-  //   random points benchmark, although positions are not really random.
+  //   or random positions: it advances along a straight line (which is close to
+  //   a slightly curved line which happens in particle propagation). This
+  //   instance does not use the cache infrastructure, so is effectively close
+  //   to the random points benchmark, although positions are not really random.
   {
     std::cout << "Benchmarking advancing interpolated field lookup: "
               << std::flush;
@@ -171,9 +168,9 @@ int main(int argc, char* argv[]) {
 
   // - This variation of the fourth benchmark advances in a straight line, but
   //   also uses the cache infrastructure. As subsequent positions are close to
-  //   one another, the cache will be valid for a certain number of points, before
-  //   becoming invalid. This means we expect performance to improve over the
-  //   uncached straight line advance.
+  //   one another, the cache will be valid for a certain number of points,
+  //   before becoming invalid. This means we expect performance to improve over
+  //   the uncached straight line advance.
   {
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
