@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
 
-  std::ofstream& os{"bfield_bench.csv"};
+  std::ofstream os{"bfield_bench.csv"};
 
   auto csv = [&](const std::string& name, auto res) {
 
