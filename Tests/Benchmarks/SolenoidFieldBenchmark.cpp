@@ -16,6 +16,7 @@
 #include <iostream>
 #include <random>
 #include <string>
+#include <fstream>
 
 using namespace Acts::UnitLiterals;
 
@@ -65,8 +66,9 @@ int main(int argc, char* argv[]) {
     return {r * std::cos(phi), r * std::sin(phi), z};
   };
 
+  std::ofstream& os{"bfield_bench.csv"};
+
   auto csv = [&](const std::string& name, auto res) {
-    auto& os = std::cerr;
 
     os << name << "," << res.run_timings.size() << "," << res.iters_per_run
        << "," << res.totalTime().count() << "," << res.runTimeMedian().count()
@@ -77,7 +79,7 @@ int main(int argc, char* argv[]) {
     os << std::endl;
   };
 
-  std::cerr << "name,runs,iters,total_time,run_time_median,run_time_error,iter_"
+  os << "name,runs,iters,total_time,run_time_median,run_time_error,iter_"
                "time_average,iter_time_error"
             << std::endl;
 
@@ -100,20 +102,26 @@ int main(int argc, char* argv[]) {
   //   that sense, it provides a lower bound of field lookup performance.
   std::cout << "Benchmarking interpolated field lookup: " << std::flush;
   const auto fixedPos = genPos();
-  const auto map_cached_result = Acts::Test::microBenchmark(
+  const auto map_fixed_nocache_result = Acts::Test::microBenchmark(
       [&] { return bFieldMap.getField(fixedPos); }, iters_map);
-  std::cout << map_cached_result << std::endl;
-  csv("interp_nocache_fixed", map_cached_result);
+  std::cout << map_fixed_nocache_result << std::endl;
+  csv("interp_nocache_fixed", map_fixed_nocache_result);
+
+  std::cout << "Benchmarking random interpolated field lookup: " << std::flush;
 
   // - The second benchmark generates random positions, so it is biased by the
   //   cost of random position generation and has unrealistically bad cache
   //   locality, but provides an upper bound of field lookup performance.
-  std::cout << "Benchmarking random interpolated field lookup: " << std::flush;
   const auto map_rand_result = Acts::Test::microBenchmark(
       [&] { return bFieldMap.getField(genPos()); }, iters_map);
   std::cout << map_rand_result << std::endl;
   csv("interp_nocache_random", map_rand_result);
 
+
+  // - This variation of the first benchmark uses a fixed position again, but
+  //   uses the cache infrastructure to evaluate how much of an impact it has on
+  //   performance in this scenario. We expect this to improve performance as the
+  //   the cache will always be valid for the fixed point.
   {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;
@@ -124,9 +132,10 @@ int main(int argc, char* argv[]) {
     csv("interp_cache_fixed", map_cached_result_cache);
   }
 
-  // - The second benchmark generates random positions, so it is biased by the
-  //   cost of random position generation and has unrealistically bad cache
-  //   locality, but provides an upper bound of field lookup performance.
+  // - This variation of the second benchmark again generates random positions
+  //   and uses the cache infrastructure to evaluate the impact on performance. We
+  //   expect this to deteriorate performance, as the cache will most likely be
+  //   invalid and need to be recreated, on top of the underlying lookup.
   {
     std::cout << "Benchmarking cached random interpolated field lookup: "
               << std::flush;
@@ -137,6 +146,12 @@ int main(int argc, char* argv[]) {
     csv("interp_cache_random", map_rand_result_cache);
   }
 
+
+  // - The fourth benchmark tests a more 'realistic' access pattern than fixed
+  //   or random positions: it advances along a straight line (which is close to a
+  //   slightly curved line which happens in particle propagation). This instance
+  //   does not use the cache infrastructure, so is effectively close to the
+  //   random points benchmark, although positions are not really random.
   {
     std::cout << "Benchmarking advancing interpolated field lookup: "
               << std::flush;
@@ -154,6 +169,11 @@ int main(int argc, char* argv[]) {
     csv("interp_nocache_adv", map_adv_result);
   }
 
+  // - This variation of the fourth benchmark advances in a straight line, but
+  //   also uses the cache infrastructure. As subsequent positions are close to
+  //   one another, the cache will be valid for a certain number of points, before
+  //   becoming invalid. This means we expect performance to improve over the
+  //   uncached straight line advance.
   {
     std::cout << "Benchmarking cached advancing interpolated field lookup: "
               << std::flush;
