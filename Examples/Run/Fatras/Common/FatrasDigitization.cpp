@@ -55,9 +55,12 @@ void setupDigitization(
       RootDigitizationWriter::Config smearWriterRoot;
       smearWriterRoot.inputMeasurements = smearCfg.outputMeasurements;
       smearWriterRoot.inputSimHits = smearCfg.inputSimHits;
+      smearWriterRoot.inputMeasurementSimHitsMap =
+          smearCfg.outputMeasurementSimHitsMap;
       smearWriterRoot.filePath =
           joinPaths(outputDir, smearCfg.outputMeasurements + ".root");
       smearWriterRoot.smearers = smearCfg.smearers;
+      smearWriterRoot.trackingGeometry = trackingGeometry;
       sequencer.addWriter(
           std::make_shared<RootDigitizationWriter>(smearWriterRoot, logLevel));
     }

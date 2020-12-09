@@ -31,8 +31,7 @@ void ActsExamples::Options::addDigitizationOptions(
       "options input on command line.");
   opt("digi-geometric-3d", bool_switch(),
       "Geometric: Switching geometric digitisation in 3D on");
-  opt("digi-smearing", bool_switch(),
-      "Smearing: Switching geometric digitisation in 3D on");
+  opt("digi-smearing", bool_switch(), "Smearing: Switching hit smearing on");
   opt("digi-smear-volume-id",
       value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: sensitive volume identifiers.");
@@ -122,10 +121,6 @@ ActsExamples::Options::readSmearingConfig(
   using namespace Acts::UnitLiterals;
 
   SmearingAlgorithm::Config smearCfg;
-
-  smearCfg.inputSimHits = variables["digi-input-hits"].as<std::string>();
-  smearCfg.outputMeasurements =
-      variables["digi-smear-output"].as<std::string>();
 
   // Smear configuration with command line input
   // only limited smearing configuration possible
@@ -217,5 +212,6 @@ ActsExamples::Options::readSmearingConfig(
   smearCfg.smearers =
       Acts::GeometryHierarchyMap<SmearingAlgorithm::SmearerConfig>(
           std::move(smearersInput));
+
   return smearCfg;
 }
