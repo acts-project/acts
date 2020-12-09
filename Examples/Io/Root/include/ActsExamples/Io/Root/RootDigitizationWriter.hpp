@@ -165,7 +165,7 @@ class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
     /// @param m The measurement set
     template <typename measurement_t>
     void fillBoundMeasurement(const measurement_t& m) {
-      auto fullVect = m.projector().transpose() * m.parameters();
+      Acts::BoundVector fullVect = m.expander() * m.parameters();
       recBound[Acts::eBoundLoc0] = fullVect[Acts::eBoundLoc0];
       recBound[Acts::eBoundLoc1] = fullVect[Acts::eBoundLoc1];
       recBound[Acts::eBoundPhi] = fullVect[Acts::eBoundPhi];
