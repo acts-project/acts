@@ -9,7 +9,9 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimParticle.hpp"
+
 #include <memory>
+
 #include <G4ParticleTable.hh>
 #include <G4SystemOfUnits.hh>
 #include <G4ThreeVector.hh>

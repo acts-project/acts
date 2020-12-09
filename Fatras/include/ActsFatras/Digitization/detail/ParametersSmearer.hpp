@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include <utility>
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <utility>
 
 namespace ActsFatras {
 

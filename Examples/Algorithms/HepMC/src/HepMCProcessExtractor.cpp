@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/HepMC/HepMCProcessExtractor.hpp"
+
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
+
 #include <stdexcept>
 
 #include <HepMC3/GenEvent.h>

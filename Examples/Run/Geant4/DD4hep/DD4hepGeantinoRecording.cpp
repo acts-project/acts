@@ -10,9 +10,10 @@
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Geant4DD4hep/DD4hepDetectorConstruction.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "../GeantinoRecordingBase.hpp"
 
 #include <boost/program_options.hpp>
+
+#include "../GeantinoRecordingBase.hpp"
 
 using namespace ActsExamples;
 

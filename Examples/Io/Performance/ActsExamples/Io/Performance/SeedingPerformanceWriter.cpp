@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "SeedingPerformanceWriter.hpp"
+
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -15,6 +16,7 @@
 #include <numeric>
 #include <set>
 #include <stdexcept>
+
 #include <TFile.h>
 
 using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;

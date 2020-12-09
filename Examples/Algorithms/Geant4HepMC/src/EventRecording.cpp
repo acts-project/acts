@@ -7,19 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
+
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+
 #include <iostream>
 #include <stdexcept>
+
 #include <FTFP_BERT.hh>
+#include <HepMC3/GenParticle.h>
+
 #include "EventAction.hpp"
 #include "G4RunManager.hh"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
-
-#include <HepMC3/GenParticle.h>
 
 ActsExamples::EventRecording::~EventRecording() {
   m_runManager = nullptr;

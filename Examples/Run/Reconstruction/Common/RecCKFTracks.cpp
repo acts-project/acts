@@ -31,6 +31,7 @@
 #include <Acts/Definitions/Units.hpp>
 
 #include <memory>
+
 #include <boost/filesystem.hpp>
 
 using namespace Acts::UnitLiterals;

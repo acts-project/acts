@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <limits>
-
 #include "Acts/Definitions/Algebra.hpp"
+
+#include <limits>
 namespace Acts {
 
 ///  @struct Intersection
