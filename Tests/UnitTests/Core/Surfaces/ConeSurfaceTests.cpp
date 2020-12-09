@@ -262,8 +262,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
       coneSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
   // Check if the result is as expected
-  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  PositionToBoundLocalMatrix expLoc3DToLocBound =
+      PositionToBoundLocalMatrix::Zero();
   expLoc3DToLocBound << -1, 0, M_PI / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

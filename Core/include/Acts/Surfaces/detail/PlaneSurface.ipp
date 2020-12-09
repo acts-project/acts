@@ -47,10 +47,10 @@ inline SurfaceIntersection PlaneSurface::intersect(
   return {intersection, this};
 }
 
-inline LocalCartesianToBoundLocalMatrix
+inline PositionToBoundLocalMatrix
 PlaneSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& /*unused*/, const Vector3D& /*unused*/) const {
-  const LocalCartesianToBoundLocalMatrix loc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Identity();
+  const PositionToBoundLocalMatrix loc3DToLocBound =
+      PositionToBoundLocalMatrix::Identity();
   return loc3DToLocBound;
 }

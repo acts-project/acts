@@ -127,34 +127,38 @@ static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
 
 // Matrix and vector types related to bound track parameters.
 
-using BoundVector = ActsVector<BoundScalar, eBoundSize>;
-using BoundRowVector = ActsRowVector<BoundScalar, eBoundSize>;
-using BoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eBoundSize>;
-using BoundSymMatrix = ActsSymMatrix<BoundScalar, eBoundSize>;
-
-using LocalCartesianToBoundLocalMatrix = ActsMatrix<BoundScalar, 2, 3>;
+using BoundVector = Eigen::Matrix<BoundScalar, eBoundSize, 1>;
+using BoundMatrix = Eigen::Matrix<BoundScalar, eBoundSize, eBoundSize>;
+using BoundSymMatrix = Eigen::Matrix<BoundScalar, eBoundSize, eBoundSize>;
 
 // Matrix and vector types related to free track parameters.
 
-using FreeVector = ActsVector<FreeScalar, eFreeSize>;
-using FreeRowVector = ActsRowVector<FreeScalar, eFreeSize>;
-using FreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eFreeSize>;
-using FreeSymMatrix = ActsSymMatrix<FreeScalar, eFreeSize>;
+using FreeVector = Eigen::Matrix<FreeScalar, eFreeSize, 1>;
+using FreeMatrix = Eigen::Matrix<FreeScalar, eFreeSize, eFreeSize>;
+using FreeSymMatrix = Eigen::Matrix<FreeScalar, eFreeSize, eFreeSize>;
 
-// Mapping to bound track parameters.
+// Mapping from bound track parameters.
 //
-// Assumes that matrices represent maps from another space into the space of
-// bound track parameters. Thus, the bound Scalar type is sufficient
-// to retain accuracy.
+// Assumes that matrices represent maps from the bound parameters space into
+// another space. To retain the accuracy of the input space, the mappings must
+// use the same scalar as the input space.
 
-using FreeToBoundMatrix = ActsMatrix<BoundScalar, eBoundSize, eFreeSize>;
+using BoundToFreeMatrix = Eigen::Matrix<BoundScalar, eFreeSize, eBoundSize>;
 
-// Mapping to free track parameters.
+// Mapping from free track parameters.
 //
-// Assumes that matrices represent maps from another space into the space of
-// free track parameters. Thus, the free Scalar type is sufficient
-// to retain accuracy.
+// Assumes that matrices represent maps from the free parameters space into
+// another space. To retain the accuracy of the input space, the mappings must
+// use the same scalar as the input space.
 
-using BoundToFreeMatrix = ActsMatrix<FreeScalar, eFreeSize, eBoundSize>;
+using FreeToBoundMatrix = Eigen::Matrix<FreeScalar, eBoundSize, eFreeSize>;
+using FreeToPathMatrix = Eigen::Matrix<FreeScalar, 1, eFreeSize>;
+
+// Other mappings.
+
+// TODO this is not track parameter specific and might fit better to the general
+//   algebra definitions as it connects three- and two-dimensional spaces.
+//   maybe just replace w/ ActsMatrix<2,3>?
+using PositionToBoundLocalMatrix = Eigen::Matrix<BoundScalar, 2, 3>;
 
 }  // namespace Acts

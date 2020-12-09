@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
       planeSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                                globalPosition);
   // For plane surface, this should be identity matrix
-  CHECK_CLOSE_ABS(loc3DToLocBound, LocalCartesianToBoundLocalMatrix::Identity(),
+  CHECK_CLOSE_ABS(loc3DToLocBound, PositionToBoundLocalMatrix::Identity(),
                   1e-10);
 
   // (c) Test the derivative of bound parameters (only test loc0, loc1 here)

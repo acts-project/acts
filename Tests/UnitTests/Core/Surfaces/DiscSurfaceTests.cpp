@@ -284,8 +284,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
       discSurfaceObject->localCartesianToBoundLocalDerivative(tgContext,
                                                               globalPosition);
   // Check if the result is as expected
-  LocalCartesianToBoundLocalMatrix expLoc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  PositionToBoundLocalMatrix expLoc3DToLocBound =
+      PositionToBoundLocalMatrix::Zero();
   expLoc3DToLocBound << 0, 1, 0, -1.0 / 3, 0, 0;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

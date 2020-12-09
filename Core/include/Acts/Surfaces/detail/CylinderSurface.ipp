@@ -161,7 +161,7 @@ inline AlignmentToPathMatrix CylinderSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline LocalCartesianToBoundLocalMatrix
+inline PositionToBoundLocalMatrix
 CylinderSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::perp;
@@ -176,8 +176,8 @@ CylinderSurface::localCartesianToBoundLocalDerivative(
   const double lsphi = std::sin(lphi);
   // Solve for radius R
   double R = bounds().get(CylinderBounds::eR);
-  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  PositionToBoundLocalMatrix loc3DToLocBound =
+      PositionToBoundLocalMatrix::Zero();
   loc3DToLocBound << -R * lsphi / lr, R * lcphi / lr, 0, 0, 0, 1;
 
   return loc3DToLocBound;

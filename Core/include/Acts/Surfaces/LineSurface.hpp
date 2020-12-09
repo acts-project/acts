@@ -133,8 +133,8 @@ class LineSurface : public Surface {
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. free parameters
-  FreeRowVector freeToPathDerivative(const GeometryContext& gctx,
-                                     const FreeVector& parameters) const final;
+  FreeToPathMatrix freeToPathDerivative(
+      const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -264,7 +264,7 @@ class LineSurface : public Surface {
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
-  LocalCartesianToBoundLocalMatrix localCartesianToBoundLocalDerivative(
+  PositionToBoundLocalMatrix localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3D& position) const final;
 
  protected:

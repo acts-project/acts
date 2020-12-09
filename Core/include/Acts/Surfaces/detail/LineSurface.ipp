@@ -180,7 +180,7 @@ inline BoundToFreeMatrix LineSurface::jacobianLocalToGlobal(
   return jacToGlobal;
 }
 
-inline FreeRowVector LineSurface::freeToPathDerivative(
+inline FreeToPathMatrix LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
   const auto position = parameters.segment<3>(eFreePos0);
@@ -198,7 +198,7 @@ inline FreeRowVector LineSurface::freeToPathDerivative(
   const auto dz = localZAxis.dot(direction);
   const auto norm = 1 / (1 - dz * dz);
   // Initialize the derivative of propagation path w.r.t. free parameter
-  FreeRowVector freeToPath = FreeRowVector::Zero();
+  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   // The derivative of path w.r.t. position
   freeToPath.segment<3>(eFreePos0) =
       norm * (dz * localZAxis.transpose() - direction.transpose());
@@ -240,7 +240,7 @@ inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline LocalCartesianToBoundLocalMatrix
+inline PositionToBoundLocalMatrix
 LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::phi;
@@ -251,8 +251,8 @@ LineSurface::localCartesianToBoundLocalDerivative(
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  LocalCartesianToBoundLocalMatrix loc3DToLocBound =
-      LocalCartesianToBoundLocalMatrix::Zero();
+  PositionToBoundLocalMatrix loc3DToLocBound =
+      PositionToBoundLocalMatrix::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, 0, 0, 1;
 
   return loc3DToLocBound;

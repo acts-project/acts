@@ -99,7 +99,7 @@ void jacobianLocalToLocal(
     Jacobian& jacFull, const Surface& surface) {
   // Calculate the derivative of path length at the final surface or the
   // point-of-closest approach w.r.t. free parameters
-  const FreeRowVector freeToPath =
+  const FreeToPathMatrix freeToPath =
       surface.freeToPathDerivative(geoContext, parameters);
   // Calculate the jacobian from global to local at the final surface
   FreeToBoundMatrix jacToLocal =
@@ -140,7 +140,7 @@ void jacobianLocalToLocal(const Vector3D& direction,
                           const FreeVector& derivatives, Jacobian& jacFull) {
   // Calculate the derivative of path length at the the curvilinear surface
   // w.r.t. free parameters
-  FreeRowVector freeToPath = FreeRowVector::Zero();
+  FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * direction;
   // Calculate the jacobian from global to local at the curvilinear surface
   FreeToBoundMatrix jacToLocal = freeToCurvilinearJacobian(direction);
