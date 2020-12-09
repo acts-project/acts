@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <boost/program_options.hpp>
-
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geant4/Geant4Options.hpp"
@@ -18,6 +16,9 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+
+#include <boost/program_options.hpp>
+
 #include "G4VUserDetectorConstruction.hh"
 
 using namespace ActsExamples;

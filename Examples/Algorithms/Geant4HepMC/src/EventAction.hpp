@@ -11,10 +11,10 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <G4UserEventAction.hh>
-#include <globals.hh>
 
+#include <G4UserEventAction.hh>
 #include <HepMC3/GenEvent.h>
+#include <globals.hh>
 
 namespace ActsExamples {
 

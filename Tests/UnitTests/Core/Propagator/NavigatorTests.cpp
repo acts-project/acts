@@ -144,7 +144,7 @@ struct PropagatorState {
     }
 
     BoundState boundState(State& state, const Surface& surface, bool /*unused*/
-                          ) const {
+    ) const {
       BoundTrackParameters parameters(surface.getSharedPtr(), tgContext,
                                       state.pos4, state.dir, state.p, state.q);
       BoundState bState{std::move(parameters), Jacobian::Identity(),
@@ -153,7 +153,7 @@ struct PropagatorState {
     }
 
     CurvilinearState curvilinearState(State& state, bool /*unused*/
-                                      ) const {
+    ) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
       // Create the bound state

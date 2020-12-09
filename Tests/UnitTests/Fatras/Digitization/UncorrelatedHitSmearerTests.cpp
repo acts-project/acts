@@ -6,9 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"

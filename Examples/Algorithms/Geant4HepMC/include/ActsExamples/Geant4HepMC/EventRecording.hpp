@@ -8,14 +8,15 @@
 
 #pragma once
 
-#include <memory>
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <memory>
 #include <mutex>
+
 #include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenEvent.h>
 

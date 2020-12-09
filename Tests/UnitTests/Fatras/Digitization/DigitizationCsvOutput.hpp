@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+
 #include <fstream>
 
 namespace ActsFatras {

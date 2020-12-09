@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+
 #include <iosfwd>
 #include <limits>
 

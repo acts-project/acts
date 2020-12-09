@@ -10,7 +10,9 @@
 
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
+
 #include <string>
+
 #include <HepMC3/GenEvent.h>
 #include <HepMC3/WriterAscii.h>
 

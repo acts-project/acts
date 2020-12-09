@@ -9,8 +9,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
-
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -21,11 +19,13 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
-#include "DigitizationCsvOutput.hpp"
-#include "PlanarSurfaceTestBeds.hpp"
+#include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
 
 #include <array>
 #include <fstream>
+
+#include "DigitizationCsvOutput.hpp"
+#include "PlanarSurfaceTestBeds.hpp"
 
 namespace bdata = boost::unit_test::data;
 

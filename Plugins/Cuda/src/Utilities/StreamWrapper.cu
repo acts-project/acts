@@ -8,6 +8,7 @@
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Utilities/StreamWrapper.hpp"
+
 #include "ErrorCheck.cuh"
 #include "StreamHandlers.cuh"
 
