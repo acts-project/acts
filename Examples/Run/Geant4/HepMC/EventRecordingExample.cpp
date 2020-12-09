@@ -20,8 +20,10 @@
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+
 #include <fstream>
 #include <string>
+
 #include <boost/program_options.hpp>
 
 int main(int argc, char* argv[]) {

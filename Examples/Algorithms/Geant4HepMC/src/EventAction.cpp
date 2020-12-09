@@ -7,9 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "EventAction.hpp"
+
 #include <stdexcept>
+
 #include <G4Event.hh>
 #include <G4RunManager.hh>
+
 #include "SteppingAction.hpp"
 
 namespace {

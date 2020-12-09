@@ -12,6 +12,7 @@
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"

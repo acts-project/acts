@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+
 #include <cassert>
 #include <stdexcept>
-
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 
 // parametrized constructor
 Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {

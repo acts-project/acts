@@ -6,13 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
 #include <cmath>
 #include <iostream>
 #include <tuple>
-
-#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2D& s0, const Vector2D& s1, const Vector2D& origin,

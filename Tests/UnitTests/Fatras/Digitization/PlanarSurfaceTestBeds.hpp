@@ -20,11 +20,12 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "BoundRandomValues.hpp"
 
 #include <array>
 #include <tuple>
 #include <vector>
+
+#include "BoundRandomValues.hpp"
 
 namespace ActsFatras {
 

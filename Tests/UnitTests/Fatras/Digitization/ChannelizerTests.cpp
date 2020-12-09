@@ -24,13 +24,14 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
-#include "DigitizationCsvOutput.hpp"
-#include "PlanarSurfaceTestBeds.hpp"
 
 #include <array>
 #include <fstream>
 #include <functional>
 #include <vector>
+
+#include "DigitizationCsvOutput.hpp"
+#include "PlanarSurfaceTestBeds.hpp"
 
 namespace bdata = boost::unit_test::data;
 

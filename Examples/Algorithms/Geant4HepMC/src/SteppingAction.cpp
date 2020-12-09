@@ -7,14 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "SteppingAction.hpp"
+
 #include <stdexcept>
+
 #include <G4RunManager.hh>
 #include <G4Step.hh>
 #include <G4VProcess.hh>
-#include "EventAction.hpp"
-
 #include <HepMC3/Attribute.h>
 #include <HepMC3/Units.h>
+
+#include "EventAction.hpp"
 
 ActsExamples::SteppingAction* ActsExamples::SteppingAction::s_instance =
     nullptr;

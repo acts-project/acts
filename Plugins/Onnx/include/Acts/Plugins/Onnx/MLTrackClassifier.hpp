@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include <vector>
-
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+
+#include <vector>
 
 namespace Acts {
 

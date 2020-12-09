@@ -9,7 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
