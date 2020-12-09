@@ -282,10 +282,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath =
+  const AlignmentToPathMatrix& alignToPath =
       planeSurfaceObject->alignmentToPathDerivative(tgContext, parameters);
   // The expected results
-  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   expAlignToPath << 0, 0, 1, 2, -1, 0;
   // Check if the calculated derivative is as expected
   CHECK_CLOSE_ABS(alignToPath, expAlignToPath, 1e-10);
@@ -306,14 +306,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   const AlignmentToBoundMatrix& alignToBound =
       planeSurfaceObject->alignmentToBoundDerivative(tgContext, parameters,
                                                      derivatives);
-  const AlignmentRowVector alignToloc0 =
+  const AlignmentToPathMatrix alignToloc0 =
       alignToBound.block<1, 6>(eBoundLoc0, eAlignmentCenter0);
-  const AlignmentRowVector alignToloc1 =
+  const AlignmentToPathMatrix alignToloc1 =
       alignToBound.block<1, 6>(eBoundLoc1, eAlignmentCenter0);
   // The expected results
-  AlignmentRowVector expAlignToloc0;
+  AlignmentToPathMatrix expAlignToloc0;
   expAlignToloc0 << -1, 0, 0, 0, 0, 2;
-  AlignmentRowVector expAlignToloc1;
+  AlignmentToPathMatrix expAlignToloc1;
   expAlignToloc1 << 0, -1, 0, 0, 0, -1;
   // Check if the calculated derivatives are as expected
   CHECK_CLOSE_ABS(alignToloc0, expAlignToloc0, 1e-10);

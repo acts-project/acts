@@ -178,10 +178,10 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   parameters.segment<3>(eFreeDir0) = direction;
 
   // (a) Test the derivative of path length w.r.t. alignment parameters
-  const AlignmentRowVector& alignToPath =
+  const AlignmentToPathMatrix& alignToPath =
       line.alignmentToPathDerivative(tgContext, parameters);
   // The expected results
-  AlignmentRowVector expAlignToPath = AlignmentRowVector::Zero();
+  AlignmentToPathMatrix expAlignToPath = AlignmentToPathMatrix::Zero();
   const double value = std::sqrt(3) / 2;
   expAlignToPath << -value, value, 0, -3 * value, -value, 0;
   // Check if the calculated derivative is as expected

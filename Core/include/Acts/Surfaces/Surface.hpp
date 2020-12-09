@@ -451,7 +451,7 @@ class Surface : public virtual GeometryObject,
   /// @param parameters is the free parameters
   ///
   /// @return Derivative of path length w.r.t. the alignment parameters
-  virtual AlignmentRowVector alignmentToPathDerivative(
+  virtual AlignmentToPathMatrix alignmentToPathDerivative(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 
   /// Calculate the derivative of bound track parameters local position w.r.t.

@@ -36,13 +36,13 @@ enum AlignmentIndices : unsigned int {
 using AlignmentScalar = ActsScalar;
 
 // Matrix and vector types related to alignment parameters.
-using AlignmentVector = ActsVector<AlignmentScalar, eAlignmentSize>;
-using AlignmentRowVector = ActsRowVector<AlignmentScalar, eAlignmentSize>;
-using AlingmentMatrix =
-    ActsMatrix<AlignmentScalar, eAlignmentSize, eAlignmentSize>;
-using AlignmentToLocalCartesianMatrix =
-    ActsMatrix<AlignmentScalar, 3, eAlignmentSize>;
+using AlignmentVector = Eigen::Matrix<AlignmentScalar, eAlignmentSize, 1>;
+using AlignmentMatrix =
+    Eigen::Matrix<AlignmentScalar, eAlignmentSize, eAlignmentSize>;
+using AlignmentToPositionMatrix =
+    Eigen::Matrix<AlignmentScalar, 3, eAlignmentSize>;
 using AlignmentToBoundMatrix =
-    ActsMatrix<BoundScalar, eBoundSize, eAlignmentSize>;
+    Eigen::Matrix<AlignmentScalar, eBoundSize, eAlignmentSize>;
+using AlignmentToPathMatrix = Eigen::Matrix<AlignmentScalar, 1, eAlignmentSize>;
 
 }  // namespace Acts
