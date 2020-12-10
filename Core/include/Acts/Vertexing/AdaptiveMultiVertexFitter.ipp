@@ -323,7 +323,7 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3D diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                     vtx->fullPosition().template head<3>();
-    ActsSymMatrixD<3> vtxWgt =
+    SymMatrix3D vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {

@@ -84,12 +84,11 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BoundTrackParameters params7(perigeeSurface, paramVec7, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  MainGridVector mainGrid(MainGridVector::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, TrackGridVector> binAndTrackGrid;
 
   // Adds tracks too far away in transverse distance
   binAndTrackGrid = grid.addTrack(params3, mainGrid);
@@ -100,14 +99,14 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Tracks are far away from z-axis (or not in region of interest) and
   // should not have contributed to density grid
-  auto zeroGrid = ActsVector<float, mainGridSize>::Zero();
+  auto zeroGrid = MainGridVector::Zero();
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
   // Now add track 1 and 2 to grid, seperately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
-  mainGrid = ActsVector<float, mainGridSize>::Zero();
+  mainGrid = MainGridVector::Zero();
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Track 1 is closer to z-axis and should thus yield higher
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   BOOST_CHECK_EQUAL(maxBin, mainGridSize / 2 + 1);
 
   // Check if error is thrown for empty grid
-  mainGrid = ActsVector<float, mainGridSize>::Zero();
+  mainGrid = MainGridVector::Zero();
   auto maxResErr = grid.getMaxZPosition(mainGrid);
   BOOST_CHECK(!maxResErr.ok());
 
@@ -162,16 +161,18 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 /// @brief Tests the functionality of the `useHighestSumZPosition` option
 BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   // Define the size of the grids
-  const int mainGridSize = 50;
-  const int trkGridSize = 11;
+  constexpr int mainGridSize = 50;
+  constexpr int trkGridSize = 11;
+
+  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  GaussianGridTrackDensity<mainGridSize, trkGridSize>::Config cfg(zMinMax);
+  Grid::Config cfg(zMinMax);
   cfg.useHighestSumZPosition = true;
-  GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
+  Grid grid(cfg);
 
   // Create some test tracks
   Covariance covMat;
@@ -196,12 +197,11 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  MainGridVector mainGrid(MainGridVector::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, Grid::TrackGridVector> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
@@ -222,16 +222,18 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
 /// @brief Tests the seed width
 BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   // Define the size of the grids
-  const int mainGridSize = 50;
-  const int trkGridSize = 11;
+  constexpr int mainGridSize = 50;
+  constexpr int trkGridSize = 11;
+
+  using Grid = Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
   double binSize = 0.1;  // mm
   double zMinMax = mainGridSize / 2 * binSize;
 
   // Set up grid density with zMinMax
-  GaussianGridTrackDensity<mainGridSize, trkGridSize>::Config cfg(zMinMax);
+  Grid::Config cfg(zMinMax);
   cfg.useHighestSumZPosition = true;
-  GaussianGridTrackDensity<mainGridSize, trkGridSize> grid(cfg);
+  Grid grid(cfg);
 
   // Create some test tracks
   Covariance covMat;
@@ -256,12 +258,11 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // The grid to be filled
-  ActsVector<float, mainGridSize> mainGrid(
-      ActsVector<float, mainGridSize>::Zero());
+  MainGridVector mainGrid(MainGridVector::Zero());
 
   // addTrack method returns the central z bin where the track density
   // grid was added and the track density grid itself for caching
-  std::pair<int, Acts::ActsVector<float, trkGridSize>> binAndTrackGrid;
+  std::pair<int, Acts::Grid::TrackGridVector> binAndTrackGrid;
 
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);

@@ -91,7 +91,7 @@ class Vertex {
   /// @brief Sets 3x3 covariance
   ///
   /// @param covariance Position covariance matrix
-  void setCovariance(const ActsSymMatrixD<3>& covariance);
+  void setCovariance(const SymMatrix3D& covariance);
 
   /// @brief Sets 4x4 covariance
   ///
