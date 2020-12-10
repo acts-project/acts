@@ -99,8 +99,8 @@ const std::vector<std::tuple<double, double, double>> kPhiDataset = {
 
 BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
                      phiRes) {
-  using MeasurementVector = Acts::ActsVector<Acts::BoundScalar, 1>;
-  using MeasurementCovariance = Acts::ActsSymMatrix<Acts::BoundScalar, 1>;
+  using MeasurementVector = Acts::ActsVector<1>;
+  using MeasurementCovariance = Acts::ActsSymMatrix<1>;
 
   // prepare measurement
   MeasurementVector params = MeasurementVector::Zero();
