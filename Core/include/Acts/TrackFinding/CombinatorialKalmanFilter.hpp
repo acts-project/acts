@@ -765,6 +765,10 @@ class CombinatorialKalmanFilter {
       trackStateProxy.jacobian() = jacobian;
       trackStateProxy.pathLength() = pathLength;
 
+      // Set the surface
+      trackStateProxy.setReferenceSurface(
+          boundParams.referenceSurface().getSharedPtr());
+
       // Assign the uncalibrated&calibrated measurement to the track
       // state (the uncalibrated could be already stored in other states)
       if ((not ACTS_CHECK_BIT(stateMask, TrackStatePropMask::Uncalibrated)) and

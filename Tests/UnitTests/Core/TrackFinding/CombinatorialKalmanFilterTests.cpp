@@ -95,8 +95,6 @@ struct Fixture {
   std::vector<Acts::CurvilinearTrackParameters> endParameters;
 
   // generated measurements
-  std::vector<std::shared_ptr<Acts::FittableMeasurement<TestSourceLink>>>
-      measurementsStore;
   std::vector<TestSourceLink> sourceLinks;
 
   // CKF implementation to be tested
@@ -147,9 +145,6 @@ struct Fixture {
       auto measurements = createMeasurements(
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
-      for (auto& fm : measurements.store) {
-        measurementsStore.emplace_back(std::move(fm));
-      }
       for (auto& sl : measurements.sourceLinks) {
         sourceLinks.emplace_back(std::move(sl));
       }
