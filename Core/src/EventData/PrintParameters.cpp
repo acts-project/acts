@@ -156,13 +156,8 @@ void printParameters(std::ostream& os, const names_container_t& names,
   os.precision(precision);
 }
 
-template <typename scalar_t>
-using ParametersMap =
-    Eigen::Map<const Eigen::Matrix<scalar_t, Eigen::Dynamic, 1> >;
-
-template <typename scalar_t>
-using CovarianceMap =
-    Eigen::Map<const Eigen::Matrix<scalar_t, Eigen::Dynamic, Eigen::Dynamic> >;
+using ParametersMap = Eigen::Map<const Acts::ActsDynamicVector>;
+using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
 
 }  // namespace
 
@@ -191,20 +186,18 @@ void Acts::detail::printFreeParameters(std::ostream& os,
 
 void Acts::detail::printMeasurement(std::ostream& os, BoundIndices size,
                                     const uint8_t* indices,
-                                    const BoundScalar* params,
-                                    const BoundScalar* cov) {
+                                    const ActsScalar* params,
+                                    const ActsScalar* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeBoundNames(), indices,
-                            ParametersMap<BoundScalar>(params, s),
-                            CovarianceMap<BoundScalar>(cov, s, s));
+                            ParametersMap(params, s), CovarianceMap(cov, s, s));
 }
 
 void Acts::detail::printMeasurement(std::ostream& os, FreeIndices size,
                                     const uint8_t* indices,
-                                    const FreeScalar* params,
-                                    const FreeScalar* cov) {
+                                    const ActsScalar* params,
+                                    const ActsScalar* cov) {
   auto s = static_cast<Eigen::Index>(size);
   printParametersCovariance(os, makeFreeNames(), indices,
-                            ParametersMap<FreeScalar>(params, s),
-                            CovarianceMap<FreeScalar>(cov, s, s));
+                            ParametersMap(params, s), CovarianceMap(cov, s, s));
 }

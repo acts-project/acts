@@ -34,8 +34,7 @@ namespace detail {
 /// @return The global track parameters covariance matrix and the starting
 /// row/column for smoothed states
 template <typename source_link_t, typename parameters_t = BoundTrackParameters>
-std::pair<Eigen::Matrix<BoundScalar, Eigen::Dynamic, Eigen::Dynamic>,
-          std::unordered_map<size_t, size_t>>
+std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>
 globalTrackParametersCovariance(
     const Acts::MultiTrajectory<source_link_t>& multiTraj,
     const size_t& entryIndex) {
@@ -57,9 +56,8 @@ globalTrackParametersCovariance(
   });
 
   // Set the size of global track parameters covariance for all smoothed states
-  Eigen::Matrix<BoundScalar, Eigen::Dynamic, Eigen::Dynamic>
-      fullGlobalTrackParamsCov(nSmoothedStates * eBoundSize,
-                               nSmoothedStates * eBoundSize);
+  ActsDynamicMatrix fullGlobalTrackParamsCov(nSmoothedStates * eBoundSize,
+                                             nSmoothedStates * eBoundSize);
   fullGlobalTrackParamsCov.setZero();
   // The index of state within the trajectory and the starting row/column for
   // this state in the global covariance matrix

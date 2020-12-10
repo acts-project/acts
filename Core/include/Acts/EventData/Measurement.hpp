@@ -54,15 +54,15 @@ class Measurement {
   using Subspace = detail::FixedSizeSubspace<kFullSize, kSize>;
 
  public:
-  using Scalar = typename detail::ParametersScalar<indices_t>;
+  using Scalar = ActsScalar;
   /// Vector type containing for measured parameter values.
-  using ParametersVector = Eigen::Matrix<Scalar, kSize, 1>;
+  using ParametersVector = ActsVector<kSize>;
   /// Matrix type for the measurement covariance.
-  using CovarianceMatrix = Eigen::Matrix<Scalar, kSize, kSize>;
+  using CovarianceMatrix = ActsSymMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
-  using FullParametersVector = Eigen::Matrix<Scalar, kFullSize, 1>;
-  using ProjectionMatrix = Eigen::Matrix<Scalar, kSize, kFullSize>;
-  using ExpansionMatrix = Eigen::Matrix<Scalar, kFullSize, kSize>;
+  using FullParametersVector = ActsVector<kFullSize>;
+  using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;
+  using ExpansionMatrix = ActsMatrix<kFullSize, kSize>;
 
   /// Construct from source link, subset indices, and measured data.
   ///

@@ -26,7 +26,7 @@ using namespace Acts::UnitLiterals;
 using AnyCurvilinearTrackParameters =
     SingleCurvilinearTrackParameters<AnyCharge>;
 
-constexpr auto eps = 8 * std::numeric_limits<BoundScalar>::epsilon();
+constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 

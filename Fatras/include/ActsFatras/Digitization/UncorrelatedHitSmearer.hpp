@@ -40,9 +40,9 @@ using SingleParameterSmearFunction =
 /// vector and associated covariance matrix.
 template <typename generator_t, size_t kSize>
 struct BoundParametersSmearer {
-  using Scalar = Acts::BoundScalar;
-  using ParametersVector = Eigen::Matrix<Scalar, kSize, 1>;
-  using CovarianceMatrix = Eigen::Matrix<Scalar, kSize, kSize>;
+  using Scalar = Acts::ActsScalar;
+  using ParametersVector = Acts::ActsVector<kSize>;
+  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
@@ -97,9 +97,9 @@ struct BoundParametersSmearer {
 ///   individually is not recommended
 template <typename generator_t, size_t kSize>
 struct FreeParametersSmearer {
-  using Scalar = Acts::FreeScalar;
-  using ParametersVector = Eigen::Matrix<Scalar, kSize, 1>;
-  using CovarianceMatrix = Eigen::Matrix<Scalar, kSize, kSize>;
+  using Scalar = Acts::ActsScalar;
+  using ParametersVector = Acts::ActsVector<kSize>;
+  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.

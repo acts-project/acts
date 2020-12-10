@@ -45,7 +45,7 @@ std::default_random_engine rng(123);
 BOOST_AUTO_TEST_SUITE(EventDataMeasurement)
 
 BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
-  auto [params, cov] = generateParametersCovariance<BoundScalar, 1u>(rng);
+  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
   auto meas = makeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
@@ -113,11 +113,11 @@ BOOST_DATA_TEST_CASE(BoundResidualsPhi, bd::make(kPhiDataset), phiMea, phiRef,
 
   // compute and check residual
   auto res = measurement.residuals(reference);
-  CHECK_CLOSE_ABS(res[0], phiRes, std::numeric_limits<BoundScalar>::epsilon());
+  CHECK_CLOSE_ABS(res[0], phiRes, std::numeric_limits<ActsScalar>::epsilon());
 }
 
 BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
-  auto [params, cov] = generateParametersCovariance<FreeScalar, 1u>(rng);
+  auto [params, cov] = generateParametersCovariance<ActsScalar, 1u>(rng);
   auto meas = makeMeasurement(source, params, cov, index);
 
   BOOST_CHECK_EQUAL(meas.size(), 1);
@@ -133,7 +133,7 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
   BOOST_CHECK_EQUAL(meas.sourceLink(), source);
 
   // all free parameters are unrestricted and we know the expected residual.
-  constexpr auto tol = std::numeric_limits<FreeScalar>::epsilon();
+  constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
   auto [ref, refCov] = generateFreeParametersCovariance(rng);
   auto res = meas.residuals(ref);
   CHECK_CLOSE_ABS(res[0], params[0] - ref[index], tol);
@@ -154,14 +154,14 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
   BOOST_CHECK_EQUAL(meas.sourceLink(), source);
 
   // all free parameters are unrestricted and we know the expected residual.
-  constexpr auto tol = std::numeric_limits<FreeScalar>::epsilon();
+  constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
   auto [ref, refCov] = generateFreeParametersCovariance(rng);
   CHECK_CLOSE_ABS(meas.residuals(ref), params - ref, tol);
 }
 
 BOOST_AUTO_TEST_CASE(VariantBound) {
   // generate w/ a single parameter
-  auto [par1, cov1] = generateParametersCovariance<BoundScalar, 1u>(rng);
+  auto [par1, cov1] = generateParametersCovariance<ActsScalar, 1u>(rng);
   BoundVariantMeasurement<SourceLink> meas =
       makeMeasurement(source, par1, cov1, eBoundTheta);
   std::visit(
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
 
 BOOST_AUTO_TEST_CASE(VariantFree) {
   // generate w/ two parameters
-  auto [par2, cov2] = generateParametersCovariance<FreeScalar, 2u>(rng);
+  auto [par2, cov2] = generateParametersCovariance<ActsScalar, 2u>(rng);
   FreeVariantMeasurement<SourceLink> meas =
       makeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
   std::visit(

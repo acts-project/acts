@@ -67,10 +67,8 @@ class GainMatrixUpdater {
         [&](const auto calibrated, const auto calibratedCovariance) {
           constexpr size_t kMeasurementSize =
               decltype(calibrated)::RowsAtCompileTime;
-          using Scalar = typename decltype(calibrated)::Scalar;
-          using ParametersVector = Eigen::Matrix<Scalar, kMeasurementSize, 1>;
-          using CovarianceMatrix =
-              Eigen::Matrix<Scalar, kMeasurementSize, kMeasurementSize>;
+          using ParametersVector = ActsVector<kMeasurementSize>;
+          using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
 
           ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
           ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());

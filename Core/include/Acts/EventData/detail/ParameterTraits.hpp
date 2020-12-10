@@ -159,18 +159,12 @@ template <typename indices_t>
 struct ParametersTraitsImpl;
 template <>
 struct ParametersTraitsImpl<BoundIndices> {
-  using Scalar = BoundScalar;
   static constexpr size_t kSize = static_cast<size_t>(BoundIndices::eBoundSize);
 };
 template <>
 struct ParametersTraitsImpl<FreeIndices> {
-  using Scalar = FreeScalar;
   static constexpr size_t kSize = static_cast<size_t>(FreeIndices::eFreeSize);
 };
-
-/// Scalar type that corresponds to the indices enum.
-template <typename indices_t>
-using ParametersScalar = typename ParametersTraitsImpl<indices_t>::Scalar;
 
 /// The maximum parameters vector size definable for an indices enum.
 template <typename indices_t>

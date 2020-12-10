@@ -63,7 +63,7 @@ inline auto generateParametersCovariance(generator_t& rng)
 /// Generate a random bound parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateBoundParametersCovariance(generator_t& rng) {
-  auto parCov = generateParametersCovariance<BoundScalar, eBoundSize>(rng);
+  auto parCov = generateParametersCovariance<ActsScalar, eBoundSize>(rng);
   auto [phi, theta] = detail::normalizePhiTheta(parCov.first[eBoundPhi],
                                                 parCov.first[eBoundTheta]);
   parCov.first[eBoundPhi] = phi;
@@ -74,7 +74,7 @@ inline auto generateBoundParametersCovariance(generator_t& rng) {
 /// Generate a random free parameters vector and covariance matrix.
 template <typename generator_t>
 inline auto generateFreeParametersCovariance(generator_t& rng) {
-  return generateParametersCovariance<FreeScalar, eFreeSize>(rng);
+  return generateParametersCovariance<ActsScalar, eFreeSize>(rng);
 }
 
 }  // namespace Test
