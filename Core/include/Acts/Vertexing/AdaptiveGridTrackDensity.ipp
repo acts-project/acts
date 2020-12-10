@@ -306,7 +306,7 @@ double Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
   double sum = mainGridDensity[pos];
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
-  if (pos - 1 >= 0) {
+  if (0 < pos) {
     // Check if we are still operating on continous z values
     if (mainGridZValues[pos] - mainGridZValues[pos - 1] == 1) {
       sum += mainGridDensity[pos - 1];

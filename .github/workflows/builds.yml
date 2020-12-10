@@ -13,12 +13,12 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v5
+    container: ghcr.io/acts-project/${{ matrix.image }}:v6
     strategy:
       matrix:
         image:
-          - centos7-lcg95apython3
-          - centos7-lcg96
+          - centos7-lcg97apython3-gcc9
+          - centos7-lcg98python3-gcc10
           - ubuntu2004
     env:
       SETUP: true
@@ -116,7 +116,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v5
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v6
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -132,7 +132,7 @@ jobs:
         run: cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v5
+    container: ghcr.io/acts-project/ubuntu2004:v6
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
