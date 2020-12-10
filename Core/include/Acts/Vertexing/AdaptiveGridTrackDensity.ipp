@@ -58,12 +58,11 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
 }
 
 template <int trkGridSize>
-    std::pair < int,
-    Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector
-    Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
-        const Acts::BoundTrackParameters& trk,
-        std::vector<float>& mainGridDensity,
-        std::vector<int>& mainGridZValues) const {
+std::pair<int,
+          typename Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector>
+Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
+    const Acts::BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
+    std::vector<int>& mainGridZValues) const {
   SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
@@ -147,7 +146,7 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
 }
 
 template <int trkGridSize>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector
+typename Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     int offset, const Acts::SymMatrix2D& cov, float distCtrD,
     float distCtrZ) const {

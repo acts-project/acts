@@ -53,8 +53,8 @@ Acts::Result<std::pair<float, float>> Acts::GaussianGridTrackDensity<
 }
 
 template <int mainGridSize, int trkGridSize>
-std::pair<int, Acts::GaussianGridTrackDensity<mainGridSize,
-                                              trkGridSize>::TrackGridVector>
+std::pair<int, typename Acts::GaussianGridTrackDensity<
+                   mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk,
     Acts::MainGridVector& mainGrid) const {
@@ -136,7 +136,8 @@ void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 }
 
 template <int mainGridSize, int trkGridSize>
-Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::TrackGridVector
+typename Acts::GaussianGridTrackDensity<mainGridSize,
+                                        trkGridSize>::TrackGridVector
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
     int offset, const Acts::SymMatrix2D& cov, float distCtrD,
     float distCtrZ) const {
