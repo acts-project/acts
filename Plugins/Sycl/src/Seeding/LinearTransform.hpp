@@ -10,6 +10,7 @@
 
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
+
 #include "../Utilities/Arrays.hpp"
 #include "SpacePointType.hpp"
 

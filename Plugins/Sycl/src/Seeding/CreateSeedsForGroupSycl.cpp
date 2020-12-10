@@ -21,6 +21,7 @@
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
 #include "Acts/Plugins/Sycl/Seeding/detail/Types.hpp"
 #include "Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp"
+
 #include "../Utilities/Arrays.hpp"
 #include "DupletSearch.hpp"
 #include "LinearTransform.hpp"

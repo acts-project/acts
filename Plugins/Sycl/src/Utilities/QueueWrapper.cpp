@@ -25,7 +25,7 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
                            std::unique_ptr<const Logger> incomingLogger)
     : m_queue(nullptr), m_ownsQueue(true), m_logger(std::move(incomingLogger)) {
   // SYCL kernel exceptions are asynchronous
-  auto exception_handler = [& log =
+  auto exception_handler = [&log =
                                 m_logger](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
       try {
