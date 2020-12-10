@@ -220,7 +220,7 @@ if(ACTS_BUILD_DOCS)
 endif()
 
 if(ACTS_CUSTOM_SCALARTYPE)
-    message(STATUS "Building Acts with custom scalar type: "${ACTS_CUSTOM_SCALARTYPE} )
+    message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
 endif()
 
 # core library, core plugins, and other components

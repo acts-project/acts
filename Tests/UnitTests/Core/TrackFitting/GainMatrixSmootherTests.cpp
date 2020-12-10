@@ -10,62 +10,33 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
-#include <memory>
+namespace {
 
-#include <boost/optional/optional_io.hpp>
+using namespace Acts;
+using namespace Acts::Test;
 
-namespace Acts {
-namespace Test {
+using ParametersVector = Acts::BoundVector;
+using CovarianceMatrix = Acts::BoundSymMatrix;
+using Jacobian = Acts::BoundMatrix;
 
-using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
-template <BoundIndices... params>
-using MeasurementType = Measurement<TestSourceLink, BoundIndices, params...>;
+const Acts::GeometryContext tgContext;
 
-// Create a test context
-GeometryContext tgContext = GeometryContext();
+}  // namespace
 
-BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
-  // Make dummy measurement
-  auto plane1 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 1,
-                                                  Vector3D::UnitX());
-  auto plane2 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 2,
-                                                  Vector3D::UnitX());
-  auto plane3 = Surface::makeShared<PlaneSurface>(Vector3D::UnitX() * 3,
-                                                  Vector3D::UnitX());
+BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
-  SymMatrix2D cov;
-  cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<TestSourceLink> meas1(
-      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
-          plane1, {}, std::move(cov), -0.1, 0.45));
-
-  cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<TestSourceLink> meas2(
-      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
-          plane2, {}, std::move(cov), -0.2, 0.35));
-
-  cov << 0.04, 0, 0, 0.1;
-  FittableMeasurement<TestSourceLink> meas3(
-      MeasurementType<BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc1>(
-          plane3, {}, std::move(cov), -0.05, 0.25));
-
+BOOST_AUTO_TEST_CASE(Smooth) {
   MultiTrajectory<TestSourceLink> traj;
-
-  size_t ts_idx;
-
-  ts_idx = traj.addTrackState(TrackStatePropMask::All);
+  size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
-  ts.setReferenceSurface(plane1);
 
   // Make dummy track parameter
-  Covariance covTrk;
+  CovarianceMatrix covTrk;
   covTrk.setIdentity();
   covTrk.diagonal() << 0.08, 0.3, 1, 1, 1, 1;
   BoundVector parValues;
@@ -83,7 +54,6 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.setReferenceSurface(plane2);
 
   parValues << 0.2, 0.5, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.predicted() = parValues;
@@ -97,7 +67,6 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   ts_idx = traj.addTrackState(TrackStatePropMask::All, ts_idx);
   ts = traj.getTrackState(ts_idx);
-  ts.setReferenceSurface(plane3);
 
   parValues << 0.35, 0.49, 0.5 * M_PI, 0., 1 / 100., 0.;
   ts.predicted() = parValues;
@@ -110,9 +79,7 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   ts.jacobian().setIdentity();
 
   // "smooth" these three track states
-
-  GainMatrixSmoother gms;
-  BOOST_CHECK(gms(tgContext, traj, ts_idx).ok());
+  BOOST_CHECK(GainMatrixSmoother()(tgContext, traj, ts_idx).ok());
 
   // Regression tests, only tests very basic correctness of the math, but tests
   // for regressions in the result.
@@ -123,13 +90,13 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
 
   double tol = 1e-6;
 
-  BoundVector expPars;
+  ParametersVector expPars;
   expPars << 0.3510000, 0.4730000, 1.5707963, 0.0000000, 0.0100000, 0.0000000;
-  CHECK_CLOSE_ABS(ts1.smoothed(), expPars, tol);
-  Covariance expCov;
+  CovarianceMatrix expCov;
   expCov.setIdentity();
   expCov.diagonal() << 0.0800000, 0.3000000, 1.0000000, 1.0000000, 1.0000000,
       1.0000000;
+  CHECK_CLOSE_ABS(ts1.smoothed(), expPars, tol);
   CHECK_CLOSE_ABS(ts1.smoothedCovariance(), expCov, tol);
 
   auto ts2 = traj.getTrackState(1);
@@ -150,5 +117,4 @@ BOOST_AUTO_TEST_CASE(gain_matrix_smoother) {
   CHECK_CLOSE_ABS(ts3.smoothedCovariance(), expCov, tol);
 }
 
-}  // namespace Test
-}  // namespace Acts
+BOOST_AUTO_TEST_SUITE_END()

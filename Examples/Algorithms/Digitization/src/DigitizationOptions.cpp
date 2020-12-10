@@ -14,6 +14,7 @@
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <numeric>
 #include <string>
 
 #include <boost/program_options.hpp>
@@ -30,8 +31,7 @@ void ActsExamples::Options::addDigitizationOptions(
       "options input on command line.");
   opt("digi-geometric-3d", bool_switch(),
       "Geometric: Switching geometric digitisation in 3D on");
-  opt("digi-smearing", bool_switch(),
-      "Smearing: Switching geometric digitisation in 3D on");
+  opt("digi-smearing", bool_switch(), "Smearing: Switching hit smearing on");
   opt("digi-smear-volume-id",
       value<read_series>()->multitoken()->default_value({}),
       "Smearing Input: sensitive volume identifiers.");
@@ -49,8 +49,68 @@ void ActsExamples::Options::addDigitizationOptions(
       "Smearing Input: smear parameters depending on the smearing type, 1 "
       "parameter for simple gauss, 4 for all others (1 parameter, 2 absolute "
       "range "
-      "values, 1 range indicator: both neg < 0, pos/neg = 0, both pos > 0).");
+      "values, 1 range indicator: both neg < 0, neg/pos = 0, both pos > 0).");
 }
+
+namespace {
+
+enum SmearingTypes : int {
+  eGauss = 0,
+  eGaussTruncated = 1,
+  eGaussClipped = 2,
+  eUniform = 3,
+  eDigital = 4,
+};
+
+constexpr size_t numConfigParametersForType(int type) {
+  // Gaussian smearing requires only a width/standard deviation parameter
+  // Everything else requires a width and a range
+  return (static_cast<SmearingTypes>(type) == eGauss) ? 1u : 4u;
+}
+
+ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
+makeSmearFunctionForType(SmearingTypes smearingType, const double* parameters) {
+  using namespace ActsExamples::Digitization;
+
+  // this is an artifact from the command line parsing. all numbers must be
+  // positive, so we need to determine the signs of the range limits with an
+  // additional parameter. see command line flag documentation above for
+  // details.
+  double signLow = 1;
+  double signHigh = 1;
+  if (smearingType != eGauss) {
+    if (parameters[3u] < 0) {
+      signLow = -1;
+      signHigh = -1;
+    } else if (0 < parameters[3u]) {
+      signLow = 1;
+      signHigh = 1;
+    } else {
+      signLow = -1;
+      signHigh = 1;
+    }
+  }
+
+  switch (smearingType) {
+    case eGauss:
+      return Gauss(parameters[0]);
+    case eGaussTruncated:
+      return GaussTrunc(parameters[0],
+                        {signLow * parameters[1u], signHigh * parameters[2u]});
+    case eGaussClipped:
+      return GaussClipped(
+          parameters[0], {signLow * parameters[1u], signHigh * parameters[2u]});
+    case eUniform:
+      return Uniform(parameters[0],
+                     {signLow * parameters[1u], signHigh * parameters[2u]});
+    case eDigital:
+      return Digital(parameters[0],
+                     {signLow * parameters[1u], signHigh * parameters[2u]});
+  }
+  return nullptr;
+}
+
+}  // namespace
 
 ActsExamples::SmearingAlgorithm::Config
 ActsExamples::Options::readSmearingConfig(
@@ -62,181 +122,96 @@ ActsExamples::Options::readSmearingConfig(
 
   SmearingAlgorithm::Config smearCfg;
 
-  smearCfg.inputSimHits = variables["digi-input-hits"].as<std::string>();
-  smearCfg.outputMeasurements =
-      variables["digi-smear-output"].as<std::string>();
-
   // Smear configuration with command line input
-  // only limted smearing possible, use configuration for more
-  // complex smearing setups
+  // only limited smearing configuration possible
+  // TODO add configuration file for more complex smearing setups
+
+  // in case of an error, we always return a configuration struct with empty
+  // smearers configuration. this will be caught later on during the algorithm
+  // construction.
+
   auto volumes = variables["digi-smear-volume-id"].as<read_series>();
-  if (not volumes.empty()) {
-    Digitization::SmearingFunctionGenerator sFnc;
-
-    auto vdims = variables["digi-smear-dimensions"].as<read_series>();
-    auto pindices = variables["digi-smear-parIndices"].as<read_series>();
-    auto types = variables["digi-smear-types"].as<read_series>();
-    auto parameters = variables["digi-smear-parameters"].as<read_range>();
-
-    // Count the number of needed parameters
-    // - type 0 needs 1 parameters
-    // - type 1-4 needs 4 parameters:
-    //      1 principle parameter, 2 range parameters, 1 range indicator
-    size_t sumpars = 0;
-    std::for_each(types.begin(), types.end(),
-                  [&](int n) { sumpars += (n == 0) ? 1 : 4; });
-
-    if (volumes.size() == vdims.size() and pindices.size() == types.size() and
-        parameters.size() == sumpars) {
-      size_t vpos = 0;
-      size_t ppos = 0;
-
-      ACTS_DEBUG("Volume parameters properly read from command line.")
-
-      /// Extract the parameters from the global vector
-      ///
-      /// @param ftype the function type
-      ///
-      /// @return an extracted vector
-      auto extract = [&](int ftype) -> std::vector<double> {
-        size_t padd = (ftype == 0) ? 1 : 3;
-        std::vector<double> fpars = {parameters.begin() + ppos,
-                                     parameters.begin() + ppos + padd};
-        // unfortunately boost::program_options can not deal with negative
-        // values within a sequence, we thus have to flag the range at defined
-        // with command line options:
-        //    < 0 (both negative), 0 (symmetric), > 0 both positive
-        if (padd == 3) {
-          double rangeIndic = parameters[ppos + padd];
-          fpars[1] *= (rangeIndic <= 0) ? -1. : 1.;
-          fpars[2] *= (rangeIndic < 0) ? -1. : 1.;
-          ++padd;
-        }
-        ppos += padd;
-        return fpars;
-      };
-
-      std::vector<std::pair<Acts::GeometryIdentifier,
-                            SmearingAlgorithm::SupportedSmearer> >
-          smearers;
-      for (unsigned int iv = 0; iv < volumes.size(); ++iv) {
-        SmearingAlgorithm::SupportedSmearer smearer;
-
-        int volID = volumes[iv];
-        Acts::GeometryIdentifier volumeGeometryId =
-            Acts::GeometryIdentifier(0).setVolume(volID);
-
-        int volDim = vdims[iv];
-        int ftype = 0;
-        // 1 - dimensional, either loc 0 or loc 1
-        if (volDim == 1) {
-          using OneFnc = std::array<ActsFatras::SmearFunction<RandomEngine>, 1>;
-          std::array<int, 1> ftypes;
-          std::array<std::vector<double>, 1> fparameters;
-          ftype = types[vpos++];
-          ftypes[0] = ftype;
-          fparameters[0] = extract(ftype);
-          OneFnc smearFunctions = sFnc.generate<1>(ftypes, fparameters);
-          // Create and fill
-          if ((Acts::BoundIndices)pindices[vpos - 1] == Acts::eBoundLoc0) {
-            smearCfg.configured = true;
-            smearer =
-                std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0>,
-                          OneFnc>(
-                    ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0>(),
-                    std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)pindices[vpos - 1] ==
-                     Acts::eBoundLoc1) {
-            smearCfg.configured = true;
-            smearer =
-                std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1>,
-                          OneFnc>(
-                    ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1>(),
-                    std::move(smearFunctions));
-          }
-        } else if (volDim == 2) {
-          // 2 - dimensional,  loc0 x loc1, loc0 x time, loc1 x time
-          using TwoFnc = std::array<ActsFatras::SmearFunction<RandomEngine>, 2>;
-          std::array<int, 2> ftypes;
-          std::array<std::vector<double>, 2> fparameters;
-          for (size_t idim = 0; idim < (size_t)volDim; ++idim) {
-            ftype = types[vpos++];
-            ftypes[idim] = ftype;
-            fparameters[idim] = extract(ftype);
-          }
-          TwoFnc smearFunctions = sFnc.generate<2>(ftypes, fparameters);
-          if ((Acts::BoundIndices)pindices[vpos - 2] == Acts::eBoundLoc0 and
-              (Acts::BoundIndices) pindices[vpos - 1] == Acts::eBoundTime) {
-            smearCfg.configured = true;
-            smearer =
-                std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
-                                                             Acts::eBoundTime>,
-                          TwoFnc>(
-                    ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
-                                                       Acts::eBoundTime>(),
-                    std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)pindices[vpos - 2] ==
-                         Acts::eBoundLoc1 and
-                     (Acts::BoundIndices)
-                             pindices[vpos - 1] == Acts::eBoundTime) {
-            smearCfg.configured = true;
-            smearer =
-                std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1,
-                                                             Acts::eBoundTime>,
-                          TwoFnc>(
-                    ActsFatras::BoundParametersSmearer<Acts::eBoundLoc1,
-                                                       Acts::eBoundTime>(),
-                    std::move(smearFunctions));
-          } else if ((Acts::BoundIndices)pindices[vpos - 2] ==
-                         Acts::eBoundLoc0 and
-                     (Acts::BoundIndices)
-                             pindices[vpos - 1] == Acts::eBoundLoc1) {
-            smearCfg.configured = true;
-            smearer =
-                std::pair<ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
-                                                             Acts::eBoundLoc1>,
-                          TwoFnc>(
-                    ActsFatras::BoundParametersSmearer<Acts::eBoundLoc0,
-                                                       Acts::eBoundLoc1>(),
-                    std::move(smearFunctions));
-          }
-
-        } else if (volDim == 3) {
-          // 3 - dimensional,  loc0 x loc1 x time
-          using ThreeFnc =
-              std::array<ActsFatras::SmearFunction<RandomEngine>, 3>;
-          std::array<int, 3> ftypes;
-          std::array<std::vector<double>, 3> fparameters;
-          for (size_t idim = 0; idim < (size_t)volDim; ++idim) {
-            ftype = types[vpos++];
-            ftypes[idim] = ftype;
-            fparameters[idim] = extract(ftype);
-          }
-          ThreeFnc smearFunctions = sFnc.generate<3>(ftypes, fparameters);
-          if ((Acts::BoundIndices)pindices[vpos - 3] == Acts::eBoundLoc0 and
-              (Acts::BoundIndices) pindices[vpos - 2] == Acts::eBoundLoc1 and
-              (Acts::BoundIndices) pindices[vpos - 1] == Acts::eBoundTime) {
-            smearCfg.configured = true;
-            smearer = std::pair<
-                ActsFatras::BoundParametersSmearer<
-                    Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime>,
-                ThreeFnc>(
-                ActsFatras::BoundParametersSmearer<
-                    Acts::eBoundLoc0, Acts::eBoundLoc1, Acts::eBoundTime>(),
-                std::move(smearFunctions));
-          }
-        }
-        // fill the smearer into the configuration map
-        smearers.push_back({volumeGeometryId, std::move(smearer)});
-      }
-      smearCfg.smearers =
-          Acts::GeometryHierarchyMap<SmearingAlgorithm::SupportedSmearer>(
-              std::move(smearers));
-
-    } else if (parameters.size() != sumpars) {
-      ACTS_ERROR("Expected " << sumpars << " parameters, but received "
-                             << parameters.size());
-    }
+  if (volumes.empty()) {
+    // no configured volumes are not considered an error at this stage
+    return smearCfg;
   }
+  auto dimensions = variables["digi-smear-dimensions"].as<read_series>();
+  if (dimensions.size() != volumes.size()) {
+    ACTS_ERROR("Inconsistent digi-smear-dimensions number of entries. Expected "
+               << volumes.size() << ", but received " << dimensions.size());
+    return smearCfg;
+  }
+  // count the expected number of parameter indices
+  auto expectedNumIndices =
+      std::accumulate(dimensions.begin(), dimensions.end(), size_t(0u));
+  auto indices = variables["digi-smear-parIndices"].as<read_series>();
+  if (indices.size() != expectedNumIndices) {
+    ACTS_ERROR("Inconsistent digi-smear-parIndices number of entries. Expected "
+               << expectedNumIndices << ", but received " << indices.size());
+    return smearCfg;
+  }
+  auto types = variables["digi-smear-types"].as<read_series>();
+  if (types.size() != indices.size()) {
+    ACTS_ERROR("Inconsistent digi-smear-types number of entries. Expected "
+               << indices.size() << ", but received " << types.size());
+    return smearCfg;
+  }
+  // count the expected number of smearing configuration parameters
+  size_t expectedNumParameters = 0;
+  for (auto smearingType : types) {
+    expectedNumParameters += numConfigParametersForType(smearingType);
+  }
+  auto parameters = variables["digi-smear-parameters"].as<read_range>();
+  if (parameters.size() != expectedNumParameters) {
+    ACTS_ERROR("Inconsistent digi-smear-parameters number of entries. Expected "
+               << expectedNumParameters << ", but received "
+               << parameters.size());
+    return smearCfg;
+  }
+
+  // construct the input for the smearer configuation
+  std::vector<
+      std::pair<Acts::GeometryIdentifier, SmearingAlgorithm::SmearerConfig>>
+      smearersInput;
+  // position of the current volume in the input vectors
+  size_t ivol = 0;
+  // position of the current dimension index/type in the input vectors
+  size_t iidx = 0;
+  // position of the current smear function parameter in the input vector
+  size_t ipar = 0;
+  for (; ivol < volumes.size(); ++ivol) {
+    Acts::GeometryIdentifier geoId =
+        Acts::GeometryIdentifier(0).setVolume(volumes[ivol]);
+    // number of smeared track parameters
+    size_t ndim = dimensions[ivol];
+
+    // create the smearing configuration for this geometry identifier
+    SmearingAlgorithm::SmearerConfig geoCfg;
+    geoCfg.reserve(ndim);
+
+    for (auto nidx = iidx + ndim; iidx < nidx; ++iidx) {
+      const auto paramIndex = static_cast<Acts::BoundIndices>(indices[iidx]);
+      const auto smearingType = static_cast<SmearingTypes>(types[iidx]);
+      const double* smearingParameters = &parameters[ipar];
+      ipar += numConfigParametersForType(smearingType);
+
+      SmearingAlgorithm::ParameterSmearerConfig parCfg;
+      parCfg.index = paramIndex;
+      parCfg.smearFunction =
+          makeSmearFunctionForType(smearingType, smearingParameters);
+      if (not parCfg.smearFunction) {
+        ACTS_ERROR("Invalid smearing type for entry "
+                   << iidx << ". Type " << types[iidx] << " is not valid");
+        return smearCfg;
+      }
+      geoCfg.emplace_back(std::move(parCfg));
+    }
+    smearersInput.emplace_back(geoId, std::move(geoCfg));
+  }
+  // set the smearer configuration from the prepared input
+  smearCfg.smearers =
+      Acts::GeometryHierarchyMap<SmearingAlgorithm::SmearerConfig>(
+          std::move(smearersInput));
+
   return smearCfg;
 }

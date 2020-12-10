@@ -13,33 +13,42 @@
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/DigitizationSourceLink.hpp"
 
+#include <array>
+#include <cassert>
+
 namespace Acts {
 
 class PlanarModuleCluster
-    : public Measurement<DigitizationSourceLink, BoundIndices, eBoundLoc0,
-                         eBoundLoc1, eBoundTime> {
-  using Base = Measurement<DigitizationSourceLink, BoundIndices, eBoundLoc0,
-                           eBoundLoc1, eBoundTime>;
+    : public Measurement<DigitizationSourceLink, BoundIndices, 3> {
+  using Base = Measurement<DigitizationSourceLink, BoundIndices, 3>;
+
+  static constexpr std::array<BoundIndices, 3> kIndices = {
+      eBoundLoc0, eBoundLoc1, eBoundTime};
 
  public:
   /// Constructor from DigitizationCells
   ///
-  /// @param [in] mSurface is the module surface
   /// @param [in] sourceLink is the link to the truth information
   /// @param [in] cov is the covariance matrix
   /// @param [in] loc0 is the local position in the first coordinate
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] t Timestamp of the cluster
   /// @param [in] dCells is the vector of digitization cells
-  PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      DigitizationSourceLink sourceLink, ActsSymMatrixD<3> cov,
-                      double loc0, double loc1, double t,
-                      std::vector<DigitizationCell> dCells,
+  PlanarModuleCluster(std::shared_ptr<const Surface> surface,
+                      DigitizationSourceLink sourceLink,
+                      Base::CovarianceMatrix cov, double loc0, double loc1,
+                      double t, std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Base(std::move(mSurface), std::move(sourceLink), std::move(cov), loc0,
-             loc1, t),
+      : Base(std::move(sourceLink), kIndices,
+             Base::ParametersVector(loc0, loc1, t), std::move(cov)),
+        m_surface(std::move(surface)),
         m_digitizationCells(std::move(dCells)),
-        m_digitizationModule(dModule) {}
+        m_digitizationModule(dModule) {
+    assert(m_surface);
+  }
+
+  /// Module surface.
+  const Surface& referenceObject() const { return *m_surface; }
 
   /// access to the digitization cells
   ///
@@ -52,6 +61,7 @@ class PlanarModuleCluster
   const DigitizationModule* digitizationModule() const;
 
  private:
+  std::shared_ptr<const Surface> m_surface;
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
   const DigitizationModule* m_digitizationModule;  /// the digitization module
 };

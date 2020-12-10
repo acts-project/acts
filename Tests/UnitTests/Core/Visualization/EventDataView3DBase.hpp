@@ -205,28 +205,19 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<FittableMeasurement<Test::TestSourceLink>> measurements;
-  measurements.reserve(6);
+  std::vector<Test::TestSourceLink> sourcelinks;
+  sourcelinks.reserve(6);
   Vector2D lPosCenter{10_mm, 10_mm};
-  std::array<double, 2> resolution = {30_um, 50_um};
-  SymMatrix2D cov2D;
-  cov2D << resolution[eBoundLoc0] * resolution[eBoundLoc0], 0., 0.,
-      resolution[eBoundLoc1] * resolution[eBoundLoc1];
+  Vector2D resolution{30_um, 50_um};
+  SymMatrix2D cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
-    double dx = resolution[eBoundLoc0] * gauss(generator);
-    double dy = resolution[eBoundLoc1] * gauss(generator);
-    MeasurementType<eBoundLoc0, eBoundLoc1> m01(
-        surface->getSharedPtr(), {}, cov2D, lPosCenter[eBoundLoc0] + dx,
-        lPosCenter[eBoundLoc1] + dy);
-    measurements.push_back(std::move(m01));
+    Vector2D loc = lPosCenter;
+    loc[0] += resolution[0] * gauss(generator);
+    loc[1] += resolution[1] * gauss(generator);
+    sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
+                             surface->geometryId());
   }
-
-  // Make a vector of source links as input to the KF
-  std::vector<Test::TestSourceLink> sourcelinks;
-  std::transform(measurements.begin(), measurements.end(),
-                 std::back_inserter(sourcelinks),
-                 [](const auto& m) { return Test::TestSourceLink{m}; });
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
   std::cout << "Construct KalmanFitter and perform fit" << std::endl;

@@ -8,36 +8,14 @@
 
 #pragma once
 
-#include <cassert>
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <cstddef>
-#include <ostream>
-#include <variant>
 
 namespace Acts {
 
-class Surface;
-
-namespace MeasurementHelpers {
-
-/// @brief Extract surface from a type erased measurement object
-/// @tparam T The FittableMeasurement type
-/// @return const pointer to the extracted surface
-template <typename T>
-const Surface* getSurface(const T& fittable_measurement) {
-  return std::visit([](const auto& meas) { return &meas.referenceObject(); },
-                    fittable_measurement);
-}
-
-template <typename T>
-size_t getSize(const T& fittable_measurement) {
-  return std::visit([](const auto& meas) { return meas.size(); },
-                    fittable_measurement);
-}
-
-}  // namespace MeasurementHelpers
-
 namespace detail {
-
 /// Helper functor for @c visit_measurement. This is the actual functor given
 /// to @c template_switch.
 /// @tparam I Compile time int value
@@ -58,7 +36,6 @@ struct visit_measurement_callable {
     return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
   }
 };
-
 }  // namespace detail
 
 /// Dispatch a lambda call on an overallocated parameter vector and covariance

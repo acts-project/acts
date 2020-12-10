@@ -44,8 +44,6 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputParticles;
     /// Input collection of simulated hits.
     std::string inputSimHits;
-    /// Input measurements collection.
-    std::string inputMeasurements;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
