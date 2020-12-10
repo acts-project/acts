@@ -116,7 +116,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[5] = 0.;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
-  ActsMatrix<BoundScalar, eBoundSize, 4> positionJacobian;
+  Eigen::Matrix<BoundScalar, eBoundSize, 4> positionJacobian;
   positionJacobian.setZero();
   // First row
   positionJacobian(0, 0) = -sgnH * X / S;

@@ -32,7 +32,7 @@ class PlyVisualization3D : public IVisualization3D {
   using ValueType = T;
 
   /// Type of a vertex based on the value type
-  using VertexType = ActsVector<ValueType, 3>;
+  using VertexType = Eigen::Matrix<ValueType, 3, 1>;
 
   /// @copydoc Acts::IVisualization3D::vertex()
   void vertex(const Vector3D& vtx, ColorRGB color = {120, 120, 120}) final;

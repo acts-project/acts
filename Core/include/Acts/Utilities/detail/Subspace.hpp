@@ -69,13 +69,14 @@ class FixedSizeSubspace {
                 "Subspace can only be as large as the full space");
 
   template <typename source_t>
-  using SubspaceVectorFor = ActsVector<typename source_t::Scalar, kSize>;
+  using SubspaceVectorFor = Eigen::Matrix<typename source_t::Scalar, kSize, 1>;
   template <typename source_t>
-  using FullspaceVectorFor = ActsVector<typename source_t::Scalar, kFullSize>;
+  using FullspaceVectorFor =
+      Eigen::Matrix<typename source_t::Scalar, kFullSize, 1>;
   template <typename scalar_t>
-  using ProjectionMatrix = ActsMatrix<scalar_t, kSize, kFullSize>;
+  using ProjectionMatrix = Eigen::Matrix<scalar_t, kSize, kFullSize>;
   template <typename scalar_t>
-  using ExpansionMatrix = ActsMatrix<scalar_t, kFullSize, kSize>;
+  using ExpansionMatrix = Eigen::Matrix<scalar_t, kFullSize, kSize>;
 
   // the functionality could also be implemented using a std::bitset where each
   // bit corresponds to an axis in the fullspace and set bits indicate which

@@ -25,10 +25,10 @@ struct AutodiffExtensionWrapper {
 
   // Some typedefs
   using AutodiffScalar = autodiff::dual;
-
-  using AutodiffVector3 = ActsMatrix<AutodiffScalar, 3, 1>;
-  using AutodiffFreeMatrix = ActsMatrix<AutodiffScalar, 8, 8>;
-  using AutodiffFreeVector = ActsMatrix<AutodiffScalar, 8, 1>;
+  using AutodiffVector3 = Eigen::Matrix<AutodiffScalar, 3, 1>;
+  using AutodiffFreeVector = Eigen::Matrix<AutodiffScalar, eFreeSize, 1>;
+  using AutodiffFreeMatrix =
+      Eigen::Matrix<AutodiffScalar, eFreeSize, eFreeSize>;
 
   // The double-extension is needed to communicate with the "outer world" (the
   // stepper) and ensures it behaves exactly as the underlying extension, with

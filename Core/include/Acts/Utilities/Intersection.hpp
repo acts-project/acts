@@ -30,7 +30,7 @@ struct Intersection {
   };
 
   /// Position of the intersection
-  ActsVector<DIM> position = ActsVectorD<DIM>::Zero();
+  ActsVector<DIM> position = ActsVector<DIM>::Zero();
   /// Signed path length to the intersection (if valid)
   typename ActsVector<DIM>::Scalar pathLength{
       std::numeric_limits<double>::infinity()};

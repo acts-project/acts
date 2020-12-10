@@ -67,7 +67,7 @@ class AxisAlignedBoundingBox {
    * Re-export vertex type based on value type given
    */
 
-  using VertexType = ActsVector<value_t, DIM>;
+  using VertexType = Eigen::Matrix<value_t, DIM, 1>;
   /**
    * Associated array value to `VertexType`
    */

@@ -227,12 +227,15 @@ inline double roundWithPrecision(double val, int precision) {
 }  // namespace detail
 
 /// Print out a matrix in a structured way.
+///
+/// @tparam derived_t Type of the matrix
 /// @param matrix The matrix to print
 /// @param precision Numeric output precision
 /// @param offset Offset in front of matrix lines
 /// @return The printed string
-inline std::string toString(const ActsMatrixXd& matrix, int precision = 4,
-                            const std::string& offset = "") {
+template <typename derived_t>
+inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
+                            int precision = 4, const std::string& offset = "") {
   std::ostringstream sout;
 
   sout << std::setiosflags(std::ios::fixed) << std::setprecision(precision);

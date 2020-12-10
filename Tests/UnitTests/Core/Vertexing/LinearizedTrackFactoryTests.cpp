@@ -129,10 +129,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   Vector4D vecSPZero = Vector4D::Zero();
-  ActsMatrix<BoundScalar, eBoundSize, 4> matBound2SPZero =
-      ActsMatrix<BoundScalar, eBoundSize, 4>::Zero();
-  ActsMatrix<eBoundSize, 3> matBound2MomZero =
-      ActsMatrix<eBoundSize, 3>::Zero();
+  Eigen::Matrix<BoundScalar, eBoundSize, 4> matBound2SPZero =
+      Eigen::Matrix<BoundScalar, eBoundSize, 4>::Zero();
+  Eigen::Matrix<BoundScalar, eBoundSize, 3> matBound2MomZero =
+      Eigen::Matrix<BoundScalar, eBoundSize, 3>::Zero();
 
   for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =
@@ -221,10 +221,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   BoundVector vecBoundZero = BoundVector::Zero();
   BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
   Vector4D vecSPZero = Vector4D::Zero();
-  ActsMatrix<BoundScalar, eBoundSize, 4> matBound2SPZero =
-      ActsMatrix<BoundScalar, eBoundSize, 4>::Zero();
-  ActsMatrix<eBoundSize, 3> matBound2MomZero =
-      ActsMatrix<eBoundSize, 3>::Zero();
+  Eigen::Matrix<BoundScalar, eBoundSize, 4> matBound2SPZero =
+      Eigen::Matrix<BoundScalar, eBoundSize, 4>::Zero();
+  Eigen::Matrix<BoundScalar, eBoundSize, 3> matBound2MomZero =
+      Eigen::Matrix<BoundScalar, eBoundSize, 3>::Zero();
 
   for (const BoundTrackParameters& parameters : tracks) {
     LinearizedTrack linTrack =

@@ -19,7 +19,7 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  using Jacobian = Acts::ActsMatrix<Acts::BoundScalar, Acts::eBoundSize, 4>;
+  using Jacobian = Eigen::Matrix<Acts::BoundScalar, Acts::eBoundSize, 4>;
 
   BilloirTrack(const input_track_t* params, Acts::LinearizedTrack lTrack)
       : originalTrack(params), linTrack(std::move(lTrack)) {}
@@ -133,7 +133,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
             qOverP - fQOvP, 0;
 
         // position jacobian (D matrix)
-        ActsMatrix<BoundScalar, eBoundSize, 4> Dmat;
+        Eigen::Matrix<BoundScalar, eBoundSize, 4> Dmat;
         Dmat = linTrack.positionJacobian;
 
         // momentum jacobian (E matrix)

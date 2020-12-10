@@ -23,7 +23,7 @@ template <typename scalar_t>
 struct GenericDefaultExtension {
   using Scalar = scalar_t;
   /// @brief Vector3D replacement for the custom scalar type
-  using ThisVector3 = Acts::ActsVector<Scalar, 3>;
+  using ThisVector3 = Eigen::Matrix<Scalar, 3, 1>;
 
   /// @brief Control function if the step evaluation would be valid
   ///
