@@ -42,24 +42,22 @@ void printFreeParameters(std::ostream& os, const FreeVector& params,
 /// @param os The output stream
 /// @param size Size of the measurement space
 /// @param indices Which parameters are measured, must contain size elements
-/// @param params Parameters vector
-/// @param cov Optional Covariance matrix
+/// @param params Parameters vector data, must contain size elements
+/// @param cov Optional Covariance matrix data, must contain sizexsize elements
 void printMeasurement(std::ostream& os, BoundIndices size,
-                      const uint8_t* indices,
-                      const Eigen::Ref<const ActsVectorX<BoundScalar>>& params,
-                      const Eigen::Ref<const ActsMatrixX<BoundScalar>>& cov);
+                      const uint8_t* indices, const BoundScalar* params,
+                      const BoundScalar* cov);
 
 /// Print free measurement content to the output stream.
 ///
 /// @param os The output stream
 /// @param size Size of the measurement space
 /// @param indices Which parameters are measured, must contain size elements
-/// @param params Parameters vector
-/// @param cov Optional Covariance matrix
+/// @param params Parameters vector data, must contain size elements
+/// @param cov Optional Covariance matrix data, must contain sizexsize elements
 void printMeasurement(std::ostream& os, FreeIndices size,
-                      const uint8_t* indices,
-                      const Eigen::Ref<const ActsVectorX<FreeScalar>>& params,
-                      const Eigen::Ref<const ActsMatrixX<FreeScalar>>& cov);
+                      const uint8_t* indices, const FreeScalar* params,
+                      const FreeScalar* cov);
 
 }  // namespace detail
 }  // namespace Acts

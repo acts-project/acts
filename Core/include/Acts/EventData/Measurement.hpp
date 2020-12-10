@@ -144,7 +144,8 @@ class Measurement {
 
   std::ostream& operator<<(std::ostream& os) const {
     detail::printMeasurement(os, static_cast<indices_t>(kSize),
-                             m_subspace.indices().data(), m_params, m_cov);
+                             m_subspace.indices().data(), m_params.data(),
+                             m_cov.data());
     return os;
   }
 
