@@ -56,7 +56,7 @@ class NullBField final {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& /*position*/,
-                            ActsMatrixD<3, 3>& /*derivative*/) const {
+                            ActsMatrix<3, 3>& /*derivative*/) const {
     return m_BField;
   }
 
@@ -72,7 +72,7 @@ class NullBField final {
   /// @note currently the derivative is not calculated
   /// @todo return derivative
   Vector3D getFieldGradient(const Vector3D& /*position*/,
-                            ActsMatrixD<3, 3>& /*derivative*/,
+                            ActsMatrix<3, 3>& /*derivative*/,
                             Cache& /*cache*/) const {
     return m_BField;
   }

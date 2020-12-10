@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   // check that the overallocated parts are zeroed
   ParametersVector mParFull = ParametersVector::Zero();
   CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
-  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrix<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       projFull;
   mParFull.head<2>() = m2.parameters();
   mCovFull.topLeftCorner<2, 2>() = m2.covariance();
@@ -562,7 +562,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   }
 
   BOOST_CHECK(ts.hasProjector());
-  ActsMatrixD<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
+  ActsMatrix<MultiTrajectory<TestSourceLink>::MeasurementSizeMax, eBoundSize>
       fullProj;
   fullProj.setZero();
   {

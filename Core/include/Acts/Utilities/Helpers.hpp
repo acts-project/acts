@@ -180,8 +180,8 @@ inline double cast(const Vector3D& position, BinningValue bval) {
 /// @param [in] m Matrix that will be used for cross products
 /// @param [in] v Vector for cross products
 /// @return Constructed matrix
-inline ActsMatrixD<3, 3> cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) {
-  ActsMatrixD<3, 3> r;
+inline ActsMatrix<3, 3> cross(const ActsMatrix<3, 3>& m, const Vector3D& v) {
+  ActsMatrix<3, 3> r;
   r.col(0) = m.col(0).cross(v);
   r.col(1) = m.col(1).cross(v);
   r.col(2) = m.col(2).cross(v);

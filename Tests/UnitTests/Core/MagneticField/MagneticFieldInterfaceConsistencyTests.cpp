@@ -42,7 +42,7 @@ void testInterfaceConsistency(const BField_t& field) {
   using Cache_t = typename BField_t::Cache;
   Vector3D pos(0, 0, 0);
   Vector3D B;
-  ActsMatrixD<3, 3> gradient;
+  ActsMatrix<3, 3> gradient;
 
   // test interface method without cache
   field.getField(pos);

@@ -51,7 +51,7 @@ struct MaterialMapper {
     /// @param [in] materialValues Material classification values at the hyper
     /// box corners sorted in the canonical order defined in Acts::interpolate
     MaterialCell(
-        std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+        std::function<ActsVector<DIM_POS>(const Vector3D&)> transformPos,
         std::array<double, DIM_POS> lowerLeft,
         std::array<double, DIM_POS> upperRight,
         std::array<Material::ParametersVector, N> materialValues)
@@ -90,7 +90,7 @@ struct MaterialMapper {
 
    private:
     /// Geometric transformation applied to global 3D positions
-    std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
+    std::function<ActsVector<DIM_POS>(const Vector3D&)> m_transformPos;
 
     /// Generalized lower-left corner of the confining hyper-box
     std::array<double, DIM_POS> m_lowerLeft;
@@ -111,7 +111,7 @@ struct MaterialMapper {
   /// onto grid space
   /// @param [in] grid Grid storing material classification values
   MaterialMapper(
-      std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+      std::function<ActsVector<DIM_POS>(const Vector3D&)> transformPos,
       Grid_t grid)
       : m_transformPos(std::move(transformPos)), m_grid(std::move(grid)) {}
 
@@ -206,7 +206,7 @@ struct MaterialMapper {
 
  private:
   /// Geometric transformation applied to global 3D positions
-  std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
+  std::function<ActsVector<DIM_POS>(const Vector3D&)> m_transformPos;
   /// Grid storing material values
   Grid_t m_grid;
 };
@@ -298,7 +298,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Currently the derivative is not calculated
   /// @todo return derivative
   Material getMaterialGradient(const Vector3D& position,
-                               ActsMatrixD<5, 5>& /*derivative*/) const {
+                               ActsMatrix<5, 5>& /*derivative*/) const {
     return m_mapper.getMaterial(position);
   }
 
@@ -313,7 +313,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @note Cache is not used currently
   /// @todo return derivative
   Material getMaterialGradient(const Vector3D& position,
-                               ActsMatrixD<5, 5>& /*derivative*/,
+                               ActsMatrix<5, 5>& /*derivative*/,
                                Cache& /*cache*/) const {
     return m_mapper.getMaterial(position);
   }
