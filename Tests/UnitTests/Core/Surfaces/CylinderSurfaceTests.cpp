@@ -272,8 +272,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
       cylinderSurfaceObject->localCartesianToBoundLocalDerivative(
           testContext, globalPosition);
   // Check if the result is as expected
-  PositionToBoundLocalMatrix expLoc3DToLocBound =
-      PositionToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }

@@ -240,8 +240,7 @@ inline AlignmentToPathMatrix LineSurface::alignmentToPathDerivative(
   return alignToPath;
 }
 
-inline PositionToBoundLocalMatrix
-LineSurface::localCartesianToBoundLocalDerivative(
+inline ActsMatrix<2, 3> LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3D& position) const {
   using VectorHelpers::phi;
   // The local frame transform
@@ -251,8 +250,7 @@ LineSurface::localCartesianToBoundLocalDerivative(
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);
   const double lsphi = std::sin(lphi);
-  PositionToBoundLocalMatrix loc3DToLocBound =
-      PositionToBoundLocalMatrix::Zero();
+  ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
   loc3DToLocBound << lcphi, lsphi, 0, 0, 0, 1;
 
   return loc3DToLocBound;

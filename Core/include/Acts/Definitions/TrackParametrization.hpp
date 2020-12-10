@@ -154,11 +154,4 @@ using BoundToFreeMatrix = Eigen::Matrix<BoundScalar, eFreeSize, eBoundSize>;
 using FreeToBoundMatrix = Eigen::Matrix<FreeScalar, eBoundSize, eFreeSize>;
 using FreeToPathMatrix = Eigen::Matrix<FreeScalar, 1, eFreeSize>;
 
-// Other mappings.
-
-// TODO this is not track parameter specific and might fit better to the general
-//   algebra definitions as it connects three- and two-dimensional spaces.
-//   maybe just replace w/ ActsMatrix<2,3>?
-using PositionToBoundLocalMatrix = Eigen::Matrix<BoundScalar, 2, 3>;
-
 }  // namespace Acts
