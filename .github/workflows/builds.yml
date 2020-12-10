@@ -13,12 +13,12 @@ env:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v5
+    container: ghcr.io/acts-project/${{ matrix.image }}:v6
     strategy:
       matrix:
         image:
-          - centos7-lcg95apython3
-          - centos7-lcg96
+          - centos7-lcg97apython3-gcc9
+          - centos7-lcg98python3-gcc10
           - ubuntu2004
     env:
       SETUP: true
@@ -78,11 +78,15 @@ jobs:
           && sudo chown $USER /usr/local/acts
           && curl -SL https://acts.web.cern.ch/ci/macOS/deps.43e0201.tar.gz | tar -xzC /usr/local/acts
       - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions such as the one installed via homebrew
         run: >
           cmake -B build -S .
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DCMAKE_PREFIX_PATH=/usr/local/acts
           -DACTS_BUILD_EVERYTHING=on
@@ -104,6 +108,7 @@ jobs:
           -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
       - name: Downstream build
         run: cmake --build build-downstream --
@@ -111,7 +116,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v5
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v6
     steps:
       - uses: actions/checkout@v2
       - name: Configure
@@ -127,7 +132,7 @@ jobs:
         run: cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v5
+    container: ghcr.io/acts-project/ubuntu2004:v6
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies

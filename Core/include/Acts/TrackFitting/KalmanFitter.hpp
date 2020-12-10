@@ -483,6 +483,8 @@ class KalmanFitter {
         auto trackStateProxy =
             result.fittedStates.getTrackState(result.trackTip);
 
+        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
+
         // assign the source link to the track state
         trackStateProxy.uncalibrated() = sourcelink_it->second;
 
@@ -663,6 +665,8 @@ class KalmanFitter {
 
         // Get the detached track state proxy back
         auto trackStateProxy = result.fittedStates.getTrackState(tempTrackTip);
+
+        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
         // Assign the source link to the detached track state
         trackStateProxy.uncalibrated() = sourcelink_it->second;

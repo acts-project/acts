@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
+
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+
 #include <HepMC3/Units.h>
 
 bool ActsExamples::HepMC3AsciiReader::readEvent(HepMC3::ReaderAscii& reader,

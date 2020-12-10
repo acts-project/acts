@@ -9,6 +9,7 @@
 #pragma once
 
 #include <vector>
+
 #include <core/session/onnxruntime_cxx_api.h>
 
 namespace Acts {

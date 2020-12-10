@@ -10,7 +10,7 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format8:v5
+    container: ghcr.io/acts-project/format10:v5
     steps:
       - uses: actions/checkout@v2
       - name: Check

@@ -8,29 +8,20 @@
 
 #include "ActsExamples/Seeding/SeedingAlgorithm.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include <iostream>
-#include <stdexcept>
 
-using SimSpacePoint = ActsExamples::SimSpacePoint;
-using ConcreteMeasurement =
-    Acts::Measurement<ActsExamples::IndexSourceLink, Acts::BoundIndices,
-                      Acts::eBoundLoc0, Acts::eBoundLoc1>;
+#include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -42,6 +33,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing output seeds collection");
+  }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
   }
 
   // silicon detector max
@@ -74,35 +68,45 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_cfg.gridConf.cotThetaMax = m_cfg.cotThetaMax;
 }
 
-std::unique_ptr<SimSpacePoint> ActsExamples::SeedingAlgorithm::transformSP(
-    const unsigned int hit_id, const ConcreteMeasurement meas,
-    const AlgorithmContext& ctx) const {
-  const auto parameters = meas.parameters();
-  Acts::Vector2D localPos(parameters[0], parameters[1]);
-  Acts::Vector3D globalPos(0, 0, 0);
-  Acts::Vector3D globalFakeMom(1, 1, 1);
+std::unique_ptr<ActsExamples::SimSpacePoint>
+ActsExamples::SeedingAlgorithm::makeSpacePoint(
+    const Measurement& measurement, const Acts::Surface& surface,
+    const Acts::GeometryContext& geoCtx) const {
+  SimSpacePoint sp = std::visit(
+      [&](const auto& m) {
+        // since we do not know if and where the local parameters are contained
+        // in the measurement, we always transform to the bound space where we
+        // do not their location. if the local parameters are not measured, this
+        // results in a zero location.
+        Acts::BoundVector localPar = m.expander() * m.parameters();
+        Acts::BoundSymMatrix localCov =
+            m.expander() * m.covariance() * m.expander().transpose();
 
-  // transform local into global position information
-  const auto& surf = meas.referenceObject();
+        // transform local position to global coordinates
+        Acts::Vector3D globalFakeMom(1, 1, 1);
+        Acts::Vector3D globalPos = surface.localToGlobal(
+            geoCtx, {localPar[Acts::eBoundLoc0], localPar[Acts::eBoundLoc1]},
+            globalFakeMom);
 
-  globalPos = meas.referenceObject().localToGlobal(ctx.geoContext, localPos,
-                                                   globalFakeMom);
-  auto cov_local = meas.covariance();
-  auto rframe = surf.referenceFrame(ctx.geoContext, globalPos, globalFakeMom);
-  auto jacToGlobal = rframe.topLeftCorner<3, 2>();
-  auto cov_global = jacToGlobal * cov_local * jacToGlobal.transpose();
+        // transfrom local covariance to global coordinates
+        Acts::BoundToFreeMatrix jacToGlobal =
+            surface.jacobianLocalToGlobal(geoCtx, localPar);
+        Acts::SymMatrix3D globalCov =
+            (jacToGlobal * localCov * jacToGlobal.transpose())
+                .block<3, 3>(Acts::eFreePos0, Acts::eFreePos0);
 
-  float x, y, z, r, varianceR, varianceZ;
-  x = globalPos.x();
-  y = globalPos.y();
-  z = globalPos.z();
-  r = std::sqrt(x * x + y * y);
-  varianceR = cov_global(0, 0);
-  varianceZ = cov_global(1, 1);
-  std::unique_ptr<SimSpacePoint> sp(
-      new SimSpacePoint{hit_id, x, y, z, r, varianceR, varianceZ});
-
-  return sp;
+        // create space point
+        float x = globalPos[Acts::ePos0];
+        float y = globalPos[Acts::ePos1];
+        float z = globalPos[Acts::ePos2];
+        float r = std::hypot(x, y);
+        float varianceR = globalCov(0, 0);
+        float varianceZ = globalCov(1, 1);
+        return SimSpacePoint{
+            m.sourceLink().index(), x, y, z, r, varianceR, varianceZ};
+      },
+      measurement);
+  return std::make_unique<SimSpacePoint>(std::move(sp));
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -126,12 +130,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // create the space points
   std::vector<const SimSpacePoint*> spVec;
   unsigned int hit_id = 0;
-  for (const auto& fullMeas : measurements) {
-    const auto& meas = std::get<ConcreteMeasurement>(fullMeas);
-    const auto& surface = meas.referenceObject();
-    const auto& geoId = surface.geometryId();
-    unsigned int volumeId = geoId.volume();
-    unsigned int layerId = geoId.layer();
+  for (Index imeas = 0u; imeas < measurements.size(); ++imeas) {
+    const auto& meas = measurements[imeas];
+    const auto geoId = std::visit(
+        [](const auto& m) { return m.sourceLink().geometryId(); }, meas);
+    const auto volumeId = geoId.volume();
+    const auto layerId = geoId.layer();
 
     // volumes and layers for seed finding
     if (volumeId == m_cfg.barrelVolume) {
@@ -146,10 +150,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       if (std::find(m_cfg.negEndcapLayers.begin(), m_cfg.negEndcapLayers.end(),
                     layerId) == m_cfg.negEndcapLayers.end())
         continue;
-    } else
+    } else {
       continue;
+    }
 
-    auto sp = transformSP(hit_id, meas, ctx).release();
+    // lookup surface
+    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    if (not surface) {
+      ACTS_ERROR("Could not find surface " << geoId);
+      return ProcessCode::ABORT;
+    }
+
+    auto sp = makeSpacePoint(meas, *surface, ctx.geoContext).release();
     spVec.push_back(sp);
     hit_id++;
   }

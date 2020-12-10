@@ -13,14 +13,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-
-#include <TTree.h>
 
 #include <memory>
 #include <mutex>
@@ -44,7 +43,7 @@ namespace ActsExamples {
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
-class RootDigitizationWriter : public WriterT<MeasurementContainer> {
+class RootDigitizationWriter final : public WriterT<MeasurementContainer> {
  public:
   struct Config {
     /// Which measurement collection to write.
@@ -56,7 +55,9 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     /// Optional the smearFunctions
-    Acts::GeometryHierarchyMap<SmearingAlgorithm::SupportedSmearer> smearers;
+    Acts::GeometryHierarchyMap<SmearingAlgorithm::SmearerConfig> smearers;
+    /// Tracking geometry required to access local-to-global transforms.
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   struct DigitizationTree {
@@ -124,28 +125,8 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
     /// @tparam parset_t Type of the parameter set
     ///
     /// @param ps A dummy bound parameter set
-    template <typename parset_t>
-    void setupBoundRecBranches(const parset_t& ps) {
-      if (ps.template contains<Acts::eBoundLoc0>()) {
-        tree->Branch(std::string("rec_" + bNames[Acts::eBoundLoc0]).c_str(),
-                     &recBound[Acts::eBoundLoc0]);
-      }
-      if (ps.template contains<Acts::eBoundLoc1>()) {
-        tree->Branch(std::string("rec_" + bNames[Acts::eBoundLoc1]).c_str(),
-                     &recBound[Acts::eBoundLoc1]);
-      }
-      if (ps.template contains<Acts::eBoundPhi>()) {
-        tree->Branch(std::string("rec_" + bNames[Acts::eBoundPhi]).c_str(),
-                     &recBound[Acts::eBoundPhi]);
-      }
-      if (ps.template contains<Acts::eBoundTheta>()) {
-        tree->Branch(std::string("rec_" + bNames[Acts::eBoundTheta]).c_str(),
-                     &recBound[Acts::eBoundTheta]);
-      }
-      if (ps.template contains<Acts::eBoundTime>()) {
-        tree->Branch(std::string("rec_" + bNames[Acts::eBoundTime]).c_str(),
-                     &recBound[Acts::eBoundTime]);
-      }
+    void setupBoundRecBranch(Acts::BoundIndices i) {
+      tree->Branch(std::string("rec_" + bNames[i]).c_str(), &recBound[i]);
     }
 
     /// Convenience function to register idenfication
@@ -184,7 +165,7 @@ class RootDigitizationWriter : public WriterT<MeasurementContainer> {
     /// @param m The measurement set
     template <typename measurement_t>
     void fillBoundMeasurement(const measurement_t& m) {
-      auto fullVect = m.projector().transpose() * m.parameters();
+      Acts::BoundVector fullVect = m.expander() * m.parameters();
       recBound[Acts::eBoundLoc0] = fullVect[Acts::eBoundLoc0];
       recBound[Acts::eBoundLoc1] = fullVect[Acts::eBoundLoc1];
       recBound[Acts::eBoundPhi] = fullVect[Acts::eBoundPhi];

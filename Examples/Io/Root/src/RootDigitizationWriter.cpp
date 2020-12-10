@@ -41,6 +41,9 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+  if (not m_cfg.trackingGeometry) {
+    throw std::invalid_argument("Missing tracking geometry");
+  }
   // Setup ROOT File
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
@@ -57,16 +60,12 @@ ActsExamples::RootDigitizationWriter::RootDigitizationWriter(
     ACTS_DEBUG("Smearers are present, preparing trees.");
     for (size_t ikv = 0; ikv < m_cfg.smearers.size(); ++ikv) {
       auto geoID = m_cfg.smearers.idAt(ikv);
-      auto value = m_cfg.smearers.valueAt(ikv);
-      std::visit(
-          [&](auto&& smearer) {
-            auto dTree = std::make_unique<DigitizationTree>(geoID);
-            typename decltype(smearer.first)::ParSet::ParametersVector pv;
-            typename decltype(smearer.first)::ParSet pset(std::nullopt, pv);
-            dTree->setupBoundRecBranches(pset);
-            dTrees.push_back({geoID, std::move(dTree)});
-          },
-          value);
+      auto geoCfg = m_cfg.smearers.valueAt(ikv);
+      auto dTree = std::make_unique<DigitizationTree>(geoID);
+      for (const auto& parCfg : geoCfg) {
+        dTree->setupBoundRecBranch(parCfg.index);
+      }
+      dTrees.push_back({geoID, std::move(dTree)});
     }
   }
   m_outputTrees = Acts::GeometryHierarchyMap<std::unique_ptr<DigitizationTree>>(
@@ -102,9 +101,14 @@ ActsExamples::ProcessCode ActsExamples::RootDigitizationWriter::writeT(
 
     std::visit(
         [&](const auto& m) {
-          const auto& surface = m.referenceObject();
-          Acts::GeometryIdentifier geoId = surface.geometryId();
-
+          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+          // find the corresponding surface
+          const Acts::Surface* surfacePtr =
+              m_cfg.trackingGeometry->findSurface(geoId);
+          if (not surfacePtr) {
+            return;
+          }
+          const Acts::Surface& surface = *surfacePtr;
           // find the corresponding output tree
           auto dTreeItr = m_outputTrees.find(geoId);
           if (dTreeItr == m_outputTrees.end()) {

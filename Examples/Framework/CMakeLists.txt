@@ -16,12 +16,11 @@ add_library(
 )
 target_include_directories(
   ActsExamplesFramework
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  PRIVATE ${TBB_INCLUDE_DIRS})
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE ${TBB_LIBRARIES} dfelibs Boost::filesystem)
+  PRIVATE Boost::filesystem dfelibs TBB::tbb)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)

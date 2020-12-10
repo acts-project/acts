@@ -182,7 +182,13 @@ if(ACTS_BUILD_EXAMPLES)
   # standalone components. for simplicity always request all possible
   # required components.
   find_package(ROOT ${_root_version} CONFIG REQUIRED COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
-  find_package(TBB REQUIRED)
+  # newer DD4hep version require TBB and search interally for TBB in
+  # config-only mode. to avoid missmatches we explicitely search using
+  # config-only mode first to be sure that we find the same version.
+  find_package(TBB CONFIG)
+  if(NOT TBB_FOUND)
+    find_package(TBB MODULE REQUIRED)
+  endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
@@ -220,7 +226,7 @@ if(ACTS_BUILD_DOCS)
 endif()
 
 if(ACTS_CUSTOM_SCALARTYPE)
-    message(STATUS "Building Acts with custom scalar type: "${ACTS_CUSTOM_SCALARTYPE} )
+    message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
 endif()
 
 # core library, core plugins, and other components

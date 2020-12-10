@@ -185,7 +185,6 @@ int runRecTruthTracks(int argc, char* argv[],
   trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
-  trackStatesWriter.inputMeasurements = hitSmearingCfg.outputMeasurements;
   trackStatesWriter.inputMeasurementParticlesMap =
       hitSmearingCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =

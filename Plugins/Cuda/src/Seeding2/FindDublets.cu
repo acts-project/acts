@@ -9,6 +9,7 @@
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/Details/FindDublets.hpp"
 #include "Acts/Plugins/Cuda/Seeding2/Details/Types.hpp"
+
 #include "../Utilities/ErrorCheck.cuh"
 #include "../Utilities/MatrixMacros.hpp"
 

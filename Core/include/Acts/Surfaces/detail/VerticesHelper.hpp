@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+
 #include <utility>
 #include <vector>
 

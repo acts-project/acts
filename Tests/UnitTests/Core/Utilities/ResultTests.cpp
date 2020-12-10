@@ -17,11 +17,16 @@
 using namespace std::string_literals;
 
 namespace {
-enum class MyError { Failure = 1, SomethingElse = 2 };
+
+enum class MyError {
+  Failure = 1,
+  SomethingElse,
+};
 
 std::error_code make_error_code(MyError e) {
   return {static_cast<int>(e), std::generic_category()};
 }
+
 }  // namespace
 
 namespace std {
