@@ -54,7 +54,7 @@ struct MaterialMapper {
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
         std::array<double, DIM_POS> lowerLeft,
         std::array<double, DIM_POS> upperRight,
-        std::array<ActsVector<float, 5>, N> materialValues)
+        std::array<Material::ParametersVector, N> materialValues)
         : m_transformPos(std::move(transformPos)),
           m_lowerLeft(std::move(lowerLeft)),
           m_upperRight(std::move(upperRight)),
@@ -102,7 +102,7 @@ struct MaterialMapper {
     ///
     /// @note These values must be order according to the prescription detailed
     ///       in Acts::interpolate.
-    std::array<ActsVector<float, 5>, N> m_materialValues;
+    std::array<Material::ParametersVector, N> m_materialValues;
   };
 
   /// @brief Default constructor
@@ -154,7 +154,7 @@ struct MaterialMapper {
 
     // Loop through all corner points
     constexpr size_t nCorners = 1 << DIM_POS;
-    std::array<ActsVector<float, 5>, nCorners> neighbors;
+    std::array<Material::ParametersVector, nCorners> neighbors;
     const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
     size_t i = 0;
