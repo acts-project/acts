@@ -18,9 +18,4 @@ namespace Acts {
 static const Transform3D s_idTransform =
     Transform3D::Identity();  //!< idendity transformation
 
-// Axis system
-static const Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
-static const Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
-static const Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
-
 }  // namespace Acts
