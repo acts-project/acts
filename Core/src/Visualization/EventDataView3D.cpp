@@ -38,8 +38,8 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   double dtheta = VectorHelpers::theta(direction);
 
   Transform3D eplane(Translation3(anker) *
-                     AngleAxis3D(dtheta, Vector3(1., 0., 0.)) *
-                     AngleAxis3D(dphi, Vector3(0., 0., 1.)));
+                     AngleAxis3(dtheta, Vector3(1., 0., 0.)) *
+                     AngleAxis3(dphi, Vector3(0., 0., 1.)));
 
   // Now generate the ellipse points
   std::vector<Vector3> ellipse =

@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
   const double beta = 0;
   const double gamma = M_PI / 2;
   // rotation around x axis
-  AngleAxis3D rotX(alpha, Vector3(1., 0., 0.));
+  AngleAxis3 rotX(alpha, Vector3(1., 0., 0.));
   // rotation around y axis
-  AngleAxis3D rotY(beta, Vector3(0., 1., 0.));
+  AngleAxis3 rotY(beta, Vector3(0., 1., 0.));
   // rotation around z axis
-  AngleAxis3D rotZ(gamma, Vector3(0., 0., 1.));
+  AngleAxis3 rotZ(gamma, Vector3(0., 0., 1.));
   double sz = std::sin(gamma);
   double cz = std::cos(gamma);
   double sy = std::sin(beta);

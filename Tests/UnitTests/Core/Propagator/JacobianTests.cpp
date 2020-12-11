@@ -51,8 +51,8 @@ Transform3D createCylindricTransform(const Vector3& nposition, double angleX,
   Transform3D ctransform;
   ctransform.setIdentity();
   ctransform.pretranslate(nposition);
-  ctransform.prerotate(AngleAxis3D(angleX, Vector3::UnitX()));
-  ctransform.prerotate(AngleAxis3D(angleY, Vector3::UnitY()));
+  ctransform.prerotate(AngleAxis3(angleX, Vector3::UnitX()));
+  ctransform.prerotate(AngleAxis3(angleY, Vector3::UnitY()));
   return ctransform;
 }
 
@@ -80,8 +80,8 @@ Transform3D createPlanarTransform(const Vector3& nposition,
   // curvilinear surfaces are boundless
   Transform3D ctransform{curvilinearRotation};
   ctransform.pretranslate(nposition);
-  ctransform.prerotate(AngleAxis3D(angleT, T));
-  ctransform.prerotate(AngleAxis3D(angleU, U));
+  ctransform.prerotate(AngleAxis3(angleT, T));
+  ctransform.prerotate(AngleAxis3(angleU, U));
   //
   return ctransform;
 }

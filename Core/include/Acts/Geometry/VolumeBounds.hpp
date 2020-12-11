@@ -31,12 +31,12 @@ using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces
 static const Transform3D s_planeXY = Transform3D::Identity();
-static const Transform3D s_planeYZ = AngleAxis3D(0.5 * M_PI, Vector3::UnitY()) *
-                                     AngleAxis3D(0.5 * M_PI, Vector3::UnitZ()) *
+static const Transform3D s_planeYZ = AngleAxis3(0.5 * M_PI, Vector3::UnitY()) *
+                                     AngleAxis3(0.5 * M_PI, Vector3::UnitZ()) *
                                      Transform3D::Identity();
-static const Transform3D s_planeZX =
-    AngleAxis3D(-0.5 * M_PI, Vector3::UnitX()) *
-    AngleAxis3D(-0.5 * M_PI, Vector3::UnitZ()) * Transform3D::Identity();
+static const Transform3D s_planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
+                                     AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
+                                     Transform3D::Identity();
 
 /// @class VolumeBounds
 ///

@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_SUITE(Surfaces)
 
 BOOST_AUTO_TEST_CASE(VerticesHelperOnHyperPlane) {
   // Create the transform
-  Transform3D transform(AngleAxis3D(0.234, Vector3(0., 1., 0.)) *
-                        AngleAxis3D(-0.734, Vector3(1., 1., 1.).normalized()) *
+  Transform3D transform(AngleAxis3(0.234, Vector3(0., 1., 0.)) *
+                        AngleAxis3(-0.734, Vector3(1., 1., 1.).normalized()) *
                         Translation3(Vector3(-1., 2., 3.)));
 
   auto trfSpace = [](std::vector<Vector3>& vtxs,

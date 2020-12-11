@@ -81,17 +81,17 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   if (m_sectorPlaneBounds != nullptr) {
     // sectorPlane 1 (negative phi)
     const Transform3D sp1Transform = Transform3D(
-        transform * AngleAxis3D(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
+        transform * AngleAxis3(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-        AngleAxis3D(M_PI / 2, Vector3(1., 0., 0.)));
+        AngleAxis3(M_PI / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), forward));
     // sectorPlane 2 (positive phi)
     const Transform3D sp2Transform = Transform3D(
-        transform * AngleAxis3D(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
+        transform * AngleAxis3(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
         Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
-        AngleAxis3D(-M_PI / 2, Vector3(1., 0., 0.)));
+        AngleAxis3(-M_PI / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(OrientedSurface(std::move(pSurface), backward));

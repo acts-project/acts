@@ -92,10 +92,8 @@ using Translation3 = Eigen::Translation<ActsScalar, 3>;
 using RotationMatrix2 = ActsMatrix<2, 2>;
 using RotationMatrix3 = ActsMatrix<3, 3>;
 
-// pure rotation transformations. only available in 2d and 3d
-using Rotation2D = Eigen::Rotation2D<ActsScalar>;
-using Rotation3D = Eigen::Quaternion<ActsScalar>;
-using AngleAxis3D = Eigen::AngleAxis<ActsScalar>;
+// pure rotation defined by a rotation angle around a rotation axis
+using AngleAxis3 = Eigen::AngleAxis<ActsScalar>;
 
 // combined affine transformations. types are chosen for better data alignment:
 // - 2d affine compact stored as 2x3 matrix

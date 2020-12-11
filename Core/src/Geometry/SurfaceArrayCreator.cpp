@@ -440,7 +440,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 
     // create rotation, so that maxPhi is +pi
     AxisScalar angle = -(M_PI + maxPhi);
-    transform = (transform)*AngleAxis3D(angle, Vector3::UnitZ());
+    transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
 
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
@@ -615,7 +615,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         double angle = M_PI - (max + 0.5 * step);
 
         // replace given transform ref
-        transform = (transform)*AngleAxis3D(angle, Vector3::UnitZ());
+        transform = (transform)*AngleAxis3(angle, Vector3::UnitZ());
 
       } else {
         minimum = protoLayer.min(binPhi, true);

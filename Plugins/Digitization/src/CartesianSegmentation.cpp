@@ -124,7 +124,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // lorentz angle around y
   RotationMatrix3 lorentzPlaneRotationMatrix =
       (lorentzAngle != 0.)
-          ? xBinRotationMatrix * AngleAxis3D(lorentzAngle, Vector3::UnitX())
+          ? xBinRotationMatrix * AngleAxis3(lorentzAngle, Vector3::UnitX())
           : xBinRotationMatrix;
 
   // reserve, it's always (number of bins-1) as the boundaries are within the

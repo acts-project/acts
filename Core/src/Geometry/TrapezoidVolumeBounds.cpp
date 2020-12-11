@@ -79,9 +79,9 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   // Face surfaces yz
   // (3) - At point B, attached to beta opening angle
   Vector3 fbPosition(-get(eHalfLengthXnegY) + neghOffset, 0., 0.);
-  auto fbTransform =
-      transform * Translation3(fbPosition) *
-      AngleAxis3D(-0.5 * M_PI + get(eBeta), Vector3(0., 0., 1.)) * s_planeYZ;
+  auto fbTransform = transform * Translation3(fbPosition) *
+                     AngleAxis3(-0.5 * M_PI + get(eBeta), Vector3(0., 0., 1.)) *
+                     s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
@@ -90,7 +90,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
   auto faTransform =
       transform * Translation3(faPosition) *
-      AngleAxis3D(-0.5 * M_PI + get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
+      AngleAxis3(-0.5 * M_PI + get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));

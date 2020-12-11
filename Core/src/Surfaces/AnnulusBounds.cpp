@@ -356,7 +356,7 @@ double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
 }
 
 Acts::Vector2 Acts::AnnulusBounds::moduleOrigin() const {
-  return Rotation2D(get(eAveragePhi)) * m_moduleOrigin;
+  return Eigen::Rotation2D<ActsScalar>(get(eAveragePhi)) * m_moduleOrigin;
 }
 
 // Ostream operator overload

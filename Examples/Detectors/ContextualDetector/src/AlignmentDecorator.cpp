@@ -68,16 +68,16 @@ ActsExamples::Contextual::AlignmentDecorator::decorate(
             }
             // now modify it - rotation around local X
             if (m_cfg.aSigmaX != 0.) {
-              (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaX * gauss(rng),
-                                             Acts::Vector3::UnitX());
+              (*atForm) *= Acts::AngleAxis3(m_cfg.aSigmaX * gauss(rng),
+                                            Acts::Vector3::UnitX());
             }
             if (m_cfg.aSigmaY != 0.) {
-              (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaY * gauss(rng),
-                                             Acts::Vector3::UnitY());
+              (*atForm) *= Acts::AngleAxis3(m_cfg.aSigmaY * gauss(rng),
+                                            Acts::Vector3::UnitY());
             }
             if (m_cfg.aSigmaZ != 0.) {
-              (*atForm) *= Acts::AngleAxis3D(m_cfg.aSigmaZ * gauss(rng),
-                                             Acts::Vector3::UnitZ());
+              (*atForm) *= Acts::AngleAxis3(m_cfg.aSigmaZ * gauss(rng),
+                                            Acts::Vector3::UnitZ());
             }
           }
           // put it back into the store

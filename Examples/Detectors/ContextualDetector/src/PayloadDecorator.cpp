@@ -29,8 +29,8 @@ ActsExamples::ProcessCode ActsExamples::Contextual::PayloadDecorator::decorate(
   ACTS_VERBOSE("New IOV detected, emulate new alignment");
   if (context.eventNumber % m_cfg.iovSize) {
     for (auto& tf : aStore) {
-      tf *= Acts::AngleAxis3D(m_cfg.rotationStep * context.eventNumber,
-                              Acts::Vector3::UnitY());
+      tf *= Acts::AngleAxis3(m_cfg.rotationStep * context.eventNumber,
+                             Acts::Vector3::UnitY());
     }
     // This creates a full payload context, i.e. the nominal store
     PayloadDetectorElement::ContextType alignableGeoContext;

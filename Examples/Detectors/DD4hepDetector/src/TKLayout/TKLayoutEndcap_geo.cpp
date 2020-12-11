@@ -119,7 +119,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // if it is the negative endcap the normal vector needs to point into the
   // Place Volume
   Position endcap_translation(0., 0., x_det_dim.z());
-  Rotation3D rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+  Rotation3 rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
   if (x_det_dim.z() < 0.) {
     rotation.SetComponents(1., 0., 0., 0., 1., 0., 0., 0., -1.);
   }

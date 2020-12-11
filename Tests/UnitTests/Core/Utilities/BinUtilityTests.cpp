@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(BinUtility_equidistant_binning) {
 BOOST_AUTO_TEST_CASE(BinUtility_transform) {
   Transform3D transform_LtoG = Transform3D::Identity();
   transform_LtoG = transform_LtoG * Translation3(0., 0., -50);
-  transform_LtoG = transform_LtoG * AngleAxis3D(M_PI / 4, Vector3(0, 0, 1));
+  transform_LtoG = transform_LtoG * AngleAxis3(M_PI / 4, Vector3(0, 0, 1));
   ;
 
   Transform3D transform_GtoL = transform_LtoG.inverse();

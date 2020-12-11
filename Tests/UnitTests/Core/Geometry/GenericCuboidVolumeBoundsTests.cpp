@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
 
   Transform3D trf;
   trf = Translation3(Vector3(0, 8, -5)) *
-        AngleAxis3D(M_PI / 3., Vector3(1, -3, 9).normalized());
+        AngleAxis3(M_PI / 3., Vector3(1, -3, 9).normalized());
 
   surfaces = cubo.orientedSurfaces(trf);
   for (const auto& srf : surfaces) {
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   auto bb = gcvb.boundingBox();
 
   Transform3D rot;
-  rot = AngleAxis3D(M_PI / 2., Vector3::UnitX());
+  rot = AngleAxis3(M_PI / 2., Vector3::UnitX());
 
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   BOOST_CHECK_EQUAL(bb.max(), Vector3(2, 1, 1));
@@ -165,14 +165,14 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.max(), Vector3(2, 0, 1), tol);
   BOOST_CHECK_EQUAL(bb.min(), Vector3(0, -1, 0));
 
-  rot = AngleAxis3D(M_PI / 2., Vector3::UnitZ());
+  rot = AngleAxis3(M_PI / 2., Vector3::UnitZ());
   bb = gcvb.boundingBox(&rot);
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3(0, 2, 1), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3(-1, 0., 0.), tol);
 
-  rot = AngleAxis3D(0.542, Vector3::UnitZ()) *
-        AngleAxis3D(M_PI / 5., Vector3(1, 3, 6).normalized());
+  rot = AngleAxis3(0.542, Vector3::UnitZ()) *
+        AngleAxis3(M_PI / 5., Vector3(1, 3, 6).normalized());
 
   bb = gcvb.boundingBox(&rot);
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);

@@ -99,8 +99,8 @@ struct CylindricalTrackingGeometry {
       auto mModuleTransform = Transform3D(
           Translation3(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
                        ringZ + (im % 2) * zStagger) *
-          AngleAxis3D(phi - 0.5 * M_PI, Vector3::UnitZ()) *
-          AngleAxis3D(moduleTilt, Vector3::UnitY()));
+          AngleAxis3(phi - 0.5 * M_PI, Vector3::UnitZ()) *
+          AngleAxis3(moduleTilt, Vector3::UnitY()));
 
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(

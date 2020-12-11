@@ -154,11 +154,11 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   // position of volume
   const Vector3 pos(posX, posY, posZ);
   // rotation around x axis
-  AngleAxis3D rotX(alpha, Vector3(1., 0., 0.));
+  AngleAxis3 rotX(alpha, Vector3(1., 0., 0.));
   // rotation around y axis
-  AngleAxis3D rotY(beta, Vector3(0., 1., 0.));
+  AngleAxis3 rotY(beta, Vector3(0., 1., 0.));
   // rotation around z axis
-  AngleAxis3D rotZ(gamma, Vector3(0., 0., 1.));
+  AngleAxis3 rotZ(gamma, Vector3(0., 0., 1.));
 
   // create the cylinder bounds
   double rmin = 1.;
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   auto bb = cvb.boundingBox();
 
   Transform3D rot;
-  rot = AngleAxis3D(M_PI / 2., Vector3::UnitX());
+  rot = AngleAxis3(M_PI / 2., Vector3::UnitX());
 
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   BOOST_CHECK_EQUAL(bb.max(), Vector3(5, 5, 10));
@@ -252,14 +252,14 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsBoundingBox) {
   CHECK_CLOSE_ABS(bb.min(),
                   Vector3(5 * std::cos(angle), -8 * std::sin(angle), -13), tol);
 
-  rot = AngleAxis3D(M_PI / 2., Vector3::UnitZ());
+  rot = AngleAxis3(M_PI / 2., Vector3::UnitZ());
   bb = cvb.boundingBox(&rot);
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3(8 * std::sin(angle), 8, 13), tol);
   CHECK_CLOSE_ABS(bb.min(),
                   Vector3(-8 * std::sin(angle), 5 * std::cos(angle), -13), tol);
 
-  rot = AngleAxis3D(M_PI / 2., Vector3(-2, 4, 5).normalized());
+  rot = AngleAxis3(M_PI / 2., Vector3(-2, 4, 5).normalized());
   bb = cvb.boundingBox(&rot);
   BOOST_CHECK_EQUAL(bb.entity(), nullptr);
   CHECK_CLOSE_ABS(bb.max(), Vector3(8.40007, 15.2828, 3.88911), tol);

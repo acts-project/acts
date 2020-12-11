@@ -311,7 +311,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
           // twist by the stereo angle
           double stereo = m_cfg.centralModuleFrontsideStereo.at(icl);
           (*mutableModuleTransform.get()) *=
-              Acts::AngleAxis3D(-stereo, Acts::Vector3::UnitZ());
+              Acts::AngleAxis3(-stereo, Acts::Vector3::UnitZ());
         }
         // count the modules
         Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
@@ -342,7 +342,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
             // twist by the stereo angle
             double stereoBackSide = m_cfg.centralModuleBacksideStereo.at(icl);
             (*mutableModuleTransform.get()) *=
-                Acts::AngleAxis3D(-stereoBackSide, Acts::Vector3::UnitZ());
+                Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
           }
           // Finalize the transform
           moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(
@@ -529,7 +529,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
               double stereoBackSide =
                   m_cfg.posnegModuleBacksideStereo.at(ipnl).at(ipnR);
               (*mutableModuleTransform.get()) *=
-                  Acts::AngleAxis3D(-stereoBackSide, Acts::Vector3::UnitZ());
+                  Acts::AngleAxis3(-stereoBackSide, Acts::Vector3::UnitZ());
             }
             // Finalize the transform
             moduleTransform = std::const_pointer_cast<const Acts::Transform3D>(

@@ -142,7 +142,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
     Transform3D negSectorRelTrans{sectorRotation};
     negSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) - get(eHalfPhiSector), Vector3::UnitZ()));
+        AngleAxis3(get(eAveragePhi) - get(eHalfPhiSector), Vector3::UnitZ()));
     auto negSectorAbsTrans = transform * negSectorRelTrans;
     auto negSectorPlane =
         Surface::makeShared<PlaneSurface>(negSectorAbsTrans, m_sectorBounds);
@@ -150,7 +150,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
     Transform3D posSectorRelTrans{sectorRotation};
     posSectorRelTrans.prerotate(
-        AngleAxis3D(get(eAveragePhi) + get(eHalfPhiSector), Vector3::UnitZ()));
+        AngleAxis3(get(eAveragePhi) + get(eHalfPhiSector), Vector3::UnitZ()));
     auto posSectorAbsTrans = transform * posSectorRelTrans;
     auto posSectorPlane =
         Surface::makeShared<PlaneSurface>(posSectorAbsTrans, m_sectorBounds);

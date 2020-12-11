@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   CHECK_CLOSE_ABS(bb.max(), Vector3(10, 38, 24), tol);
   CHECK_CLOSE_ABS(bb.min(), Vector3(-10, 22, 16), tol);
 
-  trf = AngleAxis3D(M_PI / 2., Vector3(-2, 4, 5).normalized());
+  trf = AngleAxis3(M_PI / 2., Vector3(-2, 4, 5).normalized());
 
   bb = tvb.boundingBox(&trf);
   CHECK_CLOSE_ABS(bb.max(), Vector3(9.32577, 11.4906, 11.5777), tol);

@@ -143,8 +143,8 @@ struct SurfaceArrayCreatorFixture {
       Transform3D trans;
       trans.setIdentity();
       trans.translate(origin + dir * step * i);
-      // trans.rotate(AngleAxis3D(M_PI/9., Vector3(0, 0, 1)));
-      trans.rotate(AngleAxis3D(M_PI / 2., Vector3(1, 0, 0)));
+      // trans.rotate(AngleAxis3(M_PI/9., Vector3(0, 0, 1)));
+      trans.rotate(AngleAxis3(M_PI / 2., Vector3(1, 0, 0)));
       trans = trans * pretrans;
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
@@ -467,7 +467,7 @@ BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
 
   // z row where elements are rotated around y
   Transform3D tr = Transform3D::Identity();
-  tr.rotate(AngleAxis3D(M_PI / 4., Vector3(0, 0, 1)));
+  tr.rotate(AngleAxis3(M_PI / 4., Vector3(0, 0, 1)));
   surfaces = straightLineSurfaces(10, 3, Vector3(0, 0, 0 + 1.5), tr);
   surfacesRaw = unpack_shared_vector(surfaces);
   pl = ProtoLayer(tgContext, surfacesRaw);

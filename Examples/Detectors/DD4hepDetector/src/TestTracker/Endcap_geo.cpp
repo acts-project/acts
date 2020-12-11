@@ -146,7 +146,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
             comp_det.setPlacement(sensComp);
             scomp_num++;
           }
-          Rotation3D rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+          Rotation3 rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
           // Place Module Box Volumes in layer
           Transform3D transf1(RotationX(0.5 * M_PI) *
                                   RotationY(phi + 0.5 * M_PI) *
@@ -181,7 +181,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // if it is the negative endcap the normal vector needs to point into the
   // outside
   Position endcap_translation(0., 0., x_det_dim.z());
-  Rotation3D rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+  Rotation3 rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
   if (x_det_dim.z() < 0.) {
     rotation.SetComponents(1., 0., 0., 0., -1., 0., 0., 0., -1.);
   }
