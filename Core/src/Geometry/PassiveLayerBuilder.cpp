@@ -110,8 +110,9 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::centralLayers(
       auto cBounds = std::make_shared<const CylinderBounds>(
           m_cfg.centralLayerRadii[icl], m_cfg.centralLayerHalflengthZ.at(icl));
       // create the layer
-      MutableLayerPtr cLayer = CylinderLayer::create(
-          s_idTransform, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
+      MutableLayerPtr cLayer =
+          CylinderLayer::create(Transform3D::Identity(), cBounds, nullptr,
+                                m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
       std::shared_ptr<const ISurfaceMaterial> material = nullptr;
       // create the material from jobOptions

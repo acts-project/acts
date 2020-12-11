@@ -11,11 +11,4 @@
 
 /// Define statics for Geometry in Tracking
 ///
-namespace Acts {
-
-// Transformations
-
-static const Transform3D s_idTransform =
-    Transform3D::Identity();  //!< idendity transformation
-
-}  // namespace Acts
+namespace Acts {}  // namespace Acts
