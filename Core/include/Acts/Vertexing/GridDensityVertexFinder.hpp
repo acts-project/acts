@@ -42,6 +42,9 @@ class GridDensityVertexFinder {
   using GridDensity = GaussianGridTrackDensity<mainGridSize, trkGridSize>;
 
  public:
+  using MainGridVector = typename GridDensity::MainGridVector;
+  using TrackGridVector = typename GridDensity::TrackGridVector;
+
   /// @brief The Config struct
   struct Config {
     ///@param zMinMax min and max z value of big z-axis grid

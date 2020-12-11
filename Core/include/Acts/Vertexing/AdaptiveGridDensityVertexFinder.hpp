@@ -41,6 +41,8 @@ class AdaptiveGridDensityVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
 
  public:
+  using TrackGridVector = typename GridDensity::TrackGridVector;
+
   /// @brief The Config struct
   struct Config {
     ///@param binSize Bin size of grid in mm

@@ -12,7 +12,7 @@
 template <int mainGridSize, int trkGridSize>
 Acts::Result<float>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
-    Acts::MainGridVector& mainGrid) const {
+    MainGridVector& mainGrid) const {
   if (mainGrid == MainGridVector::Zero()) {
     return VertexingError::EmptyInput;
   }
@@ -33,7 +33,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
 
 template <int mainGridSize, int trkGridSize>
 Acts::Result<std::pair<float, float>> Acts::GaussianGridTrackDensity<
-    mainGridSize, trkGridSize>::getMaxZPositionAndWidth(Acts::MainGridVector&
+    mainGridSize, trkGridSize>::getMaxZPositionAndWidth(MainGridVector&
                                                             mainGrid) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(mainGrid);
@@ -56,8 +56,7 @@ template <int mainGridSize, int trkGridSize>
 std::pair<int, typename Acts::GaussianGridTrackDensity<
                    mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
-    const Acts::BoundTrackParameters& trk,
-    Acts::MainGridVector& mainGrid) const {
+    const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
   SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
@@ -98,21 +97,21 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
 template <int mainGridSize, int trkGridSize>
 void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     addTrackGridToMainGrid(int zBin, const TrackGridVector& trkGrid,
-                           Acts::MainGridVector& mainGrid) const {
+                           MainGridVector& mainGrid) const {
   modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, +1);
 }
 
 template <int mainGridSize, int trkGridSize>
 void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     removeTrackGridFromMainGrid(int zBin, const TrackGridVector& trkGrid,
-                                Acts::MainGridVector& mainGrid) const {
+                                MainGridVector& mainGrid) const {
   modifyMainGridWithTrackGrid(zBin, trkGrid, mainGrid, -1);
 }
 
 template <int mainGridSize, int trkGridSize>
 void Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
     modifyMainGridWithTrackGrid(int zBin, const TrackGridVector& trkGrid,
-                                Acts::MainGridVector& mainGrid,
+                                MainGridVector& mainGrid,
                                 int modifyModeSign) const {
   int width = (trkGridSize - 1) / 2;
   // Overlap left
@@ -157,7 +156,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
 template <int mainGridSize, int trkGridSize>
 Acts::Result<float>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
-    Acts::MainGridVector& mainGrid, float maxZ) const {
+    MainGridVector& mainGrid, float maxZ) const {
   if (mainGrid == MainGridVector::Zero()) {
     return VertexingError::EmptyInput;
   }
@@ -213,7 +212,7 @@ float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
 
 template <int mainGridSize, int trkGridSize>
 int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
-    getHighestSumZPosition(Acts::MainGridVector& mainGrid) const {
+    getHighestSumZPosition(MainGridVector& mainGrid) const {
   // Checks the first (up to) 3 density maxima, if they are close, checks which
   // one has the highest surrounding density sum (the two neighboring bins)
 
@@ -262,7 +261,7 @@ int Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::
 
 template <int mainGridSize, int trkGridSize>
 double Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getDensitySum(
-    const Acts::MainGridVector& mainGrid, int pos) const {
+    const MainGridVector& mainGrid, int pos) const {
   double sum = mainGrid(pos);
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
