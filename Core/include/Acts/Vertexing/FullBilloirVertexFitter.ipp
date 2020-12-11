@@ -44,11 +44,11 @@ struct BilloirTrack {
 /// @brief Struct to cache vertex-specific matrix operations in Billoir fitter
 struct BilloirVertex {
   // Amat  = sum{DiMat^T * Wi * DiMat}
-  Acts::SymMatrix4D Amat = Acts::SymMatrix4D::Zero();
+  Acts::SymMatrix4 Amat = Acts::SymMatrix4::Zero();
   // Tvec  = sum{DiMat^T * Wi * dqi}
   Acts::Vector4 Tvec = Acts::Vector4::Zero();
   // BCBmat = sum{BiMat * Ci^-1 * BiMat^T}
-  Acts::SymMatrix4D BCBmat = Acts::SymMatrix4D::Zero();
+  Acts::SymMatrix4 BCBmat = Acts::SymMatrix4::Zero();
   // BCUvec = sum{BiMat * Ci^-1 * UiVec}
   Acts::Vector4 BCUvec = Acts::Vector4::Zero();
 };
@@ -187,7 +187,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     // beam-const
     // Vdel = Tvec-sum{BiMat*Ci^-1*UiVec}
     Vector4 Vdel = billoirVertex.Tvec - billoirVertex.BCUvec;
-    SymMatrix4D VwgtMat =
+    SymMatrix4 VwgtMat =
         billoirVertex.Amat -
         billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
     if (isConstraintFit) {
@@ -201,7 +201,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     }
 
     // cov(deltaV) = VwgtMat^-1
-    SymMatrix4D covDeltaVmat = VwgtMat.inverse();
+    SymMatrix4 covDeltaVmat = VwgtMat.inverse();
     // deltaV = cov_(deltaV) * Vdel;
     Vector4 deltaV = covDeltaVmat * Vdel;
     //--------------------------------------------------------------------------------------
@@ -240,7 +240,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
       // some intermediate calculations to get 5x5 matrix
       // cov(V,V), 4x4 matrix
-      SymMatrix4D VVmat = covDeltaVmat;
+      SymMatrix4 VVmat = covDeltaVmat;
 
       // cov(V,P)
       ActsMatrix<4, 3> VPmat = bTrack.BiMat;

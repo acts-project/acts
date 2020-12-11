@@ -70,7 +70,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   const DigitizationModule digMod(segmentation, 1., 1., 0.);
   DetectorElementStub detElem(t3d);
   auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
-  SymMatrix3D cov;
+  SymMatrix3 cov;
   cov << 0., 0., 0., 0., 0., 0., 0., 0., 0.;
   Vector2 local = {0.1, -0.1};
 

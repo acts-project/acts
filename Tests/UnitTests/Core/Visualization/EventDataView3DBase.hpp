@@ -209,7 +209,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   sourcelinks.reserve(6);
   Vector2 lPosCenter{10_mm, 10_mm};
   Vector2 resolution{30_um, 50_um};
-  SymMatrix2D cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;

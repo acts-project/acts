@@ -53,11 +53,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
   // Vertex covariance and weight matrices
-  const SymMatrix3D vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
-  const SymMatrix3D vtxWeight = vtxCov.inverse();
+  const SymMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
+  const SymMatrix3 vtxWeight = vtxCov.inverse();
 
   // New track covariance matrix
-  const SymMatrix3D newTrkCov =
+  const SymMatrix3 newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
   KalmanVertexUpdater::MatrixCache matrixCache;
@@ -67,7 +67,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       vtx, linTrack, track.trackWeight, -1, matrixCache);
 
   // Corresponding weight matrix
-  const SymMatrix3D& reducedVtxWeight = matrixCache.newVertexWeight;
+  const SymMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
 
   // Difference in positions
   Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
@@ -86,10 +86,10 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   ActsMatrix<4, 3> newFullTrkCov(ActsMatrix<4, 3>::Zero());
   newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
-  SymMatrix4D vtxFullWeight(SymMatrix4D::Zero());
+  SymMatrix4 vtxFullWeight(SymMatrix4::Zero());
   vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
 
-  SymMatrix4D vtxFullCov(SymMatrix4D::Zero());
+  SymMatrix4 vtxFullCov(SymMatrix4::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
   const Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
@@ -112,8 +112,8 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const SymMatrix3D& sMat, const ActsMatrix<4, 3>& newTrkCov,
-    const SymMatrix4D& vtxWeight, const SymMatrix4D& vtxCov,
+    const SymMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
+    const SymMatrix4& vtxWeight, const SymMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
   ActsSymMatrix<3> momCov =

@@ -90,7 +90,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SymMatrix4D seedCov = vertexingOptions.vertexConstraint.fullCovariance();
+  SymMatrix4 seedCov = vertexingOptions.vertexConstraint.fullCovariance();
 
   if (width != 0.) {
     // Use z-constraint from seed width

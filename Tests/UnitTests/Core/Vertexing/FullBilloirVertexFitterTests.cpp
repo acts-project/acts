@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   // Constraint for vertex fit
   Vertex<BoundTrackParameters> myConstraint;
   // Some abitrary values
-  SymMatrix4D myCovMat = SymMatrix4D::Zero();
+  SymMatrix4 myCovMat = SymMatrix4::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   Vector3 origin(0., 0., 0.);
   BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
-  SymMatrix4D zeroMat = SymMatrix4D::Zero();
+  SymMatrix4 zeroMat = SymMatrix4::Zero();
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
   fittedVertex =
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Constraint for vertex fit
     Vertex<BoundTrackParameters> myConstraint;
     // Some abitrary values
-    SymMatrix4D myCovMat = SymMatrix4D::Zero();
+    SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
     // Some abitrary values
-    SymMatrix4D myCovMat = SymMatrix4D::Zero();
+    SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;

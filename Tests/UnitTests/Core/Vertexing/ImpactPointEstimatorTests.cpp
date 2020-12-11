@@ -82,7 +82,7 @@ Acts::BoundSymMatrix makeBoundParametersCovariance() {
 }
 
 // Construct a diagonal vertex covariance w/ reasonable values.
-Acts::SymMatrix4D makeVertexCovariance() {
+Acts::SymMatrix4 makeVertexCovariance() {
   Vector4 stddev;
   stddev[ePos0] = 10_um;
   stddev[ePos1] = 10_um;

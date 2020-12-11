@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
   for (auto& vtxPos : vtxPosVec) {
     Vertex<BoundTrackParameters> vtx(vtxPos);
     // Set some vertex covariance
-    SymMatrix4D posCovariance(SymMatrix4D::Identity());
+    SymMatrix4 posCovariance(SymMatrix4::Identity());
     vtx.setFullCovariance(posCovariance);
     // Add to vertex list
     vtxList.push_back(vtx);
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
       magFieldContext);
 
   // The constraint vertex position covariance
-  SymMatrix4D covConstr(SymMatrix4D::Identity());
+  SymMatrix4 covConstr(SymMatrix4::Identity());
   covConstr = covConstr * 1e+8;
   covConstr(3, 3) = 0.;
 
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   const Vector3 expVtx1Pos(0.077_mm, -0.189_mm, 2.924_mm);
 
   // Helper matrix to create const expVtx1Cov below
-  SymMatrix3D expVtx1Cov;
+  SymMatrix3 expVtx1Cov;
   expVtx1Cov << 0.329, 0.016, -0.035, 0.016, 0.250, 0.085, -0.035, 0.085, 0.242;
 
   ActsVector<6> expVtx1TrkWeights;
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   // Vertex 2
   const Vector3 expVtx2Pos(-0.443_mm, -0.044_mm, -4.829_mm);
   // Helper matrix to create const expVtx2Cov below
-  SymMatrix3D expVtx2Cov;
+  SymMatrix3 expVtx2Cov;
   expVtx2Cov << 1.088, 0.028, -0.066, 0.028, 0.643, 0.073, -0.066, 0.073, 0.435;
 
   const Vector3 expVtx2TrkWeights(0.8172, 0.8150, 0.8137);

@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::HitSmearing::execute(
   std::normal_distribution<double> stdNormal(0.0, 1.0);
 
   // setup local covariance
-  Acts::SymMatrix2D cov = Acts::SymMatrix2D::Zero();
+  Acts::SymMatrix2 cov = Acts::SymMatrix2::Zero();
   cov(0, 0) = m_cfg.sigmaLoc0 * m_cfg.sigmaLoc0;
   cov(1, 1) = m_cfg.sigmaLoc1 * m_cfg.sigmaLoc1;
 

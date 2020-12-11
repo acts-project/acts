@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixUpdater)
 BOOST_AUTO_TEST_CASE(Update) {
   // Make dummy measurement
   Vector2 measPar(-0.1, 0.45);
-  SymMatrix2D measCov = Vector2(0.04, 0.1).asDiagonal();
+  SymMatrix2 measCov = Vector2(0.04, 0.1).asDiagonal();
   auto sourceLink = TestSourceLink(eBoundLoc0, eBoundLoc1, measPar, measCov);
 
   // Make dummy track parameters

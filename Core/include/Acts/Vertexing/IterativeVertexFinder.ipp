@@ -215,10 +215,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   auto linTrack = std::move(*result);
 
   // Calculate reduced weight
-  SymMatrix2D weightReduced =
+  SymMatrix2 weightReduced =
       linTrack.covarianceAtPCA.template block<2, 2>(0, 0);
 
-  SymMatrix2D errorVertexReduced =
+  SymMatrix2 errorVertexReduced =
       (linTrack.positionJacobian *
        (vertex.fullCovariance() * linTrack.positionJacobian.transpose()))
           .template block<2, 2>(0, 0);

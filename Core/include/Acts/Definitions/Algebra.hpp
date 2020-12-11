@@ -80,9 +80,9 @@ using Vector3 = ActsVector<3>;
 using Vector4 = ActsVector<4>;
 
 // symmetric matrices e.g. for coordinate covariance matrices
-using SymMatrix2D = ActsSymMatrix<2>;
-using SymMatrix3D = ActsSymMatrix<3>;
-using SymMatrix4D = ActsSymMatrix<4>;
+using SymMatrix2 = ActsSymMatrix<2>;
+using SymMatrix3 = ActsSymMatrix<3>;
+using SymMatrix4 = ActsSymMatrix<4>;
 
 // pure translation transformations
 using Translation2D = Eigen::Translation<ActsScalar, 2>;

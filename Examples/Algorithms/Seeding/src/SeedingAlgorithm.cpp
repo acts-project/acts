@@ -91,7 +91,7 @@ ActsExamples::SeedingAlgorithm::makeSpacePoint(
         // transfrom local covariance to global coordinates
         Acts::BoundToFreeMatrix jacToGlobal =
             surface.jacobianLocalToGlobal(geoCtx, localPar);
-        Acts::SymMatrix3D globalCov =
+        Acts::SymMatrix3 globalCov =
             (jacToGlobal * localCov * jacToGlobal.transpose())
                 .block<3, 3>(Acts::eFreePos0, Acts::eFreePos0);
 

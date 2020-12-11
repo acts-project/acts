@@ -336,7 +336,7 @@ Acts::Vector2 Acts::AnnulusBounds::stripXYToModulePC(
 
 Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
     const Vector2& a, const Vector2& b, const Vector2& p,
-    const SymMatrix2D& weight) const {
+    const SymMatrix2& weight) const {
   // connecting vector
   auto n = b - a;
   // squared norm of line
@@ -351,7 +351,7 @@ Acts::Vector2 Acts::AnnulusBounds::closestOnSegment(
 }
 
 double Acts::AnnulusBounds::squaredNorm(const Vector2& v,
-                                        const SymMatrix2D& weight) const {
+                                        const SymMatrix2& weight) const {
   return (v.transpose() * weight * v).value();
 }
 

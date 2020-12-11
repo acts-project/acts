@@ -96,7 +96,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
       IVisualization3D& helper, const Vector2& lposition,
-      const SymMatrix2D& covariance, const Transform3D& transform,
+      const SymMatrix2& covariance, const Transform3D& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
@@ -227,7 +227,7 @@ struct EventDataView3D {
       if (measurementConfig.visible and state.hasCalibrated() and
           state.calibratedSize() == 2) {
         const Vector2& lposition = state.calibrated().template head<2>();
-        const SymMatrix2D covariance =
+        const SymMatrix2 covariance =
             state.calibratedCovariance().template topLeftCorner<2, 2>();
         drawCovarianceCartesian(helper, lposition, covariance,
                                 state.referenceSurface().transform(gctx),

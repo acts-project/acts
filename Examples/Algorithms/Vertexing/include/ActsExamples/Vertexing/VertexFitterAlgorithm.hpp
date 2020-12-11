@@ -29,7 +29,7 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
     /// Vertex constraint position
     Acts::Vector3 constraintPos = Acts::Vector3(0, 0, 0);
     /// Vertex constraint covariance matrix
-    Acts::SymMatrix3D constraintCov =
+    Acts::SymMatrix3 constraintCov =
         Acts::Vector3(3 * Acts::UnitConstants::mm, 3 * Acts::UnitConstants::mm,
                       10 * Acts::UnitConstants::mm)
             .asDiagonal();

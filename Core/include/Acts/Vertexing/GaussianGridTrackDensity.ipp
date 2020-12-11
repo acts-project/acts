@@ -57,7 +57,7 @@ std::pair<int, typename Acts::GaussianGridTrackDensity<
                    mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
-  SymMatrix2D cov = trk.covariance()->block<2, 2>(0, 0);
+  SymMatrix2 cov = trk.covariance()->block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
@@ -138,7 +138,7 @@ template <int mainGridSize, int trkGridSize>
 typename Acts::GaussianGridTrackDensity<mainGridSize,
                                         trkGridSize>::TrackGridVector
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2D& cov, float distCtrD,
+    int offset, const Acts::SymMatrix2& cov, float distCtrD,
     float distCtrZ) const {
   TrackGridVector trackGrid(TrackGridVector::Zero());
 
@@ -201,7 +201,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
 
 template <int mainGridSize, int trkGridSize>
 float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    float d, float z, const Acts::SymMatrix2D& cov) const {
+    float d, float z, const Acts::SymMatrix2& cov) const {
   float det = cov.determinant();
   float coef = 1 / (2 * M_PI * std::sqrt(det));
   float expo =

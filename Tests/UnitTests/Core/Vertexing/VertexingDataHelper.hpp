@@ -32,7 +32,7 @@ struct VertexInfo {
   // The position
   Vector3 position;
   // The covariance
-  SymMatrix3D covariance;
+  SymMatrix3 covariance;
   // Number of tracks
   int nTracks;
   // Weight of first track
@@ -77,7 +77,7 @@ readTracksAndVertexCSV(std::string toolString,
         std::sregex_token_iterator()};
 
     Vector3 beamspotPos;
-    SymMatrix3D beamspotCov;
+    SymMatrix3 beamspotCov;
     beamspotPos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
     beamspotCov << std::stod(row[3]), 0, 0, 0, std::stod(row[4]), 0, 0, 0,
@@ -130,7 +130,7 @@ readTracksAndVertexCSV(std::string toolString,
     Vector3 pos;
     pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
-    SymMatrix3D cov;
+    SymMatrix3 cov;
     cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]),
         std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
         std::stod(row[9]), std::stod(row[10]), std::stod(row[11]);
