@@ -168,7 +168,7 @@ void ActsExamples::ResPlotTool::fill(
   truthParameter[Acts::BoundIndices::eBoundTheta] =
       theta(truthParticle.unitDirection());
   truthParameter[Acts::BoundIndices::eBoundQOverP] =
-      truthParticle.charge() / truthParticle.absMomentum();
+      truthParticle.charge() / truthParticle.absoluteMomentum();
   truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT

@@ -42,7 +42,8 @@ ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
                                    << " mm");
     ACTS_INFO("    direction:    " << particle.unitDirection().transpose());
     ACTS_INFO("    time:         " << particle.time() / 1_ns << " ns");
-    ACTS_INFO("    |p|:          " << particle.absMomentum() / 1_GeV << " GeV");
+    ACTS_INFO("    |p|:          " << particle.absoluteMomentum() / 1_GeV
+                                   << " GeV");
   }
   return ProcessCode::SUCCESS;
 }

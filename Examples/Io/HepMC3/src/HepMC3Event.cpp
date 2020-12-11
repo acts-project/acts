@@ -19,7 +19,7 @@ namespace {
 HepMC3::GenParticlePtr actsParticleToGen(
     std::shared_ptr<ActsExamples::SimParticle> actsParticle) {
   // Extract momentum and energy from Acts particle for HepMC3::FourVector
-  const auto mom4 = actsParticle->momentum4();
+  const auto mom4 = actsParticle->fourMomentum();
   const HepMC3::FourVector vec(mom4[0], mom4[1], mom4[2], mom4[3]);
   // Create HepMC3::GenParticle
   HepMC3::GenParticle genParticle(vec, actsParticle->pdg());

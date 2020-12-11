@@ -108,9 +108,10 @@ int main(int argc, char** argv) {
   for (auto& particle : particles)
     std::cout << HepPID::particleName(particle.pdg())
               << "\tID:" << particle.particleId() << ", momentum: ("
-              << particle.momentum4()(0) << ", " << particle.momentum4()(1)
-              << ", " << particle.momentum4()(2)
-              << "), mass:  " << particle.mass() << std::endl;
+              << particle.fourMomentum()(0) << ", "
+              << particle.fourMomentum()(1) << ", "
+              << particle.fourMomentum()(2) << "), mass:  " << particle.mass()
+              << std::endl;
 
   std::cout << std::endl << "Initial to final state: ";
   std::vector<ActsExamples::SimParticle> fState = finalState(genevt);

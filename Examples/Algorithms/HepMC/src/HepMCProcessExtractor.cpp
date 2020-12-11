@@ -156,7 +156,7 @@ void filterAndSort(
          cit != interaction.after.cend();) {
       // Test whether a particle fulfills the conditions
       if (cit->pdg() < cfg.absPdgMin || cit->pdg() > cfg.absPdgMax ||
-          cit->absMomentum() < cfg.pMin) {
+          cit->absoluteMomentum() < cfg.pMin) {
         interaction.after.erase(cit);
       } else {
         cit++;
@@ -168,7 +168,7 @@ void filterAndSort(
   for (auto& interaction : interactions) {
     std::sort(interaction.after.begin(), interaction.after.end(),
               [](ActsExamples::SimParticle& a, ActsExamples::SimParticle& b) {
-                return a.absMomentum() > b.absMomentum();
+                return a.absoluteMomentum() > b.absoluteMomentum();
               });
   }
 }
