@@ -56,7 +56,7 @@ static dd4hep::Ref_t createSimpleLayeredCylinder(
     // @todo use material string again layer.attr<std::string>("material"))
 
     // envVolume.placeVolume(layerVolume,
-    // dd4hep::Transform3(dd4hep::RotationZ(0.),
+    // dd4hep::Transform3D(dd4hep::RotationZ(0.),
     // transLayer));
     if (layerDet.hasAttr(_U(vis))) {
       layerVolume.setVisAttributes(lcdd, layerDet.visStr());
@@ -81,7 +81,7 @@ static dd4hep::Ref_t createSimpleLayeredCylinder(
 
   dd4hep::Position trans(0., 0., dimensions.z_offset());
   dd4hep::PlacedVolume envPhys = experimentalHall.placeVolume(
-      envVolume, dd4hep::Transform3(dd4hep::RotationZ(0.), trans));
+      envVolume, dd4hep::Transform3D(dd4hep::RotationZ(0.), trans));
   envPhys.addPhysVolID("system", detElement.id());
   detElement.setPlacement(envPhys);
   detElement.setVisAttributes(lcdd, xmlDet.visStr(), envVolume);

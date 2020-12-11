@@ -146,12 +146,12 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
             comp_det.setPlacement(sensComp);
             scomp_num++;
           }
-          Rotation3 rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+          Rotation3D rotation1(1., 0., 0., 0., 1., 0., 0., 0., 1.);
           // Place Module Box Volumes in layer
-          Transform3 transf1(RotationX(0.5 * M_PI) *
-                                 RotationY(phi + 0.5 * M_PI) *
-                                 RotationZ(0.1 * M_PI),
-                             trans);
+          Transform3D transf1(RotationX(0.5 * M_PI) *
+                                  RotationY(phi + 0.5 * M_PI) *
+                                  RotationZ(0.1 * M_PI),
+                              trans);
           PlacedVolume placedmodule =
               layer_vol.placeVolume(mod_vol, rotation1 * transf1);
           placedmodule.addPhysVolID("module",
@@ -181,11 +181,11 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // if it is the negative endcap the normal vector needs to point into the
   // outside
   Position endcap_translation(0., 0., x_det_dim.z());
-  Rotation3 rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
+  Rotation3D rotation(1., 0., 0., 0., 1., 0., 0., 0., 1.);
   if (x_det_dim.z() < 0.) {
     rotation.SetComponents(1., 0., 0., 0., -1., 0., 0., 0., -1.);
   }
-  Transform3 endcap_transform(rotation, endcap_translation);
+  Transform3D endcap_transform(rotation, endcap_translation);
   Volume mother_vol = lcdd.pickMotherVolume(cylinderVolume);
   PlacedVolume placedTube = mother_vol.placeVolume(tube_vol, endcap_transform);
   placedTube.addPhysVolID("system", cylinderVolume.id());

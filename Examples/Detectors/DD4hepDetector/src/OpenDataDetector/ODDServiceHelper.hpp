@@ -74,8 +74,9 @@ void buildBarrelRouting(Detector& oddd, volume_t& barrelVolume,
         }
         // Place the pipe in the stave
         barrelVolume.placeVolume(
-            cableboxAssembly, Transform3(RotationZ(phi) * RotationY(0.5 * M_PI),
-                                         Position(xpos, ypos, zpos)));
+            cableboxAssembly,
+            Transform3D(RotationZ(phi) * RotationY(0.5 * M_PI),
+                        Position(xpos, ypos, zpos)));
       }
     }
   }
@@ -142,7 +143,7 @@ void buildEndcapRouting(Detector& oddd, volume_t& endcapVolume,
       // Place the pipe in the stave
       endcapVolume.placeVolume(
           cableboxAssembly,
-          Transform3(RotationZ(+phi), Position(xpos, ypos, zpos)));
+          Transform3D(RotationZ(+phi), Position(xpos, ypos, zpos)));
     }
   }
 }
@@ -219,8 +220,8 @@ void buildCoolingRings(Detector& oddd, volume_t& motherVolume,
       // Place the support structure
       motherVolume.placeVolume(
           coolingSegement,
-          Transform3(RotationY(0.5 * M_PI) * RotationX(0.5 * M_PI - phi),
-                     segementPos));
+          Transform3D(RotationY(0.5 * M_PI) * RotationX(0.5 * M_PI - phi),
+                      segementPos));
     }
   }
 }

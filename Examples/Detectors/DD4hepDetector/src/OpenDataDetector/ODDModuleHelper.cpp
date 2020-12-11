@@ -74,7 +74,7 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleTrapezoidalModule(
     double stereoAlpha = x_comp.alpha();
     PlacedVolume placedComponent = moduleAssembly.placeVolume(
         componentVolume,
-        Transform3(
+        Transform3D(
             RotationY(stereoAlpha),
             Position(x_comp.x_offset(), x_comp.y_offset(), x_comp.z_offset())));
 
@@ -137,9 +137,9 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
           Volume(componentName,
                  SubtractionSolid(
                      boxShape, tubeCutout,
-                     Transform3(RotationX(0.5 * M_PI),
-                                Position(x_sub.x_offset(), x_sub.y_offset(),
-                                         x_sub.z_offset()))),
+                     Transform3D(RotationX(0.5 * M_PI),
+                                 Position(x_sub.x_offset(), x_sub.y_offset(),
+                                          x_sub.z_offset()))),
                  oddd.material(x_comp.materialStr()));
 
       // place a fitting pipe if available
@@ -153,9 +153,9 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
 
         componentVolume.placeVolume(
             pipeVolume,
-            Transform3(RotationX(0.5 * M_PI),
-                       Position(x_pipe.x_offset(), x_pipe.y_offset(),
-                                x_pipe.z_offset())));
+            Transform3D(RotationX(0.5 * M_PI),
+                        Position(x_pipe.x_offset(), x_pipe.y_offset(),
+                                 x_pipe.z_offset())));
       }
     }
     componentVolume.setVisAttributes(oddd, x_comp.visStr());
@@ -172,7 +172,7 @@ std::pair<Assembly, DetElement> ODDModuleHelper::assembleRectangularModule(
     double stereoAlpha = x_comp.alpha();
     PlacedVolume placedComponent = moduleAssembly.placeVolume(
         componentVolume,
-        Transform3(
+        Transform3D(
             RotationZ(stereoAlpha),
             Position(x_comp.x_offset(), x_comp.y_offset(), x_comp.z_offset())));
 

@@ -130,9 +130,9 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
         // Place the cooling pipe into the module
         dd4hep::PlacedVolume placedPipe = moduleAssembly.placeVolume(
             pipeVolume,
-            Transform3(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
-                       Position(x_tubs.x_offset(), x_tubs.y_offset(),
-                                x_tubs.z_offset())));
+            Transform3D(RotationX(0.5 * M_PI) * RotationY(0.5 * M_PI),
+                        Position(x_tubs.x_offset(), x_tubs.y_offset(),
+                                 x_tubs.z_offset())));
         placedPipe.addPhysVolID("support", supportNum++);
       }
 
@@ -148,9 +148,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
 
         // Place the mount onto the module
         dd4hep::PlacedVolume placedMount = moduleAssembly.placeVolume(
-            mountVolume, Transform3(RotationZ(0.5 * M_PI),
-                                    Position(x_trd.x_offset(), x_trd.y_offset(),
-                                             x_trd.z_offset())));
+            mountVolume,
+            Transform3D(RotationZ(0.5 * M_PI),
+                        Position(x_trd.x_offset(), x_trd.y_offset(),
+                                 x_trd.z_offset())));
         placedMount.addPhysVolID("support", supportNum++);
       }
 
@@ -164,9 +165,10 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
         cableVolume.setVisAttributes(lcdd, x_cab.visStr());
         // Place Module Box Volumes in layer
         dd4hep::PlacedVolume placedCable = moduleAssembly.placeVolume(
-            cableVolume, Transform3(RotationX(x_cab.alpha()),
-                                    Position(x_cab.x_offset(), x_cab.y_offset(),
-                                             x_cab.z_offset())));
+            cableVolume,
+            Transform3D(RotationX(x_cab.alpha()),
+                        Position(x_cab.x_offset(), x_cab.y_offset(),
+                                 x_cab.z_offset())));
         placedCable.addPhysVolID("support", supportNum++);
       }
 
@@ -193,8 +195,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
         // Place Module Box Volumes in layer
         dd4hep::PlacedVolume placedModule = layerVolume.placeVolume(
             moduleAssembly,
-            Transform3(RotationY(0.5 * M_PI) * RotationX(-phi - phiTilt),
-                       trans));
+            Transform3D(RotationY(0.5 * M_PI) * RotationX(-phi - phiTilt),
+                        trans));
         placedModule.addPhysVolID("module", iphi + 1);
 
         // Assign module dd4hep::DetElement to the placed module volume

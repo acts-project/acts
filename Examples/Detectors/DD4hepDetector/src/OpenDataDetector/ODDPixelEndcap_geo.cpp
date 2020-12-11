@@ -94,7 +94,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
       }
       PlacedVolume placedModule = ringAssembly.placeVolume(
           module.first,
-          Transform3(RotationZ(phi + 1.5 * M_PI) * RotationY(flip), trans));
+          Transform3D(RotationZ(phi + 1.5 * M_PI) * RotationY(flip), trans));
       placedModule.addPhysVolID("module", modNum);
       // Clone the detector element
       auto moduleElement = module.second.clone(moduleName, modNum);

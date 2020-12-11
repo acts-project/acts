@@ -86,9 +86,9 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
 
       // Place the pipe in the stave
       staveAssembly.placeVolume(
-          cableVolume, Transform3(RotationX(0.5 * M_PI),
-                                  Position(x_cable.x_offset(), positionY,
-                                           x_cable.z_offset())));
+          cableVolume, Transform3D(RotationX(0.5 * M_PI),
+                                   Position(x_cable.x_offset(), positionY,
+                                            x_cable.z_offset())));
     }
 
     // Place them along local y
@@ -142,9 +142,9 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector sens) {
       // Now place the stave
       PlacedVolume placedStave = layerVolume.placeVolume(
           staveAssembly,
-          Transform3(RotationY(0.5 * M_PI) * RotationZ(0.5 * M_PI) *
-                         RotationY(phi + phiTilt),
-                     Position(x, y, 0.)));
+          Transform3D(RotationY(0.5 * M_PI) * RotationZ(0.5 * M_PI) *
+                          RotationY(phi + phiTilt),
+                      Position(x, y, 0.)));
       placedStave.addPhysVolID("stave", staveNum);
 
       // Clone the stave element from the template
