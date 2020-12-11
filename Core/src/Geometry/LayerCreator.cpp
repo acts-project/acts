@@ -81,10 +81,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
-  Translation3D addTranslation(0., 0., 0.);
+  Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3D::Identity())) {
     // double shift = -(layerZ + envZShift);
-    addTranslation = Translation3D(0., 0., layerZ);
+    addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
 
@@ -154,9 +154,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
+  Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3D::Identity()) && bTypeZ == equidistant) {
-    addTranslation = Translation3D(0., 0., layerZ);
+    addTranslation = Translation3(0., 0., layerZ);
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
 
@@ -224,9 +224,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
                                        << binsR << " x " << binsPhi << ")");
 
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
+  Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3D::Identity())) {
-    addTranslation = Translation3D(0., 0., layerZ);
+    addTranslation = Translation3(0., 0., layerZ);
   }
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
@@ -287,9 +287,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - # of modules     = " << surfaces.size());
 
   // create the layer transforms if not given
-  Translation3D addTranslation(0., 0., 0.);
+  Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3D::Identity())) {
-    addTranslation = Translation3D(0., 0., layerZ);
+    addTranslation = Translation3(0., 0., layerZ);
   }
 
   // create the surface array
@@ -364,10 +364,10 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
   // create the layer transforms if not given
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
-  Translation3D addTranslation(0., 0., 0.);
+  Translation3 addTranslation(0., 0., 0.);
   if (transform.isApprox(Transform3D::Identity())) {
     // double shift = (layerZ + envZShift);
-    addTranslation = Translation3D(centerX, centerY, centerZ);
+    addTranslation = Translation3(centerX, centerY, centerZ);
     ACTS_VERBOSE(" - layer shift  = "
                  << "(" << centerX << ", " << centerY << ", " << centerZ
                  << ")");

@@ -20,8 +20,8 @@ Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
     : m_values(values), m_moduleOrigin({values[eOriginX], values[eOriginY]}) {
   checkConsistency();
-  m_rotationStripPC = Translation2D(Vector2(0, -get(eAveragePhi)));
-  m_translation = Translation2D(m_moduleOrigin);
+  m_rotationStripPC = Translation2(Vector2(0, -get(eAveragePhi)));
+  m_translation = Translation2(m_moduleOrigin);
 
   m_shiftXY = m_moduleOrigin * -1;
   m_shiftPC =

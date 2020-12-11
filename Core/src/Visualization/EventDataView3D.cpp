@@ -37,7 +37,7 @@ void Acts::EventDataView3D::drawCovarianceAngular(
   double dphi = VectorHelpers::phi(direction);
   double dtheta = VectorHelpers::theta(direction);
 
-  Transform3D eplane(Translation3D(anker) *
+  Transform3D eplane(Translation3(anker) *
                      AngleAxis3D(dtheta, Vector3(1., 0., 0.)) *
                      AngleAxis3D(dphi, Vector3(0., 0., 1.)));
 

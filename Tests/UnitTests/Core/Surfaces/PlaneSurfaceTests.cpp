@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Constructor with transform and bounds
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   // constructor with transform
   BOOST_CHECK_EQUAL(
@@ -67,12 +67,12 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   /// Test clone method
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
   // Is it in the right place?
-  Translation3D translation2{0., 2., 4.};
+  Translation3 translation2{0., 2., 4.};
   auto pTransform2 = Transform3D(translation2);
   auto planeSurfaceObject2 =
       Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
 BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
   // rectangle bounds
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   auto rBounds = std::make_shared<RectangleBounds>(rHx, rHy);
 
   auto plane = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3D(Vector3(0., yPs, 0.)) * planeZX), rBounds);
+      Transform3D(Translation3(Vector3(0., yPs, 0.)) * planeZX), rBounds);
 
   auto planeExtent = plane->polyhedronRepresentation(tgContext, 1).extent();
 
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // Now rotate
   double alpha = 0.123;
   auto planeRot = Surface::makeShared<PlaneSurface>(
-      Transform3D(Translation3D(Vector3(0., yPs, 0.)) *
+      Transform3D(Translation3(Vector3(0., yPs, 0.)) *
                   AngleAxis3D(alpha, Vector3(0., 0., 1.)) * planeZX),
       rBounds);
 
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   // bounds object, rectangle type
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto planeSurfaceObject =
       Surface::makeShared<PlaneSurface>(pTransform, rBounds);

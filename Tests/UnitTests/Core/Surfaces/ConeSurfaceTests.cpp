@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   /// indicator
   double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
   bool symmetric(false);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(Transform3D::Identity(),
                                                      alpha, symmetric)
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test clone method
   double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
 BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
   double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
 BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
   double alpha{M_PI / 8.}, zMin{0.}, zMax{10.};
 
-  Translation3D translation{0., 0., 0.};
+  Translation3 translation{0., 0., 0.};
 
   // Testing a Full cone
   auto pTransform = Transform3D(translation);
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
 BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
   double alpha{M_PI / 8.};
   bool symmetric(false);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto coneSurfaceObject =
       Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);

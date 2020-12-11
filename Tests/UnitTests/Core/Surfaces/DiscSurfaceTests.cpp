@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceConstruction) {
       Surface::makeShared<DiscSurface>(Transform3D::Identity(), rMin, rMax));
   //
   /// Test DiscSurface constructor with a transform specified
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   BOOST_CHECK_NO_THROW(
       Surface::makeShared<DiscSurface>(pTransform, rMin, rMax, halfPhiSector));
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceExtent) {
 
 /// Unit test for testing DiscSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(DiscSurfaceAlignment) {
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   Transform3D transform(translation);
   double rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
   auto discSurfaceObject =

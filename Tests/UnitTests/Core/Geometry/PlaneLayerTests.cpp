@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
   // default constructor, copy and assignment are all deleted
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // RectangleBounds) to construct
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(PlaneLayerConstruction) {
 
 /// Unit test for testing Layer properties
 BOOST_AUTO_TEST_CASE(PlaneLayerProperties /*, *utf::expected_failures(1)*/) {
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
   auto pRectangle = std::make_shared<const RectangleBounds>(halfX, halfY);

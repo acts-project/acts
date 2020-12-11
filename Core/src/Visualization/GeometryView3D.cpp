@@ -97,7 +97,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
       for (auto z : zValues) {
         for (auto cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
-                      Translation3D(0., 0., z) * transform, gridRadConfig);
+                      Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
 
@@ -113,7 +113,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
         for (auto cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
-                      Translation3D(0., 0., z) * transform, gridRadConfig);
+                      Translation3(0., 0., z) * transform, gridRadConfig);
         }
       }
       double rMin = axes[0]->getMin();

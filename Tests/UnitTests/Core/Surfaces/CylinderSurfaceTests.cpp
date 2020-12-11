@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
   //
   /// Constructor with transform, radius and halfZ
   double radius(1.0), halfZ(10.), halfPhiSector(M_PI / 8.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ)->type(),
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction) {
 BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test clone method
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
 BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
   // Some radius and half length
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 0., 2.};
+  Translation3 translation{0., 0., 2.};
   auto pTransform = Transform3D(translation);
   auto cylinderSurface =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceExtent) {
 /// Unit test for testing CylinderSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto cylinderSurfaceObject =
       Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);

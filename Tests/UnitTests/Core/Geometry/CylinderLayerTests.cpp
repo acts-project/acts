@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
   // default constructor, copy and assignment are all deleted
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // CylinderBounds) to construct
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerConstruction) {
 
 /// Unit test for testing Layer properties
 BOOST_AUTO_TEST_CASE(CylinderLayerProperties /*, *utf::expected_failures(1)*/) {
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   double radius(0.5), halfz(10.);
   auto pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);

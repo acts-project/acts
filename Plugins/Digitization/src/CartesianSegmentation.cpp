@@ -156,7 +156,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
       auto boundaryXTransform =
-          Transform3D(Translation3D(boundaryXPosition) * boundaryXRotation);
+          Transform3D(Translation3(boundaryXPosition) * boundaryXRotation);
       // the correct bounds for this
       std::shared_ptr<const PlanarBounds> boundaryXBounds =
           boundaryStraight ? xBinBounds : lorentzPlaneBounds;
@@ -169,7 +169,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
       Vector3 lorentzPlanePosition(
           cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
       auto lorentzPlaneTransform = Transform3D(
-          Translation3D(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
+          Translation3(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
       // lorentz plane surfaces
       segmentationSurfacesX.push_back(Surface::makeShared<PlaneSurface>(
           lorentzPlaneTransform, lorentzPlaneBounds));
@@ -199,7 +199,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
     Vector3 binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform =
-        Transform3D(Translation3D(binSurfaceCenter) * yBinRotationMatrix);
+        Transform3D(Translation3(binSurfaceCenter) * yBinRotationMatrix);
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(

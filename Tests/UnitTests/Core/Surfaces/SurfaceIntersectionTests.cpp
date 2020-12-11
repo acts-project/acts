@@ -29,7 +29,7 @@ GeometryContext tgContext = GeometryContext();
 
 // Some random transform
 Transform3D aTransform = Transform3D::Identity() *
-                         Translation3D(30_cm, 7_m, -87_mm) *
+                         Translation3(30_cm, 7_m, -87_mm) *
                          AngleAxis3D(0.42, Vector3(-3., 1., 8).normalized());
 
 namespace Test {

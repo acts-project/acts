@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(alignment_helper_test) {
       Vector3(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
 
   // Construct a transform
-  Translation3D translation(Vector3(0., 0., 0.));
+  Translation3 translation(Vector3(0., 0., 0.));
   Transform3D transform(translation);
   // Rotation with rotZ * rotY * rotX
   transform *= rotZ;

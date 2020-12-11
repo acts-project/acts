@@ -27,10 +27,10 @@ TrackingVolumePtr constructCylinderVolume(
     const std::string& name) {
   ///  the surface transforms
   auto sfnPosition = Vector3(0., 0., -3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfnTransform = Transform3D(Translation3D(sfnPosition));
+  auto sfnTransform = Transform3D(Translation3(sfnPosition));
   auto sfcTransform = Transform3D::Identity();
   auto sfpPosition = Vector3(0., 0., 3 * surfaceHalfLengthZ - surfaceZoverlap);
-  auto sfpTransform = Transform3D(Translation3D(sfpPosition));
+  auto sfpTransform = Transform3D(Translation3(sfpPosition));
   ///  the surfaces
   auto sfnBounds = std::make_shared<CylinderBounds>(
       surfaceR - 0.5 * surfaceRstagger, surfaceHalfLengthZ);

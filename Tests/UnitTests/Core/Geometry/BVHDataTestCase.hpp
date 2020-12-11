@@ -39,7 +39,7 @@ gridBoxFactory(size_t n = NBOXES, double hl = 1000, size_t octd = 5) {
       for (size_t k = 0; k <= n; k++) {
         Vector3 pos(min + i * step, min + j * step, min + k * step);
 
-        auto trf = Transform3D(Translation3D(pos));
+        auto trf = Transform3D(Translation3(pos));
         auto vol = std::make_unique<AbstractVolume>(trf, vbds);
 
         volumes.push_back(std::move(vol));

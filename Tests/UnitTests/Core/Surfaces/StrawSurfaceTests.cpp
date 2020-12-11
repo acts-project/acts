@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceConstruction) {
   //
   /// Constructor with transform, radius and halfZ
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   BOOST_CHECK_EQUAL(
       Surface::makeShared<StrawSurface>(Transform3D::Identity(), radius, halfZ)
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceConstruction) {
 BOOST_AUTO_TEST_CASE(StrawSurfaceProperties) {
   /// Test clone method
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto strawSurfaceObject =
       Surface::makeShared<StrawSurface>(pTransform, radius, halfZ);
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceProperties) {
 
 BOOST_AUTO_TEST_CASE(EqualityOperators) {
   double radius(1.0), halfZ(10.);
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto strawSurfaceObject =
       Surface::makeShared<StrawSurface>(pTransform, radius, halfZ);

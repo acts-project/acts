@@ -166,7 +166,7 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBoundsOrientedSurfaces,
   double halfz = 3.;
   CylinderVolumeBounds cylBounds(rmin, rmax, halfz);
   // create the transformation matrix
-  auto transform = Transform3D(Translation3D(pos));
+  auto transform = Transform3D(Translation3(pos));
   transform *= rotZ;
   transform *= rotY;
   transform *= rotX;

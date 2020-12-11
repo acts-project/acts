@@ -277,7 +277,7 @@ inline std::string toString(const Eigen::MatrixBase<derived_t>& matrix,
 /// @param matrix The translation to print
 /// @param precision Numeric output precision
 /// @return The printed string
-inline std::string toString(const Acts::Translation3D& translation,
+inline std::string toString(const Acts::Translation3& translation,
                             int precision = 4) {
   Acts::Vector3 trans;
   trans[0] = translation.x();

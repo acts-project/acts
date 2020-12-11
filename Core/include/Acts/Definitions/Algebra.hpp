@@ -85,8 +85,8 @@ using SymMatrix3 = ActsSymMatrix<3>;
 using SymMatrix4 = ActsSymMatrix<4>;
 
 // pure translation transformations
-using Translation2D = Eigen::Translation<ActsScalar, 2>;
-using Translation3D = Eigen::Translation<ActsScalar, 3>;
+using Translation2 = Eigen::Translation<ActsScalar, 2>;
+using Translation3 = Eigen::Translation<ActsScalar, 3>;
 
 // linear (rotation) matrices
 using RotationMatrix2D = ActsMatrix<2, 2>;

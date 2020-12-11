@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(toString_test_helper) {
   out = toString(mat);
   BOOST_CHECK(out.size() > 0);
 
-  Translation3D trl{Vector3{1, 2, 3}};
+  Translation3 trl{Vector3{1, 2, 3}};
   out = toString(trl);
   BOOST_CHECK(out.size() > 0);
 

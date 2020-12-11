@@ -101,9 +101,9 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // All in one for radial bounds
   std::vector<Transform3D> threeCones = {
-      Transform3D(Translation3D{-0.5 * coneMaxZ, 0., 0.}),
-      Transform3D(Translation3D{0., 0., 0.}),
-      Transform3D(Translation3D{0.75 * coneMaxZ, 0., 0.})};
+      Transform3D(Translation3{-0.5 * coneMaxZ, 0., 0.}),
+      Transform3D(Translation3{0., 0., 0.}),
+      Transform3D(Translation3{0.75 * coneMaxZ, 0., 0.})};
 
   for (size_t ic = 0; ic < coneSurfaces.size(); ++ic) {
     GeometryView3D::drawSurface(helper, *coneSurfaces[ic], gctx, threeCones[ic],
@@ -159,9 +159,9 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // All in one for radial bounds
   std::vector<Transform3D> threeCylinders = {
-      Transform3D(Translation3D{-2 * cylinderRadius, 0., 0.}),
-      Transform3D(Translation3D{0., 0., 0.}),
-      Transform3D(Translation3D{2.5 * cylinderRadius, 0., 0.})};
+      Transform3D(Translation3{-2 * cylinderRadius, 0., 0.}),
+      Transform3D(Translation3{0., 0., 0.}),
+      Transform3D(Translation3{2.5 * cylinderRadius, 0., 0.})};
 
   for (size_t ic = 0; ic < cylinderSurfaces.size(); ++ic) {
     GeometryView3D::drawSurface(helper, *cylinderSurfaces[ic], gctx,
@@ -266,12 +266,12 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // All in one for radial bounds
   std::vector<Transform3D> sixDiscs = {
-      Transform3D(Translation3D{-2.0 * discRmax, 1.5 * discRmax, 0.}),
-      Transform3D(Translation3D{0., 1.5 * discRmax, 0.}),
-      Transform3D(Translation3D{2.5 * discRmax, 1.5 * discRmax, 0.}),
-      Transform3D(Translation3D{-2.0 * discRmax, -1.5 * discRmax, 0.}),
-      Transform3D(Translation3D{0., -1.5 * discRmax, 0.}),
-      Transform3D(Translation3D{2.5 * discRmax, -1.5 * discRmax, 0.})};
+      Transform3D(Translation3{-2.0 * discRmax, 1.5 * discRmax, 0.}),
+      Transform3D(Translation3{0., 1.5 * discRmax, 0.}),
+      Transform3D(Translation3{2.5 * discRmax, 1.5 * discRmax, 0.}),
+      Transform3D(Translation3{-2.0 * discRmax, -1.5 * discRmax, 0.}),
+      Transform3D(Translation3{0., -1.5 * discRmax, 0.}),
+      Transform3D(Translation3{2.5 * discRmax, -1.5 * discRmax, 0.})};
   for (size_t ir = 0; ir < radialSurfaces.size(); ++ir) {
     GeometryView3D::drawSurface(helper, *radialSurfaces[ir], gctx, sixDiscs[ir],
                                 sConfig);
@@ -311,8 +311,8 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // All in one for radial bounds
   std::vector<Transform3D> twoAnomalDiscs = {
-      Transform3D(Translation3D{-5., 0., 0.}),
-      Transform3D(Translation3D{5., 0., 0.})};
+      Transform3D(Translation3{-5., 0., 0.}),
+      Transform3D(Translation3{5., 0., 0.})};
   for (size_t id = 0; id < anomalDiscSurfaces.size(); ++id) {
     GeometryView3D::drawSurface(helper, *anomalDiscSurfaces[id], gctx,
                                 sixDiscs[id], sConfig);
@@ -468,15 +468,15 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
 
   // All planes
   std::vector<Transform3D> ninePlanes = {
-      Transform3D(Translation3D{-10., -10., 0.}),
-      Transform3D(Translation3D{0., -10., 0.}),
-      Transform3D(Translation3D{10., -10., 0.}),
-      Transform3D(Translation3D{-10., 0., 0.}),
-      Transform3D(Translation3D{0., -6., 0.}),
-      Transform3D(Translation3D{10., -8., 0.}),
-      Transform3D(Translation3D{-10, 10., 0.}),
-      Transform3D(Translation3D{0., 10., 0.}),
-      Transform3D(Translation3D{10., 10., 0.})};
+      Transform3D(Translation3{-10., -10., 0.}),
+      Transform3D(Translation3{0., -10., 0.}),
+      Transform3D(Translation3{10., -10., 0.}),
+      Transform3D(Translation3{-10., 0., 0.}),
+      Transform3D(Translation3{0., -6., 0.}),
+      Transform3D(Translation3{10., -8., 0.}),
+      Transform3D(Translation3{-10, 10., 0.}),
+      Transform3D(Translation3{0., 10., 0.}),
+      Transform3D(Translation3{10., 10., 0.})};
   for (size_t ip = 0; ip < planarSurfaces.size(); ++ip) {
     GeometryView3D::drawSurface(helper, *planarSurfaces[ip], gctx,
                                 ninePlanes[ip], sConfig);

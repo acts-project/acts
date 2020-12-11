@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboidBoundsOrientedSurfaces) {
   }
 
   Transform3D trf;
-  trf = Translation3D(Vector3(0, 8, -5)) *
+  trf = Translation3(Vector3(0, 8, -5)) *
         AngleAxis3D(M_PI / 3., Vector3(1, -3, 9).normalized());
 
   surfaces = cubo.orientedSurfaces(trf);

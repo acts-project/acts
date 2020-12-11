@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
   // default constructor, copy and assignment are all deleted
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // RadialBounds) to construct
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
 
 /// Unit test for testing Layer properties
 BOOST_AUTO_TEST_CASE(DiscLayerProperties /*, *utf::expected_failures(1)*/) {
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc
   auto pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);

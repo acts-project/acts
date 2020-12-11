@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
 
   Transform3D trf;
 
-  trf = Translation3D(Vector3(0, 30, 20));
+  trf = Translation3(Vector3(0, 30, 20));
 
   bb = tvb.boundingBox(&trf);
   CHECK_CLOSE_ABS(bb.max(), Vector3(10, 38, 24), tol);

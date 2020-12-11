@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(SurfaceConstruction) {
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub().type());
   SurfaceStub original;
   BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original).type());
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   Transform3D transform(translation);
   BOOST_CHECK_EQUAL(Surface::Other,
                     SurfaceStub(tgContext, original, transform).type());
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
   Vector3 reference{0., 1., 2.};
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   auto pLayer = PlaneLayer::create(pTransform, pPlanarBound);
   auto pMaterial =
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   std::shared_ptr<const Acts::PlanarBounds> pPlanarBound =
       std::make_shared<const RectangleBounds>(5., 10.);
   Vector3 reference{0., 1., 2.};
-  Translation3D translation1{0., 1., 2.};
-  Translation3D translation2{1., 1., 2.};
+  Translation3 translation1{0., 1., 2.};
+  Translation3 translation2{1., 1., 2.};
   auto pTransform1 = Transform3D(translation1);
   auto pTransform2 = Transform3D(translation2);
   // build a planeSurface to be compared

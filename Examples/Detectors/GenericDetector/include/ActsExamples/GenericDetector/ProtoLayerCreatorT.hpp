@@ -304,7 +304,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         // get the moduleTransform
         std::shared_ptr<Acts::Transform3D> mutableModuleTransform =
             std::make_shared<Acts::Transform3D>(
-                Acts::Translation3D(moduleCenter) * moduleRotation);
+                Acts::Translation3(moduleCenter) * moduleRotation);
         // stereo angle if necessary
         if (m_cfg.centralModuleFrontsideStereo.size() &&
             m_cfg.centralModuleFrontsideStereo.at(icl) != 0.) {
@@ -336,7 +336,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
               moduleCenter +
               m_cfg.centralModuleBacksideGap.at(icl) * moduleLocalZ;
           mutableModuleTransform = std::make_shared<Acts::Transform3D>(
-              Acts::Translation3D(bsModuleCenter) * moduleRotation);
+              Acts::Translation3(bsModuleCenter) * moduleRotation);
           // apply the stereo
           if (m_cfg.centralModuleBacksideStereo.size()) {
             // twist by the stereo angle
@@ -501,7 +501,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // the transforms for the two modules
           std::shared_ptr<const Acts::Transform3D> moduleTransform =
               std::make_shared<const Acts::Transform3D>(
-                  Acts::Translation3D(moduleCenter) * moduleRotation);
+                  Acts::Translation3(moduleCenter) * moduleRotation);
 
           // reate the modules identifier
           Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
@@ -522,7 +522,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                 m_cfg.posnegModuleBacksideGap.at(ipnl).at(ipnR) * moduleLocalZ;
             // the new transforms
             auto mutableModuleTransform = std::make_shared<Acts::Transform3D>(
-                Acts::Translation3D(moduleCenter) * moduleRotation);
+                Acts::Translation3(moduleCenter) * moduleRotation);
             // apply the stereo
             if (m_cfg.posnegModuleBacksideStereo.size()) {
               // twist by the stereo angle

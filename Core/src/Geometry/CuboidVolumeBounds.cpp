@@ -47,32 +47,32 @@ Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
   // Face surfaces xy -------------------------------------
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(0., 0., -get(eHalfLengthZ)), m_xyBounds);
+      transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(0., 0., get(eHalfLengthZ)), m_xyBounds);
+      transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
+      transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(get(eHalfLengthX), 0., 0.) * s_planeYZ,
+      transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(0., -get(eHalfLengthY), 0.) * s_planeZX,
+      transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), forward));
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
-      transform * Translation3D(0., get(eHalfLengthY), 0.) * s_planeZX,
+      transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
   oSurfaces.push_back(OrientedSurface(std::move(sf), backward));
 

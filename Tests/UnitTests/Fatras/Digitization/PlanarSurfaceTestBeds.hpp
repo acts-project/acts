@@ -109,7 +109,7 @@ struct PlanarSurfaceTestBeds {
                                                          phimax, aorigin);
     auto aSurface = Acts::Surface::makeShared<Acts::DiscSurface>(
         Acts::Transform3D::Identity() *
-            Acts::Translation3D(-aorigin.x(), -aorigin.y(), 0.),
+            Acts::Translation3(-aorigin.x(), -aorigin.y(), 0.),
         annulus);
 
     auto vertices = annulus->vertices(72);

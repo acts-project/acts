@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction) {
                     Surface::Perigee);
   //
   /// Constructor with transform
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(pTransform)->type(),
                     Surface::Perigee);

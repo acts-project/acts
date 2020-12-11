@@ -163,7 +163,7 @@ inline Acts::Transform3D makeCurvilinearTransform(
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;
-  Acts::Translation3D offset(params.position(geoCtx));
+  Acts::Translation3 offset(params.position(geoCtx));
   Acts::Transform3D toGlobal = offset * rotation;
 
   return toGlobal;
@@ -224,7 +224,7 @@ struct ZStrawSurfaceBuilder {
       const Acts::SingleBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
-        Acts::Transform3D(Acts::Translation3D(params.position(geoCtx))));
+        Acts::Transform3D(Acts::Translation3(params.position(geoCtx))));
   }
 };
 

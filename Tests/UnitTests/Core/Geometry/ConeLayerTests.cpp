@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   // default constructor, copy and assignment are all deleted
   // minimally need a Transform3D and a PlanarBounds object (e.g.
   // ConeBounds) to construct
-  Translation3D translation{0., 1., 2.};
+  Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3D(translation);
   double alpha(M_PI / 8.0);
   const bool symmetric(false);

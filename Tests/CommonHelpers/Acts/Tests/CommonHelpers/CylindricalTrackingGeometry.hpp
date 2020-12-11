@@ -97,8 +97,8 @@ struct CylindricalTrackingGeometry {
       // Get the moduleTransform
       double phi = -M_PI + im * phiStep;
       auto mModuleTransform = Transform3D(
-          Translation3D(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
-                        ringZ + (im % 2) * zStagger) *
+          Translation3(ringRadius * std::cos(phi), ringRadius * std::sin(phi),
+                       ringZ + (im % 2) * zStagger) *
           AngleAxis3D(phi - 0.5 * M_PI, Vector3::UnitZ()) *
           AngleAxis3D(moduleTilt, Vector3::UnitY()));
 
@@ -167,7 +167,7 @@ struct CylindricalTrackingGeometry {
       moduleRotation.col(2) = moduleLocalZ;
       // Get the moduleTransform
       auto mModuleTransform =
-          Transform3D(Translation3D(mCenter) * moduleRotation);
+          Transform3D(Translation3(mCenter) * moduleRotation);
       // Create the detector element
       auto detElement = std::make_unique<const DetectorElementStub>(
           mModuleTransform, mBounds, moduleThickness, moduleMaterialPtr);

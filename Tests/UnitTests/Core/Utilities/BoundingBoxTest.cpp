@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
                {0, 1, 1}}};
   auto cubo = std::make_shared<GenericCuboidVolumeBounds>(vertices);
   auto trf =
-      Transform3D(Translation3D(Vector3(0, 8, -5)) *
+      Transform3D(Translation3(Vector3(0, 8, -5)) *
                   AngleAxis3D(M_PI / 3., Vector3(1, -3, 9).normalized()));
 
   AbstractVolume vol(trf, cubo);

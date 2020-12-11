@@ -90,7 +90,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     vol2srf = (Eigen::Quaternion<Transform3D::Scalar>().setFromTwoVectors(
         normal, Vector3::UnitZ()));
 
-    vol2srf = vol2srf * Translation3D(-ctrd);
+    vol2srf = vol2srf * Translation3(-ctrd);
 
     // now calculate position of vertices in surface local frame
     Vector3 a_l, b_l, c_l, d_l;

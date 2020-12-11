@@ -58,11 +58,11 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
 
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3D(0., 0., -get(eHalfLengthZ)), m_discBounds);
+      transform * Translation3(0., 0., -get(eHalfLengthZ)), m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), forward));
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(
-      transform * Translation3D(0., 0., get(eHalfLengthZ)), m_discBounds);
+      transform * Translation3(0., 0., get(eHalfLengthZ)), m_discBounds);
   oSurfaces.push_back(OrientedSurface(std::move(dSurface), backward));
 
   // [2] Outer Cylinder
@@ -82,7 +82,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     // sectorPlane 1 (negative phi)
     const Transform3D sp1Transform = Transform3D(
         transform * AngleAxis3D(-get(eHalfPhiSector), Vector3(0., 0., 1.)) *
-        Translation3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
+        Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3D(M_PI / 2, Vector3(1., 0., 0.)));
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
@@ -90,7 +90,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     // sectorPlane 2 (positive phi)
     const Transform3D sp2Transform = Transform3D(
         transform * AngleAxis3D(get(eHalfPhiSector), Vector3(0., 0., 1.)) *
-        Translation3D(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
+        Translation3(0.5 * (get(eMinR) + get(eMaxR)), 0., 0.) *
         AngleAxis3D(-M_PI / 2, Vector3(1., 0., 0.)));
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);

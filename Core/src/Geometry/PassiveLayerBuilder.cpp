@@ -68,7 +68,7 @@ const Acts::LayerVector Acts::PassiveLayerBuilder::endcapLayers(
                                                m_cfg.posnegLayerRmax.at(ipnl));
       // create the layer transforms
       const Transform3D eTransform(
-          Translation3D(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
+          Translation3(0., 0., side * m_cfg.posnegLayerPositionZ.at(ipnl)));
       // create the layers
       MutableLayerPtr eLayer = DiscLayer::create(
           eTransform, dBounds, nullptr, m_cfg.posnegLayerThickness.at(ipnl));

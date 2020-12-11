@@ -95,8 +95,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
   // Create an inner Cone
   if (m_innerConeBounds != nullptr) {
-    auto innerConeTrans =
-        transform * Translation3D(0., 0., -get(eInnerOffsetZ));
+    auto innerConeTrans = transform * Translation3(0., 0., -get(eInnerOffsetZ));
     auto innerCone =
         Surface::makeShared<ConeSurface>(innerConeTrans, m_innerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(innerCone), forward));
@@ -109,8 +108,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
 
   // Create an outer Cone
   if (m_outerConeBounds != nullptr) {
-    auto outerConeTrans =
-        transform * Translation3D(0., 0., -get(eOuterOffsetZ));
+    auto outerConeTrans = transform * Translation3(0., 0., -get(eOuterOffsetZ));
     auto outerCone =
         Surface::makeShared<ConeSurface>(outerConeTrans, m_outerConeBounds);
     oSurfaces.push_back(OrientedSurface(std::move(outerCone), backward));
@@ -124,14 +122,14 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   // Set a disc at Zmin
   if (m_negativeDiscBounds != nullptr) {
     auto negativeDiscTrans =
-        transform * Translation3D(0., 0., -get(eHalfLengthZ));
+        transform * Translation3(0., 0., -get(eHalfLengthZ));
     auto negativeDisc = Surface::makeShared<DiscSurface>(negativeDiscTrans,
                                                          m_negativeDiscBounds);
     oSurfaces.push_back(OrientedSurface(std::move(negativeDisc), forward));
   }
 
   // Set a disc at Zmax
-  auto positiveDiscTrans = transform * Translation3D(0., 0., get(eHalfLengthZ));
+  auto positiveDiscTrans = transform * Translation3(0., 0., get(eHalfLengthZ));
   auto positiveDisc =
       Surface::makeShared<DiscSurface>(positiveDiscTrans, m_positiveDiscBounds);
   oSurfaces.push_back(OrientedSurface(std::move(positiveDisc), backward));

@@ -46,19 +46,19 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto createProtoLayer = [&](const Transform3D& trf,
                               bool shared = false) -> ProtoLayer {
     auto atNegX = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3(-3., 0., 0.)) * planeYZ),
+        Transform3D(trf * Translation3(Vector3(-3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atPosX = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3(3., 0., 0.)) * planeYZ),
+        Transform3D(trf * Translation3(Vector3(3., 0., 0.)) * planeYZ),
         recBounds);
 
     auto atNegY = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3(0., -3, 0.)) * planeZX),
+        Transform3D(trf * Translation3(Vector3(0., -3, 0.)) * planeZX),
         recBounds);
 
     auto atPosY = Surface::makeShared<PlaneSurface>(
-        Transform3D(trf * Translation3D(Vector3(0., 3., 0.)) * planeZX),
+        Transform3D(trf * Translation3(Vector3(0., 3., 0.)) * planeZX),
         recBounds);
 
     std::vector<std::shared_ptr<const Surface>> sharedSurfaces = {
