@@ -248,6 +248,19 @@ class KalmanFitter {
 
       ACTS_VERBOSE("KalmanFitter step");
 
+      // Add the measurement surface as external surface to navigator.
+      // We will try to hit those surface by ignoring boundary checks.
+      if constexpr (not isDirectNavigator) {
+        if (result.processedStates == 0) {
+          for (auto measurementIt = inputMeasurements.begin();
+               measurementIt != inputMeasurements.end(); measurementIt++) {
+            state.navigation.externalSurfaces.insert(
+                std::pair<uint64_t, GeometryIdentifier>(
+                    measurementIt->first.layer(), measurementIt->first));
+          }
+        }
+      }
+
       // This following is added due to the fact that the navigation
       // reinitialization in reverse call cannot guarantee the navigator to
       // target for extra layers in the reversed-propagation starting volume.

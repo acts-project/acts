@@ -143,12 +143,22 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     if (!acceptSurface(sf, sensitive)) {
       return;
     }
+    bool boundaryCheck = options.boundaryCheck;
+    if (std::find(options.externalSurfaces.begin(),
+                  options.externalSurfaces.end(),
+                  sf.geometryId()) != options.externalSurfaces.end()) {
+      boundaryCheck = false;
+    }
     // the surface intersection
-    SurfaceIntersection sfi = sf.intersect(
-        gctx, position, options.navDir * direction, options.boundaryCheck);
+    SurfaceIntersection sfi =
+        sf.intersect(gctx, position, options.navDir * direction, boundaryCheck);
     // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
+    if (boundaryCheck == false) {
+      std::cout << "sifPath : " << sifPath << std::endl;
+      std::cout << "lim : " << pathLimit << std::endl;
+    }
     if (sfi && sifPath > overstepLimit &&
         sifPath * sifPath <= pathLimit * pathLimit) {
       // Now put the right sign on it
