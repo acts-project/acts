@@ -23,8 +23,4 @@ static const Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
 static const Vector3D s_yAxis(0, 1, 0);  //!< global y Axis;
 static const Vector3D s_zAxis(0, 0, 1);  //!< global z Axis;
 
-// Origin
-
-static const Vector3D s_origin(0, 0, 0);  //!< origin position
-
 }  // namespace Acts

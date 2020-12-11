@@ -124,7 +124,8 @@ inline Vector3D NavigationLayer::binningPosition(const GeometryContext& gctx,
 inline bool NavigationLayer::isOnLayer(const GeometryContext& gctx,
                                        const Vector3D& gp,
                                        const BoundaryCheck& bcheck) const {
-  return m_surfaceRepresentation->isOnSurface(gctx, gp, s_origin, bcheck);
+  return m_surfaceRepresentation->isOnSurface(gctx, gp, Vector3D::Zero(),
+                                              bcheck);
 }
 
 inline bool NavigationLayer::resolve(bool /*resolveSensitive*/,
