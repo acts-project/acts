@@ -50,7 +50,7 @@ inline ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double phi,
       .setPosition4(0, 0, 0, 0)
       .setDirection(std::cos(lambda) * std::cos(phi),
                     std::cos(lambda) * std::sin(phi), std::sin(lambda))
-      .setAbsMomentum(p);
+      .setAbsoluteMomentum(p);
 }
 
 }  // namespace Dataset

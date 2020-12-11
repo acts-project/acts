@@ -43,7 +43,7 @@ struct BetheBloch {
     // compute energy loss distribution parameters
     const auto pdg = particle.pdg();
     const auto m = particle.mass();
-    const auto qOverP = particle.charge() / particle.absMomentum();
+    const auto qOverP = particle.charge() / particle.absoluteMomentum();
     const auto q = particle.charge();
     // most probable value
     const auto energyLoss =
