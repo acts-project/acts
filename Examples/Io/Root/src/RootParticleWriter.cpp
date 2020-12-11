@@ -96,12 +96,12 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     m_particleType = particle.pdg();
     m_process = static_cast<decltype(m_process)>(particle.process());
     // position
-    m_vx = particle.position4().x() / Acts::UnitConstants::mm;
-    m_vy = particle.position4().y() / Acts::UnitConstants::mm;
-    m_vz = particle.position4().z() / Acts::UnitConstants::mm;
-    m_vt = particle.position4().w() / Acts::UnitConstants::ns;
+    m_vx = particle.fourPosition().x() / Acts::UnitConstants::mm;
+    m_vy = particle.fourPosition().y() / Acts::UnitConstants::mm;
+    m_vz = particle.fourPosition().z() / Acts::UnitConstants::mm;
+    m_vt = particle.fourPosition().w() / Acts::UnitConstants::ns;
     // momentum
-    const auto p = particle.absMomentum() / Acts::UnitConstants::GeV;
+    const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_px = p * particle.unitDirection().x();
     m_py = p * particle.unitDirection().y();
     m_pz = p * particle.unitDirection().z();

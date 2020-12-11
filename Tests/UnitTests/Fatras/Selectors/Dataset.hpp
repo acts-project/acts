@@ -21,7 +21,7 @@ ActsFatras::Particle makeParticle(Acts::PdgParticle pdg, double z, double eta) {
   return ActsFatras::Particle(id, pdg)
       .setPosition4(0.0, 0.0, z, 0.0)
       .setDirection(1.0 / std::cosh(eta), 0.0, std::tanh(eta))
-      .setAbsMomentum(1.5_GeV);
+      .setAbsoluteMomentum(1.5_GeV);
 }
 
 const auto centralElectron =

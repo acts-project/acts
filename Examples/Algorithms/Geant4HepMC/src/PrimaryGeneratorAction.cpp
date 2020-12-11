@@ -65,7 +65,7 @@ void ActsExamples::PrimaryGeneratorAction::prepareParticleGun(
   const auto pos = part.position() * convertLength;
   const auto dir = part.unitDirection();
   m_particleGun->SetParticlePosition({pos[0], pos[1], pos[2]});
-  m_particleGun->SetParticleMomentum(part.absMomentum() * convertEnergy);
+  m_particleGun->SetParticleMomentum(part.absoluteMomentum() * convertEnergy);
   m_particleGun->SetParticleMomentumDirection({dir[0], dir[1], dir[2]});
 }
 

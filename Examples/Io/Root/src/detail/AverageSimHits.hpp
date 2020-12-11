@@ -69,7 +69,7 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     }
     // global position should already be at the intersection. no need to perform
     // an additional intersection call.
-    avgPos4 += simHit.position4();
+    avgPos4 += simHit.fourPosition();
     avgDir += simHit.unitDirection();
   }
 

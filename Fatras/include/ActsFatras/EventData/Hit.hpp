@@ -68,7 +68,7 @@ class Hit {
   constexpr int32_t index() const { return m_index; }
 
   /// Space-time position four-vector.
-  const Vector4& position4() const { return m_pos4; }
+  const Vector4& fourPosition() const { return m_pos4; }
   /// Three-position, i.e. spatial coordinates without the time.
   auto position() const { return m_pos4.segment<3>(Acts::ePos0); }
   /// Time coordinate.

@@ -39,11 +39,12 @@ struct SplitEnergyLoss {
   bool operator()(generator_t&, const Acts::MaterialSlab&,
                   ActsFatras::Particle& particle,
                   std::vector<ActsFatras::Particle>& generated) const {
-    const auto p = particle.absMomentum();
+    const auto p = particle.absoluteMomentum();
     if (splitMomentumMin < p) {
-      particle.setAbsMomentum(0.5 * p);
+      particle.setAbsoluteMomentum(0.5 * p);
       const auto pid = particle.particleId().makeDescendant();
-      generated.push_back(particle.withParticleId(pid).setAbsMomentum(0.5 * p));
+      generated.push_back(
+          particle.withParticleId(pid).setAbsoluteMomentum(0.5 * p));
     }
     // never break
     return false;
@@ -182,7 +183,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
     const auto particle =
         ActsFatras::Particle(pid, pdg)
             .setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta))
-            .setAbsMomentum(p);
+            .setAbsoluteMomentum(p);
     input.push_back(std::move(particle));
   }
   BOOST_TEST_INFO(input.front());
