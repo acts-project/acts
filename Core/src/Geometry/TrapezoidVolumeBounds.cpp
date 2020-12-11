@@ -56,7 +56,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   oSurfaces.reserve(6);
 
   // Face surfaces xy
-  RotationMatrix3D trapezoidRotation(transform.rotation());
+  RotationMatrix3 trapezoidRotation(transform.rotation());
   Vector3 trapezoidX(trapezoidRotation.col(0));
   Vector3 trapezoidY(trapezoidRotation.col(1));
   Vector3 trapezoidZ(trapezoidRotation.col(2));

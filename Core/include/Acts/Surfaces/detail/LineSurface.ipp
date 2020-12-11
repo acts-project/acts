@@ -45,10 +45,10 @@ inline std::string LineSurface::name() const {
   return "Acts::LineSurface";
 }
 
-inline RotationMatrix3D LineSurface::referenceFrame(
+inline RotationMatrix3 LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*unused*/,
     const Vector3& momentum) const {
-  RotationMatrix3D mFrame;
+  RotationMatrix3 mFrame;
   const auto& tMatrix = transform(gctx).matrix();
   Vector3 measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
   Vector3 measX(measY.cross(momentum).normalized());

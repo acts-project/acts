@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   Vector3 globalPositionZ{rootHalf, 1. - rootHalf, 2.0};
   Vector3 momentum{15., 15., 15.};
   Vector3 momentum2{6.6, -3., 2.};
-  RotationMatrix3D expectedFrame;
+  RotationMatrix3 expectedFrame;
   expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1., 0.;
   // check without shift
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(

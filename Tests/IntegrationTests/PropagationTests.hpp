@@ -159,7 +159,7 @@ inline Acts::Transform3D makeCurvilinearTransform(
   Acts::Vector3 unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
-  Acts::RotationMatrix3D rotation = Acts::RotationMatrix3D::Zero();
+  Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Zero();
   rotation.col(0) = unitU;
   rotation.col(1) = unitV;
   rotation.col(2) = unitW;

@@ -76,10 +76,10 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 }
 
 // return the measurement frame: it's the tangential plane
-Acts::RotationMatrix3D Acts::CylinderSurface::referenceFrame(
+Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& /*unused*/) const {
-  RotationMatrix3D mFrame;
+  RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the z axis
   Vector3 measY = rotSymmetryAxis(gctx);

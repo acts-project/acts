@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1)) {
   BOOST_CHECK(surface.isOnSurface(tgContext, reference, mom,
                                   true));  // need to improve bounds()
   // referenceFrame()
-  RotationMatrix3D unitary;
+  RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
   auto referenceFrame = surface.referenceFrame(
       tgContext, reference, mom);  // need more complex case to test

@@ -311,11 +311,11 @@ class Surface : public virtual GeometryObject,
   /// inside bounds (check is done)
   /// @param momentum global 3D momentum representation (optionally ignored)
   ///
-  /// @return RotationMatrix3D which defines the three axes of the measurement
+  /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
-  virtual Acts::RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                const Vector3& momentum) const;
+  virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                               const Vector3& position,
+                                               const Vector3& momentum) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.

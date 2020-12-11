@@ -32,7 +32,7 @@ inline bool Acts::Surface::insideBounds(const Vector2& lposition,
   return bounds().inside(lposition, bcheck);
 }
 
-inline Acts::RotationMatrix3D Acts::Surface::referenceFrame(
+inline Acts::RotationMatrix3 Acts::Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*unused*/,
     const Vector3& /*unused*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
@@ -87,7 +87,7 @@ inline Acts::FreeToBoundMatrix Acts::Surface::jacobianGlobalToLocal(
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
-  RotationMatrix3D rframeT =
+  RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
   // Initalize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
@@ -112,7 +112,7 @@ inline Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
   // The measurement frame of the surface
-  const RotationMatrix3D rframe = referenceFrame(gctx, position, direction);
+  const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
   // The measurement frame z axis
   const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis

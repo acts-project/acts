@@ -179,7 +179,7 @@ struct CubicTrackingGeometry {
         new Acts::TrackingGeometry(mtvpWorld));
   }
 
-  RotationMatrix3D rotation = RotationMatrix3D::Identity();
+  RotationMatrix3 rotation = RotationMatrix3::Identity();
   std::shared_ptr<const RectangleBounds> rBounds = nullptr;
   std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 

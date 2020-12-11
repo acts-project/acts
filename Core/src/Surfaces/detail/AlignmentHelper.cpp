@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
 Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
-    const RotationMatrix3D& rotation) {
+    const RotationMatrix3& rotation) {
   // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.
   // first rotation around x axis, then y axis, last z axis
   // The elements stored in rotAngles is (rotZ, rotY, rotX)
@@ -26,19 +26,19 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
   // [ -sy   cy*sx         cy*cx        ]
 
   // Derivative of local x axis w.r.t. (rotX, rotY, rotZ)
-  RotationMatrix3D rotToLocalXAxis = RotationMatrix3D::Zero();
+  RotationMatrix3 rotToLocalXAxis = RotationMatrix3::Zero();
   rotToLocalXAxis.col(0) = Vector3(0, 0, 0);
   rotToLocalXAxis.col(1) = Vector3(-cz * sy, -sz * sy, -cy);
   rotToLocalXAxis.col(2) = Vector3(-sz * cy, cz * cy, 0);
   // Derivative of local y axis w.r.t. (rotX, rotY, rotZ)
-  RotationMatrix3D rotToLocalYAxis = RotationMatrix3D::Zero();
+  RotationMatrix3 rotToLocalYAxis = RotationMatrix3::Zero();
   rotToLocalYAxis.col(0) =
       Vector3(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
   rotToLocalYAxis.col(1) = Vector3(cz * cy * sx, sz * cy * sx, -sy * sx);
   rotToLocalYAxis.col(2) =
       Vector3(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
   // Derivative of local z axis w.r.t. (rotX, rotY, rotZ)
-  RotationMatrix3D rotToLocalZAxis = RotationMatrix3D::Zero();
+  RotationMatrix3 rotToLocalZAxis = RotationMatrix3::Zero();
   rotToLocalZAxis.col(0) =
       Vector3(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
   rotToLocalZAxis.col(1) = Vector3(cz * cy * cx, sz * cy * cx, -sy * cx);

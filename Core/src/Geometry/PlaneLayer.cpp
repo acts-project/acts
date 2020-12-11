@@ -53,7 +53,7 @@ void Acts::PlaneLayer::buildApproachDescriptor() {
 
   //@todo fix with representing volume
   const Transform3D& lTransform = PlaneSurface::transform(GeometryContext());
-  RotationMatrix3D lRotation = lTransform.rotation();
+  RotationMatrix3 lRotation = lTransform.rotation();
   const Vector3& lCenter = PlaneSurface::center(GeometryContext());
   const Vector3& lVector = Surface::normal(GeometryContext(), lCenter);
   // create new surfaces

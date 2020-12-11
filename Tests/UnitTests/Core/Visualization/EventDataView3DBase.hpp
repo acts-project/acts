@@ -114,7 +114,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   CalibrationContext calContext = CalibrationContext();
 
   // Construct the rotation
-  RotationMatrix3D rotation = RotationMatrix3D::Identity();
+  RotationMatrix3 rotation = RotationMatrix3::Identity();
   double rotationAngle = 90_degree;
   Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
   Vector3 yPos(0., 1., 0.);

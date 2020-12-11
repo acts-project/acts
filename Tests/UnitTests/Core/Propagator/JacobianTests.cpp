@@ -73,7 +73,7 @@ Transform3D createPlanarTransform(const Vector3& nposition,
                   : Vector3::UnitX().cross(T).normalized();
   Vector3 V = T.cross(U);
   // that's the plane curvilinear Rotation
-  RotationMatrix3D curvilinearRotation;
+  RotationMatrix3 curvilinearRotation;
   curvilinearRotation.col(0) = U;
   curvilinearRotation.col(1) = V;
   curvilinearRotation.col(2) = T;

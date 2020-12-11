@@ -78,10 +78,10 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
   return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
 }
 
-Acts::RotationMatrix3D Acts::ConeSurface::referenceFrame(
+Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& /*unused*/) const {
-  RotationMatrix3D mFrame;
+  RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
   Vector3 measY = rotSymmetryAxis(gctx);

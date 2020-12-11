@@ -89,8 +89,8 @@ using Translation2 = Eigen::Translation<ActsScalar, 2>;
 using Translation3 = Eigen::Translation<ActsScalar, 3>;
 
 // linear (rotation) matrices
-using RotationMatrix2D = ActsMatrix<2, 2>;
-using RotationMatrix3D = ActsMatrix<3, 3>;
+using RotationMatrix2 = ActsMatrix<2, 2>;
+using RotationMatrix3 = ActsMatrix<3, 3>;
 
 // pure rotation transformations. only available in 2d and 3d
 using Rotation2D = Eigen::Rotation2D<ActsScalar>;

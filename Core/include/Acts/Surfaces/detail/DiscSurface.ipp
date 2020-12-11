@@ -77,7 +77,7 @@ inline FreeToBoundMatrix DiscSurface::jacobianGlobalToLocal(
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
-  RotationMatrix3D rframeT =
+  RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
   // calculate the transformation to local coorinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;

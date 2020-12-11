@@ -161,7 +161,7 @@ struct CylindricalTrackingGeometry {
       Vector3 moduleLocalX(-sin(modulePhi + moduleTiltPhi),
                            cos(modulePhi + moduleTiltPhi), 0.);
       // Create the RotationMatrix
-      RotationMatrix3D moduleRotation;
+      RotationMatrix3 moduleRotation;
       moduleRotation.col(0) = moduleLocalX;
       moduleRotation.col(1) = moduleLocalY;
       moduleRotation.col(2) = moduleLocalZ;

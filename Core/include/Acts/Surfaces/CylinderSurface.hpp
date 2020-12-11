@@ -98,9 +98,9 @@ class CylinderSurface : public Surface {
   /// @param position is the position where the measurement frame is defined
   /// @param momentum is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
-  RotationMatrix3D referenceFrame(const GeometryContext& gctx,
-                                  const Vector3& position,
-                                  const Vector3& momentum) const final;
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                 const Vector3& position,
+                                 const Vector3& momentum) const final;
 
   /// Return the surface type
   SurfaceType type() const override;

@@ -297,7 +297,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
         Acts::Vector3 moduleLocalX(-sin(modulePhi + modulePhiTilt),
                                    cos(modulePhi + modulePhiTilt), 0.);
         // create the RotationMatrix
-        Acts::RotationMatrix3D moduleRotation;
+        Acts::RotationMatrix3 moduleRotation;
         moduleRotation.col(0) = moduleLocalX;
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
@@ -494,7 +494,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           Acts::Vector3 moduleLocalX = moduleLocalY.cross(moduleLocalZ);
           // local rotation matrices
           // create the RotationMatrix - negative side
-          Acts::RotationMatrix3D moduleRotation;
+          Acts::RotationMatrix3 moduleRotation;
           moduleRotation.col(0) = moduleLocalX;
           moduleRotation.col(1) = moduleLocalY;
           moduleRotation.col(2) = moduleLocalZ;

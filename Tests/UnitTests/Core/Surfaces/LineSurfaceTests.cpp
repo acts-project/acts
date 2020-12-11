@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
       line.referenceFrame(tgContext, globalPosition, momentum);
   double v0 = std::cos(std::atan(2. / 3.));
   double v1 = std::sin(std::atan(2. / 3.));
-  RotationMatrix3D expectedRotationMatrix;
+  RotationMatrix3 expectedRotationMatrix;
   expectedRotationMatrix << -v1, 0., v0, v0, 0., v1, 0., 1., -0.;
   // std::cout<<returnedRotationMatrix<<std::endl;
   // std::cout<<expectedRotationMatrix<<std::endl;

@@ -39,7 +39,7 @@ Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
                   ? Vector3::UnitZ().cross(T).normalized()
                   : Vector3::UnitX().cross(T).normalized();
   Vector3 V = T.cross(U);
-  RotationMatrix3D curvilinearRotation;
+  RotationMatrix3 curvilinearRotation;
   curvilinearRotation.col(0) = U;
   curvilinearRotation.col(1) = V;
   curvilinearRotation.col(2) = T;

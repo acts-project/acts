@@ -135,7 +135,7 @@ Acts::OrientedSurfaces Acts::ConeVolumeBounds::orientedSurfaces(
   oSurfaces.push_back(OrientedSurface(std::move(positiveDisc), backward));
 
   if (m_sectorBounds) {
-    RotationMatrix3D sectorRotation;
+    RotationMatrix3 sectorRotation;
     sectorRotation.col(0) = Vector3::UnitZ();
     sectorRotation.col(1) = Vector3::UnitX();
     sectorRotation.col(2) = Vector3::UnitY();

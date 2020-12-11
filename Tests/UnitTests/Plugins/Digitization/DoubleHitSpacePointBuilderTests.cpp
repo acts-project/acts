@@ -56,7 +56,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   // Build translation
 
   double rotation = 0.026;
-  RotationMatrix3D rotationPos;
+  RotationMatrix3 rotationPos;
   Vector3 xPos(cos(rotation), sin(rotation), 0.);
   Vector3 yPos(-sin(rotation), cos(rotation), 0.);
   Vector3 zPos(0., 0., 1.);
@@ -84,7 +84,7 @@ BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1),
   // Build second PlanarModuleCluster
 
   double rotation2 = -0.026;
-  RotationMatrix3D rotationNeg;
+  RotationMatrix3 rotationNeg;
   Vector3 xNeg(cos(rotation2), sin(rotation2), 0.);
   Vector3 yNeg(-sin(rotation2), cos(rotation2), 0.);
   Vector3 zNeg(0., 0., 1.);

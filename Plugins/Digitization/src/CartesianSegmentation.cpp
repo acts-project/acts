@@ -116,13 +116,13 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
                                     lorentzPlaneHalfX));
 
   // now the rotation matrix for the xBins
-  RotationMatrix3D xBinRotationMatrix;
+  RotationMatrix3 xBinRotationMatrix;
   xBinRotationMatrix.col(0) = Vector3::UnitY();
   xBinRotationMatrix.col(1) = Vector3::UnitZ();
   xBinRotationMatrix.col(2) = Vector3::UnitX();
   // now the lorentz plane rotation should be the xBin rotation, rotated by the
   // lorentz angle around y
-  RotationMatrix3D lorentzPlaneRotationMatrix =
+  RotationMatrix3 lorentzPlaneRotationMatrix =
       (lorentzAngle != 0.)
           ? xBinRotationMatrix * AngleAxis3D(lorentzAngle, Vector3::UnitX())
           : xBinRotationMatrix;
@@ -152,7 +152,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
               ? Vector3(cPosX, 0., 0.)
               : Vector3(cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
       // rotation of the boundary: striaght or lorentz
-      const RotationMatrix3D& boundaryXRotation =
+      const RotationMatrix3& boundaryXRotation =
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
       auto boundaryXTransform =
@@ -179,7 +179,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
   // (C) - bin Y surfaces - everything is defined
   // -----------------------------------------------------------
   // now the rotation matrix for the yBins - anticyclic
-  RotationMatrix3D yBinRotationMatrix;
+  RotationMatrix3 yBinRotationMatrix;
   yBinRotationMatrix.col(0) = Vector3::UnitX();
   yBinRotationMatrix.col(1) = Vector3::UnitZ();
   yBinRotationMatrix.col(2) = Vector3(0., -1., 0.);

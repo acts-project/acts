@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   Vector3 globalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   double rootHalf = std::sqrt(0.5);
-  RotationMatrix3D expectedFrame;
+  RotationMatrix3 expectedFrame;
   expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1., 0.;
   CHECK_CLOSE_OR_SMALL(
       coneSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),

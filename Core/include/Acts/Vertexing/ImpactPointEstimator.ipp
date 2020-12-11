@@ -97,7 +97,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   // surface rotation
-  RotationMatrix3D myRotation =
+  RotationMatrix3 myRotation =
       trkParams->referenceSurface().transform(gctx).rotation();
   // Surface translation
   Vector3 myTranslation =

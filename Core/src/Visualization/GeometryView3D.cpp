@@ -257,7 +257,7 @@ void Acts::GeometryView3D::drawSegmentBase(IVisualization3D& helper,
   double hlength = 0.5 * Vector3(end - start).norm();
 
   auto unitVectors = makeCurvilinearUnitVectors(direction);
-  RotationMatrix3D lrotation;
+  RotationMatrix3 lrotation;
   lrotation.col(0) = unitVectors.first;
   lrotation.col(1) = unitVectors.second;
   lrotation.col(2) = direction;

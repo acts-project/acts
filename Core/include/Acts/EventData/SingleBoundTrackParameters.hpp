@@ -219,7 +219,7 @@ class SingleBoundTrackParameters {
   /// For planar surfaces, this is the transformation local-to-global rotation
   /// matrix. For non-planar surfaces, it is the local-to-global rotation matrix
   /// of the tangential plane at the track position.
-  RotationMatrix3D referenceFrame(const GeometryContext& geoCtx) const {
+  RotationMatrix3 referenceFrame(const GeometryContext& geoCtx) const {
     return m_surface->referenceFrame(geoCtx, position(geoCtx), momentum());
   }
 

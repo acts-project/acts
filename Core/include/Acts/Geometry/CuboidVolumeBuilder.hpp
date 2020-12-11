@@ -44,7 +44,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Center position
     Vector3 position;
     // Rotation
-    RotationMatrix3D rotation = RotationMatrix3D::Identity();
+    RotationMatrix3 rotation = RotationMatrix3::Identity();
     // Bounds
     std::shared_ptr<const RectangleBounds> rBounds = nullptr;
     // Attached material

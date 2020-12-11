@@ -57,7 +57,7 @@ BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1),
   // Build translation
 
   double rotation = 0.026_rad;
-  RotationMatrix3D rotationPos;
+  RotationMatrix3 rotationPos;
   Vector3 xPos(cos(rotation), sin(rotation), 0.);
   Vector3 yPos(-sin(rotation), cos(rotation), 0.);
   Vector3 zPos(0., 0., 1.);

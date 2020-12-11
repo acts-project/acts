@@ -193,7 +193,7 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   const Vector3& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
      << sfcenter.y() << ", " << sfcenter.z() << ")" << std::endl;
-  Acts::RotationMatrix3D rot(transform(gctx).matrix().block<3, 3>(0, 0));
+  Acts::RotationMatrix3 rot(transform(gctx).matrix().block<3, 3>(0, 0));
   Acts::Vector3 rotX(rot.col(0));
   Acts::Vector3 rotY(rot.col(1));
   Acts::Vector3 rotZ(rot.col(2));
