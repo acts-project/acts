@@ -17,8 +17,6 @@ namespace Acts {
 
 static const Transform3D s_idTransform =
     Transform3D::Identity();  //!< idendity transformation
-static const Rotation3D s_idRotation =
-    Rotation3D::Identity();  //!< idendity rotation
 
 // Axis system
 static const Vector3D s_xAxis(1, 0, 0);  //!< global x Axis;
@@ -32,10 +30,4 @@ static const Vector2D s_origin2D(0., 0.);
 
 static const Vector3D s_origin(0, 0, 0);  //!< origin position
 
-namespace detail {
-static const RotationMatrix3D::Scalar _helper[9] = {0., 1., 0., 1., 0.,
-                                                    0., 0., 0., -1.};
-}
-
-static const RotationMatrix3D s_idRotationZinverse(detail::_helper);
 }  // namespace Acts
