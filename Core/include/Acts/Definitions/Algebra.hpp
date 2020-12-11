@@ -28,6 +28,17 @@ namespace Acts {
 /// codebase. They all use the common Acts scalar type but support variable size
 /// either at compile- or runtime.
 ///
+/// Eigen does not have a distinct type for symmetric matrices. A typedef for
+/// fixed-size matrices is still defined to simplify definition (one template
+/// size vs two template size for generic matrices) and to clarify semantic
+/// meaning in interfaces. It also ensures that the matrix is square. However,
+/// the user is responsible for ensuring that the values are symmetric.
+///
+/// Without a distinct type for symmetric matrices, there is no way to provide
+/// any conditions e.g. square size, for the dynamic-sized case. Consequently,
+/// no dynamic-sized symmetric matrix type is defined. Use the
+/// `ActsDynamicMatrix` instead.
+///
 /// @{
 
 /// Common scalar (floating point type used for the default algebra types.
@@ -55,7 +66,7 @@ using ActsDynamicMatrix =
 
 /// @}
 
-/// @defgroup fixed-algebra-types Fixed-size vector/matrix e.g. for coordinates
+/// @defgroup coordinates-types Fixed-size vector/matrix types for coordinates
 ///
 /// These predefined types should always be used when handling coordinate
 /// vectors in different coordinate systems, i.e. on surfaces (2d), spatial
