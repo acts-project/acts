@@ -32,7 +32,7 @@ enum AlignmentIndices : unsigned int {
   eAlignmentSize,
 };
 
-// Matrix and vector types related to alignment parameters.
+// Shorthand vector/matrix types related to alignment parameters.
 using AlignmentVector = ActsVector<eAlignmentSize>;
 using AlignmentMatrix = ActsMatrix<eAlignmentSize, eAlignmentSize>;
 using AlignmentToPositionMatrix = ActsMatrix<3, eAlignmentSize>;
